@@ -1,0 +1,6 @@
+#ifndef SULTANC_PRIVATE_SUPPORT_PATH_SOURCE_EXTENSION_H
+#define SULTANC_PRIVATE_SUPPORT_PATH_SOURCE_EXTENSION_H
+
+int __Source_Path_Is_SultanC__(const char *__Path__);
+
+#endif

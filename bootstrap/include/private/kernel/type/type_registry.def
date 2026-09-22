@@ -1,0 +1,32 @@
+/*
+ * SultanC canonical Type Kernel builtin registry.
+ *
+ * Single declarative owner of builtin type rows. The frontend generator projects
+ * Token and AstKind into Stage-0/Stage-1 token-to-AST syntax adapters. The Type
+ * System projects Id, ResolvedKind, Bits, Scalar, Signed, and DiagnosticName into
+ * semantic identity and properties, and owns AST-to-canonical-ID resolution.
+ * Neither generated frontend adapter imports the semantic Type representation.
+ *
+ * Arguments:
+ *   Id, Token, AstKind, ResolvedKind, Bits, Scalar, Signed, Stage1Constructor,
+ *   DiagnosticName
+ */
+
+SULTANC__TYPE_BUILTIN__(ANY, ANY, Any, Unknown, 0, 0, 0, "أي", "any")
+SULTANC__TYPE_BUILTIN__(BOOL, BOOL, Boolean, Boolean, 1, 1, 0, "منطقي", "bool")
+SULTANC__TYPE_BUILTIN__(STRING, STRING, String, String, 0, 0, 0, "نص", "string")
+SULTANC__TYPE_BUILTIN__(CHAR, CHAR, Character, Character, 32, 1, 0, "حرف", "char")
+SULTANC__TYPE_BUILTIN__(INT, INT, Integer, Signed_Integer, 64, 1, 1, "عدد", "int")
+SULTANC__TYPE_BUILTIN__(UINT, UINT, Unsigned_Integer, Unsigned_Integer, 64, 1, 0, "غير_موقع", "uint")
+SULTANC__TYPE_BUILTIN__(VOID, VOID, Void, Void, 0, 0, 0, "فراغ", "void")
+
+SULTANC__TYPE_MACHINE__(I8, I8, I8, Signed_Integer, 8, 1, 1, "ص8", "i8")
+SULTANC__TYPE_MACHINE__(I16, I16, I16, Signed_Integer, 16, 1, 1, "ص16", "i16")
+SULTANC__TYPE_MACHINE__(I32, I32, I32, Signed_Integer, 32, 1, 1, "ص32", "i32")
+SULTANC__TYPE_MACHINE__(I64, I64, I64, Signed_Integer, 64, 1, 1, "ص64", "i64")
+SULTANC__TYPE_MACHINE__(U8, U8, U8, Unsigned_Integer, 8, 1, 0, "غ8", "u8")
+SULTANC__TYPE_MACHINE__(U16, U16, U16, Unsigned_Integer, 16, 1, 0, "غ16", "u16")
+SULTANC__TYPE_MACHINE__(U32, U32, U32, Unsigned_Integer, 32, 1, 0, "غ32", "u32")
+SULTANC__TYPE_MACHINE__(U64, U64, U64, Unsigned_Integer, 64, 1, 0, "غ64", "u64")
+SULTANC__TYPE_MACHINE__(F32, F32, F32, Float, 32, 1, 1, "ع32", "f32")
+SULTANC__TYPE_MACHINE__(F64, F64, F64, Float, 64, 1, 1, "ع64", "f64")
