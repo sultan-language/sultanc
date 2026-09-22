@@ -1,0 +1,48 @@
+/*
+ * Canonical SultanC diagnostic catalog.
+ *
+ * Ownership: single semantic registry for diagnostic IDs, stable codes,
+ * default severities, and default message keys.
+ * Non-ownership: wording and rendering live in their dedicated subsystems.
+ */
+#ifndef SULTANC_DIAGNOSTIC
+#error "Define SULTANC_DIAGNOSTIC before including diagnostic_catalog.def"
+#endif
+
+SULTANC_DIAGNOSTIC(__E0001_Syntax_Error__, "SULTANC-E0001", __Diagnostic_Severity_Error__, __Diag_Word_E0001__)
+SULTANC_DIAGNOSTIC(__E0103_Input_File_Not_Found__, "SULTANC-E0103", __Diagnostic_Severity_Error__, __Diag_Word_E0103__)
+SULTANC_DIAGNOSTIC(__E0104_Unrecognized_Input_File_Type__, "SULTANC-E0104", __Diagnostic_Severity_Error__, __Diag_Word_E0104__)
+SULTANC_DIAGNOSTIC(__E0200_Duplicate_Function__, "SULTANC-E0200", __Diagnostic_Severity_Error__, __Diag_Word_E0200__)
+SULTANC_DIAGNOSTIC(__E0201_Source_Module_Not_Found__, "SULTANC-E0201", __Diagnostic_Severity_Error__, __Diag_Word_E0201__)
+SULTANC_DIAGNOSTIC(__E0203_Main_Function_Not_Found__, "SULTANC-E0203", __Diagnostic_Severity_Error__, __Diag_Word_E0203__)
+SULTANC_DIAGNOSTIC(__E0205_Duplicate_Declaration__, "SULTANC-E0205", __Diagnostic_Severity_Error__, __Diag_Word_E0205__)
+SULTANC_DIAGNOSTIC(__E0206_Duplicate_Temporary__, "SULTANC-E0206", __Diagnostic_Severity_Error__, __Diag_Word_E0206__)
+SULTANC_DIAGNOSTIC(__E0300_Unknown_Name__, "SULTANC-E0300", __Diagnostic_Severity_Error__, __Diag_Word_E0300__)
+SULTANC_DIAGNOSTIC(__E0304_Unsatisfied_Use__, "SULTANC-E0304", __Diagnostic_Severity_Error__, __Diag_Word_E0304__)
+SULTANC_DIAGNOSTIC(__E0308_Infinite_Recursive_Type__, "SULTANC-E0308", __Diagnostic_Severity_Error__, __Diag_Word_E0308__)
+SULTANC_DIAGNOSTIC(__E0309_Private_Declaration__, "SULTANC-E0309", __Diagnostic_Severity_Error__, __Diag_Word_E0309__)
+SULTANC_DIAGNOSTIC(__E0310_Ambiguous_Import__, "SULTANC-E0310", __Diagnostic_Severity_Error__, __Diag_Word_E0310__)
+SULTANC_DIAGNOSTIC(__E0311_Import_Cycle__, "SULTANC-E0311", __Diagnostic_Severity_Error__, __Diag_Word_E0311__)
+SULTANC_DIAGNOSTIC(__E0400_Mismatched_Types__, "SULTANC-E0400", __Diagnostic_Severity_Error__, __Diag_Word_E0400__)
+SULTANC_DIAGNOSTIC(__E0404_Statement_Typecheck_Not_Implemented__, "SULTANC-E0404", __Diagnostic_Severity_Error__, __Diag_Word_E0404__)
+SULTANC_DIAGNOSTIC(__E0408_Main_Bad_Signature__, "SULTANC-E0408", __Diagnostic_Severity_Error__, __Diag_Word_E0408__)
+SULTANC_DIAGNOSTIC(__E0409_Unresolved_Type__, "SULTANC-E0409", __Diagnostic_Severity_Error__, __Diag_Word_E0409__)
+SULTANC_DIAGNOSTIC(__E0502_Unknown_Record_Member__, "SULTANC-E0502", __Diagnostic_Severity_Error__, __Diag_Word_E0502__)
+SULTANC_DIAGNOSTIC(__E0600_Undefined_Literal_In_Lowering__, "SULTANC-E0600", __Diagnostic_Severity_Error__, __Diag_Word_E0600__)
+SULTANC_DIAGNOSTIC(__E0602_Unsupported_Binary_Expression__, "SULTANC-E0602", __Diagnostic_Severity_Error__, __Diag_Word_E0602__)
+SULTANC_DIAGNOSTIC(__E0612_Dereference_Non_Pointer__, "SULTANC-E0612", __Diagnostic_Severity_Error__, __Diag_Word_E0612__)
+SULTANC_DIAGNOSTIC(__E0613_Address_Of_Non_Lvalue__, "SULTANC-E0613", __Diagnostic_Severity_Error__, __Diag_Word_E0613__)
+SULTANC_DIAGNOSTIC(__E0614_Record_Field_Missing__, "SULTANC-E0614", __Diagnostic_Severity_Error__, __Diag_Word_E0614__)
+SULTANC_DIAGNOSTIC(__E0615_Record_Field_Duplicate__, "SULTANC-E0615", __Diagnostic_Severity_Error__, __Diag_Word_E0615__)
+SULTANC_DIAGNOSTIC(__E0703_Write_To_Immutable__, "SULTANC-E0703", __Diagnostic_Severity_Error__, __Diag_Word_E0703__)
+SULTANC_DIAGNOSTIC(__E1001_Invalid_UTF8_Byte__, "SULTANC-E1001", __Diagnostic_Severity_Error__, __Diag_Word_E1001__)
+SULTANC_DIAGNOSTIC(__E1100_Internal_Context_Error__, "SULTANC-E1100", __Diagnostic_Severity_Error__, __Diag_Word_E1100__)
+SULTANC_DIAGNOSTIC(__E1300_Use_Before_Initialization__, "SULTANC-E1300", __Diagnostic_Severity_Error__, __Diag_Word_E1300__)
+SULTANC_DIAGNOSTIC(__E1301_Use_After_Move__, "SULTANC-E1301", __Diagnostic_Severity_Error__, __Diag_Word_E1301__)
+SULTANC_DIAGNOSTIC(__E1302_Borrow_Conflict__, "SULTANC-E1302", __Diagnostic_Severity_Error__, __Diag_Word_E1302__)
+SULTANC_DIAGNOSTIC(__E1303_Reference_Escape__, "SULTANC-E1303", __Diagnostic_Severity_Error__, __Diag_Word_E1303__)
+SULTANC_DIAGNOSTIC(__E1305_Bounds_Violation__, "SULTANC-E1305", __Diagnostic_Severity_Error__, __Diag_Word_E1305__)
+SULTANC_DIAGNOSTIC(__E1306_Non_Exhaustive_Pattern__, "SULTANC-E1306", __Diagnostic_Severity_Error__, __Diag_Word_E1306__)
+SULTANC_DIAGNOSTIC(__E1307_Unreachable_Pattern__, "SULTANC-E1307", __Diagnostic_Severity_Error__, __Diag_Word_E1307__)
+SULTANC_DIAGNOSTIC(__E1308_Missing_Return_Path__, "SULTANC-E1308", __Diagnostic_Severity_Error__, __Diag_Word_E1308__)
+SULTANC_DIAGNOSTIC(__E1312_Partial_Owned_Move__, "SULTANC-E1312", __Diagnostic_Severity_Error__, __Diag_Word_E1312__)
