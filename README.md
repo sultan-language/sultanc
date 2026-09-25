@@ -98,4 +98,4 @@ Self-hosting on `arm64-darwin` and `x86_64-linux`, both verified by byte-identic
 
 ## License
 
-Not yet finalized.
+Licensed under the [MIT License](LICENSE).
