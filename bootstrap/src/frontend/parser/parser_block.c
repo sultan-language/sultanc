@@ -1,3 +1,5 @@
+/* Parses statement blocks. */
+
 #include "frontend/parser/diagnostic.h"
 #include "frontend/parser/span.h"
 #include "frontend/parser/storage.h"
@@ -5,10 +7,14 @@
 
 #include <stdalign.h>
 
+/* Parses the parser block. */
 __Ast_Block__ *__Parser_Parse_Block__(__Parser__ *__Parser_State__)
 {
+    /* Stores the start. */
     __Source_Position__ __Start__ = __Parser_State__->__Current__.__Span__.__Start__;
+    /* Stores the statements. */
     __Vector__ __Statements__;
+    /* References the block. */
     __Ast_Block__ *__Block__ = NULL;
 
     __Vector_Init__(&__Statements__, sizeof(__Ast_Statement__ *));

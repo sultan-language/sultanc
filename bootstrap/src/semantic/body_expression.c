@@ -1,5 +1,8 @@
+/* Dispatches expression type inference. */
+
 #include "semantic/body_internal.h"
 
+/* Infers the body expression. */
 int __Body_Infer_Expression__(__Semantic_Body_Context__ *__Context__,
                               __Ast_Expression__ *__Expression__,
                               __Ast_Type__ **__Out_Type__)

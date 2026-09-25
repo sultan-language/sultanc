@@ -1,12 +1,18 @@
+/* Checks explicit type conversions. */
+
 #include "semantic/body_internal.h"
 #include "kernel/type/conversion.h"
 
+/* Infers the body conversion. */
 int __Body_Infer_Conversion__(__Semantic_Body_Context__ *__Context__,
                               __Ast_Expression__ *__Expression__,
                               __Ast_Type__ **__Out_Type__)
 {
+    /* References the source type. */
     __Ast_Type__ *__Source_Type__ = NULL;
+    /* References the target type. */
     __Ast_Type__ *__Target_Type__;
+    /* Stores the class. */
     __Type_Conversion_Class__ __Class__;
 
     if (__Context__ == NULL || __Expression__ == NULL || __Out_Type__ == NULL ||

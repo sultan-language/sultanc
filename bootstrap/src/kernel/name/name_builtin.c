@@ -1,8 +1,12 @@
+/* Resolves built-in function identities. */
+
 #include "kernel/name/name.h"
 #include "frontend/identifier_identity.h"
 
+/* Expands the builtin name macro. */
 #define SULTANC__BUILTIN_NAME__(literal_) (__Text_Slice__){(literal_), sizeof(literal_) - 1U}
 
+/* Finds the name builtin function. */
 __Name_Builtin_Function__ __Name_Find_Builtin_Function__(__Text_Slice__ __Name__)
 {
     if (__Identifier_Identity_Equals__(__Name__, SULTANC__BUILTIN_NAME__("length")) ||
@@ -39,6 +43,18 @@ __Name_Builtin_Function__ __Name_Find_Builtin_Function__(__Text_Slice__ __Name__
     if (__Identifier_Identity_Equals__(__Name__, SULTANC__BUILTIN_NAME__("بدائي_إغلاق_ملف")))
     {
         return __Name_Builtin_Close_File__;
+    }
+    if (__Identifier_Identity_Equals__(__Name__, SULTANC__BUILTIN_NAME__("بدائي_فتح_دليل")))
+    {
+        return __Name_Builtin_Open_Directory__;
+    }
+    if (__Identifier_Identity_Equals__(__Name__, SULTANC__BUILTIN_NAME__("بدائي_قراءة_مدخل_دليل")))
+    {
+        return __Name_Builtin_Read_Directory_Entry__;
+    }
+    if (__Identifier_Identity_Equals__(__Name__, SULTANC__BUILTIN_NAME__("بدائي_إغلاق_دليل")))
+    {
+        return __Name_Builtin_Close_Directory__;
     }
     if (__Identifier_Identity_Equals__(__Name__, SULTANC__BUILTIN_NAME__("بدائي_قراءة_بايت_دخل")))
     {
@@ -89,9 +105,22 @@ __Name_Builtin_Function__ __Name_Find_Builtin_Function__(__Text_Slice__ __Name__
     {
         return __Name_Builtin_Text_From_Bytes__;
     }
+    if (__Identifier_Identity_Equals__(__Name__, SULTANC__BUILTIN_NAME__("بدائي_نوع_مسار")))
+    {
+        return __Name_Builtin_Path_Type__;
+    }
+    if (__Identifier_Identity_Equals__(__Name__, SULTANC__BUILTIN_NAME__("بدائي_حجم_مسار")))
+    {
+        return __Name_Builtin_Path_Size__;
+    }
+    if (__Identifier_Identity_Equals__(__Name__, SULTANC__BUILTIN_NAME__("بدائي_وقت_تعديل_مسار")))
+    {
+        return __Name_Builtin_Path_Modified_Time__;
+    }
     return __Name_Builtin_None__;
 }
 
+/* Checks whether the name builtin is direct source. */
 int __Name_Builtin_Is_Direct_Source__(__Name_Builtin_Function__ __Builtin__)
 {
     return __Builtin__ == __Name_Builtin_Length__ || __Builtin__ == __Name_Builtin_Append__;

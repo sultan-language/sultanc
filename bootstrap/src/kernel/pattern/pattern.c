@@ -1,3 +1,5 @@
+/* Analyzes patterns, bindings, and coverage. */
+
 #include "kernel/pattern/pattern.h"
 #include "kernel/layout/layout.h"
 #include "kernel/name/name.h"
@@ -7,14 +9,20 @@
 
 #include <string.h>
 
+/* Defines the pattern node info structure. */
 typedef struct
 {
+    /* Stores the irrefutable. */
     int __Irrefutable__;
+    /* Tracks whether the enum constructor is present. */
     int __Has_Enum_Constructor__;
+    /* Tracks the enum constructor index. */
     size_t __Enum_Constructor_Index__;
+    /* Tracks the enum constructor fully covered state. */
     int __Enum_Constructor_Fully_Covered__;
 } __Pattern_Node_Info__;
 
+/* Records a failure for the pattern. */
 static int
 __Pattern_Fail__(__Pattern_Error__ *__Error__, __Error_Id__ __Id__, __Source_Span__ __Span__)
 {
@@ -26,12 +34,14 @@ __Pattern_Fail__(__Pattern_Error__ *__Error__, __Error_Id__ __Id__, __Source_Spa
     return 0;
 }
 
+/* Initializes the pattern analysis. */
 void __Pattern_Analysis_Init__(__Pattern_Analysis__ *__Analysis__)
 {
     memset(__Analysis__, 0, sizeof(*__Analysis__));
     __Vector_Init__(&__Analysis__->__Bindings__, sizeof(__Pattern_Binding__));
 }
 
+/* Releases the pattern analysis. */
 void __Pattern_Analysis_Destroy__(__Pattern_Analysis__ *__Analysis__)
 {
     if (__Analysis__ != NULL)
@@ -41,17 +51,21 @@ void __Pattern_Analysis_Destroy__(__Pattern_Analysis__ *__Analysis__)
     }
 }
 
+/* Adds the pattern binding. */
 static int __Pattern_Add_Binding__(__Pattern_Analysis__ *__Analysis__,
                                    __Text_Slice__ __Name__,
                                    __Ast_Type__ *__Type__,
                                    __Source_Span__ __Span__,
                                    __Pattern_Error__ *__Error__)
 {
+    /* Tracks the index. */
     size_t __Index__ = 0U;
+    /* Stores the binding. */
     __Pattern_Binding__ __Binding__;
 
     for (__Index__ = 0U; __Index__ < __Analysis__->__Bindings__.__Count__; ++__Index__)
     {
+        /* References the existing. */
         const __Pattern_Binding__ *__Existing__ = (const __Pattern_Binding__ *)__Vector_At_Const__(
             &__Analysis__->__Bindings__, __Index__);
         if (__Existing__ != NULL && __Text_Slice_Equals__(__Existing__->__Name__, __Name__))
@@ -70,6 +84,7 @@ static int __Pattern_Add_Binding__(__Pattern_Analysis__ *__Analysis__,
     return 1;
 }
 
+/* Analyzes the pattern node. */
 static int __Pattern_Analyze_Node__(__Semantic_Context__ *__Context__,
                                     __Ast_Type__ *__Expected_Type__,
                                     __Ast_Pattern__ *__Pattern__,
@@ -77,8 +92,11 @@ static int __Pattern_Analyze_Node__(__Semantic_Context__ *__Context__,
                                     __Pattern_Node_Info__ *__Out_Info__,
                                     __Pattern_Error__ *__Error__)
 {
+    /* Stores the resolved. */
     __Resolved_Type__ __Resolved__;
+    /* References the base. */
     __Ast_Type__ *__Base__ = __Type_Unwrap_Mutable__(__Expected_Type__);
+    /* Tracks the index. */
     size_t __Index__ = 0U;
 
     memset(__Out_Info__, 0, sizeof(*__Out_Info__));
@@ -111,6 +129,7 @@ static int __Pattern_Analyze_Node__(__Semantic_Context__ *__Context__,
 
         case __Ast_Pattern_Struct__:
         {
+            /* Stores the all irrefutable. */
             int __All_Irrefutable__ = 1;
             if (__Resolved__.__Kind__ != __Resolved_Type_Struct__ || __Resolved__.__Named__ == NULL)
             {
@@ -121,11 +140,16 @@ static int __Pattern_Analyze_Node__(__Semantic_Context__ *__Context__,
             for (__Index__ = 0U; __Index__ < __Pattern__->__As__.__Struct__.__Field_Count__;
                  ++__Index__)
             {
+                /* References the field. */
                 __Ast_Struct_Pattern_Field__ *__Field__ =
                     &__Pattern__->__As__.__Struct__.__Fields__[__Index__];
+                /* References the field type. */
                 __Ast_Type__ *__Field_Type__ = NULL;
+                /* Stores the offset. */
                 size_t __Offset__ = 0U;
+                /* Stores the prior. */
                 size_t __Prior__ = 0U;
+                /* Stores the child. */
                 __Pattern_Node_Info__ __Child__;
 
                 for (__Prior__ = 0U; __Prior__ < __Index__; ++__Prior__)
@@ -168,14 +192,20 @@ static int __Pattern_Analyze_Node__(__Semantic_Context__ *__Context__,
 
         case __Ast_Pattern_Enum__:
         {
+            /* Tracks the constructor index. */
             size_t __Constructor_Index__ = 0U;
+            /* Stores the payload count. */
             size_t __Payload_Count__ = 0U;
+            /* References the payload type. */
             __Ast_Type__ *__Payload_Type__ = NULL;
+            /* Stores the payloads irrefutable. */
             int __Payloads_Irrefutable__ = 1;
+            /* Stores the constructor count. */
             size_t __Constructor_Count__ = 0U;
 
             if (__Type_Is_Builtin_Tagged__(__Base__))
             {
+                /* Stores the constructor. */
                 __Type_Tagged_Constructor__ __Constructor__;
                 if (!__Type_Tagged_Name_Matches__(__Base__,
                                                   __Pattern__->__As__.__Enum__.__Type_Name__) ||
@@ -194,7 +224,9 @@ static int __Pattern_Analyze_Node__(__Semantic_Context__ *__Context__,
             }
             else
             {
+                /* References the pattern type. */
                 __Semantic_Type_Entry__ *__Pattern_Type__ = NULL;
+                /* References the constructor. */
                 __Ast_Enum_Constructor__ *__Constructor__ = NULL;
 
                 if (__Resolved__.__Kind__ != __Resolved_Type_Enum__ ||
@@ -231,6 +263,7 @@ static int __Pattern_Analyze_Node__(__Semantic_Context__ *__Context__,
 
             if (__Payload_Count__ == 1U)
             {
+                /* Stores the child. */
                 __Pattern_Node_Info__ __Child__;
                 if (!__Pattern_Analyze_Node__(__Context__,
                                               __Payload_Type__,
@@ -247,7 +280,9 @@ static int __Pattern_Analyze_Node__(__Semantic_Context__ *__Context__,
             {
                 /* User enums may carry multiple payload slots. */
                 __Semantic_Type_Entry__ *__Pattern_Type__ = __Resolved__.__Named__;
+                /* References the constructor. */
                 __Ast_Enum_Constructor__ *__Constructor__ = NULL;
+                /* Tracks the ignored index. */
                 size_t __Ignored_Index__ = 0U;
                 if (__Pattern_Type__ == NULL ||
                     !__Name_Find_Enum_Constructor__(
@@ -260,6 +295,7 @@ static int __Pattern_Analyze_Node__(__Semantic_Context__ *__Context__,
                 }
                 for (__Index__ = 0U; __Index__ < __Payload_Count__; ++__Index__)
                 {
+                    /* Stores the child. */
                     __Pattern_Node_Info__ __Child__;
                     if (!__Pattern_Analyze_Node__(
                             __Context__,
@@ -288,12 +324,14 @@ static int __Pattern_Analyze_Node__(__Semantic_Context__ *__Context__,
         __Error__, __E0404_Statement_Typecheck_Not_Implemented__, __Pattern__->__Header__.__Span__);
 }
 
+/* Analyzes the pattern. */
 int __Pattern_Analyze__(__Semantic_Context__ *__Context__,
                         __Ast_Type__ *__Expected_Type__,
                         __Ast_Pattern__ *__Pattern__,
                         __Pattern_Analysis__ *__Out_Analysis__,
                         __Pattern_Error__ *__Out_Error__)
 {
+    /* Stores the info. */
     __Pattern_Node_Info__ __Info__;
 
     if (__Out_Analysis__ == NULL)

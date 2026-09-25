@@ -1,3 +1,5 @@
+/* Declares semantic diagnostic helpers. */
+
 #ifndef SULTANC__SEMANTIC_DIAGNOSTIC_H__
 #define SULTANC__SEMANTIC_DIAGNOSTIC_H__
 

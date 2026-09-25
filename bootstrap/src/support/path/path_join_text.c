@@ -1,13 +1,20 @@
+/* Joins path components with text slices. */
+
 #include "support/path/source_path.h"
 
 #include <stdlib.h>
 #include <string.h>
 
+/* Joins the path text. */
 char *__Path_Join_Text__(const char *__Directory__, __Text_Slice__ __Relative__)
 {
+    /* Stores the directory length. */
     size_t __Directory_Length__;
+    /* Stores the slash. */
     size_t __Slash__;
+    /* Stores the length. */
     size_t __Length__;
+    /* References the out. */
     char *__Out__;
 
     __Directory_Length__ = strlen(__Directory__);

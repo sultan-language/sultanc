@@ -6,12 +6,23 @@
 
 #include <string.h>
 
+/* Returns the identifier identity ignores scalar. */
 int __Identifier_Identity_Ignores_Scalar__(uint32_t __Scalar__)
 {
     return
         __Scalar__ == UINT32_C(0x0640);
 }
 
+/* Returns the identifier identity normalize scalar. */
+static uint32_t __Identifier_Identity_Normalize_Scalar__(uint32_t __Scalar__)
+{
+    if (__Scalar__ == UINT32_C(0x0622)) return UINT32_C(0x0627);
+    if (__Scalar__ == UINT32_C(0x0623)) return UINT32_C(0x0627);
+    if (__Scalar__ == UINT32_C(0x0625)) return UINT32_C(0x0627);
+    return __Scalar__;
+}
+
+/* Returns the identifier semantic scalar. */
 static int __Identifier_Next_Semantic_Scalar__(const unsigned char *__Bytes__,
                                                 size_t __Length__,
                                                 size_t *__Offset__,
@@ -19,6 +30,7 @@ static int __Identifier_Next_Semantic_Scalar__(const unsigned char *__Bytes__,
 {
     while (*__Offset__ < __Length__)
     {
+        /* Stores the decoded. */
         __Utf8_Decode_Result__ __Decoded__ =
             __Utf8_Decode__(__Bytes__ + *__Offset__, __Length__ - *__Offset__);
         if (!__Decoded__.__Valid__)
@@ -28,18 +40,23 @@ static int __Identifier_Next_Semantic_Scalar__(const unsigned char *__Bytes__,
         *__Offset__ += __Decoded__.__Width__;
         if (!__Identifier_Identity_Ignores_Scalar__(__Decoded__.__Codepoint__))
         {
-            *__Out_Scalar__ = __Decoded__.__Codepoint__;
+            *__Out_Scalar__ = __Identifier_Identity_Normalize_Scalar__(__Decoded__.__Codepoint__);
             return 1;
         }
     }
     return 0;
 }
 
+/* Checks whether the identifier identity has content. */
 int __Identifier_Identity_Has_Content__(__Text_Slice__ __Text__)
 {
+    /* References the bytes. */
     const unsigned char *__Bytes__ = (const unsigned char *)__Text__.__Data__;
+    /* Stores the offset. */
     size_t __Offset__ = 0U;
+    /* Stores the scalar. */
     uint32_t __Scalar__ = 0U;
+    /* Stores the operation result. */
     int __Result__;
 
     if (__Bytes__ == NULL && __Text__.__Length__ != 0U)
@@ -51,11 +68,16 @@ int __Identifier_Identity_Has_Content__(__Text_Slice__ __Text__)
     return __Result__ == 1;
 }
 
+/* Compares the identifier identity. */
 int __Identifier_Identity_Equals__(__Text_Slice__ __Left__, __Text_Slice__ __Right__)
 {
+    /* References the left bytes. */
     const unsigned char *__Left_Bytes__ = (const unsigned char *)__Left__.__Data__;
+    /* References the right bytes. */
     const unsigned char *__Right_Bytes__ = (const unsigned char *)__Right__.__Data__;
+    /* Stores the left offset. */
     size_t __Left_Offset__ = 0U;
+    /* Stores the right offset. */
     size_t __Right_Offset__ = 0U;
 
     if ((__Left_Bytes__ == NULL && __Left__.__Length__ != 0U) ||
@@ -65,10 +87,14 @@ int __Identifier_Identity_Equals__(__Text_Slice__ __Left__, __Text_Slice__ __Rig
     }
     for (;;)
     {
+        /* Stores the left scalar. */
         uint32_t __Left_Scalar__ = 0U;
+        /* Stores the right scalar. */
         uint32_t __Right_Scalar__ = 0U;
+        /* Stores the left result. */
         int __Left_Result__ = __Identifier_Next_Semantic_Scalar__(
             __Left_Bytes__, __Left__.__Length__, &__Left_Offset__, &__Left_Scalar__);
+        /* Stores the right result. */
         int __Right_Result__ = __Identifier_Next_Semantic_Scalar__(
             __Right_Bytes__, __Right__.__Length__, &__Right_Offset__, &__Right_Scalar__);
         if (__Left_Result__ < 0 || __Right_Result__ < 0)
@@ -86,8 +112,10 @@ int __Identifier_Identity_Equals__(__Text_Slice__ __Left__, __Text_Slice__ __Rig
     }
 }
 
+/* Compares the identifier identity C string. */
 int __Identifier_Identity_Equals_Cstr__(__Text_Slice__ __Left__, const char *__Right__)
 {
+    /* Stores the right slice. */
     __Text_Slice__ __Right_Slice__;
     if (__Right__ == NULL)
     {

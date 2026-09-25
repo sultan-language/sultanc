@@ -1,3 +1,5 @@
+/* Provides shared body-checking context helpers. */
+
 #include "semantic/diagnostic.h"
 #include "semantic/body_internal.h"
 #include "kernel/type/conversion.h"
@@ -6,18 +8,26 @@
 #include <stdalign.h>
 #include <string.h>
 
+/* Stores the body builtin int type. */
 __Ast_Type__ __Body_Builtin_Int_Type__ = {.__Kind__ = __Ast_Type_Integer__};
+/* Stores the body builtin bool type. */
 __Ast_Type__ __Body_Builtin_Bool_Type__ = {.__Kind__ = __Ast_Type_Boolean__};
+/* Stores the body builtin char type. */
 __Ast_Type__ __Body_Builtin_Char_Type__ = {.__Kind__ = __Ast_Type_Character__};
+/* Stores the body builtin string type. */
 __Ast_Type__ __Body_Builtin_String_Type__ = {.__Kind__ = __Ast_Type_String__};
+/* Stores the body builtin void type. */
 __Ast_Type__ __Body_Builtin_Void_Type__ = {.__Kind__ = __Ast_Type_Void__};
+/* Stores the body builtin u 8 type. */
 __Ast_Type__ __Body_Builtin_U8_Type__ = {.__Kind__ = __Ast_Type_Machine__,
                                          .__As__.__Machine__ = __Machine_U8__};
 
+/* Begins the body diagnostic. */
 __Diagnostic__ *__Body_Begin_Diagnostic__(__Semantic_Body_Context__ *__Context__,
                                           __Error_Id__ __Id__,
                                           __Source_Span__ __Span__)
 {
+    /* References the diagnostic state. */
     __Diagnostic__ *__Diagnostic_State__;
 
     if (__Context__ == NULL)
@@ -37,6 +47,7 @@ __Diagnostic__ *__Body_Begin_Diagnostic__(__Semantic_Body_Context__ *__Context__
     return __Diagnostic_State__;
 }
 
+/* Records a failure for the body. */
 int __Body_Fail__(__Semantic_Body_Context__ *__Context__,
                   __Error_Id__ __Id__,
                   __Source_Span__ __Span__)
@@ -45,9 +56,11 @@ int __Body_Fail__(__Semantic_Body_Context__ *__Context__,
     return 0;
 }
 
+/* Finds the body local. */
 __Semantic_Local__ *__Body_Find_Local__(__Semantic_Body_Context__ *__Context__,
                                         const __Ast_Lvalue__ *__Lvalue__)
 {
+    /* Tracks the index. */
     size_t __Index__ = __Context__->__Locals__.__Count__;
     if (__Lvalue__ == NULL || __Lvalue__->__Kind__ != __Ast_Lvalue_Base__)
     {
@@ -55,6 +68,7 @@ __Semantic_Local__ *__Body_Find_Local__(__Semantic_Body_Context__ *__Context__,
     }
     while (__Index__ > 0U)
     {
+        /* References the local. */
         __Semantic_Local__ *__Local__ =
             (__Semantic_Local__ *)__Vector_At__(&__Context__->__Locals__, __Index__ - 1U);
         --__Index__;
@@ -69,9 +83,11 @@ __Semantic_Local__ *__Body_Find_Local__(__Semantic_Body_Context__ *__Context__,
     return NULL;
 }
 
+/* Returns the body local index. */
 size_t __Body_Local_Index__(__Semantic_Body_Context__ *__Context__,
                             const __Semantic_Local__ *__Local__)
 {
+    /* Tracks the index. */
     size_t __Index__;
 
     if (__Context__ == NULL || __Local__ == NULL)
@@ -80,6 +96,7 @@ size_t __Body_Local_Index__(__Semantic_Body_Context__ *__Context__,
     }
     for (__Index__ = 0U; __Index__ < __Context__->__Locals__.__Count__; ++__Index__)
     {
+        /* References the candidate. */
         const __Semantic_Local__ *__Candidate__ =
             (const __Semantic_Local__ *)__Vector_At_Const__(&__Context__->__Locals__, __Index__);
         if (__Candidate__ == __Local__)
@@ -90,12 +107,15 @@ size_t __Body_Local_Index__(__Semantic_Body_Context__ *__Context__,
     return SIZE_MAX;
 }
 
+/* Returns the body name exists in current scope. */
 int __Body_Name_Exists_In_Current_Scope__(__Semantic_Body_Context__ *__Context__,
                                           const __Semantic_Local__ *__Candidate__)
 {
+    /* Tracks the index. */
     size_t __Index__ = __Context__->__Locals__.__Count__;
     while (__Index__ > 0U)
     {
+        /* References the local. */
         const __Semantic_Local__ *__Local__ = (const __Semantic_Local__ *)__Vector_At_Const__(
             &__Context__->__Locals__, __Index__ - 1U);
         --__Index__;
@@ -116,9 +136,11 @@ int __Body_Name_Exists_In_Current_Scope__(__Semantic_Body_Context__ *__Context__
     return 0;
 }
 
+/* Returns the body synthetic named type. */
 __Ast_Type__ *__Body_Synthetic_Named_Type__(__Semantic_Body_Context__ *__Context__,
                                             __Text_Slice__ __Name__)
 {
+    /* References the type. */
     __Ast_Type__ *__Type__ = (__Ast_Type__ *)__Arena_Allocate__(
         &__Context__->__Synthetic_Types__, sizeof(*__Type__), alignof(__Ast_Type__));
     if (__Type__ == NULL)
@@ -131,12 +153,15 @@ __Ast_Type__ *__Body_Synthetic_Named_Type__(__Semantic_Body_Context__ *__Context
     return __Type__;
 }
 
+/* Returns the body synthetic reference type. */
 __Ast_Type__ *__Body_Synthetic_Reference_Type__(__Semantic_Body_Context__ *__Context__,
                                                 __Ast_Type__ *__Inner__,
                                                 int __Mutable__)
 {
+    /* References the reference. */
     __Ast_Type__ *__Reference__ = (__Ast_Type__ *)__Arena_Allocate__(
         &__Context__->__Synthetic_Types__, sizeof(*__Reference__), alignof(__Ast_Type__));
+    /* References the referent. */
     __Ast_Type__ *__Referent__ = __Type_Unwrap_Mutable__(__Inner__);
 
     if (__Reference__ == NULL || __Referent__ == NULL)
@@ -145,6 +170,7 @@ __Ast_Type__ *__Body_Synthetic_Reference_Type__(__Semantic_Body_Context__ *__Con
     }
     if (__Mutable__)
     {
+        /* Tracks the mutable type state. */
         __Ast_Type__ *__Mutable_Type__ = (__Ast_Type__ *)__Arena_Allocate__(
             &__Context__->__Synthetic_Types__, sizeof(*__Mutable_Type__), alignof(__Ast_Type__));
         if (__Mutable_Type__ == NULL)
@@ -162,10 +188,12 @@ __Ast_Type__ *__Body_Synthetic_Reference_Type__(__Semantic_Body_Context__ *__Con
     return __Reference__;
 }
 
+/* Returns the body synthetic result type. */
 __Ast_Type__ *__Body_Synthetic_Result_Type__(__Semantic_Body_Context__ *__Context__,
                                              __Ast_Type__ *__Ok__,
                                              __Ast_Type__ *__Error__)
 {
+    /* References the type. */
     __Ast_Type__ *__Type__ = (__Ast_Type__ *)__Arena_Allocate__(
         &__Context__->__Synthetic_Types__, sizeof(*__Type__), alignof(__Ast_Type__));
 
@@ -180,10 +208,12 @@ __Ast_Type__ *__Body_Synthetic_Result_Type__(__Semantic_Body_Context__ *__Contex
     return __Type__;
 }
 
+/* Checks whether the body is integer like. */
 int __Body_Is_Integer_Like__(__Semantic_Body_Context__ *__Context__,
                              __Ast_Type__ *__Type__,
                              int *__Out_Signed__)
 {
+    /* Stores the resolved. */
     __Resolved_Type__ __Resolved__;
     if (!__Type_Resolve__(__Context__->__Semantic__, __Type__, &__Resolved__))
     {
@@ -216,8 +246,10 @@ int __Body_Is_Integer_Like__(__Semantic_Body_Context__ *__Context__,
     return 0;
 }
 
+/* Checks whether the body is bool convertible. */
 int __Body_Is_Bool_Convertible__(__Semantic_Body_Context__ *__Context__, __Ast_Type__ *__Type__)
 {
+    /* Stores the resolved. */
     __Resolved_Type__ __Resolved__;
     if (!__Type_Resolve__(__Context__->__Semantic__, __Type__, &__Resolved__))
     {
@@ -230,6 +262,7 @@ int __Body_Is_Bool_Convertible__(__Semantic_Body_Context__ *__Context__, __Ast_T
            __Resolved__.__Kind__ == __Resolved_Type_Box__;
 }
 
+/* Checks the body compatible. */
 int __Body_Check_Compatible__(__Semantic_Body_Context__ *__Context__,
                               __Ast_Type__ *__Expected__,
                               __Ast_Type__ *__Actual__,
@@ -243,12 +276,15 @@ int __Body_Check_Compatible__(__Semantic_Body_Context__ *__Context__,
     return 1;
 }
 
+/* Checks the body atom compatible. */
 int __Body_Check_Atom_Compatible__(__Semantic_Body_Context__ *__Context__,
                                    __Ast_Type__ *__Expected__,
                                    const __Ast_Atom__ *__Atom__,
                                    __Source_Span__ __Span__)
 {
+    /* References the actual. */
     __Ast_Type__ *__Actual__ = NULL;
+    /* Stores the literal value. */
     int64_t __Literal_Value__ = 0;
     if (__Semantic_Integer_Literal_Atom_Value__(__Atom__, &__Literal_Value__) &&
         __Type_Integer_Literal_Fits__(__Context__->__Semantic__, __Literal_Value__, __Expected__))
@@ -262,13 +298,17 @@ int __Body_Check_Atom_Compatible__(__Semantic_Body_Context__ *__Context__,
     return __Body_Check_Compatible__(__Context__, __Expected__, __Actual__, __Span__);
 }
 
+/* Checks the body expression compatible. */
 int __Body_Check_Expression_Compatible__(__Semantic_Body_Context__ *__Context__,
                                          __Ast_Type__ *__Expected__,
                                          __Ast_Expression__ *__Expression__,
                                          __Source_Span__ __Span__)
 {
+    /* References the actual. */
     __Ast_Type__ *__Actual__ = NULL;
+    /* Stores the literal value. */
     int64_t __Literal_Value__ = 0;
+    /* Tracks the tagged matched state. */
     int __Tagged_Matched__ = 0;
 
     if (!__Body_Try_Check_Builtin_Tagged_Construct__(

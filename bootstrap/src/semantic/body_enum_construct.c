@@ -1,13 +1,20 @@
+/* Checks enum constructor expressions. */
+
 #include "semantic/body_internal.h"
 
+/* Infers the body try enum construct. */
 int __Body_Try_Infer_Enum_Construct__(__Semantic_Body_Context__ *__Context__,
                                       __Ast_Expression__ *__Expression__,
                                       __Ast_Type__ **__Out_Type__,
                                       int *__Matched__)
 {
+    /* References the type. */
     __Semantic_Type_Entry__ *__Type__ = NULL;
+    /* References the constructor. */
     __Ast_Enum_Constructor__ *__Constructor__ = NULL;
+    /* Tracks the constructor index. */
     size_t __Constructor_Index__ = 0U;
+    /* Tracks the index. */
     size_t __Index__;
 
     *__Matched__ = 0;
@@ -29,15 +36,14 @@ int __Body_Try_Infer_Enum_Construct__(__Semantic_Body_Context__ *__Context__,
             __Context__, __E0400_Mismatched_Types__, __Expression__->__Header__.__Span__);
     }
 
-    /* A call statement is inferred once to establish its temporary result type
-     * and again when that temporary assignment is checked. Constructor payload
-     * ownership effects therefore belong to the constructor expression itself
-     * and must be applied only once, just like ordinary/builtin call effects. */
+    /* Apply constructor ownership effects only once per expression. */
     if (!__Expression__->__Semantic_Effects_Applied__)
     {
         for (__Index__ = 0U; __Index__ < __Constructor__->__Payload_Count__; ++__Index__)
         {
+            /* References the payload type. */
             __Ast_Type__ *__Payload_Type__ = __Constructor__->__Payload_Slots__[__Index__].__Type__;
+            /* References the payload. */
             __Ast_Expression__ *__Payload__ =
                 __Expression__->__As__.__Call__.__Arguments__[__Index__];
             if (!__Body_Check_Expression_Compatible__(

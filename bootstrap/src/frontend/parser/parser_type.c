@@ -1,12 +1,18 @@
+/* Parses type syntax. */
+
 #include "frontend/parser/cursor.h"
 #include "frontend/parser/diagnostic.h"
 #include "frontend/parser/storage.h"
 #include "frontend/parser/type_internal.h"
 
+/* Parses the parser type. */
 __Ast_Type__ *__Parser_Parse_Type__(__Parser__ *__Parser_State__)
 {
+    /* Stores the kind. */
     __Ast_Type_Kind__ __Kind__ = __Ast_Type_Any__;
+    /* Stores the machine. */
     __Machine_Type__ __Machine__ = __Machine_I8__;
+    /* References the type. */
     __Ast_Type__ *__Type__ = NULL;
 
     if (__Parser_State__->__Current__.__Kind__ == __Token_MUTABLE__)
@@ -46,7 +52,9 @@ __Ast_Type__ *__Parser_Parse_Type__(__Parser__ *__Parser_State__)
 
     if (__Parser_State__->__Current__.__Kind__ == __Token_IDENTIFIER__)
     {
+        /* Stores the name. */
         __Text_Slice__ __Name__ = __Parser_State__->__Current__.__Lexeme__;
+        /* Stores the contextual. */
         __Ast_Type_Kind__ __Contextual__ = __Ast_Type_Named__;
 
         if (__Parser_Type_Contextual__(__Name__, &__Contextual__))
@@ -57,6 +65,7 @@ __Ast_Type__ *__Parser_Parse_Type__(__Parser__ *__Parser_State__)
             }
             if (__Contextual__ == __Ast_Type_Result__)
             {
+                /* Stores the operation result. */
                 __Ast_Type__ *__Result__ = NULL;
                 if (!__Parser_Advance__(__Parser_State__))
                     return NULL;

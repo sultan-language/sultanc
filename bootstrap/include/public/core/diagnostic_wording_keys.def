@@ -1,7 +1,4 @@
-/*
- * Canonical language-neutral wording-key schema.
- * The second field lists the exact named placeholders required by every wording bank.
- */
+/* Canonical wording keys and required named placeholders. */
 #ifndef SULTANC_DIAGNOSTIC_WORDING_KEY
 #error "Define SULTANC_DIAGNOSTIC_WORDING_KEY before including diagnostic_wording_keys.def"
 #endif

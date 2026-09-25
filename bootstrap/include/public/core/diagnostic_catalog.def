@@ -1,10 +1,4 @@
-/*
- * Canonical SultanC diagnostic catalog.
- *
- * Ownership: single semantic registry for diagnostic IDs, stable codes,
- * default severities, and default message keys.
- * Non-ownership: wording and rendering live in their dedicated subsystems.
- */
+/* Canonical diagnostic IDs, stable codes, severities, and default message keys. */
 #ifndef SULTANC_DIAGNOSTIC
 #error "Define SULTANC_DIAGNOSTIC before including diagnostic_catalog.def"
 #endif

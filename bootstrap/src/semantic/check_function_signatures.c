@@ -1,15 +1,21 @@
+/* Validates function signatures. */
+
 #include "semantic/check_function_signatures.h"
 #include "semantic/check_type_reference.h"
 #include "kernel/layout/layout.h"
 
+/* Checks the semantic function signatures. */
 int __Semantic_Check_Function_Signatures__(__Semantic_Context__ *__Context__)
 {
+    /* Tracks the index. */
     size_t __Index__ = 0U;
 
     for (__Index__ = 0U; __Index__ < __Context__->__Functions__.__Count__; ++__Index__)
     {
+        /* References the function. */
         __Semantic_Function_Entry__ *__Function__ =
             (__Semantic_Function_Entry__ *)__Vector_At__(&__Context__->__Functions__, __Index__);
+        /* Tracks the parameter index. */
         size_t __Parameter_Index__ = 0U;
 
         if (__Function__ == NULL)

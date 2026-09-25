@@ -1,12 +1,17 @@
+/* Parses value initializers. */
+
 #include "frontend/parser/cursor.h"
 #include "frontend/parser/diagnostic.h"
 #include "frontend/parser/span.h"
 #include "frontend/parser/storage.h"
 #include "frontend/parser/initializer.h"
 
+/* Parses the parser initializer. */
 __Initializer__ __Parser_Parse_Initializer__(__Parser__ *__Parser_State__, int *__Ok__)
 {
+    /* Stores the initializer value. */
     __Initializer__ __Initializer_Value__;
+    /* Stores the start. */
     __Source_Position__ __Start__ = __Parser_State__->__Current__.__Span__.__Start__;
 
     *__Ok__ = 0;
@@ -45,6 +50,7 @@ __Initializer__ __Parser_Parse_Initializer__(__Parser__ *__Parser_State__, int *
 
     if (__Parser_Accept__(__Parser_State__, __Token_BOX_OPERATOR__))
     {
+        /* Stores the atom ok. */
         int __Atom_Ok__ = 0;
 
         __Initializer_Value__.__Kind__ = __Initializer_Box__;
@@ -62,6 +68,7 @@ __Initializer__ __Parser_Parse_Initializer__(__Parser__ *__Parser_State__, int *
 
     if (__Parser_Accept__(__Parser_State__, __Token_LEFT_PARENTHESIS_OPERATOR__))
     {
+        /* References the expression. */
         __Ast_Expression__ *__Expression__ = __Parser_Parse_Expression__(__Parser_State__);
 
         if (__Expression__ == NULL ||

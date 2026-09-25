@@ -1,7 +1,10 @@
+/* Moves temporary vectors into AST storage. */
+
 #include "frontend/ast/storage.h"
 #include "frontend/parser/storage.h"
 #include "frontend/parser/internal.h"
 
+/* Returns the parser freeze vector. */
 void *__Parser_Freeze_Vector__(__Parser__ *__Parser_State__,
                                const __Vector__ *__Vector_State__,
                                size_t __Alignment__)

@@ -1,6 +1,9 @@
+/* Compares canonical AST base identities. */
+
 #include "frontend/ast/identity.h"
 #include "frontend/identifier_identity.h"
 
+/* Checks the AST base identity. */
 int __Ast_Base_Identity_Matches__(__Ast_Lvalue_Base_Kind__ __Left_Kind__,
                                   __Text_Slice__ __Left_Name__,
                                   __Temporary_Id__ __Left_Temporary__,
@@ -19,12 +22,15 @@ int __Ast_Base_Identity_Matches__(__Ast_Lvalue_Base_Kind__ __Left_Kind__,
     return __Left_Temporary__ == __Right_Temporary__;
 }
 
+/* Checks the AST base identity lvalue. */
 int __Ast_Base_Identity_Matches_Lvalue__(__Ast_Lvalue_Base_Kind__ __Kind__,
                                          __Text_Slice__ __Name__,
                                          __Temporary_Id__ __Temporary__,
                                          const __Ast_Lvalue__ *__Lvalue__)
 {
+    /* Stores the lvalue name. */
     __Text_Slice__ __Lvalue_Name__ = {0};
+    /* Stores the lvalue temporary. */
     __Temporary_Id__ __Lvalue_Temporary__ = 0U;
 
     if (__Lvalue__ == NULL || __Lvalue__->__Kind__ != __Ast_Lvalue_Base__)

@@ -1,10 +1,14 @@
+/* Records lexer diagnostics. */
+
 #include "frontend/lexer/cursor.h"
 
+/* Records a failure for the lexer. */
 int __Lexer_Fail__(__Lexer__ *__Lexer_State__,
                    __Error_Id__ __Id__,
                    __Source_Position__ __Start__,
                    __Diagnostic_Wording_Key__ __Message_Key__)
 {
+    /* Stores the span. */
     __Source_Span__ __Span__;
 
     __Span__.__Start__ = __Start__;

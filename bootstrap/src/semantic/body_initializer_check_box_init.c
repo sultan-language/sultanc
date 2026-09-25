@@ -1,10 +1,16 @@
+/* Checks box initializers. */
+
 #include "semantic/body_internal.h"
 
+/* Checks the body box initializer. */
 int __Body_Check_Box_Init__(__Semantic_Body_Context__ *__Context__,
                             __Ast_Statement__ *__Statement__)
 {
+    /* References the destination type. */
     __Ast_Type__ *__Destination_Type__ = NULL;
+    /* References the local. */
     __Semantic_Local__ *__Local__ = NULL;
+    /* Stores the resolved. */
     __Resolved_Type__ __Resolved__;
 
     if (!__Body_Check_Assignable__(__Context__,

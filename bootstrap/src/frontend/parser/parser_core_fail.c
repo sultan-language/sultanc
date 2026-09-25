@@ -1,6 +1,9 @@
+/* Builds parser diagnostics. */
+
 #include "frontend/parser/diagnostic.h"
 #include "frontend/parser/internal.h"
 
+/* Records a failure for the parser with ID. */
 static int __Parser_Fail_With_Id__(__Parser__ *__Parser_State__,
                                    __Error_Id__ __Id__,
                                    __Diagnostic_Wording_Key__ __Message_Key__)
@@ -17,11 +20,13 @@ static int __Parser_Fail_With_Id__(__Parser__ *__Parser_State__,
     return 0;
 }
 
+/* Records a failure for the parser. */
 int __Parser_Fail__(__Parser__ *__Parser_State__, __Diagnostic_Wording_Key__ __Message_Key__)
 {
     return __Parser_Fail_With_Id__(__Parser_State__, __E0001_Syntax_Error__, __Message_Key__);
 }
 
+/* Records a failure for the parser internal. */
 int __Parser_Fail_Internal__(__Parser__ *__Parser_State__,
                              __Diagnostic_Wording_Key__ __Message_Key__)
 {

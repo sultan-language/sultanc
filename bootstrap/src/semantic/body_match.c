@@ -1,3 +1,5 @@
+/* Checks match statements and pattern coverage. */
+
 #include "semantic/body_internal.h"
 #include "kernel/pattern/pattern.h"
 #include "kernel/type/tagged.h"
@@ -6,22 +8,36 @@
 #include <stdlib.h>
 #include <string.h>
 
+/* Checks the body match. */
 int __Body_Check_Match__(__Semantic_Body_Context__ *__Context__,
                          __Ast_Statement__ *__Statement__,
                          int *__Out_Falls_Through__)
 {
+    /* References the value type. */
     __Ast_Type__ *__Value_Type__ = NULL;
+    /* Stores the resolved. */
     __Resolved_Type__ __Resolved__;
+    /* Tracks the covered constructors state. */
     unsigned char *__Covered_Constructors__ = NULL;
+    /* References the covering spans. */
     __Source_Span__ *__Covering_Spans__ = NULL;
+    /* Stores the irrefutable covering span. */
     __Source_Span__ __Irrefutable_Covering_Span__ = {0};
+    /* Tracks whether the irrefutable covering span is present. */
     int __Has_Irrefutable_Covering_Span__ = 0;
+    /* Stores the constructor count. */
     size_t __Constructor_Count__ = 0U;
+    /* Tracks the fully covered count state. */
     size_t __Fully_Covered_Count__ = 0U;
+    /* Tracks the case index. */
     size_t __Case_Index__ = 0U;
+    /* Tracks the covered all state. */
     int __Covered_All__ = 0;
+    /* Stores the before. */
     __Body_Safety_Snapshot__ __Before__ = {0};
+    /* Stores the accumulated. */
     __Body_Safety_Snapshot__ __Accumulated__ = {0};
+    /* Stores the have fallthrough path. */
     int __Have_Fallthrough_Path__ = 0;
 
     if (!__Body_Infer_Expression__(
@@ -80,16 +96,24 @@ int __Body_Check_Match__(__Semantic_Body_Context__ *__Context__,
     for (__Case_Index__ = 0U; __Case_Index__ < __Statement__->__As__.__Match__.__Case_Count__;
          ++__Case_Index__)
     {
+        /* References the case. */
         __Ast_Match_Case__ *__Case__ = &__Statement__->__As__.__Match__.__Cases__[__Case_Index__];
+        /* Stores the analysis. */
         __Pattern_Analysis__ __Analysis__;
+        /* Stores the pattern error. */
         __Pattern_Error__ __Pattern_Error__ = {0};
+        /* Stores the saved local count. */
         size_t __Saved_Local_Count__ = __Before__.__Count__;
+        /* Tracks the binding index. */
         size_t __Binding_Index__ = 0U;
+        /* Tracks the case falls state. */
         int __Case_Falls__ = 1;
+        /* Stores the case after. */
         __Body_Safety_Snapshot__ __Case_After__ = {0};
 
         if (__Covered_All__)
         {
+            /* References the diagnostic state. */
             __Diagnostic__ *__Diagnostic_State__ =
                 __Body_Begin_Diagnostic__(__Context__,
                                           __E1307_Unreachable_Pattern__,
@@ -130,9 +154,11 @@ int __Body_Check_Match__(__Semantic_Body_Context__ *__Context__,
         if (__Analysis__.__Has_Top_Enum_Constructor__ &&
             __Analysis__.__Top_Enum_Constructor_Fully_Covered__ && __Covered_Constructors__ != NULL)
         {
+            /* Tracks the constructor index. */
             size_t __Constructor_Index__ = __Analysis__.__Top_Enum_Constructor_Index__;
             if (__Covered_Constructors__[__Constructor_Index__])
             {
+                /* References the diagnostic state. */
                 __Diagnostic__ *__Diagnostic_State__ =
                     __Body_Begin_Diagnostic__(__Context__,
                                               __E1307_Unreachable_Pattern__,
@@ -176,9 +202,11 @@ int __Body_Check_Match__(__Semantic_Body_Context__ *__Context__,
         for (__Binding_Index__ = 0U; __Binding_Index__ < __Analysis__.__Bindings__.__Count__;
              ++__Binding_Index__)
         {
+            /* References the binding. */
             const __Pattern_Binding__ *__Binding__ =
                 (const __Pattern_Binding__ *)__Vector_At_Const__(&__Analysis__.__Bindings__,
                                                                  __Binding_Index__);
+            /* Stores the local. */
             __Semantic_Local__ __Local__;
 
             if (__Binding__ == NULL)
@@ -261,9 +289,12 @@ int __Body_Check_Match__(__Semantic_Body_Context__ *__Context__,
     if (!__Covered_All__ &&
         !(__Constructor_Count__ != 0U && __Fully_Covered_Count__ == __Constructor_Count__))
     {
+        /* Stores the missing pattern. */
         char __Missing_Pattern__[__Diagnostic_Max_Argument_Value__] = "_";
+        /* References the diagnostic state. */
         __Diagnostic__ *__Diagnostic_State__ = __Body_Begin_Diagnostic__(
             __Context__, __E1306_Non_Exhaustive_Pattern__, __Statement__->__Header__.__Span__);
+        /* Tracks the missing index. */
         size_t __Missing_Index__ = 0U;
 
         while (__Missing_Index__ < __Constructor_Count__ && __Covered_Constructors__ != NULL &&
@@ -274,6 +305,7 @@ int __Body_Check_Match__(__Semantic_Body_Context__ *__Context__,
 
         if (__Missing_Index__ < __Constructor_Count__)
         {
+            /* References the base type. */
             __Ast_Type__ *__Base_Type__ = __Type_Unwrap_Mutable__(__Value_Type__);
             if (__Base_Type__ != NULL && __Base_Type__->__Kind__ == __Ast_Type_Option__)
             {
@@ -295,10 +327,13 @@ int __Body_Check_Match__(__Semantic_Body_Context__ *__Context__,
                      __Missing_Index__ <
                          __Resolved__.__Named__->__Declaration__->__As__.__Enum__.__Count__)
             {
+                /* References the constructor. */
                 const __Ast_Enum_Constructor__ *__Constructor__ =
                     &__Resolved__.__Named__->__Declaration__->__As__.__Enum__
                          .__Constructors__[__Missing_Index__];
+                /* Stores the name length. */
                 size_t __Name_Length__ = __Constructor__->__Name__.__Length__;
+                /* Stores the copy length. */
                 size_t __Copy_Length__ = __Name_Length__ < sizeof(__Missing_Pattern__) - 4U
                                              ? __Name_Length__
                                              : sizeof(__Missing_Pattern__) - 4U;

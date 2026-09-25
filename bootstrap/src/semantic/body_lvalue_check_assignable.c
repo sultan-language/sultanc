@@ -1,10 +1,14 @@
+/* Checks whether lvalues can be assigned. */
+
 #include "semantic/body_internal.h"
 
+/* Checks the body assignable. */
 int __Body_Check_Assignable__(__Semantic_Body_Context__ *__Context__,
                               __Ast_Lvalue__ *__Lvalue__,
                               __Ast_Type__ **__Out_Type__,
                               __Semantic_Local__ **__Out_Local__)
 {
+    /* References the local. */
     __Semantic_Local__ *__Local__ = NULL;
     if (!__Body_Infer_Lvalue_For_Write__(__Context__, __Lvalue__, __Out_Type__, &__Local__))
     {

@@ -1,3 +1,5 @@
+/* Parses primary expressions. */
+
 #include "frontend/parser/cursor.h"
 #include "frontend/parser/diagnostic.h"
 #include "frontend/parser/span.h"
@@ -6,11 +8,14 @@
 
 #include <stdalign.h>
 
+/* Parses the parser primary. */
 __Ast_Expression__ *__Parser_Parse_Primary__(__Parser__ *__Parser_State__)
 {
+    /* Stores the start. */
     __Source_Position__ __Start__;
     if (__Parser_Accept__(__Parser_State__, __Token_LEFT_PARENTHESIS_OPERATOR__))
     {
+        /* References the expression. */
         __Ast_Expression__ *__Expression__ = __Parser_Parse_Expression_Min__(__Parser_State__, 1);
         if (__Expression__ == NULL ||
             !__Parser_Expect__(__Parser_State__, __Token_RIGHT_PARENTHESIS_OPERATOR__))
@@ -21,7 +26,9 @@ __Ast_Expression__ *__Parser_Parse_Primary__(__Parser__ *__Parser_State__)
     }
     if (__Parser_State__->__Current__.__Kind__ == __Token_IDENTIFIER__)
     {
+        /* References the function or value. */
         __Ast_Lvalue__ *__Function_Or_Value__ = NULL;
+        /* References the expression. */
         __Ast_Expression__ *__Expression__ = NULL;
         __Start__ = __Parser_State__->__Current__.__Span__.__Start__;
         __Function_Or_Value__ = __Parser_Parse_Lvalue__(__Parser_State__);
@@ -31,12 +38,14 @@ __Ast_Expression__ *__Parser_Parse_Primary__(__Parser__ *__Parser_State__)
         }
         if (__Parser_Accept__(__Parser_State__, __Token_LEFT_PARENTHESIS_OPERATOR__))
         {
+            /* Stores the call arguments. */
             __Vector__ __Arguments__;
             __Vector_Init__(&__Arguments__, sizeof(__Ast_Expression__ *));
             if (__Parser_State__->__Current__.__Kind__ != __Token_RIGHT_PARENTHESIS_OPERATOR__)
             {
                 for (;;)
                 {
+                    /* References the argument. */
                     __Ast_Expression__ *__Argument__ =
                         __Parser_Parse_Expression_Min__(__Parser_State__, 1);
                     if (__Argument__ == NULL ||
@@ -89,8 +98,11 @@ __Ast_Expression__ *__Parser_Parse_Primary__(__Parser__ *__Parser_State__)
         return __Expression__;
     }
     {
+        /* Tracks whether the operation succeeded. */
         int __Ok__ = 0;
+        /* Stores the atom. */
         __Ast_Atom__ __Atom__ = __Parser_Parse_Atom__(__Parser_State__, &__Ok__);
+        /* References the expression. */
         __Ast_Expression__ *__Expression__ = NULL;
         if (!__Ok__)
         {

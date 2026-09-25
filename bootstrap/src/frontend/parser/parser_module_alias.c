@@ -1,3 +1,5 @@
+/* Parses and resolves module aliases. */
+
 #include "frontend/parser/cursor.h"
 #include "frontend/parser/diagnostic.h"
 #include "frontend/parser/module_internal.h"
@@ -7,14 +9,20 @@
 
 #include <stddef.h>
 
+/* Defines the parser alias path structure. */
 typedef struct
 {
+    /* Stores the path. */
     __Ast_Alias_Path__ __Path__;
+    /* Stores the parent span. */
     __Source_Span__ __Parent_Span__;
+    /* Stores the name span. */
     __Source_Span__ __Name_Span__;
+    /* Stores the qualified. */
     int __Qualified__;
 } __Parser_Alias_Path__;
 
+/* Returns the parser alias diagnostic. */
 static int __Parser_Alias_Diagnostic__(__Parser__ *__Parser_State__,
                                        __Error_Id__ __Error__,
                                        __Source_Span__ __Span__)
@@ -24,10 +32,13 @@ static int __Parser_Alias_Diagnostic__(__Parser__ *__Parser_State__,
     return 0;
 }
 
+/* Parses the parser alias path. */
 static int __Parser_Parse_Alias_Path__(__Parser__ *__Parser_State__,
                                        __Parser_Alias_Path__ *__Out_Path__)
 {
+    /* Stores the first. */
     __Text_Slice__ __First__;
+    /* Stores the first span. */
     __Source_Span__ __First_Span__;
 
     if (__Parser_State__ == NULL || __Out_Path__ == NULL)
@@ -67,12 +78,13 @@ static int __Parser_Parse_Alias_Path__(__Parser__ *__Parser_State__,
     return __Parser_Take_Contextual_Name__(__Parser_State__, &__Out_Path__->__Path__.__Name__);
 }
 
-/* Parser-time canonicalization mirrors the module-root alias chain. It only
- * inspects already parsed bindings, so source declaration ordering is kept. */
+/* Resolve aliases only through bindings already parsed in source order. */
 static const __Ast_Module_Item__ *__Parser_Resolve_Root_Binding__(const __Vector__ *__Items__,
                                                                   __Text_Slice__ __Name__)
 {
+    /* Stores the depth. */
     size_t __Depth__;
+    /* Stores the resolved. */
     __Text_Slice__ __Resolved__ = __Name__;
 
     if (__Items__ == NULL)
@@ -81,6 +93,7 @@ static const __Ast_Module_Item__ *__Parser_Resolve_Root_Binding__(const __Vector
     }
     for (__Depth__ = 0U; __Depth__ <= __Items__->__Count__; ++__Depth__)
     {
+        /* References the item. */
         const __Ast_Module_Item__ *__Item__ =
             __Parser_Module_Find_Binding__(__Items__, __Resolved__);
 
@@ -102,11 +115,14 @@ static const __Ast_Module_Item__ *__Parser_Resolve_Root_Binding__(const __Vector
     return NULL;
 }
 
+/* Finds the parser direct enum constructor. */
 static int __Parser_Find_Direct_Enum_Constructor__(const __Ast_Module_Item__ *__Parent__,
                                                    __Text_Slice__ __Name__,
                                                    size_t *__Out_Index__)
 {
+    /* References the type. */
     const __Ast_Type_Declaration__ *__Type__;
+    /* Tracks the index. */
     size_t __Index__;
 
     if (__Parent__ == NULL || __Parent__->__Kind__ != __Ast_Module_Item_Type__)
@@ -133,14 +149,15 @@ static int __Parser_Find_Direct_Enum_Constructor__(const __Ast_Module_Item__ *__
     return 0;
 }
 
-/* Resolve a child spelling through prior child aliases to the one constructor
- * declaration owned by Parent. No constructor declaration or index is copied. */
+/* Resolve child aliases to the constructor owned by the parent type. */
 static int __Parser_Resolve_Enum_Child__(const __Vector__ *__Items__,
                                          const __Ast_Module_Item__ *__Parent__,
                                          __Text_Slice__ __Name__,
                                          size_t *__Out_Index__)
 {
+    /* Stores the depth. */
     size_t __Depth__;
+    /* Stores the resolved. */
     __Text_Slice__ __Resolved__ = __Name__;
 
     if (__Items__ == NULL || __Parent__ == NULL)
@@ -149,7 +166,9 @@ static int __Parser_Resolve_Enum_Child__(const __Vector__ *__Items__,
     }
     for (__Depth__ = 0U; __Depth__ <= __Items__->__Count__; ++__Depth__)
     {
+        /* Tracks the index. */
         size_t __Index__;
+        /* Tracks the found alias state. */
         int __Found_Alias__ = 0;
 
         if (__Parser_Find_Direct_Enum_Constructor__(__Parent__, __Resolved__, __Out_Index__))
@@ -158,11 +177,15 @@ static int __Parser_Resolve_Enum_Child__(const __Vector__ *__Items__,
         }
         for (__Index__ = 0U; __Index__ < __Items__->__Count__; ++__Index__)
         {
+            /* References the slot. */
             __Ast_Module_Item__ *const *__Slot__ =
                 (__Ast_Module_Item__ *const *)(__Items__->__Data__ +
                                                __Index__ * __Items__->__Element_Size__);
+            /* References the item. */
             const __Ast_Module_Item__ *__Item__;
+            /* References the destination parent. */
             const __Ast_Module_Item__ *__Destination_Parent__;
+            /* References the target parent. */
             const __Ast_Module_Item__ *__Target_Parent__;
 
             if (__Slot__ == NULL || *__Slot__ == NULL)
@@ -201,14 +224,19 @@ static int __Parser_Resolve_Enum_Child__(const __Vector__ *__Items__,
     return 0;
 }
 
+/* Parses the parser alias item. */
 int __Parser_Parse_Alias_Item__(__Parser__ *__Parser_State__,
                                 __Vector__ *__Items__,
                                 __Source_Position__ __Start__,
                                 int __Public__)
 {
+    /* Stores the destination. */
     __Parser_Alias_Path__ __Destination__;
+    /* Stores the target. */
     __Parser_Alias_Path__ __Target__;
+    /* References the target item. */
     const __Ast_Module_Item__ *__Target_Item__;
+    /* References the item. */
     __Ast_Module_Item__ *__Item__;
 
     if (!__Parser_Expect__(__Parser_State__, __Token_ALIAS__) ||
@@ -227,6 +255,7 @@ int __Parser_Parse_Alias_Item__(__Parser__ *__Parser_State__,
 
     if (!__Public__)
     {
+        /* Stores the builtin. */
         __Name_Builtin_Function__ __Builtin__;
         if (__Destination__.__Qualified__ ||
             __Identifier_Identity_Equals__(__Destination__.__Path__.__Name__,
@@ -299,10 +328,13 @@ int __Parser_Parse_Alias_Item__(__Parser__ *__Parser_State__,
     }
     else
     {
+        /* References the destination parent. */
         const __Ast_Module_Item__ *__Destination_Parent__ =
             __Parser_Resolve_Root_Binding__(__Items__, __Destination__.__Path__.__Parent__);
+        /* References the target parent. */
         const __Ast_Module_Item__ *__Target_Parent__ =
             __Parser_Resolve_Root_Binding__(__Items__, __Target__.__Path__.__Parent__);
+        /* Tracks the target index. */
         size_t __Target_Index__;
 
         if (__Destination_Parent__ == NULL)

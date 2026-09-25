@@ -1,5 +1,8 @@
+/* Maps tokens to expression operators. */
+
 #include "frontend/parser/expression_internal.h"
 
+/* Returns the parser binary info. */
 int __Parser_Binary_Info__(__Token_Kind__ __Kind__,
                            int *__Out_Precedence__,
                            __Ast_Binary_Operation__ *__Out_Operation__)

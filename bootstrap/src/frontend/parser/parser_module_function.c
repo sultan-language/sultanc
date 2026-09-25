@@ -1,15 +1,22 @@
+/* Parses module function items. */
+
 #include "frontend/parser/cursor.h"
 #include "frontend/parser/diagnostic.h"
 #include "frontend/parser/module_internal.h"
 #include "support/text/equality.h"
 
+/* Parses the parser function item. */
 int __Parser_Parse_Function_Item__(__Parser__ *__Parser_State__,
                                    __Vector__ *__Items__,
                                    int __Public__)
 {
+    /* Stores the start. */
     __Source_Position__ __Start__ = __Parser_State__->__Current__.__Span__.__Start__;
+    /* Stores the name. */
     __Text_Slice__ __Name__;
+    /* References the function. */
     __Ast_Function__ *__Function__ = NULL;
+    /* References the item. */
     __Ast_Module_Item__ *__Item__ = NULL;
     if (!__Parser_Expect__(__Parser_State__, __Token_FUNCTION_DEF__))
     {

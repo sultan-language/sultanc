@@ -1,3 +1,5 @@
+/* Parses function declarations. */
+
 #include "frontend/ast/storage.h"
 #include "frontend/parser/cursor.h"
 #include "frontend/parser/diagnostic.h"
@@ -8,14 +10,19 @@
 #include <stdalign.h>
 #include <string.h>
 
+/* Parses the parser function. */
 __Ast_Function__ *__Parser_Parse_Function__(__Parser__ *__Parser_State__,
                                             __Text_Slice__ __Name__,
                                             int __Public__,
                                             __Source_Position__ __Start__)
 {
+    /* Stores the parameters. */
     __Vector__ __Parameters__;
+    /* References the output type. */
     __Ast_Type__ *__Output_Type__ = NULL;
+    /* References the body. */
     __Ast_Block__ *__Body__ = NULL;
+    /* References the function. */
     __Ast_Function__ *__Function__ = NULL;
 
     __Vector_Init__(&__Parameters__, sizeof(__Ast_Function_Parameter__));
@@ -26,8 +33,11 @@ __Ast_Function__ *__Parser_Parse_Function__(__Parser__ *__Parser_State__,
     }
     while (__Parser_State__->__Current__.__Kind__ != __Token_RIGHT_PARENTHESIS_OPERATOR__)
     {
+        /* Stores the parameter. */
         __Ast_Function_Parameter__ __Parameter__;
+        /* Stores the parameter start. */
         __Source_Position__ __Parameter_Start__;
+        /* References the parameter type. */
         __Ast_Type__ *__Parameter_Type__ = NULL;
 
         if (__Parser_State__->__Current__.__Kind__ != __Token_IDENTIFIER__)
@@ -73,7 +83,9 @@ __Ast_Function__ *__Parser_Parse_Function__(__Parser__ *__Parser_State__,
     }
 
     {
+        /* Stores the output start. */
         __Source_Position__ __Output_Start__ = __Parser_State__->__Current__.__Span__.__Start__;
+        /* Stores the output end. */
         __Source_Position__ __Output_End__;
 
         __Output_Type__ = __Parser_Parse_Type__(__Parser_State__);

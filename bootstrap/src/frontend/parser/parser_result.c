@@ -1,8 +1,11 @@
+/* Releases parse-result storage. */
+
 #include "frontend/ast/context_lifecycle.h"
 #include "frontend/parser/parser.h"
 
 #include <string.h>
 
+/* Parses the result destroy. */
 void __Parse_Result_Destroy__(__Parse_Result__ *__Result__)
 {
     if (__Result__ == NULL)

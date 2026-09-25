@@ -1,5 +1,8 @@
+/* Returns the current program diagnostic. */
+
 #include "core/program.h"
 
+/* Returns the program diagnostic. */
 const __Diagnostic__ *__Program_Diagnostic__(const __Program__ *__Program_State__)
 {
     return (__Program_State__ == NULL || !__Program_State__->__Failed__)

@@ -1,9 +1,13 @@
+/* Validates the program entry point. */
+
 #include "semantic/diagnostic.h"
 #include "semantic/check_function_signatures.h"
 #include "kernel/type/type.h"
 
+/* Checks the semantic entry point. */
 int __Semantic_Check_Entry_Point__(__Semantic_Context__ *__Context__)
 {
+    /* Stores the main output. */
     __Resolved_Type__ __Main_Output__;
 
     if (__Context__->__Main__ == NULL)

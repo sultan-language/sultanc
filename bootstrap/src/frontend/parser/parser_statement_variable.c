@@ -1,14 +1,18 @@
+/* Parses local variable declarations. */
+
 #include "frontend/ast/storage.h"
 #include "frontend/parser/cursor.h"
 #include "frontend/parser/diagnostic.h"
 #include "frontend/parser/span.h"
 #include "frontend/parser/statement_internal.h"
 
+/* Creates the parser variable declaration. */
 static __Ast_Statement__ *__Parser_Create_Variable_Declaration__(__Parser__ *__Parser_State__,
                                                                  __Text_Slice__ __Name__,
                                                                  __Ast_Type__ *__Type__,
                                                                  __Source_Span__ __Span__)
 {
+    /* References the declaration. */
     __Ast_Statement__ *__Declaration__ = __Parser_New_Statement__(
         __Parser_State__, __Ast_Statement_Variable_Declaration__, __Span__);
 
@@ -25,16 +29,26 @@ static __Ast_Statement__ *__Parser_Create_Variable_Declaration__(__Parser__ *__P
     return __Declaration__;
 }
 
+/* Parses the parser variable. */
 int __Parser_Parse_Variable__(__Parser__ *__Parser_State__, __Vector__ *__Statements__)
 {
+    /* Stores the start. */
     __Source_Position__ __Start__ = __Parser_State__->__Current__.__Span__.__Start__;
+    /* Stores the name. */
     __Text_Slice__ __Name__;
+    /* References the type. */
     __Ast_Type__ *__Type__ = NULL;
+    /* Stores the initializer value. */
     __Initializer__ __Initializer_Value__;
+    /* Stores the initializer ok. */
     int __Initializer_Ok__ = 0;
+    /* References the declaration. */
     __Ast_Statement__ *__Declaration__ = NULL;
+    /* References the initialization. */
     __Ast_Statement__ *__Initialization__ = NULL;
+    /* References the destination. */
     __Ast_Lvalue__ *__Destination__ = NULL;
+    /* Stores the span. */
     __Source_Span__ __Span__;
 
     if (!__Parser_Advance__(__Parser_State__))

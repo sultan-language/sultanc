@@ -1,5 +1,8 @@
+/* Parses contextual identifier names. */
+
 #include "frontend/parser/cursor.h"
 
+/* Checks whether the parser token is contextual name. */
 int __Parser_Token_Is_Contextual_Name__(const __Token__ *__Token_Value__)
 {
     if (__Token_Value__ == NULL)
@@ -10,6 +13,7 @@ int __Parser_Token_Is_Contextual_Name__(const __Token__ *__Token_Value__)
            __Token_Is_Keyword_Kind__(__Token_Value__->__Kind__);
 }
 
+/* Takes the parser contextual name. */
 int __Parser_Take_Contextual_Name__(__Parser__ *__Parser_State__, __Text_Slice__ *__Out_Name__)
 {
     if (__Parser_State__ == NULL || __Out_Name__ == NULL ||

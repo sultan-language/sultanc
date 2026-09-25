@@ -1,7 +1,10 @@
+/* Reads integer values from literal atoms. */
+
 #include "semantic/literal.h"
 
 #include <stdint.h>
 
+/* Returns the semantic integer literal atom value. */
 int __Semantic_Integer_Literal_Atom_Value__(const __Ast_Atom__ *__Atom__, int64_t *__Out_Value__)
 {
     if (__Atom__ == NULL || __Out_Value__ == NULL || __Atom__->__Kind__ != __Ast_Atom_Literal__ ||

@@ -1,9 +1,13 @@
+/* Checks borrow and reference lifetime rules. */
+
 #include "semantic/body_internal.h"
 
+/* Returns the body report borrow conflict. */
 int __Body_Report_Borrow_Conflict__(__Semantic_Body_Context__ *__Context__,
                                     __Semantic_Local__ *__Source__,
                                     __Source_Span__ __Span__)
 {
+    /* References the diagnostic state. */
     __Diagnostic__ *__Diagnostic_State__ =
         __Body_Begin_Diagnostic__(__Context__, __E1302_Borrow_Conflict__, __Span__);
 
@@ -33,15 +37,18 @@ int __Body_Report_Borrow_Conflict__(__Semantic_Body_Context__ *__Context__,
     return 0;
 }
 
+/* Returns the body report lifetime escape. */
 int __Body_Report_Lifetime_Escape__(__Semantic_Body_Context__ *__Context__,
                                     __Semantic_Local__ *__Source__,
                                     __Source_Span__ __Span__)
 {
+    /* References the diagnostic state. */
     __Diagnostic__ *__Diagnostic_State__ =
         __Body_Begin_Diagnostic__(__Context__, __E1303_Reference_Escape__, __Span__);
 
     if (__Diagnostic_State__ != NULL)
     {
+        /* Stores the scope end. */
         __Source_Span__ __Scope_End__ = {0};
 
         __Diagnostic_Set_Message_Key__(__Diagnostic_State__, __Diag_Word_Lifetime_Escape_Causal__);
@@ -69,6 +76,7 @@ int __Body_Report_Lifetime_Escape__(__Semantic_Body_Context__ *__Context__,
     return 0;
 }
 
+/* Returns the body root lvalue. */
 static __Ast_Lvalue__ *__Body_Root_Lvalue__(__Ast_Lvalue__ *__Lvalue__)
 {
     if (__Lvalue__ == NULL)
@@ -94,11 +102,14 @@ static __Ast_Lvalue__ *__Body_Root_Lvalue__(__Ast_Lvalue__ *__Lvalue__)
     return NULL;
 }
 
+/* Returns the body borrow source. */
 static __Semantic_Local__ *__Body_Borrow_Source__(__Semantic_Body_Context__ *__Context__,
                                                   __Ast_Expression__ *__Expression__,
                                                   int *__Out_Mutable__)
 {
+    /* References the operand. */
     __Ast_Expression__ *__Operand__;
+    /* References the root. */
     __Ast_Lvalue__ *__Root__;
 
     if (__Expression__ == NULL || __Expression__->__Kind__ != __Ast_Expression_Unary__ ||
@@ -120,10 +131,13 @@ static __Semantic_Local__ *__Body_Borrow_Source__(__Semantic_Body_Context__ *__C
     return __Root__ == NULL ? NULL : __Body_Find_Local__(__Context__, __Root__);
 }
 
+/* Releases the body safety local borrow. */
 static void __Body_Safety_Release_Local_Borrow__(__Semantic_Body_Context__ *__Context__,
                                                  __Semantic_Local__ *__Local__)
 {
+    /* Tracks the owner index. */
     size_t __Owner_Index__;
+    /* References the owner. */
     __Semantic_Local__ *__Owner__;
 
     if (__Local__ == NULL || __Local__->__Safety__.__Borrow_Kind__ == __Safety_Borrow_None__ ||
@@ -145,12 +159,15 @@ static void __Body_Safety_Release_Local_Borrow__(__Semantic_Body_Context__ *__Co
     __Local__->__Safety__.__Origin_Parameter__ = SIZE_MAX;
 }
 
+/* Releases the body safety scope. */
 void __Body_Safety_Release_Scope__(__Semantic_Body_Context__ *__Context__, size_t __Saved_Count__)
 {
+    /* Tracks the index. */
     size_t __Index__ = __Context__->__Locals__.__Count__;
 
     while (__Index__ > __Saved_Count__)
     {
+        /* References the local. */
         __Semantic_Local__ *__Local__ =
             (__Semantic_Local__ *)__Vector_At__(&__Context__->__Locals__, __Index__ - 1U);
         --__Index__;
@@ -158,14 +175,19 @@ void __Body_Safety_Release_Scope__(__Semantic_Body_Context__ *__Context__, size_
     }
 }
 
+/* Returns the body safety acquire borrow. */
 static int __Body_Safety_Acquire_Borrow__(__Semantic_Body_Context__ *__Context__,
                                           __Ast_Expression__ *__Expression__,
                                           __Semantic_Local__ *__Destination__)
 {
+    /* Tracks the mutable state. */
     int __Mutable__ = 0;
+    /* References the source. */
     __Semantic_Local__ *__Source__ =
         __Body_Borrow_Source__(__Context__, __Expression__, &__Mutable__);
+    /* Tracks the source index. */
     size_t __Source_Index__;
+    /* Tracks the destination index. */
     size_t __Destination_Index__ = SIZE_MAX;
 
     if (__Source__ == NULL)
@@ -224,11 +246,13 @@ static int __Body_Safety_Acquire_Borrow__(__Semantic_Body_Context__ *__Context__
     return 1;
 }
 
+/* Copies the body safety reference. */
 static int __Body_Safety_Copy_Reference__(__Semantic_Body_Context__ *__Context__,
                                           __Semantic_Local__ *__Source__,
                                           __Semantic_Local__ *__Destination__,
                                           __Source_Span__ __Span__)
 {
+    /* Tracks the mutable state. */
     int __Mutable__ = 0;
 
     if (!__Safety_Type_Is_Reference__(__Source__->__Type__, &__Mutable__))
@@ -238,9 +262,13 @@ static int __Body_Safety_Copy_Reference__(__Semantic_Body_Context__ *__Context__
 
     if (__Mutable__)
     {
+        /* Stores the borrowed from. */
         size_t __Borrowed_From__ = __Source__->__Safety__.__Borrowed_From__;
+        /* Stores the borrow kind. */
         __Safety_Borrow_Kind__ __Borrow_Kind__ = __Source__->__Safety__.__Borrow_Kind__;
+        /* Stores the region. */
         size_t __Region__ = __Source__->__Safety__.__Lifetime_Region__;
+        /* Stores the origin parameter. */
         size_t __Origin_Parameter__ = __Source__->__Safety__.__Origin_Parameter__;
 
         if (!__Safety_Fact_Can_Move__(&__Source__->__Safety__))
@@ -256,8 +284,10 @@ static int __Body_Safety_Copy_Reference__(__Semantic_Body_Context__ *__Context__
         __Destination__->__Safety__.__Origin_Parameter__ = __Origin_Parameter__;
         if (__Borrowed_From__ != SIZE_MAX)
         {
+            /* References the owner. */
             __Semantic_Local__ *__Owner__ =
                 (__Semantic_Local__ *)__Vector_At__(&__Context__->__Locals__, __Borrowed_From__);
+            /* Tracks the destination index. */
             const size_t __Destination_Index__ = __Body_Local_Index__(__Context__, __Destination__);
             __Safety_Fact_Set_Mutable_Borrow_Holder__(
                 __Owner__ != NULL ? &__Owner__->__Safety__ : NULL, __Destination_Index__);
@@ -267,6 +297,7 @@ static int __Body_Safety_Copy_Reference__(__Semantic_Body_Context__ *__Context__
 
     if (__Source__->__Safety__.__Borrowed_From__ != SIZE_MAX)
     {
+        /* References the owner. */
         __Semantic_Local__ *__Owner__ = (__Semantic_Local__ *)__Vector_At__(
             &__Context__->__Locals__, __Source__->__Safety__.__Borrowed_From__);
         if (__Owner__ == NULL ||
@@ -283,11 +314,15 @@ static int __Body_Safety_Copy_Reference__(__Semantic_Body_Context__ *__Context__
     return 1;
 }
 
+/* Returns the body reference call source. */
 static __Ast_Expression__ *__Body_Reference_Call_Source__(__Semantic_Body_Context__ *__Context__,
                                                           __Ast_Expression__ *__Expression__)
 {
+    /* References the function lvalue. */
     __Ast_Lvalue__ *__Function_Lvalue__;
+    /* References the callee. */
     __Semantic_Function_Entry__ *__Callee__;
+    /* Tracks the parameter index. */
     size_t __Parameter_Index__;
 
     if (__Expression__ == NULL || __Expression__->__Kind__ != __Ast_Expression_Call__)
@@ -315,16 +350,21 @@ static __Ast_Expression__ *__Body_Reference_Call_Source__(__Semantic_Body_Contex
     return __Expression__->__As__.__Call__.__Arguments__[__Parameter_Index__];
 }
 
+/* Returns the body safety transfer expression. */
 int __Body_Safety_Transfer_Expression__(__Semantic_Body_Context__ *__Context__,
                                         __Ast_Expression__ *__Expression__,
                                         __Semantic_Local__ *__Destination__)
 {
+    /* References the lvalue. */
     __Ast_Lvalue__ *__Lvalue__;
+    /* References the source. */
     __Semantic_Local__ *__Source__;
+    /* References the reference source. */
     __Ast_Expression__ *__Reference_Source__ = __Expression__;
 
     if (__Destination__ != NULL && __Safety_Type_Is_Reference__(__Destination__->__Type__, NULL))
     {
+        /* References the call source. */
         __Ast_Expression__ *__Call_Source__ =
             __Body_Reference_Call_Source__(__Context__, __Expression__);
         if (__Call_Source__ != NULL)
@@ -366,6 +406,7 @@ int __Body_Safety_Transfer_Expression__(__Semantic_Body_Context__ *__Context__,
 
     if (__Destination__ != NULL)
     {
+        /* Tracks the composite matched state. */
         int __Composite_Matched__ = 0;
         if (!__Body_Safety_Transfer_Composite_Expression__(
                 __Context__, __Expression__, __Destination__, &__Composite_Matched__))
@@ -381,10 +422,13 @@ int __Body_Safety_Transfer_Expression__(__Semantic_Body_Context__ *__Context__,
     return __Body_Safety_Move_Expression__(__Context__, __Expression__, __Destination__);
 }
 
+/* Checks the body safety ephemeral borrow. */
 int __Body_Safety_Check_Ephemeral_Borrow__(__Semantic_Body_Context__ *__Context__,
                                            __Ast_Expression__ *__Expression__)
 {
+    /* Tracks the mutable state. */
     int __Mutable__ = 0;
+    /* References the source. */
     __Semantic_Local__ *__Source__ =
         __Body_Borrow_Source__(__Context__, __Expression__, &__Mutable__);
 
@@ -411,10 +455,13 @@ int __Body_Safety_Check_Ephemeral_Borrow__(__Semantic_Body_Context__ *__Context_
     return 1;
 }
 
+/* Checks the body safety return reference. */
 int __Body_Safety_Check_Return_Reference__(__Semantic_Body_Context__ *__Context__,
                                            __Ast_Expression__ *__Expression__)
 {
+    /* Stores the return type. */
     __Resolved_Type__ __Return_Type__;
+    /* References the origin expression. */
     __Ast_Expression__ *__Origin_Expression__ = __Expression__;
 
     if (!__Type_Resolve__(__Context__->__Semantic__,
@@ -431,6 +478,7 @@ int __Body_Safety_Check_Return_Reference__(__Semantic_Body_Context__ *__Context_
     }
 
     {
+        /* References the call source. */
         __Ast_Expression__ *__Call_Source__ =
             __Body_Reference_Call_Source__(__Context__, __Expression__);
         if (__Call_Source__ != NULL)
@@ -442,7 +490,9 @@ int __Body_Safety_Check_Return_Reference__(__Semantic_Body_Context__ *__Context_
     if (__Origin_Expression__->__Kind__ == __Ast_Expression_Atom__ &&
         __Origin_Expression__->__As__.__Atom__.__Kind__ == __Ast_Atom_Lvalue__)
     {
+        /* References the lvalue. */
         __Ast_Lvalue__ *__Lvalue__ = __Origin_Expression__->__As__.__Atom__.__As__.__Lvalue__;
+        /* References the local. */
         __Semantic_Local__ *__Local__ =
             __Lvalue__ != NULL && __Lvalue__->__Kind__ == __Ast_Lvalue_Base__
                 ? __Body_Find_Local__(__Context__, __Lvalue__)
@@ -451,6 +501,7 @@ int __Body_Safety_Check_Return_Reference__(__Semantic_Body_Context__ *__Context_
             __Local__->__Safety__.__Lifetime_Region__ == 0U &&
             __Local__->__Safety__.__Origin_Parameter__ != SIZE_MAX)
         {
+            /* Stores the origin. */
             size_t __Origin__ = __Local__->__Safety__.__Origin_Parameter__;
             if (__Context__->__Function__->__Reference_Return_Parameter__ == SIZE_MAX)
             {
@@ -466,7 +517,9 @@ int __Body_Safety_Check_Return_Reference__(__Semantic_Body_Context__ *__Context_
     }
 
     {
+        /* Tracks the mutable state. */
         int __Mutable__ = 0;
+        /* References the source. */
         __Semantic_Local__ *__Source__ =
             __Body_Borrow_Source__(__Context__, __Origin_Expression__, &__Mutable__);
         (void)__Mutable__;

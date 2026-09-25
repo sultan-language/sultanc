@@ -1,5 +1,8 @@
+/* Converts hexadecimal characters to numeric values. */
+
 #include "frontend/lexer/character.h"
 
+/* Returns the lexer hex value. */
 int __Lexer_Hex_Value__(unsigned char __Byte__)
 {
     if (__Byte__ >= (unsigned char)'0' && __Byte__ <= (unsigned char)'9')

@@ -1,3 +1,5 @@
+/* Parses record initializers. */
+
 #include "frontend/parser/cursor.h"
 #include "frontend/parser/diagnostic.h"
 #include "frontend/parser/span.h"
@@ -6,16 +8,20 @@
 
 #include <stdalign.h>
 
+/* Parses the parser record initializer. */
 int __Parser_Parse_Record_Initializer__(__Parser__ *__Parser_State__,
                                         __Source_Position__ __Start__,
                                         __Initializer__ *__Out_Initializer__)
 {
+    /* Stores the fields. */
     __Vector__ __Fields__;
 
     __Vector_Init__(&__Fields__, sizeof(__Ast_Record_Input__));
     while (__Parser_State__->__Current__.__Kind__ != __Token_RIGHT_BRACE_OPERATOR__)
     {
+        /* Stores the field. */
         __Ast_Record_Input__ __Field__;
+        /* Stores the atom ok. */
         int __Atom_Ok__ = 0;
 
         if (__Parser_State__->__Current__.__Kind__ != __Token_IDENTIFIER__)

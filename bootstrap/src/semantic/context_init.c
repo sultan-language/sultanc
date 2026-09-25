@@ -1,8 +1,11 @@
+/* Initializes semantic context state. */
+
 #include "semantic/context_lifecycle.h"
 #include "semantic/context.h"
 
 #include <string.h>
 
+/* Initializes the semantic context. */
 void __Semantic_Context_Init__(__Semantic_Context__ *__Context__, __Program__ *__Program_State__)
 {
     memset(__Context__, 0, sizeof(*__Context__));

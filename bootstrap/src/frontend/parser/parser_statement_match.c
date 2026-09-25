@@ -1,3 +1,5 @@
+/* Parses match statements. */
+
 #include "frontend/parser/cursor.h"
 #include "frontend/parser/diagnostic.h"
 #include "frontend/parser/pattern.h"
@@ -7,11 +9,16 @@
 
 #include <stdalign.h>
 
+/* Parses the parser match. */
 int __Parser_Parse_Match__(__Parser__ *__Parser_State__, __Vector__ *__Statements__)
 {
+    /* Stores the start. */
     __Source_Position__ __Start__ = __Parser_State__->__Current__.__Span__.__Start__;
+    /* References the value. */
     __Ast_Expression__ *__Value__ = NULL;
+    /* Stores the cases. */
     __Vector__ __Cases__;
+    /* References the statement. */
     __Ast_Statement__ *__Statement__ = NULL;
 
     __Vector_Init__(&__Cases__, sizeof(__Ast_Match_Case__));
@@ -30,6 +37,7 @@ int __Parser_Parse_Match__(__Parser__ *__Parser_State__, __Vector__ *__Statement
 
     while (__Parser_Accept__(__Parser_State__, __Token_OR_OPERATOR__))
     {
+        /* Stores the case. */
         __Ast_Match_Case__ __Case__ = {0};
 
         __Case__.__Pattern__ = __Parser_Parse_Pattern__(__Parser_State__);

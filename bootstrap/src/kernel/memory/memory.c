@@ -1,7 +1,10 @@
+/* Classifies ownership, views, and vector memory policy. */
+
 #include "kernel/memory/memory.h"
 
 #include <stdint.h>
 
+/* Defines the memory vector minimum capacity macro. */
 #define __Memory_Vector_Minimum_Capacity__ 4U
 
 /* Removes surface mutability wrappers before classifying memory semantics. */
@@ -14,11 +17,14 @@ static const __Ast_Type__ *__Memory_Unwrap_Mutable__(const __Ast_Type__ *__Type_
     return __Type__;
 }
 
+/* Checks whether the memory type is owned recursive. */
 static int __Memory_Type_Is_Owned_Recursive__(__Semantic_Context__ *__Context__,
                                               __Ast_Type__ *__Type__,
                                               unsigned __Depth__)
 {
+    /* Stores the resolved. */
     __Resolved_Type__ __Resolved__;
+    /* Tracks the index. */
     size_t __Index__;
 
     if (__Depth__ > 64U)
@@ -63,6 +69,7 @@ static int __Memory_Type_Is_Owned_Recursive__(__Semantic_Context__ *__Context__,
     }
     if (__Resolved__.__Kind__ == __Resolved_Type_Struct__ && __Resolved__.__Named__ != NULL)
     {
+        /* References the declaration. */
         __Ast_Type_Declaration__ *__Declaration__ = __Resolved__.__Named__->__Declaration__;
         for (__Index__ = 0U; __Index__ < __Declaration__->__As__.__Struct__.__Count__; ++__Index__)
         {
@@ -77,12 +84,15 @@ static int __Memory_Type_Is_Owned_Recursive__(__Semantic_Context__ *__Context__,
     }
     else if (__Resolved__.__Kind__ == __Resolved_Type_Enum__ && __Resolved__.__Named__ != NULL)
     {
+        /* References the declaration. */
         __Ast_Type_Declaration__ *__Declaration__ = __Resolved__.__Named__->__Declaration__;
+        /* Tracks the constructor index. */
         size_t __Constructor_Index__;
         for (__Constructor_Index__ = 0U;
              __Constructor_Index__ < __Declaration__->__As__.__Enum__.__Count__;
              ++__Constructor_Index__)
         {
+            /* References the constructor. */
             __Ast_Enum_Constructor__ *__Constructor__ =
                 &__Declaration__->__As__.__Enum__.__Constructors__[__Constructor_Index__];
             for (__Index__ = 0U; __Index__ < __Constructor__->__Payload_Count__; ++__Index__)
@@ -100,22 +110,27 @@ static int __Memory_Type_Is_Owned_Recursive__(__Semantic_Context__ *__Context__,
     return 0;
 }
 
+/* Checks whether the memory type is owned. */
 int __Memory_Type_Is_Owned__(__Semantic_Context__ *__Context__, __Ast_Type__ *__Type__)
 {
     return __Memory_Type_Is_Owned_Recursive__(__Context__, __Type__, 0U);
 }
 
+/* Checks whether the memory type is view. */
 int __Memory_Type_Is_View__(const __Ast_Type__ *__Type__)
 {
     __Type__ = __Memory_Unwrap_Mutable__(__Type__);
     return __Type__ != NULL && __Type__->__Kind__ == __Ast_Type_Reference__;
 }
 
+/* Returns the memory type contains view recursive. */
 static int __Memory_Type_Contains_View_Recursive__(__Semantic_Context__ *__Context__,
                                                    __Ast_Type__ *__Type__,
                                                    unsigned __Depth__)
 {
+    /* Stores the resolved. */
     __Resolved_Type__ __Resolved__;
+    /* Tracks the index. */
     size_t __Index__;
 
     if (__Depth__ > 64U)
@@ -155,6 +170,7 @@ static int __Memory_Type_Contains_View_Recursive__(__Semantic_Context__ *__Conte
     }
     if (__Resolved__.__Kind__ == __Resolved_Type_Struct__ && __Resolved__.__Named__ != NULL)
     {
+        /* References the declaration. */
         __Ast_Type_Declaration__ *__Declaration__ = __Resolved__.__Named__->__Declaration__;
         for (__Index__ = 0U; __Index__ < __Declaration__->__As__.__Struct__.__Count__; ++__Index__)
         {
@@ -169,12 +185,15 @@ static int __Memory_Type_Contains_View_Recursive__(__Semantic_Context__ *__Conte
     }
     else if (__Resolved__.__Kind__ == __Resolved_Type_Enum__ && __Resolved__.__Named__ != NULL)
     {
+        /* References the declaration. */
         __Ast_Type_Declaration__ *__Declaration__ = __Resolved__.__Named__->__Declaration__;
+        /* Tracks the constructor index. */
         size_t __Constructor_Index__;
         for (__Constructor_Index__ = 0U;
              __Constructor_Index__ < __Declaration__->__As__.__Enum__.__Count__;
              ++__Constructor_Index__)
         {
+            /* References the constructor. */
             __Ast_Enum_Constructor__ *__Constructor__ =
                 &__Declaration__->__As__.__Enum__.__Constructors__[__Constructor_Index__];
             for (__Index__ = 0U; __Index__ < __Constructor__->__Payload_Count__; ++__Index__)
@@ -192,18 +211,22 @@ static int __Memory_Type_Contains_View_Recursive__(__Semantic_Context__ *__Conte
     return 0;
 }
 
+/* Returns the memory type contains view. */
 int __Memory_Type_Contains_View__(__Semantic_Context__ *__Context__, __Ast_Type__ *__Type__)
 {
     return __Memory_Type_Contains_View_Recursive__(__Context__, __Type__, 0U);
 }
 
+/* Returns the memory vector growth policy view. */
 const __Memory_Vector_Growth_Policy__ *__Memory_Vector_Growth_Policy_View__(void)
 {
+    /* Stores the policy. */
     static const __Memory_Vector_Growth_Policy__ __Policy__ = {__Memory_Vector_Minimum_Capacity__,
                                                                2U};
     return &__Policy__;
 }
 
+/* Returns the memory element bytes. */
 int __Memory_Element_Bytes__(size_t __Element_Size__,
                              size_t __Element_Count__,
                              size_t *__Out_Bytes__)
@@ -216,8 +239,10 @@ int __Memory_Element_Bytes__(size_t __Element_Size__,
     return 1;
 }
 
+/* Returns the memory vector initial capacity. */
 size_t __Memory_Vector_Initial_Capacity__(size_t __Length__)
 {
+    /* Stores the capacity. */
     size_t __Capacity__;
     if (__Length__ == 0U)
         return 0U;
@@ -231,10 +256,12 @@ size_t __Memory_Vector_Initial_Capacity__(size_t __Length__)
     return __Capacity__;
 }
 
+/* Grows the memory vector capacity. */
 int __Memory_Vector_Grow_Capacity__(size_t __Current_Capacity__,
                                     size_t __Required_Capacity__,
                                     size_t *__Out_Capacity__)
 {
+    /* Stores the capacity. */
     size_t __Capacity__;
     if (__Out_Capacity__ == NULL)
         return 0;

@@ -1,7 +1,10 @@
+/* Compares text slices. */
+
 #include "support/text/equality.h"
 
 #include <string.h>
 
+/* Returns the text equals. */
 int __Text_Slice_Equals__(__Text_Slice__ __Left__, __Text_Slice__ __Right__)
 {
     if (__Left__.__Length__ != __Right__.__Length__)

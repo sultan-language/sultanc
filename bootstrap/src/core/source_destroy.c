@@ -1,7 +1,10 @@
+/* Releases source-file storage. */
+
 #include "core/source.h"
 
 #include <stdlib.h>
 
+/* Releases the source. */
 void __Source_Destroy__(__Source_File__ *__Source__)
 {
     if (__Source__ == NULL)

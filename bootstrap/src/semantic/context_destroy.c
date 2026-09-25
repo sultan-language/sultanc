@@ -1,8 +1,11 @@
+/* Releases semantic context storage. */
+
 #include "semantic/context_lifecycle.h"
 #include "semantic/context.h"
 
 #include <string.h>
 
+/* Releases the semantic context. */
 void __Semantic_Context_Destroy__(__Semantic_Context__ *__Context__)
 {
     if (__Context__ == NULL)

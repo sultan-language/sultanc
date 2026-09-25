@@ -1,15 +1,21 @@
+/* Parses unary expressions and conversions. */
+
 #include "frontend/parser/cursor.h"
 #include "frontend/parser/span.h"
 #include "frontend/parser/type_internal.h"
 #include "frontend/parser/expression_internal.h"
 
+/* Parses the parser explicit conversions. */
 static __Ast_Expression__ *__Parser_Parse_Explicit_Conversions__(__Parser__ *__Parser_State__,
                                                                  __Ast_Expression__ *__Expression__)
 {
     while (__Expression__ != NULL && __Parser_State__->__Current__.__Kind__ == __Token_AS__)
     {
+        /* References the target type. */
         __Ast_Type__ *__Target_Type__;
+        /* References the conversion. */
         __Ast_Expression__ *__Conversion__;
+        /* Stores the start. */
         __Source_Position__ __Start__ = __Expression__->__Header__.__Span__.__Start__;
 
         if (!__Parser_Advance__(__Parser_State__))
@@ -36,10 +42,14 @@ static __Ast_Expression__ *__Parser_Parse_Explicit_Conversions__(__Parser__ *__P
     return __Expression__;
 }
 
+/* Parses the parser unary. */
 __Ast_Expression__ *__Parser_Parse_Unary__(__Parser__ *__Parser_State__)
 {
+    /* Stores the operation. */
     __Ast_Unary_Operation__ __Operation__ = __Unary_Not__;
+    /* Tracks whether the value is unary. */
     int __Is_Unary__ = 1;
+    /* Stores the start. */
     __Source_Position__ __Start__ = __Parser_State__->__Current__.__Span__.__Start__;
 
     switch (__Parser_State__->__Current__.__Kind__)
@@ -83,7 +93,9 @@ __Ast_Expression__ *__Parser_Parse_Unary__(__Parser__ *__Parser_State__)
         }
     }
     {
+        /* References the operand. */
         __Ast_Expression__ *__Operand__ = __Parser_Parse_Unary__(__Parser_State__);
+        /* References the expression. */
         __Ast_Expression__ *__Expression__ = NULL;
         if (__Operand__ == NULL)
         {

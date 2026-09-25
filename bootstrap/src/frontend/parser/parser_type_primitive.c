@@ -7,6 +7,7 @@
 #include "frontend/parser/type_internal.h"
 #include "core/source.h"
 
+/* Returns the parser type primitive. */
 int __Parser_Type_Primitive__(__Token_Kind__ __Token_Value__,
                               __Ast_Type_Kind__ *__Out_Kind__,
                               __Machine_Type__ *__Out_Machine__)
@@ -84,6 +85,7 @@ int __Parser_Type_Primitive__(__Token_Kind__ __Token_Value__,
     }
 }
 
+/* Returns the parser type contextual. */
 int __Parser_Type_Contextual__(__Text_Slice__ __Name__, __Ast_Type_Kind__ *__Out_Kind__)
 {
     if (__Out_Kind__ == NULL)

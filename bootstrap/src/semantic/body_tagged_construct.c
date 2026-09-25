@@ -1,21 +1,24 @@
+/* Checks built-in tagged constructors. */
+
 #include "semantic/body_internal.h"
 #include "kernel/type/tagged.h"
 #include "support/text/equality.h"
 
-/*
- * Checks an option/result constructor against an expected contextual type.
- * These constructors are intentionally context-typed so `option.none()` does
- * not need redundant source-level type arguments.
- */
+/* Checks option/result constructors against their contextual type. */
 int __Body_Try_Check_Builtin_Tagged_Construct__(__Semantic_Body_Context__ *__Context__,
                                                 __Ast_Type__ *__Expected__,
                                                 __Ast_Expression__ *__Expression__,
                                                 int *__Matched__)
 {
+    /* References the function. */
     __Ast_Lvalue__ *__Function__;
+    /* References the parent. */
     __Ast_Lvalue__ *__Parent__;
+    /* Stores the type name. */
     __Text_Slice__ __Type_Name__;
+    /* Stores the constructor name. */
     __Text_Slice__ __Constructor_Name__;
+    /* Stores the constructor. */
     __Type_Tagged_Constructor__ __Constructor__;
 
     *__Matched__ = 0;
@@ -54,6 +57,7 @@ int __Body_Try_Check_Builtin_Tagged_Construct__(__Semantic_Body_Context__ *__Con
 
     if (__Constructor__.__Payload_Count__ == 1U)
     {
+        /* References the payload. */
         __Ast_Expression__ *__Payload__ = __Expression__->__As__.__Call__.__Arguments__[0];
         if (!__Body_Check_Expression_Compatible__(__Context__,
                                                   __Constructor__.__Payload_Type__,

@@ -1,3 +1,5 @@
+/* Parses match patterns. */
+
 #include "frontend/ast/storage.h"
 #include "frontend/parser/cursor.h"
 #include "frontend/parser/diagnostic.h"
@@ -8,10 +10,12 @@
 
 #include <stdalign.h>
 
+/* Creates the parser pattern. */
 static __Ast_Pattern__ *__Parser_New_Pattern__(__Parser__ *__Parser_State__,
                                                __Ast_Pattern_Kind__ __Kind__,
                                                __Source_Position__ __Start__)
 {
+    /* References the pattern. */
     __Ast_Pattern__ *__Pattern__ = (__Ast_Pattern__ *)__Ast_Allocate__(
         __Parser_State__->__Ast__, sizeof(*__Pattern__), alignof(__Ast_Pattern__));
     if (__Pattern__ == NULL)
@@ -27,12 +31,16 @@ static __Ast_Pattern__ *__Parser_New_Pattern__(__Parser__ *__Parser_State__,
     return __Pattern__;
 }
 
+/* Parses the parser enum pattern. */
 static __Ast_Pattern__ *__Parser_Parse_Enum_Pattern__(__Parser__ *__Parser_State__,
                                                       __Text_Slice__ __Type_Name__,
                                                       __Source_Position__ __Start__)
 {
+    /* Stores the constructor name. */
     __Text_Slice__ __Constructor_Name__;
+    /* Stores the payloads. */
     __Vector__ __Payloads__;
+    /* References the pattern. */
     __Ast_Pattern__ *__Pattern__ = NULL;
 
     if (!__Parser_Expect__(__Parser_State__, __Token_DOT_OPERATOR__))
@@ -56,6 +64,7 @@ static __Ast_Pattern__ *__Parser_Parse_Enum_Pattern__(__Parser__ *__Parser_State
         {
             for (;;)
             {
+                /* References the payload. */
                 __Ast_Pattern__ *__Payload__ = __Parser_Parse_Pattern__(__Parser_State__);
                 if (__Payload__ == NULL || __Vector_Push__(&__Payloads__, &__Payload__) == NULL)
                 {
@@ -90,10 +99,13 @@ static __Ast_Pattern__ *__Parser_Parse_Enum_Pattern__(__Parser__ *__Parser_State
     return __Pattern__;
 }
 
+/* Parses the parser struct pattern. */
 static __Ast_Pattern__ *__Parser_Parse_Struct_Pattern__(__Parser__ *__Parser_State__,
                                                         __Source_Position__ __Start__)
 {
+    /* Stores the fields. */
     __Vector__ __Fields__;
+    /* References the pattern. */
     __Ast_Pattern__ *__Pattern__ = NULL;
 
     __Vector_Init__(&__Fields__, sizeof(__Ast_Struct_Pattern_Field__));
@@ -105,6 +117,7 @@ static __Ast_Pattern__ *__Parser_Parse_Struct_Pattern__(__Parser__ *__Parser_Sta
 
     while (__Parser_State__->__Current__.__Kind__ != __Token_RIGHT_BRACE_OPERATOR__)
     {
+        /* Stores the field. */
         __Ast_Struct_Pattern_Field__ __Field__;
         if (__Parser_State__->__Current__.__Kind__ != __Token_IDENTIFIER__)
         {
@@ -151,9 +164,12 @@ static __Ast_Pattern__ *__Parser_Parse_Struct_Pattern__(__Parser__ *__Parser_Sta
     return __Pattern__;
 }
 
+/* Parses the parser pattern. */
 __Ast_Pattern__ *__Parser_Parse_Pattern__(__Parser__ *__Parser_State__)
 {
+    /* Stores the start. */
     __Source_Position__ __Start__ = __Parser_State__->__Current__.__Span__.__Start__;
+    /* References the pattern. */
     __Ast_Pattern__ *__Pattern__ = NULL;
 
     if (__Parser_State__->__Current__.__Kind__ == __Token_UNDERSCORE_OPERATOR__)
@@ -177,6 +193,7 @@ __Ast_Pattern__ *__Parser_Parse_Pattern__(__Parser__ *__Parser_State__)
     }
 
     {
+        /* Stores the name. */
         __Text_Slice__ __Name__ = __Parser_State__->__Current__.__Kind__ == __Token_IDENTIFIER__
                                       ? __Parser_State__->__Current__.__Lexeme__
                                       : __Parser_State__->__Current__.__Lexeme__;

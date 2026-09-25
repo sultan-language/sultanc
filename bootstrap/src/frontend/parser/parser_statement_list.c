@@ -1,6 +1,9 @@
+/* Builds statement lists. */
+
 #include "frontend/parser/diagnostic.h"
 #include "frontend/parser/statement_internal.h"
 
+/* Adds the parser statement. */
 int __Parser_Push_Statement__(__Parser__ *__Parser_State__,
                               __Vector__ *__Statements__,
                               __Ast_Statement__ *__Statement__)

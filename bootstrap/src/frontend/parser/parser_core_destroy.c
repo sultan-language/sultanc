@@ -1,7 +1,10 @@
+/* Releases parser state. */
+
 #include "frontend/lexer/lifecycle.h"
 #include "frontend/parser/lifecycle.h"
 #include "frontend/parser/internal.h"
 
+/* Releases the parser. */
 void __Parser_Destroy__(__Parser__ *__Parser_State__)
 {
     if (__Parser_State__ == NULL)

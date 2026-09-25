@@ -1,10 +1,14 @@
+/* Reads integer values from literal expressions. */
+
 #include "semantic/literal.h"
 
 #include <stdint.h>
 
+/* Returns the semantic integer literal expression value. */
 int __Semantic_Integer_Literal_Expression_Value__(const __Ast_Expression__ *__Expression__,
                                                   int64_t *__Out_Value__)
 {
+    /* Stores the value. */
     int64_t __Value__ = 0;
     if (__Expression__ == NULL || __Out_Value__ == NULL)
     {

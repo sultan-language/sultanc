@@ -1,12 +1,17 @@
+/* Decodes escaped source characters. */
+
 #include "frontend/lexer/escape.h"
 #include "frontend/lexer/character.h"
 #include "support/text/utf8.h"
 
+/* Parses the lexer hex escape. */
 int __Lexer_Parse_Hex_Escape__(__Lexer__ *__Lexer_State__,
                                size_t __Digits__,
                                uint32_t *__Out_Codepoint__)
 {
+    /* Tracks the index. */
     size_t __Index__ = 0U;
+    /* Stores the value. */
     uint32_t __Value__ = 0U;
     if (!__Lexer_Has__(__Lexer_State__, __Digits__))
     {
@@ -14,6 +19,7 @@ int __Lexer_Parse_Hex_Escape__(__Lexer__ *__Lexer_State__,
     }
     for (__Index__ = 0U; __Index__ < __Digits__; ++__Index__)
     {
+        /* Stores the digit. */
         int __Digit__ = __Lexer_Hex_Value__(__Lexer_Peek__(__Lexer_State__, __Index__));
         if (__Digit__ < 0)
         {
@@ -26,18 +32,24 @@ int __Lexer_Parse_Hex_Escape__(__Lexer__ *__Lexer_State__,
     return 1;
 }
 
+/* Appends the lexer codepoint. */
 static int __Lexer_Append_Codepoint__(__Text_Builder__ *__Builder__, uint32_t __Codepoint__)
 {
+    /* Stores the encoded. */
     unsigned char __Encoded__[4];
+    /* Stores the width. */
     size_t __Width__ = __Utf8_Encode__(__Codepoint__, __Encoded__);
     return __Width__ != 0U && __Text_Builder_Append__(__Builder__, __Encoded__, __Width__);
 }
 
+/* Scans the lexer escape. */
 int __Lexer_Scan_Escape__(__Lexer__ *__Lexer_State__,
                           __Text_Builder__ *__Builder__,
                           __Source_Position__ __Start__)
 {
+    /* Stores the escape. */
     unsigned char __Escape__ = 0U;
+    /* Stores the codepoint. */
     uint32_t __Codepoint__ = 0U;
     if (!__Lexer_Has__(__Lexer_State__, 1U))
     {

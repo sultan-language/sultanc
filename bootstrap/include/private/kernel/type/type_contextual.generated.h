@@ -6,18 +6,21 @@
 
 #include "core/source.h"
 
+/* Checks whether the type contextual name is option. */
 static inline int __Type_Contextual_Name_Is_OPTION__(__Text_Slice__ __Name__)
 {
     return __Text_Equals_Cstr__(__Name__, "option") ||
            __Text_Equals_Cstr__(__Name__, "اختيار");
 }
 
+/* Checks whether the type contextual name is result. */
 static inline int __Type_Contextual_Name_Is_RESULT__(__Text_Slice__ __Name__)
 {
     return __Text_Equals_Cstr__(__Name__, "result") ||
            __Text_Equals_Cstr__(__Name__, "نتيجة");
 }
 
+/* Checks whether the type contextual name is vector. */
 static inline int __Type_Contextual_Name_Is_VECTOR__(__Text_Slice__ __Name__)
 {
     return __Text_Equals_Cstr__(__Name__, "vector") ||

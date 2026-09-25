@@ -1,10 +1,14 @@
+/* Tracks body-level control-flow safety state. */
+
 #include "semantic/body_internal.h"
 
 #include <stdlib.h>
 
+/* Captures the body safety. */
 int __Body_Safety_Capture__(__Semantic_Body_Context__ *__Context__,
                             __Body_Safety_Snapshot__ *__Snapshot__)
 {
+    /* Tracks the index. */
     size_t __Index__ = 0U;
 
     if (__Snapshot__ == NULL)
@@ -28,6 +32,7 @@ int __Body_Safety_Capture__(__Semantic_Body_Context__ *__Context__,
 
     for (__Index__ = 0U; __Index__ < __Snapshot__->__Count__; ++__Index__)
     {
+        /* References the local. */
         const __Semantic_Local__ *__Local__ =
             (const __Semantic_Local__ *)__Vector_At_Const__(&__Context__->__Locals__, __Index__);
         if (__Local__ != NULL)
@@ -42,10 +47,13 @@ int __Body_Safety_Capture__(__Semantic_Body_Context__ *__Context__,
     return 1;
 }
 
+/* Restores the body safety. */
 void __Body_Safety_Restore__(__Semantic_Body_Context__ *__Context__,
                              const __Body_Safety_Snapshot__ *__Snapshot__)
 {
+    /* Tracks the index. */
     size_t __Index__ = 0U;
+    /* Stores the count. */
     size_t __Count__ = 0U;
 
     if (__Snapshot__ == NULL)
@@ -58,6 +66,7 @@ void __Body_Safety_Restore__(__Semantic_Body_Context__ *__Context__,
                     : __Context__->__Locals__.__Count__;
     for (__Index__ = 0U; __Index__ < __Count__; ++__Index__)
     {
+        /* References the local. */
         __Semantic_Local__ *__Local__ =
             (__Semantic_Local__ *)__Vector_At__(&__Context__->__Locals__, __Index__);
         if (__Local__ != NULL)
@@ -70,11 +79,14 @@ void __Body_Safety_Restore__(__Semantic_Body_Context__ *__Context__,
     }
 }
 
+/* Merges the body safety. */
 void __Body_Safety_Merge__(__Semantic_Body_Context__ *__Context__,
                            const __Body_Safety_Snapshot__ *__Left__,
                            const __Body_Safety_Snapshot__ *__Right__)
 {
+    /* Tracks the index. */
     size_t __Index__ = 0U;
+    /* Stores the count. */
     size_t __Count__;
 
     if (__Left__ == NULL || __Right__ == NULL)
@@ -91,6 +103,7 @@ void __Body_Safety_Merge__(__Semantic_Body_Context__ *__Context__,
 
     for (__Index__ = 0U; __Index__ < __Count__; ++__Index__)
     {
+        /* References the local. */
         __Semantic_Local__ *__Local__ =
             (__Semantic_Local__ *)__Vector_At__(&__Context__->__Locals__, __Index__);
         if (__Local__ != NULL)
@@ -116,6 +129,7 @@ void __Body_Safety_Merge__(__Semantic_Body_Context__ *__Context__,
     }
 }
 
+/* Releases the body safety snapshot. */
 void __Body_Safety_Snapshot_Destroy__(__Body_Safety_Snapshot__ *__Snapshot__)
 {
     if (__Snapshot__ == NULL)
@@ -128,11 +142,14 @@ void __Body_Safety_Snapshot_Destroy__(__Body_Safety_Snapshot__ *__Snapshot__)
     __Snapshot__->__Count__ = 0U;
 }
 
+/* Returns the body safety move atom. */
 int __Body_Safety_Move_Atom__(__Semantic_Body_Context__ *__Context__,
                               const __Ast_Atom__ *__Atom__,
                               __Source_Span__ __Span__)
 {
+    /* References the lvalue. */
     __Ast_Lvalue__ *__Lvalue__;
+    /* References the source. */
     __Semantic_Local__ *__Source__;
 
     if (__Atom__ == NULL || __Atom__->__Kind__ != __Ast_Atom_Lvalue__)
@@ -146,14 +163,10 @@ int __Body_Safety_Move_Atom__(__Semantic_Body_Context__ *__Context__,
     }
     if (__Lvalue__->__Kind__ != __Ast_Lvalue_Base__)
     {
+        /* References the projected type. */
         __Ast_Type__ *__Projected_Type__ = NULL;
 
-        /*
-         * Stage 0 keeps aggregate ownership whole. A projected scalar may be
-         * copied, but moving an owned field would create partial ownership and
-         * a second destruction obligation. Reject that operation here rather
-         * than allowing a feature-specific shallow copy.
-         */
+        /* Reject moves that would split ownership of an aggregate. */
         if (!__Body_Infer_Lvalue__(__Context__, __Lvalue__, &__Projected_Type__, NULL))
         {
             return 0;
@@ -183,11 +196,14 @@ int __Body_Safety_Move_Atom__(__Semantic_Body_Context__ *__Context__,
     return 1;
 }
 
+/* Returns the body safety move expression. */
 int __Body_Safety_Move_Expression__(__Semantic_Body_Context__ *__Context__,
                                     __Ast_Expression__ *__Expression__,
                                     __Semantic_Local__ *__Destination__)
 {
+    /* References the lvalue. */
     __Ast_Lvalue__ *__Lvalue__ = NULL;
+    /* References the source. */
     __Semantic_Local__ *__Source__ = NULL;
 
     if (__Expression__ == NULL || __Expression__->__Kind__ != __Ast_Expression_Atom__ ||

@@ -1,3 +1,5 @@
+/* Resolves enum constructor names. */
+
 #include "kernel/name/name.h"
 #include "frontend/identifier_identity.h"
 
@@ -6,12 +8,15 @@ int __Name_Resolve_Module_Alias_Name__(const __Program_Unit__ *__Unit__,
                                        __Text_Slice__ __Name__,
                                        __Text_Slice__ *__Out_Name__);
 
+/* Finds the name direct enum constructor. */
 static int __Name_Find_Direct_Enum_Constructor__(__Semantic_Type_Entry__ *__Type__,
                                                  __Text_Slice__ __Constructor_Name__,
                                                  size_t *__Out_Index__,
                                                  __Ast_Enum_Constructor__ **__Out_Constructor__)
 {
+    /* References the declaration. */
     __Ast_Type_Declaration__ *__Declaration__ = __Type__ == NULL ? NULL : __Type__->__Declaration__;
+    /* Tracks the index. */
     size_t __Index__ = 0U;
 
     if (__Declaration__ == NULL || __Declaration__->__Kind__ != __Ast_Type_Decl_Enum__)
@@ -21,6 +26,7 @@ static int __Name_Find_Direct_Enum_Constructor__(__Semantic_Type_Entry__ *__Type
 
     for (__Index__ = 0U; __Index__ < __Declaration__->__As__.__Enum__.__Count__; ++__Index__)
     {
+        /* References the constructor. */
         __Ast_Enum_Constructor__ *__Constructor__ =
             &__Declaration__->__As__.__Enum__.__Constructors__[__Index__];
 
@@ -41,13 +47,17 @@ static int __Name_Find_Direct_Enum_Constructor__(__Semantic_Type_Entry__ *__Type
     return 0;
 }
 
+/* Finds the name enum constructor. */
 int __Name_Find_Enum_Constructor__(__Semantic_Type_Entry__ *__Type__,
                                    __Text_Slice__ __Constructor_Name__,
                                    size_t *__Out_Index__,
                                    __Ast_Enum_Constructor__ **__Out_Constructor__)
 {
+    /* References the unit. */
     const __Program_Unit__ *__Unit__ = __Type__ == NULL ? NULL : __Type__->__Unit__;
+    /* Stores the resolved. */
     __Text_Slice__ __Resolved__ = __Constructor_Name__;
+    /* Stores the depth. */
     size_t __Depth__;
 
     if (__Type__ == NULL)
@@ -59,7 +69,9 @@ int __Name_Find_Enum_Constructor__(__Semantic_Type_Entry__ *__Type__,
          __Depth__ <= (__Unit__ == NULL ? 0U : __Unit__->__Parse__.__Module__.__Item_Count__);
          ++__Depth__)
     {
+        /* Tracks the index. */
         size_t __Index__;
+        /* Tracks the found alias state. */
         int __Found_Alias__ = 0;
 
         if (__Name_Find_Direct_Enum_Constructor__(
@@ -74,9 +86,12 @@ int __Name_Find_Enum_Constructor__(__Semantic_Type_Entry__ *__Type__,
 
         for (__Index__ = 0U; __Index__ < __Unit__->__Parse__.__Module__.__Item_Count__; ++__Index__)
         {
+            /* References the item. */
             const __Ast_Module_Item__ *__Item__ =
                 __Unit__->__Parse__.__Module__.__Items__[__Index__];
+            /* Stores the destination parent. */
             __Text_Slice__ __Destination_Parent__;
+            /* Stores the target parent. */
             __Text_Slice__ __Target_Parent__;
 
             if (__Item__ == NULL || __Item__->__Kind__ != __Ast_Module_Item_Alias__ ||
@@ -116,13 +131,16 @@ int __Name_Find_Enum_Constructor__(__Semantic_Type_Entry__ *__Type__,
     return 0;
 }
 
+/* Resolves the name enum constructor lvalue. */
 int __Name_Resolve_Enum_Constructor_Lvalue__(__Semantic_Context__ *__Context__,
                                              const __Ast_Lvalue__ *__Lvalue__,
                                              __Semantic_Type_Entry__ **__Out_Type__,
                                              size_t *__Out_Index__,
                                              __Ast_Enum_Constructor__ **__Out_Constructor__)
 {
+    /* References the parent. */
     const __Ast_Lvalue__ *__Parent__ = NULL;
+    /* References the type. */
     __Semantic_Type_Entry__ *__Type__ = NULL;
 
     if (__Lvalue__ == NULL || __Lvalue__->__Kind__ != __Ast_Lvalue_Field__)

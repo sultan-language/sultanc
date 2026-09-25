@@ -1,10 +1,15 @@
+/* Checks path suffixes. */
+
 #include "support/path/filesystem.h"
 
 #include <string.h>
 
+/* Checks whether the path has suffix. */
 int __Path_Has_Suffix__(const char *__Path__, const char *__Suffix__)
 {
+    /* Stores the path length. */
     size_t __Path_Length__;
+    /* Stores the suffix length. */
     size_t __Suffix_Length__;
 
     if (__Path__ == NULL || __Suffix__ == NULL)

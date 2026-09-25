@@ -1,8 +1,11 @@
+/* Resolves lvalue types and access rules. */
+
 #include "semantic/body_internal.h"
 #include "kernel/name/name.h"
 
 #include <stdio.h>
 
+/* Checks the body local read. */
 static int __Body_Check_Local_Read__(__Semantic_Body_Context__ *__Context__,
                                      __Semantic_Local__ *__Local__,
                                      __Source_Span__ __Span__)
@@ -23,6 +26,7 @@ static int __Body_Check_Local_Read__(__Semantic_Body_Context__ *__Context__,
         case __Safety_Value_Moved__:
         case __Safety_Value_Maybe_Moved__:
         {
+            /* References the diagnostic state. */
             __Diagnostic__ *__Diagnostic_State__ =
                 __Body_Begin_Diagnostic__(__Context__, __E1301_Use_After_Move__, __Span__);
             if (__Diagnostic_State__ != NULL)
@@ -63,6 +67,7 @@ static int __Body_Check_Local_Read__(__Semantic_Body_Context__ *__Context__,
         case __Safety_Value_Uninitialized__:
         case __Safety_Value_Maybe_Uninitialized__:
         {
+            /* References the diagnostic state. */
             __Diagnostic__ *__Diagnostic_State__ = __Body_Begin_Diagnostic__(
                 __Context__, __E1300_Use_Before_Initialization__, __Span__);
             if (__Diagnostic_State__ != NULL)
@@ -87,6 +92,7 @@ static int __Body_Check_Local_Read__(__Semantic_Body_Context__ *__Context__,
     return 0;
 }
 
+/* Infers the body lvalue access. */
 static int __Body_Infer_Lvalue_Access__(__Semantic_Body_Context__ *__Context__,
                                         __Ast_Lvalue__ *__Lvalue__,
                                         __Ast_Type__ **__Out_Type__,
@@ -105,6 +111,7 @@ static int __Body_Infer_Lvalue_Access__(__Semantic_Body_Context__ *__Context__,
 
     if (__Lvalue__->__Kind__ == __Ast_Lvalue_Base__)
     {
+        /* References the local. */
         __Semantic_Local__ *__Local__ = __Body_Find_Local__(__Context__, __Lvalue__);
 
         if (__Local__ == NULL)
@@ -135,9 +142,13 @@ static int __Body_Infer_Lvalue_Access__(__Semantic_Body_Context__ *__Context__,
 
     if (__Lvalue__->__Kind__ == __Ast_Lvalue_Field__)
     {
+        /* References the parent type. */
         __Ast_Type__ *__Parent_Type__ = NULL;
+        /* Stores the resolved. */
         __Resolved_Type__ __Resolved__;
+        /* Stores the offset. */
         size_t __Offset__ = 0U;
+        /* References the field type. */
         __Ast_Type__ *__Field_Type__ = NULL;
 
         if (!__Body_Infer_Lvalue_Access__(
@@ -165,8 +176,11 @@ static int __Body_Infer_Lvalue_Access__(__Semantic_Body_Context__ *__Context__,
 
     if (__Lvalue__->__Kind__ == __Ast_Lvalue_Index__)
     {
+        /* References the parent type. */
         __Ast_Type__ *__Parent_Type__ = NULL;
+        /* References the index type. */
         __Ast_Type__ *__Index_Type__ = NULL;
+        /* Stores the resolved. */
         __Resolved_Type__ __Resolved__;
 
         if (!__Body_Infer_Lvalue_Access__(
@@ -191,10 +205,12 @@ static int __Body_Infer_Lvalue_Access__(__Semantic_Body_Context__ *__Context__,
         if (__Resolved__.__Kind__ == __Resolved_Type_Vector__ ||
             __Resolved__.__Kind__ == __Resolved_Type_String__)
         {
+            /* Tracks the known index. */
             int64_t __Known_Index__ = 0;
             if (__Semantic_Integer_Literal_Atom_Value__(&__Lvalue__->__As__.__Index__.__Index__,
                                                         &__Known_Index__))
             {
+                /* References the sequence local. */
                 __Semantic_Local__ *__Sequence_Local__ =
                     __Lvalue__->__As__.__Index__.__Parent__->__Kind__ == __Ast_Lvalue_Base__
                         ? __Body_Find_Local__(__Context__, __Lvalue__->__As__.__Index__.__Parent__)
@@ -203,6 +219,7 @@ static int __Body_Infer_Lvalue_Access__(__Semantic_Body_Context__ *__Context__,
                     (__Sequence_Local__ != NULL && __Sequence_Local__->__Has_Known_Length__ &&
                      (uint64_t)__Known_Index__ >= (uint64_t)__Sequence_Local__->__Known_Length__))
                 {
+                    /* References the diagnostic state. */
                     __Diagnostic__ *__Diagnostic_State__ = __Body_Begin_Diagnostic__(
                         __Context__, __E1305_Bounds_Violation__, __Lvalue__->__Header__.__Span__);
                     if (__Diagnostic_State__ != NULL)
@@ -215,6 +232,7 @@ static int __Body_Infer_Lvalue_Access__(__Semantic_Body_Context__ *__Context__,
                             __Known_Index__ < 0 ? 0U : (uint64_t)__Known_Index__);
                         if (__Sequence_Local__ != NULL && __Sequence_Local__->__Has_Known_Length__)
                         {
+                            /* Stores the range. */
                             char __Range__[64];
                             __Diagnostic_Set_Message_Key__(__Diagnostic_State__,
                                                            __Diag_Word_Bounds_Known__);
@@ -269,7 +287,9 @@ static int __Body_Infer_Lvalue_Access__(__Semantic_Body_Context__ *__Context__,
 
     if (__Lvalue__->__Kind__ == __Ast_Lvalue_Dereference__)
     {
+        /* References the parent type. */
         __Ast_Type__ *__Parent_Type__ = NULL;
+        /* Stores the resolved. */
         __Resolved_Type__ __Resolved__;
 
         if (!__Body_Infer_Lvalue_Access__(__Context__,
@@ -303,6 +323,7 @@ static int __Body_Infer_Lvalue_Access__(__Semantic_Body_Context__ *__Context__,
     return __Body_Fail__(__Context__, __E0300_Unknown_Name__, __Lvalue__->__Header__.__Span__);
 }
 
+/* Infers the body lvalue. */
 int __Body_Infer_Lvalue__(__Semantic_Body_Context__ *__Context__,
                           __Ast_Lvalue__ *__Lvalue__,
                           __Ast_Type__ **__Out_Type__,
@@ -311,6 +332,7 @@ int __Body_Infer_Lvalue__(__Semantic_Body_Context__ *__Context__,
     return __Body_Infer_Lvalue_Access__(__Context__, __Lvalue__, __Out_Type__, __Out_Local__, 1);
 }
 
+/* Infers the body lvalue for write. */
 int __Body_Infer_Lvalue_For_Write__(__Semantic_Body_Context__ *__Context__,
                                     __Ast_Lvalue__ *__Lvalue__,
                                     __Ast_Type__ **__Out_Type__,
