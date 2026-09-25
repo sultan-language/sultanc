@@ -1,17 +1,23 @@
+/* Resolves types, functions, imports, and aliases. */
+
 #include "kernel/name/name.h"
 #include "frontend/identifier_identity.h"
 
+/* Checks the name function entry. */
 static int __Name_Function_Entry_Matches__(const __Semantic_Function_Entry__ *__Entry__,
                                            __Text_Slice__ __Name__)
 {
     return __Entry__ != NULL && __Identifier_Identity_Equals__(__Entry__->__Name__, __Name__);
 }
 
+/* Resolves the name module alias name. */
 int __Name_Resolve_Module_Alias_Name__(const __Program_Unit__ *__Unit__,
                                        __Text_Slice__ __Name__,
                                        __Text_Slice__ *__Out_Name__)
 {
+    /* Stores the depth. */
     size_t __Depth__;
+    /* Stores the resolved. */
     __Text_Slice__ __Resolved__ = __Name__;
 
     if (__Out_Name__ == NULL)
@@ -25,11 +31,14 @@ int __Name_Resolve_Module_Alias_Name__(const __Program_Unit__ *__Unit__,
     }
     for (__Depth__ = 0U; __Depth__ <= __Unit__->__Parse__.__Module__.__Item_Count__; ++__Depth__)
     {
+        /* Tracks the index. */
         size_t __Index__;
+        /* Tracks the found alias state. */
         int __Found_Alias__ = 0;
 
         for (__Index__ = 0U; __Index__ < __Unit__->__Parse__.__Module__.__Item_Count__; ++__Index__)
         {
+            /* References the item. */
             const __Ast_Module_Item__ *__Item__ =
                 __Unit__->__Parse__.__Module__.__Items__[__Index__];
 
@@ -56,10 +65,12 @@ int __Name_Resolve_Module_Alias_Name__(const __Program_Unit__ *__Unit__,
     return 0;
 }
 
+/* Returns the name unit imports. */
 static int __Name_Unit_Imports__(const __Semantic_Context__ *__Context__,
                                  const __Program_Unit__ *__From_Unit__,
                                  const __Program_Unit__ *__Target_Unit__)
 {
+    /* Tracks the index. */
     size_t __Index__;
 
     if (__Context__ == NULL || __From_Unit__ == NULL || __Target_Unit__ == NULL)
@@ -69,8 +80,10 @@ static int __Name_Unit_Imports__(const __Semantic_Context__ *__Context__,
     for (__Index__ = 0U; __Index__ < __From_Unit__->__Imported_Unit_Indexes__.__Count__;
          ++__Index__)
     {
+        /* Tracks the imported index. */
         const size_t *__Imported_Index__ = (const size_t *)__Vector_At_Const__(
             &__From_Unit__->__Imported_Unit_Indexes__, __Index__);
+        /* References the imported unit. */
         const __Program_Unit__ *__Imported_Unit__;
 
         if (__Imported_Index__ == NULL)
@@ -87,13 +100,17 @@ static int __Name_Unit_Imports__(const __Semantic_Context__ *__Context__,
     return 0;
 }
 
+/* Resolves the name type. */
 __Name_Lookup_Status__ __Name_Resolve_Type__(__Semantic_Context__ *__Context__,
                                              const __Program_Unit__ *__From_Unit__,
                                              __Text_Slice__ __Name__,
                                              __Semantic_Type_Entry__ **__Out_Entry__)
 {
+    /* Tracks the index. */
     size_t __Index__;
+    /* References the imported match. */
     __Semantic_Type_Entry__ *__Imported_Match__ = NULL;
+    /* Stores the private match. */
     int __Private_Match__ = 0;
 
     if (__Out_Entry__ != NULL)
@@ -107,8 +124,10 @@ __Name_Lookup_Status__ __Name_Resolve_Type__(__Semantic_Context__ *__Context__,
 
     for (__Index__ = 0U; __Index__ < __Context__->__Types__.__Count__; ++__Index__)
     {
+        /* References the entry. */
         __Semantic_Type_Entry__ *__Entry__ =
             (__Semantic_Type_Entry__ *)__Vector_At__(&__Context__->__Types__, __Index__);
+        /* Stores the resolved name. */
         __Text_Slice__ __Resolved_Name__;
 
         if (__Entry__ == NULL ||
@@ -153,13 +172,17 @@ __Name_Lookup_Status__ __Name_Resolve_Type__(__Semantic_Context__ *__Context__,
     return __Private_Match__ ? __Name_Lookup_Private__ : __Name_Lookup_Missing__;
 }
 
+/* Resolves the name function. */
 __Name_Lookup_Status__ __Name_Resolve_Function__(__Semantic_Context__ *__Context__,
                                                  const __Program_Unit__ *__From_Unit__,
                                                  __Text_Slice__ __Name__,
                                                  __Semantic_Function_Entry__ **__Out_Entry__)
 {
+    /* Tracks the index. */
     size_t __Index__;
+    /* References the imported match. */
     __Semantic_Function_Entry__ *__Imported_Match__ = NULL;
+    /* Stores the private match. */
     int __Private_Match__ = 0;
 
     if (__Out_Entry__ != NULL)
@@ -173,8 +196,10 @@ __Name_Lookup_Status__ __Name_Resolve_Function__(__Semantic_Context__ *__Context
 
     for (__Index__ = 0U; __Index__ < __Context__->__Functions__.__Count__; ++__Index__)
     {
+        /* References the entry. */
         __Semantic_Function_Entry__ *__Entry__ =
             (__Semantic_Function_Entry__ *)__Vector_At__(&__Context__->__Functions__, __Index__);
+        /* Stores the resolved name. */
         __Text_Slice__ __Resolved_Name__;
 
         if (__Entry__ == NULL ||
@@ -219,9 +244,11 @@ __Name_Lookup_Status__ __Name_Resolve_Function__(__Semantic_Context__ *__Context
     return __Private_Match__ ? __Name_Lookup_Private__ : __Name_Lookup_Missing__;
 }
 
+/* Finds the name type. */
 __Semantic_Type_Entry__ *__Name_Find_Type__(__Semantic_Context__ *__Context__,
                                             __Text_Slice__ __Name__)
 {
+    /* References the entry. */
     __Semantic_Type_Entry__ *__Entry__ = NULL;
     return __Name_Resolve_Type__(__Context__,
                                  __Context__ == NULL ? NULL : __Context__->__Active_Unit__,
@@ -231,9 +258,11 @@ __Semantic_Type_Entry__ *__Name_Find_Type__(__Semantic_Context__ *__Context__,
                : NULL;
 }
 
+/* Finds the name function. */
 __Semantic_Function_Entry__ *__Name_Find_Function__(__Semantic_Context__ *__Context__,
                                                     __Text_Slice__ __Name__)
 {
+    /* References the entry. */
     __Semantic_Function_Entry__ *__Entry__ = NULL;
     return __Name_Resolve_Function__(__Context__,
                                      __Context__ == NULL ? NULL : __Context__->__Active_Unit__,
@@ -243,6 +272,7 @@ __Semantic_Function_Entry__ *__Name_Find_Function__(__Semantic_Context__ *__Cont
                : NULL;
 }
 
+/* Finds the name error ID. */
 __Error_Id__ __Name_Lookup_Error_Id__(__Name_Lookup_Status__ __Status__)
 {
     if (__Status__ == __Name_Lookup_Private__)

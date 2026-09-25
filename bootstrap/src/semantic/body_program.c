@@ -1,14 +1,20 @@
+/* Checks function bodies across the program. */
+
 #include "semantic/diagnostic.h"
 #include "semantic/body_internal.h"
 #include "kernel/memory/memory.h"
 
 #include <string.h>
 
+/* Checks the function. */
 static int __Check_Function__(__Semantic_Context__ *__Semantic__,
                               __Semantic_Function_Entry__ *__Function__)
 {
+    /* Stores the context. */
     __Semantic_Body_Context__ __Context__;
+    /* Tracks the index. */
     size_t __Index__ = 0U;
+    /* Stores the output. */
     __Resolved_Type__ __Output__;
     memset(&__Context__, 0, sizeof(__Context__));
     __Context__.__Semantic__ = __Semantic__;
@@ -18,8 +24,10 @@ static int __Check_Function__(__Semantic_Context__ *__Semantic__,
     __Arena_Init__(&__Context__.__Synthetic_Types__, 2048U);
     for (__Index__ = 0U; __Index__ < __Function__->__Function__->__Parameter_Count__; ++__Index__)
     {
+        /* References the parameter. */
         __Ast_Function_Parameter__ *__Parameter__ =
             &__Function__->__Function__->__Parameters__[__Index__];
+        /* Stores the local. */
         __Semantic_Local__ __Local__;
         memset(&__Local__, 0, sizeof(__Local__));
         __Local__.__Name_Kind__ = __Ast_Lvalue_Base_Identifier__;
@@ -33,6 +41,7 @@ static int __Check_Function__(__Semantic_Context__ *__Semantic__,
         __Local__.__Declaration_Span__ = __Function__->__Function__->__Header__.__Span__;
         __Safety_Fact_Mark_Initialized_At__(&__Local__.__Safety__, __Local__.__Declaration_Span__);
         {
+            /* Tracks whether the value is view. */
             int __Is_View__ = __Safety_Type_Is_Reference__(__Local__.__Type__, NULL);
 
             if (!__Is_View__ && __Memory_Type_Contains_View__(__Semantic__, __Local__.__Type__))
@@ -90,8 +99,10 @@ static int __Check_Function__(__Semantic_Context__ *__Semantic__,
     return 1;
 }
 
+/* Checks the semantic bodies. */
 int __Semantic_Check_Bodies__(__Semantic_Context__ *__Context__)
 {
+    /* Tracks the index. */
     size_t __Index__ = 0U;
     if (__Context__ == NULL)
     {
@@ -99,6 +110,7 @@ int __Semantic_Check_Bodies__(__Semantic_Context__ *__Context__)
     }
     for (__Index__ = 0U; __Index__ < __Context__->__Functions__.__Count__; ++__Index__)
     {
+        /* References the function. */
         __Semantic_Function_Entry__ *__Function__ =
             (__Semantic_Function_Entry__ *)__Vector_At__(&__Context__->__Functions__, __Index__);
         if (__Function__ != NULL && !__Check_Function__(__Context__, __Function__))

@@ -1,11 +1,15 @@
+/* Implements arena allocation for bootstrap-owned data. */
+
 #include "support/memory/arena.h"
 #include "support/memory/alignment.h"
 
 #include <stdlib.h>
 #include <string.h>
 
+/* Creates the arena block. */
 static __Arena_Block__ *__Arena_New_Block__(size_t __Capacity__)
 {
+    /* References the block. */
     __Arena_Block__ *__Block__ = (__Arena_Block__ *)malloc(sizeof(*__Block__) + __Capacity__);
     if (__Block__ == NULL)
     {
@@ -17,6 +21,7 @@ static __Arena_Block__ *__Arena_New_Block__(size_t __Capacity__)
     return __Block__;
 }
 
+/* Initializes the arena. */
 void __Arena_Init__(__Arena__ *__Arena_State__, size_t __Default_Block_Size__)
 {
     if (__Arena_State__ == NULL)
@@ -29,10 +34,14 @@ void __Arena_Init__(__Arena__ *__Arena_State__, size_t __Default_Block_Size__)
         __Default_Block_Size__ < 1024U ? 1024U : __Default_Block_Size__;
 }
 
+/* Allocates the arena. */
 void *__Arena_Allocate__(__Arena__ *__Arena_State__, size_t __Size__, size_t __Alignment__)
 {
+    /* References the block. */
     __Arena_Block__ *__Block__ = NULL;
+    /* Stores the offset. */
     size_t __Offset__ = 0U;
+    /* Stores the capacity. */
     size_t __Capacity__ = 0U;
 
     if (__Arena_State__ == NULL || __Size__ == 0U)
@@ -77,8 +86,10 @@ void *__Arena_Allocate__(__Arena__ *__Arena_State__, size_t __Size__, size_t __A
     return __Block__->__Data__ + __Offset__;
 }
 
+/* Copies the arena text. */
 char *__Arena_Copy_Text__(__Arena__ *__Arena_State__, const char *__Text__, size_t __Length__)
 {
+    /* References the copy. */
     char *__Copy__ = (char *)__Arena_Allocate__(__Arena_State__, __Length__ + 1U, _Alignof(char));
     if (__Copy__ == NULL)
     {
@@ -92,9 +103,12 @@ char *__Arena_Copy_Text__(__Arena__ *__Arena_State__, const char *__Text__, size
     return __Copy__;
 }
 
+/* Releases the arena. */
 void __Arena_Destroy__(__Arena__ *__Arena_State__)
 {
+    /* References the block. */
     __Arena_Block__ *__Block__ = NULL;
+    /* References the next. */
     __Arena_Block__ *__Next__ = NULL;
     if (__Arena_State__ == NULL)
     {

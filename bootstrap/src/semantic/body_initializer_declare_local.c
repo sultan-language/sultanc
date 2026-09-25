@@ -1,11 +1,15 @@
+/* Declares initialized local values. */
+
 #include "semantic/body_internal.h"
 
 #include <string.h>
 
+/* Returns the body declare local. */
 int __Body_Declare_Local__(__Semantic_Body_Context__ *__Context__,
                            __Ast_Variable_Declaration__ *__Declaration__,
                            __Source_Span__ __Span__)
 {
+    /* Stores the local. */
     __Semantic_Local__ __Local__;
     memset(&__Local__, 0, sizeof(__Local__));
     __Local__.__Name_Kind__ = __Declaration__->__Name_Kind__;
@@ -34,6 +38,7 @@ int __Body_Declare_Local__(__Semantic_Body_Context__ *__Context__,
     }
     if (__Local__.__Type__ != NULL)
     {
+        /* Stores the size. */
         size_t __Size__ = 0U, __Alignment__ = 0U;
         if (!__Layout_Type__(
                 __Context__->__Semantic__, __Local__.__Type__, &__Size__, &__Alignment__))

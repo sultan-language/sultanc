@@ -1,12 +1,17 @@
+/* Parses atomic expressions. */
+
 #include "frontend/parser/cursor.h"
 #include "frontend/parser/diagnostic.h"
 #include "frontend/parser/expression_internal.h"
 #include "frontend/parser/storage.h"
 #include "frontend/parser/token_payload.h"
 
+/* Parses the parser atom. */
 __Ast_Atom__ __Parser_Parse_Atom__(__Parser__ *__Parser_State__, int *__Ok__)
 {
+    /* Stores the atom. */
     __Ast_Atom__ __Atom__;
+    /* References the literal. */
     __Ast_Literal__ *__Literal__ = NULL;
     *__Ok__ = 0;
     __Atom__.__Kind__ = __Ast_Atom_Literal__;
@@ -15,6 +20,7 @@ __Ast_Atom__ __Parser_Parse_Atom__(__Parser__ *__Parser_State__, int *__Ok__)
     {
         case __Token_LIT_INT__:
         {
+            /* Stores the integer. */
             __Integer_Literal__ __Integer__;
             if (!__Parser_Current_Integer__(__Parser_State__, &__Integer__))
             {
@@ -32,6 +38,7 @@ __Ast_Atom__ __Parser_Parse_Atom__(__Parser__ *__Parser_State__, int *__Ok__)
         }
         case __Token_LIT_CHAR__:
         {
+            /* Stores the character. */
             uint32_t __Character__;
             if (!__Parser_Current_Character__(__Parser_State__, &__Character__))
             {
@@ -49,6 +56,7 @@ __Ast_Atom__ __Parser_Parse_Atom__(__Parser__ *__Parser_State__, int *__Ok__)
         }
         case __Token_LIT_BOOL__:
         {
+            /* Stores the boolean. */
             int __Boolean__;
             if (!__Parser_Current_Boolean__(__Parser_State__, &__Boolean__))
             {
@@ -65,6 +73,7 @@ __Ast_Atom__ __Parser_Parse_Atom__(__Parser__ *__Parser_State__, int *__Ok__)
         }
         case __Token_LIT_STR__:
         {
+            /* Stores the text. */
             __Text_Slice__ __Text__;
             if (!__Parser_Current_Text__(__Parser_State__, &__Text__))
             {

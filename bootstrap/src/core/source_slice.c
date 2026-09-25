@@ -1,7 +1,11 @@
+/* Returns a bounded slice of source text. */
+
 #include "core/source.h"
 
+/* Returns the source. */
 __Text_Slice__ __Source_Slice__(const __Source_File__ *__Source__, size_t __Start__, size_t __End__)
 {
+    /* Stores the operation result. */
     __Text_Slice__ __Result__ = {0};
     if (__Source__ == NULL || __Start__ > __End__ || __End__ > __Source__->__Length__)
     {

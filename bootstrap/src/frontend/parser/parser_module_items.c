@@ -1,3 +1,5 @@
+/* Parses module item lists. */
+
 #include "frontend/parser/cursor.h"
 #include "frontend/parser/diagnostic.h"
 #include "frontend/parser/storage.h"
@@ -6,8 +8,10 @@
 
 #include <stdalign.h>
 
+/* Parses the parser public module item. */
 static int __Parser_Parse_Public_Module_Item__(__Parser__ *__Parser_State__, __Vector__ *__Items__)
 {
+    /* Tracks the public start state. */
     __Source_Position__ __Public_Start__ = __Parser_State__->__Current__.__Span__.__Start__;
 
     if (!__Parser_Advance__(__Parser_State__))
@@ -29,15 +33,19 @@ static int __Parser_Parse_Public_Module_Item__(__Parser__ *__Parser_State__, __V
     return __Parser_Fail__(__Parser_State__, __Diag_Word_Syntax_Expected_Module_Item__);
 }
 
+/* Parses the parser module items. */
 int __Parser_Parse_Module_Items__(__Parser__ *__Parser_State__, __Ast_Module__ *__Out_Module__)
 {
+    /* Stores the items. */
     __Vector__ __Items__;
+    /* Stores the imports. */
     __Vector__ __Imports__;
 
     __Vector_Init__(&__Items__, sizeof(__Ast_Module_Item__ *));
-    __Vector_Init__(&__Imports__, sizeof(__Text_Slice__));
+    __Vector_Init__(&__Imports__, sizeof(__Ast_Import__));
     while (__Parser_State__->__Current__.__Kind__ != __Token_EOF__)
     {
+        /* Tracks whether the operation succeeded. */
         int __Ok__ = 0;
         switch (__Parser_State__->__Current__.__Kind__)
         {
@@ -76,8 +84,8 @@ int __Parser_Parse_Module_Items__(__Parser__ *__Parser_State__, __Ast_Module__ *
     __Out_Module__->__Items__ = (__Ast_Module_Item__ **)__Parser_Freeze_Vector__(
         __Parser_State__, &__Items__, alignof(__Ast_Module_Item__ *));
     __Out_Module__->__Import_Count__ = __Imports__.__Count__;
-    __Out_Module__->__Imports__ = (__Text_Slice__ *)__Parser_Freeze_Vector__(
-        __Parser_State__, &__Imports__, alignof(__Text_Slice__));
+    __Out_Module__->__Imports__ = (__Ast_Import__ *)__Parser_Freeze_Vector__(
+        __Parser_State__, &__Imports__, alignof(__Ast_Import__));
     __Vector_Destroy__(&__Items__);
     __Vector_Destroy__(&__Imports__);
     return 1;

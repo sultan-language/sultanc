@@ -1,6 +1,9 @@
+/* Builds semantic diagnostics. */
+
 #include "semantic/diagnostic.h"
 #include "semantic/context.h"
 
+/* Begins the semantic diagnostic. */
 __Diagnostic__ *__Semantic_Begin_Diagnostic__(__Semantic_Context__ *__Context__,
                                               __Error_Id__ __Id__,
                                               __Source_Span__ __Span__)
@@ -18,6 +21,7 @@ __Diagnostic__ *__Semantic_Begin_Diagnostic__(__Semantic_Context__ *__Context__,
     return &__Context__->__Diagnostic__;
 }
 
+/* Records a failure for the semantic. */
 int __Semantic_Fail__(__Semantic_Context__ *__Context__,
                       __Error_Id__ __Id__,
                       __Source_Span__ __Span__)

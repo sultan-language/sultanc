@@ -1,6 +1,9 @@
+/* Tracks move, borrow, and initialization safety facts. */
+
 #include "kernel/safety/flow.h"
 #include "kernel/memory/memory.h"
 
+/* Initializes the safety fact. */
 void __Safety_Fact_Init__(__Safety_Value_Fact__ *__Fact__, int __Initialized__)
 {
     if (__Fact__ == NULL)
@@ -22,24 +25,28 @@ void __Safety_Fact_Init__(__Safety_Value_Fact__ *__Fact__, int __Initialized__)
     __Fact__->__Mutable_Borrow_Holder__ = SIZE_MAX;
 }
 
+/* Checks whether the safety fact can read. */
 int __Safety_Fact_Can_Read__(const __Safety_Value_Fact__ *__Fact__)
 {
     return __Fact__ != NULL && __Fact__->__State__ == __Safety_Value_Initialized__ &&
            !__Fact__->__Mutable_Borrow__;
 }
 
+/* Checks whether the safety fact can write. */
 int __Safety_Fact_Can_Write__(const __Safety_Value_Fact__ *__Fact__)
 {
     return __Fact__ != NULL && !__Fact__->__Mutable_Borrow__ &&
            __Fact__->__Immutable_Borrows__ == 0U;
 }
 
+/* Checks whether the safety fact can move. */
 int __Safety_Fact_Can_Move__(const __Safety_Value_Fact__ *__Fact__)
 {
     return __Fact__ != NULL && __Fact__->__State__ == __Safety_Value_Initialized__ &&
            !__Fact__->__Mutable_Borrow__ && __Fact__->__Immutable_Borrows__ == 0U;
 }
 
+/* Returns the safety fact acquire shared at. */
 int __Safety_Fact_Acquire_Shared_At__(__Safety_Value_Fact__ *__Owner__, __Source_Span__ __Span__)
 {
     if (__Owner__ == NULL || __Owner__->__State__ != __Safety_Value_Initialized__ ||
@@ -56,6 +63,7 @@ int __Safety_Fact_Acquire_Shared_At__(__Safety_Value_Fact__ *__Owner__, __Source
     return 1;
 }
 
+/* Returns the safety fact acquire mutable at. */
 int __Safety_Fact_Acquire_Mutable_At__(__Safety_Value_Fact__ *__Owner__,
                                        __Source_Span__ __Span__,
                                        size_t __Holder_Index__)
@@ -72,6 +80,7 @@ int __Safety_Fact_Acquire_Mutable_At__(__Safety_Value_Fact__ *__Owner__,
     return 1;
 }
 
+/* Sets the safety fact mutable borrow holder. */
 void __Safety_Fact_Set_Mutable_Borrow_Holder__(__Safety_Value_Fact__ *__Owner__,
                                                size_t __Holder_Index__)
 {
@@ -81,6 +90,7 @@ void __Safety_Fact_Set_Mutable_Borrow_Holder__(__Safety_Value_Fact__ *__Owner__,
     }
 }
 
+/* Releases the safety fact borrow. */
 void __Safety_Fact_Release_Borrow__(__Safety_Value_Fact__ *__Owner__,
                                     __Safety_Borrow_Kind__ __Kind__)
 {
@@ -107,6 +117,7 @@ void __Safety_Fact_Release_Borrow__(__Safety_Value_Fact__ *__Owner__,
     }
 }
 
+/* Marks the safety fact initialized at. */
 void __Safety_Fact_Mark_Initialized_At__(__Safety_Value_Fact__ *__Fact__, __Source_Span__ __Span__)
 {
     if (__Fact__ != NULL)
@@ -120,6 +131,7 @@ void __Safety_Fact_Mark_Initialized_At__(__Safety_Value_Fact__ *__Fact__, __Sour
     }
 }
 
+/* Marks the safety fact moved at. */
 void __Safety_Fact_Mark_Moved_At__(__Safety_Value_Fact__ *__Fact__, __Source_Span__ __Span__)
 {
     if (__Fact__ != NULL)
@@ -134,9 +146,11 @@ void __Safety_Fact_Mark_Moved_At__(__Safety_Value_Fact__ *__Fact__, __Source_Spa
     }
 }
 
+/* Merges the safety fact. */
 __Safety_Value_Fact__ __Safety_Fact_Merge__(const __Safety_Value_Fact__ *__Left__,
                                             const __Safety_Value_Fact__ *__Right__)
 {
+    /* Stores the operation result. */
     __Safety_Value_Fact__ __Result__;
 
     __Safety_Fact_Init__(&__Result__, 0);
@@ -219,6 +233,7 @@ __Safety_Value_Fact__ __Safety_Fact_Merge__(const __Safety_Value_Fact__ *__Left_
     return __Result__;
 }
 
+/* Checks whether the safety type is reference. */
 int __Safety_Type_Is_Reference__(__Ast_Type__ *__Type__, int *__Out_Mutable__)
 {
     while (__Type__ != NULL && __Type__->__Kind__ == __Ast_Type_Mutable__)
@@ -237,8 +252,10 @@ int __Safety_Type_Is_Reference__(__Ast_Type__ *__Type__, int *__Out_Mutable__)
     return 1;
 }
 
+/* Checks whether the safety type is move only. */
 int __Safety_Type_Is_Move_Only__(__Semantic_Context__ *__Context__, __Ast_Type__ *__Type__)
 {
+    /* Tracks the mutable reference state. */
     int __Mutable_Reference__ = 0;
     return __Memory_Type_Is_Owned__(__Context__, __Type__) ||
            (__Safety_Type_Is_Reference__(__Type__, &__Mutable_Reference__) &&

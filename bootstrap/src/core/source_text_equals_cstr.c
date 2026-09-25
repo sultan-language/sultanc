@@ -1,9 +1,13 @@
+/* Compares source text with a C string. */
+
 #include "core/source.h"
 
 #include <string.h>
 
+/* Compares the text C string. */
 int __Text_Equals_Cstr__(__Text_Slice__ __Text__, const char *__Cstr__)
 {
+    /* Stores the length. */
     size_t __Length__ = 0U;
     if (__Cstr__ == NULL)
     {

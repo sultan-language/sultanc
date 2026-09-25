@@ -1,15 +1,19 @@
+/* Copies arrays into AST-owned storage. */
+
 #include "frontend/ast/storage.h"
 #include "frontend/ast/context.h"
 
 #include <stdint.h>
 #include <string.h>
 
+/* Copies the AST array. */
 void *__Ast_Copy_Array__(__Ast_Context__ *__Context__,
                          const void *__Data__,
                          size_t __Count__,
                          size_t __Element_Size__,
                          size_t __Alignment__)
 {
+    /* References the copy. */
     void *__Copy__ = NULL;
     if (__Count__ == 0U)
     {

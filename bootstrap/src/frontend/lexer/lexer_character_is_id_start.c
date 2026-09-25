@@ -4,6 +4,7 @@
 #include "frontend/lexer/character.h"
 #include "frontend/identifier_identity.h"
 
+/* Checks whether the lexer is ID start. */
 int __Lexer_Is_Id_Start__(uint32_t __Scalar__)
 {
     return

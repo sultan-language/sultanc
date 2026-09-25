@@ -1,16 +1,4 @@
-/*
- * SultanC canonical Type Kernel builtin registry.
- *
- * Single declarative owner of builtin type rows. The frontend generator projects
- * Token and AstKind into Stage-0/Stage-1 token-to-AST syntax adapters. The Type
- * System projects Id, ResolvedKind, Bits, Scalar, Signed, and DiagnosticName into
- * semantic identity and properties, and owns AST-to-canonical-ID resolution.
- * Neither generated frontend adapter imports the semantic Type representation.
- *
- * Arguments:
- *   Id, Token, AstKind, ResolvedKind, Bits, Scalar, Signed, Stage1Constructor,
- *   DiagnosticName
- */
+/* Canonical built-in type registry shared by generated frontend and type-system views. */
 
 SULTANC__TYPE_BUILTIN__(ANY, ANY, Any, Unknown, 0, 0, 0, "أي", "any")
 SULTANC__TYPE_BUILTIN__(BOOL, BOOL, Boolean, Boolean, 1, 1, 0, "منطقي", "bool")

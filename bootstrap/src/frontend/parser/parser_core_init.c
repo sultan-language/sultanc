@@ -1,3 +1,5 @@
+/* Initializes parser state and token flow. */
+
 #include "frontend/lexer/lifecycle.h"
 #include "frontend/lexer/scanning.h"
 #include "frontend/parser/cursor.h"
@@ -6,6 +8,7 @@
 
 #include <string.h>
 
+/* Reads the parser token. */
 static int __Parser_Read_Token__(__Parser__ *__Parser_State__, __Token__ *__Out_Token__)
 {
     if (__Lexer_Next__(&__Parser_State__->__Lexer__, __Out_Token__))
@@ -20,6 +23,7 @@ static int __Parser_Read_Token__(__Parser__ *__Parser_State__, __Token__ *__Out_
     return 0;
 }
 
+/* Initializes the parser. */
 int __Parser_Init__(__Parser__ *__Parser_State__,
                     const __Source_File__ *__Source__,
                     __Ast_Context__ *__Ast__,
@@ -48,8 +52,10 @@ int __Parser_Init__(__Parser__ *__Parser_State__,
     return 1;
 }
 
+/* Advances the parser. */
 int __Parser_Advance__(__Parser__ *__Parser_State__)
 {
+    /* Stores the incoming. */
     __Token__ __Incoming__;
     if (__Parser_State__ == NULL || __Parser_State__->__Failed__)
     {

@@ -1,6 +1,9 @@
+/* Returns a mutable loaded program unit. */
+
 #include "core/program.h"
 #include "support/containers/vector.h"
 
+/* Returns the program unit at. */
 __Program_Unit__ *__Program_Unit_At__(__Program__ *__Program_State__, size_t __Index__)
 {
     return __Program_State__ == NULL

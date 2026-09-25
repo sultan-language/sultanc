@@ -1,3 +1,5 @@
+/* Scans the next source token. */
+
 #include "frontend/lexer/scanning.h"
 #include "frontend/identifier_identity.h"
 #include "frontend/lexer/lexer.h"
@@ -10,11 +12,13 @@
 
 #include <string.h>
 
+/* Decodes the lexer at. */
 static __Utf8_Decode_Result__ __Lexer_Decode_At__(const __Lexer__ *__Lexer_State__,
                                                   size_t __Offset__)
 {
     if (__Offset__ >= __Lexer_State__->__Source__->__Length__)
     {
+        /* Stores the empty. */
         __Utf8_Decode_Result__ __Empty__ = {0U, 0U, 0};
         return __Empty__;
     }
@@ -23,9 +27,12 @@ static __Utf8_Decode_Result__ __Lexer_Decode_At__(const __Lexer__ *__Lexer_State
                            __Lexer_State__->__Source__->__Length__ - __Offset__);
 }
 
+/* Returns the lexer. */
 int __Lexer_Next__(__Lexer__ *__Lexer_State__, __Token__ *__Out_Token__)
 {
+    /* Stores the start. */
     __Source_Position__ __Start__;
+    /* Stores the start offset. */
     size_t __Start_Offset__ = 0U;
 
     if (__Lexer_State__ == NULL || __Out_Token__ == NULL || __Lexer_State__->__Source__ == NULL ||
@@ -38,6 +45,7 @@ int __Lexer_Next__(__Lexer__ *__Lexer_State__, __Token__ *__Out_Token__)
     {
         while (__Lexer_Has__(__Lexer_State__, 1U))
         {
+            /* Stores the byte. */
             unsigned char __Byte__ = __Lexer_Peek__(__Lexer_State__, 0U);
             if (__Byte__ == (unsigned char)' ' || __Byte__ == (unsigned char)'\t' ||
                 __Byte__ == (unsigned char)'\r' || __Byte__ == (unsigned char)'\n')
@@ -90,17 +98,21 @@ int __Lexer_Next__(__Lexer__ *__Lexer_State__, __Token__ *__Out_Token__)
 
     if (__Lexer_Peek__(__Lexer_State__, 0U) == (unsigned char)'_')
     {
+        /* Tracks whether the ID rest is present. */
         int __Has_Id_Rest__ = 0;
         if (__Lexer_Has__(__Lexer_State__, 2U))
         {
+            /* Stores the next byte. */
             unsigned char __Next_Byte__ = __Lexer_Peek__(__Lexer_State__, 1U);
             if (__Lexer_Is_Decimal_Digit__(__Next_Byte__))
             {
+                /* Stores the value. */
                 uint64_t __Value__ = 0U;
                 __Lexer_Advance_Bytes__(__Lexer_State__, 1U);
                 while (__Lexer_Has__(__Lexer_State__, 1U) &&
                        __Lexer_Is_Decimal_Digit__(__Lexer_Peek__(__Lexer_State__, 0U)))
                 {
+                    /* Stores the digit. */
                     uint64_t __Digit__ =
                         (uint64_t)(__Lexer_Peek__(__Lexer_State__, 0U) - (unsigned char)'0');
                     if (__Value__ > (((uint64_t)INT64_MAX - __Digit__) / 10U))
@@ -121,6 +133,7 @@ int __Lexer_Next__(__Lexer__ *__Lexer_State__, __Token__ *__Out_Token__)
                                                  (int64_t)__Value__);
             }
             {
+                /* Stores the next. */
                 __Utf8_Decode_Result__ __Next__ =
                     __Lexer_Decode_At__(__Lexer_State__, __Start_Offset__ + 1U);
                 __Has_Id_Rest__ =
@@ -144,13 +157,17 @@ int __Lexer_Next__(__Lexer__ *__Lexer_State__, __Token__ *__Out_Token__)
     }
 
     {
+        /* Stores the first. */
         __Utf8_Decode_Result__ __First__ = __Lexer_Decode_At__(__Lexer_State__, __Start_Offset__);
         if (__First__.__Valid__ && __Lexer_Is_Id_Start__(__First__.__Codepoint__))
         {
+            /* Stores the keyword. */
             __Keyword_Result__ __Keyword__;
+            /* Stores the text. */
             __Text_Slice__ __Text__;
             while (__Lexer_Has__(__Lexer_State__, 1U))
             {
+                /* Stores the current. */
                 __Utf8_Decode_Result__ __Current__ =
                     __Lexer_Decode_At__(__Lexer_State__, __Lexer_State__->__Offset__);
                 if (!__Current__.__Valid__)
@@ -205,6 +222,7 @@ int __Lexer_Next__(__Lexer__ *__Lexer_State__, __Token__ *__Out_Token__)
 
     if (__Lexer_Peek__(__Lexer_State__, 0U) >= 0x80U)
     {
+        /* Stores the decoded. */
         __Utf8_Decode_Result__ __Decoded__ =
             __Utf8_Decode__((const unsigned char *)__Lexer_State__->__Source__->__Bytes__ +
                                 __Lexer_State__->__Offset__,

@@ -1,9 +1,12 @@
+/* Validates required parser tokens. */
+
 #include "frontend/parser/cursor.h"
 #include "frontend/parser/diagnostic.h"
 #include "frontend/parser/internal.h"
 
 #include <stddef.h>
 
+/* Returns the parser expected token spelling. */
 static const char *__Parser_Expected_Token_Spelling__(__Token_Kind__ __Kind__)
 {
     switch (__Kind__)
@@ -46,6 +49,7 @@ static const char *__Parser_Expected_Token_Spelling__(__Token_Kind__ __Kind__)
     }
 }
 
+/* Sets the parser found argument. */
 static int __Parser_Set_Found_Argument__(__Parser__ *__Parser_State__)
 {
     if (__Parser_State__->__Current__.__Lexeme__.__Length__ != 0U)
@@ -59,8 +63,10 @@ static int __Parser_Set_Found_Argument__(__Parser__ *__Parser_State__)
         __Parser_State__->__Diagnostic__, __Diagnostic_Argument_Found__, "<EOF>");
 }
 
+/* Records a failure for the parser missing semicolon. */
 static int __Parser_Fail_Missing_Semicolon__(__Parser__ *__Parser_State__)
 {
+    /* Stores the insertion. */
     __Source_Span__ __Insertion__;
 
     __Insertion__.__Start__ = __Parser_State__->__Previous__.__Span__.__End__;
@@ -87,8 +93,10 @@ static int __Parser_Fail_Missing_Semicolon__(__Parser__ *__Parser_State__)
     return 0;
 }
 
+/* Expects the parser. */
 int __Parser_Expect__(__Parser__ *__Parser_State__, __Token_Kind__ __Kind__)
 {
+    /* References the expected. */
     const char *__Expected__;
 
     if (__Parser_State__ == NULL)

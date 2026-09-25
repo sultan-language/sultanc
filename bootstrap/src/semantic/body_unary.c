@@ -1,16 +1,24 @@
+/* Infers and validates unary expressions. */
+
 #include "semantic/body_internal.h"
 
+/* Infers the body unary. */
 int __Body_Infer_Unary__(__Semantic_Body_Context__ *__Context__,
                          __Ast_Expression__ *__Expression__,
                          __Ast_Type__ **__Out_Type__)
 {
+    /* References the operand type. */
     __Ast_Type__ *__Operand_Type__ = NULL;
+    /* Stores the operation. */
     __Ast_Unary_Operation__ __Operation__ = __Expression__->__As__.__Unary__.__Operation__;
 
     if (__Operation__ == __Unary_Address__ || __Operation__ == __Unary_Address_Mutable__)
     {
+        /* References the operand. */
         __Ast_Expression__ *__Operand__ = __Expression__->__As__.__Unary__.__Operand__;
+        /* References the lvalue type. */
         __Ast_Type__ *__Lvalue_Type__ = NULL;
+        /* References the reference type. */
         __Ast_Type__ *__Reference_Type__ = NULL;
 
         if (__Operand__ == NULL || __Operand__->__Kind__ != __Ast_Expression_Atom__ ||
@@ -44,6 +52,7 @@ int __Body_Infer_Unary__(__Semantic_Body_Context__ *__Context__,
     }
     if (__Operation__ == __Unary_Dereference__)
     {
+        /* Stores the resolved. */
         __Resolved_Type__ __Resolved__;
 
         if (!__Type_Resolve__(__Context__->__Semantic__, __Operand_Type__, &__Resolved__))

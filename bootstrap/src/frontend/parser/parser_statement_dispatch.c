@@ -1,7 +1,10 @@
+/* Dispatches statement parsing. */
+
 #include "frontend/parser/cursor.h"
 #include "frontend/parser/diagnostic.h"
 #include "frontend/parser/statement_internal.h"
 
+/* Parses the parser one statement. */
 int __Parser_Parse_One_Statement__(__Parser__ *__Parser_State__, __Vector__ *__Statements__)
 {
     switch (__Parser_State__->__Current__.__Kind__)
@@ -16,6 +19,7 @@ int __Parser_Parse_One_Statement__(__Parser__ *__Parser_State__, __Vector__ *__S
             return __Parser_Parse_Match__(__Parser_State__, __Statements__);
         case __Token_IF__:
         {
+            /* References the conditional statement. */
             __Ast_Statement__ *__If__ = __Parser_Parse_If_Core__(__Parser_State__);
             if (__If__ == NULL)
             {

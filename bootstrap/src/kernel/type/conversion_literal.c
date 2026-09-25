@@ -1,10 +1,15 @@
+/* Classifies safe literal and type conversions. */
+
 #include "kernel/type/conversion.h"
 
 #include <stdint.h>
 
+/* Returns the signed integer fits. */
 static int __Signed_Integer_Fits__(int64_t __Value__, unsigned __Bits__)
 {
+    /* Stores the minimum. */
     int64_t __Minimum__;
+    /* Stores the maximum. */
     int64_t __Maximum__;
     if (__Bits__ == 0U || __Bits__ > 64U)
     {
@@ -19,8 +24,10 @@ static int __Signed_Integer_Fits__(int64_t __Value__, unsigned __Bits__)
     return __Value__ >= __Minimum__ && __Value__ <= __Maximum__;
 }
 
+/* Returns the unsigned integer fits. */
 static int __Unsigned_Integer_Fits__(int64_t __Value__, unsigned __Bits__)
 {
+    /* Stores the maximum. */
     uint64_t __Maximum__;
     if (__Bits__ == 0U || __Bits__ > 64U || __Value__ < 0)
     {
@@ -34,10 +41,12 @@ static int __Unsigned_Integer_Fits__(int64_t __Value__, unsigned __Bits__)
     return (uint64_t)__Value__ <= __Maximum__;
 }
 
+/* Returns the type integer literal fits. */
 int __Type_Integer_Literal_Fits__(__Semantic_Context__ *__Context__,
                                   int64_t __Value__,
                                   __Ast_Type__ *__Target_Type__)
 {
+    /* Stores the resolved. */
     __Resolved_Type__ __Resolved__;
     if (__Context__ == NULL || __Target_Type__ == NULL ||
         !__Type_Resolve__(__Context__, __Target_Type__, &__Resolved__))
@@ -55,11 +64,14 @@ int __Type_Integer_Literal_Fits__(__Semantic_Context__ *__Context__,
     return 0;
 }
 
+/* Classifies the type conversion. */
 __Type_Conversion_Class__ __Type_Conversion_Classify__(__Semantic_Context__ *__Context__,
                                                        __Ast_Type__ *__Source__,
                                                        __Ast_Type__ *__Target__)
 {
+    /* Stores the source type. */
     __Resolved_Type__ __Source_Type__;
+    /* Stores the target type. */
     __Resolved_Type__ __Target_Type__;
 
     if (__Context__ == NULL || __Source__ == NULL || __Target__ == NULL)
@@ -129,6 +141,7 @@ __Type_Conversion_Class__ __Type_Conversion_Classify__(__Semantic_Context__ *__C
     return __Type_Conversion_Invalid__;
 }
 
+/* Checks whether the type conversion is safe. */
 int __Type_Conversion_Is_Safe__(__Semantic_Context__ *__Context__,
                                 __Ast_Type__ *__Source__,
                                 __Ast_Type__ *__Target__)

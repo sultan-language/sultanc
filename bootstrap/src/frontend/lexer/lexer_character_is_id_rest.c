@@ -3,6 +3,7 @@
  */
 #include "frontend/lexer/character.h"
 
+/* Checks whether the lexer is ID rest. */
 int __Lexer_Is_Id_Rest__(uint32_t __Scalar__)
 {
     return

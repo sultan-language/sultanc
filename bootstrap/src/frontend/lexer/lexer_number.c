@@ -1,3 +1,5 @@
+/* Scans and validates numeric literals. */
+
 #include "frontend/lexer/literal.h"
 #include "frontend/lexer/cursor.h"
 #include "frontend/lexer/character.h"
@@ -5,6 +7,7 @@
 #include <errno.h>
 #include <stdlib.h>
 
+/* Returns the lexer digit for base. */
 static int __Lexer_Digit_For_Base__(unsigned char __Byte__, int __Base__)
 {
     if (__Base__ == 2)
@@ -21,7 +24,9 @@ static int __Lexer_Digit_For_Base__(unsigned char __Byte__, int __Base__)
 /* Numeric separators are permitted only between two digits of the active radix. */
 static int __Lexer_Number_Separators_Valid__(__Text_Slice__ __Spelling__)
 {
+    /* Tracks the index. */
     size_t __Index__ = 0U;
+    /* Stores the base. */
     int __Base__ = 10;
     if (__Spelling__.__Length__ >= 2U && __Spelling__.__Data__[0] == '0' &&
         __Spelling__.__Data__[1] == 'b')
@@ -49,12 +54,18 @@ static int __Lexer_Number_Separators_Valid__(__Text_Slice__ __Spelling__)
     }
     return 1;
 }
+/* Parses the lexer integer value. */
 static int __Lexer_Parse_Integer_Value__(__Text_Slice__ __Spelling__, int64_t *__Out_Value__)
 {
+    /* Stores the buffer. */
     char __Buffer__[256];
+    /* References the end. */
     char *__End__ = NULL;
+    /* Stores the input. */
     size_t __Input__ = 0U;
+    /* Stores the output. */
     size_t __Output__ = 0U;
+    /* Stores the base. */
     int __Base__ = 10;
     if (__Spelling__.__Length__ >= sizeof(__Buffer__))
     {
@@ -62,6 +73,7 @@ static int __Lexer_Parse_Integer_Value__(__Text_Slice__ __Spelling__, int64_t *_
     }
     for (__Input__ = 0U; __Input__ < __Spelling__.__Length__; ++__Input__)
     {
+        /* Stores the character. */
         char __Character__ = __Spelling__.__Data__[__Input__];
         if (__Character__ != '_')
         {
@@ -71,7 +83,9 @@ static int __Lexer_Parse_Integer_Value__(__Text_Slice__ __Spelling__, int64_t *_
     __Buffer__[__Output__] = '\0';
     if (__Output__ >= 2U && __Buffer__[0] == '0' && __Buffer__[1] == 'b')
     {
+        /* Tracks the index. */
         size_t __Index__ = 2U;
+        /* Stores the value. */
         uint64_t __Value__ = 0U;
         if (__Output__ == 2U)
         {
@@ -101,10 +115,12 @@ static int __Lexer_Parse_Integer_Value__(__Text_Slice__ __Spelling__, int64_t *_
     return errno != ERANGE && __End__ != __Buffer__ && *__End__ == '\0';
 }
 
+/* Scans the lexer decimal digits. */
 static void __Lexer_Scan_Decimal_Digits__(__Lexer__ *__Lexer_State__)
 {
     while (__Lexer_Has__(__Lexer_State__, 1U))
     {
+        /* Stores the byte. */
         unsigned char __Byte__ = __Lexer_Peek__(__Lexer_State__, 0U);
         if (!__Lexer_Is_Decimal_Digit__(__Byte__) && __Byte__ != (unsigned char)'_')
         {
@@ -114,17 +130,20 @@ static void __Lexer_Scan_Decimal_Digits__(__Lexer__ *__Lexer_State__)
     }
 }
 
+/* Scans the lexer number. */
 int __Lexer_Scan_Number__(__Lexer__ *__Lexer_State__,
                           __Token__ *__Out_Token__,
                           __Source_Position__ __Start__,
                           size_t __Start_Offset__)
 {
+    /* Stores the decimal float. */
     int __Decimal_Float__ = 0;
     if (__Lexer_Matches__(__Lexer_State__, "0b"))
     {
         __Lexer_Advance_Bytes__(__Lexer_State__, 2U);
         while (__Lexer_Has__(__Lexer_State__, 1U))
         {
+            /* Stores the byte. */
             unsigned char __Byte__ = __Lexer_Peek__(__Lexer_State__, 0U);
             if (__Byte__ != (unsigned char)'0' && __Byte__ != (unsigned char)'1' &&
                 __Byte__ != (unsigned char)'_')
@@ -139,6 +158,7 @@ int __Lexer_Scan_Number__(__Lexer__ *__Lexer_State__,
         __Lexer_Advance_Bytes__(__Lexer_State__, 2U);
         while (__Lexer_Has__(__Lexer_State__, 1U))
         {
+            /* Stores the byte. */
             unsigned char __Byte__ = __Lexer_Peek__(__Lexer_State__, 0U);
             if (!__Lexer_Is_Hex_Digit__(__Byte__) && __Byte__ != (unsigned char)'_')
             {
@@ -162,8 +182,11 @@ int __Lexer_Scan_Number__(__Lexer__ *__Lexer_State__,
             (__Lexer_Peek__(__Lexer_State__, 0U) == (unsigned char)'e' ||
              __Lexer_Peek__(__Lexer_State__, 0U) == (unsigned char)'E'))
         {
+            /* Stores the saved offset. */
             size_t __Saved_Offset__ = __Lexer_State__->__Offset__;
+            /* Stores the saved line. */
             uint32_t __Saved_Line__ = __Lexer_State__->__Line__;
+            /* Stores the saved column. */
             uint32_t __Saved_Column__ = __Lexer_State__->__Column__;
             __Lexer_Advance_Bytes__(__Lexer_State__, 1U);
             if (__Lexer_Has__(__Lexer_State__, 1U) &&
@@ -188,6 +211,7 @@ int __Lexer_Scan_Number__(__Lexer__ *__Lexer_State__,
     }
 
     {
+        /* Stores the spelling. */
         __Text_Slice__ __Spelling__ = __Source_Slice__(
             __Lexer_State__->__Source__, __Start_Offset__, __Lexer_State__->__Offset__);
         if (!__Lexer_Number_Separators_Valid__(__Spelling__))
@@ -206,6 +230,7 @@ int __Lexer_Scan_Number__(__Lexer__ *__Lexer_State__,
     }
 
     {
+        /* Stores the integer. */
         __Integer_Literal__ __Integer__;
         __Integer__.__Spelling__ = __Source_Slice__(
             __Lexer_State__->__Source__, __Start_Offset__, __Lexer_State__->__Offset__);

@@ -1,12 +1,19 @@
+/* Checks vector initializers. */
+
 #include "semantic/body_internal.h"
 #include "kernel/memory/memory.h"
 
+/* Checks the body vector initializer. */
 int __Body_Check_Vector_Init__(__Semantic_Body_Context__ *__Context__,
                                __Ast_Statement__ *__Statement__)
 {
+    /* References the destination type. */
     __Ast_Type__ *__Destination_Type__ = NULL;
+    /* References the local. */
     __Semantic_Local__ *__Local__ = NULL;
+    /* Stores the resolved. */
     __Resolved_Type__ __Resolved__;
+    /* Tracks the index. */
     size_t __Index__ = 0U;
     if (!__Body_Check_Assignable__(__Context__,
                                    __Statement__->__As__.__Aggregate__.__Destination__,

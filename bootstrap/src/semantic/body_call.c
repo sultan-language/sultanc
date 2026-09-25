@@ -1,7 +1,10 @@
+/* Checks ordinary function calls. */
+
 #include "semantic/body_internal.h"
 #include "kernel/name/name.h"
 #include "kernel/type/tagged.h"
 
+/* Checks the body call arguments. */
 static int __Body_Check_Call_Arguments__(__Semantic_Body_Context__ *__Context__,
                                          __Ast_Type__ *const *__Parameters__,
                                          size_t __Parameter_Count__,
@@ -9,6 +12,7 @@ static int __Body_Check_Call_Arguments__(__Semantic_Body_Context__ *__Context__,
                                          size_t __Argument_Count__,
                                          int __Apply_Safety_Effects__)
 {
+    /* Tracks the index. */
     size_t __Index__;
 
     if (__Parameter_Count__ != __Argument_Count__)
@@ -43,15 +47,20 @@ static int __Body_Check_Call_Arguments__(__Semantic_Body_Context__ *__Context__,
     return 1;
 }
 
+/* Infers the body call. */
 int __Body_Infer_Call__(__Semantic_Body_Context__ *__Context__,
                         __Ast_Expression__ *__Expression__,
                         __Ast_Type__ **__Out_Type__)
 {
+    /* References the function lvalue. */
     __Ast_Lvalue__ *__Function_Lvalue__ = __Expression__->__As__.__Call__.__Function__;
+    /* References the callee. */
     __Semantic_Function_Entry__ *__Callee__ = NULL;
+    /* References the local. */
     __Semantic_Local__ *__Local__ = NULL;
 
     {
+        /* Tracks the builtin matched state. */
         int __Builtin_Matched__ = 0;
         if (!__Body_Try_Infer_Builtin_Call__(
                 __Context__, __Expression__, __Out_Type__, &__Builtin_Matched__))
@@ -78,6 +87,7 @@ int __Body_Infer_Call__(__Semantic_Body_Context__ *__Context__,
     }
 
     {
+        /* Tracks the matched state. */
         int __Matched__ = 0;
         if (!__Body_Try_Infer_Enum_Construct__(
                 __Context__, __Expression__, __Out_Type__, &__Matched__))
@@ -96,6 +106,7 @@ int __Body_Infer_Call__(__Semantic_Body_Context__ *__Context__,
         __Local__ = __Body_Find_Local__(__Context__, __Function_Lvalue__);
         if (__Local__ == NULL)
         {
+            /* Stores the lookup. */
             __Name_Lookup_Status__ __Lookup__ = __Name_Resolve_Function__(
                 __Context__->__Semantic__,
                 __Context__->__Function__->__Unit__,
@@ -112,9 +123,12 @@ int __Body_Infer_Call__(__Semantic_Body_Context__ *__Context__,
 
     if (__Callee__ != NULL)
     {
+        /* References the parameters. */
         __Ast_Type__ **__Parameters__ = NULL;
 
+        /* Tracks the index. */
         size_t __Index__;
+        /* Tracks whether the operation succeeded. */
         int __Ok__;
 
         if (__Callee__->__Function__->__Parameter_Count__ != 0U)

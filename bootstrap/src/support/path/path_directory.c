@@ -1,13 +1,19 @@
+/* Returns the directory portion of a source path. */
+
 #include "support/path/source_path.h"
 #include "support/path/path.h"
 
 #include <stdlib.h>
 #include <string.h>
 
+/* Returns the source path directory. */
 char *__Source_Path_Directory__(const char *__Path__)
 {
+    /* References the slash. */
     const char *__Slash__;
+    /* Stores the length. */
     size_t __Length__;
+    /* References the directory. */
     char *__Directory__;
 
     if (__Path__ == NULL || __Path__[0] == '\0')

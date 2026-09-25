@@ -1,3 +1,5 @@
+/* Resolves AST types into canonical type facts. */
+
 #include "kernel/type/type.h"
 #include "kernel/type/builtin.h"
 #include "semantic/type_named.h"
@@ -5,6 +7,7 @@
 
 #include <string.h>
 
+/* Maps the builtin class to the type resolved kind. */
 static __Resolved_Type_Kind__
 __Type_Resolved_Kind_From_Builtin_Class__(__Type_Builtin_Class__ __Class__)
 {
@@ -30,6 +33,7 @@ __Type_Resolved_Kind_From_Builtin_Class__(__Type_Builtin_Class__ __Class__)
     return __Resolved_Type_Unknown__;
 }
 
+/* Maps the AST to the type builtin ID. */
 __Type_Builtin_Id__ __Type_Builtin_Id_From_Ast__(const __Ast_Type__ *__Type__)
 {
     if (__Type__ == NULL)
@@ -39,10 +43,12 @@ __Type_Builtin_Id__ __Type_Builtin_Id_From_Ast__(const __Ast_Type__ *__Type__)
 
     switch (__Type__->__Kind__)
     {
+/* Expands the type builtin macro. */
 #define SULTANC__TYPE_BUILTIN__(                                                                   \
     Id, Token, AstKind, ResolvedKind, Bits, Scalar, Signed, Stage1, Name)                          \
     case __Ast_Type_##AstKind##__:                                                                 \
         return __Type_Builtin_##Id##__;
+/* Expands the type machine macro. */
 #define SULTANC__TYPE_MACHINE__(                                                                   \
     Id, Token, Machine, ResolvedKind, Bits, Scalar, Signed, Stage1, Name)
 #include "kernel/type/type_registry.def"
@@ -59,8 +65,10 @@ __Type_Builtin_Id__ __Type_Builtin_Id_From_Ast__(const __Ast_Type__ *__Type__)
 
     switch (__Type__->__As__.__Machine__)
     {
+/* Expands the type builtin macro. */
 #define SULTANC__TYPE_BUILTIN__(                                                                   \
     Id, Token, AstKind, ResolvedKind, Bits, Scalar, Signed, Stage1, Name)
+/* Expands the type machine macro. */
 #define SULTANC__TYPE_MACHINE__(                                                                   \
     Id, Token, Machine, ResolvedKind, Bits, Scalar, Signed, Stage1, Name)                          \
     case __Machine_##Machine##__:                                                                  \
@@ -72,13 +80,18 @@ __Type_Builtin_Id__ __Type_Builtin_Id_From_Ast__(const __Ast_Type__ *__Type__)
     return __Type_Builtin_Invalid__;
 }
 
+/* Resolves the type. */
 int __Type_Resolve__(__Semantic_Context__ *__Context__,
                      __Ast_Type__ *__Type__,
                      __Resolved_Type__ *__Out_Type__)
 {
+    /* References the original. */
     __Ast_Type__ *__Original__ = __Type__;
+    /* References the base. */
     __Ast_Type__ *__Base__ = __Type_Unwrap_Mutable__(__Type__);
+    /* Stores the builtin ID. */
     __Type_Builtin_Id__ __Builtin_Id__;
+    /* References the builtin. */
     const __Type_Builtin_Descriptor__ *__Builtin__;
 
     if (__Out_Type__ == NULL)
@@ -130,6 +143,7 @@ int __Type_Resolve__(__Semantic_Context__ *__Context__,
             break;
         case __Ast_Type_Named__:
         {
+            /* References the entry. */
             __Semantic_Type_Entry__ *__Entry__ = NULL;
             if (!__Semantic_Resolve_Named_Entry__(__Context__, __Base__, &__Entry__) ||
                 __Entry__ == NULL || __Entry__->__Declaration__ == NULL)

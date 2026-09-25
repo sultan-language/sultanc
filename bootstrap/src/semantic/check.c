@@ -1,7 +1,10 @@
+/* Runs the semantic validation pipeline. */
+
 #include "semantic/check.h"
 #include "semantic/check_function_signatures.h"
 #include "semantic/check_type_declarations.h"
 
+/* Checks the semantic program. */
 int __Semantic_Check_Program__(__Semantic_Context__ *__Context__)
 {
     if (__Context__ == NULL || __Context__->__Program__ == NULL)

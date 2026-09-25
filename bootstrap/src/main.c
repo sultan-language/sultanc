@@ -1,3 +1,5 @@
+/* Runs the Stage0 bootstrap compiler command-line entry point. */
+
 #include "llvm/llvm_emitter.h"
 #include "core/program.h"
 #include "semantic/body.h"
@@ -10,8 +12,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+/* Returns the diagnostic argument. */
 static const char *diagnostic_argument(const __Diagnostic__ *d, __Diagnostic_Argument_Key__ key)
 {
+    /* Tracks the loop index. */
     size_t i;
 
     if (d == NULL)
@@ -24,6 +28,7 @@ static const char *diagnostic_argument(const __Diagnostic__ *d, __Diagnostic_Arg
     return NULL;
 }
 
+/* Returns the diagnostic argument name. */
 static const char *diagnostic_argument_name(__Diagnostic_Argument_Key__ key)
 {
     switch (key)
@@ -52,8 +57,10 @@ static const char *diagnostic_argument_name(__Diagnostic_Argument_Key__ key)
     return "detail";
 }
 
+/* Prints the diagnostic arguments. */
 static void print_diagnostic_arguments(const __Diagnostic__ *d)
 {
+    /* Tracks the loop index. */
     size_t i;
 
     if (d == NULL)
@@ -69,10 +76,14 @@ static void print_diagnostic_arguments(const __Diagnostic__ *d)
     }
 }
 
+/* Prints the diagnostic name. */
 static void print_diagnostic_name(const char *name)
 {
+    /* References the cursor. */
     const char *cursor = name;
+    /* Stores the length. */
     size_t length;
+    /* Tracks the loop index. */
     size_t i;
 
     if (cursor == NULL)
@@ -93,11 +104,16 @@ static void print_diagnostic_name(const char *name)
     }
 }
 
+/* Prints the diagnostic. */
 static void print_diag(const char *phase, const __Diagnostic__ *d)
 {
+    /* References the code. */
     const char *code = d ? __Diagnostic_Code__(d->__Id__) : NULL;
+    /* References the name. */
     const char *name = d ? __Diagnostic_Name__(d->__Id__) : NULL;
+    /* References the function. */
     const char *function = diagnostic_argument(d, __Diagnostic_Argument_Function__);
+    /* References the span. */
     const __Diagnostic_Source_Span__ *span = d ? &d->__Primary_Span__ : NULL;
 
     if (span != NULL && span->__Has_Source__)
@@ -148,20 +164,34 @@ static void print_diag(const char *phase, const __Diagnostic__ *d)
     print_diagnostic_arguments(d);
 }
 
+/* Runs the Stage0 bootstrap compiler. */
 int main(int argc, char **argv)
 {
+    /* References the input path. */
     const char *input = NULL;
+    /* References the output path. */
     const char *output = NULL;
+    /* References the run argv. */
     const char **run_argv = NULL;
+    /* Stores the run argc. */
     int run_argc = 0;
+    /* Stores the run start. */
     int run_start = -1;
+    /* Stores the run mode. */
     int run_mode = 0;
+    /* Stores the process status. */
     int process_status = 1;
+    /* Tracks the loop index. */
     int i;
+    /* Tracks whether the operation succeeded. */
     int ok = 0;
+    /* Stores the program. */
     __Program__ program;
+    /* Stores the semantic context. */
     __Semantic_Context__ sem;
+    /* Tracks the program ready state. */
     int program_ready = 0;
+    /* Tracks the semantic context ready state. */
     int sem_ready = 0;
 
     if (argc < 2)
@@ -221,6 +251,7 @@ int main(int argc, char **argv)
 
     if (run_mode)
     {
+        /* Stores the user count. */
         int user_count = argc - run_start;
         run_argc = user_count + 1;
         run_argv = (const char **)calloc((size_t)run_argc, sizeof(*run_argv));

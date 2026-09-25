@@ -1,12 +1,17 @@
+/* Parses assignable value paths. */
+
 #include "frontend/parser/cursor.h"
 #include "frontend/parser/diagnostic.h"
 #include "frontend/parser/span.h"
 #include "frontend/parser/expression_internal.h"
 #include "support/text/equality.h"
 
+/* Parses the parser lvalue. */
 __Ast_Lvalue__ *__Parser_Parse_Lvalue__(__Parser__ *__Parser_State__)
 {
+    /* References the lvalue. */
     __Ast_Lvalue__ *__Lvalue__ = NULL;
+    /* Stores the start. */
     __Source_Position__ __Start__;
     if (__Parser_State__->__Current__.__Kind__ != __Token_IDENTIFIER__)
     {
@@ -36,8 +41,11 @@ __Ast_Lvalue__ *__Parser_Parse_Lvalue__(__Parser__ *__Parser_State__)
         {
             if (__Parser_Accept__(__Parser_State__, __Token_LEFT_PARENTHESIS_OPERATOR__))
             {
+                /* Tracks whether the operation succeeded. */
                 int __Ok__ = 0;
+                /* Tracks the index. */
                 __Ast_Atom__ __Index__ = __Parser_Parse_Atom__(__Parser_State__, &__Ok__);
+                /* References the extended. */
                 __Ast_Lvalue__ *__Extended__ = NULL;
                 if (!__Ok__ ||
                     !__Parser_Expect__(__Parser_State__, __Token_RIGHT_PARENTHESIS_OPERATOR__))
@@ -64,7 +72,9 @@ __Ast_Lvalue__ *__Parser_Parse_Lvalue__(__Parser__ *__Parser_State__)
                 return NULL;
             }
             {
+                /* Stores the field. */
                 __Text_Slice__ __Field__;
+                /* References the extended. */
                 __Ast_Lvalue__ *__Extended__ = NULL;
                 if (!__Parser_Take_Contextual_Name__(__Parser_State__, &__Field__))
                 {
@@ -86,8 +96,11 @@ __Ast_Lvalue__ *__Parser_Parse_Lvalue__(__Parser__ *__Parser_State__)
         }
         if (__Parser_Accept__(__Parser_State__, __Token_LEFT_BRACKET_OPERATOR__))
         {
+            /* Tracks whether the operation succeeded. */
             int __Ok__ = 0;
+            /* Tracks the index. */
             __Ast_Atom__ __Index__ = __Parser_Parse_Atom__(__Parser_State__, &__Ok__);
+            /* References the extended. */
             __Ast_Lvalue__ *__Extended__ = NULL;
             if (!__Ok__ || !__Parser_Expect__(__Parser_State__, __Token_RIGHT_BRACKET_OPERATOR__))
             {

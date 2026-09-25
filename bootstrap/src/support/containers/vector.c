@@ -1,9 +1,12 @@
+/* Implements the bootstrap dynamic vector. */
+
 #include "support/containers/vector.h"
 
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
+/* Initializes the vector. */
 void __Vector_Init__(__Vector__ *__Vector_State__, size_t __Element_Size__)
 {
     if (__Vector_State__ == NULL)
@@ -16,9 +19,12 @@ void __Vector_Init__(__Vector__ *__Vector_State__, size_t __Element_Size__)
     __Vector_State__->__Element_Size__ = __Element_Size__;
 }
 
+/* Reserves the vector. */
 static int __Vector_Reserve__(__Vector__ *__Vector_State__, size_t __Needed__)
 {
+    /* Stores the capacity. */
     size_t __Capacity__ = 0U;
+    /* References the data. */
     unsigned char *__Data__ = NULL;
     if (__Vector_State__->__Capacity__ >= __Needed__)
     {
@@ -49,8 +55,10 @@ static int __Vector_Reserve__(__Vector__ *__Vector_State__, size_t __Needed__)
     return 1;
 }
 
+/* Adds the vector. */
 void *__Vector_Push__(__Vector__ *__Vector_State__, const void *__Element__)
 {
+    /* References the destination. */
     void *__Destination__ = NULL;
     if (__Vector_State__ == NULL || __Vector_State__->__Element_Size__ == 0U || __Element__ == NULL)
     {
@@ -67,6 +75,7 @@ void *__Vector_Push__(__Vector__ *__Vector_State__, const void *__Element__)
     return __Destination__;
 }
 
+/* Returns the vector at const. */
 const void *__Vector_At_Const__(const __Vector__ *__Vector_State__, size_t __Index__)
 {
     if (__Vector_State__ == NULL || __Index__ >= __Vector_State__->__Count__)
@@ -76,11 +85,13 @@ const void *__Vector_At_Const__(const __Vector__ *__Vector_State__, size_t __Ind
     return __Vector_State__->__Data__ + __Index__ * __Vector_State__->__Element_Size__;
 }
 
+/* Returns the vector at. */
 void *__Vector_At__(__Vector__ *__Vector_State__, size_t __Index__)
 {
     return (void *)__Vector_At_Const__(__Vector_State__, __Index__);
 }
 
+/* Releases the vector. */
 void __Vector_Destroy__(__Vector__ *__Vector_State__)
 {
     if (__Vector_State__ == NULL)

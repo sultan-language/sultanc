@@ -1,3 +1,5 @@
+/* Parses call statements. */
+
 #include "frontend/ast/storage.h"
 #include "frontend/parser/cursor.h"
 #include "frontend/parser/diagnostic.h"
@@ -7,11 +9,14 @@
 
 #include <stdalign.h>
 
+/* Returns the parser call after lvalue. */
 __Ast_Expression__ *__Parser_Call_After_Lvalue__(__Parser__ *__Parser_State__,
                                                  __Ast_Lvalue__ *__Function__,
                                                  __Source_Position__ __Start__)
 {
+    /* Stores the call arguments. */
     __Vector__ __Arguments__;
+    /* References the call. */
     __Ast_Expression__ *__Call__ = NULL;
     __Vector_Init__(&__Arguments__, sizeof(__Ast_Expression__ *));
     if (!__Parser_Expect__(__Parser_State__, __Token_LEFT_PARENTHESIS_OPERATOR__))
@@ -21,6 +26,7 @@ __Ast_Expression__ *__Parser_Call_After_Lvalue__(__Parser__ *__Parser_State__,
     }
     while (__Parser_State__->__Current__.__Kind__ != __Token_RIGHT_PARENTHESIS_OPERATOR__)
     {
+        /* References the argument. */
         __Ast_Expression__ *__Argument__ = __Parser_Parse_Expression__(__Parser_State__);
         if (__Argument__ == NULL || __Vector_Push__(&__Arguments__, &__Argument__) == NULL)
         {

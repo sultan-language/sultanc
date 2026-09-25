@@ -1,14 +1,21 @@
+/* Loads source bytes from disk. */
+
 #include "core/source.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+/* Loads the source. */
 int __Source_Load__(const char *__Path__, __Source_File__ *__Out_Source__)
 {
+    /* References the file. */
     FILE *__File__ = NULL;
+    /* Stores the size. */
     long __Size__ = 0;
+    /* Stores the read. */
     size_t __Read__ = 0;
+    /* References the bytes. */
     char *__Bytes__ = NULL;
 
     if (__Path__ == NULL || __Out_Source__ == NULL)

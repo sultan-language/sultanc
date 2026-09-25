@@ -1,3 +1,5 @@
+/* Declares ownership and memory-policy queries. */
+
 #ifndef SULTANC__KERNEL_MEMORY_MEMORY_H__
 #define SULTANC__KERNEL_MEMORY_MEMORY_H__
 
@@ -5,9 +7,12 @@
 
 #include <stddef.h>
 
+/* Defines the memory vector growth policy structure. */
 typedef struct
 {
+    /* Stores the minimum capacity. */
     size_t __Minimum_Capacity__;
+    /* Stores the growth factor. */
     size_t __Growth_Factor__;
 } __Memory_Vector_Growth_Policy__;
 
@@ -20,14 +25,18 @@ int __Memory_Type_Is_View__(const __Ast_Type__ *__Type__);
 /* True when a value directly or recursively contains a reference/slice view. */
 int __Memory_Type_Contains_View__(__Semantic_Context__ *__Context__, __Ast_Type__ *__Type__);
 
+/* Returns the memory vector growth policy view. */
 const __Memory_Vector_Growth_Policy__ *__Memory_Vector_Growth_Policy_View__(void);
 
+/* Returns the memory element bytes. */
 int __Memory_Element_Bytes__(size_t __Element_Size__,
                              size_t __Element_Count__,
                              size_t *__Out_Bytes__);
 
+/* Returns the memory vector initial capacity. */
 size_t __Memory_Vector_Initial_Capacity__(size_t __Length__);
 
+/* Grows the memory vector capacity. */
 int __Memory_Vector_Grow_Capacity__(size_t __Current_Capacity__,
                                     size_t __Required_Capacity__,
                                     size_t *__Out_Capacity__);

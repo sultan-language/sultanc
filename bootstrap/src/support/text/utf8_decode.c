@@ -1,11 +1,19 @@
+/* Decodes UTF-8 scalar values. */
+
 #include "support/text/utf8.h"
 
+/* Decodes the UTF 8. */
 __Utf8_Decode_Result__ __Utf8_Decode__(const unsigned char *__Bytes__, size_t __Remaining__)
 {
+    /* Stores the operation result. */
     __Utf8_Decode_Result__ __Result__ = {0U, 0U, 0};
+    /* Stores the codepoint. */
     uint32_t __Codepoint__ = 0U;
+    /* Stores the width. */
     size_t __Width__ = 0U;
+    /* Tracks the index. */
     size_t __Index__ = 0U;
+    /* Stores the first. */
     unsigned char __First__ = 0U;
 
     if (__Bytes__ == NULL || __Remaining__ == 0U)
@@ -45,6 +53,7 @@ __Utf8_Decode_Result__ __Utf8_Decode__(const unsigned char *__Bytes__, size_t __
     }
     for (__Index__ = 1U; __Index__ < __Width__; ++__Index__)
     {
+        /* Stores the byte. */
         unsigned char __Byte__ = __Bytes__[__Index__];
         if (!__Utf8_Is_Continuation_Byte__(__Byte__))
         {

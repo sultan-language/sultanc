@@ -1,5 +1,8 @@
+/* Checks statements and block flow. */
+
 #include "semantic/body_internal.h"
 
+/* Checks the body statement. */
 static int __Body_Check_Statement__(__Semantic_Body_Context__ *__Context__,
                                     __Ast_Statement__ *__Statement__)
 {
@@ -17,9 +20,13 @@ static int __Body_Check_Statement__(__Semantic_Body_Context__ *__Context__,
 
         case __Ast_Statement_Copy__:
         {
+            /* References the destination type. */
             __Ast_Type__ *__Destination_Type__ = NULL;
+            /* References the value type. */
             __Ast_Type__ *__Value_Type__ = NULL;
+            /* References the local. */
             __Semantic_Local__ *__Local__ = NULL;
+            /* Stores the expression already inferred. */
             int __Expression_Already_Inferred__ = 0;
 
             if (__Statement__->__As__.__Copy__.__Destination__->__Kind__ == __Ast_Lvalue_Base__)
@@ -36,9 +43,7 @@ static int __Body_Check_Statement__(__Semantic_Body_Context__ *__Context__,
                     }
                     __Local__->__Type__ = __Value_Type__;
                     __Local__->__Mutable__ = 1;
-                    /* Parser-generated call statements use an untyped temporary. The
-                     * inference above already checked that exact expression and applied
-                     * its ownership effects; checking it again would reread moved args. */
+                    /* Avoid rechecking call temporaries after ownership effects are applied. */
                     __Expression_Already_Inferred__ = 1;
                     if (__Local__->__Slot__ != NULL)
                     {
@@ -68,6 +73,7 @@ static int __Body_Check_Statement__(__Semantic_Body_Context__ *__Context__,
             }
             if (__Local__ != NULL)
             {
+                /* References the assigned expression. */
                 __Ast_Expression__ *__Assigned_Expression__ =
                     __Statement__->__As__.__Copy__.__Expression__;
 
@@ -103,9 +109,13 @@ static int __Body_Check_Statement__(__Semantic_Body_Context__ *__Context__,
 
         case __Ast_Statement_While__:
         {
+            /* References the condition type. */
             __Ast_Type__ *__Condition_Type__ = NULL;
+            /* Stores the before. */
             __Body_Safety_Snapshot__ __Before__ = {0};
+            /* Stores the after body. */
             __Body_Safety_Snapshot__ __After_Body__ = {0};
+            /* Tracks the body falls state. */
             int __Body_Falls__ = 1;
 
             if (!__Body_Infer_Expression__(__Context__,
@@ -142,11 +152,17 @@ static int __Body_Check_Statement__(__Semantic_Body_Context__ *__Context__,
 
         case __Ast_Statement_If__:
         {
+            /* References the condition type. */
             __Ast_Type__ *__Condition_Type__ = NULL;
+            /* Stores the before. */
             __Body_Safety_Snapshot__ __Before__ = {0};
+            /* Stores the then. */
             __Body_Safety_Snapshot__ __Then__ = {0};
+            /* Stores the else. */
             __Body_Safety_Snapshot__ __Else__ = {0};
+            /* Tracks the then falls state. */
             int __Then_Falls__ = 1;
+            /* Tracks the else falls state. */
             int __Else_Falls__ = 1;
 
             if (!__Body_Infer_Expression__(
@@ -213,6 +229,7 @@ static int __Body_Check_Statement__(__Semantic_Body_Context__ *__Context__,
 
         case __Ast_Statement_Match__:
         {
+            /* Tracks the match falls state. */
             int __Match_Falls__ = 1;
             if (!__Body_Check_Match__(__Context__, __Statement__, &__Match_Falls__))
             {
@@ -224,8 +241,10 @@ static int __Body_Check_Statement__(__Semantic_Body_Context__ *__Context__,
 
         case __Ast_Statement_Return__:
         {
+            /* References the expected. */
             __Ast_Type__ *__Expected__ =
                 __Context__->__Function__->__Function__->__Output__.__Type__;
+            /* Stores the resolved. */
             __Resolved_Type__ __Resolved__;
 
             if (!__Type_Resolve__(__Context__->__Semantic__, __Expected__, &__Resolved__))
@@ -284,12 +303,16 @@ static int __Body_Check_Statement__(__Semantic_Body_Context__ *__Context__,
                          __Statement__->__Header__.__Span__);
 }
 
+/* Checks the body block flow. */
 int __Body_Check_Block_Flow__(__Semantic_Body_Context__ *__Context__,
                               __Ast_Block__ *__Block__,
                               int *__Out_Falls_Through__)
 {
+    /* Stores the saved count. */
     size_t __Saved_Count__ = __Context__->__Locals__.__Count__;
+    /* Tracks the index. */
     size_t __Index__ = 0U;
+    /* Tracks the falls state. */
     int __Falls__ = 1;
 
     ++__Context__->__Scope_Depth__;
@@ -322,8 +345,10 @@ int __Body_Check_Block_Flow__(__Semantic_Body_Context__ *__Context__,
     return 1;
 }
 
+/* Checks the body block. */
 int __Body_Check_Block__(__Semantic_Body_Context__ *__Context__, __Ast_Block__ *__Block__)
 {
+    /* Tracks the falls state. */
     int __Falls__ = 1;
     return __Body_Check_Block_Flow__(__Context__, __Block__, &__Falls__);
 }

@@ -1,11 +1,15 @@
+/* Captures source spans and excerpts for diagnostics. */
+
 #include "diagnostics/core/internal.h"
 #include "support/text/utf8.h"
 
 #include <stdio.h>
 #include <string.h>
 
+/* Finds the diagnostic line start. */
 static size_t __Diagnostic_Find_Line_Start__(const __Source_File__ *__Source__, size_t __Offset__)
 {
+    /* Stores the cursor. */
     size_t __Cursor__ = __Offset__ > __Source__->__Length__ ? __Source__->__Length__ : __Offset__;
 
     while (__Cursor__ > 0U && __Source__->__Bytes__[__Cursor__ - 1U] != '\n')
@@ -15,8 +19,10 @@ static size_t __Diagnostic_Find_Line_Start__(const __Source_File__ *__Source__, 
     return __Cursor__;
 }
 
+/* Finds the diagnostic line end. */
 static size_t __Diagnostic_Find_Line_End__(const __Source_File__ *__Source__, size_t __Offset__)
 {
+    /* Stores the cursor. */
     size_t __Cursor__ = __Offset__ > __Source__->__Length__ ? __Source__->__Length__ : __Offset__;
 
     while (__Cursor__ < __Source__->__Length__ && __Source__->__Bytes__[__Cursor__] != '\n' &&
@@ -27,12 +33,15 @@ static size_t __Diagnostic_Find_Line_End__(const __Source_File__ *__Source__, si
     return __Cursor__;
 }
 
+/* Returns the diagnostic clamp excerpt start. */
 static size_t __Diagnostic_Clamp_Excerpt_Start__(const __Source_File__ *__Source__,
                                                  size_t __Line_Start__,
                                                  size_t __Line_End__,
                                                  size_t __Focus_Offset__)
 {
+    /* Stores the capacity. */
     size_t __Capacity__ = __Diagnostic_Max_Source_Line__ - 1U;
+    /* Stores the start. */
     size_t __Start__ = __Line_Start__;
 
     if (__Line_End__ - __Line_Start__ <= __Capacity__)
@@ -60,13 +69,19 @@ static size_t __Diagnostic_Clamp_Excerpt_Start__(const __Source_File__ *__Source
     return __Start__;
 }
 
+/* Captures the diagnostic source span. */
 void __Diagnostic_Capture_Source_Span__(__Diagnostic_Source_Span__ *__Destination__,
                                         __Source_Span__ __Source_Span__)
 {
+    /* References the source. */
     const __Source_File__ *__Source__ = __Source_Span__.__Start__.__Source__;
+    /* Stores the line start. */
     size_t __Line_Start__ = 0U;
+    /* Stores the line end. */
     size_t __Line_End__ = 0U;
+    /* Stores the excerpt start. */
     size_t __Excerpt_Start__ = 0U;
+    /* Stores the copy length. */
     size_t __Copy_Length__ = 0U;
 
     if (__Destination__ == NULL)
@@ -78,10 +93,7 @@ void __Diagnostic_Capture_Source_Span__(__Diagnostic_Source_Span__ *__Destinatio
     __Destination__->__Start__ = __Source_Span__.__Start__;
     __Destination__->__End__ = __Source_Span__.__End__;
 
-    /*
-     * The structured diagnostic owns copied source identity, so never retain a
-     * source-unit pointer whose lifetime may end after parsing an imported file.
-     */
+    /* Copy source identity so diagnostics never retain source-unit pointers. */
     __Destination__->__Start__.__Source__ = NULL;
     __Destination__->__End__.__Source__ = NULL;
 

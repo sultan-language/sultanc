@@ -1,8 +1,11 @@
+/* Initializes lexer state. */
+
 #include "frontend/lexer/lifecycle.h"
 #include "frontend/lexer/lexer.h"
 
 #include <string.h>
 
+/* Initializes the lexer. */
 void __Lexer_Init__(__Lexer__ *__Lexer_State__, const __Source_File__ *__Source__)
 {
     if (__Lexer_State__ == NULL)

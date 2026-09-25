@@ -1,6 +1,9 @@
+/* Tracks safety facts for composite values. */
+
 #include "semantic/body_internal.h"
 #include "kernel/memory/memory.h"
 
+/* Returns the body composite source local. */
 static __Semantic_Local__ *__Body_Composite_Source_Local__(__Semantic_Body_Context__ *__Context__,
                                                            const __Ast_Atom__ *__Atom__)
 {
@@ -13,6 +16,7 @@ static __Semantic_Local__ *__Body_Composite_Source_Local__(__Semantic_Body_Conte
     return __Body_Find_Local__(__Context__, __Atom__->__As__.__Lvalue__);
 }
 
+/* Checks whether the body local has view dependency. */
 static int __Body_Local_Has_View_Dependency__(const __Semantic_Local__ *__Local__)
 {
     return __Local__ != NULL && (__Local__->__Safety__.__Borrowed_From__ != SIZE_MAX ||
@@ -20,13 +24,16 @@ static int __Body_Local_Has_View_Dependency__(const __Semantic_Local__ *__Local_
                                  __Local__->__Safety__.__Lifetime_Region__ != SIZE_MAX);
 }
 
+/* Returns the body safety transfer local dependency. */
 int __Body_Safety_Transfer_Local_Dependency__(__Semantic_Body_Context__ *__Context__,
                                               __Semantic_Local__ *__Source__,
                                               __Semantic_Local__ *__Destination__,
                                               __Source_Span__ __Span__,
                                               int __Move__)
 {
+    /* References the owner. */
     __Semantic_Local__ *__Owner__ = NULL;
+    /* Tracks the destination index. */
     size_t __Destination_Index__;
 
     if (__Destination__ == NULL || !__Body_Local_Has_View_Dependency__(__Source__))
@@ -84,13 +91,16 @@ int __Body_Safety_Transfer_Local_Dependency__(__Semantic_Body_Context__ *__Conte
     return 1;
 }
 
+/* Returns the body safety consume contained atom. */
 int __Body_Safety_Consume_Contained_Atom__(__Semantic_Body_Context__ *__Context__,
                                            __Ast_Type__ *__Expected_Type__,
                                            const __Ast_Atom__ *__Atom__,
                                            __Semantic_Local__ *__Destination__,
                                            __Source_Span__ __Span__)
 {
+    /* References the source. */
     __Semantic_Local__ *__Source__ = __Body_Composite_Source_Local__(__Context__, __Atom__);
+    /* Stores the move. */
     int __Move__ = __Safety_Type_Is_Move_Only__(__Context__->__Semantic__, __Expected_Type__);
 
     if (__Source__ != NULL && __Body_Local_Has_View_Dependency__(__Source__))
@@ -110,6 +120,7 @@ int __Body_Safety_Consume_Contained_Atom__(__Semantic_Body_Context__ *__Context_
     return !__Move__ || __Body_Safety_Move_Atom__(__Context__, __Atom__, __Span__);
 }
 
+/* Returns the body composite expression local. */
 static __Semantic_Local__ *
 __Body_Composite_Expression_Local__(__Semantic_Body_Context__ *__Context__,
                                     __Ast_Expression__ *__Expression__)
@@ -124,12 +135,16 @@ __Body_Composite_Expression_Local__(__Semantic_Body_Context__ *__Context__,
     return __Body_Find_Local__(__Context__, __Expression__->__As__.__Atom__.__As__.__Lvalue__);
 }
 
+/* Returns the body composite call provenance source. */
 static __Ast_Expression__ *
 __Body_Composite_Call_Provenance_Source__(__Semantic_Body_Context__ *__Context__,
                                           __Ast_Expression__ *__Expression__)
 {
+    /* References the function lvalue. */
     __Ast_Lvalue__ *__Function_Lvalue__;
+    /* References the callee. */
     __Semantic_Function_Entry__ *__Callee__;
+    /* Tracks the parameter index. */
     size_t __Parameter_Index__;
 
     if (__Expression__ == NULL || __Expression__->__Kind__ != __Ast_Expression_Call__)
@@ -155,13 +170,17 @@ __Body_Composite_Call_Provenance_Source__(__Semantic_Body_Context__ *__Context__
                : NULL;
 }
 
+/* Returns the body safety transfer composite expression. */
 int __Body_Safety_Transfer_Composite_Expression__(__Semantic_Body_Context__ *__Context__,
                                                   __Ast_Expression__ *__Expression__,
                                                   __Semantic_Local__ *__Destination__,
                                                   int *__Matched__)
 {
+    /* References the source expression. */
     __Ast_Expression__ *__Source_Expression__ = __Expression__;
+    /* References the source. */
     __Semantic_Local__ *__Source__;
+    /* Stores the move. */
     int __Move__;
 
     *__Matched__ = 0;
@@ -180,19 +199,23 @@ int __Body_Safety_Transfer_Composite_Expression__(__Semantic_Body_Context__ *__C
 
     if (__Expression__->__Kind__ == __Ast_Expression_Call__)
     {
+        /* References the function. */
         __Ast_Lvalue__ *__Function__ = __Expression__->__As__.__Call__.__Function__;
         if (__Function__ != NULL && __Function__->__Kind__ == __Ast_Lvalue_Field__)
         {
+            /* Tracks the index. */
             size_t __Index__;
 
             if (__Expression__->__As__.__Call__.__Argument_Count__ == 0U)
             {
                 return 1;
             }
+            /* Tracks the found dependency state. */
             int __Found_Dependency__ = 0;
             for (__Index__ = 0U; __Index__ < __Expression__->__As__.__Call__.__Argument_Count__;
                  ++__Index__)
             {
+                /* References the argument source. */
                 __Semantic_Local__ *__Argument_Source__ = __Body_Composite_Expression_Local__(
                     __Context__, __Expression__->__As__.__Call__.__Arguments__[__Index__]);
                 if (!__Body_Local_Has_View_Dependency__(__Argument_Source__))
@@ -248,11 +271,15 @@ int __Body_Safety_Transfer_Composite_Expression__(__Semantic_Body_Context__ *__C
         __Context__, __Source__, __Destination__, __Expression__->__Header__.__Span__, __Move__);
 }
 
+/* Checks the body safety return composite view. */
 int __Body_Safety_Check_Return_Composite_View__(__Semantic_Body_Context__ *__Context__,
                                                 __Ast_Expression__ *__Expression__)
 {
+    /* References the return type. */
     __Ast_Type__ *__Return_Type__ = __Context__->__Function__->__Function__->__Output__.__Type__;
+    /* References the local. */
     __Semantic_Local__ *__Local__;
+    /* Stores the origin. */
     size_t __Origin__;
 
     if (__Memory_Type_Is_View__(__Return_Type__) ||

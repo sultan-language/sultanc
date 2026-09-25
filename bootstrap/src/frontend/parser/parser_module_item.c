@@ -1,6 +1,9 @@
+/* Dispatches module item parsing. */
+
 #include "frontend/parser/diagnostic.h"
 #include "frontend/parser/module_internal.h"
 
+/* Adds the parser module item. */
 int __Parser_Push_Module_Item__(__Parser__ *__Parser_State__,
                                 __Vector__ *__Items__,
                                 __Ast_Module_Item__ *__Item__)

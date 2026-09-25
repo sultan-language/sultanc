@@ -1,14 +1,22 @@
+/* Parses conditional statements. */
+
 #include "frontend/parser/cursor.h"
 #include "frontend/parser/diagnostic.h"
 #include "frontend/parser/span.h"
 #include "frontend/parser/statement_internal.h"
 
+/* Parses the parser if core. */
 __Ast_Statement__ *__Parser_Parse_If_Core__(__Parser__ *__Parser_State__)
 {
+    /* Stores the start. */
     __Source_Position__ __Start__ = __Parser_State__->__Current__.__Span__.__Start__;
+    /* References the condition. */
     __Ast_Expression__ *__Condition__ = NULL;
+    /* References the then. */
     __Ast_Block__ *__Then__ = NULL;
+    /* References the else. */
     __Ast_Block__ *__Else__ = NULL;
+    /* References the statement. */
     __Ast_Statement__ *__Statement__ = NULL;
     if (!__Parser_Advance__(__Parser_State__) ||
         !__Parser_Expect__(__Parser_State__, __Token_LEFT_PARENTHESIS_OPERATOR__))
@@ -30,6 +38,7 @@ __Ast_Statement__ *__Parser_Parse_If_Core__(__Parser__ *__Parser_State__)
     {
         if (__Parser_State__->__Current__.__Kind__ == __Token_IF__)
         {
+            /* References the nested. */
             __Ast_Statement__ *__Nested__ = __Parser_Parse_If_Core__(__Parser_State__);
             if (__Nested__ == NULL)
             {

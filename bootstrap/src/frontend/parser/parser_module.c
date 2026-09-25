@@ -1,11 +1,15 @@
+/* Parses a complete module. */
+
 #include "frontend/ast/context_lifecycle.h"
 #include "frontend/parser/lifecycle.h"
 #include "frontend/parser/module_internal.h"
 
 #include <string.h>
 
+/* Parses the parser module. */
 int __Parser_Parse_Module__(const __Source_File__ *__Source__, __Parse_Result__ *__Out_Result__)
 {
+    /* Stores the parser state. */
     __Parser__ __Parser_State__;
     if (__Source__ == NULL || __Out_Result__ == NULL)
     {

@@ -1,6 +1,9 @@
+/* Releases lexer-owned storage. */
+
 #include "frontend/lexer/lifecycle.h"
 #include "frontend/lexer/lexer.h"
 
+/* Releases the lexer. */
 void __Lexer_Destroy__(__Lexer__ *__Lexer_State__)
 {
     if (__Lexer_State__ == NULL)

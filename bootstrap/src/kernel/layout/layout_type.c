@@ -1,16 +1,22 @@
+/* Computes storage layout for SultanC types. */
+
 #include "semantic/diagnostic.h"
 #include "kernel/layout/layout.h"
 #include "semantic/type_named.h"
 #include "kernel/type/type.h"
 #include "support/memory/alignment.h"
 
+/* Returns the named layout. */
 static int __Named_Layout__(__Semantic_Context__ *__Context__,
                             __Semantic_Type_Entry__ *__Entry__,
                             size_t *__Out_Size__,
                             size_t *__Out_Alignment__)
 {
+    /* References the declaration. */
     __Ast_Type_Declaration__ *__Declaration__ = NULL;
+    /* Stores the size. */
     size_t __Size__ = 0U;
+    /* Stores the alignment. */
     size_t __Alignment__ = 1U;
 
     if (__Entry__ == NULL || __Entry__->__Declaration__ == NULL)
@@ -36,13 +42,17 @@ static int __Named_Layout__(__Semantic_Context__ *__Context__,
 
     if (__Declaration__->__Kind__ == __Ast_Type_Decl_Struct__)
     {
+        /* Tracks the index. */
         size_t __Index__ = 0U;
 
         for (__Index__ = 0U; __Index__ < __Declaration__->__As__.__Struct__.__Count__; ++__Index__)
         {
+            /* References the field. */
             __Ast_Struct_Field__ *__Field__ =
                 &__Declaration__->__As__.__Struct__.__Fields__[__Index__];
+            /* Stores the field size. */
             size_t __Field_Size__ = 0U;
+            /* Stores the field alignment. */
             size_t __Field_Alignment__ = 0U;
 
             if (!__Layout_Type__(__Context__,
@@ -65,23 +75,32 @@ static int __Named_Layout__(__Semantic_Context__ *__Context__,
     }
     else
     {
+        /* Tracks the constructor index. */
         size_t __Constructor_Index__ = 0U;
+        /* Stores the payload max. */
         size_t __Payload_Max__ = 0U;
+        /* Stores the payload alignment. */
         size_t __Payload_Alignment__ = 1U;
 
         for (__Constructor_Index__ = 0U;
              __Constructor_Index__ < __Declaration__->__As__.__Enum__.__Count__;
              ++__Constructor_Index__)
         {
+            /* References the constructor. */
             __Ast_Enum_Constructor__ *__Constructor__ =
                 &__Declaration__->__As__.__Enum__.__Constructors__[__Constructor_Index__];
+            /* Stores the payload size. */
             size_t __Payload_Size__ = 0U;
+            /* Tracks the index. */
             size_t __Index__ = 0U;
+            /* Stores the constructor alignment. */
             size_t __Constructor_Alignment__ = 1U;
 
             for (__Index__ = 0U; __Index__ < __Constructor__->__Payload_Count__; ++__Index__)
             {
+                /* Stores the field size. */
                 size_t __Field_Size__ = 0U;
+                /* Stores the field alignment. */
                 size_t __Field_Alignment__ = 0U;
 
                 if (!__Layout_Type__(__Context__,
@@ -124,13 +143,17 @@ static int __Named_Layout__(__Semantic_Context__ *__Context__,
     return 1;
 }
 
+/* Returns the layout type. */
 int __Layout_Type__(__Semantic_Context__ *__Context__,
                     __Ast_Type__ *__Type__,
                     size_t *__Out_Size__,
                     size_t *__Out_Alignment__)
 {
+    /* References the base. */
     __Ast_Type__ *__Base__ = __Type_Unwrap_Mutable__(__Type__);
+    /* Stores the size. */
     size_t __Size__ = 0U;
+    /* Stores the alignment. */
     size_t __Alignment__ = 1U;
 
     if (__Base__ == NULL)
@@ -160,10 +183,15 @@ int __Layout_Type__(__Semantic_Context__ *__Context__,
         case __Ast_Type_Option__:
         case __Ast_Type_Result__:
         {
+            /* References the payloads. */
             __Ast_Type__ *__Payloads__[2] = {NULL, NULL};
+            /* Stores the payload count. */
             size_t __Payload_Count__ = 0U;
+            /* Stores the payload max. */
             size_t __Payload_Max__ = 0U;
+            /* Stores the payload alignment. */
             size_t __Payload_Alignment__ = 1U;
+            /* Tracks the index. */
             size_t __Index__;
 
             if (__Base__->__Kind__ == __Ast_Type_Option__)
@@ -180,7 +208,9 @@ int __Layout_Type__(__Semantic_Context__ *__Context__,
 
             for (__Index__ = 0U; __Index__ < __Payload_Count__; ++__Index__)
             {
+                /* Stores the payload size. */
                 size_t __Payload_Size__ = 0U;
+                /* Stores the current alignment. */
                 size_t __Current_Alignment__ = 1U;
                 if (!__Layout_Type__(__Context__,
                                      __Payloads__[__Index__],
@@ -243,6 +273,7 @@ int __Layout_Type__(__Semantic_Context__ *__Context__,
 
         case __Ast_Type_Named__:
         {
+            /* References the entry. */
             __Semantic_Type_Entry__ *__Entry__ = NULL;
 
             if (!__Semantic_Resolve_Named_Entry__(__Context__, __Base__, &__Entry__))

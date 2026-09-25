@@ -1,12 +1,16 @@
+/* Wraps statements as AST blocks. */
+
 #include "frontend/ast/storage.h"
 #include "frontend/parser/diagnostic.h"
 #include "frontend/parser/statement_internal.h"
 
 #include <stdalign.h>
 
+/* Maps the statement to the parser block. */
 __Ast_Block__ *__Parser_Block_From_Statement__(__Parser__ *__Parser_State__,
                                                __Ast_Statement__ *__Statement__)
 {
+    /* References the block. */
     __Ast_Block__ *__Block__ = (__Ast_Block__ *)__Ast_Allocate__(
         __Parser_State__->__Ast__, sizeof(*__Block__), alignof(__Ast_Block__));
     if (__Block__ == NULL)

@@ -1,16 +1,25 @@
+/* Checks record initializers. */
+
 #include "semantic/body_internal.h"
 #include "support/text/equality.h"
 
 #include <stdlib.h>
 
+/* Checks the body record initializer. */
 int __Body_Check_Record_Init__(__Semantic_Body_Context__ *__Context__,
                                __Ast_Statement__ *__Statement__)
 {
+    /* References the destination type. */
     __Ast_Type__ *__Destination_Type__ = NULL;
+    /* References the local. */
     __Semantic_Local__ *__Local__ = NULL;
+    /* Stores the resolved. */
     __Resolved_Type__ __Resolved__;
+    /* References the declaration. */
     __Ast_Type_Declaration__ *__Declaration__ = NULL;
+    /* Tracks the index. */
     size_t __Index__ = 0U;
+    /* References the seen. */
     unsigned char *__Seen__ = NULL;
     if (!__Body_Check_Assignable__(__Context__,
                                    __Statement__->__As__.__Record__.__Destination__,
@@ -37,12 +46,16 @@ int __Body_Check_Record_Init__(__Semantic_Body_Context__ *__Context__,
     }
     for (__Index__ = 0U; __Index__ < __Statement__->__As__.__Record__.__Field_Count__; ++__Index__)
     {
+        /* References the input. */
         __Ast_Record_Input__ *__Input__ = &__Statement__->__As__.__Record__.__Fields__[__Index__];
+        /* Tracks the field index. */
         size_t __Field_Index__ = 0U;
+        /* Tracks the found state. */
         int __Found__ = 0;
         for (__Field_Index__ = 0U; __Field_Index__ < __Declaration__->__As__.__Struct__.__Count__;
              ++__Field_Index__)
         {
+            /* References the field. */
             __Ast_Struct_Field__ *__Field__ =
                 &__Declaration__->__As__.__Struct__.__Fields__[__Field_Index__];
             if (__Text_Slice_Equals__(__Field__->__Name__, __Input__->__Name__))

@@ -1,11 +1,15 @@
+/* Provides Stage0 host file, stream, and process services. */
+
 #include <errno.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+/* Returns the sultanc bootstrap host path. */
 static char *sultanc_bootstrap_host_path(const unsigned char *data, uint64_t length)
 {
+    /* References the path. */
     char *path;
     if (length > (uint64_t)SIZE_MAX - 1U)
         return NULL;
@@ -18,24 +22,34 @@ static char *sultanc_bootstrap_host_path(const unsigned char *data, uint64_t len
     return path;
 }
 
+/* Returns the sultanc bootstrap host errno. */
 static int64_t sultanc_bootstrap_host_errno(void)
 {
+    /* Stores the value. */
     int value = errno;
     return value != 0 ? -(int64_t)value : -1;
 }
 
+/* Reads the sultanc bootstrap host file. */
 int64_t sultanc_bootstrap_host_read_file(const unsigned char *path_data,
                                          uint64_t path_length,
                                          unsigned char **out_data,
                                          uint64_t *out_length,
                                          uint64_t *out_capacity)
 {
+    /* References the path. */
     char *path = NULL;
+    /* References the file. */
     FILE *file = NULL;
+    /* References the data. */
     unsigned char *data = NULL;
+    /* Stores the end. */
     long end;
+    /* Stores the length. */
     size_t length;
+    /* Stores the read count. */
     size_t read_count;
+    /* Stores the operation result. */
     int64_t result = -1;
 
     if (out_data == NULL || out_length == NULL || out_capacity == NULL)
@@ -88,13 +102,18 @@ done:
     return result;
 }
 
+/* Reads the sultanc bootstrap host line. */
 int64_t sultanc_bootstrap_host_read_line(unsigned char **out_data,
                                          uint64_t *out_length,
                                          uint64_t *out_capacity)
 {
+    /* References the data. */
     unsigned char *data = NULL;
+    /* Stores the length. */
     size_t length = 0U;
+    /* Stores the capacity. */
     size_t capacity = 0U;
+    /* Stores the character. */
     int ch;
     if (out_data == NULL || out_length == NULL || out_capacity == NULL)
         return -1;
@@ -105,7 +124,9 @@ int64_t sultanc_bootstrap_host_read_line(unsigned char **out_data,
             break;
         if (length == capacity)
         {
+            /* Stores the next. */
             size_t next = capacity == 0U ? 128U : capacity * 2U;
+            /* References the grown. */
             unsigned char *grown;
             if (next < capacity)
             {
@@ -136,14 +157,19 @@ int64_t sultanc_bootstrap_host_read_line(unsigned char **out_data,
     return (int64_t)length;
 }
 
+/* Writes the sultanc bootstrap host file. */
 int64_t sultanc_bootstrap_host_write_file(const unsigned char *path_data,
                                           uint64_t path_length,
                                           const unsigned char *data,
                                           uint64_t length)
 {
+    /* References the path. */
     char *path;
+    /* References the file. */
     FILE *file;
+    /* Stores the written. */
     size_t written;
+    /* Stores the close result. */
     int close_result;
     if (length > (uint64_t)SIZE_MAX)
         return -1;
@@ -161,10 +187,13 @@ int64_t sultanc_bootstrap_host_write_file(const unsigned char *path_data,
     return (int64_t)written;
 }
 
+/* Writes the sultanc bootstrap host stream. */
 int64_t
 sultanc_bootstrap_host_write_stream(int32_t descriptor, const unsigned char *data, uint64_t length)
 {
+    /* References the stream. */
     FILE *stream = descriptor == 2 ? stderr : stdout;
+    /* Stores the written. */
     size_t written;
     if (descriptor != 1 && descriptor != 2)
         return -1;
@@ -176,6 +205,7 @@ sultanc_bootstrap_host_write_stream(int32_t descriptor, const unsigned char *dat
     return (int64_t)written;
 }
 
+/* Exits the sultanc bootstrap host. */
 void sultanc_bootstrap_host_exit(int64_t status)
 {
     exit((int)status);

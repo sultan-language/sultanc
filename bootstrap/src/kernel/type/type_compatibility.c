@@ -1,12 +1,19 @@
+/* Checks semantic type compatibility. */
+
 #include "kernel/type/type.h"
 
+/* Returns the type compatible. */
 int __Type_Compatible__(__Semantic_Context__ *__Context__,
                         __Ast_Type__ *__Left__,
                         __Ast_Type__ *__Right__)
 {
+    /* Stores the left value. */
     __Resolved_Type__ __A__;
+    /* Stores the right value. */
     __Resolved_Type__ __B__;
+    /* References the left base. */
     __Ast_Type__ *__Left_Base__ = __Type_Unwrap_Mutable__(__Left__);
+    /* References the right base. */
     __Ast_Type__ *__Right_Base__ = __Type_Unwrap_Mutable__(__Right__);
     if (__Left_Base__ == NULL || __Right_Base__ == NULL)
     {

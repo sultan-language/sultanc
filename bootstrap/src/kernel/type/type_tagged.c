@@ -1,14 +1,14 @@
+/* Queries tagged and enum type constructors. */
+
 #include "kernel/type/tagged.h"
 #include "core/source.h"
 #include "kernel/type/type_contextual.generated.h"
 
-/*
- * Maps one option/result constructor name to its canonical tag and payload.
- * The built-in tagged types have no independent runtime representation.
- */
+/* Maps option/result constructors to canonical tags and payloads. */
 static int
 __Type_Tagged_Fill__(__Ast_Type__ *__Type__, size_t __Tag__, __Type_Tagged_Constructor__ *__Out__)
 {
+    /* References the base. */
     __Ast_Type__ *__Base__ = __Type_Unwrap_Mutable__(__Type__);
 
     if (__Base__ == NULL || __Out__ == NULL)
@@ -49,18 +49,22 @@ __Type_Tagged_Fill__(__Ast_Type__ *__Type__, size_t __Tag__, __Type_Tagged_Const
     return 0;
 }
 
+/* Checks whether the type is builtin tagged. */
 int __Type_Is_Builtin_Tagged__(__Ast_Type__ *__Type__)
 {
+    /* References the base. */
     __Ast_Type__ *__Base__ = __Type_Unwrap_Mutable__(__Type__);
     return __Base__ != NULL &&
            (__Base__->__Kind__ == __Ast_Type_Option__ || __Base__->__Kind__ == __Ast_Type_Result__);
 }
 
+/* Returns the type tagged constructor count. */
 size_t __Type_Tagged_Constructor_Count__(__Ast_Type__ *__Type__)
 {
     return __Type_Is_Builtin_Tagged__(__Type__) ? 2U : 0U;
 }
 
+/* Returns the type tagged constructor at. */
 int __Type_Tagged_Constructor_At__(__Ast_Type__ *__Type__,
                                    size_t __Tag__,
                                    __Type_Tagged_Constructor__ *__Out_Constructor__)
@@ -68,10 +72,12 @@ int __Type_Tagged_Constructor_At__(__Ast_Type__ *__Type__,
     return __Type_Tagged_Fill__(__Type__, __Tag__, __Out_Constructor__);
 }
 
+/* Finds the type tagged constructor. */
 int __Type_Tagged_Find_Constructor__(__Ast_Type__ *__Type__,
                                      __Text_Slice__ __Name__,
                                      __Type_Tagged_Constructor__ *__Out_Constructor__)
 {
+    /* References the base. */
     __Ast_Type__ *__Base__ = __Type_Unwrap_Mutable__(__Type__);
 
     if (__Base__ == NULL)
@@ -109,8 +115,10 @@ int __Type_Tagged_Find_Constructor__(__Ast_Type__ *__Type__,
     return 0;
 }
 
+/* Checks the type tagged name. */
 int __Type_Tagged_Name_Matches__(__Ast_Type__ *__Type__, __Text_Slice__ __Name__)
 {
+    /* References the base. */
     __Ast_Type__ *__Base__ = __Type_Unwrap_Mutable__(__Type__);
     if (__Base__ == NULL)
     {

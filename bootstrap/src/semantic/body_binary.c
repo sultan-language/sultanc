@@ -1,12 +1,19 @@
+/* Infers and validates binary expressions. */
+
 #include "semantic/body_internal.h"
 
+/* Infers the body binary. */
 int __Body_Infer_Binary__(__Semantic_Body_Context__ *__Context__,
                           __Ast_Expression__ *__Expression__,
                           __Ast_Type__ **__Out_Type__)
 {
+    /* References the left. */
     __Ast_Type__ *__Left__ = NULL;
+    /* References the right. */
     __Ast_Type__ *__Right__ = NULL;
+    /* Stores the operation. */
     __Ast_Binary_Operation__ __Operation__ = __Expression__->__As__.__Binary__.__Operation__;
+    /* Stores the comparison result. */
     int __Compare__ =
         __Operation__ == __Binary_Equal__ || __Operation__ == __Binary_Not_Equal__ ||
         __Operation__ == __Binary_Less_Than__ || __Operation__ == __Binary_Less_Or_Equal__ ||
@@ -32,6 +39,7 @@ int __Body_Infer_Binary__(__Semantic_Body_Context__ *__Context__,
     }
     if (!__Type_Compatible__(__Context__->__Semantic__, __Left__, __Right__))
     {
+        /* Stores the literal value. */
         int64_t __Literal_Value__ = 0;
 
         if (__Semantic_Integer_Literal_Expression_Value__(

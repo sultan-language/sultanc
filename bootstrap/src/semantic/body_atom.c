@@ -1,5 +1,8 @@
+/* Infers semantic types for atomic expressions. */
+
 #include "semantic/body_internal.h"
 
+/* Infers the body atom. */
 int __Body_Infer_Atom__(__Semantic_Body_Context__ *__Context__,
                         const __Ast_Atom__ *__Atom__,
                         __Ast_Type__ **__Out_Type__)
