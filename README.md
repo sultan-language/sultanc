@@ -1,5 +1,5 @@
 <div align="center">
-<img src="./editors/vscode/icons/sultanc-logo.svg" alt="SultanC" width="100">
+<img src="https://raw.githubusercontent.com/sultan-language/sultanc-vscode/main/icons/sultanc-logo.svg" alt="SultanC" width="100">
 
 # SultanC
 
@@ -98,4 +98,4 @@ Self-hosting on `arm64-darwin` and `x86_64-linux`, both verified by byte-identic
 
 ## License
 
-[MIT License](LICENSE).
+[MIT License](LICENSE)
