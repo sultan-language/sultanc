@@ -1,16 +1,16 @@
 <div align="center">
-<img src="./editors/vscode/icons/sultanc-logo.svg" alt="SultanC" width="100">
+<img src="https://raw.githubusercontent.com/sultan-language/sultanc-vscode/main/icons/sultanc-logo.svg" alt="SultanC" width="100">
 
 # SultanC
 
-**A self-hosted systems programming language, written in Arabic and English.**
+**A self-hosted systems programming language, written in Arabic.**
 
 <p>
 <img src="https://img.shields.io/badge/self--hosted-yes-1a7f37?style=for-the-badge&labelColor=0d1117" alt="Self-hosted">
 <img src="https://img.shields.io/badge/macOS-arm64-1a7f37?style=for-the-badge&labelColor=0d1117&logo=apple&logoColor=white" alt="macOS arm64">
 <img src="https://img.shields.io/badge/Linux-x86__64-1a7f37?style=for-the-badge&labelColor=0d1117&logo=linux&logoColor=white" alt="Linux x86_64">
 <img src="https://img.shields.io/badge/source-Arabic%20%2B%20English-8957e5?style=for-the-badge&labelColor=0d1117" alt="Language">
-<img src="https://img.shields.io/badge/license-TBD-8b949e?style=for-the-badge&labelColor=0d1117" alt="License">
+<img src="https://img.shields.io/badge/license-MIT-8b949e?style=for-the-badge&labelColor=0d1117" alt="License">
 </p>
 
 [Install](#install) &nbsp;·&nbsp; [Language](#language) &nbsp;·&nbsp; [Documentation](#documentation)
@@ -56,7 +56,7 @@ Same AST, same semantics, same diagnostics — only the keywords and identifiers
 ## Install
 
 ```sh
-git clone <repo-url> sultanc && cd sultanc
+git clone https://github.com/sultan-language/sultanc.git && cd sultanc
 ./build.sh
 sudo cp build/sultanc /usr/local/bin/sultanc
 ```
@@ -98,4 +98,4 @@ Self-hosting on `arm64-darwin` and `x86_64-linux`, both verified by byte-identic
 
 ## License
 
-Not yet finalized.
+[MIT License](LICENSE)
