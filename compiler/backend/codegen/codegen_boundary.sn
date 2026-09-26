@@ -1,0 +1,21 @@
+استورد compiler.backend.provider.native.native_codegen;
+استورد compiler.backend.target.selection_query_context;
+استورد compiler.backend.target.target_model;
+استورد compiler.msir.msir_consumer;
+استورد compiler.msir.identifiers;
+استورد compiler.backend.layout.layout_model;
+
+// حد Codegen لدالة واحدة. يسمح للمخرج الأصلي بإكمال select→allocate→encode
+// قبل الانتقال إلى الدالة التالية بدلا من الاحتفاظ بكل الشفرة الوسيطة.
+عام عرف هيئ_دالة_منتقاة(
+    المسير: &سياق_مستهلك_مسير,
+    حقائق_الخلفية: &سياق_استعلام_اختيار_خلفية,
+    الهدف: &واصف_هدف,
+    سجل_التخطيط: &متغير سجل_تخطيط,
+    المعرف: معرف_دالة_مسير
+): نتيجة_دالة_منتقاة_أصلية {
+    أرجع هيئ_دالة_منتقاة_بالمزود_الأصلي(
+        المسير, حقائق_الخلفية, الهدف, سجل_التخطيط, المعرف
+    );
+}
+
