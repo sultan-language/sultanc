@@ -1,4 +1,0 @@
-def main() {
-    let x = acosh(2);
-    print(f"{x}");
-}

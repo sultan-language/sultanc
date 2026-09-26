@@ -1,4 +1,0 @@
-def main() {
-    let x = hypot(3, 4);
-    print(f"{x}");
-}

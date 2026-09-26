@@ -1,4 +1,0 @@
-def main() {
-    let x = atan(1);
-    print(f"{x}");
-}

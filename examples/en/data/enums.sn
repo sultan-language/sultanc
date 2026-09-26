@@ -1,0 +1,13 @@
+type Operation = | Add of int | Multiply of int;
+
+def apply(value: int, operation: Operation): int {
+    match operation with
+    | Operation.Add(amount) -> { return value + amount; }
+    | Operation.Multiply(amount) -> { return value * amount; };
+}
+
+def main(): int {
+    let first: Operation = Operation.Add(1);
+    let second: Operation = Operation.Multiply(2);
+    return apply(apply(20, first), second);
+}

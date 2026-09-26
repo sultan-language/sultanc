@@ -1,0 +1,3 @@
+public def module_value(seed: int): int {
+    return seed + 2;
+}

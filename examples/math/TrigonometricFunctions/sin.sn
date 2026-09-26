@@ -1,5 +1,0 @@
-def main() {
-    let x = sin(1.57079632679);
-
-    print(f"{x}");
-}

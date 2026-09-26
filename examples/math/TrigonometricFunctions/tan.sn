@@ -1,4 +1,0 @@
-def main() {
-    let x = tan(0.785);
-    print(f"{x}");
-}

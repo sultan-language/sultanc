@@ -1,4 +1,0 @@
-def main() {
-    let x = log2(8);
-    print(f"{x}");
-}

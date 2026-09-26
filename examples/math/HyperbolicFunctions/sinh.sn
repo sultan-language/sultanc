@@ -1,4 +1,0 @@
-def main() {
-    let x = sinh(1);
-    print(f"{x}");
-}
