@@ -1,0 +1,12 @@
+استورد compiler.frontend.source.source;
+استورد compiler.frontend.lexer.token;
+استورد compiler.frontend.source.position;
+استورد compiler.frontend.source.scope;
+استورد compiler.frontend.ast.unit;
+استورد compiler.frontend.parser.error;
+
+عام نوع نتيجة_تحليل =
+    | شجرة بنوع وحدة_مصدر
+    | مرفوض بنوع خطأ_نحوي
+    | خلل_داخلي
+;

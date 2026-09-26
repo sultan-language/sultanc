@@ -1,0 +1,23 @@
+استورد compiler.frontend.types.type_model;
+استورد compiler.frontend.types.type_identity;
+
+عام نوع مدخل_فهرس_نوع = {
+    الهاش: غير_موقع,
+    المعرف: معرف_نوع
+};
+
+// Canonical Type-owned context shape shared across Type consumers.
+// Mutation operations remain private to type_registry.sn; read-only consumers use semantic queries.
+عام نوع سجل_أنواع = {
+    الأنواع: متجه نوع_مقنن,
+    فهرس_الأنواع: متجه اختيار مدخل_فهرس_نوع,
+    // SymbolID is the canonical identity of a named declaration. Keep the named-Type
+    // template binding in that direct slot instead of searching a second list by SymbolID.
+    المسماة: متجه اختيار ربط_نوع_مسمى,
+    // Concrete generic named-Type instances are keyed directly by canonical TypeID.
+    // Their semantic structure is fully substituted before representation/lowering.
+    مثيلات_المسماة: متجه اختيار تعريف_نوع_مسمى,
+    // Type parameters are semantic Type facts keyed by their canonical SymbolID.
+    // They are registered once and reused by every source Type occurrence in scope.
+    معاملات_النوع: متجه اختيار معرف_نوع
+};
