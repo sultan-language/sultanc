@@ -1,4 +1,0 @@
-def main() {
-    let x = cos(3.14);
-    print(f"{x}");
-}

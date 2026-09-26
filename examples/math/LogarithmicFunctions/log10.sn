@@ -1,4 +1,0 @@
-def main() {
-    let x = log10(1000);
-    print(f"{x}");
-}

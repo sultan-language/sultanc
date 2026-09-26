@@ -1,0 +1,10 @@
+def identity<T>(value: T): T {
+    return value;
+}
+
+def main(): int {
+    let number: int = identity(42);
+    let truth: bool = identity(true);
+    if (truth) { return number; };
+    return 1;
+}

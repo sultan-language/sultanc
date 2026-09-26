@@ -1,0 +1,5 @@
+import "helper.sn";
+
+def main(): int {
+    return module_value(40);
+}

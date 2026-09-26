@@ -1,4 +1,0 @@
-def main() {
-    let x = cosh(1);
-    print(f"{x}");
-}

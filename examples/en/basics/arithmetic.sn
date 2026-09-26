@@ -1,0 +1,5 @@
+def main(): int {
+    let base: int = 40;
+    let increment: int = 2;
+    return base + increment;
+}

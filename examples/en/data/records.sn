@@ -1,0 +1,9 @@
+type Point = { x: int, y: int };
+type Rectangle = { start: Point, end: Point };
+
+def main(): int {
+    let start: Point = { x: 10, y: 11 };
+    let end: Point = { x: 12, y: 9 };
+    let rectangle: Rectangle = { start: start, end: end };
+    return rectangle.start.x + rectangle.start.y + rectangle.end.x + rectangle.end.y;
+}

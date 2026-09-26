@@ -1,4 +1,0 @@
-def main() {
-    let x = cbrt(27);
-    print(f"{x}");
-}

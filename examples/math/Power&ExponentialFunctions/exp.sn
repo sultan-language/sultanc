@@ -1,4 +1,0 @@
-def main() {
-    let x = exp(1);
-    print(f"{x}");
-}

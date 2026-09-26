@@ -1,4 +1,0 @@
-def main() {
-    let x = floor(2.8);
-    print(f"{x}");
-}
