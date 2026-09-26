@@ -3,7 +3,7 @@
 
 # SultanC
 
-**A self-hosted systems programming language, written in Arabic and English.**
+**A self-hosted systems programming language, written in Arabic.**
 
 <p>
 <img src="https://img.shields.io/badge/self--hosted-yes-1a7f37?style=for-the-badge&labelColor=0d1117" alt="Self-hosted">
