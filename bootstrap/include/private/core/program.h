@@ -12,6 +12,8 @@
 /* Defines the program unit structure. */
 typedef struct
 {
+    /* Stores the canonical program-unit index. */
+    size_t __Index__;
     /* References the path. */
     char *__Path__;
     /* References the source. */

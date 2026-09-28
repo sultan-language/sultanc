@@ -54,6 +54,21 @@ typedef struct
     const __Program_Unit__ *__Unit__;
 } __Semantic_Type_Owner_Fact__;
 
+/* Defines one unit's contiguous global declaration ranges. */
+typedef struct
+{
+    /* References the owning unit. */
+    const __Program_Unit__ *__Unit__;
+    /* Stores the first type entry. */
+    size_t __Type_Begin__;
+    /* Stores one-past the last type entry. */
+    size_t __Type_End__;
+    /* Stores the first function entry. */
+    size_t __Function_Begin__;
+    /* Stores one-past the last function entry. */
+    size_t __Function_End__;
+} __Semantic_Unit_Name_Range__;
+
 /* Defines the semantic context structure. */
 typedef struct
 {
@@ -66,6 +81,8 @@ typedef struct
     /* Stores semantic function entries. */
     __Vector__ __Type_Owners__;
     /* Stores semantic type-owner facts. */
+    __Vector__ __Unit_Name_Ranges__;
+    /* Stores one declaration range for each Program unit, indexed by Program_Unit.__Index__. */
     __Semantic_Function_Entry__ *__Main__;
 
     /* Module identity currently active for scoped Name/Type resolution. */

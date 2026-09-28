@@ -201,6 +201,45 @@ static int __LLVM_Fail_Message__(const char *prefix, char *message)
     return 0;
 }
 
+/* Records a failure for an LLVM error object. */
+static int __LLVM_Fail_Error__(const char *prefix, LLVMErrorRef error)
+{
+    /* References the consumed error message. */
+    char *message;
+    if (error == NULL)
+        return __LLVM_Fail__(prefix);
+    message = LLVMGetErrorMessage(error);
+    snprintf(__LLVM_Error__,
+             sizeof(__LLVM_Error__),
+             "%s%s%s",
+             prefix,
+             message != NULL ? ": " : "",
+             message != NULL ? message : "");
+    if (message != NULL)
+        LLVMDisposeErrorMessage(message);
+    return 0;
+}
+
+/* Promotes Stage0 stack locals into SSA without whole-module rewrites. */
+static int __LLVM_Optimize_Module__(__LLVM_Emitter__ *emitter, LLVMTargetMachineRef machine)
+{
+    /* Stores the pass builder options. */
+    LLVMPassBuilderOptionsRef options;
+    /* Stores a pass pipeline failure. */
+    LLVMErrorRef error;
+
+    if (emitter == NULL || emitter->module == NULL || machine == NULL)
+        return __LLVM_Fail__("invalid LLVM optimization request");
+    options = LLVMCreatePassBuilderOptions();
+    if (options == NULL)
+        return __LLVM_Fail__("LLVM pass builder options creation failed");
+    error = LLVMRunPasses(emitter->module, "function(mem2reg,sroa)", machine, options);
+    LLVMDisposePassBuilderOptions(options);
+    if (error != NULL)
+        return __LLVM_Fail_Error__("LLVM local SSA optimization failed", error);
+    return 1;
+}
+
 /* Allocates the LLVM stack. */
 static LLVMValueRef
 __LLVM_Allocate_Stack__(__LLVM_Emitter__ *emitter, LLVMTypeRef type, const char *name)
@@ -5663,6 +5702,24 @@ static LLVMValueRef __LLVM_Emit_Pattern_Condition__(__LLVM_Emitter__ *emitter,
     return NULL;
 }
 
+/* Releases the temporary LLVM match lowering buffers. */
+static int __LLVM_Finish_Match__(LLVMBasicBlockRef *case_blocks,
+                                 LLVMBasicBlockRef *arm_exits,
+                                 size_t *tags,
+                                 unsigned char *has_tag,
+                                 unsigned char *needs_full_test,
+                                 unsigned char *arm_terminated,
+                                 int result)
+{
+    free(case_blocks);
+    free(arm_exits);
+    free(tags);
+    free(has_tag);
+    free(needs_full_test);
+    free(arm_terminated);
+    return result;
+}
+
 /* Emits the LLVM match. */
 static int __LLVM_Emit_Match__(__LLVM_Emitter__ *emitter,
                                __Ast_Statement__ *statement,
@@ -5709,9 +5766,6 @@ static int __LLVM_Emit_Match__(__LLVM_Emitter__ *emitter,
     size_t index;
     /* Stores the live count. */
     size_t live_count = 0U;
-    /* Tracks whether the operation succeeded. */
-    int ok = 0;
-
     if (statement == NULL || statement->__Kind__ != __Ast_Statement_Match__ ||
         path_terminated == NULL)
     {
@@ -5774,7 +5828,8 @@ static int __LLVM_Emit_Match__(__LLVM_Emitter__ *emitter,
         needs_full_test == NULL || arm_terminated == NULL)
     {
         __LLVM_Fail__("out of memory while lowering L2.5 match");
-        goto done;
+        return __LLVM_Finish_Match__(
+            case_blocks, arm_exits, tags, has_tag, needs_full_test, arm_terminated, 0);
     }
 
     for (index = 0U; index < case_count; ++index)
@@ -5793,7 +5848,8 @@ static int __LLVM_Emit_Match__(__LLVM_Emitter__ *emitter,
         {
             __Pattern_Analysis_Destroy__(&analysis);
             __LLVM_Fail__("L2.5 canonical pattern analysis unexpectedly rejected semantic match");
-            goto done;
+            return __LLVM_Finish_Match__(
+                case_blocks, arm_exits, tags, has_tag, needs_full_test, arm_terminated, 0);
         }
         if (analysis.__Has_Top_Enum_Constructor__)
         {
@@ -5811,7 +5867,8 @@ static int __LLVM_Emit_Match__(__LLVM_Emitter__ *emitter,
         if (case_blocks[index] == NULL)
         {
             __LLVM_Fail__("L2.5 could not create match arm block");
-            goto done;
+            return __LLVM_Finish_Match__(
+                case_blocks, arm_exits, tags, has_tag, needs_full_test, arm_terminated, 0);
         }
     }
 
@@ -5840,7 +5897,13 @@ static int __LLVM_Emit_Match__(__LLVM_Emitter__ *emitter,
                     storage,
                     llvm_type);
                 if (matches == NULL)
-                    goto done;
+                    return __LLVM_Finish_Match__(case_blocks,
+                                                arm_exits,
+                                                tags,
+                                                has_tag,
+                                                needs_full_test,
+                                                arm_terminated,
+                                                0);
             }
             else
             {
@@ -5849,7 +5912,13 @@ static int __LLVM_Emit_Match__(__LLVM_Emitter__ *emitter,
                 if (tag_value == NULL)
                 {
                     __LLVM_Fail__("Direct LLVM constructor dispatch requires tagged storage");
-                    goto done;
+                    return __LLVM_Finish_Match__(case_blocks,
+                                                arm_exits,
+                                                tags,
+                                                has_tag,
+                                                needs_full_test,
+                                                arm_terminated,
+                                                0);
                 }
                 expected_tag = LLVMConstInt(LLVMIntTypeInContext(emitter->context, 64U),
                                             (unsigned long long)tags[index],
@@ -5861,7 +5930,13 @@ static int __LLVM_Emit_Match__(__LLVM_Emitter__ *emitter,
             if (next == NULL)
             {
                 __LLVM_Fail__("L2.5 could not create match dispatch block");
-                goto done;
+                return __LLVM_Finish_Match__(case_blocks,
+                                            arm_exits,
+                                            tags,
+                                            has_tag,
+                                            needs_full_test,
+                                            arm_terminated,
+                                            0);
             }
             LLVMBuildCondBr(emitter->builder, matches, case_blocks[index], next);
             dispatch_block = next;
@@ -5889,7 +5964,8 @@ static int __LLVM_Emit_Match__(__LLVM_Emitter__ *emitter,
                                          tags[index]))
         {
             emitter->local_count = saved_local_count;
-            goto done;
+            return __LLVM_Finish_Match__(
+                case_blocks, arm_exits, tags, has_tag, needs_full_test, arm_terminated, 0);
         }
         if (!__LLVM_Emit_Statement_List__(emitter,
                                           statement->__As__.__Match__.__Cases__[index].__Body__,
@@ -5897,7 +5973,8 @@ static int __LLVM_Emit_Match__(__LLVM_Emitter__ *emitter,
                                           &terminated))
         {
             emitter->local_count = saved_local_count;
-            goto done;
+            return __LLVM_Finish_Match__(
+                case_blocks, arm_exits, tags, has_tag, needs_full_test, arm_terminated, 0);
         }
         arm_exits[index] = LLVMGetInsertBlock(emitter->builder);
         if (arm_exits[index] == NULL ||
@@ -5905,7 +5982,8 @@ static int __LLVM_Emit_Match__(__LLVM_Emitter__ *emitter,
         {
             emitter->local_count = saved_local_count;
             __LLVM_Fail__("L2.5 inconsistent match-arm CFG termination state");
-            goto done;
+            return __LLVM_Finish_Match__(
+                case_blocks, arm_exits, tags, has_tag, needs_full_test, arm_terminated, 0);
         }
         arm_terminated[index] = terminated ? 1U : 0U;
         if (!terminated)
@@ -5918,15 +5996,16 @@ static int __LLVM_Emit_Match__(__LLVM_Emitter__ *emitter,
     if (live_count == 0U)
     {
         *path_terminated = 1;
-        ok = 1;
-        goto done;
+        return __LLVM_Finish_Match__(
+            case_blocks, arm_exits, tags, has_tag, needs_full_test, arm_terminated, 1);
     }
 
     merge_block = LLVMAppendBasicBlockInContext(emitter->context, function, "match.end");
     if (merge_block == NULL)
     {
         __LLVM_Fail__("L2.5 could not create match continuation");
-        goto done;
+        return __LLVM_Finish_Match__(
+            case_blocks, arm_exits, tags, has_tag, needs_full_test, arm_terminated, 0);
     }
     for (index = 0U; index < case_count; ++index)
     {
@@ -5937,16 +6016,8 @@ static int __LLVM_Emit_Match__(__LLVM_Emitter__ *emitter,
         }
     }
     LLVMPositionBuilderAtEnd(emitter->builder, merge_block);
-    ok = 1;
-
-done:
-    free(case_blocks);
-    free(arm_exits);
-    free(tags);
-    free(has_tag);
-    free(needs_full_test);
-    free(arm_terminated);
-    return ok;
+    return __LLVM_Finish_Match__(
+        case_blocks, arm_exits, tags, has_tag, needs_full_test, arm_terminated, 1);
 }
 
 /* Emits the LLVM statement. */
@@ -7035,19 +7106,28 @@ int __Bootstrap_Emit_LLVM_Object__(__Semantic_Context__ *semantic, const char *p
     memset(&emitter, 0, sizeof(emitter));
     if (path == NULL)
         return __LLVM_Fail__("missing native object output path");
-    if (!__LLVM_Prepare_Program_Module__(
+    if (__LLVM_Prepare_Program_Module__(
             semantic, &emitter, &saved_unit, &machine, &data, &triple, &layout))
-        goto done;
-    if (LLVMTargetMachineEmitToFile(
-            machine, emitter.module, (char *)path, LLVMObjectFile, &message))
     {
-        __LLVM_Fail_Message__("LLVM native object emission failed", message);
-        message = NULL;
-        goto done;
+        if (__LLVM_Optimize_Module__(&emitter, machine))
+        {
+            if (LLVMVerifyModule(emitter.module, LLVMReturnStatusAction, &message))
+            {
+                __LLVM_Fail_Message__("LLVM verifier rejected optimized module", message);
+                message = NULL;
+            }
+            else if (LLVMTargetMachineEmitToFile(
+                         machine, emitter.module, (char *)path, LLVMObjectFile, &message))
+            {
+                __LLVM_Fail_Message__("LLVM native object emission failed", message);
+                message = NULL;
+            }
+            else
+            {
+                ok = 1;
+            }
+        }
     }
-    ok = 1;
-
-done:
     if (message != NULL)
         LLVMDisposeMessage(message);
     __LLVM_Dispose_Program_Module__(&emitter, machine, data, triple, layout);
@@ -7086,29 +7166,30 @@ int __Bootstrap_Run_LLVM_Program__(__Semantic_Context__ *semantic,
     memset(&emitter, 0, sizeof(emitter));
     if (status == NULL || argc < 1 || argv == NULL)
         return __LLVM_Fail__("invalid Direct-LLVM execution request");
-    if (!__LLVM_Prepare_Program_Module__(
+    if (__LLVM_Prepare_Program_Module__(
             semantic, &emitter, &saved_unit, &machine, &data, &triple, &layout))
-        goto done;
-
-    main_value = LLVMGetNamedFunction(emitter.module, "main");
-    if (main_value == NULL)
     {
-        __LLVM_Fail__("Direct-LLVM execution module has no process entry");
-        goto done;
+        main_value = LLVMGetNamedFunction(emitter.module, "main");
+        if (main_value == NULL)
+        {
+            __LLVM_Fail__("Direct-LLVM execution module has no process entry");
+        }
+        else
+        {
+            LLVMLinkInMCJIT();
+            if (LLVMCreateExecutionEngineForModule(&engine, emitter.module, &message))
+            {
+                __LLVM_Fail_Message__("LLVM execution engine creation failed", message);
+                message = NULL;
+            }
+            else
+            {
+                emitter.module = NULL;
+                *status = LLVMRunFunctionAsMain(engine, main_value, (unsigned)argc, argv, NULL);
+                ok = 1;
+            }
+        }
     }
-
-    LLVMLinkInMCJIT();
-    if (LLVMCreateExecutionEngineForModule(&engine, emitter.module, &message))
-    {
-        __LLVM_Fail_Message__("LLVM execution engine creation failed", message);
-        message = NULL;
-        goto done;
-    }
-    emitter.module = NULL;
-    *status = LLVMRunFunctionAsMain(engine, main_value, (unsigned)argc, argv, NULL);
-    ok = 1;
-
-done:
     if (message != NULL)
         LLVMDisposeMessage(message);
     if (engine != NULL)

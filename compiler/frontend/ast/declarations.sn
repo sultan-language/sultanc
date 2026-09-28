@@ -58,3 +58,14 @@
     علني: منطقي,
     الشكل: شكل_تصريح_نوع
 };
+
+// Top-level value declarations use the existing `let` surface. An outer
+// `mutable` wrapper on the declared Type denotes writable global storage;
+// otherwise the declaration is an immutable compile-time constant.
+عام نوع تصريح_قيمة_عليا = {
+    النطاق: نطاق,
+    الاسم: اسم,
+    النوع: نوع_تركيبي,
+    علني: منطقي,
+    التهيئة: تعبير
+};

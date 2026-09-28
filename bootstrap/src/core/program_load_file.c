@@ -80,6 +80,7 @@ int __Program_Load_File__(__Program__ *__Program_State__, const char *__Path__)
     }
 
     memset(&__Unit__, 0, sizeof(__Unit__));
+    __Unit__.__Index__ = __Program_State__->__Units__.__Count__;
     __Unit__.__Path__ = __Canonical_Path__;
     __Unit__.__Loading__ = 1;
     __Vector_Init__(&__Unit__.__Imported_Unit_Indexes__, sizeof(size_t));

@@ -30,6 +30,17 @@ static int64_t sultanc_bootstrap_host_errno(void)
     return value != 0 ? -(int64_t)value : -1;
 }
 
+/* Finishes a failed bootstrap host file read. */
+static int64_t sultanc_bootstrap_host_read_file_failure(FILE *file, unsigned char *data)
+{
+    /* Stores the failure result before cleanup can change errno. */
+    int64_t result = sultanc_bootstrap_host_errno();
+    free(data);
+    if (file != NULL)
+        fclose(file);
+    return result;
+}
+
 /* Reads the sultanc bootstrap host file. */
 int64_t sultanc_bootstrap_host_read_file(const unsigned char *path_data,
                                          uint64_t path_length,
@@ -49,9 +60,6 @@ int64_t sultanc_bootstrap_host_read_file(const unsigned char *path_data,
     size_t length;
     /* Stores the read count. */
     size_t read_count;
-    /* Stores the operation result. */
-    int64_t result = -1;
-
     if (out_data == NULL || out_length == NULL || out_capacity == NULL)
         return -1;
     *out_data = NULL;
@@ -65,41 +73,33 @@ int64_t sultanc_bootstrap_host_read_file(const unsigned char *path_data,
     if (file == NULL)
         return sultanc_bootstrap_host_errno();
     if (fseek(file, 0L, SEEK_END) != 0)
-        goto done;
+        return sultanc_bootstrap_host_read_file_failure(file, data);
     end = ftell(file);
     if (end < 0)
-        goto done;
+        return sultanc_bootstrap_host_read_file_failure(file, data);
     if (fseek(file, 0L, SEEK_SET) != 0)
-        goto done;
+        return sultanc_bootstrap_host_read_file_failure(file, data);
     length = (size_t)end;
     if ((long)length != end)
-        goto done;
+        return sultanc_bootstrap_host_read_file_failure(file, data);
     if (length != 0U)
     {
         data = (unsigned char *)malloc(length);
         if (data == NULL)
-            goto done;
+            return sultanc_bootstrap_host_read_file_failure(file, data);
         read_count = fread(data, 1U, length, file);
         if (read_count != length)
         {
             if (ferror(file))
-                goto done;
+                return sultanc_bootstrap_host_read_file_failure(file, data);
             length = read_count;
         }
     }
     *out_data = data;
     *out_length = (uint64_t)length;
     *out_capacity = (uint64_t)length;
-    data = NULL;
-    result = (int64_t)length;
-
-done:
-    if (result < 0)
-        result = sultanc_bootstrap_host_errno();
-    free(data);
-    if (file != NULL)
-        fclose(file);
-    return result;
+    fclose(file);
+    return (int64_t)length;
 }
 
 /* Reads the sultanc bootstrap host line. */
