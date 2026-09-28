@@ -1,0 +1,111 @@
+# Names the required entrance gate for changes targeting main.
+name: SultanC Gate
+
+# Declares which repository events start this workflow.
+on:
+  # Runs whenever a pull request targets the active integration branch.
+  pull_request:
+    # Restricts this gate to main.
+    branches:
+      # Names the current integration branch.
+      - main
+  # Runs the same gate for GitHub Merge Queue candidates.
+  merge_group:
+    # Restricts merge-queue execution to check requests.
+    types:
+      # Runs when GitHub creates a merge-group candidate.
+      - checks_requested
+
+# Gives untrusted pull-request builds only read access to repository contents.
+permissions:
+  # Allows source checkout without any write authority.
+  contents: read
+
+# Prevents obsolete pull-request builds from consuming runner capacity.
+concurrency:
+  # Groups runs by pull request and falls back to the merge-group ref.
+  group: sultanc-gate-${{ github.event.pull_request.number || github.ref }}
+  # Cancels an older run when a newer commit replaces the same candidate.
+  cancel-in-progress: true
+
+# Declares the jobs that protect main.
+jobs:
+  # Builds SultanC natively on every currently supported host.
+  native:
+    # Shows the exact SultanC target in GitHub's required-check list.
+    name: Native / ${{ matrix.target }}
+    # Selects the hosted runner associated with the matrix row.
+    runs-on: ${{ matrix.runner }}
+    # Prevents a stuck compiler build from occupying a runner indefinitely.
+    timeout-minutes: 60
+
+    # Defines how native target jobs are expanded.
+    strategy:
+      # Preserves the independent result of each target when another fails.
+      fail-fast: false
+      # Declares exact host/target contracts instead of implicit defaults.
+      matrix:
+        # Uses explicit rows because each target carries multiple facts.
+        include:
+          # Declares the Linux x86_64 target row.
+          - target: x86_64-linux
+            # Uses GitHub's x64 Ubuntu 24.04 hosted runner.
+            runner: ubuntu-24.04
+            # Requires the Linux kernel identity.
+            host_os: Linux
+            # Requires the x86_64 host architecture.
+            host_arch: x86_64
+            # Requires the final compiler to be an x86-64 ELF executable.
+            file_pattern: 'ELF 64-bit.*x86-64'
+          # Declares the Apple Silicon Darwin target row.
+          - target: arm64-darwin
+            # Uses GitHub's ARM64 macOS 15 hosted runner.
+            runner: macos-15
+            # Requires the Darwin kernel identity.
+            host_os: Darwin
+            # Requires the ARM64 host architecture.
+            host_arch: arm64
+            # Requires the final compiler to be an ARM64 Mach-O executable.
+            file_pattern: 'Mach-O 64-bit.*arm64'
+
+    # Starts the native qualification steps.
+    steps:
+      # Checks out the exact pull-request or merge-group source revision.
+      - name: Checkout SultanC
+        # Pins actions/checkout v7.0.1 to its immutable full commit SHA.
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        # Applies the repository checkout security policy.
+        with:
+          # Prevents the workflow token from being written into local Git configuration.
+          persist-credentials: false
+
+      # Builds through SultanC's normal host auto-detection path.
+      - name: Build detected host target
+        # Reuses the repository-local build action.
+        uses: ./.github/actions/build
+
+      # Verifies that auto-detection produced the native compiler expected for this host.
+      - name: Verify detected target
+        # Reuses the repository-local target verifier.
+        uses: ./.github/actions/target
+        # Supplies the exact host and native artifact contract.
+        with:
+          # Identifies the SultanC target represented by this runner.
+          target: ${{ matrix.target }}
+          # Supplies the expected operating-system identity.
+          expected-host-os: ${{ matrix.host_os }}
+          # Supplies the expected architecture identity.
+          expected-host-arch: ${{ matrix.host_arch }}
+          # Supplies the expected native binary format and architecture.
+          expected-file-pattern: ${{ matrix.file_pattern }}
+
+      # Verifies that the build did not rewrite tracked repository sources.
+      - name: Verify clean source tree
+        # Reuses the repository-local strict qualification wrapper.
+        uses: ./.github/actions/test
+        # Supplies the readable check name and repository command.
+        with:
+          # Names the check in the run summary.
+          name: Repository cleanliness
+          # Requires no tracked source changes after the build.
+          command: git diff --exit-code

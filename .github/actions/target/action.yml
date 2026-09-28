@@ -1,0 +1,88 @@
+# Names this repository-local target-verification action.
+name: SultanC Target Verification
+# Describes the target contract verified by this action.
+description: Verify the host identity and native compiler artifact for a SultanC target.
+
+# Declares the target facts supplied by workflows.
+inputs:
+  # Declares the human-readable SultanC target name.
+  target:
+    # Explains what target is being qualified.
+    description: SultanC target name represented by this runner.
+    # Requires an explicit target identity.
+    required: true
+  # Declares the expected operating-system identity from uname.
+  expected-host-os:
+    # Documents examples such as Linux and Darwin.
+    description: Expected uname operating-system identity.
+    # Requires an explicit operating-system expectation.
+    required: true
+  # Declares the expected machine architecture from uname.
+  expected-host-arch:
+    # Documents examples such as x86_64 and arm64.
+    description: Expected uname architecture identity.
+    # Requires an explicit architecture expectation.
+    required: true
+  # Declares the expected file-command pattern for the compiler artifact.
+  expected-file-pattern:
+    # Explains that the pattern captures object format plus architecture.
+    description: Case-insensitive regular expression expected in file output for the compiler artifact.
+    # Requires every target to state its native binary contract.
+    required: true
+  # Declares the compiler binary path to inspect.
+  binary:
+    # Explains why callers normally do not need to override this path.
+    description: Compiler binary to verify.
+    # Keeps the canonical final compiler as the normal path.
+    required: false
+    # Points at the artifact produced by the root build.
+    default: build/sultanc
+
+# Declares this verifier as a composite action.
+runs:
+  # Executes directly on the current GitHub-hosted runner.
+  using: composite
+  # Starts the verification steps.
+  steps:
+    # Labels target verification in the Actions log.
+    - name: Verify SultanC target contract
+      # Uses Bash because uname, file, test, and grep exist on both supported hosts.
+      shell: bash
+      # Moves all action inputs into environment variables.
+      env:
+        # Stores the target name for reporting.
+        SULTANC_TARGET: ${{ inputs.target }}
+        # Stores the expected host operating system.
+        EXPECTED_HOST_OS: ${{ inputs.expected-host-os }}
+        # Stores the expected host architecture.
+        EXPECTED_HOST_ARCH: ${{ inputs.expected-host-arch }}
+        # Stores the expected native executable pattern.
+        EXPECTED_FILE_PATTERN: ${{ inputs.expected-file-pattern }}
+        # Stores the binary path to inspect.
+        SULTANC_BINARY: ${{ inputs.binary }}
+      # Starts the target-verification script.
+      run: |
+        # Fails immediately on any violated target contract.
+        set -euo pipefail
+        # Reads the actual operating system from the runner.
+        ACTUAL_HOST_OS="$(uname -s)"
+        # Reads the actual architecture from the runner.
+        ACTUAL_HOST_ARCH="$(uname -m)"
+        # Requires the final compiler artifact to exist and be executable.
+        test -x "$SULTANC_BINARY"
+        # Requires the hosted operating system to match the matrix contract.
+        test "$ACTUAL_HOST_OS" = "$EXPECTED_HOST_OS"
+        # Requires the hosted architecture to match the matrix contract.
+        test "$ACTUAL_HOST_ARCH" = "$EXPECTED_HOST_ARCH"
+        # Captures the native executable description emitted by the file utility.
+        FILE_DESCRIPTION="$(file "$SULTANC_BINARY")"
+        # Prints the native executable description into the job log.
+        printf '%s\n' "$FILE_DESCRIPTION"
+        # Requires the binary to match the target's expected object format and architecture.
+        printf '%s\n' "$FILE_DESCRIPTION" | grep -Eiq -- "$EXPECTED_FILE_PATTERN"
+        # Adds the target identity to the GitHub run summary.
+        printf '### SultanC target: `%s`\n' "$SULTANC_TARGET" >> "$GITHUB_STEP_SUMMARY"
+        # Adds the verified host tuple to the GitHub run summary.
+        printf -- '- Host: `%s / %s`\n' "$ACTUAL_HOST_OS" "$ACTUAL_HOST_ARCH" >> "$GITHUB_STEP_SUMMARY"
+        # Adds the verified compiler artifact description to the GitHub run summary.
+        printf -- '- Compiler: `%s`\n' "$FILE_DESCRIPTION" >> "$GITHUB_STEP_SUMMARY"
