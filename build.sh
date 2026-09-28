@@ -39,12 +39,12 @@ llvm_flags() {
 
     if [ -n "${LLVM_CONFIG:-}" ] && [ -x "$LLVM_CONFIG" ]; then
         LLVM_CFLAGS=$($LLVM_CONFIG --cflags)
-        LLVM_LIBS=$($LLVM_CONFIG --ldflags --libs core native target executionengine mcjit --system-libs)
+        LLVM_LIBS=$($LLVM_CONFIG --ldflags --libs core native target executionengine mcjit passes --system-libs)
         LLVM_DISCOVERY="LLVM_CONFIG=$LLVM_CONFIG"
     elif command -v llvm-config >/dev/null 2>&1; then
         LLVM_TOOL=$(command -v llvm-config)
         LLVM_CFLAGS=$($LLVM_TOOL --cflags)
-        LLVM_LIBS=$($LLVM_TOOL --ldflags --libs core native target executionengine mcjit --system-libs)
+        LLVM_LIBS=$($LLVM_TOOL --ldflags --libs core native target executionengine mcjit passes --system-libs)
         LLVM_DISCOVERY="llvm-config=$LLVM_TOOL"
     elif command -v pkg-config >/dev/null 2>&1; then
         for package in llvm LLVM llvm-20 llvm-19 llvm-18 llvm-17; do
@@ -150,29 +150,11 @@ build_stage1_with_stage0() {
     trap 'rm -rf "$S1_TMP"' EXIT HUP INT TERM
     mkdir -p "$S1_TMP"
 
-    case "$S1_TARGET" in
-        arm64-darwin)
-            (
-                cd "$PROJECT"
-                "$S0_ABS" compiler/main.sn -o "$S1_TMP/compiler.o"
-                "$S0_ABS" bootstrap/finalize_stage1.sn --run \
-                    "$S1_TMP/compiler.o" "$S1_ABS" "$S1_TARGET"
-            )
-            ;;
-        x86_64-linux)
-            (
-                cd "$PROJECT"
-                "$S0_ABS" compiler/main.sn -o "$S1_TMP/compiler.o"
-                # Stage0 is the only bootstrap host bridge. This links the
-                # host-native Stage0 object so Stage1 can run on this host.
-                "$CC_BIN" "$S1_TMP/compiler.o" -o "$S1_ABS"
-            )
-            ;;
-        *)
-            echo "sultanc-bootstrap: unsupported Stage1 host target: $S1_TARGET" >&2
-            return 1
-            ;;
-    esac
+    (
+        cd "$PROJECT"
+        "$S0_ABS" compiler/main.sn -o "$S1_TMP/compiler.o"
+        "$S0_ABS" --finalize-stage1 "$S1_TMP/compiler.o" "$S1_ABS" "$S1_TARGET"
+    )
 
     chmod +x "$S1_ABS"
     rm -rf "$S1_TMP"
