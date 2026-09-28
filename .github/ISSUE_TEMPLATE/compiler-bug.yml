@@ -1,0 +1,154 @@
+# Gives the compiler bug form a clear title in GitHub's issue chooser.
+name: Compiler bug
+# Explains when contributors should use this form.
+description: Report a reproducible SultanC compiler, bootstrap, target, diagnostic, or code-generation defect.
+# Prefixes submitted issue titles for fast triage.
+title: "[Compiler] "
+# Applies an existing bug label when the repository has that label configured.
+labels:
+  # Uses GitHub's conventional bug label.
+  - bug
+# Leaves assignment to normal project triage.
+assignees: []
+
+# Starts the structured compiler bug form.
+body:
+  # Adds a short contributor-facing introduction.
+  - type: markdown
+    # Configures the introduction content.
+    attributes:
+      # Explains the quality of report needed for compiler debugging.
+      value: |
+        Please provide the smallest reproducible SultanC program and the exact host/target information.
+
+  # Requests the SultanC revision or version.
+  - type: input
+    # Gives this field a stable machine-readable identifier.
+    id: version
+    # Configures how the field is displayed.
+    attributes:
+      # Names the field.
+      label: SultanC version or commit
+      # Shows an example of useful revision information.
+      placeholder: v0.x.x-beta.N or git commit SHA
+    # Declares field validation.
+    validations:
+      # Requires revision information for reproducibility.
+      required: true
+
+  # Requests the host environment.
+  - type: input
+    # Gives the host field a stable identifier.
+    id: host
+    # Configures the host field.
+    attributes:
+      # Names the host field.
+      label: Host
+      # Shows the expected level of detail.
+      placeholder: macOS 15 ARM64 or Ubuntu 24.04 x86_64
+    # Declares field validation.
+    validations:
+      # Requires host information.
+      required: true
+
+  # Requests the selected compiler target.
+  - type: dropdown
+    # Gives the target field a stable identifier.
+    id: target
+    # Configures target selection.
+    attributes:
+      # Names the field.
+      label: Target
+      # Explains when to choose automatic detection.
+      description: Select the target involved in the defect.
+      # Lists currently supported SultanC target identities.
+      options:
+        # Represents normal host target auto-detection.
+        - automatic host detection
+        # Represents native/cross ARM64 Darwin.
+        - arm64-darwin
+        # Represents native/cross x86_64 Linux.
+        - x86_64-linux
+        # Covers defects not tied to one target.
+        - target-independent
+    # Declares field validation.
+    validations:
+      # Requires an explicit target classification.
+      required: true
+
+  # Requests the exact command that reproduces the bug.
+  - type: textarea
+    # Gives the command field a stable identifier.
+    id: command
+    # Configures the command field.
+    attributes:
+      # Names the field.
+      label: Command
+      # Requests copy-pasteable terminal input.
+      description: Provide the exact command used to reproduce the problem.
+      # Uses a shell code block placeholder.
+      render: shell
+    # Declares field validation.
+    validations:
+      # Requires a reproduction command.
+      required: true
+
+  # Requests the smallest source reproducer.
+  - type: textarea
+    # Gives the reproducer field a stable identifier.
+    id: reproducer
+    # Configures the reproducer field.
+    attributes:
+      # Names the source field.
+      label: Minimal reproducer
+      # Requests reduced SultanC source instead of an unrelated application archive.
+      description: Provide the smallest .sn program that still reproduces the defect.
+      # Renders the input as a code block.
+      render: text
+    # Declares field validation.
+    validations:
+      # Requires a source reproducer when filing a compiler bug.
+      required: true
+
+  # Requests the expected compiler behavior.
+  - type: textarea
+    # Gives the expected field a stable identifier.
+    id: expected
+    # Configures expected behavior.
+    attributes:
+      # Names the field.
+      label: Expected behavior
+    # Declares field validation.
+    validations:
+      # Requires a concrete expected result.
+      required: true
+
+  # Requests the actual compiler behavior.
+  - type: textarea
+    # Gives the actual field a stable identifier.
+    id: actual
+    # Configures actual behavior.
+    attributes:
+      # Names the field.
+      label: Actual behavior
+      # Requests full diagnostics when available.
+      description: Include the complete SultanC diagnostic, exit status, crash signal, or incorrect result.
+    # Declares field validation.
+    validations:
+      # Requires the observed failure.
+      required: true
+
+  # Adds a final reporter confirmation.
+  - type: checkboxes
+    # Gives the confirmation field a stable identifier.
+    id: confirmation
+    # Configures the reporter confirmation.
+    attributes:
+      # Names the confirmation group.
+      label: Confirmation
+      # Declares the required reproducibility statement.
+      options:
+        # Adds one required confirmation item.
+        - label: I reproduced this on the SultanC revision listed above.
+          # Makes the confirmation mandatory.
+          required: true

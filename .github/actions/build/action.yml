@@ -1,0 +1,109 @@
+# Names this repository-local composite action in GitHub logs.
+name: SultanC Build
+# Describes the single responsibility of this action.
+description: Prepare the native host toolchain and build SultanC through the canonical repository build entry point.
+
+# Declares the values that workflows may provide to this action.
+inputs:
+  # Declares an optional explicit SultanC target.
+  target:
+    # Explains why callers may intentionally leave this value empty.
+    description: Optional SultanC target; leave empty to exercise automatic host-target detection.
+    # Allows host-detection builds to omit the target.
+    required: false
+    # Uses an empty value so the normal build path receives no target override.
+    default: ""
+
+# Declares that this local action is made from normal workflow steps.
+runs:
+  # Tells GitHub to execute the steps directly on the current runner.
+  using: composite
+  # Starts the ordered build steps.
+  steps:
+    # Labels Linux toolchain preparation in the Actions log.
+    - name: Prepare Linux toolchain
+      # Limits this step to Linux runners.
+      if: runner.os == 'Linux'
+      # Uses Bash because SultanC's build entry points are shell scripts.
+      shell: bash
+      # Starts the Linux preparation script.
+      run: |
+        # Fails immediately on command errors, unset variables, or failed pipelines.
+        set -euo pipefail
+        # Checks whether the LLVM bootstrap helper already exists on the hosted image.
+        if ! command -v llvm-config >/dev/null 2>&1; then
+          # Refreshes Ubuntu package metadata only when LLVM must be installed.
+          sudo apt-get update
+          # Installs the C compiler and LLVM bootstrap dependencies.
+          sudo apt-get install -y clang llvm
+        # Ends the conditional dependency installation block.
+        fi
+        # Records the selected LLVM version in the workflow log.
+        llvm-config --version
+        # Records the selected Clang version in the workflow log.
+        clang --version
+
+    # Labels macOS toolchain preparation in the Actions log.
+    - name: Prepare macOS toolchain
+      # Limits this step to macOS runners.
+      if: runner.os == 'macOS'
+      # Uses Bash for consistent shell semantics across supported hosts.
+      shell: bash
+      # Starts the macOS preparation script.
+      run: |
+        # Fails immediately on command errors, unset variables, or failed pipelines.
+        set -euo pipefail
+        # Checks whether Homebrew LLVM is already present on the hosted image.
+        if ! brew list llvm >/dev/null 2>&1; then
+          # Installs LLVM only when the hosted runner does not already contain it.
+          brew install llvm
+        # Ends the conditional Homebrew installation block.
+        fi
+        # Resolves Homebrew's actual LLVM prefix instead of hardcoding a machine path.
+        LLVM_PREFIX="$(brew --prefix llvm)"
+        # Adds Homebrew LLVM binaries to PATH for all later steps in this job.
+        echo "${LLVM_PREFIX}/bin" >> "$GITHUB_PATH"
+        # Exposes the exact llvm-config path for build scripts that honor LLVM_CONFIG.
+        echo "LLVM_CONFIG=${LLVM_PREFIX}/bin/llvm-config" >> "$GITHUB_ENV"
+        # Records the selected LLVM version in the workflow log.
+        "${LLVM_PREFIX}/bin/llvm-config" --version
+        # Records the selected Clang version in the workflow log.
+        clang --version
+
+    # Labels the canonical compiler build step.
+    - name: Build SultanC
+      # Uses Bash because build.sh is SultanC's canonical build entry point.
+      shell: bash
+      # Moves the workflow input into the process environment instead of shell source text.
+      env:
+        # Stores the optional requested target exactly as provided by the caller.
+        SULTANC_TARGET: ${{ inputs.target }}
+      # Starts the canonical build script.
+      run: |
+        # Stops the build on the first real failure.
+        set -euo pipefail
+        # Ensures the repository build entry point is executable after checkout.
+        chmod +x ./build.sh
+        # Selects the explicit-target path only when the caller requested one.
+        if [[ -n "$SULTANC_TARGET" ]]; then
+          # Builds through SultanC's official target-selection interface.
+          ./build.sh --target="$SULTANC_TARGET"
+        # Selects normal host auto-detection when no target was requested.
+        else
+          # Builds exactly as a developer does with no target override.
+          ./build.sh
+        # Ends the target-selection branch.
+        fi
+
+    # Labels the final compiler artifact sanity check.
+    - name: Verify compiler artifact exists
+      # Uses Bash for filesystem assertions.
+      shell: bash
+      # Starts the artifact verification script.
+      run: |
+        # Makes a missing compiler artifact fail the action.
+        set -euo pipefail
+        # Requires the canonical final compiler path to exist and be executable.
+        test -x build/sultanc
+        # Prints the produced native binary format and architecture.
+        file build/sultanc

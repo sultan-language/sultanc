@@ -1,0 +1,96 @@
+# Gives the feature form a clear title in GitHub's issue chooser.
+name: Feature request
+# Explains when contributors should use this form.
+description: Propose a focused SultanC language, compiler, target, tooling, or standard-library capability.
+# Prefixes submitted issue titles for triage.
+title: "[Proposal] "
+# Applies the enhancement label when that label exists.
+labels:
+  # Uses GitHub's conventional enhancement label.
+  - enhancement
+# Leaves assignment to project triage.
+assignees: []
+
+# Starts the structured proposal form.
+body:
+  # Adds proposal guidance before the editable fields.
+  - type: markdown
+    # Configures guidance content.
+    attributes:
+      # Requests problem-first proposals instead of syntax-only ideas.
+      value: |
+        Describe the problem first, then the proposed SultanC behavior. Keep compiler ownership and target separation in mind.
+
+  # Requests the area affected by the proposal.
+  - type: dropdown
+    # Gives the area field a stable identifier.
+    id: area
+    # Configures area selection.
+    attributes:
+      # Names the field.
+      label: Area
+      # Lists project areas without implying implementation ownership.
+      options:
+        # Covers source-language design.
+        - Language
+        # Covers compiler frontend and semantics.
+        - Compiler
+        # Covers native code generation.
+        - Backend
+        # Covers target/ABI/object/runtime selection.
+        - Target
+        # Covers the public standard library.
+        - Standard library
+        # Covers editor/LSP integration.
+        - Tooling
+        # Covers build/bootstrap workflows.
+        - Bootstrap
+    # Declares field validation.
+    validations:
+      # Requires the proposal to identify its primary area.
+      required: true
+
+  # Requests the underlying problem.
+  - type: textarea
+    # Gives the problem field a stable identifier.
+    id: problem
+    # Configures the problem statement.
+    attributes:
+      # Names the field.
+      label: Problem
+      # Encourages a concrete use case.
+      description: What is difficult, missing, unsafe, or unnecessarily verbose today?
+    # Declares field validation.
+    validations:
+      # Requires a problem statement.
+      required: true
+
+  # Requests the proposed behavior.
+  - type: textarea
+    # Gives the proposal field a stable identifier.
+    id: proposal
+    # Configures the proposal field.
+    attributes:
+      # Names the field.
+      label: Proposed behavior
+      # Requests semantics rather than only surface syntax.
+      description: Describe how SultanC should behave and which user-facing result you expect.
+    # Declares field validation.
+    validations:
+      # Requires a concrete proposal.
+      required: true
+
+  # Requests alternatives already considered.
+  - type: textarea
+    # Gives the alternatives field a stable identifier.
+    id: alternatives
+    # Configures the alternatives field.
+    attributes:
+      # Names the field.
+      label: Alternatives considered
+      # Explains why this information is useful.
+      description: Mention workarounds or alternative designs you considered.
+    # Leaves alternatives optional for simple proposals.
+    validations:
+      # Does not require this field.
+      required: false

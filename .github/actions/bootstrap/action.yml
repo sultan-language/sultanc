@@ -1,0 +1,61 @@
+# Names this repository-local bootstrap action.
+name: SultanC Bootstrap
+# Describes that the action verifies the compiler bootstrap stages without owning compiler logic.
+description: Run a requested SultanC bootstrap stage through the canonical root build interface.
+
+# Declares the bootstrap-stage input.
+inputs:
+  # Defines which bootstrap stage the caller wants to execute.
+  stage:
+    # Documents the accepted root build modes used by this action.
+    description: "Bootstrap stage to run: stage0, stage1, or bootstrap."
+    # Forces every caller to choose its intended bootstrap depth explicitly.
+    required: true
+
+# Declares this action as a sequence of local workflow steps.
+runs:
+  # Executes the steps directly on the selected runner.
+  using: composite
+  # Starts the bootstrap steps.
+  steps:
+    # Labels validation of the requested stage.
+    - name: Validate bootstrap stage
+      # Uses Bash for exact string validation.
+      shell: bash
+      # Places the action input in an environment variable.
+      env:
+        # Stores the requested bootstrap stage without interpolating it as shell source.
+        SULTANC_BOOTSTRAP_STAGE: ${{ inputs.stage }}
+      # Starts the stage-validation script.
+      run: |
+        # Fails immediately if validation encounters an error.
+        set -euo pipefail
+        # Accepts only root build modes that SultanC intentionally exposes.
+        case "$SULTANC_BOOTSTRAP_STAGE" in
+          # Accepts the C/LLVM Stage0 build.
+          stage0) ;;
+          # Accepts the Stage1 compiler build.
+          stage1) ;;
+          # Accepts the repository bootstrap mode.
+          bootstrap) ;;
+          # Rejects every unrecognized stage value.
+          *) printf 'Unsupported bootstrap stage: %s\n' "$SULTANC_BOOTSTRAP_STAGE" >&2; exit 2 ;;
+        # Ends the allowed-stage validation.
+        esac
+
+    # Labels execution of the requested canonical bootstrap stage.
+    - name: Run bootstrap stage
+      # Uses Bash because the canonical root build entry point is a shell script.
+      shell: bash
+      # Places the validated stage into the process environment.
+      env:
+        # Stores the requested bootstrap stage.
+        SULTANC_BOOTSTRAP_STAGE: ${{ inputs.stage }}
+      # Starts the bootstrap execution script.
+      run: |
+        # Stops on the first bootstrap failure.
+        set -euo pipefail
+        # Ensures the root build entry point can be executed.
+        chmod +x ./build.sh
+        # Delegates bootstrap ownership to SultanC's existing build system.
+        ./build.sh "$SULTANC_BOOTSTRAP_STAGE"
