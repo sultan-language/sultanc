@@ -1,0 +1,37 @@
+استورد text.from_bytes;
+
+مرادف بدائي_الخرج = بدائي_كتابة_خرج;
+مرادف بدائي_الخطأ = بدائي_كتابة_خطأ;
+
+// Public text output. The private primitive is only the irreducible runtime write.
+عام عرف اطبع(النص: نص): نتيجة عدد, عدد {
+    دع المكتوب: عدد = بدائي_الخرج(النص);
+    لو (المكتوب < 0) { أرجع نتيجة.خطأ(المكتوب); };
+    أرجع نتيجة.نجح(المكتوب);
+}
+
+// Public stderr text output. Runtime owns only the irreducible stderr write.
+عام عرف اطبع_خطأ(النص: نص): نتيجة عدد, عدد {
+    دع المكتوب: عدد = بدائي_الخطأ(النص);
+    لو (المكتوب < 0) { أرجع نتيجة.خطأ(المكتوب); };
+    أرجع نتيجة.نجح(المكتوب);
+}
+
+// Byte-oriented stdout write. Text materialization preserves the exact byte sequence.
+عام عرف اكتب_بايتات_خرج(البايتات: &متجه غ8): نتيجة عدد, عدد {
+    دع النص: نص = من_بايتات(البايتات);
+    أرجع اطبع(النص);
+}
+
+// Byte-oriented stderr write with the same full-write runtime contract as stdout.
+عام عرف اكتب_بايتات_خطأ(البايتات: &متجه غ8): نتيجة عدد, عدد {
+    دع النص: نص = من_بايتات(البايتات);
+    أرجع اطبع_خطأ(النص);
+}
+
+عام مرادف print = اطبع;
+عام مرادف eprint = اطبع_خطأ;
+عام مرادف write_bytes = اكتب_بايتات_خرج;
+عام مرادف write_all_bytes = اكتب_بايتات_خرج;
+عام مرادف write_error_bytes = اكتب_بايتات_خطأ;
+عام مرادف write_all_error_bytes = اكتب_بايتات_خطأ;
