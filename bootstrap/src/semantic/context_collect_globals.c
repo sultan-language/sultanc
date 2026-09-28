@@ -6,7 +6,30 @@
 #include "semantic/diagnostic.h"
 #include "semantic/context.h"
 
+#include <stdint.h>
+#include <stdlib.h>
 #include <string.h>
+
+/* Orders type-owner facts by their stable AST node address for binary lookup. */
+static int __Semantic_Compare_Type_Owner_Facts__(const void *__Left__, const void *__Right__)
+{
+    const __Semantic_Type_Owner_Fact__ *__Left_Fact__ =
+        (const __Semantic_Type_Owner_Fact__ *)__Left__;
+    const __Semantic_Type_Owner_Fact__ *__Right_Fact__ =
+        (const __Semantic_Type_Owner_Fact__ *)__Right__;
+    uintptr_t __Left_Key__ = (uintptr_t)__Left_Fact__->__Type__;
+    uintptr_t __Right_Key__ = (uintptr_t)__Right_Fact__->__Type__;
+
+    if (__Left_Key__ < __Right_Key__)
+    {
+        return -1;
+    }
+    if (__Left_Key__ > __Right_Key__)
+    {
+        return 1;
+    }
+    return 0;
+}
 
 /* Returns the semantic record type owner. */
 static int __Semantic_Record_Type_Owner__(__Semantic_Context__ *__Context__,
@@ -170,11 +193,24 @@ int __Semantic_Collect_Globals__(__Semantic_Context__ *__Context__)
     {
         /* References the unit. */
         __Program_Unit__ *__Unit__ = __Program_Unit_At__(__Context__->__Program__, __Unit_Index__);
+        /* Stores this unit's declaration ranges. */
+        __Semantic_Unit_Name_Range__ __Range__;
         /* Tracks the item index. */
         size_t __Item_Index__;
 
+        memset(&__Range__, 0, sizeof(__Range__));
+        __Range__.__Unit__ = __Unit__;
+        __Range__.__Type_Begin__ = __Context__->__Types__.__Count__;
+        __Range__.__Function_Begin__ = __Context__->__Functions__.__Count__;
         if (__Unit__ == NULL)
         {
+            __Range__.__Type_End__ = __Context__->__Types__.__Count__;
+            __Range__.__Function_End__ = __Context__->__Functions__.__Count__;
+            if (__Vector_Push__(&__Context__->__Unit_Name_Ranges__, &__Range__) == NULL)
+            {
+                return __Semantic_Fail__(
+                    __Context__, __E1100_Internal_Context_Error__, (__Source_Span__){0});
+            }
             continue;
         }
         for (__Item_Index__ = 0U; __Item_Index__ < __Unit__->__Parse__.__Module__.__Item_Count__;
@@ -252,6 +288,21 @@ int __Semantic_Collect_Globals__(__Semantic_Context__ *__Context__)
                 }
             }
         }
+        __Range__.__Type_End__ = __Context__->__Types__.__Count__;
+        __Range__.__Function_End__ = __Context__->__Functions__.__Count__;
+        if (__Vector_Push__(&__Context__->__Unit_Name_Ranges__, &__Range__) == NULL)
+        {
+            return __Semantic_Fail__(
+                __Context__, __E1100_Internal_Context_Error__, (__Source_Span__){0});
+        }
+    }
+
+    if (__Context__->__Type_Owners__.__Count__ > 1U)
+    {
+        qsort(__Context__->__Type_Owners__.__Data__,
+              __Context__->__Type_Owners__.__Count__,
+              __Context__->__Type_Owners__.__Element_Size__,
+              __Semantic_Compare_Type_Owner_Facts__);
     }
 
     for (__Function_Index__ = 0U; __Function_Index__ < __Context__->__Functions__.__Count__;

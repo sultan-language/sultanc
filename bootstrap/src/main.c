@@ -1,6 +1,7 @@
 /* Runs the Stage0 bootstrap compiler command-line entry point. */
 
 #include "llvm/llvm_emitter.h"
+#include "link/stage1_finalizer.h"
 #include "core/program.h"
 #include "semantic/body.h"
 #include "semantic/check.h"
@@ -183,22 +184,33 @@ int main(int argc, char **argv)
     int process_status = 1;
     /* Tracks the loop index. */
     int i;
-    /* Tracks whether the operation succeeded. */
-    int ok = 0;
     /* Stores the program. */
     __Program__ program;
     /* Stores the semantic context. */
     __Semantic_Context__ sem;
-    /* Tracks the program ready state. */
-    int program_ready = 0;
-    /* Tracks the semantic context ready state. */
-    int sem_ready = 0;
 
     if (argc < 2)
     {
         fprintf(stderr, "usage: %s <input.sn> -o <output.o>\n", argv[0]);
         fprintf(stderr, "       %s <compiler.sn> --run <compiler-args...>\n", argv[0]);
+        fprintf(stderr, "       %s --finalize-stage1 <object.o> <output> <target>\n", argv[0]);
         return 2;
+    }
+
+    if (strcmp(argv[1], "--finalize-stage1") == 0)
+    {
+        if (argc != 5)
+        {
+            fprintf(stderr, "sultanc-stage0: --finalize-stage1 requires <object.o> <output> <target>\n");
+            return 2;
+        }
+        if (!__Bootstrap_Finalize_Stage1__(argv[2], argv[3], argv[4]))
+        {
+            fprintf(stderr, "sultanc-stage0: Stage1 finalization failed: %s\n",
+                    __Bootstrap_Stage1_Finalizer_Error__());
+            return 1;
+        }
+        return 0;
     }
 
     input = argv[1];
@@ -233,20 +245,21 @@ int main(int argc, char **argv)
     }
 
     __Program_Init__(&program);
-    program_ready = 1;
     if (!__Program_Load_Root__(&program, input))
     {
         print_diag("load", __Program_Diagnostic__(&program));
-        goto done;
+        __Program_Destroy__(&program);
+        return 1;
     }
 
     __Semantic_Context_Init__(&sem, &program);
-    sem_ready = 1;
     if (!__Semantic_Collect_Globals__(&sem) || !__Semantic_Check_Program__(&sem) ||
         !__Semantic_Check_Bodies__(&sem))
     {
         print_diag("semantic", &sem.__Diagnostic__);
-        goto done;
+        __Semantic_Context_Destroy__(&sem);
+        __Program_Destroy__(&program);
+        return 1;
     }
 
     if (run_mode)
@@ -258,7 +271,9 @@ int main(int argc, char **argv)
         if (run_argv == NULL)
         {
             fprintf(stderr, "sultanc-stage0: unable to allocate JIT argument vector\n");
-            goto done;
+            __Semantic_Context_Destroy__(&sem);
+            __Program_Destroy__(&program);
+            return 1;
         }
         run_argv[0] = "sultanc-stage1-bootstrap";
         for (i = 0; i < user_count; ++i)
@@ -268,7 +283,10 @@ int main(int argc, char **argv)
             fprintf(stderr,
                     "sultanc-stage0: LLVM execution failed: %s\n",
                     __Bootstrap_LLVM_Emitter_Error__());
-            goto done;
+            free(run_argv);
+            __Semantic_Context_Destroy__(&sem);
+            __Program_Destroy__(&program);
+            return 1;
         }
     }
     else
@@ -278,18 +296,15 @@ int main(int argc, char **argv)
             fprintf(stderr,
                     "sultanc-stage0: LLVM object emission failed: %s\n",
                     __Bootstrap_LLVM_Emitter_Error__());
-            goto done;
+            __Semantic_Context_Destroy__(&sem);
+            __Program_Destroy__(&program);
+            return 1;
         }
         process_status = 0;
     }
 
-    ok = 1;
-
-done:
     free(run_argv);
-    if (sem_ready)
-        __Semantic_Context_Destroy__(&sem);
-    if (program_ready)
-        __Program_Destroy__(&program);
-    return ok ? process_status : 1;
+    __Semantic_Context_Destroy__(&sem);
+    __Program_Destroy__(&program);
+    return process_status;
 }

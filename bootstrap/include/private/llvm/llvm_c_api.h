@@ -8,8 +8,10 @@
 
 #if defined(__has_include)
 #if __has_include(<llvm-c/Core.h>) && __has_include(<llvm-c/Analysis.h>) && \
+      __has_include(<llvm-c/Error.h>) && \
       __has_include(<llvm-c/Target.h>) && __has_include(<llvm-c/TargetMachine.h>) && \
-      __has_include(<llvm-c/ExecutionEngine.h>)
+      __has_include(<llvm-c/ExecutionEngine.h>) && \
+      __has_include(<llvm-c/Transforms/PassBuilder.h>)
 /* Defines the sultanc bootstrap has LLVM headers macro. */
 #define SULTANC_BOOTSTRAP_HAS_LLVM_HEADERS 1
 #endif
@@ -18,14 +20,18 @@
 #ifdef SULTANC_BOOTSTRAP_HAS_LLVM_HEADERS
 #include <llvm-c/Analysis.h>
 #include <llvm-c/Core.h>
+#include <llvm-c/Error.h>
 #include <llvm-c/ExecutionEngine.h>
 #include <llvm-c/Target.h>
 #include <llvm-c/TargetMachine.h>
+#include <llvm-c/Transforms/PassBuilder.h>
 #else
 
 /* Defines the LLVM bool type alias. */
 typedef int LLVMBool;
 
+/* Defines the LLVM error ref structure. */
+typedef struct LLVMOpaqueError *LLVMErrorRef;
 /* Defines the LLVM context ref structure. */
 typedef struct LLVMOpaqueContext *LLVMContextRef;
 /* Defines the LLVM module ref structure. */
@@ -46,6 +52,8 @@ typedef struct LLVMOpaqueTargetMachine *LLVMTargetMachineRef;
 typedef struct LLVMOpaqueTargetData *LLVMTargetDataRef;
 /* Defines the LLVM execution engine ref structure. */
 typedef struct LLVMOpaqueExecutionEngine *LLVMExecutionEngineRef;
+/* Defines the LLVM pass builder options ref structure. */
+typedef struct LLVMOpaquePassBuilderOptions *LLVMPassBuilderOptionsRef;
 
 /* Defines the LLVM verifier failure action values. */
 typedef enum
@@ -438,6 +446,24 @@ extern LLVMBool LLVMTargetMachineEmitToFile(LLVMTargetMachineRef T,
                                             char *Filename,
                                             LLVMCodeGenFileType codegen,
                                             char **ErrorMessage);
+
+/* Creates the LLVM pass builder options. */
+extern LLVMPassBuilderOptionsRef LLVMCreatePassBuilderOptions(void);
+
+/* Releases the LLVM pass builder options. */
+extern void LLVMDisposePassBuilderOptions(LLVMPassBuilderOptionsRef Options);
+
+/* Runs the LLVM pass pipeline over a module. */
+extern LLVMErrorRef LLVMRunPasses(LLVMModuleRef M,
+                                  const char *Passes,
+                                  LLVMTargetMachineRef TM,
+                                  LLVMPassBuilderOptionsRef Options);
+
+/* Returns and consumes the LLVM error message. */
+extern char *LLVMGetErrorMessage(LLVMErrorRef Err);
+
+/* Releases the LLVM error message. */
+extern void LLVMDisposeErrorMessage(char *ErrMsg);
 
 /* Releases the LLVM message. */
 extern void LLVMDisposeMessage(char *Message);

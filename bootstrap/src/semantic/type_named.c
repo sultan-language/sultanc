@@ -4,23 +4,50 @@
 #include "semantic/diagnostic.h"
 #include "semantic/type_named.h"
 
+#include <stdint.h>
+
 /* Returns the semantic type owner unit. */
 const __Program_Unit__ *__Semantic_Type_Owner_Unit__(const __Semantic_Context__ *__Context__,
                                                      const __Ast_Type__ *__Type__)
 {
-    /* Tracks the index. */
-    size_t __Index__;
+    /* Stores the binary-search lower bound. */
+    size_t __Low__ = 0U;
+    /* Stores the binary-search upper bound. */
+    size_t __High__;
+    /* Stores the pointer key. */
+    uintptr_t __Key__;
 
     if (__Context__ == NULL || __Type__ == NULL)
     {
         return NULL;
     }
-    for (__Index__ = 0U; __Index__ < __Context__->__Type_Owners__.__Count__; ++__Index__)
+    __High__ = __Context__->__Type_Owners__.__Count__;
+    __Key__ = (uintptr_t)__Type__;
+    while (__Low__ < __High__)
     {
+        /* Stores the midpoint. */
+        size_t __Middle__ = __Low__ + (__High__ - __Low__) / 2U;
         /* References the fact. */
         const __Semantic_Type_Owner_Fact__ *__Fact__ =
             (const __Semantic_Type_Owner_Fact__ *)__Vector_At_Const__(&__Context__->__Type_Owners__,
-                                                                      __Index__);
+                                                                      __Middle__);
+        /* Stores the midpoint key. */
+        uintptr_t __Middle_Key__ = __Fact__ == NULL ? 0U : (uintptr_t)__Fact__->__Type__;
+
+        if (__Middle_Key__ < __Key__)
+        {
+            __Low__ = __Middle__ + 1U;
+        }
+        else
+        {
+            __High__ = __Middle__;
+        }
+    }
+    if (__Low__ < __Context__->__Type_Owners__.__Count__)
+    {
+        const __Semantic_Type_Owner_Fact__ *__Fact__ =
+            (const __Semantic_Type_Owner_Fact__ *)__Vector_At_Const__(&__Context__->__Type_Owners__,
+                                                                      __Low__);
         if (__Fact__ != NULL && __Fact__->__Type__ == __Type__)
         {
             return __Fact__->__Unit__;

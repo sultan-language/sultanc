@@ -100,6 +100,75 @@ static int __Name_Unit_Imports__(const __Semantic_Context__ *__Context__,
     return 0;
 }
 
+/* Returns the semantic declaration range for a loaded unit. */
+static const __Semantic_Unit_Name_Range__ *__Name_Unit_Range__(
+    const __Semantic_Context__ *__Context__, const __Program_Unit__ *__Unit__)
+{
+    const __Semantic_Unit_Name_Range__ *__Range__;
+
+    if (__Context__ == NULL || __Unit__ == NULL ||
+        __Unit__->__Index__ >= __Context__->__Unit_Name_Ranges__.__Count__)
+    {
+        return NULL;
+    }
+    __Range__ = (const __Semantic_Unit_Name_Range__ *)__Vector_At_Const__(
+        &__Context__->__Unit_Name_Ranges__, __Unit__->__Index__);
+    return __Range__ != NULL && __Range__->__Unit__ == __Unit__ ? __Range__ : NULL;
+}
+
+/* Finds a type declaration inside one unit only. */
+static __Semantic_Type_Entry__ *__Name_Find_Type_In_Unit__(__Semantic_Context__ *__Context__,
+                                                           const __Program_Unit__ *__Unit__,
+                                                           __Text_Slice__ __Name__)
+{
+    const __Semantic_Unit_Name_Range__ *__Range__ = __Name_Unit_Range__(__Context__, __Unit__);
+    __Text_Slice__ __Resolved_Name__;
+    size_t __Index__;
+
+    if (__Range__ == NULL ||
+        !__Name_Resolve_Module_Alias_Name__(__Unit__, __Name__, &__Resolved_Name__))
+    {
+        return NULL;
+    }
+    for (__Index__ = __Range__->__Type_Begin__; __Index__ < __Range__->__Type_End__; ++__Index__)
+    {
+        __Semantic_Type_Entry__ *__Entry__ =
+            (__Semantic_Type_Entry__ *)__Vector_At__(&__Context__->__Types__, __Index__);
+        if (__Entry__ != NULL &&
+            __Identifier_Identity_Equals__(__Entry__->__Name__, __Resolved_Name__))
+        {
+            return __Entry__;
+        }
+    }
+    return NULL;
+}
+
+/* Finds a function declaration inside one unit only. */
+static __Semantic_Function_Entry__ *__Name_Find_Function_In_Unit__(
+    __Semantic_Context__ *__Context__, const __Program_Unit__ *__Unit__, __Text_Slice__ __Name__)
+{
+    const __Semantic_Unit_Name_Range__ *__Range__ = __Name_Unit_Range__(__Context__, __Unit__);
+    __Text_Slice__ __Resolved_Name__;
+    size_t __Index__;
+
+    if (__Range__ == NULL ||
+        !__Name_Resolve_Module_Alias_Name__(__Unit__, __Name__, &__Resolved_Name__))
+    {
+        return NULL;
+    }
+    for (__Index__ = __Range__->__Function_Begin__; __Index__ < __Range__->__Function_End__;
+         ++__Index__)
+    {
+        __Semantic_Function_Entry__ *__Entry__ =
+            (__Semantic_Function_Entry__ *)__Vector_At__(&__Context__->__Functions__, __Index__);
+        if (__Name_Function_Entry_Matches__(__Entry__, __Resolved_Name__))
+        {
+            return __Entry__;
+        }
+    }
+    return NULL;
+}
+
 /* Resolves the name type. */
 __Name_Lookup_Status__ __Name_Resolve_Type__(__Semantic_Context__ *__Context__,
                                              const __Program_Unit__ *__From_Unit__,
@@ -120,6 +189,62 @@ __Name_Lookup_Status__ __Name_Resolve_Type__(__Semantic_Context__ *__Context__,
     if (__Context__ == NULL)
     {
         return __Name_Lookup_Missing__;
+    }
+
+    if (__From_Unit__ != NULL && __Name_Unit_Range__(__Context__, __From_Unit__) != NULL)
+    {
+        __Semantic_Type_Entry__ *__Local__ =
+            __Name_Find_Type_In_Unit__(__Context__, __From_Unit__, __Name__);
+        size_t __Import_Index__;
+
+        if (__Local__ != NULL)
+        {
+            if (__Out_Entry__ != NULL)
+            {
+                *__Out_Entry__ = __Local__;
+            }
+            return __Name_Lookup_Found__;
+        }
+        for (__Import_Index__ = 0U;
+             __Import_Index__ < __From_Unit__->__Imported_Unit_Indexes__.__Count__;
+             ++__Import_Index__)
+        {
+            const size_t *__Imported_Index__ = (const size_t *)__Vector_At_Const__(
+                &__From_Unit__->__Imported_Unit_Indexes__, __Import_Index__);
+            const __Program_Unit__ *__Imported_Unit__;
+            __Semantic_Type_Entry__ *__Entry__;
+
+            if (__Imported_Index__ == NULL)
+            {
+                continue;
+            }
+            __Imported_Unit__ =
+                __Program_Unit_At_Const__(__Context__->__Program__, *__Imported_Index__);
+            __Entry__ = __Name_Find_Type_In_Unit__(__Context__, __Imported_Unit__, __Name__);
+            if (__Entry__ == NULL)
+            {
+                continue;
+            }
+            if (!__Entry__->__Public__)
+            {
+                __Private_Match__ = 1;
+                continue;
+            }
+            if (__Imported_Match__ != NULL && __Imported_Match__ != __Entry__)
+            {
+                return __Name_Lookup_Ambiguous__;
+            }
+            __Imported_Match__ = __Entry__;
+        }
+        if (__Imported_Match__ != NULL)
+        {
+            if (__Out_Entry__ != NULL)
+            {
+                *__Out_Entry__ = __Imported_Match__;
+            }
+            return __Name_Lookup_Found__;
+        }
+        return __Private_Match__ ? __Name_Lookup_Private__ : __Name_Lookup_Missing__;
     }
 
     for (__Index__ = 0U; __Index__ < __Context__->__Types__.__Count__; ++__Index__)
@@ -192,6 +317,62 @@ __Name_Lookup_Status__ __Name_Resolve_Function__(__Semantic_Context__ *__Context
     if (__Context__ == NULL)
     {
         return __Name_Lookup_Missing__;
+    }
+
+    if (__From_Unit__ != NULL && __Name_Unit_Range__(__Context__, __From_Unit__) != NULL)
+    {
+        __Semantic_Function_Entry__ *__Local__ =
+            __Name_Find_Function_In_Unit__(__Context__, __From_Unit__, __Name__);
+        size_t __Import_Index__;
+
+        if (__Local__ != NULL)
+        {
+            if (__Out_Entry__ != NULL)
+            {
+                *__Out_Entry__ = __Local__;
+            }
+            return __Name_Lookup_Found__;
+        }
+        for (__Import_Index__ = 0U;
+             __Import_Index__ < __From_Unit__->__Imported_Unit_Indexes__.__Count__;
+             ++__Import_Index__)
+        {
+            const size_t *__Imported_Index__ = (const size_t *)__Vector_At_Const__(
+                &__From_Unit__->__Imported_Unit_Indexes__, __Import_Index__);
+            const __Program_Unit__ *__Imported_Unit__;
+            __Semantic_Function_Entry__ *__Entry__;
+
+            if (__Imported_Index__ == NULL)
+            {
+                continue;
+            }
+            __Imported_Unit__ =
+                __Program_Unit_At_Const__(__Context__->__Program__, *__Imported_Index__);
+            __Entry__ = __Name_Find_Function_In_Unit__(__Context__, __Imported_Unit__, __Name__);
+            if (__Entry__ == NULL)
+            {
+                continue;
+            }
+            if (!__Entry__->__Public__)
+            {
+                __Private_Match__ = 1;
+                continue;
+            }
+            if (__Imported_Match__ != NULL && __Imported_Match__ != __Entry__)
+            {
+                return __Name_Lookup_Ambiguous__;
+            }
+            __Imported_Match__ = __Entry__;
+        }
+        if (__Imported_Match__ != NULL)
+        {
+            if (__Out_Entry__ != NULL)
+            {
+                *__Out_Entry__ = __Imported_Match__;
+            }
+            return __Name_Lookup_Found__;
+        }
+        return __Private_Match__ ? __Name_Lookup_Private__ : __Name_Lookup_Missing__;
     }
 
     for (__Index__ = 0U; __Index__ < __Context__->__Functions__.__Count__; ++__Index__)
