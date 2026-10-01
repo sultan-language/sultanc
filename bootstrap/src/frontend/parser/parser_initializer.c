@@ -66,23 +66,6 @@ __Initializer__ __Parser_Parse_Initializer__(__Parser__ *__Parser_State__, int *
         return __Initializer_Value__;
     }
 
-    if (__Parser_Accept__(__Parser_State__, __Token_LEFT_PARENTHESIS_OPERATOR__))
-    {
-        /* References the expression. */
-        __Ast_Expression__ *__Expression__ = __Parser_Parse_Expression__(__Parser_State__);
-
-        if (__Expression__ == NULL ||
-            !__Parser_Expect__(__Parser_State__, __Token_RIGHT_PARENTHESIS_OPERATOR__))
-        {
-            return __Initializer_Value__;
-        }
-        __Initializer_Value__.__As__.__Expression__ = __Expression__;
-        __Initializer_Value__.__Span__ =
-            __Parser_Span__(__Start__, __Parser_State__->__Previous__.__Span__.__End__);
-        *__Ok__ = 1;
-        return __Initializer_Value__;
-    }
-
     __Initializer_Value__.__As__.__Expression__ = __Parser_Parse_Expression__(__Parser_State__);
     if (__Initializer_Value__.__As__.__Expression__ == NULL)
     {

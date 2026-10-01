@@ -30,7 +30,7 @@ typedef enum
 typedef enum
 {
 /* Expands the sultanc diagnostic macro. */
-#define SULTANC_DIAGNOSTIC(__Id__, __Code__, __Severity__, __Message_Key__) __Id__,
+#define SULTANC_DIAGNOSTIC(__Id__, __Code__, __Name__, __Severity__, __Message_Key__) __Id__,
 #include "diagnostic_catalog.def"
 #undef SULTANC_DIAGNOSTIC
     /* Represents the error ID count value. */

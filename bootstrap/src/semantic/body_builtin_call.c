@@ -111,19 +111,53 @@ static int __Body_Builtin_Append__(__Semantic_Body_Context__ *__Context__,
     }
 
     __Vector_Expression__ = __Expression__->__As__.__Call__.__Arguments__[0];
-    if (__Vector_Expression__ == NULL ||
-        __Vector_Expression__->__Kind__ != __Ast_Expression_Atom__ ||
-        __Vector_Expression__->__As__.__Atom__.__Kind__ != __Ast_Atom_Lvalue__)
+    if (__Vector_Expression__ == NULL)
     {
         return __Body_Fail__(
             __Context__, __E0400_Mismatched_Types__, __Expression__->__Header__.__Span__);
     }
-    __Vector_Lvalue__ = __Vector_Expression__->__As__.__Atom__.__As__.__Lvalue__;
-    if (!__Body_Check_Assignable__(
-            __Context__, __Vector_Lvalue__, &__Vector_Type__, &__Vector_Local__) ||
-        !__Type_Resolve__(__Context__->__Semantic__, __Vector_Type__, &__Resolved__))
+    if (__Vector_Expression__->__Kind__ == __Ast_Expression_Atom__ &&
+        __Vector_Expression__->__As__.__Atom__.__Kind__ == __Ast_Atom_Lvalue__)
     {
-        return 0;
+        __Vector_Lvalue__ = __Vector_Expression__->__As__.__Atom__.__As__.__Lvalue__;
+        if (!__Body_Check_Assignable__(
+                __Context__, __Vector_Lvalue__, &__Vector_Type__, &__Vector_Local__) ||
+            !__Type_Resolve__(__Context__->__Semantic__, __Vector_Type__, &__Resolved__))
+        {
+            return 0;
+        }
+    }
+    else if (__Vector_Expression__->__Kind__ == __Ast_Expression_Unary__ &&
+             __Vector_Expression__->__As__.__Unary__.__Operation__ == __Unary_Dereference__)
+    {
+        __Ast_Type__ *__Reference_Type__ = NULL;
+        __Resolved_Type__ __Reference_Resolved__;
+        if (!__Body_Infer_Expression__(__Context__,
+                                      __Vector_Expression__->__As__.__Unary__.__Operand__,
+                                      &__Reference_Type__) ||
+            !__Type_Resolve__(__Context__->__Semantic__,
+                              __Reference_Type__,
+                              &__Reference_Resolved__))
+        {
+            return 0;
+        }
+        if (__Reference_Resolved__.__Kind__ != __Resolved_Type_Reference__ ||
+            !__Reference_Resolved__.__Reference_Mutable__ ||
+            __Reference_Resolved__.__Inner__ == NULL)
+        {
+            return __Body_Fail__(
+                __Context__, __E0400_Mismatched_Types__, __Vector_Expression__->__Header__.__Span__);
+        }
+        __Vector_Type__ = __Reference_Resolved__.__Inner__;
+        if (!__Type_Resolve__(__Context__->__Semantic__, __Vector_Type__, &__Resolved__))
+        {
+            return 0;
+        }
+    }
+    else
+    {
+        return __Body_Fail__(
+            __Context__, __E0400_Mismatched_Types__, __Expression__->__Header__.__Span__);
     }
     if (__Resolved__.__Kind__ != __Resolved_Type_Vector__)
     {

@@ -13,26 +13,54 @@ __Ast_Lvalue__ *__Parser_Parse_Lvalue__(__Parser__ *__Parser_State__)
     __Ast_Lvalue__ *__Lvalue__ = NULL;
     /* Stores the start. */
     __Source_Position__ __Start__;
-    if (__Parser_State__->__Current__.__Kind__ != __Token_IDENTIFIER__)
-    {
-        (void)__Parser_Fail__(__Parser_State__, __Diag_Word_Syntax_Expected_Identifier_Lvalue__);
-        return NULL;
-    }
     __Start__ = __Parser_State__->__Current__.__Span__.__Start__;
-    __Lvalue__ = __Parser_New_Lvalue__(
-        __Parser_State__, __Ast_Lvalue_Base__, __Parser_State__->__Current__.__Span__);
-    if (__Lvalue__ == NULL)
+    if (__Parser_State__->__Current__.__Kind__ == __Token_LEFT_PARENTHESIS_OPERATOR__)
     {
-        return NULL;
+        /* Parenthesized dereference is an lvalue base, enabling `(*ref)[index] := value`. */
+        __Ast_Lvalue__ *__Parent__ = NULL;
+        __Ast_Lvalue__ *__Dereference__ = NULL;
+        if (!__Parser_Advance__(__Parser_State__) ||
+            !__Parser_Expect__(__Parser_State__, __Token_STAR_OPERATOR__))
+        {
+            return NULL;
+        }
+        __Parent__ = __Parser_Parse_Lvalue__(__Parser_State__);
+        if (__Parent__ == NULL ||
+            !__Parser_Expect__(__Parser_State__, __Token_RIGHT_PARENTHESIS_OPERATOR__))
+        {
+            return NULL;
+        }
+        __Dereference__ = __Parser_New_Lvalue__(
+            __Parser_State__,
+            __Ast_Lvalue_Dereference__,
+            __Parser_Span__(__Start__, __Parser_State__->__Previous__.__Span__.__End__));
+        if (__Dereference__ == NULL)
+        {
+            return NULL;
+        }
+        __Dereference__->__As__.__Dereference_Parent__ = __Parent__;
+        __Lvalue__ = __Dereference__;
     }
-    __Lvalue__->__As__.__Base__.__Kind__ = __Ast_Lvalue_Base_Identifier__;
-    __Lvalue__->__As__.__Base__.__As__.__Identifier__ =
-        __Parser_State__->__Current__.__Kind__ == __Token_IDENTIFIER__
-            ? __Parser_State__->__Current__.__Lexeme__
-            : __Parser_State__->__Current__.__Lexeme__;
-    if (!__Parser_Advance__(__Parser_State__))
+    else
     {
-        return NULL;
+        if (__Parser_State__->__Current__.__Kind__ != __Token_IDENTIFIER__)
+        {
+            (void)__Parser_Fail__(
+                __Parser_State__, __Diag_Word_Syntax_Expected_Identifier_Lvalue__);
+            return NULL;
+        }
+        __Lvalue__ = __Parser_New_Lvalue__(
+            __Parser_State__, __Ast_Lvalue_Base__, __Parser_State__->__Current__.__Span__);
+        if (__Lvalue__ == NULL)
+        {
+            return NULL;
+        }
+        __Lvalue__->__As__.__Base__.__Kind__ = __Ast_Lvalue_Base_Identifier__;
+        __Lvalue__->__As__.__Base__.__As__.__Identifier__ = __Parser_State__->__Current__.__Lexeme__;
+        if (!__Parser_Advance__(__Parser_State__))
+        {
+            return NULL;
+        }
     }
 
     for (;;)

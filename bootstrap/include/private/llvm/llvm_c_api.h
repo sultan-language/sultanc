@@ -54,6 +54,39 @@ typedef struct LLVMOpaqueTargetData *LLVMTargetDataRef;
 typedef struct LLVMOpaqueExecutionEngine *LLVMExecutionEngineRef;
 /* Defines the LLVM pass builder options ref structure. */
 typedef struct LLVMOpaquePassBuilderOptions *LLVMPassBuilderOptionsRef;
+typedef struct LLVMOpaqueAttributeRef *LLVMAttributeRef;
+
+/* Defines the LLVM attribute index type. */
+typedef unsigned LLVMAttributeIndex;
+
+/* Function attributes use the all-ones index in the LLVM C API. */
+#define LLVMAttributeFunctionIndex ((LLVMAttributeIndex)~0U)
+
+/* Defines the LLVM type kind values used by Stage0 optimization guards. */
+typedef enum
+{
+    LLVMVoidTypeKind = 0,
+    LLVMHalfTypeKind,
+    LLVMFloatTypeKind,
+    LLVMDoubleTypeKind,
+    LLVMX86_FP80TypeKind,
+    LLVMFP128TypeKind,
+    LLVMPPC_FP128TypeKind,
+    LLVMLabelTypeKind,
+    LLVMIntegerTypeKind,
+    LLVMFunctionTypeKind,
+    LLVMStructTypeKind,
+    LLVMArrayTypeKind,
+    LLVMPointerTypeKind,
+    LLVMVectorTypeKind,
+    LLVMMetadataTypeKind,
+    LLVMX86_MMXTypeKind,
+    LLVMTokenTypeKind,
+    LLVMScalableVectorTypeKind,
+    LLVMBFloatTypeKind,
+    LLVMX86_AMXTypeKind,
+    LLVMTargetExtTypeKind
+} LLVMTypeKind;
 
 /* Defines the LLVM verifier failure action values. */
 typedef enum
@@ -210,6 +243,42 @@ extern LLVMValueRef LLVMAddFunction(LLVMModuleRef M, const char *Name, LLVMTypeR
 
 /* Returns the LLVM named function. */
 extern LLVMValueRef LLVMGetNamedFunction(LLVMModuleRef M, const char *Name);
+
+/* Returns the first LLVM function in a module. */
+extern LLVMValueRef LLVMGetFirstFunction(LLVMModuleRef M);
+
+/* Returns the next LLVM function in a module. */
+extern LLVMValueRef LLVMGetNextFunction(LLVMValueRef Fn);
+
+/* Returns the number of basic blocks in an LLVM function. */
+extern unsigned LLVMCountBasicBlocks(LLVMValueRef Fn);
+
+/* Returns the value type of an LLVM global/function. */
+extern LLVMTypeRef LLVMGlobalGetValueType(LLVMValueRef Global);
+
+/* Returns an LLVM type kind. */
+extern LLVMTypeKind LLVMGetTypeKind(LLVMTypeRef Ty);
+
+/* Returns an LLVM function return type. */
+extern LLVMTypeRef LLVMGetReturnType(LLVMTypeRef FunctionTy);
+
+/* Returns the number of LLVM function parameter types. */
+extern unsigned LLVMCountParamTypes(LLVMTypeRef FunctionTy);
+
+/* Copies LLVM function parameter types. */
+extern void LLVMGetParamTypes(LLVMTypeRef FunctionTy, LLVMTypeRef *Dest);
+
+/* Resolves an LLVM enum attribute kind by name. */
+extern unsigned LLVMGetEnumAttributeKindForName(const char *Name, size_t SLen);
+
+/* Creates an LLVM enum attribute. */
+extern LLVMAttributeRef LLVMCreateEnumAttribute(LLVMContextRef C, unsigned KindID, unsigned long long Val);
+
+/* Adds an LLVM attribute at the requested index. */
+extern void LLVMAddAttributeAtIndex(LLVMValueRef F, LLVMAttributeIndex Idx, LLVMAttributeRef A);
+
+/* Removes an LLVM enum attribute at the requested index. */
+extern void LLVMRemoveEnumAttributeAtIndex(LLVMValueRef F, LLVMAttributeIndex Idx, unsigned KindID);
 
 /* Adds the LLVM global. */
 extern LLVMValueRef LLVMAddGlobal(LLVMModuleRef M, LLVMTypeRef Ty, const char *Name);
@@ -461,6 +530,9 @@ extern LLVMErrorRef LLVMRunPasses(LLVMModuleRef M,
 
 /* Returns and consumes the LLVM error message. */
 extern char *LLVMGetErrorMessage(LLVMErrorRef Err);
+
+/* Consumes an LLVM error without materializing its message. */
+extern void LLVMConsumeError(LLVMErrorRef Err);
 
 /* Releases the LLVM error message. */
 extern void LLVMDisposeErrorMessage(char *ErrMsg);

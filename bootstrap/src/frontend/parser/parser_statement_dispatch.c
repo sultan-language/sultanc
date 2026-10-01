@@ -31,6 +31,7 @@ int __Parser_Parse_One_Statement__(__Parser__ *__Parser_State__, __Vector__ *__S
         }
         case __Token_IDENTIFIER__:
         case __Token_STAR_OPERATOR__:
+        case __Token_LEFT_PARENTHESIS_OPERATOR__:
             return __Parser_Parse_Lvalue_Statement__(__Parser_State__, __Statements__);
         default:
             return __Parser_Fail__(__Parser_State__, __Diag_Word_Syntax_Expected_Statement__);

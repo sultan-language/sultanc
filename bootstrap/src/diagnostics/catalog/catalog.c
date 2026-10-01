@@ -7,8 +7,8 @@
 /* Stores the diagnostic definitions. */
 static const __Diagnostic_Definition__ __Diagnostic_Definitions__[__Error_Id_Count__] = {
 /* Expands the sultanc diagnostic macro. */
-#define SULTANC_DIAGNOSTIC(__Id__, __Code__, __Severity__, __Message_Key__)                        \
-    [__Id__] = {__Id__, __Code__, #__Id__, __Severity__, __Message_Key__},
+#define SULTANC_DIAGNOSTIC(__Id__, __Code__, __Name__, __Severity__, __Message_Key__)              \
+    [__Id__] = {__Id__, __Code__, __Name__, __Severity__, __Message_Key__},
 #include "core/diagnostic_catalog.def"
 #undef SULTANC_DIAGNOSTIC
 };
@@ -31,7 +31,7 @@ const char *__Diagnostic_Code__(__Error_Id__ __Id__)
 
     if (__Definition__ == NULL)
     {
-        return "SULTANC-E????";
+        return "SULTANC-ICE-CONTEXT";
     }
     return __Definition__->__Code__;
 }
