@@ -1,96 +1,53 @@
-# Names the workflow that creates official tagged SultanC compiler binaries.
+# Names the maintainer-started release packaging workflow.
 name: SultanC Release
 
-# Restricts release automation to version tags.
+# Keeps release preparation under explicit human control.
 on:
-  # Runs when a version tag is pushed.
-  push:
-    # Declares the release-tag pattern.
-    tags:
-      # Accepts stable, beta, and prerelease tags that begin with v.
-      - 'v*'
+  # Allows a maintainer to choose when a release candidate should be packaged.
+  workflow_dispatch:
+    # Declares the release information requested by the Actions UI.
+    inputs:
+      # Declares the already-created repository tag that identifies the release source.
+      tag:
+        # Explains that this workflow packages a tag but never publishes a GitHub Release.
+        description: Existing version tag to package, for example v0.1.0-beta.1.
+        # Requires an explicit release version from the maintainer.
+        required: true
+        # Uses a normal text field so the maintainer supplies the exact tag.
+        type: string
 
-# Grants only the permission required to create and upload GitHub release assets.
+# Gives release packaging read-only repository access.
 permissions:
-  # Allows this workflow to create a GitHub Release for the pushed version tag.
-  contents: write
+  # Allows source and tag checkout but cannot create releases, tags, or commits.
+  contents: read
 
-# Prevents duplicate publication of the same tag.
+# Prevents duplicate packaging jobs for the same manually selected version tag.
 concurrency:
-  # Groups publication by the exact tag reference.
-  group: sultanc-release-${{ github.ref }}
-  # Never cancels a publication already in progress.
+  # Groups release packaging by the requested tag.
+  group: sultanc-release-${{ inputs.tag }}
+  # Preserves an in-progress release build instead of cancelling it midway.
   cancel-in-progress: false
 
-# Declares release publication jobs.
+# Declares release packaging jobs.
 jobs:
-  # Creates the GitHub Release record before target builders upload assets.
-  prepare:
-    # Gives the preparation job a clear release-oriented name.
-    name: Prepare Release
-    # Uses Ubuntu because this job only manages GitHub release metadata.
-    runs-on: ubuntu-24.04
-    # Places a short upper bound on metadata preparation.
-    timeout-minutes: 10
-
-    # Starts release preparation steps.
-    steps:
-      # Checks out the exact tagged revision for provenance.
-      - name: Checkout release tag
-        # Pins checkout to immutable v7.0.1.
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        # Applies secure checkout behavior.
-        with:
-          # Prevents token persistence inside Git.
-          persist-credentials: false
-
-      # Creates the GitHub Release if it does not already exist.
-      - name: Create GitHub Release
-        # Uses the GitHub CLI bundled with hosted runners.
-        shell: bash
-        # Gives the CLI only the workflow token required for release creation.
-        env:
-          # Exposes the scoped workflow token to gh.
-          GH_TOKEN: ${{ github.token }}
-          # Exposes the pushed version tag.
-          RELEASE_TAG: ${{ github.ref_name }}
-        # Starts release creation.
-        run: |
-          # Fails on CLI errors, unset variables, or failed pipelines.
-          set -euo pipefail
-          # Reuses an existing release when a maintainer intentionally reruns the workflow.
-          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
-            # Reports that the existing release will be reused.
-            printf 'Release %s already exists; reusing it.\n' "$RELEASE_TAG"
-          # Creates release metadata when this tag has not been published yet.
-          else
-            # Creates release notes automatically from repository history.
-            gh release create "$RELEASE_TAG" --verify-tag --generate-notes --title "$RELEASE_TAG"
-          # Ends the existing-versus-new release branch.
-          fi
-
-  # Builds and uploads one compiler binary per supported native target.
+  # Builds one verified compiler package per supported native target.
   binaries:
-    # Shows the target name directly in release results.
-    name: Binary / ${{ matrix.target }}
-    # Waits until the GitHub Release record exists.
-    needs:
-      # Requires successful release preparation.
-      - prepare
-    # Selects the native target runner.
+    # Shows the target directly in the manually started release run.
+    name: Package / ${{ matrix.target }}
+    # Uses the native runner required to execute and qualify the produced compiler.
     runs-on: ${{ matrix.runner }}
-    # Allows enough time for a clean compiler release build.
-    timeout-minutes: 90
+    # Allows time for a clean build, examples, and self-host convergence.
+    timeout-minutes: 120
 
-    # Declares release targets.
+    # Declares supported release targets.
     strategy:
-      # Keeps the other target building if one target fails.
+      # Keeps the independent result of each release target visible.
       fail-fast: false
-      # Starts explicit release rows.
+      # Starts the exact native target rows.
       matrix:
-        # Declares the native release matrix.
+        # Declares target/runner contracts.
         include:
-          # Declares Linux x86_64.
+          # Declares Linux x86_64 release packaging.
           - target: x86_64-linux
             # Uses Ubuntu x64.
             runner: ubuntu-24.04
@@ -98,102 +55,179 @@ jobs:
             host_os: Linux
             # Expects x86_64.
             host_arch: x86_64
-            # Expects ELF x86-64.
+            # Expects an ELF x86-64 compiler.
             file_pattern: 'ELF 64-bit.*x86-64'
-          # Declares Darwin ARM64.
+          # Declares Darwin ARM64 release packaging.
           - target: arm64-darwin
-            # Uses macOS ARM64.
+            # Uses Apple Silicon macOS.
             runner: macos-15
             # Expects Darwin.
             host_os: Darwin
             # Expects arm64.
             host_arch: arm64
-            # Expects Mach-O ARM64.
+            # Expects a Mach-O ARM64 compiler.
             file_pattern: 'Mach-O 64-bit.*arm64'
 
-    # Starts release build steps.
+    # Starts release packaging steps.
     steps:
-      # Checks out the exact release tag.
-      - name: Checkout release tag
-        # Pins checkout to immutable v7.0.1.
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        # Applies secure checkout behavior.
-        with:
-          # Prevents token persistence in Git.
-          persist-credentials: false
-
-      # Builds the exact registered release target.
-      - name: Build release compiler
-        # Reuses SultanC's local build action.
-        uses: ./.github/actions/build
-        # Supplies the release target.
-        with:
-          # Passes the registered target name.
-          target: ${{ matrix.target }}
-
-      # Verifies the release binary before packaging.
-      - name: Verify release target
-        # Reuses the target verifier.
-        uses: ./.github/actions/target
-        # Supplies the target contract.
-        with:
-          # Names the release target.
-          target: ${{ matrix.target }}
-          # Supplies the host OS.
-          expected-host-os: ${{ matrix.host_os }}
-          # Supplies the host architecture.
-          expected-host-arch: ${{ matrix.host_arch }}
-          # Supplies the native binary expectation.
-          expected-file-pattern: ${{ matrix.file_pattern }}
-
-      # Packages the compiler binary and checksum with deterministic names.
-      - name: Package release binary
-        # Uses Bash for file naming and SHA-256 generation.
+      # Validates the maintainer-supplied tag before it is used in paths or artifact names.
+      - name: Validate release tag
+        # Uses Bash for a strict version-tag shape check.
         shell: bash
-        # Supplies release naming inputs.
+        # Places the manual input in an environment variable instead of shell source text.
         env:
-          # Stores the release version tag.
-          RELEASE_TAG: ${{ github.ref_name }}
-          # Stores the target name.
-          SULTANC_TARGET: ${{ matrix.target }}
-        # Starts packaging.
+          # Stores the exact requested version tag.
+          RELEASE_TAG: ${{ inputs.tag }}
+        # Starts release-tag validation.
         run: |
-          # Fails on packaging errors.
+          # Fails on shell errors, unset variables, or failed pipelines.
           set -euo pipefail
-          # Creates the release staging directory.
-          mkdir -p dist
-          # Builds the final portable asset name.
-          ASSET="sultanc-$RELEASE_TAG-$SULTANC_TARGET"
-          # Copies the verified compiler into the release staging directory.
-          cp build/sultanc "dist/$ASSET"
-          # Generates a SHA-256 checksum using the host-appropriate utility.
-          if command -v sha256sum >/dev/null 2>&1; then
-            # Uses GNU sha256sum on Linux.
-            (cd dist && sha256sum "$ASSET" > "$ASSET.sha256")
-          # Uses the macOS checksum utility when GNU coreutils is absent.
-          else
-            # Uses shasum with SHA-256 on macOS.
-            (cd dist && shasum -a 256 "$ASSET" > "$ASSET.sha256")
-          # Ends the platform-specific checksum branch.
+          # Accepts version-like tags beginning with v and containing only release-safe characters.
+          if [[ ! "$RELEASE_TAG" =~ ^v[0-9A-Za-z._-]+$ ]]; then
+            # Reports malformed tag input without attempting any checkout.
+            printf 'Invalid SultanC release tag: %s\n' "$RELEASE_TAG" >&2
+            # Rejects unsafe or non-version-like release input.
+            exit 2
+          # Ends release-tag validation.
           fi
 
-      # Uploads the compiler and checksum to the already-created GitHub Release.
-      - name: Upload release assets
-        # Uses the GitHub CLI bundled with hosted runners.
+      # Checks out main only to provide the current repository-owned CI actions.
+      - name: Checkout CI definitions
+        # Pins actions/checkout v7.0.1 to its immutable full commit SHA.
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        # Keeps release mechanics owned by the current main branch.
+        with:
+          # Uses main as the canonical CI definition source.
+          ref: main
+          # Prevents workflow-token persistence.
+          persist-credentials: false
+
+      # Checks out the exact tagged release source into an isolated directory.
+      - name: Checkout release tag
+        # Pins checkout to the same immutable v7.0.1 commit.
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        # Configures the release-source checkout.
+        with:
+          # Resolves only a tag ref rather than an accidental branch with the same short name.
+          ref: ${{ format('refs/tags/{0}', inputs.tag) }}
+          # Keeps the release candidate separate from main's CI definitions.
+          path: candidate
+          # Fetches complete history so the tag can be proven to belong to master.
+          fetch-depth: 0
+          # Prevents workflow-token persistence in the release source checkout.
+          persist-credentials: false
+
+      # Proves the selected release tag belongs to the published master history.
+      - name: Verify tag is from master
+        # Uses Bash and Git ancestry checks without modifying the candidate checkout.
         shell: bash
-        # Supplies only the token and naming facts needed by gh.
-        env:
-          # Exposes the scoped workflow token for release upload.
-          GH_TOKEN: ${{ github.token }}
-          # Stores the release tag.
-          RELEASE_TAG: ${{ github.ref_name }}
-          # Stores the target name.
-          SULTANC_TARGET: ${{ matrix.target }}
-        # Starts release upload.
+        # Starts release provenance verification.
         run: |
-          # Fails the job if any asset upload fails.
+          # Fails on fetch, revision, or ancestry-check errors.
           set -euo pipefail
-          # Reconstructs the deterministic asset name.
-          ASSET="sultanc-$RELEASE_TAG-$SULTANC_TARGET"
-          # Uploads both the compiler and its checksum, replacing only same-name assets on rerun.
-          gh release upload "$RELEASE_TAG" "dist/$ASSET" "dist/$ASSET.sha256" --clobber
+          # Refreshes master inside the isolated tagged checkout.
+          git -C candidate fetch --no-tags origin master
+          # Requires the tagged commit to be reachable from the current remote master branch.
+          git -C candidate merge-base --is-ancestor HEAD origin/master
+
+      # Builds the exact native target from the selected release tag.
+      - name: Build release compiler
+        # Reuses the current main-branch build action.
+        uses: ./.github/actions/build
+        # Supplies the release target and tagged source checkout.
+        with:
+          # Passes the exact registered target name.
+          target: ${{ matrix.target }}
+          # Directs the build into the tagged candidate checkout.
+          working-directory: candidate
+
+      # Verifies native architecture and executable format before packaging.
+      - name: Verify release target
+        # Reuses the current target verifier.
+        uses: ./.github/actions/target
+        # Supplies the native release contract.
+        with:
+          # Names the selected release target.
+          target: ${{ matrix.target }}
+          # Supplies the expected host operating system.
+          expected-host-os: ${{ matrix.host_os }}
+          # Supplies the expected host architecture.
+          expected-host-arch: ${{ matrix.host_arch }}
+          # Supplies the expected executable format and architecture.
+          expected-file-pattern: ${{ matrix.file_pattern }}
+          # Directs verification to the tagged candidate checkout.
+          working-directory: candidate
+
+      # Exercises the public bilingual examples before accepting a release package.
+      - name: Run bilingual examples
+        # Reuses the current example qualification action.
+        uses: ./.github/actions/examples
+        # Selects the tagged candidate checkout.
+        with:
+          # Directs example compilation and execution to the release source.
+          working-directory: candidate
+
+      # Requires the tagged compiler to reproduce itself exactly before packaging.
+      - name: Verify self-host convergence
+        # Reuses the current self-host convergence action.
+        uses: ./.github/actions/convergence
+        # Supplies the release target and candidate checkout.
+        with:
+          # Keeps regenerated compilers on the native release target.
+          target: ${{ matrix.target }}
+          # Directs convergence to the tagged release source.
+          working-directory: candidate
+
+      # Packages the verified executable in a tar archive that preserves its executable mode.
+      - name: Package release binary
+        # Uses Bash for staging, tar creation, and checksums on both native hosts.
+        shell: bash
+        # Supplies release naming facts through the environment.
+        env:
+          # Stores the manually selected release tag.
+          RELEASE_TAG: ${{ inputs.tag }}
+          # Stores the exact target name.
+          SULTANC_TARGET: ${{ matrix.target }}
+        # Starts deterministic package creation.
+        run: |
+          # Fails on packaging errors, unset variables, or failed pipelines.
+          set -euo pipefail
+          # Enters the tagged release source checkout.
+          cd candidate
+          # Creates clean staging and final artifact directories.
+          rm -rf build/release-package dist
+          # Creates the package staging directory and artifact output directory.
+          mkdir -p build/release-package dist
+          # Copies the verified compiler using its public executable name.
+          cp build/sultanc build/release-package/sultanc
+          # Preserves executable permission explicitly inside the release archive.
+          chmod 755 build/release-package/sultanc
+          # Builds the target-specific archive filename.
+          ARCHIVE="sultanc-$RELEASE_TAG-$SULTANC_TARGET.tar.gz"
+          # Creates a gzip-compressed tar archive preserving the executable file mode.
+          tar -C build/release-package -czf "dist/$ARCHIVE" sultanc
+          # Generates the archive checksum using GNU coreutils when available.
+          if command -v sha256sum >/dev/null 2>&1; then
+            # Writes a portable SHA-256 checksum file on Linux.
+            (cd dist && sha256sum "$ARCHIVE" > "$ARCHIVE.sha256")
+          # Selects macOS's standard SHA-256 utility when GNU sha256sum is absent.
+          else
+            # Writes the same checksum format with shasum on macOS.
+            (cd dist && shasum -a 256 "$ARCHIVE" > "$ARCHIVE.sha256")
+          # Ends platform-specific checksum generation.
+          fi
+
+      # Uploads packages only to this workflow run for maintainer review and manual publication.
+      - name: Upload release package
+        # Pins actions/upload-artifact v7.0.1 to its immutable full commit SHA.
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        # Configures the workflow artifact without creating a GitHub Release.
+        with:
+          # Gives each native target an independent reviewable artifact.
+          name: sultanc-${{ inputs.tag }}-${{ matrix.target }}
+          # Uploads the release archive and its SHA-256 checksum together.
+          path: candidate/dist/*
+          # Fails packaging if the expected files were not created.
+          if-no-files-found: error
+          # Keeps manual-release review artifacts available for two weeks.
+          retention-days: 14

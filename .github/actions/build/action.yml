@@ -13,6 +13,14 @@ inputs:
     required: false
     # Uses an empty value so the normal build path receives no target override.
     default: ""
+  # Declares the repository directory containing build.sh.
+  working-directory:
+    # Allows workflows to qualify another ref checked out beside the CI definition checkout.
+    description: Repository directory containing the SultanC source tree to build.
+    # Keeps normal main-branch workflows at the repository root.
+    required: false
+    # Uses the current repository root unless a workflow supplies another checkout path.
+    default: "."
 
 # Declares that this local action is made from normal workflow steps.
 runs:
@@ -74,14 +82,18 @@ runs:
     - name: Build SultanC
       # Uses Bash because build.sh is SultanC's canonical build entry point.
       shell: bash
-      # Moves the workflow input into the process environment instead of shell source text.
+      # Moves workflow inputs into process environment variables instead of shell source text.
       env:
         # Stores the optional requested target exactly as provided by the caller.
         SULTANC_TARGET: ${{ inputs.target }}
+        # Stores the source checkout directory containing build.sh.
+        SULTANC_WORKING_DIRECTORY: ${{ inputs.working-directory }}
       # Starts the canonical build script.
       run: |
         # Stops the build on the first real failure.
         set -euo pipefail
+        # Enters the requested source checkout without changing repository ownership.
+        cd -- "$SULTANC_WORKING_DIRECTORY"
         # Ensures the repository build entry point is executable after checkout.
         chmod +x ./build.sh
         # Selects the explicit-target path only when the caller requested one.
@@ -99,10 +111,16 @@ runs:
     - name: Verify compiler artifact exists
       # Uses Bash for filesystem assertions.
       shell: bash
+      # Places the selected source checkout directory in the process environment.
+      env:
+        # Stores the source checkout directory containing build/sultanc.
+        SULTANC_WORKING_DIRECTORY: ${{ inputs.working-directory }}
       # Starts the artifact verification script.
       run: |
         # Makes a missing compiler artifact fail the action.
         set -euo pipefail
+        # Enters the same source checkout used for the compiler build.
+        cd -- "$SULTANC_WORKING_DIRECTORY"
         # Requires the canonical final compiler path to exist and be executable.
         test -x build/sultanc
         # Prints the produced native binary format and architecture.

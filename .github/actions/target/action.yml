@@ -32,11 +32,19 @@ inputs:
   # Declares the compiler binary path to inspect.
   binary:
     # Explains why callers normally do not need to override this path.
-    description: Compiler binary to verify.
+    description: Compiler binary to verify, relative to the selected working directory.
     # Keeps the canonical final compiler as the normal path.
     required: false
     # Points at the artifact produced by the root build.
     default: build/sultanc
+  # Declares the repository directory containing the binary.
+  working-directory:
+    # Supports verification of refs checked out beside the CI definition checkout.
+    description: Repository directory containing the compiler binary.
+    # Keeps normal workflows rooted at the main checkout.
+    required: false
+    # Uses the current repository root by default.
+    default: "."
 
 # Declares this verifier as a composite action.
 runs:
@@ -60,10 +68,14 @@ runs:
         EXPECTED_FILE_PATTERN: ${{ inputs.expected-file-pattern }}
         # Stores the binary path to inspect.
         SULTANC_BINARY: ${{ inputs.binary }}
+        # Stores the source checkout directory containing the binary.
+        SULTANC_WORKING_DIRECTORY: ${{ inputs.working-directory }}
       # Starts the target-verification script.
       run: |
         # Fails immediately on any violated target contract.
         set -euo pipefail
+        # Enters the requested source checkout before resolving the compiler artifact path.
+        cd -- "$SULTANC_WORKING_DIRECTORY"
         # Reads the actual operating system from the runner.
         ACTUAL_HOST_OS="$(uname -s)"
         # Reads the actual architecture from the runner.

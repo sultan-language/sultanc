@@ -26,14 +26,14 @@ concurrency:
 
 # Declares integrated-main qualification jobs.
 jobs:
-  # Verifies explicit target selection on each native host.
+  # Verifies explicit target selection and public examples on each native host.
   explicit-target:
     # Shows the selected target directly in GitHub's job list.
     name: Explicit Target / ${{ matrix.target }}
     # Uses the native hosted runner for this target.
     runs-on: ${{ matrix.runner }}
-    # Prevents a hung integration build from running indefinitely.
-    timeout-minutes: 60
+    # Allows time for the compiler build, bilingual examples, and self-host convergence.
+    timeout-minutes: 120
 
     # Declares the supported target matrix.
     strategy:
@@ -99,36 +99,64 @@ jobs:
           # Supplies the expected executable format.
           expected-file-pattern: ${{ matrix.file_pattern }}
 
-  # Verifies the earliest bootstrap boundary independently of the final compiler job.
-  bootstrap-stage0:
-    # Gives the bootstrap job a stable required-check name.
-    name: Bootstrap / Stage0
-    # Uses Linux x86_64 as the first integration bootstrap lane.
-    runs-on: ubuntu-24.04
-    # Prevents a broken bootstrap from consuming a runner indefinitely.
-    timeout-minutes: 30
+      # Exercises every mirrored English and Arabic example on the freshly built compiler.
+      - name: Run bilingual examples
+        # Reuses the local example qualification action.
+        uses: ./.github/actions/examples
 
-    # Starts Stage0 qualification.
-    steps:
-      # Checks out the integrated main revision.
-      - name: Checkout SultanC
-        # Pins checkout to the immutable v7.0.1 commit.
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        # Applies secure checkout behavior.
+      # Requires every integrated main compiler to reproduce itself exactly before the push is accepted as healthy.
+      - name: Verify self-host convergence
+        # Reuses the same repository-owned convergence check used by deep qualification.
+        uses: ./.github/actions/convergence
+        # Keeps Stage2, Stage3, and Stage4 on the native target represented by this matrix row.
         with:
-          # Prevents credential persistence.
+          # Supplies the exact supported target selected by this integration lane.
+          target: ${{ matrix.target }}
+
+      # Verifies that the complete integration lane leaves tracked source files unchanged.
+      - name: Verify clean integration tree
+        # Reuses the strict repository qualification wrapper.
+        uses: ./.github/actions/test
+        # Supplies the check command.
+        with:
+          # Names the integration cleanliness check.
+          name: Integration source cleanliness
+          # Rejects tracked source rewrites after compiler and example execution.
+          command: git diff --exit-code
+
+  # Reports failed integrated-main jobs without changing the qualification jobs themselves.
+  report-failure:
+    # Runs only after the target matrix finishes and only for failures on main.
+    if: ${{ always() && needs.explicit-target.result == 'failure' && github.ref == 'refs/heads/main' }}
+    # Waits for every explicit-target matrix row to finish before inspecting completed job logs.
+    needs: explicit-target
+    # Names the failure-only automation job clearly in the run UI.
+    name: Report CI Failure
+    # Uses one Linux runner only when main qualification has already failed.
+    runs-on: ubuntu-24.04
+    # Grants only the permissions required to inspect this run and maintain Issues.
+    permissions:
+      # Allows the reporter to read completed job metadata and logs.
+      actions: read
+      # Allows checkout of the repository-local reporter action.
+      contents: read
+      # Allows creation, update, and labeling of CI Issues.
+      issues: write
+
+    # Starts the failure-reporting steps.
+    steps:
+      # Checks out the exact integrated revision so the repository-local reporter can run.
+      - name: Checkout SultanC
+        # Pins actions/checkout v7.0.1 to its immutable full commit SHA.
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        # Prevents the workflow token from being persisted into local Git configuration.
+        with:
           persist-credentials: false
 
-      # Prepares the compiler toolchain once before running the bootstrap stage.
-      - name: Prepare build environment
-        # Reuses SultanC's build action to ensure the host toolchain is present.
-        uses: ./.github/actions/build
-
-      # Runs the canonical Stage0 mode as a distinct integration gate.
-      - name: Re-run Stage0 explicitly
-        # Reuses the local bootstrap action.
-        uses: ./.github/actions/bootstrap
-        # Selects only the Stage0 boundary.
+      # Creates or updates one deduplicated issue for each failed target job.
+      - name: Create or update CI issue
+        # Reuses the repository-owned GitHub Issue reporting action.
+        uses: ./.github/actions/report-ci-failure
+        # Labels integrated compiler failures by ownership.
         with:
-          # Requests the canonical Stage0 build mode.
-          stage: stage0
+          component-labels: compiler

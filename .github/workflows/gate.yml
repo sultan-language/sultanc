@@ -30,14 +30,14 @@ concurrency:
 
 # Declares the jobs that protect main.
 jobs:
-  # Builds SultanC natively on every currently supported host.
+  # Builds and exercises SultanC natively on every currently supported host.
   native:
     # Shows the exact SultanC target in GitHub's required-check list.
     name: Native / ${{ matrix.target }}
     # Selects the hosted runner associated with the matrix row.
     runs-on: ${{ matrix.runner }}
-    # Prevents a stuck compiler build from occupying a runner indefinitely.
-    timeout-minutes: 60
+    # Prevents a stuck compiler or example build from occupying a runner indefinitely.
+    timeout-minutes: 90
 
     # Defines how native target jobs are expanded.
     strategy:
@@ -99,7 +99,12 @@ jobs:
           # Supplies the expected native binary format and architecture.
           expected-file-pattern: ${{ matrix.file_pattern }}
 
-      # Verifies that the build did not rewrite tracked repository sources.
+      # Builds and runs every mirrored public example through native and interpreted execution.
+      - name: Run bilingual examples
+        # Reuses the repository-local example qualification action.
+        uses: ./.github/actions/examples
+
+      # Verifies that the build and example execution did not rewrite tracked repository sources.
       - name: Verify clean source tree
         # Reuses the repository-local strict qualification wrapper.
         uses: ./.github/actions/test
@@ -107,5 +112,5 @@ jobs:
         with:
           # Names the check in the run summary.
           name: Repository cleanliness
-          # Requires no tracked source changes after the build.
+          # Requires no tracked source changes after the build and example runs.
           command: git diff --exit-code

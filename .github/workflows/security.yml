@@ -22,12 +22,10 @@ on:
   # Allows maintainers to request an immediate security scan.
   workflow_dispatch:
 
-# Grants the minimum permissions required by CodeQL.
+# Keeps the workflow default read-only; jobs opt into additional authority only when required.
 permissions:
-  # Allows CodeQL and checkout to read repository source.
+  # Allows source checkout while granting no write authority by default.
   contents: read
-  # Allows CodeQL results to be written into GitHub code scanning.
-  security-events: write
 
 # Prevents duplicate security scans for the same ref.
 concurrency:
@@ -46,6 +44,12 @@ jobs:
     runs-on: ubuntu-24.04
     # Prevents analysis from hanging indefinitely.
     timeout-minutes: 45
+    # Grants CodeQL only the additional permission required to upload code-scanning results.
+    permissions:
+      # Allows checkout and CodeQL source inspection.
+      contents: read
+      # Allows this job alone to publish CodeQL findings.
+      security-events: write
 
     # Starts CodeQL analysis steps.
     steps:
@@ -92,3 +96,40 @@ jobs:
       - name: Analyze CodeQL database
         # Pins github/codeql-action v4.38.2 to its immutable full commit SHA.
         uses: github/codeql-action/analyze@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2
+
+  # Reports security-workflow execution failures on main or scheduled scans, never ordinary PR failures.
+  report-failure:
+    # Excludes pull requests while covering main failures and periodic scheduled scan failures.
+    if: ${{ always() && needs.codeql-c.result == 'failure' && github.event_name != 'pull_request' && (github.event_name == 'schedule' || github.ref == 'refs/heads/main') }}
+    # Waits for CodeQL extraction/analysis to finish before inspecting its completed log.
+    needs: codeql-c
+    # Names the failure-only automation job clearly in the run UI.
+    name: Report CI Failure
+    # Uses one Linux runner only after the security workflow itself fails.
+    runs-on: ubuntu-24.04
+    # Grants only the permissions required to inspect this run and maintain Issues.
+    permissions:
+      # Allows the reporter to read completed CodeQL job metadata and logs.
+      actions: read
+      # Allows checkout of the repository-local reporter action.
+      contents: read
+      # Allows creation, update, and labeling of CI Issues.
+      issues: write
+
+    # Starts the failure-reporting steps.
+    steps:
+      # Checks out the exact scanned revision so the repository-local reporter can run.
+      - name: Checkout SultanC
+        # Pins actions/checkout v7.0.1 to its immutable full commit SHA.
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        # Prevents the workflow token from being persisted into local Git configuration.
+        with:
+          persist-credentials: false
+
+      # Creates or updates a deduplicated issue for a failed non-PR security job.
+      - name: Create or update CI issue
+        # Reuses the repository-owned GitHub Issue reporting action.
+        uses: ./.github/actions/report-ci-failure
+        # Identifies the failing CI boundary without turning CodeQL findings themselves into Issues.
+        with:
+          component-labels: security

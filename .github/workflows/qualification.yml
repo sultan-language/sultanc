@@ -1,15 +1,15 @@
 # Names the manually requested deep qualification workflow.
 name: SultanC Qualification
 
-# Keeps deep qualification opt-in until beta/master promotion policy is enabled.
+# Keeps deep qualification manually runnable while allowing trusted promotion workflows to reuse the exact same gate.
 on:
   # Allows maintainers to start qualification from the GitHub Actions UI.
   workflow_dispatch:
     # Declares the inputs shown in the manual-run dialog.
     inputs:
-      # Lets maintainers qualify any trusted repository ref.
+      # Lets maintainers qualify any trusted repository ref without requiring that ref to contain CI files.
       ref:
-        # Explains which commit, branch, or tag will be checked out.
+        # Explains which commit, branch, or tag will be checked out as the candidate.
         description: Branch, tag, or commit to qualify.
         # Requires an explicit ref to avoid qualifying an accidental default.
         required: true
@@ -17,8 +17,18 @@ on:
         default: main
         # Treats the input as a normal text field.
         type: string
+  # Allows the promotion workflow to reuse this qualification instead of duplicating compiler checks.
+  workflow_call:
+    # Declares the candidate ref supplied by the trusted caller.
+    inputs:
+      # Carries the branch, tag, or commit that must pass before promotion continues.
+      ref:
+        # Requires the caller to choose the exact qualification candidate.
+        required: true
+        # Uses a string because Git refs and commit hashes are textual identifiers.
+        type: string
 
-# Gives deep qualification read-only access.
+# Gives deep qualification read-only repository access.
 permissions:
   # Allows source checkout only.
   contents: read
@@ -32,14 +42,14 @@ concurrency:
 
 # Declares deep qualification jobs.
 jobs:
-  # Builds every supported target explicitly from the selected ref.
+  # Builds every supported target, runs public examples, and proves self-host convergence.
   targets:
     # Shows the exact target in the qualification result list.
     name: Target / ${{ matrix.target }}
     # Uses the matching native host.
     runs-on: ${{ matrix.runner }}
-    # Allows additional time for deep qualification.
-    timeout-minutes: 90
+    # Allows additional time for examples and two self-host regeneration stages.
+    timeout-minutes: 120
 
     # Declares the supported target matrix.
     strategy:
@@ -72,31 +82,46 @@ jobs:
 
     # Starts target qualification.
     steps:
-      # Checks out exactly the ref requested by the maintainer.
-      - name: Checkout qualification ref
+      # Checks out main only to provide the current repository-owned CI actions.
+      - name: Checkout CI definitions
         # Pins checkout to the immutable v7.0.1 commit.
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        # Configures checkout for the selected candidate.
+        # Keeps CI ownership on main even when the qualified ref is beta, master, or a tag.
         with:
-          # Checks out the requested branch, tag, or commit.
-          ref: ${{ inputs.ref }}
+          # Uses the current integration branch as the canonical CI definition source.
+          ref: main
           # Prevents workflow-token persistence.
           persist-credentials: false
 
-      # Builds the explicit SultanC target.
+      # Checks out the selected candidate into an isolated directory beside the CI definitions.
+      - name: Checkout qualification candidate
+        # Pins checkout to the same immutable v7.0.1 commit.
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        # Configures the candidate checkout independently of main's CI files.
+        with:
+          # Checks out the requested branch, tag, or commit.
+          ref: ${{ inputs.ref }}
+          # Places candidate source where local CI actions cannot be replaced by the candidate ref.
+          path: candidate
+          # Prevents workflow-token persistence inside the candidate checkout.
+          persist-credentials: false
+
+      # Builds the candidate through the explicit registered target.
       - name: Build qualification target
-        # Reuses the local build action.
+        # Reuses the current main-branch build action.
         uses: ./.github/actions/build
-        # Supplies the selected target.
+        # Supplies the selected target and candidate checkout.
         with:
           # Passes the exact registered target.
           target: ${{ matrix.target }}
+          # Directs the action to the isolated candidate source tree.
+          working-directory: candidate
 
-      # Verifies target identity and native binary format.
+      # Verifies candidate target identity and native binary format.
       - name: Verify qualification target
-        # Reuses the local target verifier.
+        # Reuses the current main-branch target verifier.
         uses: ./.github/actions/target
-        # Supplies the target contract.
+        # Supplies the candidate target contract.
         with:
           # Names the target.
           target: ${{ matrix.target }}
@@ -106,14 +131,36 @@ jobs:
           expected-host-arch: ${{ matrix.host_arch }}
           # Supplies the binary-format expectation.
           expected-file-pattern: ${{ matrix.file_pattern }}
+          # Directs binary inspection to the candidate checkout.
+          working-directory: candidate
 
-      # Verifies that qualification left tracked sources unchanged.
+      # Builds and runs every mirrored English and Arabic example from the candidate ref.
+      - name: Run bilingual examples
+        # Reuses the current main-branch example action.
+        uses: ./.github/actions/examples
+        # Selects the isolated candidate checkout.
+        with:
+          # Directs example compilation and execution to the candidate source tree.
+          working-directory: candidate
+
+      # Proves the candidate compiler reproduces itself byte-for-byte across two more stages.
+      - name: Verify self-host convergence
+        # Reuses the current main-branch convergence action.
+        uses: ./.github/actions/convergence
+        # Supplies the candidate target and checkout.
+        with:
+          # Keeps generated compiler stages on the runner's native target.
+          target: ${{ matrix.target }}
+          # Directs self-host generation to the candidate source tree.
+          working-directory: candidate
+
+      # Verifies that qualification left the candidate's tracked sources unchanged.
       - name: Verify clean qualification tree
         # Reuses the strict repository qualification wrapper.
         uses: ./.github/actions/test
-        # Supplies the check command.
+        # Supplies the candidate-aware check command.
         with:
           # Names the cleanliness check.
           name: Qualification source cleanliness
-          # Rejects tracked source rewrites.
-          command: git diff --exit-code
+          # Rejects tracked source rewrites inside the isolated candidate checkout.
+          command: git -C candidate diff --exit-code

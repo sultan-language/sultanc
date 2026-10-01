@@ -1,0 +1,173 @@
+# Names the maintainer-controlled branch promotion workflow.
+name: SultanC Promotion
+
+# Keeps every beta or master promotion behind an explicit human action.
+on:
+  # Allows maintainers to request a promotion from the GitHub Actions UI.
+  workflow_dispatch:
+    # Declares the destination selected by the maintainer.
+    inputs:
+      # Determines the only supported promotion edge.
+      destination:
+        # Explains that beta receives main and master receives beta.
+        description: Promote main to beta, or beta to master.
+        # Requires the maintainer to select a destination explicitly.
+        required: true
+        # Uses a constrained selector rather than free-form branch names.
+        type: choice
+        # Declares the only branch destinations this workflow may update.
+        options:
+          # Selects main as the source and beta as the destination.
+          - beta
+          # Selects beta as the source and master as the destination.
+          - master
+
+# Grants only the right required to update the explicitly selected destination branch.
+permissions:
+  # Allows the trusted manually started workflow to push the qualified merge commit.
+  contents: write
+
+# Prevents concurrent promotions toward the same destination branch.
+concurrency:
+  # Groups runs by the manually selected promotion destination.
+  group: sultanc-promotion-${{ inputs.destination }}
+  # Keeps an in-progress promotion intact instead of replacing it with another request.
+  cancel-in-progress: false
+
+# Declares qualification and promotion jobs.
+jobs:
+  # Reuses the same deep two-target qualification required for manual candidate review.
+  qualify:
+    # Calls the repository-owned reusable qualification workflow from main.
+    uses: ./.github/workflows/qualification.yml
+    # Supplies the only legal source branch for the selected destination.
+    with:
+      # Qualifies main before beta promotion and beta before master promotion.
+      ref: ${{ inputs.destination == 'beta' && 'main' || 'beta' }}
+
+  # Merges the qualified source into the selected destination only after all qualification lanes pass.
+  promote:
+    # Requires the reusable qualification workflow to finish successfully first.
+    needs:
+      # Blocks any branch update until both native targets are green.
+      - qualify
+    # Shows the destination branch in the Actions job list.
+    name: Promote / ${{ inputs.destination }}
+    # Uses Linux because promotion is Git metadata work rather than target compilation.
+    runs-on: ubuntu-24.04
+    # Bounds branch preparation and push operations.
+    timeout-minutes: 15
+
+    # Starts controlled promotion steps.
+    steps:
+      # Checks out the selected destination with complete branch history.
+      - name: Checkout promotion destination
+        # Pins actions/checkout v7.0.1 to its immutable full commit SHA.
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        # Configures checkout for a real merge that preserves branch ancestry.
+        with:
+          # Checks out the branch that will receive the qualified source.
+          ref: ${{ inputs.destination }}
+          # Fetches complete branch history so the source can become a real merge parent.
+          fetch-depth: 0
+          # Keeps the scoped workflow credential available for the final destination push.
+          persist-credentials: true
+
+      # Creates and pushes the qualified merge while preserving destination-owned GitHub configuration.
+      - name: Promote qualified source
+        # Uses Bash for explicit lifecycle mapping and conflict handling.
+        shell: bash
+        # Supplies the selected destination through the environment.
+        env:
+          # Stores the requested destination branch.
+          DESTINATION_BRANCH: ${{ inputs.destination }}
+        # Starts the controlled promotion script.
+        run: |
+          # Fails on unexpected shell errors, unset variables, or failed pipelines.
+          set -euo pipefail
+          # Maps beta promotion only from main.
+          if [[ "$DESTINATION_BRANCH" == "beta" ]]; then
+            # Selects main as the single allowed source for beta.
+            SOURCE_BRANCH=main
+          # Maps master promotion only from beta.
+          elif [[ "$DESTINATION_BRANCH" == "master" ]]; then
+            # Selects beta as the single allowed source for master.
+            SOURCE_BRANCH=beta
+          # Rejects any destination outside the declared lifecycle.
+          else
+            # Reports an impossible or tampered destination value.
+            printf 'Unsupported promotion destination: %s\n' "$DESTINATION_BRANCH" >&2
+            # Stops before any branch mutation.
+            exit 2
+          # Ends lifecycle mapping.
+          fi
+          # Refreshes both source and destination refs from the authoritative remote.
+          git fetch --no-tags origin "$SOURCE_BRANCH" "$DESTINATION_BRANCH"
+          # Records the exact source commit that passed qualification.
+          SOURCE_SHA="$(git rev-parse "origin/$SOURCE_BRANCH")"
+          # Records the exact destination commit before promotion.
+          DESTINATION_SHA="$(git rev-parse "origin/$DESTINATION_BRANCH")"
+          # Stops cleanly when the selected source is already contained in the destination history.
+          if git merge-base --is-ancestor "$SOURCE_SHA" "$DESTINATION_SHA"; then
+            # Reports that no branch update is necessary.
+            printf '%s is already promoted to %s.\n' "$SOURCE_BRANCH" "$DESTINATION_BRANCH"
+            # Records the no-op result in the workflow summary.
+            printf '### SultanC promotion\n- Source: `%s` (`%s`)\n- Destination: `%s` (`%s`)\n- Result: `already up to date`\n' "$SOURCE_BRANCH" "$SOURCE_SHA" "$DESTINATION_BRANCH" "$DESTINATION_SHA" >> "$GITHUB_STEP_SUMMARY"
+            # Finishes successfully without creating a redundant merge commit.
+            exit 0
+          # Ends the already-promoted check.
+          fi
+          # Resets the local destination to the exact current remote destination commit.
+          git checkout -B "$DESTINATION_BRANCH" "origin/$DESTINATION_BRANCH"
+          # Configures the standard GitHub Actions bot identity for the promotion merge commit.
+          git config user.name 'github-actions[bot]'
+          # Configures the matching no-reply address for the promotion merge commit.
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          # Temporarily permits the merge command to report conflicts so .github-only conflicts can be resolved safely.
+          set +e
+          # Merges the real source history without committing yet, ensuring the source becomes a merge parent.
+          git merge --no-ff --no-commit "origin/$SOURCE_BRANCH"
+          # Captures whether Git reported conflicts during merge preparation.
+          MERGE_STATUS=$?
+          # Restores strict shell failure handling after merge-status capture.
+          set -e
+          # Handles merge conflicts instead of silently choosing a side across source code.
+          if [[ "$MERGE_STATUS" -ne 0 ]]; then
+            # Collects all paths still marked as unmerged by Git.
+            CONFLICTS="$(git diff --name-only --diff-filter=U)"
+            # Filters out .github because that tree intentionally remains destination-owned.
+            NON_GITHUB_CONFLICTS="$(printf '%s\n' "$CONFLICTS" | grep -Ev '^\.github(/|$)' || true)"
+            # Refuses automatic conflict resolution anywhere outside .github.
+            if [[ -n "$NON_GITHUB_CONFLICTS" ]]; then
+              # Reports conflicts that require a maintainer to resolve manually.
+              printf 'Promotion has source conflicts outside .github:\n%s\n' "$NON_GITHUB_CONFLICTS" >&2
+              # Aborts the incomplete merge before failing the workflow.
+              git merge --abort
+              # Stops without updating beta or master.
+              exit 1
+            # Ends non-.github conflict detection.
+            fi
+          # Ends merge-conflict handling.
+          fi
+          # Checks whether the destination currently owns any tracked .github content.
+          if git ls-tree -r --name-only "origin/$DESTINATION_BRANCH" -- .github | grep -q .; then
+            # Removes the merge result first so source-only .github paths cannot survive restoration.
+            rm -rf .github
+            # Restores the destination's .github tree so main-only CI changes are never promoted implicitly.
+            git checkout "origin/$DESTINATION_BRANCH" -- .github
+          # Handles destinations that intentionally contain no .github tree.
+          else
+            # Removes source .github files from the promotion when the destination has none.
+            git rm -r -f --ignore-unmatch .github
+          # Ends destination-specific .github preservation.
+          fi
+          # Stages every resolved promotion change, including .github restoration or deletion.
+          git add -A
+          # Creates the real merge commit with source and destination history retained as parents.
+          git commit -m "promote: $SOURCE_BRANCH to $DESTINATION_BRANCH"
+          # Pushes only the selected destination branch after successful qualification and merge preparation.
+          git push origin "HEAD:$DESTINATION_BRANCH"
+          # Records the new destination commit produced by the promotion.
+          PROMOTED_SHA="$(git rev-parse HEAD)"
+          # Adds the completed promotion relationship to the workflow summary.
+          printf '### SultanC promotion\n- Source: `%s` (`%s`)\n- Destination before: `%s`\n- Destination after: `%s` (`%s`)\n- `.github` ownership: `preserved from destination`\n' "$SOURCE_BRANCH" "$SOURCE_SHA" "$DESTINATION_SHA" "$DESTINATION_BRANCH" "$PROMOTED_SHA" >> "$GITHUB_STEP_SUMMARY"

@@ -1,9 +1,9 @@
-# Names SultanC's scheduled deep compiler build.
+# Names SultanC's scheduled deep compiler qualification.
 name: SultanC Nightly
 
 # Declares automatic and manual nightly triggers.
 on:
-  # Runs the deep build on a fixed UTC schedule from the default branch.
+  # Runs the deep qualification on a fixed UTC schedule from the default branch.
   schedule:
     # Runs once per day at 03:17 UTC to avoid common top-of-hour CI congestion.
     - cron: '17 3 * * *'
@@ -24,14 +24,14 @@ concurrency:
 
 # Declares nightly jobs.
 jobs:
-  # Rebuilds every supported native target from a clean checkout.
+  # Rebuilds, exercises, and self-hosts every supported native target from a clean checkout.
   clean-native:
     # Shows the target in the nightly job list.
     name: Clean Native / ${{ matrix.target }}
     # Selects the native runner.
     runs-on: ${{ matrix.runner }}
-    # Allows a longer timeout for clean scheduled builds.
-    timeout-minutes: 90
+    # Allows extra time for bilingual examples and self-host convergence.
+    timeout-minutes: 120
 
     # Declares the nightly target matrix.
     strategy:
@@ -97,7 +97,21 @@ jobs:
           # Supplies the native binary expectation.
           expected-file-pattern: ${{ matrix.file_pattern }}
 
-      # Detects accidental source generation or formatting changes during a clean build.
+      # Exercises every mirrored English and Arabic example through native and interpreted execution.
+      - name: Run bilingual examples
+        # Reuses the repository-local example qualification action.
+        uses: ./.github/actions/examples
+
+      # Requires the self-hosted compiler to converge byte-for-byte across Stage2, Stage3, and Stage4.
+      - name: Verify self-host convergence
+        # Reuses the repository-local convergence action.
+        uses: ./.github/actions/convergence
+        # Supplies the explicit host-native target.
+        with:
+          # Keeps all generated compiler stages executable on this runner.
+          target: ${{ matrix.target }}
+
+      # Detects accidental source generation or formatting changes during deep nightly qualification.
       - name: Verify reproducible source tree
         # Reuses the strict local qualification wrapper.
         uses: ./.github/actions/test
@@ -105,5 +119,42 @@ jobs:
         with:
           # Names the nightly cleanliness check.
           name: Nightly source-tree stability
-          # Requires tracked repository files to remain byte-for-byte unchanged by the build.
+          # Requires tracked repository files to remain byte-for-byte unchanged by the build and qualification steps.
           command: git diff --exit-code
+
+  # Reports scheduled/manual nightly regressions after all native target rows complete.
+  report-failure:
+    # Runs only when deep nightly qualification has failed.
+    if: ${{ always() && needs.clean-native.result == 'failure' }}
+    # Waits for the full nightly matrix so logs are complete before issue extraction.
+    needs: clean-native
+    # Names the failure-only automation job clearly in the run UI.
+    name: Report CI Failure
+    # Uses one Linux runner only after a nightly regression is known.
+    runs-on: ubuntu-24.04
+    # Grants only the permissions required to inspect this run and maintain Issues.
+    permissions:
+      # Allows the reporter to read completed job metadata and logs.
+      actions: read
+      # Allows checkout of the repository-local reporter action.
+      contents: read
+      # Allows creation, update, and labeling of CI Issues.
+      issues: write
+
+    # Starts the failure-reporting steps.
+    steps:
+      # Checks out the exact nightly revision so the repository-local reporter can run.
+      - name: Checkout SultanC
+        # Pins actions/checkout v7.0.1 to its immutable full commit SHA.
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        # Prevents the workflow token from being persisted into local Git configuration.
+        with:
+          persist-credentials: false
+
+      # Creates or updates one deduplicated issue for each failed target job.
+      - name: Create or update CI issue
+        # Reuses the repository-owned GitHub Issue reporting action.
+        uses: ./.github/actions/report-ci-failure
+        # Labels deep compiler qualification failures clearly.
+        with:
+          component-labels: compiler,nightly
