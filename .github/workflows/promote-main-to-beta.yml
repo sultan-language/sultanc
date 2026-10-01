@@ -1,0 +1,106 @@
+name: Promote main to beta
+
+run-name: Prepare main → beta promotion PR
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: promote-main-to-beta
+  cancel-in-progress: false
+
+jobs:
+  promotion-pr:
+    name: Prepare main → beta PR
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+
+    steps:
+      - name: Create or update promotion PR
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+
+          if [[ "${GITHUB_REF}" != "refs/heads/master" ]]; then
+            echo "::error::This controller must be dispatched from the default branch (master)."
+            exit 1
+          fi
+
+          resolve_branch_sha() {
+            local branch="$1"
+            gh api "repos/${GH_REPO}/git/ref/heads/${branch}" --jq '.object.sha'
+          }
+
+          if ! main_sha="$(resolve_branch_sha main 2>/dev/null)"; then
+            echo "::error::Required branch 'main' does not exist or is not accessible."
+            exit 1
+          fi
+
+          if ! beta_sha="$(resolve_branch_sha beta 2>/dev/null)"; then
+            echo "::error::Required branch 'beta' does not exist or is not accessible."
+            exit 1
+          fi
+
+          title="Promote main to beta"
+          body="$(cat <<EOF
+          ## SultanC main → beta promotion
+
+          - Source: \`main\` @ \`${main_sha}\`
+          - Target: \`beta\` @ \`${beta_sha}\`
+          - Workflow run: ${RUN_URL}
+
+          Beta qualification must pass before this pull request is merged.
+
+          This workflow only prepares the promotion pull request. It does not enable auto-merge, merge branches, push commits to \`beta\`, rewrite history, or create a release.
+          EOF
+          )"
+
+          repo_owner="${GH_REPO%%/*}"
+          existing_number="$(
+            gh api \
+              --method GET \
+              "repos/${GH_REPO}/pulls" \
+              -f state="open" \
+              -f base="beta" \
+              -f head="${repo_owner}:main" \
+              --jq '.[0].number // empty'
+          )"
+
+          if [[ -n "${existing_number}" ]]; then
+            gh api \
+              --method PATCH \
+              "repos/${GH_REPO}/pulls/${existing_number}" \
+              -f title="${title}" \
+              -f body="${body}" \
+              >/dev/null
+
+            pr_url="$(gh api "repos/${GH_REPO}/pulls/${existing_number}" --jq '.html_url')"
+            echo "Reused promotion PR #${existing_number}: ${pr_url}"
+            exit 0
+          fi
+
+          if [[ "${main_sha}" == "${beta_sha}" ]]; then
+            echo "::notice::main and beta already resolve to ${main_sha}; no promotion PR is needed."
+            exit 0
+          fi
+
+          pr_url="$(
+            gh api \
+              --method POST \
+              "repos/${GH_REPO}/pulls" \
+              -f title="${title}" \
+              -f head="main" \
+              -f base="beta" \
+              -f body="${body}" \
+              --jq '.html_url'
+          )"
+
+          echo "Created promotion PR: ${pr_url}"
