@@ -1,0 +1,108 @@
+# Qualifies every SultanC release candidate entering or proposed for beta.
+name: SultanC Beta Qualification
+
+on:
+  push:
+    branches:
+      - beta
+  pull_request:
+    branches:
+      - beta
+
+# Beta qualification is read-only unless the dedicated failure reporter runs.
+permissions:
+  contents: read
+
+concurrency:
+  # Keep landed beta revisions independently observable while replacing obsolete PR runs.
+  group: sultanc-beta-qualification-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  qualification:
+    name: Qualification / ${{ matrix.target }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 150
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: x86_64-linux
+            runner: ubuntu-24.04
+            host_os: Linux
+            host_arch: x86_64
+            file_pattern: 'ELF 64-bit.*x86-64'
+          - target: arm64-darwin
+            runner: macos-15
+            host_os: Darwin
+            host_arch: arm64
+            file_pattern: 'Mach-O 64-bit.*arm64'
+
+    steps:
+      - name: Checkout Beta candidate
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      # Exercise the normal developer build path first so Beta cannot qualify only through an explicit-target shortcut.
+      - name: Canonical build and bootstrap validation
+        uses: ./.github/actions/build
+
+      - name: Verify canonical host target
+        uses: ./.github/actions/target
+        with:
+          target: ${{ matrix.target }}
+          expected-host-os: ${{ matrix.host_os }}
+          expected-host-arch: ${{ matrix.host_arch }}
+          expected-file-pattern: ${{ matrix.file_pattern }}
+
+      # Rebuild through the public explicit-target contract and verify the resulting native artifact independently.
+      - name: Build explicit target
+        uses: ./.github/actions/build
+        with:
+          target: ${{ matrix.target }}
+
+      - name: Verify explicit target
+        uses: ./.github/actions/target
+        with:
+          target: ${{ matrix.target }}
+          expected-host-os: ${{ matrix.host_os }}
+          expected-host-arch: ${{ matrix.host_arch }}
+          expected-file-pattern: ${{ matrix.file_pattern }}
+
+      - name: Verify Stage2 to Stage3 to Stage4 convergence
+        uses: ./.github/actions/convergence
+        with:
+          target: ${{ matrix.target }}
+
+      - name: Run bilingual Arabic and English examples
+        uses: ./.github/actions/examples
+
+      - name: Verify clean Beta source tree
+        uses: ./.github/actions/test
+        with:
+          name: Beta source-tree cleanliness
+          command: git diff --exit-code
+
+  report-failure:
+    # PR failures remain PR checks; only regressions that have landed on beta become Issues.
+    if: ${{ always() && github.event_name == 'push' && github.ref == 'refs/heads/beta' && needs.qualification.result == 'failure' }}
+    needs: qualification
+    name: Report Beta Qualification Failure
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: read
+      contents: read
+      issues: write
+
+    steps:
+      - name: Checkout Beta revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Create or update Beta CI issue
+        uses: ./.github/actions/report-ci-failure
+        with:
+          component-labels: beta,compiler

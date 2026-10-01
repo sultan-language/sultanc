@@ -1,0 +1,73 @@
+# Runs GitHub-native static analysis for Beta candidates without acting as a promotion or release controller.
+name: SultanC Beta Security
+
+on:
+  push:
+    branches:
+      - beta
+  pull_request:
+    branches:
+      - beta
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sultanc-beta-security-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  codeql-c:
+    name: CodeQL / C Bootstrap
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      security-events: write
+
+    steps:
+      - name: Checkout Beta candidate
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2
+        with:
+          languages: c-cpp
+
+      - name: Build Stage0 for CodeQL
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! command -v llvm-config >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y clang llvm
+          fi
+          chmod +x ./build.sh
+          ./build.sh stage0
+
+      - name: Analyze CodeQL database
+        uses: github/codeql-action/analyze@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2
+
+  report-failure:
+    # A CodeQL workflow execution failure creates an Issue only after it lands on beta, never for an ordinary PR failure.
+    if: ${{ always() && github.event_name == 'push' && github.ref == 'refs/heads/beta' && needs.codeql-c.result == 'failure' }}
+    needs: codeql-c
+    name: Report Beta Security Failure
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: read
+      contents: read
+      issues: write
+
+    steps:
+      - name: Checkout Beta revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Create or update Beta security CI issue
+        uses: ./.github/actions/report-ci-failure
+        with:
+          component-labels: beta,security

@@ -1,0 +1,46 @@
+# Names the repository-local CI failure issue reporter.
+name: SultanC CI Failure Reporter
+# Describes the single responsibility of this action.
+description: Create or update deduplicated GitHub Issues for completed failed jobs in the current workflow run.
+
+# Declares optional labels supplied by each workflow that owns a failure domain.
+inputs:
+  # Declares comma-separated component labels such as compiler, nightly, or security.
+  component-labels:
+    # Explains that common CI labels and target labels are added automatically.
+    description: Additional comma-separated labels applied to every reported failure.
+    # Keeps the reporter reusable across SultanC workflows without requiring labels.
+    required: false
+    # Adds no component-specific labels by default.
+    default: ""
+
+# Declares the implementation as a composite action.
+runs:
+  # Executes the reporter directly on the workflow runner.
+  using: composite
+  # Starts the failure-reporting steps.
+  steps:
+    # Creates or updates one issue per failed job using a stable failure identity.
+    - name: Report completed failed jobs
+      # Uses Bash for GitHub CLI orchestration and log filtering.
+      shell: bash
+      # Passes trusted workflow context through environment variables instead of shell interpolation.
+      env:
+        # Authenticates GitHub CLI with the workflow's short-lived GITHUB_TOKEN.
+        GH_TOKEN: ${{ github.token }}
+        # Stores the repository identity used by GitHub CLI commands.
+        SULTANC_REPOSITORY: ${{ github.repository }}
+        # Stores the current workflow run identifier.
+        SULTANC_RUN_ID: ${{ github.run_id }}
+        # Stores the stable workflow display name.
+        SULTANC_WORKFLOW: ${{ github.workflow }}
+        # Stores the source branch or scheduled default branch name.
+        SULTANC_BRANCH: ${{ github.ref_name }}
+        # Stores the exact commit that failed qualification.
+        SULTANC_SHA: ${{ github.sha }}
+        # Stores the canonical Actions run URL prefix.
+        SULTANC_SERVER_URL: ${{ github.server_url }}
+        # Stores workflow-owned labels supplied by the caller.
+        SULTANC_COMPONENT_LABELS: ${{ inputs.component-labels }}
+      # Runs the repository-owned reporting implementation.
+      run: "$GITHUB_ACTION_PATH/report.sh"
