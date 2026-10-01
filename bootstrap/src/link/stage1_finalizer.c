@@ -1,5 +1,7 @@
 /* Finalizes Stage0 LLVM objects into Stage1 executables without an external linker. */
 
+#define _POSIX_C_SOURCE 200809L
+
 #include "link/stage1_finalizer.h"
 #include "link/byte_buffer.h"
 #include "link/elf_executable.h"
@@ -78,10 +80,13 @@ static int write_executable(const char *path, const __Bootstrap_Byte_Buffer__ *i
         fclose(file);
         return finalizer_fail("failed to write Stage1 executable");
     }
+    if (fchmod(fileno(file), 0755) != 0)
+    {
+        fclose(file);
+        return finalizer_fail("failed to mark Stage1 executable as executable");
+    }
     if (fclose(file) != 0)
         return finalizer_fail("failed to close Stage1 executable");
-    if (chmod(path, 0755) != 0)
-        return finalizer_fail("failed to mark Stage1 executable as executable");
     return 1;
 }
 
