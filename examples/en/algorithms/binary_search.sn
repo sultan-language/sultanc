@@ -1,0 +1,28 @@
+def binary_search(values: vector int, needle: int): int {
+    let count: uint = length(values) as uint;
+    let low: mutable int = 0;
+    let high: mutable int = count as int;
+    high := high - 1;
+    while (low <= high) {
+        let distance: int = high - low;
+        let mid: int = low + (distance / 2);
+        let index: uint = mid as uint;
+        let value: int = values[index];
+        if (value == needle) { return mid; };
+        if (value < needle) {
+            low := mid + 1;
+        } else {
+            high := mid - 1;
+        };
+    }
+    return 0 - 1;
+}
+
+def search_case(needle: int): int {
+    let values: vector int = [2, 5, 8, 13, 21, 34, 55, 89, 144];
+    return binary_search(values, needle);
+}
+
+def main(): int {
+    return search_case(55);
+}

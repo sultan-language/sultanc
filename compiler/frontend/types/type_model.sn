@@ -1,0 +1,107 @@
+استورد compiler.frontend.types.type_identity;
+استورد compiler.frontend.types.builtins_generated;
+استورد compiler.frontend.names.identifiers;
+
+// This model owns semantic Type shape, not canonical identity storage or physical layout.
+// Struct semantic fields are one coherent value: canonical Name identity + Type identity.
+// No physical layout fact belongs here.
+عام نوع حقل_سجل_دلالي = {
+    الاسم: معرف_اسم,
+    النوع: معرف_نوع
+};
+
+// Constructor identity is semantic. Named enum constructors use the Symbol identity
+// supplied by Name System; builtin tagged types use canonical Type-owned identities.
+عام نوع هوية_منشئ_نوع =
+    | اختيار_لا_شيء
+    | اختيار_بعض
+    | نتيجة_نجاح
+    | نتيجة_خطأ
+    | تعداد بنوع معرف_رمز
+;
+
+// One coherent constructor value owns identity, semantic name when Name supplies one,
+// and the ordered payload Type IDs. It contains no physical tag or payload layout.
+عام نوع منشئ_نوع_دلالي = {
+    الهوية: هوية_منشئ_نوع,
+    الاسم: اختيار معرف_اسم,
+    الحمولات: متجه معرف_نوع
+};
+
+عام نوع شكل_نوع_مسمى =
+    | سجل
+    | تعداد
+;
+
+// Canonical semantic type model. It contains no English/Arabic spelling.
+// Bilingual spelling is normalized by the lexer before this layer.
+عام نوع نوع_مقنن =
+    | بدائي بنوع نوع_بدائي_مقنن
+    | صف بنوع متجه معرف_نوع
+    | صندوق بنوع معرف_نوع
+    | اختيار بنوع معرف_نوع
+    | نتيجة بنوع (معرف_نوع, معرف_نوع)
+    | دالة بنوع (متجه معرف_نوع, معرف_نوع)
+    | معامل_نوع بنوع معرف_رمز
+    | مسمى بنوع (معرف_رمز, شكل_نوع_مسمى, متجه معرف_نوع)
+    | مؤشر بنوع معرف_نوع
+    | مرجع بنوع (معرف_نوع, منطقي)
+    | شريحة بنوع معرف_نوع
+    | متجه بنوع معرف_نوع
+    | متغير بنوع معرف_نوع
+;
+
+// Named aggregate semantic structure lives with its single named Type binding.
+// Aliases store no structure and point directly at the canonical target Type ID.
+عام نوع تعريف_نوع_مسمى =
+    | مرادف
+    | سجل بنوع متجه حقل_سجل_دلالي
+    | تعداد بنوع متجه منشئ_نوع_دلالي
+;
+
+عام نوع ربط_نوع_مسمى = {
+    الرمز: معرف_رمز,
+    المعرف: معرف_نوع,
+    معاملات_النوع: متجه معرف_رمز,
+    التعريف: تعريف_نوع_مسمى
+};
+
+عام نوع ربط_استبدال_نوع = {
+    المعامل: معرف_رمز,
+    الحجة: معرف_نوع
+};
+
+عام نوع نتيجة_حل_نوع =
+    | موجود بنوع معرف_نوع
+    | مفقود
+    | معاملات_غير_مدعومة
+    | غير_صالح
+;
+
+عام نوع صنف_تحويل_نوع =
+    | غير_صالح
+    | ضمني_آمن
+    | صريح_آمن
+    | يتطلب_غير_آمن
+;
+
+// Canonical target-neutral integer conversion meaning. Width transformation is
+// separate from the semantic signedness interpretation of the target Type.
+عام نوع تغيير_عرض_صحيح_دلالي =
+    | حفظ
+    | توسيع_صفري
+    | توسيع_بإشارة
+    | اقتطاع
+;
+
+عام نوع تفسير_صحيح_دلالي =
+    | موقع
+    | غير_موقع
+;
+
+عام نوع وصف_تحويل_صحيح_دلالي = {
+    المصدر: معرف_نوع,
+    الهدف: معرف_نوع,
+    تغيير_العرض: تغيير_عرض_صحيح_دلالي,
+    تفسير_الهدف: تفسير_صحيح_دلالي
+};

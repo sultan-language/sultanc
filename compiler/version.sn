@@ -1,0 +1,5 @@
+// Single compiler-facing version owner. SultanC has not declared a numbered
+// stable release yet, so the source build reports its development status plainly.
+عام عرف إصدار_سلطان_سي(): نص {
+    أرجع «development»;
+}

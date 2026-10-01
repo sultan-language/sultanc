@@ -1,0 +1,12 @@
+type Pair = { left: f64, right: f64 };
+
+def combine(value: Pair): f64 {
+    return (value.left * 2.0) + value.right;
+}
+
+def main(): i32 {
+    let pair: Pair = { left: 20.0, right: 2.0 };
+    let result: f64 = combine(pair);
+    if (result == 42.0) { return 42; };
+    return 1;
+}

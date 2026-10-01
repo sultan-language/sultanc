@@ -1,90 +1,101 @@
-بسم الله الرحمن الرحيم
+<div align="center">
+<img src="https://raw.githubusercontent.com/sultan-language/sultanc-vscode/main/icons/sultanc-logo.svg" alt="SultanC" width="100">
 
+# SultanC
 
+**A self-hosted systems programming language, written in Arabic.**
 
-In the name of Allah, the Most Gracious, the Most Merciful
+<p>
+<img src="https://img.shields.io/badge/self--hosted-yes-1a7f37?style=for-the-badge&labelColor=0d1117" alt="Self-hosted">
+<img src="https://img.shields.io/badge/macOS-arm64-1a7f37?style=for-the-badge&labelColor=0d1117&logo=apple&logoColor=white" alt="macOS arm64">
+<img src="https://img.shields.io/badge/Linux-x86__64-1a7f37?style=for-the-badge&labelColor=0d1117&logo=linux&logoColor=white" alt="Linux x86_64">
+<img src="https://img.shields.io/badge/source-Arabic%20%2B%20English-8957e5?style=for-the-badge&labelColor=0d1117" alt="Language">
+<img src="https://img.shields.io/badge/license-MIT-8b949e?style=for-the-badge&labelColor=0d1117" alt="License">
+</p>
 
+[Install](#install) &nbsp;·&nbsp; [Language](#language) &nbsp;·&nbsp; [Documentation](#documentation)
 
-Sultan-lang
-Sultan Programming Language
-Arabic
+</div>
 
-    الاسم: Sultan
-    امتدادات الملفات: .sn, wazir.toml
-    أمر مدير الحزم: wazir
-    الإصدار: 0.0.1 (مرحلة تجريبية أولية)
-    المؤلف: مدين الحاجبي
-    اللغات المدعومة: العربية، الإنجليزية، الفرنسية، الإسبانية. مع خطط مستقبلية لدعم جميع اللغات. يهدف Sultan إلى أن يكون مشروعًا مفتوح المصدر لدعم لغات متعددة.
+<br>
 
-English
+SultanC is a native systems language with ownership-aware safety, algebraic data types, and pattern matching. Its keywords exist in both Arabic and English as equal, interchangeable surfaces of the same syntax. The compiler is written in SultanC and compiles itself — every release passes a byte-for-byte self-host check on both macOS (arm64) and Linux (x86_64).
 
-    Name: Sultan
-    File Extensions: .sn, wazir.toml
-    Package Manager Command: wazir
-    Version: 0.0.1 (Beta Initial Stage)
-    Author: Madyan Al-hajebi
-    Supported Languages: Arabic, English, French, Spanish. The standard English will be based on Arabic, with future plans to support all languages. Sultan aims to be an open-source project to support multiple languages.
+<br>
 
-French
+<table>
+<tr><th width="50%">English</th><th width="50%">العربية</th></tr>
+<tr>
+<td valign="top">
 
-    Nom: Sultan
-    Extensions de fichier : .sn, wazir.toml
-    Commande du gestionnaire de paquets : wazir
-    Version : 0.0.1 (Étape bêta initiale)
-    Auteur : Madyan Al-hajebi
-    Langues prises en charge : Arabe, Anglais, Français, Espagnol. L'anglais standard sera basé sur l'arabe, avec des plans futurs pour soutenir toutes les langues. Sultan vise à être un projet open-source pour soutenir plusieurs langues.
+```
+def main (): int {
+    let x: int = 40;
+    let y: int = 2;
+    return x + y;
+}
+```
 
-Spanish
+</td>
+<td valign="top" dir="rtl">
 
-    Nombre: Sultan
-    Extensiones de archivo: .sn, wazir.toml
-    Comando del gestor de paquetes: tiger
-    Versión: 0.0.1 (Etapa beta inicial)
-    Autor: Madyan Al-hajebi
-    Idiomas soportados: Árabe, Inglés, Francés, Español. El inglés estándar se basará en el árabe, con planes futuros para apoyar todos los idiomas. Sultan busca ser un proyecto de código abierto para apoyar múltiples idiomas.
+```
+عرف القلعة(): عدد {
+    دع س: عدد = 40;
+    دع ص: عدد = 2;
+    أرجع س + ص;
+}
+```
 
-Contribution
+</td>
+</tr>
+</table>
 
-Sultan is a free and open-source project. Contributions are welcome from anyone who wishes to help improve the language. Contributors will be credited for their work, and their names will be included in the project’s acknowledgments.
+Same AST, same semantics, same diagnostics — only the keywords and identifiers change.
 
-By contributing, you agree to follow Sultan’s standards and guidelines for supporting all languages.
-To test the the first layer of the compier
+## Install
 
-git clone https://github.com/supax0/Sultan-lang.git
+```sh
+git clone https://github.com/sultan-language/sultanc.git && cd sultanc
+./build.sh
+sudo cp build/sultanc /usr/local/bin/sultanc
+```
 
-cd Sultan-lang
+> macOS with Homebrew LLVM: `export LLVM_CONFIG="$(brew --prefix llvm)/bin/llvm-config"` before building.
 
-make build
+```sh
+sultanc main.sn -o app && ./app
+```
 
-Then run
+## Language
 
-./Sultan your/file/name.aec flag
+- **Ownership, borrowing, and move checking** — verified statically before codegen
+- **Algebraic data types and pattern matching**
+- **Arabic and English** as equal source surfaces, including diagnostics
+- **A verified intermediate representation (MSIR)** that every optimization pass must pass through a checker before reaching a backend
+- **Native output** — Mach-O and ELF, no interpreter in the compiled binary's path
 
-lists of flags [--ar,--es,--fr]
+```sh
+sultanc check main.sn              # type-check only
+sultanc interpret main.sn          # run without compiling
+sultanc --lang ar main.sn          # Arabic diagnostics
+sultanc --diagnostic-format json check main.sn
+```
 
-#small tests can be
+## Documentation
 
-اطبع("مرحبا سلطان")
+| | |
+|---|---|
+| [Architecture & MSIR](docs/MSIR_CODEGEN_ARCHITECTURE.md) | How source becomes native code |
+| [Kernel architecture](docs/SULTANC_KERNEL_ARCHITECTURE.md) | Compiler internals |
+| [Safety flow](docs/SULTAN_SAFETY_FLOW.md) | Ownership and borrow checking |
+| [Type system](docs/TYPE_SYSTEM.md) | Types, inference, generics |
+| [Arabic terminology](docs/ARABIC_TERMINOLOGY.md) | Canonical Arabic compiler vocabulary |
 
-print("Hello Sultan") #English
+## Status
 
-imprimir("hola Sultan") #spanish
+Self-hosting on `arm64-darwin` and `x86_64-linux`, both verified by byte-identical convergence across compiler generations. An LSP and the standard library are in progress.
 
-imprimer("Allo Sultan") # french
-My goals
+## License
 
-Objective: To develop a new low-level language, Sultan-lang, with an initial compiler written in English. The long-term vision is to rewrite the compiler in Arabic once the language is fully self-hosting, while maintaining Sultan-lang's core mission: to compile scripts written in multiple languages. At launch, Sultan-lang will support Arabic (ar), Spanish (es), French (fr), and English (en), with English being the language of the initial compilation scripts.
-
-Rationale for Rewriting in Arabic:
-
-English, while widely used in programming, has a relatively limited number of unique combinations (keywords, syntax, etc.). In contrast, Arabic offers a far richer set of unique combinations due to its linguistic complexity and historical significance as the original language of mathematics. Rewriting the compiler in Arabic will not only unlock new possibilities that English cannot achieve, but it will also enhance the language's flexibility and expressiveness. Additionally, Arabic's deep connection to Latin languages makes it an ideal candidate for a multi-language compiler.
-
-Arabic: A Superior Semitic Language for Programming:
-
-Arabic is a highly structured and semantically rich language, making it exceptionally well-suited for programming. Its root-based system allows for a vast array of word formations and syntactic flexibility, enabling more expressive and precise code. By leveraging Arabic's superior semantic structure, Arun-lang will be able to offer more powerful and versatile programming constructs, further distinguishing itself from other languages.
-
-Arun-lang's unique ability to allow code to be written in any supported language (Arabic, Spanish, French, or English) while maintaining the integrity and functionality of the code demonstrates the compiler's versatility. This multi-language support is not just a feature but a fundamental aspect of Arun-lang's design, reflecting the global and inclusive vision of the language.
-
-Future Impact:
-
-This transition will pave the way for a new era in computer science. Preliminary research indicates that Arabic could achieve a 171 unique base system without redundancy or grammatical limitations, compared to the current 86-system base in English. This advancement has the potential to open new avenues in computing, pushing the boundaries of what can be achieved with multi-language compilers and fostering innovation in the global developer community.
+[MIT License](LICENSE)

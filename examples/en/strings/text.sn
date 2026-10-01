@@ -1,0 +1,5 @@
+def main(): int {
+    let escaped: string = "a\"b";
+    let raw: string = «alpha beta»;
+    return length(escaped) + length(raw);
+}

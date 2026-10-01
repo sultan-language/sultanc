@@ -1,0 +1,27 @@
+def main(): int {
+    let a: vector int = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+    let b: vector int = [9, 8, 7, 6, 5, 4, 3, 2, 1];
+    let c: mutable vector int = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+    let row: mutable uint = 0;
+    while (row < 3) {
+        let col: mutable uint = 0;
+        while (col < 3) {
+            let k: mutable uint = 0;
+            let sum: mutable int = 0;
+            while (k < 3) {
+                let left_base: uint = row * 3;
+                let right_base: uint = k * 3;
+                let left_index: uint = left_base + k;
+                let right_index: uint = right_base + col;
+                sum := sum + (a[left_index] * b[right_index]);
+                k := k + 1;
+            }
+            let output_base: uint = row * 3;
+            let output_index: uint = output_base + col;
+            c[output_index] := sum;
+            col := col + 1;
+        }
+        row := row + 1;
+    }
+    return c[4];
+}

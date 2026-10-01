@@ -1,0 +1,30 @@
+استورد compiler.frontend.types.type_identity;
+
+// Memory owns static semantic ownership classification only.
+// Flow state belongs to SSF; release execution and destruction belong to later runtime/lowering layers.
+عام نوع صنف_ذاكرة =
+    | عادي
+    | مملوك
+    | مستعار
+;
+
+// One coherent analysis value keeps classification and release responsibility together.
+عام نوع حقائق_ذاكرة_نوع = {
+    الصنف: صنف_ذاكرة,
+    يتطلب_تحريرا: منطقي,
+    يحتوي_مملوكا: منطقي,
+    يحتوي_مستعارا: منطقي,
+    يحتوي_استعارة_حصرية: منطقي
+};
+
+// Memory reports Type-contract failures structurally and never substitutes fake Type identities.
+عام نوع خطأ_ذاكرة_نوع =
+    | معرف_نوع_غير_صالح بنوع معرف_نوع
+    | دورة_ملكية_نوع بنوع معرف_نوع
+    | بنية_سجل_غير_متاحة بنوع معرف_نوع
+    | حقل_سجل_غير_متاح بنوع (معرف_نوع, غير_موقع)
+    | بنية_نوع_موسوم_غير_متاحة بنوع معرف_نوع
+    | منشئ_نوع_غير_متاح بنوع (معرف_نوع, غير_موقع)
+    | حمولة_منشئ_غير_متاحة بنوع (معرف_نوع, غير_موقع, غير_موقع)
+    | شكل_نوع_غير_متوقع بنوع معرف_نوع
+;

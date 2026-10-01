@@ -1,5 +1,0 @@
- ocamlc -c -o compiler/colorizer/colorizer.cmo compiler/colorizer/colorizer.ml            ✔  sultan-py3.12 🐍  04:57:31 PM 
-
- ~/vscode/lexering  ocamlc -I compiler/colorizer -o compiler/colorizer/test compiler/colorizer/colorizer.cmo compiler/colorizer/test.ml
-
- ~/vscode/lexering  ./compiler/colorizer/test

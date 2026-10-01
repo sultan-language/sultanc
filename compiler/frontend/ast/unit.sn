@@ -1,0 +1,29 @@
+استورد compiler.frontend.ast.types;
+استورد compiler.frontend.ast.literals;
+استورد compiler.frontend.ast.expressions;
+استورد compiler.frontend.ast.statements;
+استورد compiler.frontend.source.source;
+استورد compiler.frontend.source.position;
+استورد compiler.frontend.source.scope;
+استورد compiler.frontend.ast.name;
+استورد compiler.frontend.ast.declarations;
+
+// عنصر الوحدة لا يكرر حقائق التصريح؛ التصريح المضمن هو صاحب الحقيقة الوحيد لها.
+عام نوع عنصر_وحدة =
+    | دالة بنوع تصريح_دالة
+    | نوع بنوع تصريح_نوع
+    | تجميع بنوع (نطاق, متجه غ8)
+;
+
+عام نوع استيراد =
+    | اسم بنوع (نطاق, متجه اسم, اختيار اسم)
+    | نص بنوع (نطاق, متجه غ8, اختيار اسم)
+    | انتقائي بنوع (نطاق, متجه اسم, متجه اسم)
+;
+
+عام نوع وحدة_مصدر = {
+    المصدر: مصدر,
+    الاستيرادات: متجه استيراد,
+    العناصر: متجه عنصر_وحدة,
+    مرادفات_الأسماء: متجه تصريح_مرادف_اسم
+};

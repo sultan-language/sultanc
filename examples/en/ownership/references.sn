@@ -1,0 +1,10 @@
+def increment(value: & mutable i32): void {
+    *value := *value + 1;
+}
+
+def main(): i32 {
+    let value: mutable i32 = 41;
+    let reference: & mutable i32 = & mutable value;
+    increment(reference);
+    return *reference;
+}

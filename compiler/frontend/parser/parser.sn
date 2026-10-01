@@ -1,0 +1,27 @@
+استورد compiler.frontend.lexer.token;
+استورد compiler.frontend.ast.types;
+استورد compiler.frontend.ast.statements;
+استورد compiler.frontend.ast.unit;
+استورد compiler.frontend.source.source;
+استورد compiler.frontend.lexer.values;
+استورد compiler.frontend.parser.cursor;
+استورد compiler.frontend.parser.result;
+استورد compiler.frontend.parser.error;
+استورد compiler.frontend.parser.declarations;
+
+// مدخل التحليل النحوي يستهلك رموزا دلالية جاهزة ولا يفرّع حسب لغة source.
+عام عرف حلل_الرموز(المصدر: &مصدر, الرموز: &متجه رمز_مصدر): نتيجة_تحليل {
+    دع المؤشر: متغير مؤشر = مؤشر_جديد();
+    أرجع حلل_وحدة(المصدر, الرموز, & متغير المؤشر);
+}
+
+// IDE/tooling entry point. It uses the same grammar builders as strict parsing,
+// but declaration-level recovery lets later valid declarations remain semantic.
+عام عرف حلل_الرموز_للأدوات(
+    المصدر: &مصدر,
+    الرموز: &متجه رمز_مصدر,
+    الأخطاء: &متغير متجه خطأ_نحوي
+): وحدة_مصدر {
+    دع المؤشر: متغير مؤشر = مؤشر_جديد();
+    أرجع حلل_وحدة_للأدوات(المصدر, الرموز, &متغير المؤشر, الأخطاء);
+}

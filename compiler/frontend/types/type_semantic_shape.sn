@@ -1,0 +1,40 @@
+استورد compiler.frontend.types.type_identity;
+استورد compiler.frontend.types.builtins_generated;
+
+// Name-free semantic Type contract for representation consumers.
+// Values from this contract are derived from the canonical Type registry;
+// this file owns no registry storage and no Name/Symbol identity.
+عام نوع صنف_شكل_نوع_دلالي =
+    | بدائي بنوع نوع_بدائي_مقنن
+    | معامل_نوع
+    | صف
+    | سجل
+    | تعداد
+    | صندوق
+    | اختيار
+    | نتيجة
+    | دالة
+    | مؤشر
+    | مرجع
+    | شريحة
+    | متجه
+;
+
+عام نوع وصف_شكل_نوع_دلالي = {
+    المعرف: معرف_نوع,
+    الصنف: صنف_شكل_نوع_دلالي
+};
+
+// Canonical aggregate member facts for lowering and other semantic consumers.
+// `الترتيب` is declaration/member order only; it is never a physical offset or backend tag.
+عام نوع وصف_حقل_سجل_دلالي = {
+    الترتيب: غير_موقع,
+    النوع: معرف_نوع
+};
+
+// Constructor ordinal is the canonical semantic constructor order. Payload Types
+// remain ordered exactly as declared (or as defined by builtin Option/Result semantics).
+عام نوع وصف_منشئ_نوع_دلالي = {
+    الترتيب: غير_موقع,
+    عدد_الحمولات: غير_موقع
+};

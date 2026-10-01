@@ -1,0 +1,9 @@
+def main(): int {
+    let current: mutable int = 1;
+    let total: mutable int = 0;
+    while (current <= 6) {
+        total := total + current;
+        current := current + 1;
+    }
+    return total;
+}

@@ -1,0 +1,13 @@
+استورد compiler.frontend.source.position;
+استورد compiler.frontend.source.scope;
+
+// أسماء المصدر تبقى أسماء عادية؛ تصنيف Option/Result/Vector تملكه Type لا Lexer/Parser.
+عام نوع صنف_اسم_تركيبي =
+    | عادي
+;
+
+// اسم كما ظهر في source؛ دلالته تُحسم في طبقة لاحقة.
+عام نوع اسم = {
+    النطاق: نطاق,
+    الصنف: صنف_اسم_تركيبي
+};
