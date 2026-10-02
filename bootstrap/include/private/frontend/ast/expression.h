@@ -255,6 +255,8 @@ struct __Ast_Expression__
             __Ast_Expression__ **__Arguments__;
             /* Stores the argument count. */
             size_t __Argument_Count__;
+            /* Stores a resolved generic function instance index when present. */
+            size_t __Resolved_Generic_Function_Index__;
         } __Call__;
         /* Defines the struct structure. */
         struct

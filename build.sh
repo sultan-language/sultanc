@@ -11,11 +11,11 @@ usage() {
 usage:
   ./build.sh
   ./build.sh [--target=<target>] [output]
-  ./build.sh stage0 [output]
-  ./build.sh stage1 [--target=<host-target>] [output]
-  ./build.sh bootstrap [--target=<host-target>] [output-directory]
+  ./build.sh stage0 [--target=<llvm-target>] [output]
+  ./build.sh stage1 [--target=<llvm-target>] [output]
+  ./build.sh bootstrap [--target=<llvm-target>] [output-directory]
 
-Targets:
+Production targets:
     arm64-darwin
     x86_64-linux
 
@@ -23,12 +23,15 @@ Normal source build:
   ./build.sh
   ./build.sh --target=x86_64-linux build/sultanc-linux
 
-The bootstrap seed and Stage1 are always built for the current host so Stage1
-can run locally. For a normal source build, --target selects the architecture
-of the final self-hosted SultanC compiler produced by Stage1.
+For a normal source build, --target selects the production native target of the
+final self-hosted compiler. Stage0 itself remains a host-native C executable.
 
-For stage1/bootstrap mode, an explicit --target is only a host assertion and
-must match the detected host target.
+For stage0 mode, --target sets the Stage0 compiler's default LLVM object target.
+Direct Stage0 invocations may also pass --target=<alias-or-LLVM-triple>.
+
+For stage1/bootstrap mode, --target selects the LLVM target used for the Stage1
+object and its custom executable finalizer. Targets without an implemented
+finalizer fail explicitly instead of falling back to the host.
 USAGE
 }
 
@@ -36,43 +39,32 @@ llvm_flags() {
     LLVM_CFLAGS=
     LLVM_LIBS=
     LLVM_DISCOVERY=
+    LLVM_TOOL=
 
-    if [ -n "${LLVM_CONFIG:-}" ] && [ -x "$LLVM_CONFIG" ]; then
-        LLVM_CFLAGS=$($LLVM_CONFIG --cflags)
-        LLVM_LIBS=$($LLVM_CONFIG --ldflags --libs core native target executionengine mcjit passes --system-libs)
-        LLVM_DISCOVERY="LLVM_CONFIG=$LLVM_CONFIG"
+    if [ -n "${LLVM_CONFIG:-}" ]; then
+        if [ ! -x "$LLVM_CONFIG" ]; then
+            echo "sultanc-bootstrap: LLVM_CONFIG is not executable: $LLVM_CONFIG" >&2
+            exit 1
+        fi
+        LLVM_TOOL=$LLVM_CONFIG
     elif command -v llvm-config >/dev/null 2>&1; then
         LLVM_TOOL=$(command -v llvm-config)
+    fi
+
+    if [ -n "$LLVM_TOOL" ]; then
         LLVM_CFLAGS=$($LLVM_TOOL --cflags)
-        LLVM_LIBS=$($LLVM_TOOL --ldflags --libs core native target executionengine mcjit passes --system-libs)
+        # Stage0 initializes every target configured into this LLVM installation.
+        # Ask llvm-config for the installation's complete supported link set rather
+        # than deriving target libraries from the host or a target-name list.
+        LLVM_LIBS=$($LLVM_TOOL --ldflags --libs all --system-libs)
         LLVM_DISCOVERY="llvm-config=$LLVM_TOOL"
-    elif command -v pkg-config >/dev/null 2>&1; then
-        for package in llvm LLVM llvm-20 llvm-19 llvm-18 llvm-17; do
-            if pkg-config --exists "$package" 2>/dev/null; then
-                LLVM_CFLAGS=$(pkg-config --cflags "$package")
-                LLVM_LIBS=$(pkg-config --libs "$package")
-                LLVM_DISCOVERY="pkg-config=$package"
-                break
-            fi
-        done
-    fi
-
-    if [ -z "$LLVM_LIBS" ] && [ -n "${SULTANC_LLVM_LIBRARY:-}" ]; then
-        LLVM_LIBS=$SULTANC_LLVM_LIBRARY
-        LLVM_DISCOVERY="SULTANC_LLVM_LIBRARY=$SULTANC_LLVM_LIBRARY"
-    fi
-
-    if [ -z "$LLVM_LIBS" ] && command -v ldconfig >/dev/null 2>&1; then
-        LLVM_LIBRARY=$(ldconfig -p 2>/dev/null | awk '/libLLVM\.so/{print $NF; exit}')
-        if [ -n "$LLVM_LIBRARY" ]; then
-            LLVM_LIBS=$LLVM_LIBRARY
-            LLVM_DISCOVERY="ldconfig=$LLVM_LIBRARY"
+    else
+        LLVM_LIBS=${SULTANC_LLVM_LIBRARY:--lLLVM}
+        if [ -n "${SULTANC_LLVM_LIBRARY:-}" ]; then
+            LLVM_DISCOVERY="compiler/system headers; SULTANC_LLVM_LIBRARY=$SULTANC_LLVM_LIBRARY"
+        else
+            LLVM_DISCOVERY="compiler/system headers and libraries (-lLLVM)"
         fi
-    fi
-
-    if [ -z "$LLVM_LIBS" ]; then
-        echo "sultanc-bootstrap: unable to discover libLLVM; set LLVM_CONFIG or install LLVM development metadata" >&2
-        exit 1
     fi
 }
 
@@ -104,41 +96,47 @@ host_target() {
     esac
 }
 
-require_host_target() {
-    REQUESTED_HOST_TARGET=$1
-    DETECTED_HOST_TARGET=$(host_target)
-    if [ "$REQUESTED_HOST_TARGET" != "$DETECTED_HOST_TARGET" ]; then
-        echo "sultanc-bootstrap: Stage1 must be host-native and runnable" >&2
-        echo "sultanc-bootstrap: requested $REQUESTED_HOST_TARGET, host is $DETECTED_HOST_TARGET" >&2
-        exit 2
-    fi
-}
-
 build_stage0() {
     S0_OUT=$1
+    S0_DEFAULT_TARGET=${2:-}
     S0_TMP=${TMPDIR:-/tmp}/sultanc-stage0-build.$$
     trap 'rm -rf "$S0_TMP"' EXIT HUP INT TERM
     mkdir -p "$S0_TMP" "$(dirname -- "$S0_OUT")"
 
+    if [ -n "$S0_DEFAULT_TARGET" ]; then
+        case "$S0_DEFAULT_TARGET" in
+            *[!A-Za-z0-9_.+-]*)
+                echo "sultanc-bootstrap: invalid Stage0 default target spelling: $S0_DEFAULT_TARGET" >&2
+                exit 2
+                ;;
+        esac
+    fi
+
     find "$BOOTSTRAP/src" -name '*.c' -type f | LC_ALL=C sort > "$S0_TMP/sources"
 
     llvm_flags
-    # Stage0 is the only temporary host bridge. Compiler output remains native
-    # object code produced through the Bootstrap Direct-LLVM path.
+    # Stage0 is the only temporary host bridge. LLVM owns target-specific object
+    # lowering; an optional build target only changes Stage0's default object target.
     # shellcheck disable=SC2086
-    "$CC_BIN" -std=c11 -O1 -Wall -Wextra -Werror \
-        -I"$BOOTSTRAP/include/private" -I"$BOOTSTRAP/include/public" \
-        $LLVM_CFLAGS $(cat "$S0_TMP/sources") $LLVM_LIBS -o "$S0_OUT"
+    if [ -n "$S0_DEFAULT_TARGET" ]; then
+        "$CC_BIN" -std=c11 -O1 -Wall -Wextra -Werror \
+            -I"$BOOTSTRAP/include/private" -I"$BOOTSTRAP/include/public" \
+            "-DSULTANC_BOOTSTRAP_DEFAULT_TARGET=\"$S0_DEFAULT_TARGET\"" \
+            $LLVM_CFLAGS $(cat "$S0_TMP/sources") $LLVM_LIBS -o "$S0_OUT"
+    else
+        "$CC_BIN" -std=c11 -O1 -Wall -Wextra -Werror \
+            -I"$BOOTSTRAP/include/private" -I"$BOOTSTRAP/include/public" \
+            $LLVM_CFLAGS $(cat "$S0_TMP/sources") $LLVM_LIBS -o "$S0_OUT"
+    fi
     printf '%s\n' "$S0_OUT"
     printf 'LLVM discovery: %s\n' "$LLVM_DISCOVERY" >&2
     rm -rf "$S0_TMP"
     trap - EXIT HUP INT TERM
 }
-
 build_stage1_with_stage0() {
     S1_OUT=$1
     S0_BIN=$2
-    S1_TARGET=$(host_target)
+    S1_TARGET=$3
 
     mkdir -p "$(dirname -- "$S1_OUT")"
     S1_DIR=$(CDPATH= cd -- "$(dirname -- "$S1_OUT")" && pwd)
@@ -146,13 +144,13 @@ build_stage1_with_stage0() {
     S0_DIR=$(CDPATH= cd -- "$(dirname -- "$S0_BIN")" && pwd)
     S0_ABS=$S0_DIR/$(basename -- "$S0_BIN")
 
-    S1_TMP=${TMPDIR:-/tmp}/sultanc-stage1-native.$$
+    S1_TMP=${TMPDIR:-/tmp}/sultanc-stage1-object.$$
     trap 'rm -rf "$S1_TMP"' EXIT HUP INT TERM
     mkdir -p "$S1_TMP"
 
     (
         cd "$PROJECT"
-        "$S0_ABS" compiler/main.sn -o "$S1_TMP/compiler.o"
+        "$S0_ABS" compiler/main.sn --target="$S1_TARGET" -o "$S1_TMP/compiler.o"
         "$S0_ABS" --finalize-stage1 "$S1_TMP/compiler.o" "$S1_ABS" "$S1_TARGET"
     )
 
@@ -164,32 +162,35 @@ build_stage1_with_stage0() {
 
 build_stage1() {
     S1_OUT=$1
+    S1_TARGET=$2
     S1_TMP_STAGE0=${TMPDIR:-/tmp}/sultanc-stage1-stage0.$$
     trap 'rm -f "$S1_TMP_STAGE0"' EXIT HUP INT TERM
     build_stage0 "$S1_TMP_STAGE0" >/dev/null
-    build_stage1_with_stage0 "$S1_OUT" "$S1_TMP_STAGE0"
+    build_stage1_with_stage0 "$S1_OUT" "$S1_TMP_STAGE0" "$S1_TARGET"
     rm -f "$S1_TMP_STAGE0"
     trap - EXIT HUP INT TERM
 }
 
 build_bootstrap() {
     OUT_DIR=$1
+    S1_TARGET=$2
     mkdir -p "$OUT_DIR"
     build_stage0 "$OUT_DIR/sultanc-stage0"
-    build_stage1_with_stage0 "$OUT_DIR/sultanc-stage1" "$OUT_DIR/sultanc-stage0"
+    build_stage1_with_stage0 "$OUT_DIR/sultanc-stage1" "$OUT_DIR/sultanc-stage0" "$S1_TARGET"
 }
 
 build_current_compiler() {
     OUTPUT=$1
     OUTPUT_TARGET=$2
     BOOTSTRAP_OUT="$BUILD_DIR/bootstrap"
+    HOST_BOOTSTRAP_TARGET=$(host_target)
     mkdir -p "$BUILD_DIR" "$BOOTSTRAP_OUT" "$(dirname -- "$OUTPUT")"
 
-    # Bootstrap executables must remain host-native so they can execute here.
-    build_bootstrap "$BOOTSTRAP_OUT"
+    # The Stage1 compiler used by this source build must remain host-native so it can execute here.
+    build_bootstrap "$BOOTSTRAP_OUT" "$HOST_BOOTSTRAP_TARGET"
 
-    # The requested target applies here: host-native Stage1 cross-compiles the
-    # final self-hosted compiler using SultanC's registered Target layer.
+    # The requested production target applies here: host-native Stage1 cross-compiles
+    # the final self-hosted compiler using SultanC's registered native Target layer.
     (
         cd "$PROJECT"
         "$BOOTSTRAP_OUT/sultanc-stage1" \
@@ -217,11 +218,17 @@ else
 fi
 
 TARGET=
+TARGET_SET=0
 OUTPUT=
 while [ "$#" -gt 0 ]; do
     case "$1" in
         --target=*)
             TARGET=${1#--target=}
+            TARGET_SET=1
+            if [ -z "$TARGET" ]; then
+                echo "sultanc-build: --target requires a value" >&2
+                exit 2
+            fi
             ;;
         --target)
             if [ "$#" -lt 2 ]; then
@@ -229,6 +236,11 @@ while [ "$#" -gt 0 ]; do
                 exit 2
             fi
             TARGET=$2
+            TARGET_SET=1
+            if [ -z "$TARGET" ]; then
+                echo "sultanc-build: --target requires a value" >&2
+                exit 2
+            fi
             shift
             ;;
         build)
@@ -252,32 +264,26 @@ done
 
 case "$MODE" in
     build)
-        if [ -z "$TARGET" ]; then
+        if [ "$TARGET_SET" -eq 0 ]; then
             TARGET=$(host_target)
         fi
         validate_target "$TARGET"
         build_current_compiler "${OUTPUT:-$BUILD_DIR/sultanc}" "$TARGET"
         ;;
     stage0)
-        if [ -n "$TARGET" ]; then
-            echo "sultanc-bootstrap: stage0 is always host-native; --target is not valid for stage0" >&2
-            exit 2
-        fi
-        build_stage0 "${OUTPUT:-$BUILD_DIR/bootstrap/sultanc-stage0}"
+        build_stage0 "${OUTPUT:-$BUILD_DIR/bootstrap/sultanc-stage0}" "$TARGET"
         ;;
     stage1)
-        if [ -n "$TARGET" ]; then
-            validate_target "$TARGET"
-            require_host_target "$TARGET"
+        if [ "$TARGET_SET" -eq 0 ]; then
+            TARGET=$(host_target)
         fi
-        build_stage1 "${OUTPUT:-$BUILD_DIR/bootstrap/sultanc-stage1}"
+        build_stage1 "${OUTPUT:-$BUILD_DIR/bootstrap/sultanc-stage1}" "$TARGET"
         ;;
     bootstrap)
-        if [ -n "$TARGET" ]; then
-            validate_target "$TARGET"
-            require_host_target "$TARGET"
+        if [ "$TARGET_SET" -eq 0 ]; then
+            TARGET=$(host_target)
         fi
-        build_bootstrap "${OUTPUT:-$BUILD_DIR/bootstrap}"
+        build_bootstrap "${OUTPUT:-$BUILD_DIR/bootstrap}" "$TARGET"
         ;;
     *)
         usage

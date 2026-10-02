@@ -2,6 +2,7 @@
 
 #include "kernel/name/name.h"
 #include "semantic/diagnostic.h"
+#include "semantic/generic.h"
 #include "semantic/type_named.h"
 
 #include <stdint.h>
@@ -53,6 +54,17 @@ const __Program_Unit__ *__Semantic_Type_Owner_Unit__(const __Semantic_Context__ 
             return __Fact__->__Unit__;
         }
     }
+    /* Generic instances append owner facts after the initial sorted collection. */
+    for (__Low__ = 0U; __Low__ < __Context__->__Type_Owners__.__Count__; ++__Low__)
+    {
+        const __Semantic_Type_Owner_Fact__ *__Fact__ =
+            (const __Semantic_Type_Owner_Fact__ *)__Vector_At_Const__(
+                &__Context__->__Type_Owners__, __Low__);
+        if (__Fact__ != NULL && __Fact__->__Type__ == __Type__)
+        {
+            return __Fact__->__Unit__;
+        }
+    }
     return NULL;
 }
 
@@ -84,6 +96,6 @@ int __Semantic_Resolve_Named_Entry__(__Semantic_Context__ *__Context__,
         return __Semantic_Fail__(
             __Context__, __Name_Lookup_Error_Id__(__Status__), (__Source_Span__){0});
     }
-    *__Out_Entry__ = __Entry__;
-    return 1;
+    return __Semantic_Generic_Resolve_Type_Instance__(
+        __Context__, __Entry__, __Type__, __Out_Entry__);
 }

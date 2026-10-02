@@ -49,17 +49,13 @@ __LLVM_Value__ __LLVM_Emit_Runtime_Path_Metadata_Service__(
     LLVMValueRef failed;
     /* Stores the service value. */
     LLVMValueRef value = NULL;
-#if defined(__APPLE__)
-    const unsigned mode_offset = 4U;
-    const unsigned size_offset = 96U;
-    const unsigned mtime_seconds_offset = 48U;
-    const unsigned mtime_nanoseconds_offset = 56U;
-#else
-    const unsigned mode_offset = 24U;
-    const unsigned size_offset = 48U;
-    const unsigned mtime_seconds_offset = 88U;
-    const unsigned mtime_nanoseconds_offset = 96U;
-#endif
+    /* Stores the qualified target ABI offsets for struct stat. */
+    const int darwin_runtime =
+        emitter->target.platform == __Bootstrap_Target_Platform_Darwin__;
+    const unsigned mode_offset = darwin_runtime ? 4U : 24U;
+    const unsigned size_offset = darwin_runtime ? 96U : 48U;
+    const unsigned mtime_seconds_offset = darwin_runtime ? 48U : 88U;
+    const unsigned mtime_nanoseconds_offset = darwin_runtime ? 56U : 96U;
 
     if (expression->__As__.__Call__.__Argument_Count__ != 1U)
     {
@@ -99,24 +95,22 @@ __LLVM_Value__ __LLVM_Emit_Runtime_Path_Metadata_Service__(
         LLVMValueRef mode_index = LLVMConstInt(i64, mode_offset, 0);
         LLVMValueRef mode_bytes = LLVMBuildGEP2(
             emitter->builder, i8, stat_bytes, &mode_index, 1U, "runtime.metadata.mode.bytes");
-#if defined(__APPLE__)
-        LLVMTypeRef i16 = LLVMIntTypeInContext(emitter->context, 16U);
+        LLVMTypeRef mode_type =
+            LLVMIntTypeInContext(emitter->context, darwin_runtime ? 16U : 32U);
         LLVMValueRef mode_pointer = LLVMBuildPointerCast(
-            emitter->builder, mode_bytes, LLVMPointerType(i16, 0U), "runtime.metadata.mode.ptr");
+            emitter->builder,
+            mode_bytes,
+            LLVMPointerType(mode_type, 0U),
+            "runtime.metadata.mode.ptr");
         LLVMValueRef mode = LLVMBuildZExt(
             emitter->builder,
-            LLVMBuildLoad2(emitter->builder, i16, mode_pointer, "runtime.metadata.mode16"),
+            LLVMBuildLoad2(emitter->builder,
+                           mode_type,
+                           mode_pointer,
+                           darwin_runtime ? "runtime.metadata.mode16"
+                                          : "runtime.metadata.mode32"),
             i64,
             "runtime.metadata.mode");
-#else
-        LLVMValueRef mode_pointer = LLVMBuildPointerCast(
-            emitter->builder, mode_bytes, LLVMPointerType(i32, 0U), "runtime.metadata.mode.ptr");
-        LLVMValueRef mode = LLVMBuildZExt(
-            emitter->builder,
-            LLVMBuildLoad2(emitter->builder, i32, mode_pointer, "runtime.metadata.mode32"),
-            i64,
-            "runtime.metadata.mode");
-#endif
         LLVMValueRef kind = LLVMBuildAnd(
             emitter->builder, mode, LLVMConstInt(i64, 0xF000U, 0), "runtime.metadata.kind");
         LLVMValueRef regular = LLVMBuildICmp(
@@ -350,15 +344,11 @@ __LLVM_Value__ __LLVM_Emit_Runtime_Read_Directory_Entry_Service__(
     LLVMValueRef encoded_kind;
     /* Stores the encoded result. */
     LLVMValueRef encoded_result;
-#if defined(__APPLE__)
-    const unsigned directory_name_offset = 21U;
-    const unsigned directory_type_offset = 20U;
-#else
-    /* Stores the directory name offset. */
-    const unsigned directory_name_offset = 19U;
-    /* Stores the directory type offset. */
-    const unsigned directory_type_offset = 18U;
-#endif
+    /* Stores the qualified target ABI offsets for struct dirent. */
+    const int darwin_runtime =
+        emitter->target.platform == __Bootstrap_Target_Platform_Darwin__;
+    const unsigned directory_name_offset = darwin_runtime ? 21U : 19U;
+    const unsigned directory_type_offset = darwin_runtime ? 20U : 18U;
 
     if (expression->__As__.__Call__.__Argument_Count__ != 4U)
     {

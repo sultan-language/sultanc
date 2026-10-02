@@ -6,24 +6,19 @@
 #include "llvm/llvm_functions.h"
 #include "llvm/llvm_target.h"
 #include "kernel/type/type.h"
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 /* Releases the LLVM program module. */
 void __LLVM_Dispose_Program_Module__(__LLVM_Emitter__ *emitter,
-                                            LLVMTargetMachineRef machine,
-                                            LLVMTargetDataRef data,
-                                            char *triple,
-                                            char *layout)
+                                    LLVMTargetMachineRef machine,
+                                    LLVMTargetDataRef data)
 {
-    if (layout != NULL)
-        LLVMDisposeMessage(layout);
     if (data != NULL)
         LLVMDisposeTargetData(data);
     if (machine != NULL)
         LLVMDisposeTargetMachine(machine);
-    if (triple != NULL)
-        LLVMDisposeMessage(triple);
     free(emitter->locals);
     free(emitter->functions);
     free(emitter->aggregate_types);
@@ -35,16 +30,16 @@ void __LLVM_Dispose_Program_Module__(__LLVM_Emitter__ *emitter,
         LLVMDisposeModule(emitter->module);
     if (emitter->context != NULL)
         LLVMContextDispose(emitter->context);
+    __Bootstrap_Target_Destroy__(&emitter->target);
 }
 
 /* Returns the LLVM prepare program module. */
 int __LLVM_Prepare_Program_Module__(__Semantic_Context__ *semantic,
-                                           __LLVM_Emitter__ *emitter,
-                                           const __Program_Unit__ **saved_unit,
-                                           LLVMTargetMachineRef *machine,
-                                           LLVMTargetDataRef *data,
-                                           char **triple,
-                                           char **layout)
+                                   const char *requested_target,
+                                   __LLVM_Emitter__ *emitter,
+                                   const __Program_Unit__ **saved_unit,
+                                   LLVMTargetMachineRef *machine,
+                                   LLVMTargetDataRef *data)
 {
     /* References the main entry. */
     __Semantic_Function_Entry__ *main_entry;
@@ -56,6 +51,10 @@ int __LLVM_Prepare_Program_Module__(__Semantic_Context__ *semantic,
     LLVMTargetRef target = NULL;
     /* References the message. */
     char *message = NULL;
+    /* Stores a target error. */
+    char target_error[256];
+    /* Stores an LLVM target lookup prefix. */
+    char target_lookup_error[320];
     /* Tracks the index. */
     size_t index;
 
@@ -63,8 +62,7 @@ int __LLVM_Prepare_Program_Module__(__Semantic_Context__ *semantic,
     *saved_unit = NULL;
     *machine = NULL;
     *data = NULL;
-    *triple = NULL;
-    *layout = NULL;
+    target_error[0] = '\0';
     __LLVM_Error__[0] = '\0';
     if (semantic == NULL || semantic->__Main__ == NULL)
         return __LLVM_Fail__("invalid direct LLVM emitter arguments or missing entry point");
@@ -83,7 +81,10 @@ int __LLVM_Prepare_Program_Module__(__Semantic_Context__ *semantic,
         output_resolved.__Bits__ == 0U)
         return __LLVM_Fail__("Bootstrap language entry must return a canonical integer Type");
 
-    if (!__LLVM_Initialize_Host_Target__())
+    if (!__Bootstrap_Target_Init__(
+            &emitter->target, requested_target, target_error, sizeof(target_error)))
+        return __LLVM_Fail__(target_error);
+    if (!__LLVM_Initialize_Targets__())
         return 0;
 
     emitter->semantic = semantic;
@@ -94,6 +95,39 @@ int __LLVM_Prepare_Program_Module__(__Semantic_Context__ *semantic,
     if (emitter->context == NULL || emitter->module == NULL || emitter->builder == NULL ||
         emitter->allocation_builder == NULL)
         return __LLVM_Fail__("LLVM context/module/builder creation failed");
+
+    LLVMSetTarget(emitter->module, emitter->target.triple);
+    if (LLVMGetTargetFromTriple(emitter->target.triple, &target, &message))
+    {
+        snprintf(target_lookup_error,
+                 sizeof(target_lookup_error),
+                 "LLVM target backend is unavailable for '%s'",
+                 emitter->target.triple);
+        __LLVM_Fail_Message__(target_lookup_error, message);
+        return 0;
+    }
+    *machine = LLVMCreateTargetMachine(target,
+                                       emitter->target.triple,
+                                       "",
+                                       "",
+                                       LLVMCodeGenLevelNone,
+                                       LLVMRelocDefault,
+                                       LLVMCodeModelDefault);
+    if (*machine == NULL)
+    {
+        snprintf(target_lookup_error,
+                 sizeof(target_lookup_error),
+                 "LLVM TargetMachine creation failed for '%s'",
+                 emitter->target.triple);
+        return __LLVM_Fail__(target_lookup_error);
+    }
+    *data = LLVMCreateTargetDataLayout(*machine);
+    if (*data == NULL)
+        return __LLVM_Fail__("LLVM target data layout creation failed");
+    if (LLVMPointerSize(*data) != 8U)
+        return __LLVM_Fail__(
+            "current Bootstrap canonical layout requires a 64-bit LLVM target");
+    LLVMSetModuleDataLayout(emitter->module, *data);
 
     if (!__LLVM_Predeclare_Aggregate_Types__(emitter) ||
         !__LLVM_Define_Aggregate_Types__(emitter) || !__LLVM_Declare_Functions__(emitter))
@@ -109,26 +143,5 @@ int __LLVM_Prepare_Program_Module__(__Semantic_Context__ *semantic,
         __LLVM_Fail_Message__("LLVM verifier rejected L2.3 module", message);
         return 0;
     }
-
-    *triple = LLVMGetDefaultTargetTriple();
-    if (*triple == NULL)
-        return __LLVM_Fail__("LLVM did not provide a host target triple");
-    LLVMSetTarget(emitter->module, *triple);
-    if (LLVMGetTargetFromTriple(*triple, &target, &message))
-    {
-        __LLVM_Fail_Message__("LLVM host target lookup failed", message);
-        return 0;
-    }
-    *machine = LLVMCreateTargetMachine(
-        target, *triple, "", "", LLVMCodeGenLevelNone, LLVMRelocDefault, LLVMCodeModelDefault);
-    if (*machine == NULL)
-        return __LLVM_Fail__("LLVM TargetMachine creation failed");
-    *data = LLVMCreateTargetDataLayout(*machine);
-    if (*data == NULL)
-        return __LLVM_Fail__("LLVM target data layout creation failed");
-    *layout = LLVMCopyStringRepOfTargetData(*data);
-    if (*layout == NULL)
-        return __LLVM_Fail__("LLVM target data layout string creation failed");
-    LLVMSetDataLayout(emitter->module, *layout);
     return 1;
 }

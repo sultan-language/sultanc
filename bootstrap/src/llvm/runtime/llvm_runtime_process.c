@@ -79,44 +79,59 @@ __LLVM_Value__ __LLVM_Emit_Argument_Count__(__LLVM_Emitter__ *emitter,
     return expected != NULL ? __LLVM_Coerce__(emitter, result, expected) : result;
 }
 
-/* Returns the LLVM bootstrap host identity code. */
-static int __LLVM_Bootstrap_Host_Identity_Code__(__Name_Builtin_Function__ builtin,
+/* Returns the LLVM bootstrap target identity code embedded in generated code. */
+static int __LLVM_Bootstrap_Host_Identity_Code__(__LLVM_Emitter__ *emitter,
+                                                 __Name_Builtin_Function__ builtin,
                                                  unsigned long long *out)
 {
-    if (out == NULL)
+    if (emitter == NULL || out == NULL)
         return 0;
     switch (builtin)
     {
         case __Name_Builtin_Host_Architecture__:
-#if defined(__aarch64__) || defined(_M_ARM64)
-            *out = 1ULL;
-            return 1;
-#elif defined(__x86_64__) || defined(_M_X64)
-            *out = 2ULL;
-            return 1;
-#else
-            return __LLVM_Fail__("unsupported Bootstrap host architecture");
-#endif
+            if (emitter->target.architecture == __Bootstrap_Target_Architecture_AArch64__)
+            {
+                *out = 1ULL;
+                return 1;
+            }
+            if (emitter->target.architecture == __Bootstrap_Target_Architecture_X86_64__)
+            {
+                *out = 2ULL;
+                return 1;
+            }
+            return __LLVM_Fail__(
+                "requested Bootstrap target architecture has no Sultan host-identity code");
         case __Name_Builtin_Host_Platform__:
-#if defined(__APPLE__)
-            *out = 1ULL;
-            return 1;
-#elif defined(__linux__)
-            *out = 2ULL;
-            return 1;
-#else
-            return __LLVM_Fail__("unsupported Bootstrap host platform");
-#endif
+            if (emitter->target.platform == __Bootstrap_Target_Platform_Darwin__)
+            {
+                *out = 1ULL;
+                return 1;
+            }
+            if (emitter->target.platform == __Bootstrap_Target_Platform_Linux__)
+            {
+                *out = 2ULL;
+                return 1;
+            }
+            return __LLVM_Fail__(
+                "requested Bootstrap target platform has no Sultan host-identity code");
         case __Name_Builtin_Host_Environment__:
-#if defined(__APPLE__)
-            *out = 0ULL;
-            return 1;
-#elif defined(__linux__) && defined(__GLIBC__)
-            *out = 1ULL;
-            return 1;
-#else
-            return __LLVM_Fail__("unsupported Bootstrap host environment");
-#endif
+            if (emitter->target.environment == __Bootstrap_Target_Environment_Unknown__)
+            {
+                *out = 0ULL;
+                return 1;
+            }
+            if (emitter->target.environment == __Bootstrap_Target_Environment_GNU__)
+            {
+                *out = 1ULL;
+                return 1;
+            }
+            if (emitter->target.environment == __Bootstrap_Target_Environment_Musl__)
+            {
+                *out = 2ULL;
+                return 1;
+            }
+            return __LLVM_Fail__(
+                "requested Bootstrap target environment has no Sultan host-identity code");
         default:
             return __LLVM_Fail__("non-host builtin used for Bootstrap host identity");
     }
@@ -133,7 +148,7 @@ __LLVM_Value__ __LLVM_Emit_Host_Identity__(__LLVM_Emitter__ *emitter,
     unsigned long long code = 0ULL;
     /* Stores the LLVM i64 type. */
     LLVMTypeRef i64;
-    if (!__LLVM_Bootstrap_Host_Identity_Code__(builtin, &code))
+    if (!__LLVM_Bootstrap_Host_Identity_Code__(emitter, builtin, &code))
         return result;
     i64 = LLVMIntTypeInContext(emitter->context, 64U);
     result.value = LLVMConstInt(i64, code, 0);

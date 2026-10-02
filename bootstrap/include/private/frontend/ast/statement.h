@@ -10,8 +10,8 @@ typedef struct
 {
     /* Stores the name. */
     __Text_Slice__ __Name__;
-    /* Stores the value. */
-    __Ast_Atom__ __Value__;
+    /* References the value expression. */
+    __Ast_Expression__ *__Value__;
 } __Ast_Record_Input__;
 
 /* Defines the AST pattern kind values. */
@@ -230,6 +230,10 @@ struct __Ast_Function__
     __Text_Slice__ __Name__;
     /* Tracks the public state. */
     int __Public__;
+    /* References generic type parameter names. */
+    __Text_Slice__ *__Type_Parameters__;
+    /* Stores generic type parameter count. */
+    size_t __Type_Parameter_Count__;
     /* References the parameters. */
     __Ast_Function_Parameter__ *__Parameters__;
     /* Stores the parameter count. */

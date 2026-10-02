@@ -18,7 +18,41 @@ int __Body_Try_Infer_Enum_Construct__(__Semantic_Body_Context__ *__Context__,
     size_t __Index__;
 
     *__Matched__ = 0;
-    if (__Expression__ == NULL || __Expression__->__Kind__ != __Ast_Expression_Call__ ||
+    if (__Expression__ == NULL || __Expression__->__Kind__ != __Ast_Expression_Call__)
+    {
+        return 1;
+    }
+    if (__Expression__->__Contextual_Type__ != NULL)
+    {
+        __Resolved_Type__ __Expected__;
+        __Ast_Lvalue__ *__Function__ = __Expression__->__As__.__Call__.__Function__;
+        if (__Type_Resolve__(__Context__->__Semantic__, __Expression__->__Contextual_Type__, &__Expected__) &&
+            __Expected__.__Kind__ == __Resolved_Type_Enum__ && __Expected__.__Named__ != NULL &&
+            __Function__ != NULL && __Function__->__Kind__ == __Ast_Lvalue_Field__ &&
+            __Function__->__As__.__Field__.__Parent__ != NULL &&
+            __Function__->__As__.__Field__.__Parent__->__Kind__ == __Ast_Lvalue_Base__ &&
+            __Function__->__As__.__Field__.__Parent__->__As__.__Base__.__Kind__ ==
+                __Ast_Lvalue_Base_Identifier__)
+        {
+            __Semantic_Type_Entry__ *__Parent_Template__ = __Name_Find_Type__(
+                __Context__->__Semantic__,
+                __Function__->__As__.__Field__.__Parent__->__As__.__Base__.__As__.__Identifier__);
+            __Ast_Type_Declaration__ *__Expected_Template__ =
+                __Expected__.__Named__->__Template_Declaration__ != NULL
+                    ? __Expected__.__Named__->__Template_Declaration__
+                    : __Expected__.__Named__->__Declaration__;
+            if (__Parent_Template__ != NULL &&
+                (__Parent_Template__->__Declaration__ == __Expected_Template__ ||
+                 __Parent_Template__->__Template_Declaration__ == __Expected_Template__) &&
+                __Name_Find_Enum_Constructor__(
+                    __Expected__.__Named__, __Function__->__As__.__Field__.__Field__,
+                    &__Constructor_Index__, &__Constructor__))
+            {
+                __Type__ = __Expected__.__Named__;
+            }
+        }
+    }
+    if (__Type__ == NULL &&
         !__Name_Resolve_Enum_Constructor_Lvalue__(__Context__->__Semantic__,
                                                   __Expression__->__As__.__Call__.__Function__,
                                                   &__Type__,
@@ -57,7 +91,14 @@ int __Body_Try_Infer_Enum_Construct__(__Semantic_Body_Context__ *__Context__,
         __Expression__->__Semantic_Effects_Applied__ = 1;
     }
 
-    *__Out_Type__ = __Body_Synthetic_Named_Type__(__Context__, __Type__->__Name__);
+    if (__Expression__->__Contextual_Type__ != NULL)
+    {
+        *__Out_Type__ = __Expression__->__Contextual_Type__;
+    }
+    else
+    {
+        *__Out_Type__ = __Body_Synthetic_Named_Type__(__Context__, __Type__->__Name__);
+    }
     if (*__Out_Type__ == NULL)
     {
         return __Body_Fail__(

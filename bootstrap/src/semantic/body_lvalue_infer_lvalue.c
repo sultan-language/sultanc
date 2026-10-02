@@ -116,6 +116,22 @@ static int __Body_Infer_Lvalue_Access__(__Semantic_Body_Context__ *__Context__,
 
         if (__Local__ == NULL)
         {
+            __Semantic_Function_Entry__ *__Function__ = NULL;
+            if (__Lvalue__->__As__.__Base__.__Kind__ == __Ast_Lvalue_Base_Identifier__ &&
+                __Name_Resolve_Function__(
+                    __Context__->__Semantic__, __Context__->__Function__->__Unit__,
+                    __Lvalue__->__As__.__Base__.__As__.__Identifier__, &__Function__) ==
+                    __Name_Lookup_Found__ &&
+                __Function__ != NULL && !__Function__->__Is_Generic_Template__)
+            {
+                *__Out_Type__ = __Function__->__Callable_Type__;
+                if (*__Out_Type__ == NULL)
+                {
+                    return __Body_Fail__(__Context__, __E1100_Internal_Context_Error__,
+                                         __Lvalue__->__Header__.__Span__);
+                }
+                return 1;
+            }
             return __Body_Fail__(
                 __Context__, __E0300_Unknown_Name__, __Lvalue__->__Header__.__Span__);
         }
@@ -152,7 +168,8 @@ static int __Body_Infer_Lvalue_Access__(__Semantic_Body_Context__ *__Context__,
         __Ast_Type__ *__Field_Type__ = NULL;
 
         if (!__Body_Infer_Lvalue_Access__(
-                __Context__, __Lvalue__->__As__.__Field__.__Parent__, &__Parent_Type__, NULL, 1) ||
+                __Context__, __Lvalue__->__As__.__Field__.__Parent__, &__Parent_Type__, NULL,
+                __Require_Read__) ||
             !__Type_Resolve__(__Context__->__Semantic__, __Parent_Type__, &__Resolved__))
         {
             return 0;
@@ -184,7 +201,8 @@ static int __Body_Infer_Lvalue_Access__(__Semantic_Body_Context__ *__Context__,
         __Resolved_Type__ __Resolved__;
 
         if (!__Body_Infer_Lvalue_Access__(
-                __Context__, __Lvalue__->__As__.__Index__.__Parent__, &__Parent_Type__, NULL, 1) ||
+                __Context__, __Lvalue__->__As__.__Index__.__Parent__, &__Parent_Type__, NULL,
+                __Require_Read__) ||
             !__Body_Infer_Atom__(
                 __Context__, &__Lvalue__->__As__.__Index__.__Index__, &__Index_Type__))
         {

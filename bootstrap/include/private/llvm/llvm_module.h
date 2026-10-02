@@ -7,15 +7,12 @@
 
 void __LLVM_Dispose_Program_Module__(__LLVM_Emitter__ *emitter,
                                      LLVMTargetMachineRef machine,
-                                     LLVMTargetDataRef data,
-                                     char *triple,
-                                     char *layout);
+                                     LLVMTargetDataRef data);
 int __LLVM_Prepare_Program_Module__(__Semantic_Context__ *semantic,
+                                    const char *requested_target,
                                     __LLVM_Emitter__ *emitter,
                                     const __Program_Unit__ **saved_unit,
                                     LLVMTargetMachineRef *machine,
-                                    LLVMTargetDataRef *data,
-                                    char **triple,
-                                    char **layout);
+                                    LLVMTargetDataRef *data);
 
 #endif

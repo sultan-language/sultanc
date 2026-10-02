@@ -27,10 +27,18 @@ int __Body_Infer_Unary__(__Semantic_Body_Context__ *__Context__,
             return __Body_Fail__(
                 __Context__, __E0613_Address_Of_Non_Lvalue__, __Expression__->__Header__.__Span__);
         }
-        if (!__Body_Infer_Lvalue__(__Context__,
-                                   __Operand__->__As__.__Atom__.__As__.__Lvalue__,
-                                   &__Lvalue_Type__,
-                                   NULL))
+        if (__Operation__ == __Unary_Address_Mutable__)
+        {
+            if (!__Body_Infer_Lvalue_For_Write__(
+                    __Context__, __Operand__->__As__.__Atom__.__As__.__Lvalue__,
+                    &__Lvalue_Type__, NULL))
+            {
+                return 0;
+            }
+        }
+        else if (!__Body_Infer_Lvalue__(
+                     __Context__, __Operand__->__As__.__Atom__.__As__.__Lvalue__,
+                     &__Lvalue_Type__, NULL))
         {
             return 0;
         }

@@ -114,6 +114,8 @@ int __Body_Report_Borrow_Conflict__(__Semantic_Body_Context__ *,
 
 /* Returns the body synthetic named type. */
 __Ast_Type__ *__Body_Synthetic_Named_Type__(__Semantic_Body_Context__ *, __Text_Slice__);
+__Ast_Type__ *__Body_Synthetic_Function_Type__(__Semantic_Body_Context__ *,
+                                                       const __Ast_Function__ *);
 
 /* Returns the body synthetic reference type. */
 __Ast_Type__ *__Body_Synthetic_Reference_Type__(__Semantic_Body_Context__ *, __Ast_Type__ *, int);

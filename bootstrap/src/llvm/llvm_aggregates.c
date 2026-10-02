@@ -363,64 +363,106 @@ LLVMValueRef __LLVM_Copy_Tagged_Payload_To_Storage__(__LLVM_Emitter__ *emitter,
     return destination;
 }
 
+static int __LLVM_Is_Concrete_Aggregate_Entry__(const __Semantic_Type_Entry__ *entry)
+{
+    return entry != NULL && !entry->__Is_Generic_Template__ && entry->__Declaration__ != NULL &&
+           (entry->__Declaration__->__Kind__ == __Ast_Type_Decl_Struct__ ||
+            entry->__Declaration__->__Kind__ == __Ast_Type_Decl_Enum__);
+}
+
 /* Returns the LLVM predeclare aggregate types. */
 int __LLVM_Predeclare_Aggregate_Types__(__LLVM_Emitter__ *emitter)
 {
-    /* Tracks the index. */
     size_t index;
-    /* Stores the count. */
     size_t count = 0U;
     for (index = 0U; index < emitter->semantic->__Types__.__Count__; ++index)
     {
-        /* References the entry. */
         __Semantic_Type_Entry__ *entry =
             (__Semantic_Type_Entry__ *)__Vector_At__(&emitter->semantic->__Types__, index);
-        if (entry != NULL && entry->__Declaration__ != NULL &&
-            (entry->__Declaration__->__Kind__ == __Ast_Type_Decl_Struct__ ||
-             entry->__Declaration__->__Kind__ == __Ast_Type_Decl_Enum__))
-        {
+        if (__LLVM_Is_Concrete_Aggregate_Entry__(entry))
             ++count;
-        }
+    }
+    for (index = 0U; index < emitter->semantic->__Generic_Types__.__Count__; ++index)
+    {
+        __Semantic_Type_Entry__ **slot = (__Semantic_Type_Entry__ **)__Vector_At__(
+            &emitter->semantic->__Generic_Types__, index);
+        if (slot != NULL && __LLVM_Is_Concrete_Aggregate_Entry__(*slot))
+            ++count;
     }
     emitter->aggregate_type_count = count;
     if (count == 0U)
-    {
         return 1;
-    }
     emitter->aggregate_types =
         (__LLVM_Aggregate_Type__ *)calloc(count, sizeof(*emitter->aggregate_types));
     if (emitter->aggregate_types == NULL)
-    {
         return __LLVM_Fail__("out of memory while predeclaring L2.5 aggregate Types");
-    }
+
     count = 0U;
     for (index = 0U; index < emitter->semantic->__Types__.__Count__; ++index)
     {
-        /* References the entry. */
         __Semantic_Type_Entry__ *entry =
             (__Semantic_Type_Entry__ *)__Vector_At__(&emitter->semantic->__Types__, index);
-        /* Stores the symbol. */
-        char symbol[64];
-        if (entry == NULL || entry->__Declaration__ == NULL ||
-            (entry->__Declaration__->__Kind__ != __Ast_Type_Decl_Struct__ &&
-             entry->__Declaration__->__Kind__ != __Ast_Type_Decl_Enum__))
-        {
+        char symbol[80];
+        if (!__LLVM_Is_Concrete_Aggregate_Entry__(entry))
             continue;
-        }
-        snprintf(symbol,
-                 sizeof(symbol),
-                 entry->__Declaration__->__Kind__ == __Ast_Type_Decl_Enum__ ? "sultanc.enum.%zu"
-                                                                            : "sultanc.record.%zu",
+        snprintf(symbol, sizeof(symbol),
+                 entry->__Declaration__->__Kind__ == __Ast_Type_Decl_Enum__
+                     ? "sultanc.enum.%zu"
+                     : "sultanc.record.%zu",
                  index);
         emitter->aggregate_types[count].semantic = entry;
         emitter->aggregate_types[count].type = LLVMStructCreateNamed(emitter->context, symbol);
         if (emitter->aggregate_types[count].type == NULL)
-        {
             return __LLVM_Fail__("LLVM named aggregate declaration failed for L2.5");
-        }
+        ++count;
+    }
+    for (index = 0U; index < emitter->semantic->__Generic_Types__.__Count__; ++index)
+    {
+        __Semantic_Type_Entry__ **slot = (__Semantic_Type_Entry__ **)__Vector_At__(
+            &emitter->semantic->__Generic_Types__, index);
+        __Semantic_Type_Entry__ *entry = slot == NULL ? NULL : *slot;
+        char symbol[80];
+        if (!__LLVM_Is_Concrete_Aggregate_Entry__(entry))
+            continue;
+        snprintf(symbol, sizeof(symbol),
+                 entry->__Declaration__->__Kind__ == __Ast_Type_Decl_Enum__
+                     ? "sultanc.enum.generic.%zu"
+                     : "sultanc.record.generic.%zu",
+                 index);
+        emitter->aggregate_types[count].semantic = entry;
+        emitter->aggregate_types[count].type = LLVMStructCreateNamed(emitter->context, symbol);
+        if (emitter->aggregate_types[count].type == NULL)
+            return __LLVM_Fail__("LLVM generic aggregate declaration failed for L2.5");
         ++count;
     }
     return 1;
+}
+
+
+/* Ensures a concrete semantic aggregate has its canonical lazy layout. */
+static int __LLVM_Ensure_Aggregate_Layout__(__LLVM_Emitter__ *emitter,
+                                            __Semantic_Type_Entry__ *entry)
+{
+    __Ast_Type__ named_type;
+    size_t size = 0U;
+    size_t alignment = 1U;
+    if (emitter == NULL || emitter->semantic == NULL || entry == NULL ||
+        entry->__Declaration__ == NULL)
+    {
+        return 0;
+    }
+    if (entry->__Layout_State__ == 2)
+    {
+        return 1;
+    }
+    memset(&named_type, 0, sizeof(named_type));
+    named_type.__Kind__ = __Ast_Type_Named__;
+    named_type.__As__.__Named__.__Name__ = entry->__Name__;
+    named_type.__As__.__Named__.__Arguments__ = entry->__Type_Arguments__;
+    named_type.__As__.__Named__.__Argument_Count__ = entry->__Type_Argument_Count__;
+    emitter->semantic->__Active_Unit__ = entry->__Unit__;
+    return __Layout_Type__(emitter->semantic, &named_type, &size, &alignment) &&
+           entry->__Layout_State__ == 2;
 }
 
 /* Returns the LLVM define aggregate types. */
@@ -436,7 +478,8 @@ int __LLVM_Define_Aggregate_Types__(__LLVM_Emitter__ *emitter)
         __Semantic_Type_Entry__ *entry = aggregate->semantic;
         /* References the declaration. */
         __Ast_Type_Declaration__ *declaration = entry != NULL ? entry->__Declaration__ : NULL;
-        if (entry == NULL || declaration == NULL || entry->__Layout_State__ != 2)
+        if (entry == NULL || declaration == NULL ||
+            !__LLVM_Ensure_Aggregate_Layout__(emitter, entry))
         {
             return __LLVM_Fail__("L2.5 aggregate lacks canonical semantic layout");
         }
@@ -492,16 +535,11 @@ int __LLVM_Define_Aggregate_Types__(__LLVM_Emitter__ *emitter)
         }
         else if (declaration->__Kind__ == __Ast_Type_Decl_Enum__)
         {
-            /* Stores the named type. */
-            __Ast_Type__ named_type;
             /* Stores the elements. */
             LLVMTypeRef elements[2];
             /* Stores the payload size. */
             size_t payload_size = 0U;
-            memset(&named_type, 0, sizeof(named_type));
-            named_type.__Kind__ = __Ast_Type_Named__;
-            named_type.__As__.__Named__.__Name__ = entry->__Name__;
-            if (!__LLVM_Tagged_Layout__(emitter, &named_type, &payload_size, NULL, NULL))
+            if (!__LLVM_Tagged_Entry_Layout__(emitter, entry, &payload_size, NULL, NULL))
             {
                 return 0;
             }

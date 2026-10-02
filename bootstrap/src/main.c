@@ -13,6 +13,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifndef SULTANC_BOOTSTRAP_DEFAULT_TARGET
+#define SULTANC_BOOTSTRAP_DEFAULT_TARGET ((const char *)0)
+#endif
+
 /* Returns the diagnostic argument. */
 static const char *diagnostic_argument(const __Diagnostic__ *d, __Diagnostic_Argument_Key__ key)
 {
@@ -172,6 +176,10 @@ int main(int argc, char **argv)
     const char *input = NULL;
     /* References the output path. */
     const char *output = NULL;
+    /* References the requested LLVM object target. */
+    const char *target = SULTANC_BOOTSTRAP_DEFAULT_TARGET;
+    /* Tracks whether --target was provided on this invocation. */
+    int target_explicit = 0;
     /* References the run argv. */
     const char **run_argv = NULL;
     /* Stores the run argc. */
@@ -191,7 +199,7 @@ int main(int argc, char **argv)
 
     if (argc < 2)
     {
-        fprintf(stderr, "usage: %s <input.sn> -o <output.o>\n", argv[0]);
+        fprintf(stderr, "usage: %s <input.sn> [--target=<target>] -o <output.o>\n", argv[0]);
         fprintf(stderr, "       %s <compiler.sn> --run <compiler-args...>\n", argv[0]);
         fprintf(stderr, "       %s --finalize-stage1 <object.o> <output> <target>\n", argv[0]);
         return 2;
@@ -222,6 +230,26 @@ int main(int argc, char **argv)
             run_start = i + 1;
             break;
         }
+        else if (strncmp(argv[i], "--target=", 9U) == 0)
+        {
+            target = argv[i] + 9U;
+            target_explicit = 1;
+            if (target[0] == '\0')
+            {
+                fprintf(stderr, "sultanc-stage0: --target requires a value\n");
+                return 2;
+            }
+        }
+        else if (strcmp(argv[i], "--target") == 0)
+        {
+            if (i + 1 >= argc)
+            {
+                fprintf(stderr, "sultanc-stage0: --target requires a value\n");
+                return 2;
+            }
+            target = argv[++i];
+            target_explicit = 1;
+        }
         else if (strcmp(argv[i], "-o") == 0 && i + 1 < argc)
         {
             output = argv[++i];
@@ -238,6 +266,11 @@ int main(int argc, char **argv)
         }
     }
 
+    if (run_mode && target_explicit)
+    {
+        fprintf(stderr, "sultanc-stage0: --run uses the host LLVM target; --target is not valid with --run\n");
+        return 2;
+    }
     if (!run_mode && !output)
     {
         fprintf(stderr, "sultanc-stage0: missing -o <output.o>\n");
@@ -291,7 +324,7 @@ int main(int argc, char **argv)
     }
     else
     {
-        if (!__Bootstrap_Emit_LLVM_Object__(&sem, output))
+        if (!__Bootstrap_Emit_LLVM_Object__(&sem, output, target))
         {
             fprintf(stderr,
                     "sultanc-stage0: LLVM object emission failed: %s\n",

@@ -5,6 +5,8 @@
 #include "frontend/parser/storage.h"
 #include "frontend/parser/type_internal.h"
 
+#include <stdalign.h>
+
 /* Parses the parser type. */
 __Ast_Type__ *__Parser_Parse_Type__(__Parser__ *__Parser_State__)
 {
@@ -28,6 +30,59 @@ __Ast_Type__ *__Parser_Parse_Type__(__Parser__ *__Parser_State__)
     if (__Parser_State__->__Current__.__Kind__ == __Token_AND_OPERATOR__)
     {
         return __Parser_Parse_Wrapped_Type__(__Parser_State__, __Ast_Type_Reference__);
+    }
+
+    if (__Parser_State__->__Current__.__Kind__ == __Token_FUNCTION_TYPE__)
+    {
+        __Vector__ __Parameters__;
+        __Ast_Type__ *__Function_Type__ = NULL;
+        __Ast_Type__ *__Output__ = NULL;
+        __Vector_Init__(&__Parameters__, sizeof(__Ast_Type__ *));
+        if (!__Parser_Advance__(__Parser_State__) ||
+            !__Parser_Expect__(__Parser_State__, __Token_LEFT_PARENTHESIS_OPERATOR__))
+        {
+            __Vector_Destroy__(&__Parameters__);
+            return NULL;
+        }
+        while (__Parser_State__->__Current__.__Kind__ != __Token_RIGHT_PARENTHESIS_OPERATOR__)
+        {
+            __Ast_Type__ *__Parameter__ = __Parser_Parse_Type__(__Parser_State__);
+            if (__Parameter__ == NULL || __Vector_Push__(&__Parameters__, &__Parameter__) == NULL)
+            {
+                __Vector_Destroy__(&__Parameters__);
+                if (!__Parser_State__->__Failed__)
+                    (void)__Parser_Fail_Internal__(
+                        __Parser_State__, __Diag_Word_Syntax_Internal_Oom__);
+                return NULL;
+            }
+            if (!__Parser_Accept__(__Parser_State__, __Token_COMMA_OPERATOR__))
+                break;
+        }
+        if (!__Parser_Expect__(__Parser_State__, __Token_RIGHT_PARENTHESIS_OPERATOR__) ||
+            !__Parser_Expect__(__Parser_State__, __Token_COLON_OPERATOR__))
+        {
+            __Vector_Destroy__(&__Parameters__);
+            return NULL;
+        }
+        __Output__ = __Parser_Parse_Type__(__Parser_State__);
+        if (__Output__ == NULL)
+        {
+            __Vector_Destroy__(&__Parameters__);
+            return NULL;
+        }
+        __Function_Type__ = __Parser_New_Type__(__Parser_State__, __Ast_Type_Function__);
+        if (__Function_Type__ == NULL)
+        {
+            __Vector_Destroy__(&__Parameters__);
+            return NULL;
+        }
+        __Function_Type__->__As__.__Function__.__Parameter_Count__ = __Parameters__.__Count__;
+        __Function_Type__->__As__.__Function__.__Parameters__ =
+            (__Ast_Type__ **)__Parser_Freeze_Vector__(
+                __Parser_State__, &__Parameters__, alignof(__Ast_Type__ *));
+        __Function_Type__->__As__.__Function__.__Output__ = __Output__;
+        __Vector_Destroy__(&__Parameters__);
+        return __Function_Type__;
     }
 
     if (__Parser_Type_Primitive__(__Parser_State__->__Current__.__Kind__, &__Kind__, &__Machine__))
@@ -89,6 +144,41 @@ __Ast_Type__ *__Parser_Parse_Type__(__Parser__ *__Parser_State__)
         if (__Type__ == NULL)
             return NULL;
         __Type__->__As__.__Named__.__Name__ = __Name__;
+        if (__Parser_Accept__(__Parser_State__, __Token_LESS_THAN_OPERATOR__))
+        {
+            __Vector__ __Arguments__;
+            __Vector_Init__(&__Arguments__, sizeof(__Ast_Type__ *));
+            if (__Parser_State__->__Current__.__Kind__ == __Token_GREATER_THAN_OPERATOR__)
+            {
+                __Vector_Destroy__(&__Arguments__);
+                (void)__Parser_Fail__(__Parser_State__, __Diag_Word_Syntax_Expected_Type__);
+                return NULL;
+            }
+            for (;;)
+            {
+                __Ast_Type__ *__Argument__ = __Parser_Parse_Type__(__Parser_State__);
+                if (__Argument__ == NULL || __Vector_Push__(&__Arguments__, &__Argument__) == NULL)
+                {
+                    __Vector_Destroy__(&__Arguments__);
+                    if (!__Parser_State__->__Failed__)
+                        (void)__Parser_Fail_Internal__(
+                            __Parser_State__, __Diag_Word_Syntax_Internal_Oom__);
+                    return NULL;
+                }
+                if (!__Parser_Accept__(__Parser_State__, __Token_COMMA_OPERATOR__))
+                    break;
+            }
+            if (!__Parser_Expect__(__Parser_State__, __Token_GREATER_THAN_OPERATOR__))
+            {
+                __Vector_Destroy__(&__Arguments__);
+                return NULL;
+            }
+            __Type__->__As__.__Named__.__Argument_Count__ = __Arguments__.__Count__;
+            __Type__->__As__.__Named__.__Arguments__ =
+                (__Ast_Type__ **)__Parser_Freeze_Vector__(
+                    __Parser_State__, &__Arguments__, alignof(__Ast_Type__ *));
+            __Vector_Destroy__(&__Arguments__);
+        }
         return __Type__;
     }
 

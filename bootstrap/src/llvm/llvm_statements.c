@@ -386,7 +386,7 @@ static int __LLVM_Emit_Statement__(__LLVM_Emitter__ *emitter,
                                                     destination.address,
                                                     (unsigned)field_index,
                                                     "record.field.init");
-                field_value = __LLVM_Emit_Atom__(emitter, &input->__Value__, field_type);
+                field_value = __LLVM_Emit_Expression__(emitter, input->__Value__, field_type);
                 if (field_value.value == NULL)
                 {
                     return 0;

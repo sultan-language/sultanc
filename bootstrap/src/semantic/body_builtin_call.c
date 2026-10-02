@@ -198,6 +198,55 @@ static int __Body_Builtin_Append__(__Semantic_Body_Context__ *__Context__,
     return 1;
 }
 
+/* Swaps two mutable places without creating an intermediate moved-out state. */
+static int __Body_Builtin_Swap__(__Semantic_Body_Context__ *__Context__,
+                                 __Ast_Expression__ *__Expression__,
+                                 __Ast_Type__ **__Out_Type__)
+{
+    __Ast_Expression__ *__Left_Expression__;
+    __Ast_Expression__ *__Right_Expression__;
+    __Ast_Lvalue__ *__Left_Lvalue__;
+    __Ast_Lvalue__ *__Right_Lvalue__;
+    __Ast_Type__ *__Left_Type__ = NULL;
+    __Ast_Type__ *__Right_Type__ = NULL;
+    __Semantic_Local__ *__Left_Local__ = NULL;
+    __Semantic_Local__ *__Right_Local__ = NULL;
+
+    if (__Expression__->__As__.__Call__.__Argument_Count__ != 2U)
+    {
+        return __Body_Fail__(
+            __Context__, __E0400_Mismatched_Types__, __Expression__->__Header__.__Span__);
+    }
+    __Left_Expression__ = __Expression__->__As__.__Call__.__Arguments__[0];
+    __Right_Expression__ = __Expression__->__As__.__Call__.__Arguments__[1];
+    if (__Left_Expression__ == NULL || __Right_Expression__ == NULL ||
+        __Left_Expression__->__Kind__ != __Ast_Expression_Atom__ ||
+        __Right_Expression__->__Kind__ != __Ast_Expression_Atom__ ||
+        __Left_Expression__->__As__.__Atom__.__Kind__ != __Ast_Atom_Lvalue__ ||
+        __Right_Expression__->__As__.__Atom__.__Kind__ != __Ast_Atom_Lvalue__)
+    {
+        return __Body_Fail__(
+            __Context__, __E0400_Mismatched_Types__, __Expression__->__Header__.__Span__);
+    }
+    __Left_Lvalue__ = __Left_Expression__->__As__.__Atom__.__As__.__Lvalue__;
+    __Right_Lvalue__ = __Right_Expression__->__As__.__Atom__.__As__.__Lvalue__;
+    if (__Left_Lvalue__ == NULL || __Right_Lvalue__ == NULL ||
+        !__Body_Infer_Expression__(__Context__, __Left_Expression__, &__Left_Type__) ||
+        !__Body_Infer_Expression__(__Context__, __Right_Expression__, &__Right_Type__) ||
+        !__Body_Check_Assignable__(__Context__, __Left_Lvalue__, &__Left_Type__, &__Left_Local__) ||
+        !__Body_Check_Assignable__(__Context__, __Right_Lvalue__, &__Right_Type__, &__Right_Local__) ||
+        !__Type_Compatible__(__Context__->__Semantic__, __Left_Type__, __Right_Type__) ||
+        !__Type_Compatible__(__Context__->__Semantic__, __Right_Type__, __Left_Type__))
+    {
+        return 0;
+    }
+    (void)__Left_Local__;
+    (void)__Right_Local__;
+    *__Out_Type__ = &__Body_Builtin_Void_Type__;
+    __Expression__->__Semantic_Effects_Applied__ = 1;
+    return 1;
+}
+
 /* Requires the body builtin argument count. */
 static int __Body_Builtin_Require_Argument_Count__(__Semantic_Body_Context__ *__Context__,
                                                    __Ast_Expression__ *__Expression__,
@@ -437,6 +486,7 @@ static int __Body_Builtin_Runtime__(__Semantic_Body_Context__ *__Context__,
         case __Name_Builtin_None__:
         case __Name_Builtin_Length__:
         case __Name_Builtin_Append__:
+        case __Name_Builtin_Swap__:
             return 0;
     }
 
@@ -478,6 +528,8 @@ int __Body_Try_Infer_Builtin_Call__(__Semantic_Body_Context__ *__Context__,
             }
             __Expression__->__Semantic_Effects_Applied__ = 1;
             return 1;
+        case __Name_Builtin_Swap__:
+            return __Body_Builtin_Swap__(__Context__, __Expression__, __Out_Type__);
         case __Name_Builtin_Open_File_Read__:
         case __Name_Builtin_Read_File_Byte__:
         case __Name_Builtin_Read_File_Segment__:

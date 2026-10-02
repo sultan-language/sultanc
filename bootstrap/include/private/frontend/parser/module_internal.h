@@ -20,6 +20,12 @@ int __Parser_Push_Module_Item__(__Parser__ *__Parser_State__,
 /* Parses the parser import. */
 int __Parser_Parse_Import__(__Parser__ *__Parser_State__, __Vector__ *__Imports__);
 
+
+/* Parses an optional declaration type-parameter list. */
+int __Parser_Parse_Type_Parameters__(__Parser__ *__Parser_State__,
+                                     __Text_Slice__ **__Out_Parameters__,
+                                     size_t *__Out_Count__);
+
 /* Parses the parser type item. */
 int __Parser_Parse_Type_Item__(__Parser__ *__Parser_State__, __Vector__ *__Items__, int __Public__);
 

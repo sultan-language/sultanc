@@ -220,7 +220,15 @@ __Ast_Type_Declaration__ *__Parser_Parse_Type_Declaration__(__Parser__ *__Parser
         return __Declaration__;
     }
 
-    (void)__Start__;
-    (void)__Parser_Fail__(__Parser_State__, __Diag_Word_Syntax_Expected_Type__);
-    return NULL;
+    {
+        __Ast_Type__ *__Alias__ = __Parser_Parse_Type__(__Parser_State__);
+        if (__Alias__ == NULL)
+        {
+            (void)__Start__;
+            return NULL;
+        }
+        __Declaration__->__Kind__ = __Ast_Type_Decl_Alias__;
+        __Declaration__->__As__.__Alias__ = __Alias__;
+        return __Declaration__;
+    }
 }

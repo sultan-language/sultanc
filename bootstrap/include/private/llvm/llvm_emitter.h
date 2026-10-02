@@ -7,7 +7,9 @@
 #include "semantic/context.h"
 
 /* Emits the bootstrap LLVM object. */
-int __Bootstrap_Emit_LLVM_Object__(__Semantic_Context__ *semantic, const char *path);
+int __Bootstrap_Emit_LLVM_Object__(__Semantic_Context__ *semantic,
+                                  const char *path,
+                                  const char *target);
 
 /* Runs the bootstrap LLVM program. */
 int __Bootstrap_Run_LLVM_Program__(__Semantic_Context__ *semantic,

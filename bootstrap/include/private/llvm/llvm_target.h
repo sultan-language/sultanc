@@ -5,6 +5,6 @@
 
 #include "llvm/llvm_internal.h"
 
-int __LLVM_Initialize_Host_Target__(void);
+int __LLVM_Initialize_Targets__(void);
 
 #endif

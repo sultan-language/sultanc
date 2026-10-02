@@ -27,6 +27,8 @@ typedef enum
     __Name_Builtin_Length__,
     /* Represents the name builtin append value. */
     __Name_Builtin_Append__,
+    /* Represents the name builtin swap value. */
+    __Name_Builtin_Swap__,
     /* Represents the name builtin open file read value. */
     __Name_Builtin_Open_File_Read__,
     /* Represents the name builtin read file byte value. */

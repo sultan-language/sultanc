@@ -23,10 +23,6 @@ int __Bootstrap_Run_LLVM_Program__(__Semantic_Context__ *semantic,
     LLVMExecutionEngineRef engine = NULL;
     /* Stores the main value. */
     LLVMValueRef main_value = NULL;
-    /* References the triple. */
-    char *triple = NULL;
-    /* References the layout. */
-    char *layout = NULL;
     /* References the message. */
     char *message = NULL;
     /* Tracks whether the operation succeeded. */
@@ -36,7 +32,7 @@ int __Bootstrap_Run_LLVM_Program__(__Semantic_Context__ *semantic,
     if (status == NULL || argc < 1 || argv == NULL)
         return __LLVM_Fail__("invalid Direct-LLVM execution request");
     if (__LLVM_Prepare_Program_Module__(
-            semantic, &emitter, &saved_unit, &machine, &data, &triple, &layout))
+            semantic, NULL, &emitter, &saved_unit, &machine, &data))
     {
         main_value = LLVMGetNamedFunction(emitter.module, "main");
         if (main_value == NULL)
@@ -63,7 +59,7 @@ int __Bootstrap_Run_LLVM_Program__(__Semantic_Context__ *semantic,
         LLVMDisposeMessage(message);
     if (engine != NULL)
         LLVMDisposeExecutionEngine(engine);
-    __LLVM_Dispose_Program_Module__(&emitter, machine, data, triple, layout);
+    __LLVM_Dispose_Program_Module__(&emitter, machine, data);
     if (semantic != NULL && saved_unit != NULL)
         semantic->__Active_Unit__ = saved_unit;
     return ok;

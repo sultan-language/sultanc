@@ -28,6 +28,8 @@ typedef enum
     __Ast_Type_Option__,
     /* Represents the AST type result value. */
     __Ast_Type_Result__,
+    /* Represents the AST type function value. */
+    __Ast_Type_Function__,
     /* Represents the AST type named value. */
     __Ast_Type_Named__,
     /* Represents the AST type reference value. */
@@ -54,7 +56,22 @@ typedef struct
 {
     /* Stores the name. */
     __Text_Slice__ __Name__;
+    /* References generic type arguments. */
+    __Ast_Type__ **__Arguments__;
+    /* Stores the generic type argument count. */
+    size_t __Argument_Count__;
 } __Ast_Named_Type__;
+
+/* Defines the AST function type structure. */
+typedef struct
+{
+    /* References parameter types. */
+    __Ast_Type__ **__Parameters__;
+    /* Stores parameter count. */
+    size_t __Parameter_Count__;
+    /* References the output type. */
+    __Ast_Type__ *__Output__;
+} __Ast_Function_Type__;
 
 /* Defines the AST type structure. */
 struct __Ast_Type__
@@ -70,6 +87,8 @@ struct __Ast_Type__
         __Ast_Result_Type__ __Result__;
         /* Stores the named. */
         __Ast_Named_Type__ __Named__;
+        /* Stores the function. */
+        __Ast_Function_Type__ __Function__;
         /* References the inner. */
         __Ast_Type__ *__Inner__;
     } __As__;
@@ -111,7 +130,9 @@ typedef enum
     /* Represents the AST type declaration struct value. */
     __Ast_Type_Decl_Struct__,
     /* Represents the AST type declaration enum value. */
-    __Ast_Type_Decl_Enum__
+    __Ast_Type_Decl_Enum__,
+    /* Represents a transparent type alias declaration. */
+    __Ast_Type_Decl_Alias__
 } __Ast_Type_Decl_Kind__;
 
 /* Defines the AST type declaration structure. */
@@ -119,6 +140,10 @@ typedef struct
 {
     /* Stores the name. */
     __Text_Slice__ __Name__;
+    /* References generic type parameter names. */
+    __Text_Slice__ *__Type_Parameters__;
+    /* Stores generic type parameter count. */
+    size_t __Type_Parameter_Count__;
     /* Stores the kind. */
     __Ast_Type_Decl_Kind__ __Kind__;
     /* Stores the active variant payload. */
@@ -140,6 +165,8 @@ typedef struct
             /* Stores the count. */
             size_t __Count__;
         } __Enum__;
+        /* References a transparent alias target type. */
+        __Ast_Type__ *__Alias__;
     } __As__;
 } __Ast_Type_Declaration__;
 

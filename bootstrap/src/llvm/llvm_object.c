@@ -7,7 +7,9 @@
 #include <string.h>
 
 /* Emits the bootstrap LLVM object. */
-int __Bootstrap_Emit_LLVM_Object__(__Semantic_Context__ *semantic, const char *path)
+int __Bootstrap_Emit_LLVM_Object__(__Semantic_Context__ *semantic,
+                                  const char *path,
+                                  const char *target)
 {
     /* Stores the emitter. */
     __LLVM_Emitter__ emitter;
@@ -17,10 +19,6 @@ int __Bootstrap_Emit_LLVM_Object__(__Semantic_Context__ *semantic, const char *p
     LLVMTargetMachineRef machine = NULL;
     /* Stores the data. */
     LLVMTargetDataRef data = NULL;
-    /* References the triple. */
-    char *triple = NULL;
-    /* References the layout. */
-    char *layout = NULL;
     /* References the message. */
     char *message = NULL;
     /* Tracks whether the operation succeeded. */
@@ -30,7 +28,7 @@ int __Bootstrap_Emit_LLVM_Object__(__Semantic_Context__ *semantic, const char *p
     if (path == NULL)
         return __LLVM_Fail__("missing native object output path");
     if (__LLVM_Prepare_Program_Module__(
-            semantic, &emitter, &saved_unit, &machine, &data, &triple, &layout))
+            semantic, target, &emitter, &saved_unit, &machine, &data))
     {
         if (__LLVM_Optimize_Module__(&emitter, machine))
         {
@@ -53,7 +51,7 @@ int __Bootstrap_Emit_LLVM_Object__(__Semantic_Context__ *semantic, const char *p
     }
     if (message != NULL)
         LLVMDisposeMessage(message);
-    __LLVM_Dispose_Program_Module__(&emitter, machine, data, triple, layout);
+    __LLVM_Dispose_Program_Module__(&emitter, machine, data);
     if (semantic != NULL && saved_unit != NULL)
         semantic->__Active_Unit__ = saved_unit;
     return ok;
