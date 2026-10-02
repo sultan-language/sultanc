@@ -6,7 +6,7 @@
 استورد compiler.frontend.names.symbols;
 استورد compiler.frontend.types.builtins_generated;
 استورد compiler.frontend.types.contextual_names_generated;
-استورد compiler.frontend.names.context;
+استورد compiler.frontend.names.name_context;
 استورد compiler.frontend.lexer.token;
 استورد compiler.frontend.lexer.token_identity;
 استورد std.text.from_bytes;
@@ -62,8 +62,7 @@
     دع الحالة: سجل_أنواع = *الأنواع;
     لو (المعرف.القيمة >= (الطول(الحالة.الأنواع) مثل غير_موقع)) { أرجع خطأ; };
     دع مرجع_النوع: &نوع_مقنن = &الحالة.الأنواع[المعرف.القيمة];
-    دع النوع: نوع_مقنن = *مرجع_النوع;
-    طابق النوع مع
+    طابق *مرجع_النوع مع
     | نوع_مقنن.بدائي(البدائي) -> {
         دع النص: نص = تهجئة_عرض_نوع_بدائي(البدائي);
         ألحق_نص_عرض_نوع(الناتج, &النص);

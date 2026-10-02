@@ -11,6 +11,12 @@ int __Layout_Type__(__Semantic_Context__ *__Context__,
                     size_t *__Out_Size__,
                     size_t *__Out_Alignment__);
 
+/* Returns the layout of a canonical named type entry. */
+int __Layout_Named_Entry__(__Semantic_Context__ *__Context__,
+                           __Semantic_Type_Entry__ *__Entry__,
+                           size_t *__Out_Size__,
+                           size_t *__Out_Alignment__);
+
 /* Returns the layout struct field. */
 int __Layout_Struct_Field__(__Semantic_Context__ *__Context__,
                             __Semantic_Type_Entry__ *__Entry__,
@@ -25,6 +31,14 @@ int __Layout_Tagged_Storage__(__Semantic_Context__ *__Context__,
                               size_t *__Out_Payload_Offset__,
                               size_t *__Out_Payload_Size__,
                               size_t *__Out_Alignment__);
+
+/* Returns tagged storage for a canonical named enum entry. */
+int __Layout_Tagged_Entry_Storage__(__Semantic_Context__ *__Context__,
+                                    __Semantic_Type_Entry__ *__Entry__,
+                                    size_t *__Out_Tag_Size__,
+                                    size_t *__Out_Payload_Offset__,
+                                    size_t *__Out_Payload_Size__,
+                                    size_t *__Out_Alignment__);
 
 /* Returns the layout tagged payload. */
 int __Layout_Tagged_Payload__(__Semantic_Context__ *__Context__,

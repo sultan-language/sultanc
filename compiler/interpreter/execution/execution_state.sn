@@ -2,7 +2,7 @@
 استورد compiler.interpreter.values.runtime_values;
 استورد compiler.interpreter.execution.frame;
 استورد compiler.interpreter.memory.memory;
-استورد compiler.interpreter.diagnostics.runtime_failures;
+استورد compiler.interpreter.runtime_failures;
 
 عام نوع حالة_تنفيذ_مفسر = {
     المكدس: متجه إطار_تفسير_مسير,

@@ -3,7 +3,7 @@
 // Frontend-owned Stage-1 token-to-AST primitive-type syntax adapter.
 
 استورد compiler.frontend.lexer.token;
-استورد compiler.frontend.source.scope;
+استورد compiler.source.span;
 استورد compiler.frontend.ast.name;
 استورد compiler.frontend.ast.types;
 

@@ -5,6 +5,7 @@
 
 #include "llvm/llvm_emitter.h"
 #include "llvm/llvm_c_api.h"
+#include "target/bootstrap_target.h"
 
 /* Defines the LLVM local structure. */
 typedef struct
@@ -68,6 +69,8 @@ typedef struct
 {
     /* References the semantic. */
     __Semantic_Context__ *semantic;
+    /* Stores the canonical bootstrap compilation target. */
+    __Bootstrap_Target__ target;
     /* Stores the context. */
     LLVMContextRef context;
     /* Stores the module. */

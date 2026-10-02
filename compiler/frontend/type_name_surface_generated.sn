@@ -2,8 +2,8 @@
 // Owner: tools/generate/registry/type_registry.def
 // Contextual Type names remain ordinary lexical identifiers; Type owns these spellings.
 
-استورد compiler.frontend.source.source;
-استورد compiler.frontend.source.scope;
+استورد compiler.source.source_file;
+استورد compiler.source.span;
 استورد compiler.frontend.identifier_identity;
 
 عام نوع صنف_اسم_نوع_سياقي =

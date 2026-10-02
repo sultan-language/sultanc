@@ -68,15 +68,13 @@ int __Body_Check_Record_Init__(__Semantic_Body_Context__ *__Context__,
                                          __Statement__->__Header__.__Span__);
                 }
                 __Seen__[__Field_Index__] = 1U;
-                if (!__Body_Check_Atom_Compatible__(__Context__,
-                                                    __Field__->__Slot__.__Type__,
-                                                    &__Input__->__Value__,
-                                                    __Statement__->__Header__.__Span__) ||
-                    !__Body_Safety_Consume_Contained_Atom__(__Context__,
-                                                            __Field__->__Slot__.__Type__,
-                                                            &__Input__->__Value__,
-                                                            __Local__,
-                                                            __Statement__->__Header__.__Span__))
+                if (!__Body_Check_Expression_Compatible__(__Context__,
+                                                          __Field__->__Slot__.__Type__,
+                                                          __Input__->__Value__,
+                                                          __Statement__->__Header__.__Span__) ||
+                    !__Body_Safety_Transfer_Expression__(__Context__,
+                                                        __Input__->__Value__,
+                                                        __Local__))
                 {
                     free(__Seen__);
                     return 0;

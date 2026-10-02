@@ -238,15 +238,30 @@ static int __Pattern_Analyze_Node__(__Semantic_Context__ *__Context__,
 
                 __Pattern_Type__ =
                     __Name_Find_Type__(__Context__, __Pattern__->__As__.__Enum__.__Type_Name__);
-                if (__Pattern_Type__ != __Resolved__.__Named__ ||
-                    !__Name_Find_Enum_Constructor__(
-                        __Pattern_Type__,
-                        __Pattern__->__As__.__Enum__.__Constructor_Name__,
-                        &__Constructor_Index__,
-                        &__Constructor__))
+                if (__Pattern_Type__ == NULL)
                 {
                     return __Pattern_Fail__(
                         __Error__, __E0400_Mismatched_Types__, __Pattern__->__Header__.__Span__);
+                }
+                {
+                    __Ast_Type_Declaration__ *__Pattern_Template__ =
+                        __Pattern_Type__->__Template_Declaration__ != NULL
+                            ? __Pattern_Type__->__Template_Declaration__
+                            : __Pattern_Type__->__Declaration__;
+                    __Ast_Type_Declaration__ *__Resolved_Template__ =
+                        __Resolved__.__Named__->__Template_Declaration__ != NULL
+                            ? __Resolved__.__Named__->__Template_Declaration__
+                            : __Resolved__.__Named__->__Declaration__;
+                    if (__Pattern_Template__ != __Resolved_Template__ ||
+                        !__Name_Find_Enum_Constructor__(
+                            __Resolved__.__Named__,
+                            __Pattern__->__As__.__Enum__.__Constructor_Name__,
+                            &__Constructor_Index__,
+                            &__Constructor__))
+                    {
+                        return __Pattern_Fail__(
+                            __Error__, __E0400_Mismatched_Types__, __Pattern__->__Header__.__Span__);
+                    }
                 }
                 __Payload_Count__ = __Constructor__->__Payload_Count__;
                 __Payload_Type__ =

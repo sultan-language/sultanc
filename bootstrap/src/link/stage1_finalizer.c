@@ -6,6 +6,7 @@
 #include "link/byte_buffer.h"
 #include "link/elf_executable.h"
 #include "link/macho_executable.h"
+#include "target/bootstrap_target.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -98,24 +99,44 @@ int __Bootstrap_Finalize_Stage1__(const char *object_path,
     size_t object_size = 0U;
     __Bootstrap_Byte_Buffer__ image;
     char format_error[256];
+    char target_error[256];
+    char unsupported_error[320];
+    __Bootstrap_Target__ target;
+    __Bootstrap_Target_Finalizer__ finalizer;
     int finalized = 0;
     int written = 0;
 
     stage1_finalizer_error[0] = '\0';
     format_error[0] = '\0';
+    target_error[0] = '\0';
+    memset(&target, 0, sizeof(target));
     __Bootstrap_Byte_Buffer_Init__(&image);
-    if (!read_object(object_path, &object, &object_size))
-        return 0;
+    if (!__Bootstrap_Target_Init__(&target, target_name, target_error, sizeof(target_error)))
+        return finalizer_fail(target_error);
 
-    if (target_name != NULL && strcmp(target_name, "arm64-darwin") == 0)
+    finalizer = __Bootstrap_Target_Finalizer_Kind__(&target);
+    if (finalizer == __Bootstrap_Target_Finalizer_Unsupported__)
+    {
+        snprintf(unsupported_error,
+                 sizeof(unsupported_error),
+                 "Stage1 executable finalization is unavailable for target '%s'",
+                 target.triple != NULL ? target.triple : "unknown");
+        __Bootstrap_Target_Destroy__(&target);
+        return finalizer_fail(unsupported_error);
+    }
+
+    if (!read_object(object_path, &object, &object_size))
+    {
+        __Bootstrap_Target_Destroy__(&target);
+        return 0;
+    }
+
+    if (finalizer == __Bootstrap_Target_Finalizer_MachO_ARM64__)
         finalized = __Bootstrap_Finalize_MachO_ARM64__(object, object_size, &image,
                                                        format_error, sizeof(format_error));
-    else if (target_name != NULL && strcmp(target_name, "x86_64-linux") == 0)
+    else if (finalizer == __Bootstrap_Target_Finalizer_ELF_X86_64__)
         finalized = __Bootstrap_Finalize_ELF_X86_64__(object, object_size, &image,
                                                       format_error, sizeof(format_error));
-    else
-        finalizer_fail("unsupported Stage1 target");
-
     if (!finalized && stage1_finalizer_error[0] == '\0')
         finalizer_fail(format_error[0] == '\0' ? "Stage1 object finalization failed" : format_error);
     if (finalized)
@@ -123,6 +144,7 @@ int __Bootstrap_Finalize_Stage1__(const char *object_path,
 
     __Bootstrap_Byte_Buffer_Destroy__(&image);
     free(object);
+    __Bootstrap_Target_Destroy__(&target);
     return finalized && written;
 }
 

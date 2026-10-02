@@ -1,6 +1,6 @@
 استورد compiler.frontend.names.identifiers;
 استورد compiler.frontend.names.module_identity;
-استورد compiler.frontend.source.scope;
+استورد compiler.source.span;
 
 // ربط الاسم داخل النطاق يشير إلى الرمز المقنن نفسه؛ الاسم البديل لا يخصص رمزا جديدا.
 عام نوع ربط_اسم_نطاق = {

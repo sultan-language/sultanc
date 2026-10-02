@@ -158,6 +158,36 @@ int __LLVM_Tagged_Layout__(__LLVM_Emitter__ *emitter,
     return 1;
 }
 
+/* Returns the LLVM tagged layout for a canonical named enum entry. */
+int __LLVM_Tagged_Entry_Layout__(__LLVM_Emitter__ *emitter,
+                                 __Semantic_Type_Entry__ *entry,
+                                 size_t *payload_size,
+                                 size_t *payload_offset,
+                                 size_t *alignment)
+{
+    size_t tag_size = 0U;
+    size_t size = 0U;
+    size_t offset = 0U;
+    size_t align = 1U;
+    if (!__Layout_Tagged_Entry_Storage__(
+            emitter->semantic, entry, &tag_size, &offset, &size, &align))
+    {
+        return __LLVM_Fail__("L2.5 could not consume canonical tagged entry layout");
+    }
+    if (tag_size != 8U || offset != 8U || align > 8U || size > (size_t)UINT_MAX)
+    {
+        return __LLVM_Fail__(
+            "L2.5 canonical tagged entry layout is not representable by current direct LLVM storage");
+    }
+    if (payload_size != NULL)
+        *payload_size = size;
+    if (payload_offset != NULL)
+        *payload_offset = offset;
+    if (alignment != NULL)
+        *alignment = align;
+    return 1;
+}
+
 /* Creates the LLVM tagged literal type. */
 static LLVMTypeRef __LLVM_Create_Tagged_Literal_Type__(__LLVM_Emitter__ *emitter,
                                                        __Ast_Type__ *type)
@@ -264,6 +294,41 @@ LLVMTypeRef __LLVM_Type__(__LLVM_Emitter__ *emitter, __Ast_Type__ *type)
         elements[2] = LLVMIntTypeInContext(emitter->context, 64U);
         return LLVMStructTypeInContext(emitter->context, elements, 3U, 0);
     }
+    if (resolved.__Kind__ == __Resolved_Type_Function__)
+    {
+        LLVMTypeRef *parameters = NULL;
+        LLVMTypeRef output;
+        LLVMTypeRef function_type;
+        size_t index;
+        if (resolved.__Parameter_Count__ != 0U)
+        {
+            parameters = (LLVMTypeRef *)calloc(resolved.__Parameter_Count__, sizeof(*parameters));
+            if (parameters == NULL)
+            {
+                __LLVM_Fail__("out of memory while lowering function Type");
+                return NULL;
+            }
+        }
+        for (index = 0U; index < resolved.__Parameter_Count__; ++index)
+        {
+            parameters[index] = __LLVM_Type__(emitter, resolved.__Parameters__[index]);
+            if (parameters[index] == NULL)
+            {
+                free(parameters);
+                return NULL;
+            }
+        }
+        output = __LLVM_Type__(emitter, resolved.__Output__);
+        if (output == NULL)
+        {
+            free(parameters);
+            return NULL;
+        }
+        function_type = LLVMFunctionType(
+            output, parameters, (unsigned)resolved.__Parameter_Count__, 0);
+        free(parameters);
+        return function_type == NULL ? NULL : LLVMPointerType(function_type, 0U);
+    }
     if (resolved.__Kind__ == __Resolved_Type_Void__)
     {
         return LLVMVoidTypeInContext(emitter->context);
@@ -356,8 +421,25 @@ __Ast_Type__ *__LLVM_Expression_Integer_Type__(__LLVM_Emitter__ *emitter,
         }
 
         case __Ast_Expression_Unary__:
-            return __LLVM_Expression_Integer_Type__(emitter,
-                                                    expression->__As__.__Unary__.__Operand__);
+        {
+            __Ast_Type__ *operand_type;
+            __Resolved_Type__ resolved;
+            if (expression->__As__.__Unary__.__Operation__ == __Unary_Dereference__)
+            {
+                operand_type = __LLVM_Expression_Type__(
+                    emitter, expression->__As__.__Unary__.__Operand__);
+                if (operand_type != NULL &&
+                    __Type_Resolve__(emitter->semantic, operand_type, &resolved) &&
+                    (resolved.__Kind__ == __Resolved_Type_Reference__ ||
+                     resolved.__Kind__ == __Resolved_Type_Box__))
+                {
+                    return resolved.__Inner__;
+                }
+                return NULL;
+            }
+            return __LLVM_Expression_Integer_Type__(
+                emitter, expression->__As__.__Unary__.__Operand__);
+        }
     }
     return NULL;
 }
@@ -431,6 +513,7 @@ __Ast_Type__ *__LLVM_Expression_Type__(__LLVM_Emitter__ *emitter,
                 case __Name_Builtin_Write_Executable_Bytes__:
                     return &__LLVM_Result_Integer_Integer_Type__;
                 case __Name_Builtin_Append__:
+                case __Name_Builtin_Swap__:
                 case __Name_Builtin_Process_Exit__:
                     return &__LLVM_Void_Type__;
                 default:

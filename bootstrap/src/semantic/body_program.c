@@ -113,7 +113,18 @@ int __Semantic_Check_Bodies__(__Semantic_Context__ *__Context__)
         /* References the function. */
         __Semantic_Function_Entry__ *__Function__ =
             (__Semantic_Function_Entry__ *)__Vector_At__(&__Context__->__Functions__, __Index__);
-        if (__Function__ != NULL && !__Check_Function__(__Context__, __Function__))
+        if (__Function__ != NULL && !__Function__->__Is_Generic_Template__ &&
+            !__Check_Function__(__Context__, __Function__))
+        {
+            return 0;
+        }
+    }
+    for (__Index__ = 0U; __Index__ < __Context__->__Generic_Functions__.__Count__; ++__Index__)
+    {
+        __Semantic_Function_Entry__ **__Slot__ = (__Semantic_Function_Entry__ **)__Vector_At__(
+            &__Context__->__Generic_Functions__, __Index__);
+        if (__Slot__ == NULL || *__Slot__ == NULL ||
+            !__Check_Function__(__Context__, *__Slot__))
         {
             return 0;
         }

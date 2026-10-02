@@ -1,0 +1,534 @@
+استورد compiler.diagnostics.identity;
+استورد compiler.diagnostics.schema;
+استورد compiler.diagnostics.registry;
+
+// Long-form educational diagnostics keyed only by the canonical registry identity.
+عام عرف شرح_معرف_تشخيص(المعرف: معرف_تشخيص, اللغة: لغة_تشخيص): نص {
+    طابق المعرف مع
+    | معرف_تشخيص.خطأ_نحوي -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «The source could not be lexed or parsed according to SultanC grammar. Start with the primary span and any expected/found facts; correcting the earliest syntax error usually removes dependent parser errors.»; }
+        | لغة_تشخيص.العربية -> { أرجع «تعذر تحليل المصدر وفق قواعد سلطان سي. ابدأ بالنطاق الرئيسي وبحقائق المتوقع والموجود؛ وغالبا يؤدي تصحيح أول خطأ نحوي إلى إزالة الأخطاء التابعة له.»; };
+    }
+    | معرف_تشخيص.تعبير_نحوي_غير_صالح -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «The source could not be lexed or parsed according to SultanC grammar. Start with the primary span and any expected/found facts; correcting the earliest syntax error usually removes dependent parser errors.»; }
+        | لغة_تشخيص.العربية -> { أرجع «تعذر تحليل المصدر وفق قواعد سلطان سي. ابدأ بالنطاق الرئيسي وبحقائق المتوقع والموجود؛ وغالبا يؤدي تصحيح أول خطأ نحوي إلى إزالة الأخطاء التابعة له.»; };
+    }
+    | معرف_تشخيص.نوع_نحوي_غير_صالح -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «The source could not be lexed or parsed according to SultanC grammar. Start with the primary span and any expected/found facts; correcting the earliest syntax error usually removes dependent parser errors.»; }
+        | لغة_تشخيص.العربية -> { أرجع «تعذر تحليل المصدر وفق قواعد سلطان سي. ابدأ بالنطاق الرئيسي وبحقائق المتوقع والموجود؛ وغالبا يؤدي تصحيح أول خطأ نحوي إلى إزالة الأخطاء التابعة له.»; };
+    }
+    | معرف_تشخيص.نمط_نحوي_غير_صالح -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «The source could not be lexed or parsed according to SultanC grammar. Start with the primary span and any expected/found facts; correcting the earliest syntax error usually removes dependent parser errors.»; }
+        | لغة_تشخيص.العربية -> { أرجع «تعذر تحليل المصدر وفق قواعد سلطان سي. ابدأ بالنطاق الرئيسي وبحقائق المتوقع والموجود؛ وغالبا يؤدي تصحيح أول خطأ نحوي إلى إزالة الأخطاء التابعة له.»; };
+    }
+    | معرف_تشخيص.عنصر_نحوي_غير_صالح -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «The source could not be lexed or parsed according to SultanC grammar. Start with the primary span and any expected/found facts; correcting the earliest syntax error usually removes dependent parser errors.»; }
+        | لغة_تشخيص.العربية -> { أرجع «تعذر تحليل المصدر وفق قواعد سلطان سي. ابدأ بالنطاق الرئيسي وبحقائق المتوقع والموجود؛ وغالبا يؤدي تصحيح أول خطأ نحوي إلى إزالة الأخطاء التابعة له.»; };
+    }
+    | معرف_تشخيص.خلل_محلل_داخلي -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «The source could not be lexed or parsed according to SultanC grammar. Start with the primary span and any expected/found facts; correcting the earliest syntax error usually removes dependent parser errors.»; }
+        | لغة_تشخيص.العربية -> { أرجع «تعذر تحليل المصدر وفق قواعد سلطان سي. ابدأ بالنطاق الرئيسي وبحقائق المتوقع والموجود؛ وغالبا يؤدي تصحيح أول خطأ نحوي إلى إزالة الأخطاء التابعة له.»; };
+    }
+    | معرف_تشخيص.فاصلة_منقوطة_في_غير_موضعها -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «The source could not be lexed or parsed according to SultanC grammar. Start with the primary span and any expected/found facts; correcting the earliest syntax error usually removes dependent parser errors.»; }
+        | لغة_تشخيص.العربية -> { أرجع «تعذر تحليل المصدر وفق قواعد سلطان سي. ابدأ بالنطاق الرئيسي وبحقائق المتوقع والموجود؛ وغالبا يؤدي تصحيح أول خطأ نحوي إلى إزالة الأخطاء التابعة له.»; };
+    }
+    | معرف_تشخيص.تهجئة_كلمة_محجوزة_غير_معروفة -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «The source could not be lexed or parsed according to SultanC grammar. Start with the primary span and any expected/found facts; correcting the earliest syntax error usually removes dependent parser errors.»; }
+        | لغة_تشخيص.العربية -> { أرجع «تعذر تحليل المصدر وفق قواعد سلطان سي. ابدأ بالنطاق الرئيسي وبحقائق المتوقع والموجود؛ وغالبا يؤدي تصحيح أول خطأ نحوي إلى إزالة الأخطاء التابعة له.»; };
+    }
+    | معرف_تشخيص.عبارة_بلا_عملية -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «The source could not be lexed or parsed according to SultanC grammar. Start with the primary span and any expected/found facts; correcting the earliest syntax error usually removes dependent parser errors.»; }
+        | لغة_تشخيص.العربية -> { أرجع «تعذر تحليل المصدر وفق قواعد سلطان سي. ابدأ بالنطاق الرئيسي وبحقائق المتوقع والموجود؛ وغالبا يؤدي تصحيح أول خطأ نحوي إلى إزالة الأخطاء التابعة له.»; };
+    }
+    | معرف_تشخيص.نوع_ناتج_دالة_مفقود -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «The source could not be lexed or parsed according to SultanC grammar. Start with the primary span and any expected/found facts; correcting the earliest syntax error usually removes dependent parser errors.»; }
+        | لغة_تشخيص.العربية -> { أرجع «تعذر تحليل المصدر وفق قواعد سلطان سي. ابدأ بالنطاق الرئيسي وبحقائق المتوقع والموجود؛ وغالبا يؤدي تصحيح أول خطأ نحوي إلى إزالة الأخطاء التابعة له.»; };
+    }
+    | معرف_تشخيص.خطأ_معجمي -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «The source could not be lexed or parsed according to SultanC grammar. Start with the primary span and any expected/found facts; correcting the earliest syntax error usually removes dependent parser errors.»; }
+        | لغة_تشخيص.العربية -> { أرجع «تعذر تحليل المصدر وفق قواعد سلطان سي. ابدأ بالنطاق الرئيسي وبحقائق المتوقع والموجود؛ وغالبا يؤدي تصحيح أول خطأ نحوي إلى إزالة الأخطاء التابعة له.»; };
+    }
+    | معرف_تشخيص.نص_مصدر_يوتيف8_غير_صالح -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «The source could not be lexed or parsed according to SultanC grammar. Start with the primary span and any expected/found facts; correcting the earliest syntax error usually removes dependent parser errors.»; }
+        | لغة_تشخيص.العربية -> { أرجع «تعذر تحليل المصدر وفق قواعد سلطان سي. ابدأ بالنطاق الرئيسي وبحقائق المتوقع والموجود؛ وغالبا يؤدي تصحيح أول خطأ نحوي إلى إزالة الأخطاء التابعة له.»; };
+    }
+    | معرف_تشخيص.خلل_معجمي_داخلي -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «The source could not be lexed or parsed according to SultanC grammar. Start with the primary span and any expected/found facts; correcting the earliest syntax error usually removes dependent parser errors.»; }
+        | لغة_تشخيص.العربية -> { أرجع «تعذر تحليل المصدر وفق قواعد سلطان سي. ابدأ بالنطاق الرئيسي وبحقائق المتوقع والموجود؛ وغالبا يؤدي تصحيح أول خطأ نحوي إلى إزالة الأخطاء التابعة له.»; };
+    }
+    | معرف_تشخيص.رفض_تحليل -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «The source could not be lexed or parsed according to SultanC grammar. Start with the primary span and any expected/found facts; correcting the earliest syntax error usually removes dependent parser errors.»; }
+        | لغة_تشخيص.العربية -> { أرجع «تعذر تحليل المصدر وفق قواعد سلطان سي. ابدأ بالنطاق الرئيسي وبحقائق المتوقع والموجود؛ وغالبا يؤدي تصحيح أول خطأ نحوي إلى إزالة الأخطاء التابعة له.»; };
+    }
+    | معرف_تشخيص.لا_ناتج_تحليل -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «The source could not be lexed or parsed according to SultanC grammar. Start with the primary span and any expected/found facts; correcting the earliest syntax error usually removes dependent parser errors.»; }
+        | لغة_تشخيص.العربية -> { أرجع «تعذر تحليل المصدر وفق قواعد سلطان سي. ابدأ بالنطاق الرئيسي وبحقائق المتوقع والموجود؛ وغالبا يؤدي تصحيح أول خطأ نحوي إلى إزالة الأخطاء التابعة له.»; };
+    }
+    | معرف_تشخيص.استدعاء_مترجم_غير_صالح -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «The compiler invocation, selected target, or file environment is invalid for this operation. Correct the option, target, path, or missing value identified by the diagnostic and run the command again.»; }
+        | لغة_تشخيص.العربية -> { أرجع «استدعاء المترجم أو الهدف المختار أو بيئة الملفات غير صالح لهذه العملية. صحح الخيار أو الهدف أو المسار أو القيمة المفقودة التي يحددها التشخيص ثم أعد التنفيذ.»; };
+    }
+    | معرف_تشخيص.هدف_مترجم_غير_معروف -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «The compiler invocation, selected target, or file environment is invalid for this operation. Correct the option, target, path, or missing value identified by the diagnostic and run the command again.»; }
+        | لغة_تشخيص.العربية -> { أرجع «استدعاء المترجم أو الهدف المختار أو بيئة الملفات غير صالح لهذه العملية. صحح الخيار أو الهدف أو المسار أو القيمة المفقودة التي يحددها التشخيص ثم أعد التنفيذ.»; };
+    }
+    | معرف_تشخيص.مصدر_مترجم_مفقود -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «The compiler invocation, selected target, or file environment is invalid for this operation. Correct the option, target, path, or missing value identified by the diagnostic and run the command again.»; }
+        | لغة_تشخيص.العربية -> { أرجع «استدعاء المترجم أو الهدف المختار أو بيئة الملفات غير صالح لهذه العملية. صحح الخيار أو الهدف أو المسار أو القيمة المفقودة التي يحددها التشخيص ثم أعد التنفيذ.»; };
+    }
+    | معرف_تشخيص.خيار_مترجم_غير_معروف -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «The compiler invocation, selected target, or file environment is invalid for this operation. Correct the option, target, path, or missing value identified by the diagnostic and run the command again.»; }
+        | لغة_تشخيص.العربية -> { أرجع «استدعاء المترجم أو الهدف المختار أو بيئة الملفات غير صالح لهذه العملية. صحح الخيار أو الهدف أو المسار أو القيمة المفقودة التي يحددها التشخيص ثم أعد التنفيذ.»; };
+    }
+    | معرف_تشخيص.رمز_تشخيص_مترجم_غير_معروف -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «The compiler invocation, selected target, or file environment is invalid for this operation. Correct the option, target, path, or missing value identified by the diagnostic and run the command again.»; }
+        | لغة_تشخيص.العربية -> { أرجع «استدعاء المترجم أو الهدف المختار أو بيئة الملفات غير صالح لهذه العملية. صحح الخيار أو الهدف أو المسار أو القيمة المفقودة التي يحددها التشخيص ثم أعد التنفيذ.»; };
+    }
+    | معرف_تشخيص.قيمة_خيار_مترجم_مفقودة -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «The compiler invocation, selected target, or file environment is invalid for this operation. Correct the option, target, path, or missing value identified by the diagnostic and run the command again.»; }
+        | لغة_تشخيص.العربية -> { أرجع «استدعاء المترجم أو الهدف المختار أو بيئة الملفات غير صالح لهذه العملية. صحح الخيار أو الهدف أو المسار أو القيمة المفقودة التي يحددها التشخيص ثم أعد التنفيذ.»; };
+    }
+    | معرف_تشخيص.لغة_تشخيص_مترجم_غير_صالحة -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «The compiler invocation, selected target, or file environment is invalid for this operation. Correct the option, target, path, or missing value identified by the diagnostic and run the command again.»; }
+        | لغة_تشخيص.العربية -> { أرجع «استدعاء المترجم أو الهدف المختار أو بيئة الملفات غير صالح لهذه العملية. صحح الخيار أو الهدف أو المسار أو القيمة المفقودة التي يحددها التشخيص ثم أعد التنفيذ.»; };
+    }
+    | معرف_تشخيص.صيغة_تشخيص_مترجم_غير_صالحة -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «The compiler invocation, selected target, or file environment is invalid for this operation. Correct the option, target, path, or missing value identified by the diagnostic and run the command again.»; }
+        | لغة_تشخيص.العربية -> { أرجع «استدعاء المترجم أو الهدف المختار أو بيئة الملفات غير صالح لهذه العملية. صحح الخيار أو الهدف أو المسار أو القيمة المفقودة التي يحددها التشخيص ثم أعد التنفيذ.»; };
+    }
+    | معرف_تشخيص.لون_تشخيص_مترجم_غير_صالح -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «The compiler invocation, selected target, or file environment is invalid for this operation. Correct the option, target, path, or missing value identified by the diagnostic and run the command again.»; }
+        | لغة_تشخيص.العربية -> { أرجع «استدعاء المترجم أو الهدف المختار أو بيئة الملفات غير صالح لهذه العملية. صحح الخيار أو الهدف أو المسار أو القيمة المفقودة التي يحددها التشخيص ثم أعد التنفيذ.»; };
+    }
+    | معرف_تشخيص.مصدر_رئيسي_متعدد -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «The compiler invocation, selected target, or file environment is invalid for this operation. Correct the option, target, path, or missing value identified by the diagnostic and run the command again.»; }
+        | لغة_تشخيص.العربية -> { أرجع «استدعاء المترجم أو الهدف المختار أو بيئة الملفات غير صالح لهذه العملية. صحح الخيار أو الهدف أو المسار أو القيمة المفقودة التي يحددها التشخيص ثم أعد التنفيذ.»; };
+    }
+    | معرف_تشخيص.أوضاع_مترجم_متعارضة -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «The compiler invocation, selected target, or file environment is invalid for this operation. Correct the option, target, path, or missing value identified by the diagnostic and run the command again.»; }
+        | لغة_تشخيص.العربية -> { أرجع «استدعاء المترجم أو الهدف المختار أو بيئة الملفات غير صالح لهذه العملية. صحح الخيار أو الهدف أو المسار أو القيمة المفقودة التي يحددها التشخيص ثم أعد التنفيذ.»; };
+    }
+    | معرف_تشخيص.معامل_موضعي_غير_متوقع -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «The compiler invocation, selected target, or file environment is invalid for this operation. Correct the option, target, path, or missing value identified by the diagnostic and run the command again.»; }
+        | لغة_تشخيص.العربية -> { أرجع «استدعاء المترجم أو الهدف المختار أو بيئة الملفات غير صالح لهذه العملية. صحح الخيار أو الهدف أو المسار أو القيمة المفقودة التي يحددها التشخيص ثم أعد التنفيذ.»; };
+    }
+    | معرف_تشخيص.هدف_مضيف_مترجم_غير_متاح -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «The compiler invocation, selected target, or file environment is invalid for this operation. Correct the option, target, path, or missing value identified by the diagnostic and run the command again.»; }
+        | لغة_تشخيص.العربية -> { أرجع «استدعاء المترجم أو الهدف المختار أو بيئة الملفات غير صالح لهذه العملية. صحح الخيار أو الهدف أو المسار أو القيمة المفقودة التي يحددها التشخيص ثم أعد التنفيذ.»; };
+    }
+    | معرف_تشخيص.فشل_كتابة_مخرج_مترجم -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «The compiler invocation, selected target, or file environment is invalid for this operation. Correct the option, target, path, or missing value identified by the diagnostic and run the command again.»; }
+        | لغة_تشخيص.العربية -> { أرجع «استدعاء المترجم أو الهدف المختار أو بيئة الملفات غير صالح لهذه العملية. صحح الخيار أو الهدف أو المسار أو القيمة المفقودة التي يحددها التشخيص ثم أعد التنفيذ.»; };
+    }
+    | معرف_تشخيص.فشل_مترجم_داخلي -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «The compiler invocation, selected target, or file environment is invalid for this operation. Correct the option, target, path, or missing value identified by the diagnostic and run the command again.»; }
+        | لغة_تشخيص.العربية -> { أرجع «استدعاء المترجم أو الهدف المختار أو بيئة الملفات غير صالح لهذه العملية. صحح الخيار أو الهدف أو المسار أو القيمة المفقودة التي يحددها التشخيص ثم أعد التنفيذ.»; };
+    }
+    | معرف_تشخيص.ملف_إدخال_مفقود -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «The compiler invocation, selected target, or file environment is invalid for this operation. Correct the option, target, path, or missing value identified by the diagnostic and run the command again.»; }
+        | لغة_تشخيص.العربية -> { أرجع «استدعاء المترجم أو الهدف المختار أو بيئة الملفات غير صالح لهذه العملية. صحح الخيار أو الهدف أو المسار أو القيمة المفقودة التي يحددها التشخيص ثم أعد التنفيذ.»; };
+    }
+    | معرف_تشخيص.نوع_ملف_إدخال_غير_معروف -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «Name or module resolution could not establish an unambiguous semantic binding. Check declarations, imports, exports, logical module paths, and related source spans before changing later type errors.»; }
+        | لغة_تشخيص.العربية -> { أرجع «تعذر على حل الأسماء أو الوحدات إنشاء ربط دلالي واضح. تحقق من التصريحات والاستيرادات والتصدير ومسارات الوحدات والنطاقات المرتبطة قبل معالجة أخطاء الأنواع اللاحقة.»; };
+    }
+    | معرف_تشخيص.وحدة_مصدر_غير_موجودة -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «Module resolution could not find the requested source module through the registered logical module roots. Check the logical import path and ensure the module is present under a registered root.»; }
+        | لغة_تشخيص.العربية -> { أرجع «تعذر على حل الوحدات العثور على وحدة المصدر المطلوبة ضمن جذور الوحدات المنطقية المسجلة. تحقق من مسار الاستيراد المنطقي ووجود الوحدة تحت جذر مسجل.»; };
+    }
+    | معرف_تشخيص.وحدة_مصدر_غير_مقروءة -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «Name or module resolution could not establish an unambiguous semantic binding. Check declarations, imports, exports, logical module paths, and related source spans before changing later type errors.»; }
+        | لغة_تشخيص.العربية -> { أرجع «تعذر على حل الأسماء أو الوحدات إنشاء ربط دلالي واضح. تحقق من التصريحات والاستيرادات والتصدير ومسارات الوحدات والنطاقات المرتبطة قبل معالجة أخطاء الأنواع اللاحقة.»; };
+    }
+    | معرف_تشخيص.مرجع_استيراد_غير_صالح -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «Name or module resolution could not establish an unambiguous semantic binding. Check declarations, imports, exports, logical module paths, and related source spans before changing later type errors.»; }
+        | لغة_تشخيص.العربية -> { أرجع «تعذر على حل الأسماء أو الوحدات إنشاء ربط دلالي واضح. تحقق من التصريحات والاستيرادات والتصدير ومسارات الوحدات والنطاقات المرتبطة قبل معالجة أخطاء الأنواع اللاحقة.»; };
+    }
+    | معرف_تشخيص.جذر_مكتبة_غير_مسجل -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «Name or module resolution could not establish an unambiguous semantic binding. Check declarations, imports, exports, logical module paths, and related source spans before changing later type errors.»; }
+        | لغة_تشخيص.العربية -> { أرجع «تعذر على حل الأسماء أو الوحدات إنشاء ربط دلالي واضح. تحقق من التصريحات والاستيرادات والتصدير ومسارات الوحدات والنطاقات المرتبطة قبل معالجة أخطاء الأنواع اللاحقة.»; };
+    }
+    | معرف_تشخيص.استيراد_يهرب_من_الجذر -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «Name or module resolution could not establish an unambiguous semantic binding. Check declarations, imports, exports, logical module paths, and related source spans before changing later type errors.»; }
+        | لغة_تشخيص.العربية -> { أرجع «تعذر على حل الأسماء أو الوحدات إنشاء ربط دلالي واضح. تحقق من التصريحات والاستيرادات والتصدير ومسارات الوحدات والنطاقات المرتبطة قبل معالجة أخطاء الأنواع اللاحقة.»; };
+    }
+    | معرف_تشخيص.مسار_وحدة_منطقي_غير_صالح -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «Name or module resolution could not establish an unambiguous semantic binding. Check declarations, imports, exports, logical module paths, and related source spans before changing later type errors.»; }
+        | لغة_تشخيص.العربية -> { أرجع «تعذر على حل الأسماء أو الوحدات إنشاء ربط دلالي واضح. تحقق من التصريحات والاستيرادات والتصدير ومسارات الوحدات والنطاقات المرتبطة قبل معالجة أخطاء الأنواع اللاحقة.»; };
+    }
+    | معرف_تشخيص.تعارض_مسار_وحدة_عام -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «Name or module resolution could not establish an unambiguous semantic binding. Check declarations, imports, exports, logical module paths, and related source spans before changing later type errors.»; }
+        | لغة_تشخيص.العربية -> { أرجع «تعذر على حل الأسماء أو الوحدات إنشاء ربط دلالي واضح. تحقق من التصريحات والاستيرادات والتصدير ومسارات الوحدات والنطاقات المرتبطة قبل معالجة أخطاء الأنواع اللاحقة.»; };
+    }
+    | معرف_تشخيص.تعارض_مصدر_وحدة -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «Name or module resolution could not establish an unambiguous semantic binding. Check declarations, imports, exports, logical module paths, and related source spans before changing later type errors.»; }
+        | لغة_تشخيص.العربية -> { أرجع «تعذر على حل الأسماء أو الوحدات إنشاء ربط دلالي واضح. تحقق من التصريحات والاستيرادات والتصدير ومسارات الوحدات والنطاقات المرتبطة قبل معالجة أخطاء الأنواع اللاحقة.»; };
+    }
+    | معرف_تشخيص.وحدة_مستوردة_غير_محملة -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «Name or module resolution could not establish an unambiguous semantic binding. Check declarations, imports, exports, logical module paths, and related source spans before changing later type errors.»; }
+        | لغة_تشخيص.العربية -> { أرجع «تعذر على حل الأسماء أو الوحدات إنشاء ربط دلالي واضح. تحقق من التصريحات والاستيرادات والتصدير ومسارات الوحدات والنطاقات المرتبطة قبل معالجة أخطاء الأنواع اللاحقة.»; };
+    }
+    | معرف_تشخيص.رسم_وحدات_مرفوض -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «Name or module resolution could not establish an unambiguous semantic binding. Check declarations, imports, exports, logical module paths, and related source spans before changing later type errors.»; }
+        | لغة_تشخيص.العربية -> { أرجع «تعذر على حل الأسماء أو الوحدات إنشاء ربط دلالي واضح. تحقق من التصريحات والاستيرادات والتصدير ومسارات الوحدات والنطاقات المرتبطة قبل معالجة أخطاء الأنواع اللاحقة.»; };
+    }
+    | معرف_تشخيص.تصدير_انتقائي_غير_موجود -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «Name or module resolution could not establish an unambiguous semantic binding. Check declarations, imports, exports, logical module paths, and related source spans before changing later type errors.»; }
+        | لغة_تشخيص.العربية -> { أرجع «تعذر على حل الأسماء أو الوحدات إنشاء ربط دلالي واضح. تحقق من التصريحات والاستيرادات والتصدير ومسارات الوحدات والنطاقات المرتبطة قبل معالجة أخطاء الأنواع اللاحقة.»; };
+    }
+    | معرف_تشخيص.نقطة_دخول_مفقودة -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «The program has no valid entry point. Define the required entry function with the expected visibility and name.»; }
+        | لغة_تشخيص.العربية -> { أرجع «لا يملك البرنامج نقطة دخول صالحة. عرّف دالة الدخول المطلوبة بالاسم والظهور المتوقعين.»; };
+    }
+    | معرف_تشخيص.نقطة_دخول_بتوقيع_غير_صالح -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «The entry point exists but its signature does not satisfy the compiler entry-point contract. Adjust its parameters and return type.»; }
+        | لغة_تشخيص.العربية -> { أرجع «نقطة الدخول موجودة لكن توقيعها لا يطابق عقد المترجم. عدّل المعاملات ونوع الإرجاع.»; };
+    }
+    | معرف_تشخيص.تصريح_خاص_غير_متاح -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «The declaration exists but is private from the current access context. Use a public declaration or access it from an allowed scope.»; }
+        | لغة_تشخيص.العربية -> { أرجع «التصريح موجود لكنه خاص في سياق الوصول الحالي. استخدم تصريحا عاما أو صِل إليه من نطاق مسموح.»; };
+    }
+    | معرف_تشخيص.نوع_تكراري_لانهائي -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «The type recursively contains itself without indirection, so it has no finite layout. Introduce an indirection boundary such as a reference or pointer.»; }
+        | لغة_تشخيص.العربية -> { أرجع «يحتوي النوع نفسه تكراريا بلا مستوى غير مباشر، لذلك لا يملك تخطيطا محدودا. أضف حدا غير مباشر مثل مرجع أو مؤشر.»; };
+    }
+    | معرف_تشخيص.تحقق_نوعي_غير_مدعوم -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «The compiler reached a construct that its semantic type checker does not support. This is an internal compiler limitation rather than a normal type mismatch.»; }
+        | لغة_تشخيص.العربية -> { أرجع «وصل المترجم إلى بناء لا يدعمه مدقق الأنواع الدلالي. هذا قيد داخلي في المترجم وليس عدم تطابق نوع عادي.»; };
+    }
+    | معرف_تشخيص.حرفي_خفض_غير_معرف -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «Semantic lowering received a literal without a defined lowering rule. Preserve the source and diagnostic when reporting this compiler invariant failure.»; }
+        | لغة_تشخيص.العربية -> { أرجع «استقبل الخفض الدلالي حرفيا بلا قاعدة خفض معرفة. احتفظ بالمصدر والتشخيص عند الإبلاغ عن خلل ثابت المترجم.»; };
+    }
+    | معرف_تشخيص.فك_مرجع_غير_مؤشر -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «Dereference requires a pointer or reference-like value. Change the operand or its type so dereference is valid.»; }
+        | لغة_تشخيص.العربية -> { أرجع «فك المرجع يتطلب قيمة مؤشر أو مرجع. عدّل المعامل أو نوعه ليصبح فك المرجع صالحا.»; };
+    }
+    | معرف_تشخيص.أخذ_عنوان_غير_قيمة_يسرى -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «Taking an address requires an addressable storage location. Bind the value to storage first or use an expression that denotes an lvalue.»; }
+        | لغة_تشخيص.العربية -> { أرجع «أخذ العنوان يتطلب موضع تخزين قابل للعنونة. اربط القيمة بتخزين أولا أو استخدم تعبيرا يمثل قيمة يسرى.»; };
+    }
+    | معرف_تشخيص.حقل_سجل_مفقود -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «A record initializer omitted a required field. Provide every required field exactly once.»; }
+        | لغة_تشخيص.العربية -> { أرجع «تهيئة السجل أغفلت حقلا مطلوبا. وفّر كل حقل مطلوب مرة واحدة.»; };
+    }
+    | معرف_تشخيص.حقل_سجل_مكرر -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «A record initializer specifies the same field more than once. Keep only one initialization for that field.»; }
+        | لغة_تشخيص.العربية -> { أرجع «تهيئة السجل تحدد الحقل نفسه أكثر من مرة. أبق تهيئة واحدة فقط لذلك الحقل.»; };
+    }
+    | معرف_تشخيص.كتابة_إلى_غير_متغير -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «The assignment targets immutable storage. Make the binding mutable when mutation is intended, or avoid the write.»; }
+        | لغة_تشخيص.العربية -> { أرجع «الإسناد يستهدف تخزينا غير متغير. اجعل الربط متغيرا إذا كان التعديل مقصودا أو تجنب الكتابة.»; };
+    }
+    | معرف_تشخيص.تصريح_مكرر -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «Name or module resolution could not establish an unambiguous semantic binding. Check declarations, imports, exports, logical module paths, and related source spans before changing later type errors.»; }
+        | لغة_تشخيص.العربية -> { أرجع «تعذر على حل الأسماء أو الوحدات إنشاء ربط دلالي واضح. تحقق من التصريحات والاستيرادات والتصدير ومسارات الوحدات والنطاقات المرتبطة قبل معالجة أخطاء الأنواع اللاحقة.»; };
+    }
+    | معرف_تشخيص.اسم_غير_معروف -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «The referenced name is not visible in the current scope. Check spelling, imports, declaration order, and module qualification; related diagnostic data identifies the unresolved spelling.»; }
+        | لغة_تشخيص.العربية -> { أرجع «الاسم المستخدم غير مرئي في النطاق الحالي. تحقق من الكتابة والاستيراد وترتيب التصريح وتأهيل الوحدة؛ وتعرض بيانات التشخيص الاسم الذي تعذر حله.»; };
+    }
+    | معرف_تشخيص.اسم_غير_محلول -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «Name or module resolution could not establish an unambiguous semantic binding. Check declarations, imports, exports, logical module paths, and related source spans before changing later type errors.»; }
+        | لغة_تشخيص.العربية -> { أرجع «تعذر على حل الأسماء أو الوحدات إنشاء ربط دلالي واضح. تحقق من التصريحات والاستيرادات والتصدير ومسارات الوحدات والنطاقات المرتبطة قبل معالجة أخطاء الأنواع اللاحقة.»; };
+    }
+    | معرف_تشخيص.استيراد_غامض -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «Name or module resolution could not establish an unambiguous semantic binding. Check declarations, imports, exports, logical module paths, and related source spans before changing later type errors.»; }
+        | لغة_تشخيص.العربية -> { أرجع «تعذر على حل الأسماء أو الوحدات إنشاء ربط دلالي واضح. تحقق من التصريحات والاستيرادات والتصدير ومسارات الوحدات والنطاقات المرتبطة قبل معالجة أخطاء الأنواع اللاحقة.»; };
+    }
+    | معرف_تشخيص.دورة_استيراد -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «Name or module resolution could not establish an unambiguous semantic binding. Check declarations, imports, exports, logical module paths, and related source spans before changing later type errors.»; }
+        | لغة_تشخيص.العربية -> { أرجع «تعذر على حل الأسماء أو الوحدات إنشاء ربط دلالي واضح. تحقق من التصريحات والاستيرادات والتصدير ومسارات الوحدات والنطاقات المرتبطة قبل معالجة أخطاء الأنواع اللاحقة.»; };
+    }
+    | معرف_تشخيص.نوعان_غير_متوافقين -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «The expression has a different type from the type required by its context. Compare the structured expected and found types, then change the value, annotation, or conversion so they agree.»; }
+        | لغة_تشخيص.العربية -> { أرجع «نوع التعبير لا يطابق النوع الذي يتطلبه السياق. راجع النوع المتوقع والنوع الموجود في تفاصيل التشخيص ثم عدّل القيمة أو التعريف أو التحويل حتى يتطابقا.»; };
+    }
+    | معرف_تشخيص.نوع_غير_محلول -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «Semantic analysis or MSIR lowering found inconsistent or missing program facts. Read the structured arguments and related spans to identify the expected type, callable, constructor, binding, or lowering fact.»; }
+        | لغة_تشخيص.العربية -> { أرجع «وجد التحليل الدلالي أو خفض MSIR حقائق برنامج غير متوافقة أو مفقودة. راجع الحجج المنظمة والنطاقات المرتبطة لمعرفة النوع أو الاستدعاء أو المنشئ أو الربط أو حقيقة الخفض المطلوبة.»; };
+    }
+    | معرف_تشخيص.تعريف_نوع_غير_صالح -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «Semantic analysis or MSIR lowering found inconsistent or missing program facts. Read the structured arguments and related spans to identify the expected type, callable, constructor, binding, or lowering fact.»; }
+        | لغة_تشخيص.العربية -> { أرجع «وجد التحليل الدلالي أو خفض MSIR حقائق برنامج غير متوافقة أو مفقودة. راجع الحجج المنظمة والنطاقات المرتبطة لمعرفة النوع أو الاستدعاء أو المنشئ أو الربط أو حقيقة الخفض المطلوبة.»; };
+    }
+    | معرف_تشخيص.تعبير_نوعي_غير_مدعوم -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «Semantic analysis or MSIR lowering found inconsistent or missing program facts. Read the structured arguments and related spans to identify the expected type, callable, constructor, binding, or lowering fact.»; }
+        | لغة_تشخيص.العربية -> { أرجع «وجد التحليل الدلالي أو خفض MSIR حقائق برنامج غير متوافقة أو مفقودة. راجع الحجج المنظمة والنطاقات المرتبطة لمعرفة النوع أو الاستدعاء أو المنشئ أو الربط أو حقيقة الخفض المطلوبة.»; };
+    }
+    | معرف_تشخيص.تعبير_غير_قابل_للاستدعاء -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «Semantic analysis or MSIR lowering found inconsistent or missing program facts. Read the structured arguments and related spans to identify the expected type, callable, constructor, binding, or lowering fact.»; }
+        | لغة_تشخيص.العربية -> { أرجع «وجد التحليل الدلالي أو خفض MSIR حقائق برنامج غير متوافقة أو مفقودة. راجع الحجج المنظمة والنطاقات المرتبطة لمعرفة النوع أو الاستدعاء أو المنشئ أو الربط أو حقيقة الخفض المطلوبة.»; };
+    }
+    | معرف_تشخيص.حقل_سجل_غير_معروف -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «Semantic analysis or MSIR lowering found inconsistent or missing program facts. Read the structured arguments and related spans to identify the expected type, callable, constructor, binding, or lowering fact.»; }
+        | لغة_تشخيص.العربية -> { أرجع «وجد التحليل الدلالي أو خفض MSIR حقائق برنامج غير متوافقة أو مفقودة. راجع الحجج المنظمة والنطاقات المرتبطة لمعرفة النوع أو الاستدعاء أو المنشئ أو الربط أو حقيقة الخفض المطلوبة.»; };
+    }
+    | معرف_تشخيص.منشئ_نوع_غير_صالح -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «Semantic analysis or MSIR lowering found inconsistent or missing program facts. Read the structured arguments and related spans to identify the expected type, callable, constructor, binding, or lowering fact.»; }
+        | لغة_تشخيص.العربية -> { أرجع «وجد التحليل الدلالي أو خفض MSIR حقائق برنامج غير متوافقة أو مفقودة. راجع الحجج المنظمة والنطاقات المرتبطة لمعرفة النوع أو الاستدعاء أو المنشئ أو الربط أو حقيقة الخفض المطلوبة.»; };
+    }
+    | معرف_تشخيص.عدد_حمولات_نمط_غير_مطابق -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «Semantic analysis or MSIR lowering found inconsistent or missing program facts. Read the structured arguments and related spans to identify the expected type, callable, constructor, binding, or lowering fact.»; }
+        | لغة_تشخيص.العربية -> { أرجع «وجد التحليل الدلالي أو خفض MSIR حقائق برنامج غير متوافقة أو مفقودة. راجع الحجج المنظمة والنطاقات المرتبطة لمعرفة النوع أو الاستدعاء أو المنشئ أو الربط أو حقيقة الخفض المطلوبة.»; };
+    }
+    | معرف_تشخيص.نمط_غير_صالح -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «Semantic analysis or MSIR lowering found inconsistent or missing program facts. Read the structured arguments and related spans to identify the expected type, callable, constructor, binding, or lowering fact.»; }
+        | لغة_تشخيص.العربية -> { أرجع «وجد التحليل الدلالي أو خفض MSIR حقائق برنامج غير متوافقة أو مفقودة. راجع الحجج المنظمة والنطاقات المرتبطة لمعرفة النوع أو الاستدعاء أو المنشئ أو الربط أو حقيقة الخفض المطلوبة.»; };
+    }
+    | معرف_تشخيص.خفض_تعبير_غير_مدعوم -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «Semantic analysis or MSIR lowering found inconsistent or missing program facts. Read the structured arguments and related spans to identify the expected type, callable, constructor, binding, or lowering fact.»; }
+        | لغة_تشخيص.العربية -> { أرجع «وجد التحليل الدلالي أو خفض MSIR حقائق برنامج غير متوافقة أو مفقودة. راجع الحجج المنظمة والنطاقات المرتبطة لمعرفة النوع أو الاستدعاء أو المنشئ أو الربط أو حقيقة الخفض المطلوبة.»; };
+    }
+    | معرف_تشخيص.خفض_عبارة_غير_مدعومة -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «Semantic analysis or MSIR lowering found inconsistent or missing program facts. Read the structured arguments and related spans to identify the expected type, callable, constructor, binding, or lowering fact.»; }
+        | لغة_تشخيص.العربية -> { أرجع «وجد التحليل الدلالي أو خفض MSIR حقائق برنامج غير متوافقة أو مفقودة. راجع الحجج المنظمة والنطاقات المرتبطة لمعرفة النوع أو الاستدعاء أو المنشئ أو الربط أو حقيقة الخفض المطلوبة.»; };
+    }
+    | معرف_تشخيص.دالة_خفض_مفقودة -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «Semantic analysis or MSIR lowering found inconsistent or missing program facts. Read the structured arguments and related spans to identify the expected type, callable, constructor, binding, or lowering fact.»; }
+        | لغة_تشخيص.العربية -> { أرجع «وجد التحليل الدلالي أو خفض MSIR حقائق برنامج غير متوافقة أو مفقودة. راجع الحجج المنظمة والنطاقات المرتبطة لمعرفة النوع أو الاستدعاء أو المنشئ أو الربط أو حقيقة الخفض المطلوبة.»; };
+    }
+    | معرف_تشخيص.ربط_اسم_خفض_مفقود -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «Semantic analysis or MSIR lowering found inconsistent or missing program facts. Read the structured arguments and related spans to identify the expected type, callable, constructor, binding, or lowering fact.»; }
+        | لغة_تشخيص.العربية -> { أرجع «وجد التحليل الدلالي أو خفض MSIR حقائق برنامج غير متوافقة أو مفقودة. راجع الحجج المنظمة والنطاقات المرتبطة لمعرفة النوع أو الاستدعاء أو المنشئ أو الربط أو حقيقة الخفض المطلوبة.»; };
+    }
+    | معرف_تشخيص.نوع_خفض_مفقود -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «Semantic analysis or MSIR lowering found inconsistent or missing program facts. Read the structured arguments and related spans to identify the expected type, callable, constructor, binding, or lowering fact.»; }
+        | لغة_تشخيص.العربية -> { أرجع «وجد التحليل الدلالي أو خفض MSIR حقائق برنامج غير متوافقة أو مفقودة. راجع الحجج المنظمة والنطاقات المرتبطة لمعرفة النوع أو الاستدعاء أو المنشئ أو الربط أو حقيقة الخفض المطلوبة.»; };
+    }
+    | معرف_تشخيص.هوية_منشئ_خفض_مفقودة -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «Semantic analysis or MSIR lowering found inconsistent or missing program facts. Read the structured arguments and related spans to identify the expected type, callable, constructor, binding, or lowering fact.»; }
+        | لغة_تشخيص.العربية -> { أرجع «وجد التحليل الدلالي أو خفض MSIR حقائق برنامج غير متوافقة أو مفقودة. راجع الحجج المنظمة والنطاقات المرتبطة لمعرفة النوع أو الاستدعاء أو المنشئ أو الربط أو حقيقة الخفض المطلوبة.»; };
+    }
+    | معرف_تشخيص.عدد_حجج_غير_مطابق -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «Semantic analysis or MSIR lowering found inconsistent or missing program facts. Read the structured arguments and related spans to identify the expected type, callable, constructor, binding, or lowering fact.»; }
+        | لغة_تشخيص.العربية -> { أرجع «وجد التحليل الدلالي أو خفض MSIR حقائق برنامج غير متوافقة أو مفقودة. راجع الحجج المنظمة والنطاقات المرتبطة لمعرفة النوع أو الاستدعاء أو المنشئ أو الربط أو حقيقة الخفض المطلوبة.»; };
+    }
+    | معرف_تشخيص.نوع_حجة_غير_مطابق -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «Semantic analysis or MSIR lowering found inconsistent or missing program facts. Read the structured arguments and related spans to identify the expected type, callable, constructor, binding, or lowering fact.»; }
+        | لغة_تشخيص.العربية -> { أرجع «وجد التحليل الدلالي أو خفض MSIR حقائق برنامج غير متوافقة أو مفقودة. راجع الحجج المنظمة والنطاقات المرتبطة لمعرفة النوع أو الاستدعاء أو المنشئ أو الربط أو حقيقة الخفض المطلوبة.»; };
+    }
+    | معرف_تشخيص.نوع_إرجاع_غير_مطابق -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «Semantic analysis or MSIR lowering found inconsistent or missing program facts. Read the structured arguments and related spans to identify the expected type, callable, constructor, binding, or lowering fact.»; }
+        | لغة_تشخيص.العربية -> { أرجع «وجد التحليل الدلالي أو خفض MSIR حقائق برنامج غير متوافقة أو مفقودة. راجع الحجج المنظمة والنطاقات المرتبطة لمعرفة النوع أو الاستدعاء أو المنشئ أو الربط أو حقيقة الخفض المطلوبة.»; };
+    }
+    | معرف_تشخيص.استخدام_قبل_التهيئة -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «SultanC safety analysis rejected an ownership, borrowing, initialization, bounds, control-flow, or pattern condition. Follow the causal related spans and change the program so the invalid state cannot occur.»; }
+        | لغة_تشخيص.العربية -> { أرجع «رفض تحليل السلامة حالة تتعلق بالملكية أو الاستعارة أو التهيئة أو الحدود أو تدفق التحكم أو الأنماط. اتبع النطاقات السببية المرتبطة وعدّل البرنامج بحيث لا يمكن حدوث الحالة غير الصالحة.»; };
+    }
+    | معرف_تشخيص.استخدام_بعد_النقل -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «A value was used after ownership had already moved elsewhere. Use the related spans to find the move and the invalid later use; restructure ownership, borrow instead, or stop using the moved value.»; }
+        | لغة_تشخيص.العربية -> { أرجع «استُخدمت قيمة بعد نقل ملكيتها إلى موضع آخر. استخدم النطاقات المرتبطة لمعرفة موضع النقل والاستخدام اللاحق، ثم أعد تنظيم الملكية أو استخدم الاستعارة بدلا من النقل.»; };
+    }
+    | معرف_تشخيص.مورد_محرر -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «SultanC safety analysis rejected an ownership, borrowing, initialization, bounds, control-flow, or pattern condition. Follow the causal related spans and change the program so the invalid state cannot occur.»; }
+        | لغة_تشخيص.العربية -> { أرجع «رفض تحليل السلامة حالة تتعلق بالملكية أو الاستعارة أو التهيئة أو الحدود أو تدفق التحكم أو الأنماط. اتبع النطاقات السببية المرتبطة وعدّل البرنامج بحيث لا يمكن حدوث الحالة غير الصالحة.»; };
+    }
+    | معرف_تشخيص.تعارض_استعارة -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «SultanC safety analysis rejected an ownership, borrowing, initialization, bounds, control-flow, or pattern condition. Follow the causal related spans and change the program so the invalid state cannot occur.»; }
+        | لغة_تشخيص.العربية -> { أرجع «رفض تحليل السلامة حالة تتعلق بالملكية أو الاستعارة أو التهيئة أو الحدود أو تدفق التحكم أو الأنماط. اتبع النطاقات السببية المرتبطة وعدّل البرنامج بحيث لا يمكن حدوث الحالة غير الصالحة.»; };
+    }
+    | معرف_تشخيص.هروب_مرجع -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «SultanC safety analysis rejected an ownership, borrowing, initialization, bounds, control-flow, or pattern condition. Follow the causal related spans and change the program so the invalid state cannot occur.»; }
+        | لغة_تشخيص.العربية -> { أرجع «رفض تحليل السلامة حالة تتعلق بالملكية أو الاستعارة أو التهيئة أو الحدود أو تدفق التحكم أو الأنماط. اتبع النطاقات السببية المرتبطة وعدّل البرنامج بحيث لا يمكن حدوث الحالة غير الصالحة.»; };
+    }
+    | معرف_تشخيص.عملية_غير_آمنة -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «SultanC safety analysis rejected an ownership, borrowing, initialization, bounds, control-flow, or pattern condition. Follow the causal related spans and change the program so the invalid state cannot occur.»; }
+        | لغة_تشخيص.العربية -> { أرجع «رفض تحليل السلامة حالة تتعلق بالملكية أو الاستعارة أو التهيئة أو الحدود أو تدفق التحكم أو الأنماط. اتبع النطاقات السببية المرتبطة وعدّل البرنامج بحيث لا يمكن حدوث الحالة غير الصالحة.»; };
+    }
+    | معرف_تشخيص.فهرس_خارج_الحدود -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «SultanC safety analysis rejected an ownership, borrowing, initialization, bounds, control-flow, or pattern condition. Follow the causal related spans and change the program so the invalid state cannot occur.»; }
+        | لغة_تشخيص.العربية -> { أرجع «رفض تحليل السلامة حالة تتعلق بالملكية أو الاستعارة أو التهيئة أو الحدود أو تدفق التحكم أو الأنماط. اتبع النطاقات السببية المرتبطة وعدّل البرنامج بحيث لا يمكن حدوث الحالة غير الصالحة.»; };
+    }
+    | معرف_تشخيص.نمط_غير_شامل -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «A pattern match does not cover every value the matched type can produce. Add the missing constructors or cases shown by the diagnostic, or use an intentional catch-all pattern when appropriate.»; }
+        | لغة_تشخيص.العربية -> { أرجع «المطابقة لا تغطي جميع القيم التي يمكن أن ينتجها النوع. أضف الحالات أو المنشئات الناقصة التي يوضحها التشخيص، أو استخدم نمطا شاملا عندما يكون ذلك مقصودا.»; };
+    }
+    | معرف_تشخيص.نمط_غير_قابل_للوصول -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «SultanC safety analysis rejected an ownership, borrowing, initialization, bounds, control-flow, or pattern condition. Follow the causal related spans and change the program so the invalid state cannot occur.»; }
+        | لغة_تشخيص.العربية -> { أرجع «رفض تحليل السلامة حالة تتعلق بالملكية أو الاستعارة أو التهيئة أو الحدود أو تدفق التحكم أو الأنماط. اتبع النطاقات السببية المرتبطة وعدّل البرنامج بحيث لا يمكن حدوث الحالة غير الصالحة.»; };
+    }
+    | معرف_تشخيص.إرجاع_مفقود -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «SultanC safety analysis rejected an ownership, borrowing, initialization, bounds, control-flow, or pattern condition. Follow the causal related spans and change the program so the invalid state cannot occur.»; }
+        | لغة_تشخيص.العربية -> { أرجع «رفض تحليل السلامة حالة تتعلق بالملكية أو الاستعارة أو التهيئة أو الحدود أو تدفق التحكم أو الأنماط. اتبع النطاقات السببية المرتبطة وعدّل البرنامج بحيث لا يمكن حدوث الحالة غير الصالحة.»; };
+    }
+    | معرف_تشخيص.نقل_جزئي_مملوك -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «SultanC safety analysis rejected an ownership, borrowing, initialization, bounds, control-flow, or pattern condition. Follow the causal related spans and change the program so the invalid state cannot occur.»; }
+        | لغة_تشخيص.العربية -> { أرجع «رفض تحليل السلامة حالة تتعلق بالملكية أو الاستعارة أو التهيئة أو الحدود أو تدفق التحكم أو الأنماط. اتبع النطاقات السببية المرتبطة وعدّل البرنامج بحيث لا يمكن حدوث الحالة غير الصالحة.»; };
+    }
+    | معرف_تشخيص.خطأ_ذاكرة_نوع -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «SultanC safety analysis rejected an ownership, borrowing, initialization, bounds, control-flow, or pattern condition. Follow the causal related spans and change the program so the invalid state cannot occur.»; }
+        | لغة_تشخيص.العربية -> { أرجع «رفض تحليل السلامة حالة تتعلق بالملكية أو الاستعارة أو التهيئة أو الحدود أو تدفق التحكم أو الأنماط. اتبع النطاقات السببية المرتبطة وعدّل البرنامج بحيث لا يمكن حدوث الحالة غير الصالحة.»; };
+    }
+    | معرف_تشخيص.مسير_غير_صالح -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «This code represents an internal compiler invariant failure rather than a normal source-language mistake. Preserve the diagnostic code, structured phase/reason data, and a minimal reproducer when reporting it.»; }
+        | لغة_تشخيص.العربية -> { أرجع «يمثل هذا الرمز فشل ثابت داخلي في المترجم وليس خطأ عاديا في لغة المصدر. احتفظ برمز التشخيص وبيانات المرحلة والسبب المنظمة ومثال مصغر عند الإبلاغ عنه.»; };
+    }
+    | معرف_تشخيص.خطأ_سياق_داخلي -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «This code represents an internal compiler invariant failure rather than a normal source-language mistake. Preserve the diagnostic code, structured phase/reason data, and a minimal reproducer when reporting it.»; }
+        | لغة_تشخيص.العربية -> { أرجع «يمثل هذا الرمز فشل ثابت داخلي في المترجم وليس خطأ عاديا في لغة المصدر. احتفظ برمز التشخيص وبيانات المرحلة والسبب المنظمة ومثال مصغر عند الإبلاغ عنه.»; };
+    }
+    | معرف_تشخيص.حقيقة_دلالية_مفقودة -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «This code represents an internal compiler invariant failure rather than a normal source-language mistake. Preserve the diagnostic code, structured phase/reason data, and a minimal reproducer when reporting it.»; }
+        | لغة_تشخيص.العربية -> { أرجع «يمثل هذا الرمز فشل ثابت داخلي في المترجم وليس خطأ عاديا في لغة المصدر. احتفظ برمز التشخيص وبيانات المرحلة والسبب المنظمة ومثال مصغر عند الإبلاغ عنه.»; };
+    }
+    | معرف_تشخيص.فهرس_تفسير_خارج_الحدود -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «The interpreter or runtime rejected an operation while executing verified MSIR. The diagnostic identifies the failed runtime fact or host primitive; fix the source when actionable, or report an internal/runtime limitation when the code is an ICE or unsupported-host condition.»; }
+        | لغة_تشخيص.العربية -> { أرجع «رفض المفسر أو وقت التشغيل عملية أثناء تنفيذ MSIR المتحقق منه. يحدد التشخيص حقيقة وقت التشغيل أو البدائي المضيف الذي فشل؛ صحح المصدر عندما يكون الخطأ قابلا للمعالجة أو أبلغ عن قيد داخلي أو قيد مضيف عند الحاجة.»; };
+    }
+    | معرف_تشخيص.حالة_تفسير_غير_صالحة -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «The interpreter or runtime rejected an operation while executing verified MSIR. The diagnostic identifies the failed runtime fact or host primitive; fix the source when actionable, or report an internal/runtime limitation when the code is an ICE or unsupported-host condition.»; }
+        | لغة_تشخيص.العربية -> { أرجع «رفض المفسر أو وقت التشغيل عملية أثناء تنفيذ MSIR المتحقق منه. يحدد التشخيص حقيقة وقت التشغيل أو البدائي المضيف الذي فشل؛ صحح المصدر عندما يكون الخطأ قابلا للمعالجة أو أبلغ عن قيد داخلي أو قيد مضيف عند الحاجة.»; };
+    }
+    | معرف_تشخيص.ذاكرة_تفسير_تالفة -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «The interpreter or runtime rejected an operation while executing verified MSIR. The diagnostic identifies the failed runtime fact or host primitive; fix the source when actionable, or report an internal/runtime limitation when the code is an ICE or unsupported-host condition.»; }
+        | لغة_تشخيص.العربية -> { أرجع «رفض المفسر أو وقت التشغيل عملية أثناء تنفيذ MSIR المتحقق منه. يحدد التشخيص حقيقة وقت التشغيل أو البدائي المضيف الذي فشل؛ صحح المصدر عندما يكون الخطأ قابلا للمعالجة أو أبلغ عن قيد داخلي أو قيد مضيف عند الحاجة.»; };
+    }
+    | معرف_تشخيص.نوع_قيمة_تفسير_غير_متوقع -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «The interpreter or runtime rejected an operation while executing verified MSIR. The diagnostic identifies the failed runtime fact or host primitive; fix the source when actionable, or report an internal/runtime limitation when the code is an ICE or unsupported-host condition.»; }
+        | لغة_تشخيص.العربية -> { أرجع «رفض المفسر أو وقت التشغيل عملية أثناء تنفيذ MSIR المتحقق منه. يحدد التشخيص حقيقة وقت التشغيل أو البدائي المضيف الذي فشل؛ صحح المصدر عندما يكون الخطأ قابلا للمعالجة أو أبلغ عن قيد داخلي أو قيد مضيف عند الحاجة.»; };
+    }
+    | معرف_تشخيص.نص_تفسير_غير_صالح -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «The interpreter or runtime rejected an operation while executing verified MSIR. The diagnostic identifies the failed runtime fact or host primitive; fix the source when actionable, or report an internal/runtime limitation when the code is an ICE or unsupported-host condition.»; }
+        | لغة_تشخيص.العربية -> { أرجع «رفض المفسر أو وقت التشغيل عملية أثناء تنفيذ MSIR المتحقق منه. يحدد التشخيص حقيقة وقت التشغيل أو البدائي المضيف الذي فشل؛ صحح المصدر عندما يكون الخطأ قابلا للمعالجة أو أبلغ عن قيد داخلي أو قيد مضيف عند الحاجة.»; };
+    }
+    | معرف_تشخيص.عدد_حجج_بدائي_تفسير_غير_مطابق -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «The interpreter or runtime rejected an operation while executing verified MSIR. The diagnostic identifies the failed runtime fact or host primitive; fix the source when actionable, or report an internal/runtime limitation when the code is an ICE or unsupported-host condition.»; }
+        | لغة_تشخيص.العربية -> { أرجع «رفض المفسر أو وقت التشغيل عملية أثناء تنفيذ MSIR المتحقق منه. يحدد التشخيص حقيقة وقت التشغيل أو البدائي المضيف الذي فشل؛ صحح المصدر عندما يكون الخطأ قابلا للمعالجة أو أبلغ عن قيد داخلي أو قيد مضيف عند الحاجة.»; };
+    }
+    | معرف_تشخيص.حجة_بدائي_تفسير_غير_صالحة -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «The interpreter or runtime rejected an operation while executing verified MSIR. The diagnostic identifies the failed runtime fact or host primitive; fix the source when actionable, or report an internal/runtime limitation when the code is an ICE or unsupported-host condition.»; }
+        | لغة_تشخيص.العربية -> { أرجع «رفض المفسر أو وقت التشغيل عملية أثناء تنفيذ MSIR المتحقق منه. يحدد التشخيص حقيقة وقت التشغيل أو البدائي المضيف الذي فشل؛ صحح المصدر عندما يكون الخطأ قابلا للمعالجة أو أبلغ عن قيد داخلي أو قيد مضيف عند الحاجة.»; };
+    }
+    | معرف_تشخيص.جسر_نص_مضيف_تفسير_غير_متاح -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «The interpreter or runtime rejected an operation while executing verified MSIR. The diagnostic identifies the failed runtime fact or host primitive; fix the source when actionable, or report an internal/runtime limitation when the code is an ICE or unsupported-host condition.»; }
+        | لغة_تشخيص.العربية -> { أرجع «رفض المفسر أو وقت التشغيل عملية أثناء تنفيذ MSIR المتحقق منه. يحدد التشخيص حقيقة وقت التشغيل أو البدائي المضيف الذي فشل؛ صحح المصدر عندما يكون الخطأ قابلا للمعالجة أو أبلغ عن قيد داخلي أو قيد مضيف عند الحاجة.»; };
+    }
+    | معرف_تشخيص.بدائي_مضيف_تفسير_غير_مدعوم -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «The interpreter or runtime rejected an operation while executing verified MSIR. The diagnostic identifies the failed runtime fact or host primitive; fix the source when actionable, or report an internal/runtime limitation when the code is an ICE or unsupported-host condition.»; }
+        | لغة_تشخيص.العربية -> { أرجع «رفض المفسر أو وقت التشغيل عملية أثناء تنفيذ MSIR المتحقق منه. يحدد التشخيص حقيقة وقت التشغيل أو البدائي المضيف الذي فشل؛ صحح المصدر عندما يكون الخطأ قابلا للمعالجة أو أبلغ عن قيد داخلي أو قيد مضيف عند الحاجة.»; };
+    }
+    | معرف_تشخيص.فشل_تفسير_وقت_تشغيل -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «The interpreter or runtime rejected an operation while executing verified MSIR. The diagnostic identifies the failed runtime fact or host primitive; fix the source when actionable, or report an internal/runtime limitation when the code is an ICE or unsupported-host condition.»; }
+        | لغة_تشخيص.العربية -> { أرجع «رفض المفسر أو وقت التشغيل عملية أثناء تنفيذ MSIR المتحقق منه. يحدد التشخيص حقيقة وقت التشغيل أو البدائي المضيف الذي فشل؛ صحح المصدر عندما يكون الخطأ قابلا للمعالجة أو أبلغ عن قيد داخلي أو قيد مضيف عند الحاجة.»; };
+    }
+    | معرف_تشخيص.فخ_تفسير -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «The interpreter or runtime rejected an operation while executing verified MSIR. The diagnostic identifies the failed runtime fact or host primitive; fix the source when actionable, or report an internal/runtime limitation when the code is an ICE or unsupported-host condition.»; }
+        | لغة_تشخيص.العربية -> { أرجع «رفض المفسر أو وقت التشغيل عملية أثناء تنفيذ MSIR المتحقق منه. يحدد التشخيص حقيقة وقت التشغيل أو البدائي المضيف الذي فشل؛ صحح المصدر عندما يكون الخطأ قابلا للمعالجة أو أبلغ عن قيد داخلي أو قيد مضيف عند الحاجة.»; };
+    }
+    | معرف_تشخيص.تحذير_عام -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «The interpreter or runtime rejected an operation while executing verified MSIR. The diagnostic identifies the failed runtime fact or host primitive; fix the source when actionable, or report an internal/runtime limitation when the code is an ICE or unsupported-host condition.»; }
+        | لغة_تشخيص.العربية -> { أرجع «رفض المفسر أو وقت التشغيل عملية أثناء تنفيذ MSIR المتحقق منه. يحدد التشخيص حقيقة وقت التشغيل أو البدائي المضيف الذي فشل؛ صحح المصدر عندما يكون الخطأ قابلا للمعالجة أو أبلغ عن قيد داخلي أو قيد مضيف عند الحاجة.»; };
+    };
+}
+
+عام عرف شرح_كود_تشخيص(الكود: &نص, اللغة: لغة_تشخيص): اختيار نص {
+    طابق معرف_تشخيص_من_كود(الكود) مع
+    | اختيار.لا_شيء -> { أرجع اختيار.لا_شيء(); }
+    | اختيار.بعض(المعرف) -> { أرجع اختيار.بعض(شرح_معرف_تشخيص(المعرف, اللغة)); };
+}

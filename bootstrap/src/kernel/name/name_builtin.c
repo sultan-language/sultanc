@@ -19,6 +19,11 @@ __Name_Builtin_Function__ __Name_Find_Builtin_Function__(__Text_Slice__ __Name__
     {
         return __Name_Builtin_Append__;
     }
+    if (__Identifier_Identity_Equals__(__Name__, SULTANC__BUILTIN_NAME__("swap")) ||
+        __Identifier_Identity_Equals__(__Name__, SULTANC__BUILTIN_NAME__("بدّل")))
+    {
+        return __Name_Builtin_Swap__;
+    }
     if (__Identifier_Identity_Equals__(__Name__, SULTANC__BUILTIN_NAME__("بدائي_فتح_ملف_للقراءة")))
     {
         return __Name_Builtin_Open_File_Read__;
@@ -123,5 +128,6 @@ __Name_Builtin_Function__ __Name_Find_Builtin_Function__(__Text_Slice__ __Name__
 /* Checks whether the name builtin is direct source. */
 int __Name_Builtin_Is_Direct_Source__(__Name_Builtin_Function__ __Builtin__)
 {
-    return __Builtin__ == __Name_Builtin_Length__ || __Builtin__ == __Name_Builtin_Append__;
+    return __Builtin__ == __Name_Builtin_Length__ || __Builtin__ == __Name_Builtin_Append__ ||
+           __Builtin__ == __Name_Builtin_Swap__;
 }

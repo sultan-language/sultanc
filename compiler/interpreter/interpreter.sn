@@ -1,5 +1,5 @@
 استورد compiler.interpreter.values.runtime_values;
-استورد compiler.interpreter.diagnostics.runtime_failures;
+استورد compiler.interpreter.runtime_failures;
 استورد compiler.interpreter.execution.execution_state;
 استورد compiler.interpreter.execution.calls;
 استورد compiler.interpreter.operations.operations;

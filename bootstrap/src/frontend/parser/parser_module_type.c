@@ -13,6 +13,10 @@ int __Parser_Parse_Type_Item__(__Parser__ *__Parser_State__, __Vector__ *__Items
     __Source_Position__ __Start__ = __Parser_State__->__Current__.__Span__.__Start__;
     /* Stores the name. */
     __Text_Slice__ __Name__;
+    /* References generic type parameter names. */
+    __Text_Slice__ *__Type_Parameters__ = NULL;
+    /* Stores generic type parameter count. */
+    size_t __Type_Parameter_Count__ = 0U;
     /* References the declaration. */
     __Ast_Type_Declaration__ *__Declaration__ = NULL;
     /* References the item. */
@@ -27,6 +31,8 @@ int __Parser_Parse_Type_Item__(__Parser__ *__Parser_State__, __Vector__ *__Items
     }
     __Name__ = __Parser_State__->__Current__.__Lexeme__;
     if (!__Parser_Advance__(__Parser_State__) ||
+        !__Parser_Parse_Type_Parameters__(
+            __Parser_State__, &__Type_Parameters__, &__Type_Parameter_Count__) ||
         !__Parser_Expect__(__Parser_State__, __Token_DEFINITION_SEPARATOR__))
     {
         return 0;
@@ -37,6 +43,8 @@ int __Parser_Parse_Type_Item__(__Parser__ *__Parser_State__, __Vector__ *__Items
     {
         return 0;
     }
+    __Declaration__->__Type_Parameters__ = __Type_Parameters__;
+    __Declaration__->__Type_Parameter_Count__ = __Type_Parameter_Count__;
     __Item__ = __Parser_New_Module_Item__(
         __Parser_State__,
         __Ast_Module_Item_Type__,

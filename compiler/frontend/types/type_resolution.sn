@@ -6,8 +6,7 @@
 استورد compiler.frontend.names.resolved_bindings;
 استورد compiler.frontend.ast.name;
 استورد compiler.frontend.ast.types;
-استورد compiler.frontend.source.position;
-استورد compiler.frontend.source.scope;
+استورد compiler.source.span;
 
 استورد compiler.frontend.types.type_context;
 عرف بدائي_من_آلة(النوع: نوع_آلة): نوع_بدائي_مقنن {

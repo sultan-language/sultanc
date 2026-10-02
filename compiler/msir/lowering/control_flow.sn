@@ -1,5 +1,4 @@
-استورد compiler.frontend.source.position;
-استورد compiler.frontend.source.scope;
+استورد compiler.source.span;
 استورد compiler.frontend.ast.operators;
 استورد compiler.frontend.types.type_identity;
 استورد compiler.frontend.names.identifiers;
@@ -7,7 +6,7 @@
 استورد compiler.msir.msir_model;
 استورد compiler.msir.msir_builder;
 استورد compiler.msir.lowering.model;
-استورد compiler.msir.lowering.context;
+استورد compiler.msir.lowering.msir_context;
 
 // Target-neutral CFG mechanisms shared by structured lowering. Recursive AST traversal
 // remains in expressions/statements to keep the Stage0 import graph acyclic.
@@ -247,7 +246,12 @@
     دع الأصل: متغير حالة_خفض_دالة = *الحالة;
     دع قيمة_صواب: متغير معرف_قيمة_مسير = اليسار.المعرف;
     طابق أصدر_ثابتا_مسير(
-        البرنامج, الأصل.الدالة, الأصل.الكتلة, ثابت_مسير.منطق(صواب), النوع
+        البرنامج,
+        &الأصل.البناء,
+        الأصل.الدالة,
+        الأصل.الكتلة,
+        ثابت_مسير.منطق(صواب),
+        النوع
     ) مع
     | نتيجة_بناء_قيمة_مسير.مبنية(المعرف) -> { قيمة_صواب := المعرف; }
     | نتيجة_بناء_قيمة_مسير.مرفوضة(الخطأ) -> {
@@ -258,7 +262,12 @@
     };
     دع قيمة_خطأ: متغير معرف_قيمة_مسير = اليمين.المعرف;
     طابق أصدر_ثابتا_مسير(
-        البرنامج, الأصل.الدالة, الأصل.الكتلة, ثابت_مسير.منطق(خطأ), النوع
+        البرنامج,
+        &الأصل.البناء,
+        الأصل.الدالة,
+        الأصل.الكتلة,
+        ثابت_مسير.منطق(خطأ),
+        النوع
     ) مع
     | نتيجة_بناء_قيمة_مسير.مبنية(المعرف) -> { قيمة_خطأ := المعرف; }
     | نتيجة_بناء_قيمة_مسير.مرفوضة(الخطأ) -> {

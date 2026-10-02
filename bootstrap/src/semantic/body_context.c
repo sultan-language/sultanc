@@ -153,6 +153,46 @@ __Ast_Type__ *__Body_Synthetic_Named_Type__(__Semantic_Body_Context__ *__Context
     return __Type__;
 }
 
+/* Returns a body-local function type for a concrete function signature. */
+__Ast_Type__ *__Body_Synthetic_Function_Type__(__Semantic_Body_Context__ *__Context__,
+                                               const __Ast_Function__ *__Function__)
+{
+    __Ast_Type__ *__Type__;
+    __Ast_Type__ **__Parameters__ = NULL;
+    size_t __Index__;
+    if (__Context__ == NULL || __Function__ == NULL)
+    {
+        return NULL;
+    }
+    __Type__ = (__Ast_Type__ *)__Arena_Allocate__(
+        &__Context__->__Synthetic_Types__, sizeof(*__Type__), alignof(__Ast_Type__));
+    if (__Type__ == NULL)
+    {
+        return NULL;
+    }
+    memset(__Type__, 0, sizeof(*__Type__));
+    if (__Function__->__Parameter_Count__ != 0U)
+    {
+        __Parameters__ = (__Ast_Type__ **)__Arena_Allocate__(
+            &__Context__->__Synthetic_Types__,
+            __Function__->__Parameter_Count__ * sizeof(*__Parameters__),
+            alignof(__Ast_Type__ *));
+        if (__Parameters__ == NULL)
+        {
+            return NULL;
+        }
+        for (__Index__ = 0U; __Index__ < __Function__->__Parameter_Count__; ++__Index__)
+        {
+            __Parameters__[__Index__] = __Function__->__Parameters__[__Index__].__Slot__.__Type__;
+        }
+    }
+    __Type__->__Kind__ = __Ast_Type_Function__;
+    __Type__->__As__.__Function__.__Parameters__ = __Parameters__;
+    __Type__->__As__.__Function__.__Parameter_Count__ = __Function__->__Parameter_Count__;
+    __Type__->__As__.__Function__.__Output__ = __Function__->__Output__.__Type__;
+    return __Type__;
+}
+
 /* Returns the body synthetic reference type. */
 __Ast_Type__ *__Body_Synthetic_Reference_Type__(__Semantic_Body_Context__ *__Context__,
                                                 __Ast_Type__ *__Inner__,
@@ -325,6 +365,7 @@ int __Body_Check_Expression_Compatible__(__Semantic_Body_Context__ *__Context__,
     {
         return 1;
     }
+    __Expression__->__Contextual_Type__ = __Expected__;
     if (!__Body_Infer_Expression__(__Context__, __Expression__, &__Actual__))
     {
         return 0;

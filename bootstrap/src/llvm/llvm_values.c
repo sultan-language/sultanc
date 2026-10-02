@@ -3,8 +3,10 @@
 #include "llvm/llvm_values.h"
 #include "llvm/llvm_context.h"
 #include "llvm/llvm_expressions.h"
+#include "llvm/llvm_functions.h"
 #include "llvm/llvm_types.h"
 #include "kernel/layout/layout.h"
+#include "kernel/name/name.h"
 #include "kernel/type/conversion.h"
 #include "kernel/type/type.h"
 #include <limits.h>
@@ -444,7 +446,22 @@ __Ast_Type__ *__LLVM_Lvalue_Type__(__LLVM_Emitter__ *emitter, __Ast_Lvalue__ *lv
     if (lvalue->__Kind__ == __Ast_Lvalue_Base__)
     {
         local = __LLVM_Find_Local_Base__(emitter, lvalue);
-        return local != NULL ? local->type : NULL;
+        if (local != NULL)
+            return local->type;
+        if (lvalue->__As__.__Base__.__Kind__ == __Ast_Lvalue_Base_Identifier__ &&
+            emitter->current_function != NULL)
+        {
+            __Semantic_Function_Entry__ *function = NULL;
+            if (__Name_Resolve_Function__(
+                    emitter->semantic, emitter->current_function->__Unit__,
+                    lvalue->__As__.__Base__.__As__.__Identifier__, &function) ==
+                    __Name_Lookup_Found__ &&
+                function != NULL && !function->__Is_Generic_Template__)
+            {
+                return function->__Callable_Type__;
+            }
+        }
+        return NULL;
     }
     if (lvalue->__Kind__ == __Ast_Lvalue_Field__)
     {
@@ -699,10 +716,32 @@ __LLVM_Place__ __LLVM_Emit_Place__(__LLVM_Emitter__ *emitter, __Ast_Lvalue__ *lv
 /* Emits the LLVM lvalue. */
 __LLVM_Value__ __LLVM_Emit_Lvalue__(__LLVM_Emitter__ *emitter, __Ast_Lvalue__ *lvalue)
 {
-    /* Stores the place. */
-    __LLVM_Place__ place = __LLVM_Emit_Place__(emitter, lvalue);
     /* Stores the operation result. */
     __LLVM_Value__ result = __LLVM_Invalid_Value__();
+    __LLVM_Place__ place;
+    if (lvalue != NULL && lvalue->__Kind__ == __Ast_Lvalue_Base__ &&
+        lvalue->__As__.__Base__.__Kind__ == __Ast_Lvalue_Base_Identifier__ &&
+        __LLVM_Find_Local_Base__(emitter, lvalue) == NULL && emitter->current_function != NULL)
+    {
+        __Semantic_Function_Entry__ *function = NULL;
+        if (__Name_Resolve_Function__(
+                emitter->semantic, emitter->current_function->__Unit__,
+                lvalue->__As__.__Base__.__As__.__Identifier__, &function) ==
+                __Name_Lookup_Found__ &&
+            function != NULL && !function->__Is_Generic_Template__)
+        {
+            __LLVM_Function__ *llvm_function = __LLVM_Find_Function_By_Semantic__(emitter, function);
+            if (llvm_function == NULL)
+            {
+                __LLVM_Fail__("function value has no LLVM declaration");
+                return result;
+            }
+            result.value = llvm_function->value;
+            result.type = function->__Callable_Type__;
+            return result;
+        }
+    }
+    place = __LLVM_Emit_Place__(emitter, lvalue);
     if (place.address == NULL || place.llvm_type == NULL || place.type == NULL)
     {
         return result;

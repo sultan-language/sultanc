@@ -1,5 +1,4 @@
-استورد compiler.frontend.source.position;
-استورد compiler.frontend.source.scope;
+استورد compiler.source.span;
 
 // أسماء المصدر تبقى أسماء عادية؛ تصنيف Option/Result/Vector تملكه Type لا Lexer/Parser.
 عام نوع صنف_اسم_تركيبي =

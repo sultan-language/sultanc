@@ -5,6 +5,7 @@
 
 #include "core/program.h"
 #include "support/containers/vector.h"
+#include "support/memory/arena.h"
 
 /* Defines the semantic type entry structure. */
 typedef struct
@@ -13,6 +14,14 @@ typedef struct
     __Text_Slice__ __Name__;
     /* References the declaration. */
     __Ast_Type_Declaration__ *__Declaration__;
+    /* References the generic declaration template for instantiated types. */
+    __Ast_Type_Declaration__ *__Template_Declaration__;
+    /* References concrete generic type arguments for this instance. */
+    __Ast_Type__ **__Type_Arguments__;
+    /* Stores concrete generic type argument count. */
+    size_t __Type_Argument_Count__;
+    /* Tracks whether this entry is a generic declaration template. */
+    int __Is_Generic_Template__;
     /* References the unit. */
     const __Program_Unit__ *__Unit__;
     /* Tracks the public state. */
@@ -33,6 +42,16 @@ typedef struct
     __Text_Slice__ __Name__;
     /* References the function. */
     __Ast_Function__ *__Function__;
+    /* References an arena-owned callable function type for this concrete function. */
+    __Ast_Type__ *__Callable_Type__;
+    /* References the generic function template for instantiated functions. */
+    __Ast_Function__ *__Template_Function__;
+    /* References concrete generic type arguments for this instance. */
+    __Ast_Type__ **__Type_Arguments__;
+    /* Stores concrete generic type argument count. */
+    size_t __Type_Argument_Count__;
+    /* Tracks whether this entry is a generic declaration template. */
+    int __Is_Generic_Template__;
     /* References the unit. */
     const __Program_Unit__ *__Unit__;
     /* Tracks the public state. */
@@ -78,6 +97,10 @@ typedef struct
     __Vector__ __Types__;
     /* Stores semantic type entries. */
     __Vector__ __Functions__;
+    /* Stores arena-owned instantiated generic type entry pointers. */
+    __Vector__ __Generic_Types__;
+    /* Stores arena-owned instantiated generic semantic function entry pointers. */
+    __Vector__ __Generic_Functions__;
     /* Stores semantic function entries. */
     __Vector__ __Type_Owners__;
     /* Stores semantic type-owner facts. */
@@ -87,6 +110,10 @@ typedef struct
 
     /* Module identity currently active for scoped Name/Type resolution. */
     const __Program_Unit__ *__Active_Unit__;
+
+
+    /* Owns semantic generic instances and substituted AST types. */
+    __Arena__ __Generic_Arena__;
 
     /* Stores the diagnostic. */
     __Diagnostic__ __Diagnostic__;

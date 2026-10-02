@@ -7,10 +7,10 @@
 #include "support/memory/alignment.h"
 
 /* Returns the named layout. */
-static int __Named_Layout__(__Semantic_Context__ *__Context__,
-                            __Semantic_Type_Entry__ *__Entry__,
-                            size_t *__Out_Size__,
-                            size_t *__Out_Alignment__)
+int __Layout_Named_Entry__(__Semantic_Context__ *__Context__,
+                           __Semantic_Type_Entry__ *__Entry__,
+                           size_t *__Out_Size__,
+                           size_t *__Out_Alignment__)
 {
     /* References the declaration. */
     __Ast_Type_Declaration__ *__Declaration__ = NULL;
@@ -40,7 +40,15 @@ static int __Named_Layout__(__Semantic_Context__ *__Context__,
     __Entry__->__Layout_State__ = 1;
     __Declaration__ = __Entry__->__Declaration__;
 
-    if (__Declaration__->__Kind__ == __Ast_Type_Decl_Struct__)
+    if (__Declaration__->__Kind__ == __Ast_Type_Decl_Alias__)
+    {
+        if (!__Layout_Type__(__Context__, __Declaration__->__As__.__Alias__, &__Size__, &__Alignment__))
+        {
+            __Entry__->__Layout_State__ = 0;
+            return 0;
+        }
+    }
+    else if (__Declaration__->__Kind__ == __Ast_Type_Decl_Struct__)
     {
         /* Tracks the index. */
         size_t __Index__ = 0U;
@@ -168,6 +176,7 @@ int __Layout_Type__(__Semantic_Context__ *__Context__,
         case __Ast_Type_Unsigned_Integer__:
         case __Ast_Type_Reference__:
         case __Ast_Type_Box__:
+        case __Ast_Type_Function__:
         case __Ast_Type_Boolean__:
         case __Ast_Type_Character__:
             __Size__ = 8U;
@@ -280,7 +289,7 @@ int __Layout_Type__(__Semantic_Context__ *__Context__,
             {
                 return 0;
             }
-            return __Named_Layout__(__Context__, __Entry__, __Out_Size__, __Out_Alignment__);
+            return __Layout_Named_Entry__(__Context__, __Entry__, __Out_Size__, __Out_Alignment__);
         }
 
         case __Ast_Type_Mutable__:

@@ -54,6 +54,23 @@ int __Type_Compatible__(__Semantic_Context__ *__Context__,
                                    __Left_Base__->__As__.__Result__.__Error__,
                                    __Right_Base__->__As__.__Result__.__Error__);
     }
+    if (__A__.__Kind__ == __Resolved_Type_Function__)
+    {
+        size_t __Index__;
+        if (__A__.__Parameter_Count__ != __B__.__Parameter_Count__)
+        {
+            return 0;
+        }
+        for (__Index__ = 0U; __Index__ < __A__.__Parameter_Count__; ++__Index__)
+        {
+            if (!__Type_Compatible__(__Context__, __A__.__Parameters__[__Index__],
+                                     __B__.__Parameters__[__Index__]))
+            {
+                return 0;
+            }
+        }
+        return __Type_Compatible__(__Context__, __A__.__Output__, __B__.__Output__);
+    }
     if ((__A__.__Kind__ == __Resolved_Type_Struct__ || __A__.__Kind__ == __Resolved_Type_Enum__) &&
         __A__.__Named__ != __B__.__Named__)
     {

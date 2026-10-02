@@ -5,7 +5,7 @@
 استورد compiler.frontend.types.type_model;
 استورد compiler.frontend.types.type_registry;
 استورد compiler.frontend.names.identifiers;
-استورد compiler.frontend.names.context;
+استورد compiler.frontend.names.name_context;
 
 استورد compiler.frontend.types.type_context;
 // Derived read-only queries for representation consumers.
@@ -494,19 +494,9 @@
     سجل_الأنواع: &سجل_أنواع,
     البدائي: نوع_بدائي_مقنن
 ): اختيار معرف_نوع {
-    دع الحالة: سجل_أنواع = *سجل_الأنواع;
-    دع ف: متغير غير_موقع = 0;
-    بينما (ف < (الطول(الحالة.الأنواع) مثل غير_موقع)) {
-        طابق الحالة.الأنواع[ف] مع
-        | نوع_مقنن.بدائي(الموجود) -> {
-            لو (رقم_نوع_بدائي(الموجود) == رقم_نوع_بدائي(البدائي)) {
-                أرجع اختيار.بعض(معرف_نوع_من(ف));
-            };
-        }
-        | _ -> { };
-        ف := ف + 1;
-    }
-    أرجع اختيار.لا_شيء();
+    // Primitive Type IDs are seeded in the canonical generated order by TypeRegistry.
+    دع _حالة_الأنواع: &سجل_أنواع = سجل_الأنواع;
+    أرجع اختيار.بعض(معرف_نوع_من(رقم_نوع_بدائي(البدائي)));
 }
 
 

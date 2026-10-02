@@ -18,6 +18,7 @@
 #include "kernel/type/tagged.h"
 #include "kernel/type/type.h"
 #include <stdint.h>
+#include <stdio.h>
 
 /* Returns the LLVM builtin call identity. */
 __Name_Builtin_Function__ __LLVM_Builtin_Call_Identity__(__LLVM_Emitter__ *emitter,
@@ -189,6 +190,50 @@ static __LLVM_Value__ __LLVM_Emit_Text_From_Bytes__(__LLVM_Emitter__ *emitter,
     return result;
 }
 
+/* Checks whether a builtin consumes the currently qualified Stage0 platform runtime ABI. */
+static int __LLVM_Builtin_Requires_Qualified_Runtime__(__Name_Builtin_Function__ builtin)
+{
+    switch (builtin)
+    {
+        case __Name_Builtin_Open_File_Read__:
+        case __Name_Builtin_Read_File_Byte__:
+        case __Name_Builtin_Read_File_Segment__:
+        case __Name_Builtin_Create_File_Write__:
+        case __Name_Builtin_Write_File_Segment__:
+        case __Name_Builtin_Close_File__:
+        case __Name_Builtin_Open_Directory__:
+        case __Name_Builtin_Read_Directory_Entry__:
+        case __Name_Builtin_Close_Directory__:
+        case __Name_Builtin_Read_Stdin_Byte__:
+        case __Name_Builtin_Read_Stdin_Segment__:
+        case __Name_Builtin_Write_Executable_Bytes__:
+        case __Name_Builtin_Stdout_Write__:
+        case __Name_Builtin_Stderr_Write__:
+        case __Name_Builtin_Path_Type__:
+        case __Name_Builtin_Path_Size__:
+        case __Name_Builtin_Path_Modified_Time__:
+            return 1;
+        default:
+            return 0;
+    }
+}
+
+/* Requires a runtime ABI that has been qualified for the selected target. */
+static int __LLVM_Require_Qualified_Runtime__(__LLVM_Emitter__ *emitter,
+                                             __Name_Builtin_Function__ builtin)
+{
+    char message[320];
+    if (!__LLVM_Builtin_Requires_Qualified_Runtime__(builtin))
+        return 1;
+    if (__Bootstrap_Target_Runtime_Qualified__(&emitter->target))
+        return 1;
+    snprintf(message,
+             sizeof(message),
+             "Bootstrap runtime/platform ABI is not qualified for target '%s'",
+             emitter->target.triple != NULL ? emitter->target.triple : "unknown");
+    return __LLVM_Fail__(message);
+}
+
 /* Emits the LLVM builtin call. */
 __LLVM_Value__ __LLVM_Emit_Builtin_Call__(__LLVM_Emitter__ *emitter,
                                           __Ast_Expression__ *expression,
@@ -198,6 +243,8 @@ __LLVM_Value__ __LLVM_Emit_Builtin_Call__(__LLVM_Emitter__ *emitter,
 {
     /* Stores the operation result. */
     __LLVM_Value__ result = __LLVM_Invalid_Value__();
+    if (!__LLVM_Require_Qualified_Runtime__(emitter, builtin))
+        return result;
     if (builtin == __Name_Builtin_Host_Architecture__ ||
         builtin == __Name_Builtin_Host_Platform__ ||
         builtin == __Name_Builtin_Host_Environment__)
@@ -232,6 +279,52 @@ __LLVM_Value__ __LLVM_Emit_Builtin_Call__(__LLVM_Emitter__ *emitter,
             LLVMBuildExtractValue(emitter->builder, sequence.value, 1U, "sequence.length");
         result.type = &__LLVM_Integer_Type__;
         return expected != NULL ? __LLVM_Coerce__(emitter, result, expected) : result;
+    }
+    if (builtin == __Name_Builtin_Swap__)
+    {
+        __Ast_Expression__ *left_expression;
+        __Ast_Expression__ *right_expression;
+        __Ast_Lvalue__ *left_lvalue;
+        __Ast_Lvalue__ *right_lvalue;
+        __LLVM_Place__ left_place;
+        __LLVM_Place__ right_place;
+        LLVMValueRef left_value;
+        LLVMValueRef right_value;
+        LLVMValueRef last_store;
+
+        if (expression->__As__.__Call__.__Argument_Count__ != 2U ||
+            (left_expression = expression->__As__.__Call__.__Arguments__[0]) == NULL ||
+            (right_expression = expression->__As__.__Call__.__Arguments__[1]) == NULL ||
+            left_expression->__Kind__ != __Ast_Expression_Atom__ ||
+            right_expression->__Kind__ != __Ast_Expression_Atom__ ||
+            left_expression->__As__.__Atom__.__Kind__ != __Ast_Atom_Lvalue__ ||
+            right_expression->__As__.__Atom__.__Kind__ != __Ast_Atom_Lvalue__ ||
+            (left_lvalue = left_expression->__As__.__Atom__.__As__.__Lvalue__) == NULL ||
+            (right_lvalue = right_expression->__As__.__Atom__.__As__.__Lvalue__) == NULL)
+        {
+            __LLVM_Fail__("L2.7 swap disagrees with canonical builtin semantics");
+            return result;
+        }
+        left_place = __LLVM_Emit_Place__(emitter, left_lvalue);
+        right_place = __LLVM_Emit_Place__(emitter, right_lvalue);
+        if (left_place.address == NULL || right_place.address == NULL ||
+            left_place.type == NULL || right_place.type == NULL ||
+            left_place.llvm_type == NULL || right_place.llvm_type == NULL ||
+            !__Type_Compatible__(emitter->semantic, left_place.type, right_place.type) ||
+            !__Type_Compatible__(emitter->semantic, right_place.type, left_place.type))
+        {
+            __LLVM_Fail__("L2.7 swap requires two compatible mutable places");
+            return result;
+        }
+        left_value = LLVMBuildLoad2(
+            emitter->builder, left_place.llvm_type, left_place.address, "swap.left");
+        right_value = LLVMBuildLoad2(
+            emitter->builder, right_place.llvm_type, right_place.address, "swap.right");
+        LLVMBuildStore(emitter->builder, right_value, left_place.address);
+        last_store = LLVMBuildStore(emitter->builder, left_value, right_place.address);
+        result.value = last_store;
+        result.type = &__LLVM_Void_Type__;
+        return result;
     }
     if (builtin == __Name_Builtin_Append__)
     {

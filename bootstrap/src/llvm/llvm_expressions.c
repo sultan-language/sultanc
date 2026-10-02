@@ -69,6 +69,42 @@ __LLVM_Emit_Trap_If__(__LLVM_Emitter__ *emitter, LLVMValueRef condition, const c
     return 1;
 }
 
+static LLVMTypeRef __LLVM_Function_Type_From_Resolved__(__LLVM_Emitter__ *emitter,
+                                                       const __Resolved_Type__ *resolved)
+{
+    LLVMTypeRef *parameters = NULL;
+    LLVMTypeRef output;
+    LLVMTypeRef function_type;
+    size_t index;
+    if (resolved == NULL || resolved->__Kind__ != __Resolved_Type_Function__)
+        return NULL;
+    if (resolved->__Parameter_Count__ != 0U)
+    {
+        parameters = (LLVMTypeRef *)calloc(resolved->__Parameter_Count__, sizeof(*parameters));
+        if (parameters == NULL)
+            return NULL;
+    }
+    for (index = 0U; index < resolved->__Parameter_Count__; ++index)
+    {
+        parameters[index] = __LLVM_Type__(emitter, resolved->__Parameters__[index]);
+        if (parameters[index] == NULL)
+        {
+            free(parameters);
+            return NULL;
+        }
+    }
+    output = __LLVM_Type__(emitter, resolved->__Output__);
+    if (output == NULL)
+    {
+        free(parameters);
+        return NULL;
+    }
+    function_type = LLVMFunctionType(
+        output, parameters, (unsigned)resolved->__Parameter_Count__, 0);
+    free(parameters);
+    return function_type;
+}
+
 /* Emits the LLVM checked arithmetic. */
 static LLVMValueRef __LLVM_Emit_Checked_Arithmetic__(__LLVM_Emitter__ *emitter,
                                                      __Ast_Binary_Operation__ operation,
@@ -701,13 +737,35 @@ __LLVM_Value__ __LLVM_Emit_Expression__(__LLVM_Emitter__ *emitter,
                 if (tagged_target == NULL ||
                     !__Type_Resolve__(emitter->semantic, tagged_target, &target_resolved) ||
                     target_resolved.__Kind__ != __Resolved_Type_Enum__ ||
-                    target_resolved.__Named__ != enum_type || enum_constructor == NULL ||
-                    enum_constructor->__Payload_Count__ !=
-                        expression->__As__.__Call__.__Argument_Count__)
+                    target_resolved.__Named__ == NULL || enum_type == NULL)
                 {
                     __LLVM_Fail__(
                         "L2.5 enum construction disagrees with canonical semantic identity");
                     return result;
+                }
+                {
+                    __Ast_Type_Declaration__ *target_template =
+                        target_resolved.__Named__->__Template_Declaration__ != NULL
+                            ? target_resolved.__Named__->__Template_Declaration__
+                            : target_resolved.__Named__->__Declaration__;
+                    __Ast_Type_Declaration__ *source_template =
+                        enum_type->__Template_Declaration__ != NULL
+                            ? enum_type->__Template_Declaration__
+                            : enum_type->__Declaration__;
+                    if (target_template != source_template ||
+                        !__Name_Find_Enum_Constructor__(
+                            target_resolved.__Named__,
+                            expression->__As__.__Call__.__Function__->__As__.__Field__.__Field__,
+                            &enum_constructor_index, &enum_constructor) ||
+                        enum_constructor == NULL ||
+                        enum_constructor->__Payload_Count__ !=
+                            expression->__As__.__Call__.__Argument_Count__)
+                    {
+                        __LLVM_Fail__(
+                            "L2.5 enum construction disagrees with concrete generic identity");
+                        return result;
+                    }
+                    enum_type = target_resolved.__Named__;
                 }
                 return __LLVM_Emit_Tagged_Construct__(
                     emitter,
@@ -747,7 +805,77 @@ __LLVM_Value__ __LLVM_Emit_Expression__(__LLVM_Emitter__ *emitter,
             size_t index;
             if (callee == NULL)
             {
-                __LLVM_Fail__("L2.3 call is not an ordinary canonical SultanC function");
+                __Ast_Type__ *callable_type =
+                    __LLVM_Lvalue_Type__(emitter, expression->__As__.__Call__.__Function__);
+                __Resolved_Type__ callable_resolved;
+                __LLVM_Value__ callable;
+                LLVMTypeRef callable_function_type;
+                LLVMValueRef *indirect_arguments = NULL;
+                size_t indirect_index;
+                if (callable_type == NULL ||
+                    !__Type_Resolve__(emitter->semantic, callable_type, &callable_resolved) ||
+                    callable_resolved.__Kind__ != __Resolved_Type_Function__ ||
+                    callable_resolved.__Parameter_Count__ !=
+                        expression->__As__.__Call__.__Argument_Count__)
+                {
+                    __LLVM_Fail__("L2.3 call is not a canonical SultanC function value");
+                    return result;
+                }
+                callable = __LLVM_Emit_Lvalue__(emitter, expression->__As__.__Call__.__Function__);
+                callable_function_type =
+                    __LLVM_Function_Type_From_Resolved__(emitter, &callable_resolved);
+                if (callable.value == NULL || callable_function_type == NULL)
+                    return result;
+                if (callable_resolved.__Parameter_Count__ != 0U)
+                {
+                    indirect_arguments = (LLVMValueRef *)calloc(
+                        callable_resolved.__Parameter_Count__, sizeof(*indirect_arguments));
+                    if (indirect_arguments == NULL)
+                    {
+                        __LLVM_Fail__("out of memory while lowering indirect call arguments");
+                        return result;
+                    }
+                }
+                for (indirect_index = 0U;
+                     indirect_index < callable_resolved.__Parameter_Count__; ++indirect_index)
+                {
+                    __LLVM_Value__ argument = __LLVM_Emit_Expression__(
+                        emitter, expression->__As__.__Call__.__Arguments__[indirect_index],
+                        callable_resolved.__Parameters__[indirect_index]);
+                    if (argument.value == NULL)
+                    {
+                        free(indirect_arguments);
+                        return result;
+                    }
+                    argument = __LLVM_Coerce__(
+                        emitter, argument, callable_resolved.__Parameters__[indirect_index]);
+                    if (argument.value == NULL)
+                    {
+                        free(indirect_arguments);
+                        return result;
+                    }
+                    indirect_arguments[indirect_index] = argument.value;
+                }
+                {
+                    __Resolved_Type__ output_resolved;
+                    const char *call_name = "call.indirect";
+                    if (!__Type_Resolve__(
+                            emitter->semantic, callable_resolved.__Output__, &output_resolved))
+                    {
+                        free(indirect_arguments);
+                        return result;
+                    }
+                    if (output_resolved.__Kind__ == __Resolved_Type_Void__)
+                        call_name = "";
+                    result.value = LLVMBuildCall2(
+                        emitter->builder, callable_function_type, callable.value,
+                        indirect_arguments, (unsigned)callable_resolved.__Parameter_Count__,
+                        call_name);
+                }
+                free(indirect_arguments);
+                result.type = callable_resolved.__Output__;
+                if (expected != NULL)
+                    return __LLVM_Coerce__(emitter, result, expected);
                 return result;
             }
             llvm_callee = __LLVM_Find_Function_By_Semantic__(emitter, callee);

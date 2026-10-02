@@ -131,6 +131,28 @@ static __Semantic_Local__ *__Body_Borrow_Source__(__Semantic_Body_Context__ *__C
     return __Root__ == NULL ? NULL : __Body_Find_Local__(__Context__, __Root__);
 }
 
+/* Validates that a mutable borrow reaches writable storage. */
+static int __Body_Borrow_Mutable_Path_Is_Writable__(__Semantic_Body_Context__ *__Context__,
+                                                    __Ast_Expression__ *__Expression__)
+{
+    __Ast_Expression__ *__Operand__;
+    __Ast_Type__ *__Type__ = NULL;
+
+    if (__Expression__ == NULL || __Expression__->__Kind__ != __Ast_Expression_Unary__ ||
+        __Expression__->__As__.__Unary__.__Operation__ != __Unary_Address_Mutable__)
+    {
+        return 1;
+    }
+    __Operand__ = __Expression__->__As__.__Unary__.__Operand__;
+    if (__Operand__ == NULL || __Operand__->__Kind__ != __Ast_Expression_Atom__ ||
+        __Operand__->__As__.__Atom__.__Kind__ != __Ast_Atom_Lvalue__)
+    {
+        return 0;
+    }
+    return __Body_Infer_Lvalue_For_Write__(
+        __Context__, __Operand__->__As__.__Atom__.__As__.__Lvalue__, &__Type__, NULL);
+}
+
 /* Releases the body safety local borrow. */
 static void __Body_Safety_Release_Local_Borrow__(__Semantic_Body_Context__ *__Context__,
                                                  __Semantic_Local__ *__Local__)
@@ -205,10 +227,9 @@ static int __Body_Safety_Acquire_Borrow__(__Semantic_Body_Context__ *__Context__
         __Destination_Index__ = __Body_Local_Index__(__Context__, __Destination__);
     }
 
-    if (__Mutable__ && !__Source__->__Mutable__)
+    if (__Mutable__ && !__Body_Borrow_Mutable_Path_Is_Writable__(__Context__, __Expression__))
     {
-        return __Body_Fail__(
-            __Context__, __E0703_Write_To_Immutable__, __Expression__->__Header__.__Span__);
+        return 0;
     }
 
     if (__Mutable__ ? !__Safety_Fact_Acquire_Mutable_At__(&__Source__->__Safety__,
@@ -436,10 +457,9 @@ int __Body_Safety_Check_Ephemeral_Borrow__(__Semantic_Body_Context__ *__Context_
     {
         return 1;
     }
-    if (__Mutable__ && !__Source__->__Mutable__)
+    if (__Mutable__ && !__Body_Borrow_Mutable_Path_Is_Writable__(__Context__, __Expression__))
     {
-        return __Body_Fail__(
-            __Context__, __E0703_Write_To_Immutable__, __Expression__->__Header__.__Span__);
+        return 0;
     }
     if (__Mutable__ ? !__Safety_Fact_Acquire_Mutable_At__(
                           &__Source__->__Safety__, __Expression__->__Header__.__Span__, SIZE_MAX)

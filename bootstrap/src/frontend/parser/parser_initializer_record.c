@@ -21,9 +21,6 @@ int __Parser_Parse_Record_Initializer__(__Parser__ *__Parser_State__,
     {
         /* Stores the field. */
         __Ast_Record_Input__ __Field__;
-        /* Stores the atom ok. */
-        int __Atom_Ok__ = 0;
-
         if (__Parser_State__->__Current__.__Kind__ != __Token_IDENTIFIER__)
         {
             __Vector_Destroy__(&__Fields__);
@@ -36,8 +33,8 @@ int __Parser_Parse_Record_Initializer__(__Parser__ *__Parser_State__,
             __Vector_Destroy__(&__Fields__);
             return 0;
         }
-        __Field__.__Value__ = __Parser_Parse_Atom__(__Parser_State__, &__Atom_Ok__);
-        if (!__Atom_Ok__ || __Vector_Push__(&__Fields__, &__Field__) == NULL)
+        __Field__.__Value__ = __Parser_Parse_Expression__(__Parser_State__);
+        if (__Field__.__Value__ == NULL || __Vector_Push__(&__Fields__, &__Field__) == NULL)
         {
             __Vector_Destroy__(&__Fields__);
             if (!__Parser_State__->__Failed__)

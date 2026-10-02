@@ -141,6 +141,12 @@ int __Type_Resolve__(__Semantic_Context__ *__Context__,
         case __Ast_Type_Result__:
             __Out_Type__->__Kind__ = __Resolved_Type_Result__;
             break;
+        case __Ast_Type_Function__:
+            __Out_Type__->__Kind__ = __Resolved_Type_Function__;
+            __Out_Type__->__Parameters__ = __Base__->__As__.__Function__.__Parameters__;
+            __Out_Type__->__Parameter_Count__ = __Base__->__As__.__Function__.__Parameter_Count__;
+            __Out_Type__->__Output__ = __Base__->__As__.__Function__.__Output__;
+            break;
         case __Ast_Type_Named__:
         {
             /* References the entry. */
@@ -149,6 +155,11 @@ int __Type_Resolve__(__Semantic_Context__ *__Context__,
                 __Entry__ == NULL || __Entry__->__Declaration__ == NULL)
             {
                 return 0;
+            }
+            if (__Entry__->__Declaration__->__Kind__ == __Ast_Type_Decl_Alias__)
+            {
+                return __Type_Resolve__(__Context__, __Entry__->__Declaration__->__As__.__Alias__,
+                                        __Out_Type__);
             }
             __Out_Type__->__Named__ = __Entry__;
             if (__Entry__->__Declaration__->__Kind__ == __Ast_Type_Decl_Struct__)

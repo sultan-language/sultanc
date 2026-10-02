@@ -18,7 +18,7 @@ int __Semantic_Check_Function_Signatures__(__Semantic_Context__ *__Context__)
         /* Tracks the parameter index. */
         size_t __Parameter_Index__ = 0U;
 
-        if (__Function__ == NULL)
+        if (__Function__ == NULL || __Function__->__Is_Generic_Template__)
         {
             continue;
         }

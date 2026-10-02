@@ -43,12 +43,11 @@ __LLVM_Value__ __LLVM_Emit_Runtime_Open_File_Service__(__LLVM_Emitter__ *emitter
     LLVMValueRef descriptor64;
     /* Tracks the failed state. */
     LLVMValueRef failed;
-#if defined(__APPLE__)
-    const unsigned write_flags = 1U | 512U | 1024U;
-#else
-    /* Stores the write flags. */
-    const unsigned write_flags = 1U | 64U | 512U;
-#endif
+    /* Stores the write flags for the selected qualified target runtime. */
+    const unsigned write_flags =
+        emitter->target.platform == __Bootstrap_Target_Platform_Darwin__
+            ? (1U | 512U | 1024U)
+            : (1U | 64U | 512U);
 
     if (expression->__As__.__Call__.__Argument_Count__ != 1U)
     {

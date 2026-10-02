@@ -1,6 +1,5 @@
 استورد compiler.frontend.names.identifiers;
-استورد compiler.frontend.source.position;
-استورد compiler.frontend.source.scope;
+استورد compiler.source.span;
 
 عام نوع نوع_تصريح =
     | دالة
@@ -11,6 +10,7 @@
     | منشئ_تعداد
     | معامل_نوع
     | معامل
+    | قيمة_عليا
     | ربط_محلي
 ;
 

@@ -2,7 +2,7 @@
 استورد compiler.interpreter.execution.calls;
 استورد compiler.interpreter.execution.frame;
 استورد compiler.interpreter.values.runtime_values;
-استورد compiler.interpreter.diagnostics.runtime_failures;
+استورد compiler.interpreter.runtime_failures;
 استورد compiler.msir.msir_model;
 استورد compiler.msir.msir_consumer;
 استورد compiler.msir.identifiers;
