@@ -1,5 +1,5 @@
-استورد compiler.frontend.source.source;
-استورد compiler.frontend.source.scope;
+استورد compiler.source.source_file;
+استورد compiler.source.span;
 استورد compiler.frontend.lexer.token;
 استورد compiler.frontend.lexer.payload;
 استورد compiler.frontend.lexer.values;

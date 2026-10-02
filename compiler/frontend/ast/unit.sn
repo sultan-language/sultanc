@@ -2,9 +2,8 @@
 استورد compiler.frontend.ast.literals;
 استورد compiler.frontend.ast.expressions;
 استورد compiler.frontend.ast.statements;
-استورد compiler.frontend.source.source;
-استورد compiler.frontend.source.position;
-استورد compiler.frontend.source.scope;
+استورد compiler.source.source_file;
+استورد compiler.source.span;
 استورد compiler.frontend.ast.name;
 استورد compiler.frontend.ast.declarations;
 
@@ -12,6 +11,7 @@
 عام نوع عنصر_وحدة =
     | دالة بنوع تصريح_دالة
     | نوع بنوع تصريح_نوع
+    | قيمة_عليا بنوع تصريح_قيمة_عليا
     | تجميع بنوع (نطاق, متجه غ8)
 ;
 
@@ -22,7 +22,7 @@
 ;
 
 عام نوع وحدة_مصدر = {
-    المصدر: مصدر,
+    معرف_المصدر: غير_موقع,
     الاستيرادات: متجه استيراد,
     العناصر: متجه عنصر_وحدة,
     مرادفات_الأسماء: متجه تصريح_مرادف_اسم

@@ -1,10 +1,14 @@
 استورد compiler.backend.target.target_model;
-استورد compiler.diagnostics.diagnostic_model;
+استورد compiler.diagnostics.identity;
+استورد compiler.diagnostics.record;
+استورد compiler.diagnostics.builder;
+استورد compiler.diagnostics.localization;
+استورد compiler.diagnostics.schema;
 استورد compiler.msir.msir_model;
 استورد compiler.msir.identifiers;
 استورد compiler.interpreter.interpreter;
 استورد compiler.interpreter.values.runtime_values;
-استورد compiler.interpreter.diagnostics.runtime_failures;
+استورد compiler.interpreter.runtime_failures;
 
 // Driver-level models only. CLI syntax, rendering and compiler execution stay
 // in their canonical owners.
@@ -15,7 +19,7 @@
 ;
 
 عام نوع صيغة_تشخيص_عملية =
-    | بشري
+    | طرفي
     | مختصر
     | جيسون
 ;
@@ -34,7 +38,7 @@
 
 عام عرف إعداد_عرض_عملية_افتراضي(): إعداد_عرض_عملية {
     دع اللغة: لغة_تشخيص = لغة_تشخيص.العربية();
-    دع الصيغة: صيغة_تشخيص_عملية = صيغة_تشخيص_عملية.بشري();
+    دع الصيغة: صيغة_تشخيص_عملية = صيغة_تشخيص_عملية.طرفي();
     دع اللون: سياسة_لون_تشخيص_عملية = سياسة_لون_تشخيص_عملية.تلقائي();
     دع الناتج: إعداد_عرض_عملية = {
         اللغة: اللغة,
@@ -73,6 +77,7 @@
     | مساعدة
     | إصدار
     | أهداف
+    | شرح بنوع نص
     | تحقق بنوع (نص, متجه نص)
     | تفسير بنوع (نص, متجه نص)
     | كائن_أصلي بنوع (نص, متجه نص, نص, اختيار_هدف_عملية)

@@ -2,7 +2,7 @@
 استورد compiler.frontend.ast.types;
 استورد compiler.frontend.ast.statements;
 استورد compiler.frontend.ast.unit;
-استورد compiler.frontend.source.source;
+استورد compiler.source.source_file;
 استورد compiler.frontend.lexer.values;
 استورد compiler.frontend.parser.cursor;
 استورد compiler.frontend.parser.result;

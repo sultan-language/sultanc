@@ -1,0 +1,59 @@
+استورد compiler.backend.provider.llvm.ffi.types;
+
+// Exact exported target-registration and triple symbols.
+// Higher-level target policy belongs to SultanC Target, not this FFI layer.
+
+عام خارجي عرف LLVMInitializeX86TargetInfo(): فراغ;
+عام خارجي عرف LLVMInitializeX86Target(): فراغ;
+عام خارجي عرف LLVMInitializeX86TargetMC(): فراغ;
+عام خارجي عرف LLVMInitializeX86AsmPrinter(): فراغ;
+
+عام خارجي عرف LLVMInitializeAArch64TargetInfo(): فراغ;
+عام خارجي عرف LLVMInitializeAArch64Target(): فراغ;
+عام خارجي عرف LLVMInitializeAArch64TargetMC(): فراغ;
+عام خارجي عرف LLVMInitializeAArch64AsmPrinter(): فراغ;
+
+عام خارجي عرف LLVMInitializeARMTargetInfo(): فراغ;
+عام خارجي عرف LLVMInitializeARMTarget(): فراغ;
+عام خارجي عرف LLVMInitializeARMTargetMC(): فراغ;
+عام خارجي عرف LLVMInitializeARMAsmPrinter(): فراغ;
+
+عام خارجي عرف LLVMInitializeRISCVTargetInfo(): فراغ;
+عام خارجي عرف LLVMInitializeRISCVTarget(): فراغ;
+عام خارجي عرف LLVMInitializeRISCVTargetMC(): فراغ;
+عام خارجي عرف LLVMInitializeRISCVAsmPrinter(): فراغ;
+
+عام خارجي عرف LLVMInitializeWebAssemblyTargetInfo(): فراغ;
+عام خارجي عرف LLVMInitializeWebAssemblyTarget(): فراغ;
+عام خارجي عرف LLVMInitializeWebAssemblyTargetMC(): فراغ;
+عام خارجي عرف LLVMInitializeWebAssemblyAsmPrinter(): فراغ;
+
+عام خارجي عرف LLVMGetDefaultTargetTriple(): مؤشر_محرف_متغير_إل_إل_في_إم;
+عام خارجي عرف LLVMNormalizeTargetTriple(
+    الثلاثي: مؤشر_محرف_ثابت_إل_إل_في_إم
+): مؤشر_محرف_متغير_إل_إل_في_إم;
+عام خارجي عرف LLVMGetHostCPUName(): مؤشر_محرف_متغير_إل_إل_في_إم;
+عام خارجي عرف LLVMGetHostCPUFeatures(): مؤشر_محرف_متغير_إل_إل_في_إم;
+
+عام خارجي عرف LLVMGetFirstTarget(): مرجع_هدف_إل_إل_في_إم;
+عام خارجي عرف LLVMGetNextTarget(الهدف: مرجع_هدف_إل_إل_في_إم): مرجع_هدف_إل_إل_في_إم;
+عام خارجي عرف LLVMGetTargetFromName(
+    الاسم: مؤشر_محرف_ثابت_إل_إل_في_إم
+): مرجع_هدف_إل_إل_في_إم;
+عام خارجي عرف LLVMGetTargetFromTriple(
+    الثلاثي: مؤشر_محرف_ثابت_إل_إل_في_إم,
+    الناتج: *متغير مرجع_هدف_إل_إل_في_إم,
+    رسالة_الخطأ: *متغير مؤشر_محرف_متغير_إل_إل_في_إم
+): منطق_إل_إل_في_إم;
+عام خارجي عرف LLVMGetTargetName(
+    الهدف: مرجع_هدف_إل_إل_في_إم
+): مؤشر_محرف_ثابت_إل_إل_في_إم;
+عام خارجي عرف LLVMGetTargetDescription(
+    الهدف: مرجع_هدف_إل_إل_في_إم
+): مؤشر_محرف_ثابت_إل_إل_في_إم;
+عام خارجي عرف LLVMTargetHasTargetMachine(
+    الهدف: مرجع_هدف_إل_إل_في_إم
+): منطق_إل_إل_في_إم;
+عام خارجي عرف LLVMTargetHasAsmBackend(
+    الهدف: مرجع_هدف_إل_إل_في_إم
+): منطق_إل_إل_في_إم;

@@ -1,4 +1,4 @@
-استورد compiler.frontend.source.source;
+استورد compiler.source.source_file;
 استورد compiler.frontend.lexer.token;
 استورد compiler.frontend.ast.name;
 استورد compiler.frontend.ast.operators;
@@ -7,7 +7,7 @@
 استورد compiler.frontend.ast.patterns;
 استورد compiler.frontend.ast.statements;
 استورد compiler.frontend.ast.unit;
-استورد compiler.frontend.source.scope;
+استورد compiler.source.span;
 استورد compiler.frontend.lexer.values;
 استورد compiler.frontend.ast.types;
 استورد compiler.frontend.parser.error;

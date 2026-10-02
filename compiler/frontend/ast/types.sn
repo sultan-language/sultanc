@@ -1,5 +1,4 @@
-استورد compiler.frontend.source.position;
-استورد compiler.frontend.source.scope;
+استورد compiler.source.span;
 استورد compiler.frontend.ast.name;
 
 // نوع آلة دلالي في ast؛ لا يخزن هوية رمز معجمي.

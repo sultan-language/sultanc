@@ -1,5 +1,4 @@
-استورد compiler.frontend.source.position;
-استورد compiler.frontend.source.scope;
+استورد compiler.source.span;
 استورد compiler.frontend.lexer.token;
 استورد compiler.frontend.lexer.payload;
 استورد compiler.frontend.lexer.payload_registry;

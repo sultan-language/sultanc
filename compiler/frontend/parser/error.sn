@@ -1,5 +1,4 @@
-استورد compiler.frontend.source.position;
-استورد compiler.frontend.source.scope;
+استورد compiler.source.span;
 استورد compiler.frontend.lexer.token;
 
 عام نوع فئة_خطأ_نحوي =

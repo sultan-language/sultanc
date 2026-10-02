@@ -5,13 +5,20 @@
 استورد compiler.backend.target.target_model;
 استورد compiler.backend.target.target_registry;
 استورد compiler.backend.target.target_spelling;
-استورد compiler.diagnostics.diagnostic_model;
-استورد compiler.diagnostics.catalog;
-استورد compiler.diagnostics.renderer;
-استورد compiler.diagnostics.interpreter_failure_diagnostics;
+استورد compiler.diagnostics.identity;
+استورد compiler.diagnostics.record;
+استورد compiler.diagnostics.builder;
+استورد compiler.diagnostics.registry;
+استورد compiler.diagnostics.engine;
+استورد compiler.diagnostics.output.terminal;
+استورد compiler.diagnostics.output.json;
+استورد compiler.interpreter.diagnostic_translation;
+استورد compiler.diagnostics.localization;
+استورد compiler.diagnostics.schema;
+استورد compiler.diagnostics.explain;
 استورد compiler.interpreter.interpreter;
 استورد compiler.interpreter.values.runtime_values;
-استورد compiler.interpreter.diagnostics.runtime_failures;
+استورد compiler.interpreter.runtime_failures;
 استورد compiler.runtime.host_service_adapter;
 استورد std.fs.write_bytes;
 استورد std.io.print;
@@ -51,7 +58,7 @@
         اعرض_المصدر: خطأ
     };
     طابق الإعداد.الصيغة مع
-    | صيغة_تشخيص_عملية.بشري -> {
+    | صيغة_تشخيص_عملية.طرفي -> {
         اعرض_مجموعة_تشخيصات_طرفيا(التشخيصات, الإعداد.اللغة, النمط_الكامل);
     }
     | صيغة_تشخيص_عملية.مختصر -> {
@@ -120,7 +127,8 @@
         اكتب_خرج_عملية("    sultanc check <file.sn> [options]\n");
         اكتب_خرج_عملية("    sultanc interpret <file.sn> [options]\n");
         اكتب_خرج_عملية("    sultanc targets\n");
-        اكتب_خرج_عملية("    sultanc version\n\n");
+        اكتب_خرج_عملية("    sultanc version\n");
+        اكتب_خرج_عملية("    sultanc --explain <SULTANC-CODE>\n\n");
         اكتب_خرج_عملية("Options:\n");
         اكتب_خرج_عملية("    -o <path>                         Output path\n");
         اكتب_خرج_عملية("    -c                                Emit an object file\n");
@@ -128,6 +136,7 @@
         اكتب_خرج_عملية("    --lang ar|en                      Compiler interface language\n");
         اكتب_خرج_عملية("    --diagnostic-format human|short|json\n");
         اكتب_خرج_عملية("    --color auto|always|never         Diagnostic color policy\n");
+        اكتب_خرج_عملية("    --explain <SULTANC-CODE>          Explain a diagnostic code\n");
         اكتب_خرج_عملية("    --help                            Show this help\n");
         اكتب_خرج_عملية("    --version                         Show compiler version\n");
     }
@@ -139,7 +148,8 @@
         اكتب_خرج_عملية("    sultanc check <ملف.sn> [الخيارات]\n");
         اكتب_خرج_عملية("    sultanc interpret <ملف.sn> [الخيارات]\n");
         اكتب_خرج_عملية("    sultanc targets\n");
-        اكتب_خرج_عملية("    sultanc version\n\n");
+        اكتب_خرج_عملية("    sultanc version\n");
+        اكتب_خرج_عملية("    sultanc --explain <SULTANC-CODE>\n\n");
         اكتب_خرج_عملية("الخيارات:\n");
         اكتب_خرج_عملية("    -o <مسار>                         مسار المخرج\n");
         اكتب_خرج_عملية("    -c                                إنشاء ملف كائني\n");
@@ -147,6 +157,7 @@
         اكتب_خرج_عملية("    --lang ar|en                      لغة واجهة المترجم\n");
         اكتب_خرج_عملية("    --diagnostic-format human|short|json\n");
         اكتب_خرج_عملية("    --color auto|always|never         سياسة ألوان التشخيص\n");
+        اكتب_خرج_عملية("    --explain <SULTANC-CODE>          شرح رمز تشخيص\n");
         اكتب_خرج_عملية("    --help                            عرض هذه المساعدة\n");
         اكتب_خرج_عملية("    --version                         عرض إصدار المترجم\n");
     };
@@ -156,6 +167,17 @@
     اكتب_خرج_عملية(«SultanC »);
     اكتب_خرج_عملية(إصدار_سلطان_سي());
     اكتب_خرج_عملية("\n");
+}
+
+عرف اطبع_شرح_تشخيص(الكود: &نص, اللغة: لغة_تشخيص): فراغ {
+    طابق شرح_كود_تشخيص(الكود, اللغة) مع
+    | اختيار.لا_شيء -> { }
+    | اختيار.بعض(الشرح) -> {
+        اكتب_خرج_عملية(*الكود);
+        اكتب_خرج_عملية("\n\n");
+        اكتب_خرج_عملية(الشرح);
+        اكتب_خرج_عملية("\n");
+    };
 }
 
 عرف اطبع_أهداف_المترجم(اللغة: لغة_تشخيص): فراغ {
@@ -193,6 +215,10 @@
     }
     | طلب_عملية_مترجم.أهداف -> {
         اطبع_أهداف_المترجم(الإعداد.اللغة);
+        أرجع نتيجة_عملية_مترجم.أمر_مكتمل();
+    }
+    | طلب_عملية_مترجم.شرح(الكود) -> {
+        اطبع_شرح_تشخيص(&الكود, الإعداد.اللغة);
         أرجع نتيجة_عملية_مترجم.أمر_مكتمل();
     }
     | طلب_عملية_مترجم.تحقق(المصدر, المصادر_الإضافية) -> {
