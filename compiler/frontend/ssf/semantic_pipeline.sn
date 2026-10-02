@@ -2,7 +2,7 @@
 استورد compiler.frontend.ssf.borrow_legality;
 استورد compiler.frontend.ssf.control_flow_merge;
 استورد compiler.frontend.ssf.pattern_bindings;
-استورد compiler.frontend.names.context;
+استورد compiler.frontend.names.name_context;
 استورد compiler.frontend.names.symbols;
 استورد compiler.frontend.names.identifiers;
 استورد compiler.frontend.names.resolved_bindings;

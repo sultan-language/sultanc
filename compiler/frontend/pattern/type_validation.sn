@@ -9,7 +9,7 @@
 استورد compiler.frontend.types.compatibility;
 استورد compiler.frontend.types.expression_types;
 استورد compiler.frontend.names.identifiers;
-استورد compiler.frontend.names.context;
+استورد compiler.frontend.names.name_context;
 استورد compiler.frontend.names.resolved_bindings;
 استورد compiler.source.span;
 استورد compiler.frontend.types.type_context;

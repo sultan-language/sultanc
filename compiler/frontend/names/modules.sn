@@ -1,6 +1,6 @@
 استورد compiler.frontend.names.identifiers;
 استورد compiler.frontend.names.module_identity;
-استورد compiler.frontend.names.context;
+استورد compiler.frontend.names.name_context;
 استورد compiler.source.span;
 
 // Module graph owns dense Module IDs and the exact semantics of each direct

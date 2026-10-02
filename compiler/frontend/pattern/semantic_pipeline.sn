@@ -2,7 +2,7 @@
 استورد compiler.frontend.pattern.pattern_registry;
 استورد compiler.frontend.pattern.pattern_construction;
 استورد compiler.frontend.pattern.type_validation;
-استورد compiler.frontend.names.context;
+استورد compiler.frontend.names.name_context;
 استورد compiler.frontend.names.symbols;
 استورد compiler.frontend.names.resolved_bindings;
 استورد compiler.source.source_file;

@@ -9,7 +9,7 @@
 استورد compiler.frontend.types.primitive_call;
 استورد compiler.frontend.types.type_semantic_shape_queries;
 استورد compiler.frontend.names.identifiers;
-استورد compiler.frontend.names.context;
+استورد compiler.frontend.names.name_context;
 استورد compiler.frontend.names.symbols;
 استورد compiler.runtime.primitive_identity;
 استورد compiler.runtime.primitive_semantic_contract;

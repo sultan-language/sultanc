@@ -4,7 +4,7 @@
 استورد compiler.frontend.lexer.lexer;
 استورد compiler.frontend.parser.parser;
 استورد compiler.frontend.module_loading.module_loader;
-استورد compiler.frontend.names.context;
+استورد compiler.frontend.names.name_context;
 استورد compiler.frontend.names.scopes;
 استورد compiler.frontend.names.modules;
 استورد compiler.frontend.names.semantic_pipeline;

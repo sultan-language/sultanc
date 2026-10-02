@@ -3,7 +3,7 @@
 // Canonical contextual Type source-name matching for Type semantic consumers.
 
 استورد compiler.frontend.names.identifiers;
-استورد compiler.frontend.names.context;
+استورد compiler.frontend.names.name_context;
 
 عام عرف اسم_مقنن_يطابق_نصا_سياقيا(
     سياق_الأسماء: &سياق_أسماء,

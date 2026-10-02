@@ -13,7 +13,7 @@
 استورد compiler.msir.msir_model;
 استورد compiler.msir.msir_builder;
 استورد compiler.msir.lowering.model;
-استورد compiler.msir.lowering.context;
+استورد compiler.msir.lowering.msir_context;
 
 استورد compiler.frontend.types.type_context;
 // MSIR place construction. Recursive AST traversal stays in expressions.sn so the

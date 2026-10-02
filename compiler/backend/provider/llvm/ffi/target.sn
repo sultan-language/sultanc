@@ -57,3 +57,22 @@
 عام خارجي عرف LLVMTargetHasAsmBackend(
     الهدف: مرجع_هدف_إل_إل_في_إم
 ): منطق_إل_إل_في_إم;
+
+// واجهة عربية للمزود؛ أسماء LLVM المصدرة تبقى محصورة في ملف FFI.
+عام عرف هيئ_هدف_إكس_إل_إل_في_إم(): فراغ {
+    LLVMInitializeX86TargetInfo(); LLVMInitializeX86Target(); LLVMInitializeX86TargetMC(); LLVMInitializeX86AsmPrinter();
+}
+عام عرف هيئ_هدف_ذراع64_إل_إل_في_إم(): فراغ {
+    LLVMInitializeAArch64TargetInfo(); LLVMInitializeAArch64Target(); LLVMInitializeAArch64TargetMC(); LLVMInitializeAArch64AsmPrinter();
+}
+عام عرف هيئ_هدف_ذراع_إل_إل_في_إم(): فراغ {
+    LLVMInitializeARMTargetInfo(); LLVMInitializeARMTarget(); LLVMInitializeARMTargetMC(); LLVMInitializeARMAsmPrinter();
+}
+عام عرف هيئ_هدف_رايسك_في_إل_إل_في_إم(): فراغ {
+    LLVMInitializeRISCVTargetInfo(); LLVMInitializeRISCVTarget(); LLVMInitializeRISCVTargetMC(); LLVMInitializeRISCVAsmPrinter();
+}
+عام عرف هيئ_هدف_ويب_أسمبلي_إل_إل_في_إم(): فراغ {
+    LLVMInitializeWebAssemblyTargetInfo(); LLVMInitializeWebAssemblyTarget(); LLVMInitializeWebAssemblyTargetMC(); LLVMInitializeWebAssemblyAsmPrinter();
+}
+عام عرف طبع_ثلاثي_إل_إل_في_إم(الثلاثي: مؤشر_محرف_ثابت_إل_إل_في_إم): مؤشر_محرف_متغير_إل_إل_في_إم { أرجع LLVMNormalizeTargetTriple(الثلاثي); }
+عام عرف ابحث_هدف_إل_إل_في_إم(الثلاثي: مؤشر_محرف_ثابت_إل_إل_في_إم, الهدف: *متغير مرجع_هدف_إل_إل_في_إم, الرسالة: *متغير مؤشر_محرف_متغير_إل_إل_في_إم): منطق_إل_إل_في_إم { أرجع LLVMGetTargetFromTriple(الثلاثي, الهدف, الرسالة); }

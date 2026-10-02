@@ -5,7 +5,7 @@
 استورد compiler.frontend.types.type_model;
 استورد compiler.frontend.types.type_registry;
 استورد compiler.frontend.names.identifiers;
-استورد compiler.frontend.names.context;
+استورد compiler.frontend.names.name_context;
 
 استورد compiler.frontend.types.type_context;
 // Derived read-only queries for representation consumers.

@@ -71,6 +71,9 @@
     المكان: اختيار معرف_قيمة_مسير
 };
 
+// Compact function-local specialized Symbol types for a concrete generic instance.
+عام نوع ربط_نوع_رمز_خفض = { الرمز: معرف_رمز, النوع: معرف_نوع };
+
 عام نوع حالة_خفض_دالة = {
     الدالة: معرف_دالة_مسير,
     الكتلة: معرف_كتلة_مسير,
@@ -82,7 +85,7 @@
     له_هدف_متابعة_حلقة: منطقي,
     هدف_متابعة_حلقة: معرف_كتلة_مسير,
     عدد_محليات_متابعة_حلقة: غير_موقع,
-    // Branch snapshots share this immutable vector until a local mutation occurs.
+    // Branch snapshots share immutable lowering indexes until local mutation occurs.
     المحليات_مشتركة: منطقي
 };
 
@@ -90,6 +93,8 @@
     | داخلية بنوع معرف_دالة_مسير
     | خارجية بنوع معرف_دالة_خارجية_مسير
 ;
+
+
 
 // Canonical concrete function-instance identity used by monomorphization and
 // MSIR function lookup. The complete substitution set is part of the key.

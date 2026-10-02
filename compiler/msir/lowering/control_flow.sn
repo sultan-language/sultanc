@@ -6,7 +6,7 @@
 استورد compiler.msir.msir_model;
 استورد compiler.msir.msir_builder;
 استورد compiler.msir.lowering.model;
-استورد compiler.msir.lowering.context;
+استورد compiler.msir.lowering.msir_context;
 
 // Target-neutral CFG mechanisms shared by structured lowering. Recursive AST traversal
 // remains in expressions/statements to keep the Stage0 import graph acyclic.

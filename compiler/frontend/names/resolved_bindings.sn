@@ -1,6 +1,6 @@
 استورد compiler.frontend.names.identifiers;
 استورد compiler.frontend.names.symbols;
-استورد compiler.frontend.names.context;
+استورد compiler.frontend.names.name_context;
 استورد compiler.source.source_file;
 استورد compiler.source.span;
 

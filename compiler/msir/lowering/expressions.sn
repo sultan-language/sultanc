@@ -25,14 +25,14 @@
 استورد compiler.frontend.types.compatibility;
 استورد compiler.frontend.types.builtins_generated;
 استورد compiler.frontend.names.identifiers;
-استورد compiler.frontend.names.context;
+استورد compiler.frontend.names.name_context;
 استورد compiler.frontend.names.resolved_bindings;
 استورد compiler.runtime.primitive_identity;
 استورد compiler.msir.identifiers;
 استورد compiler.msir.msir_model;
 استورد compiler.msir.msir_builder;
 استورد compiler.msir.lowering.model;
-استورد compiler.msir.lowering.context;
+استورد compiler.msir.lowering.msir_context;
 استورد compiler.msir.lowering.places;
 استورد compiler.msir.lowering.control_flow;
 

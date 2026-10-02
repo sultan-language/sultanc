@@ -24,7 +24,7 @@
 استورد compiler.msir.msir_model;
 استورد compiler.msir.msir_builder;
 استورد compiler.msir.lowering.model;
-استورد compiler.msir.lowering.context;
+استورد compiler.msir.lowering.msir_context;
 استورد compiler.msir.lowering.expressions;
 استورد compiler.runtime.primitive_identity;
 

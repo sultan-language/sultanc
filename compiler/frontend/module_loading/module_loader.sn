@@ -7,7 +7,7 @@
 استورد compiler.frontend.identifier_identity;
 استورد compiler.frontend.names.identifiers;
 استورد compiler.frontend.names.module_identity;
-استورد compiler.frontend.names.context;
+استورد compiler.frontend.names.name_context;
 استورد compiler.frontend.names.modules;
 استورد compiler.source.source_file;
 استورد compiler.source.source_map;
