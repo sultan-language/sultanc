@@ -106,6 +106,7 @@ __Initializer__ __Parser_Parse_Initializer__(__Parser__ *__Parser_State__, int *
 __Ast_Function__ *__Parser_Parse_Function__(__Parser__ *__Parser_State__,
                                             __Text_Slice__ __Name__,
                                             int __Public__,
+                                            int __External__,
                                             __Source_Position__ __Start__);
 
 /* Parses the parser module items. */

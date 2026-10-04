@@ -89,6 +89,23 @@ __Type_Conversion_Class__ __Type_Conversion_Classify__(__Semantic_Context__ *__C
     }
 
     if (__Source_Type__.__Kind__ == __Resolved_Type_Reference__ &&
+        __Target_Type__.__Kind__ == __Resolved_Type_Pointer__)
+    {
+        __Ast_Type__ *__Target_Inner__ = __Target_Type__.__Inner__;
+        int __Target_Mutable__ =
+            __Target_Inner__ != NULL && __Target_Inner__->__Kind__ == __Ast_Type_Mutable__;
+        if (!__Type_Compatible__(__Context__, __Source_Type__.__Inner__, __Target_Inner__))
+        {
+            return __Type_Conversion_Invalid__;
+        }
+        if (__Target_Mutable__ && !__Source_Type__.__Reference_Mutable__)
+        {
+            return __Type_Conversion_Invalid__;
+        }
+        return __Type_Conversion_Implicit_Safe__;
+    }
+
+    if (__Source_Type__.__Kind__ == __Resolved_Type_Reference__ &&
         __Target_Type__.__Kind__ == __Resolved_Type_Reference__)
     {
         if (!__Type_Compatible__(__Context__, __Source_Type__.__Inner__, __Target_Type__.__Inner__))

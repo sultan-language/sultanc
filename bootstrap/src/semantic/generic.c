@@ -147,6 +147,7 @@ __Ast_Type__ *__Semantic_Generic_Substitute_Type__(__Semantic_Context__ *__Conte
 
     switch (__Type__->__Kind__)
     {
+        case __Ast_Type_Pointer__:
         case __Ast_Type_Reference__:
         case __Ast_Type_Vector__:
         case __Ast_Type_Box__:
@@ -556,6 +557,11 @@ static __Ast_Statement__ *__Generic_Clone_Statement__(__Semantic_Context__ *__Co
         case __Ast_Statement_Copy__:
             __Result__->__As__.__Copy__.__Expression__ = __Generic_Clone_Expression__(
                 __Context__, __Source__->__As__.__Copy__.__Expression__, __Parameters__, __Arguments__,
+                __Argument_Count__, __Unit__);
+            break;
+        case __Ast_Statement_Unsafe__:
+            __Result__->__As__.__Unsafe__ = __Generic_Clone_Block__(
+                __Context__, __Source__->__As__.__Unsafe__, __Parameters__, __Arguments__,
                 __Argument_Count__, __Unit__);
             break;
         case __Ast_Statement_While__:

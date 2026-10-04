@@ -74,6 +74,8 @@ typedef struct
     __Arena__ __Synthetic_Types__;
     /* Stores the scope depth. */
     size_t __Scope_Depth__;
+    /* Stores the unsafe nesting depth. */
+    size_t __Unsafe_Depth__;
     /* Tracks the falls through state. */
     int __Falls_Through__;
 } __Semantic_Body_Context__;

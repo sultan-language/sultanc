@@ -99,6 +99,8 @@ typedef enum
     __Ast_Statement_If__,
     /* Represents the AST statement match value. */
     __Ast_Statement_Match__,
+    /* Represents the AST statement unsafe block value. */
+    __Ast_Statement_Unsafe__,
     /* Represents the AST statement return value. */
     __Ast_Statement_Return__
 } __Ast_Statement_Kind__;
@@ -207,6 +209,8 @@ struct __Ast_Statement__
             /* Stores the case count. */
             size_t __Case_Count__;
         } __Match__;
+        /* References the unsafe body. */
+        __Ast_Block__ *__Unsafe__;
         /* References the return. */
         __Ast_Expression__ *__Return__;
     } __As__;
@@ -230,6 +234,8 @@ struct __Ast_Function__
     __Text_Slice__ __Name__;
     /* Tracks the public state. */
     int __Public__;
+    /* Tracks whether the function is an external declaration. */
+    int __External__;
     /* References generic type parameter names. */
     __Text_Slice__ *__Type_Parameters__;
     /* Stores generic type parameter count. */

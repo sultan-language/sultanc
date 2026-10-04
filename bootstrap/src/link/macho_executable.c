@@ -160,6 +160,50 @@ static int macho_append_path(__Bootstrap_Byte_Buffer__ *buffer, const char *path
     return __Bootstrap_Byte_Buffer_Append__(buffer, path, length);
 }
 
+static int macho_path_command_size(size_t fixed_size, const char *path, size_t *command_size)
+{
+    size_t raw_size;
+    if (path == NULL || path[0] == '\0' || command_size == NULL)
+        return 0;
+    if (strlen(path) + 1U > SIZE_MAX - fixed_size)
+        return 0;
+    raw_size = fixed_size + strlen(path) + 1U;
+    return macho_align(raw_size, 8U, command_size);
+}
+
+static int macho_append_dylib_command(__Bootstrap_Byte_Buffer__ *buffer, const char *path)
+{
+    size_t command_size;
+    size_t end;
+    if (buffer == NULL || !macho_path_command_size(24U, path, &command_size) ||
+        command_size > UINT32_MAX || buffer->size > SIZE_MAX - command_size)
+        return 0;
+    end = buffer->size + command_size;
+    return __Bootstrap_Byte_Buffer_Append_U32_LE__(buffer, 0xCU) &&
+           __Bootstrap_Byte_Buffer_Append_U32_LE__(buffer, (uint32_t)command_size) &&
+           __Bootstrap_Byte_Buffer_Append_U32_LE__(buffer, 24U) &&
+           __Bootstrap_Byte_Buffer_Append_U32_LE__(buffer, 0U) &&
+           __Bootstrap_Byte_Buffer_Append_U32_LE__(buffer, 0U) &&
+           __Bootstrap_Byte_Buffer_Append_U32_LE__(buffer, 0U) &&
+           macho_append_path(buffer, path) &&
+           __Bootstrap_Byte_Buffer_Pad_To__(buffer, end);
+}
+
+static int macho_append_rpath_command(__Bootstrap_Byte_Buffer__ *buffer, const char *path)
+{
+    size_t command_size;
+    size_t end;
+    if (buffer == NULL || !macho_path_command_size(12U, path, &command_size) ||
+        command_size > UINT32_MAX || buffer->size > SIZE_MAX - command_size)
+        return 0;
+    end = buffer->size + command_size;
+    return __Bootstrap_Byte_Buffer_Append_U32_LE__(buffer, 0x8000001CU) &&
+           __Bootstrap_Byte_Buffer_Append_U32_LE__(buffer, (uint32_t)command_size) &&
+           __Bootstrap_Byte_Buffer_Append_U32_LE__(buffer, 12U) &&
+           macho_append_path(buffer, path) &&
+           __Bootstrap_Byte_Buffer_Pad_To__(buffer, end);
+}
+
 static int macho_append_uleb(__Bootstrap_Byte_Buffer__ *buffer, uint64_t value)
 {
     do
@@ -481,6 +525,13 @@ static int macho_symbol_equals(const __Bootstrap_MachO_Symbol__ *symbol, const c
            memcmp(symbol->name,name,length) == 0;
 }
 
+static int macho_symbol_is_llvm(const __Bootstrap_MachO_Symbol__ *symbol)
+{
+    static const char prefix[] = "_LLVM";
+    return symbol != NULL && symbol->name_size >= sizeof(prefix) - 1U &&
+           memcmp(symbol->name, prefix, sizeof(prefix) - 1U) == 0;
+}
+
 static int macho_external_ordinal(const size_t *externals,
                                   size_t external_count,
                                   size_t symbol_index,
@@ -530,6 +581,8 @@ static uint64_t macho_symbol_target(const __Bootstrap_MachO_Symbol__ *symbol,
 int __Bootstrap_Finalize_MachO_ARM64__(const uint8_t *object,
                                        size_t object_size,
                                        __Bootstrap_Byte_Buffer__ *output,
+                                       const char *llvm_runtime_library,
+                                       const char *llvm_runtime_dir,
                                        char *error,
                                        size_t error_size)
 {
@@ -548,6 +601,9 @@ int __Bootstrap_Finalize_MachO_ARM64__(const uint8_t *object,
     size_t entry_symbol=SIZE_MAX;
     size_t i;
     size_t load_commands_size;
+    size_t llvm_load_command_size=0U,llvm_rpath_command_size=0U;
+    char *llvm_load_path=NULL;
+    int needs_llvm=0;
     size_t text_start=0U,const_start=0U,strings_start=0U,stub_start=0U,text_end=0U;
     size_t data_segment_start=0U,data_source_start=0U,common_start=0U,bss_start=0U,got_start=0U,note_start=0U,data_end=0U;
     size_t const_size,string_size_out,data_size,common_size,bss_size,stub_size,got_size;
@@ -634,7 +690,12 @@ int __Bootstrap_Finalize_MachO_ARM64__(const uint8_t *object,
         if (section>section_index || (section==0U && type_class!=0U) || (section!=0U && type_class!=0x0EU) ||
             !macho_symbol_name(object,object_size,string_offset,string_size,name_index,&symbols[i].name,&symbols[i].name_size)) { ok=0; break; }
         symbols[i].section=section; symbols[i].value=macho_u64(object,p+8U);
-        if (section==0U && symbols[i].name_size!=0U) externals[external_count++]=i;
+        if (section==0U && symbols[i].name_size!=0U)
+        {
+            externals[external_count++]=i;
+            if (macho_symbol_is_llvm(&symbols[i]))
+                needs_llvm=1;
+        }
         if (section==text.index && macho_symbol_equals(&symbols[i],"_main"))
         {
             if (entry_symbol!=SIZE_MAX || symbols[i].value<text.address || symbols[i].value>=text.address+text.size) { ok=0; break; }
@@ -647,7 +708,39 @@ int __Bootstrap_Finalize_MachO_ARM64__(const uint8_t *object,
         return macho_fail(error,error_size,"Mach-O object has no valid _main entry");
     }
 
+    if (needs_llvm)
+    {
+        size_t library_length;
+        if (llvm_runtime_library==NULL || llvm_runtime_library[0]=='\0' ||
+            llvm_runtime_dir==NULL || llvm_runtime_dir[0]=='\0')
+        {
+            free(externals); free(symbols);
+            return macho_fail(error,error_size,"LLVM runtime metadata is required for Mach-O Stage1");
+        }
+        library_length=strlen(llvm_runtime_library);
+        if (library_length>SIZE_MAX-8U)
+        {
+            free(externals); free(symbols);
+            return macho_fail(error,error_size,"invalid LLVM runtime path for Mach-O Stage1");
+        }
+        llvm_load_path=(char*)malloc(library_length+8U);
+        if (llvm_load_path==NULL)
+        {
+            free(externals); free(symbols);
+            return macho_fail(error,error_size,"out of memory building LLVM runtime path");
+        }
+        memcpy(llvm_load_path,"@rpath/",7U);
+        memcpy(llvm_load_path+7U,llvm_runtime_library,library_length+1U);
+        if (!macho_path_command_size(24U,llvm_load_path,&llvm_load_command_size) ||
+            !macho_path_command_size(12U,llvm_runtime_dir,&llvm_rpath_command_size))
+        {
+            free(llvm_load_path); free(externals); free(symbols);
+            return macho_fail(error,error_size,"invalid LLVM runtime path for Mach-O Stage1");
+        }
+    }
+
     load_commands_size=external_count>0U?1016U:968U;
+    if (needs_llvm) load_commands_size+=llvm_load_command_size+llvm_rpath_command_size;
     if (data.exists) load_commands_size+=80U;
     if (!macho_align(32U+load_commands_size,16U,&text_start)) ok=0;
     const_align=8U;
@@ -679,14 +772,16 @@ int __Bootstrap_Finalize_MachO_ARM64__(const uint8_t *object,
     if (ok && external_name_offsets==NULL) ok=0;
     if (ok && !__Bootstrap_Byte_Buffer_Append_U8__(&external_strings,0U)) ok=0;
     if (ok && external_count>0U)
-        ok=__Bootstrap_Byte_Buffer_Append_U8__(&bind,0x11U)&&__Bootstrap_Byte_Buffer_Append_U8__(&bind,0x51U);
+        ok=__Bootstrap_Byte_Buffer_Append_U8__(&bind,0x51U);
     for (i=0U; ok && i<external_count; ++i)
     {
         __Bootstrap_MachO_Symbol__ *symbol=&symbols[externals[i]];
         uint64_t got_inside_data=(uint64_t)(got_start-data_segment_start+i*8U);
+        uint8_t dylib_ordinal=macho_symbol_is_llvm(symbol)?0x12U:0x11U;
         if (external_strings.size>UINT32_MAX) { ok=0; break; }
         external_name_offsets[i]=(uint32_t)external_strings.size;
-        ok=__Bootstrap_Byte_Buffer_Append_U8__(&bind,0x40U)&&
+        ok=__Bootstrap_Byte_Buffer_Append_U8__(&bind,dylib_ordinal)&&
+           __Bootstrap_Byte_Buffer_Append_U8__(&bind,0x40U)&&
            __Bootstrap_Byte_Buffer_Append__(&bind,symbol->name,symbol->name_size)&&
            __Bootstrap_Byte_Buffer_Append_U8__(&bind,0U)&&
            __Bootstrap_Byte_Buffer_Append_U8__(&bind,0x72U)&&macho_append_uleb(&bind,got_inside_data)&&
@@ -704,7 +799,7 @@ int __Bootstrap_Finalize_MachO_ARM64__(const uint8_t *object,
     if (ok)
     {
         uint32_t flags=0x200004U | (external_count==0U?1U:0U);
-        uint32_t commands=external_count>0U?13U:12U;
+        uint32_t commands=(external_count>0U?13U:12U)+(needs_llvm?2U:0U);
         ok=__Bootstrap_Byte_Buffer_Append_U32_LE__(output,0xFEEDFACFU)&&
            __Bootstrap_Byte_Buffer_Append_U32_LE__(output,0x0100000CU)&&
            __Bootstrap_Byte_Buffer_Append_U32_LE__(output,0U)&&
@@ -767,6 +862,9 @@ int __Bootstrap_Finalize_MachO_ARM64__(const uint8_t *object,
            macho_append_path(output,"/usr/lib/libSystem.B.dylib")&&
            __Bootstrap_Byte_Buffer_Pad_To__(output,(output->size+7U)/8U*8U);
     }
+    if (ok && needs_llvm)
+        ok=macho_append_dylib_command(output,llvm_load_path)&&
+           macho_append_rpath_command(output,llvm_runtime_dir);
     if (ok)
     {
         size_t entry_offset=(size_t)(symbols[entry_symbol].value-text.address);
@@ -849,9 +947,10 @@ int __Bootstrap_Finalize_MachO_ARM64__(const uint8_t *object,
     }
     for (i=0U; ok && i<external_count; ++i)
     {
+        uint16_t library_ordinal=macho_symbol_is_llvm(&symbols[externals[i]])?0x0200U:0x0100U;
         ok=__Bootstrap_Byte_Buffer_Append_U32_LE__(output,external_name_offsets[i])&&
            __Bootstrap_Byte_Buffer_Append_U8__(output,1U)&&__Bootstrap_Byte_Buffer_Append_U8__(output,0U)&&
-           __Bootstrap_Byte_Buffer_Append_U16_LE__(output,0x0100U)&&__Bootstrap_Byte_Buffer_Append_U64_LE__(output,0U);
+           __Bootstrap_Byte_Buffer_Append_U16_LE__(output,library_ordinal)&&__Bootstrap_Byte_Buffer_Append_U64_LE__(output,0U);
     }
     if (ok) ok=__Bootstrap_Byte_Buffer_Pad_To__(output,external_strings_start)&&
               __Bootstrap_Byte_Buffer_Append__(output,external_strings.data,external_strings.size)&&
@@ -878,7 +977,7 @@ int __Bootstrap_Finalize_MachO_ARM64__(const uint8_t *object,
     if (ok) ok=__Bootstrap_Byte_Buffer_Append__(output,signature.data,signature.size);
     if (ok && output->size!=signature_start+signature.size) ok=0;
 
-    free(external_name_offsets); free(externals); free(symbols);
+    free(llvm_load_path); free(external_name_offsets); free(externals); free(symbols);
     __Bootstrap_Byte_Buffer_Destroy__(&bind); __Bootstrap_Byte_Buffer_Destroy__(&external_strings);
     __Bootstrap_Byte_Buffer_Destroy__(&preliminary_signature); __Bootstrap_Byte_Buffer_Destroy__(&signature);
     if (!ok)

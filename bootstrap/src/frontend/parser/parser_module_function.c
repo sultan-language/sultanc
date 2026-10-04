@@ -8,7 +8,8 @@
 /* Parses the parser function item. */
 int __Parser_Parse_Function_Item__(__Parser__ *__Parser_State__,
                                    __Vector__ *__Items__,
-                                   int __Public__)
+                                   int __Public__,
+                                   int __External__)
 {
     /* Stores the start. */
     __Source_Position__ __Start__ = __Parser_State__->__Current__.__Span__.__Start__;
@@ -37,7 +38,8 @@ int __Parser_Parse_Function_Item__(__Parser__ *__Parser_State__,
     {
         return 0;
     }
-    __Function__ = __Parser_Parse_Function__(__Parser_State__, __Name__, __Public__, __Start__);
+    __Function__ = __Parser_Parse_Function__(
+        __Parser_State__, __Name__, __Public__, __External__, __Start__);
     if (__Function__ == NULL)
     {
         return 0;

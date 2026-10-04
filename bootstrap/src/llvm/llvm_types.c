@@ -224,6 +224,15 @@ LLVMTypeRef __LLVM_Type__(__LLVM_Emitter__ *emitter, __Ast_Type__ *type)
     {
         return LLVMIntTypeInContext(emitter->context, resolved.__Bits__);
     }
+    if (resolved.__Kind__ == __Resolved_Type_Float__)
+    {
+        if (resolved.__Bits__ == 32U)
+            return LLVMFloatTypeInContext(emitter->context);
+        if (resolved.__Bits__ == 64U)
+            return LLVMDoubleTypeInContext(emitter->context);
+        __LLVM_Fail__("LLVM float Type must be 32 or 64 bits");
+        return NULL;
+    }
     if ((resolved.__Kind__ == __Resolved_Type_Struct__ ||
          resolved.__Kind__ == __Resolved_Type_Enum__) &&
         resolved.__Named__ != NULL)
@@ -243,7 +252,8 @@ LLVMTypeRef __LLVM_Type__(__LLVM_Emitter__ *emitter, __Ast_Type__ *type)
     {
         return __LLVM_Create_Tagged_Literal_Type__(emitter, type);
     }
-    if (resolved.__Kind__ == __Resolved_Type_Reference__ ||
+    if (resolved.__Kind__ == __Resolved_Type_Pointer__ ||
+        resolved.__Kind__ == __Resolved_Type_Reference__ ||
         resolved.__Kind__ == __Resolved_Type_Box__)
     {
         /* Stores the inner. */
@@ -431,6 +441,7 @@ __Ast_Type__ *__LLVM_Expression_Integer_Type__(__LLVM_Emitter__ *emitter,
                 if (operand_type != NULL &&
                     __Type_Resolve__(emitter->semantic, operand_type, &resolved) &&
                     (resolved.__Kind__ == __Resolved_Type_Reference__ ||
+                     resolved.__Kind__ == __Resolved_Type_Pointer__ ||
                      resolved.__Kind__ == __Resolved_Type_Box__))
                 {
                     return resolved.__Inner__;
@@ -539,6 +550,7 @@ __Ast_Type__ *__LLVM_Expression_Type__(__LLVM_Emitter__ *emitter,
             if (operation == __Unary_Dereference__ && operand_type != NULL &&
                 __Type_Resolve__(emitter->semantic, operand_type, &resolved) &&
                 (resolved.__Kind__ == __Resolved_Type_Reference__ ||
+                 resolved.__Kind__ == __Resolved_Type_Pointer__ ||
                  resolved.__Kind__ == __Resolved_Type_Box__))
                 return resolved.__Inner__;
             return operand_type;

@@ -62,10 +62,9 @@ __Ast_Expression__ *__Parser_Parse_Primary__(__Parser__ *__Parser_State__)
                 }
                 if (__Parser_Accept__(__Parser_State__, __Token_LEFT_BRACKET_OPERATOR__))
                 {
-                    int __Ok__ = 0;
-                    __Ast_Atom__ __Index__ = __Parser_Parse_Atom__(__Parser_State__, &__Ok__);
+                    __Ast_Expression__ *__Index__ = __Parser_Parse_Expression__(__Parser_State__);
                     __Ast_Lvalue__ *__Extended__;
-                    if (!__Ok__ || !__Parser_Expect__(__Parser_State__, __Token_RIGHT_BRACKET_OPERATOR__))
+                    if (__Index__ == NULL || !__Parser_Expect__(__Parser_State__, __Token_RIGHT_BRACKET_OPERATOR__))
                     {
                         return NULL;
                     }

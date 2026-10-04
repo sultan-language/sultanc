@@ -390,19 +390,23 @@ __LLVM_Value__ __LLVM_Emit_Expression__(__LLVM_Emitter__ *emitter,
             return __LLVM_Emit_Atom__(emitter, &expression->__As__.__Atom__, expected);
 
         case __Ast_Expression_Conversion__:
-            left = __LLVM_Emit_Expression__(
-                emitter, expression->__As__.__Conversion__.__Operand__, NULL);
-            if (left.value == NULL)
+            /* An explicit conversion supplies the type context for an untyped literal.
+             * Do not first lower that literal without context: doing so records a
+             * permanent LLVM failure before the typed retry can succeed. */
+            if (expression->__As__.__Conversion__.__Operand__->__Kind__ ==
+                    __Ast_Expression_Atom__ &&
+                expression->__As__.__Conversion__.__Operand__->__As__.__Atom__.__Kind__ ==
+                    __Ast_Atom_Literal__)
             {
-                /* Untyped integer literals are valid when the explicit target supplies context. */
-                if (expression->__As__.__Conversion__.__Operand__->__Kind__ ==
-                    __Ast_Expression_Atom__)
-                {
-                    left = __LLVM_Emit_Atom__(
-                        emitter,
-                        &expression->__As__.__Conversion__.__Operand__->__As__.__Atom__,
-                        expression->__As__.__Conversion__.__Target_Type__);
-                }
+                left = __LLVM_Emit_Atom__(
+                    emitter,
+                    &expression->__As__.__Conversion__.__Operand__->__As__.__Atom__,
+                    expression->__As__.__Conversion__.__Target_Type__);
+            }
+            else
+            {
+                left = __LLVM_Emit_Expression__(
+                    emitter, expression->__As__.__Conversion__.__Operand__, NULL);
             }
             if (left.value == NULL)
             {
@@ -1000,10 +1004,11 @@ __LLVM_Value__ __LLVM_Emit_Expression__(__LLVM_Emitter__ *emitter,
                     operand->__As__.__Atom__.__Kind__ != __Ast_Atom_Lvalue__ ||
                     reference_type == NULL ||
                     !__Type_Resolve__(emitter->semantic, reference_type, &resolved) ||
-                    resolved.__Kind__ != __Resolved_Type_Reference__)
+                    (resolved.__Kind__ != __Resolved_Type_Reference__ &&
+                     resolved.__Kind__ != __Resolved_Type_Pointer__))
                 {
                     __LLVM_Fail__(
-                        "L2.6 address creation requires canonical semantic reference Type");
+                        "L2.6 address creation requires canonical semantic reference/pointer Type");
                     return result;
                 }
                 operand_place =

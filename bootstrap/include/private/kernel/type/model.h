@@ -23,6 +23,8 @@ typedef enum
     __Resolved_Type_Character__,
     /* Represents the resolved type string value. */
     __Resolved_Type_String__,
+    /* Represents the resolved type pointer value. */
+    __Resolved_Type_Pointer__,
     /* Represents the resolved type reference value. */
     __Resolved_Type_Reference__,
     /* Represents the resolved type vector value. */

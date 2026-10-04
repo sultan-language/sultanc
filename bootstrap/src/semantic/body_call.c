@@ -9,6 +9,43 @@
 
 #include <string.h>
 
+
+/* Invalidates sequence-length facts after a mutable reference escapes into a call. */
+static void __Body_Invalidate_Mutable_Reference_Length__(
+    __Semantic_Body_Context__ *__Context__,
+    __Ast_Type__ *__Parameter__,
+    __Ast_Expression__ *__Argument__)
+{
+    int __Mutable_Reference__ = 0;
+    __Ast_Expression__ *__Operand__;
+    __Ast_Lvalue__ *__Lvalue__;
+    __Semantic_Local__ *__Local__;
+
+    if (!__Safety_Type_Is_Reference__(__Parameter__, &__Mutable_Reference__) ||
+        !__Mutable_Reference__ || __Argument__ == NULL ||
+        __Argument__->__Kind__ != __Ast_Expression_Unary__ ||
+        __Argument__->__As__.__Unary__.__Operation__ != __Unary_Address_Mutable__)
+    {
+        return;
+    }
+    __Operand__ = __Argument__->__As__.__Unary__.__Operand__;
+    if (__Operand__ == NULL || __Operand__->__Kind__ != __Ast_Expression_Atom__ ||
+        __Operand__->__As__.__Atom__.__Kind__ != __Ast_Atom_Lvalue__)
+    {
+        return;
+    }
+    __Lvalue__ = __Operand__->__As__.__Atom__.__As__.__Lvalue__;
+    if (__Lvalue__ == NULL || __Lvalue__->__Kind__ != __Ast_Lvalue_Base__)
+    {
+        return;
+    }
+    __Local__ = __Body_Find_Local__(__Context__, __Lvalue__);
+    if (__Local__ != NULL)
+    {
+        __Local__->__Has_Known_Length__ = 0;
+    }
+}
+
 /* Checks the body call arguments. */
 static int __Body_Check_Call_Arguments__(__Semantic_Body_Context__ *__Context__,
                                          __Ast_Type__ *const *__Parameters__,
@@ -47,6 +84,8 @@ static int __Body_Check_Call_Arguments__(__Semantic_Body_Context__ *__Context__,
             {
                 return 0;
             }
+            __Body_Invalidate_Mutable_Reference_Length__(
+                __Context__, __Parameters__[__Index__], __Arguments__[__Index__]);
         }
     }
     return 1;
@@ -95,6 +134,7 @@ static int __Body_Generic_Type_Contains_Parameter__(
     switch (__Type__->__Kind__)
     {
         case __Ast_Type_Mutable__:
+        case __Ast_Type_Pointer__:
         case __Ast_Type_Reference__:
         case __Ast_Type_Vector__:
         case __Ast_Type_Box__:
@@ -195,6 +235,7 @@ static int __Body_Generic_Infer_Type__(__Semantic_Body_Context__ *__Context__,
                 __Context__, __Template_Function__, __Template_Inner__,
                 __Actual_Inner__, __Bindings__);
         }
+        case __Ast_Type_Pointer__:
         case __Ast_Type_Mutable__:
         case __Ast_Type_Vector__:
         case __Ast_Type_Box__:

@@ -131,8 +131,8 @@ struct __Ast_Lvalue__
         {
             /* References the parent. */
             __Ast_Lvalue__ *__Parent__;
-            /* Tracks the index. */
-            __Ast_Atom__ __Index__;
+            /* References the index expression. */
+            __Ast_Expression__ *__Index__;
         } __Index__;
         /* References the dereference parent. */
         __Ast_Lvalue__ *__Dereference_Parent__;

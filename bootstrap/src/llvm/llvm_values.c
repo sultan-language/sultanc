@@ -395,7 +395,8 @@ __LLVM_Coerce__(__LLVM_Emitter__ *emitter, __LLVM_Value__ source, __Ast_Type__ *
         if (__Type_Resolve__(emitter->semantic, source.type, &source_resolved) &&
             __Type_Resolve__(emitter->semantic, target, &target_resolved) &&
             source_resolved.__Kind__ == __Resolved_Type_Reference__ &&
-            target_resolved.__Kind__ == __Resolved_Type_Reference__ &&
+            (target_resolved.__Kind__ == __Resolved_Type_Reference__ ||
+             target_resolved.__Kind__ == __Resolved_Type_Pointer__) &&
             conversion == __Type_Conversion_Implicit_Safe__)
         {
             /* Stores the target pointer. */
@@ -481,6 +482,7 @@ __Ast_Type__ *__LLVM_Lvalue_Type__(__LLVM_Emitter__ *emitter, __Ast_Lvalue__ *lv
         parent_type = __LLVM_Lvalue_Type__(emitter, lvalue->__As__.__Dereference_Parent__);
         if (parent_type == NULL || !__Type_Resolve__(emitter->semantic, parent_type, &resolved) ||
             (resolved.__Kind__ != __Resolved_Type_Reference__ &&
+             resolved.__Kind__ != __Resolved_Type_Pointer__ &&
              resolved.__Kind__ != __Resolved_Type_Box__))
         {
             return NULL;
@@ -499,6 +501,7 @@ __Ast_Type__ *__LLVM_Lvalue_Type__(__LLVM_Emitter__ *emitter, __Ast_Lvalue__ *lv
         if (resolved.__Kind__ == __Resolved_Type_String__)
             return &__LLVM_U8_Type__;
         if (resolved.__Kind__ == __Resolved_Type_Vector__ ||
+            resolved.__Kind__ == __Resolved_Type_Pointer__ ||
             resolved.__Kind__ == __Resolved_Type_Box__)
             return resolved.__Inner__;
     }
@@ -588,6 +591,7 @@ __LLVM_Place__ __LLVM_Emit_Place__(__LLVM_Emitter__ *emitter, __Ast_Lvalue__ *lv
         if (pointer.value == NULL || pointer.type == NULL ||
             !__Type_Resolve__(emitter->semantic, pointer.type, &resolved) ||
             (resolved.__Kind__ != __Resolved_Type_Reference__ &&
+             resolved.__Kind__ != __Resolved_Type_Pointer__ &&
              resolved.__Kind__ != __Resolved_Type_Box__) ||
             resolved.__Inner__ == NULL)
         {
@@ -624,8 +628,8 @@ __LLVM_Place__ __LLVM_Emit_Place__(__LLVM_Emitter__ *emitter, __Ast_Lvalue__ *lv
             __LLVM_Fail__("L2.7 index parent has no canonical Type");
             return place;
         }
-        index = __LLVM_Emit_Atom__(
-            emitter, &lvalue->__As__.__Index__.__Index__, &__LLVM_Integer_Type__);
+        index = __LLVM_Emit_Expression__(
+            emitter, lvalue->__As__.__Index__.__Index__, &__LLVM_Integer_Type__);
         if (index.value == NULL)
             return place;
         index = __LLVM_Coerce__(emitter, index, &__LLVM_Integer_Type__);
@@ -690,6 +694,12 @@ __LLVM_Place__ __LLVM_Emit_Place__(__LLVM_Emitter__ *emitter, __Ast_Lvalue__ *lv
             element_type = resolved.__Kind__ == __Resolved_Type_String__ ? &__LLVM_U8_Type__
                                                                          : resolved.__Inner__;
         }
+        else if (resolved.__Kind__ == __Resolved_Type_Pointer__)
+        {
+            base = LLVMBuildLoad2(
+                emitter->builder, parent.llvm_type, parent.address, "pointer.data");
+            element_type = resolved.__Inner__;
+        }
         else if (resolved.__Kind__ == __Resolved_Type_Box__)
         {
             base = LLVMBuildLoad2(emitter->builder, parent.llvm_type, parent.address, "box.data");
@@ -697,7 +707,7 @@ __LLVM_Place__ __LLVM_Emit_Place__(__LLVM_Emitter__ *emitter, __Ast_Lvalue__ *lv
         }
         else
         {
-            __LLVM_Fail__("L2.7 indexing requires canonical vector/text/box Type");
+            __LLVM_Fail__("L2.7 indexing requires canonical vector/text/pointer/box Type");
             return place;
         }
         element_llvm_type = __LLVM_Type__(emitter, element_type);

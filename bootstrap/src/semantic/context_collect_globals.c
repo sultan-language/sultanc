@@ -64,7 +64,8 @@ static int __Semantic_Record_Type_Owner__(__Semantic_Context__ *__Context__,
         }
         return 1;
     }
-    if (__Type__->__Kind__ == __Ast_Type_Reference__ || __Type__->__Kind__ == __Ast_Type_Vector__ ||
+    if (__Type__->__Kind__ == __Ast_Type_Pointer__ || __Type__->__Kind__ == __Ast_Type_Reference__ ||
+        __Type__->__Kind__ == __Ast_Type_Vector__ ||
         __Type__->__Kind__ == __Ast_Type_Box__ || __Type__->__Kind__ == __Ast_Type_Option__ ||
         __Type__->__Kind__ == __Ast_Type_Mutable__)
     {

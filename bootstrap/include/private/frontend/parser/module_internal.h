@@ -32,7 +32,8 @@ int __Parser_Parse_Type_Item__(__Parser__ *__Parser_State__, __Vector__ *__Items
 /* Parses the parser function item. */
 int __Parser_Parse_Function_Item__(__Parser__ *__Parser_State__,
                                    __Vector__ *__Items__,
-                                   int __Public__);
+                                   int __Public__,
+                                   int __External__);
 
 /* Parses the parser alias item. */
 int __Parser_Parse_Alias_Item__(__Parser__ *__Parser_State__,

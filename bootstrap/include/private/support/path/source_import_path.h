@@ -10,6 +10,7 @@
 char *__Source_Path_Resolve_Import__(const char *__Importer_Path__,
                                      const char *__Project_Root__,
                                      int __Logical__,
-                                     __Text_Slice__ __Import__);
+                                     __Text_Slice__ __Import__,
+                                     int *__Escapes_Root__);
 
 #endif

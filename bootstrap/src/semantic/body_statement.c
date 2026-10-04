@@ -239,6 +239,21 @@ static int __Body_Check_Statement__(__Semantic_Body_Context__ *__Context__,
             return 1;
         }
 
+        case __Ast_Statement_Unsafe__:
+        {
+            int __Unsafe_Falls__ = 1;
+            ++__Context__->__Unsafe_Depth__;
+            if (!__Body_Check_Block_Flow__(
+                    __Context__, __Statement__->__As__.__Unsafe__, &__Unsafe_Falls__))
+            {
+                --__Context__->__Unsafe_Depth__;
+                return 0;
+            }
+            --__Context__->__Unsafe_Depth__;
+            __Context__->__Falls_Through__ = __Unsafe_Falls__;
+            return 1;
+        }
+
         case __Ast_Statement_Return__:
         {
             /* References the expected. */

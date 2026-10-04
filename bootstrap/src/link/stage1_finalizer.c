@@ -93,7 +93,9 @@ static int write_executable(const char *path, const __Bootstrap_Byte_Buffer__ *i
 
 int __Bootstrap_Finalize_Stage1__(const char *object_path,
                                   const char *output_path,
-                                  const char *target_name)
+                                  const char *target_name,
+                                  const char *llvm_runtime_library,
+                                  const char *llvm_runtime_dir)
 {
     uint8_t *object = NULL;
     size_t object_size = 0U;
@@ -133,9 +135,11 @@ int __Bootstrap_Finalize_Stage1__(const char *object_path,
 
     if (finalizer == __Bootstrap_Target_Finalizer_MachO_ARM64__)
         finalized = __Bootstrap_Finalize_MachO_ARM64__(object, object_size, &image,
+                                                       llvm_runtime_library, llvm_runtime_dir,
                                                        format_error, sizeof(format_error));
     else if (finalizer == __Bootstrap_Target_Finalizer_ELF_X86_64__)
         finalized = __Bootstrap_Finalize_ELF_X86_64__(object, object_size, &image,
+                                                      llvm_runtime_library, llvm_runtime_dir,
                                                       format_error, sizeof(format_error));
     if (!finalized && stage1_finalizer_error[0] == '\0')
         finalizer_fail(format_error[0] == '\0' ? "Stage1 object finalization failed" : format_error);

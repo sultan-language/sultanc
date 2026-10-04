@@ -11,6 +11,8 @@
 int __Bootstrap_Finalize_ELF_X86_64__(const uint8_t *object,
                                       size_t object_size,
                                       __Bootstrap_Byte_Buffer__ *output,
+                                      const char *llvm_runtime_library,
+                                      const char *llvm_runtime_dir,
                                       char *error,
                                       size_t error_size);
 

@@ -27,6 +27,11 @@ __Ast_Type__ *__Parser_Parse_Type__(__Parser__ *__Parser_State__)
         return __Parser_Parse_Wrapped_Type__(__Parser_State__, __Ast_Type_Box__);
     }
 
+    if (__Parser_State__->__Current__.__Kind__ == __Token_STAR_OPERATOR__)
+    {
+        return __Parser_Parse_Wrapped_Type__(__Parser_State__, __Ast_Type_Pointer__);
+    }
+
     if (__Parser_State__->__Current__.__Kind__ == __Token_AND_OPERATOR__)
     {
         return __Parser_Parse_Wrapped_Type__(__Parser_State__, __Ast_Type_Reference__);

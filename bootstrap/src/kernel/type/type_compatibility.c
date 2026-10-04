@@ -35,7 +35,8 @@ int __Type_Compatible__(__Semantic_Context__ *__Context__,
     {
         return 0;
     }
-    if (__A__.__Kind__ == __Resolved_Type_Reference__ || __A__.__Kind__ == __Resolved_Type_Box__ ||
+    if (__A__.__Kind__ == __Resolved_Type_Pointer__ || __A__.__Kind__ == __Resolved_Type_Reference__ ||
+        __A__.__Kind__ == __Resolved_Type_Box__ ||
         __A__.__Kind__ == __Resolved_Type_Option__ || __A__.__Kind__ == __Resolved_Type_Vector__)
     {
         if (__A__.__Kind__ == __Resolved_Type_Reference__ &&

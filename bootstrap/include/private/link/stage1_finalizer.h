@@ -5,7 +5,9 @@
 
 int __Bootstrap_Finalize_Stage1__(const char *object_path,
                                   const char *output_path,
-                                  const char *target_name);
+                                  const char *target_name,
+                                  const char *llvm_runtime_library,
+                                  const char *llvm_runtime_dir);
 const char *__Bootstrap_Stage1_Finalizer_Error__(void);
 
 #endif

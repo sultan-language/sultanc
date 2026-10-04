@@ -171,6 +171,11 @@ static const char *elf_string(const uint8_t *object,
     return NULL;
 }
 
+static int elf_symbol_is_llvm(const char *name)
+{
+    return name != NULL && strncmp(name, "LLVM", 4U) == 0;
+}
+
 /* Computes one signed PC-relative relocation. */
 static int elf_relative32(uint64_t place,
                           uint64_t target,
@@ -248,6 +253,8 @@ static int elf_append_dynamic(__Bootstrap_Byte_Buffer__ *buffer, uint64_t tag, u
 int __Bootstrap_Finalize_ELF_X86_64__(const uint8_t *object,
                                       size_t object_size,
                                       __Bootstrap_Byte_Buffer__ *output,
+                                      const char *llvm_runtime_library,
+                                      const char *llvm_runtime_dir,
                                       char *error,
                                       size_t error_size)
 {
@@ -255,7 +262,7 @@ int __Bootstrap_Finalize_ELF_X86_64__(const uint8_t *object,
     const size_t page = 0x1000U;
     const size_t interpreter_offset = 0x200U;
     static const char interpreter[] = "/lib64/ld-linux-x86-64.so.2";
-    static const char library[] = "libc.so.6";
+    static const char libc_library[] = "libc.so.6";
     __Bootstrap_ELF_Section__ *sections = NULL;
     __Bootstrap_ELF_Symbol__ *symbols = NULL;
     size_t *section_offsets = NULL;
@@ -290,7 +297,10 @@ int __Bootstrap_Finalize_ELF_X86_64__(const uint8_t *object,
     size_t plt_size;
     size_t got_size;
     size_t dynamic_size = 12U * 16U;
+    uint32_t llvm_library_offset = 0U;
+    uint32_t llvm_runpath_offset = 0U;
     uint64_t main_address = 0U;
+    int needs_llvm = 0;
     int ok = 1;
 
     memset(&symtab, 0, sizeof(symtab));
@@ -370,6 +380,8 @@ int __Bootstrap_Finalize_ELF_X86_64__(const uint8_t *object,
             {
                 external_ordinals[i] = external_count;
                 external_names[external_count] = name;
+                if (elf_symbol_is_llvm(name))
+                    needs_llvm = 1;
                 ++external_count;
             }
             if (symbols[i].section != ELF_SHN_UNDEF && strcmp(name, "main") == 0)
@@ -385,6 +397,12 @@ int __Bootstrap_Finalize_ELF_X86_64__(const uint8_t *object,
     }
     if (ok && main_symbol == SIZE_MAX)
         ok = 0;
+    if (ok && needs_llvm &&
+        (llvm_runtime_library == NULL || llvm_runtime_library[0] == '\0' ||
+         llvm_runtime_dir == NULL || llvm_runtime_dir[0] == '\0'))
+        return elf_fail(error, error_size, "LLVM runtime metadata is required for ELF Stage1");
+    if (needs_llvm)
+        dynamic_size += 2U * 16U;
 
     cursor = start_offset + 32U;
     if (ok)
@@ -418,7 +436,17 @@ int __Bootstrap_Finalize_ELF_X86_64__(const uint8_t *object,
     if (ok && !elf_align(cursor, 8U, &dynstr_offset))
         ok = 0;
 
-    dynstr_size = 1U + sizeof(library);
+    dynstr_size = 1U + sizeof(libc_library);
+    if (ok && needs_llvm)
+    {
+        size_t llvm_library_size = strlen(llvm_runtime_library) + 1U;
+        size_t llvm_runpath_size = strlen(llvm_runtime_dir) + 1U;
+        if (llvm_library_size > SIZE_MAX - dynstr_size ||
+            llvm_runpath_size > SIZE_MAX - (dynstr_size + llvm_library_size))
+            ok = 0;
+        else
+            dynstr_size += llvm_library_size + llvm_runpath_size;
+    }
     if (ok)
     {
         for (i = 0U; i < external_count; ++i)
@@ -550,8 +578,19 @@ int __Bootstrap_Finalize_ELF_X86_64__(const uint8_t *object,
     {
         size_t position = dynstr_offset;
         output->data[position++] = 0U;
-        memcpy(output->data + position, library, sizeof(library));
-        position += sizeof(library);
+        memcpy(output->data + position, libc_library, sizeof(libc_library));
+        position += sizeof(libc_library);
+        if (needs_llvm)
+        {
+            size_t llvm_library_size = strlen(llvm_runtime_library) + 1U;
+            size_t llvm_runpath_size = strlen(llvm_runtime_dir) + 1U;
+            llvm_library_offset = (uint32_t)(position - dynstr_offset);
+            memcpy(output->data + position, llvm_runtime_library, llvm_library_size);
+            position += llvm_library_size;
+            llvm_runpath_offset = (uint32_t)(position - dynstr_offset);
+            memcpy(output->data + position, llvm_runtime_dir, llvm_runpath_size);
+            position += llvm_runpath_size;
+        }
         for (i = 0U; i < external_count; ++i)
         {
             size_t name_size = strlen(external_names[i]) + 1U;
@@ -680,18 +719,22 @@ int __Bootstrap_Finalize_ELF_X86_64__(const uint8_t *object,
     {
         __Bootstrap_Byte_Buffer__ dynamic;
         __Bootstrap_Byte_Buffer_Init__(&dynamic);
-        ok = elf_append_dynamic(&dynamic, 1U, 1U) &&
-             elf_append_dynamic(&dynamic, 4U, base + hash_offset) &&
-             elf_append_dynamic(&dynamic, 5U, base + dynstr_offset) &&
-             elf_append_dynamic(&dynamic, 6U, base + dynsym_offset) &&
-             elf_append_dynamic(&dynamic, 10U, dynstr_size) &&
-             elf_append_dynamic(&dynamic, 11U, 24U) &&
-             elf_append_dynamic(&dynamic, 3U, base + got_offset) &&
-             elf_append_dynamic(&dynamic, 2U, rela_plt_size) &&
-             elf_append_dynamic(&dynamic, 20U, 7U) &&
-             elf_append_dynamic(&dynamic, 23U, base + rela_plt_offset) &&
-             elf_append_dynamic(&dynamic, 9U, 24U) &&
-             elf_append_dynamic(&dynamic, 0U, 0U);
+        ok = elf_append_dynamic(&dynamic, 1U, 1U);
+        if (ok && needs_llvm)
+            ok = elf_append_dynamic(&dynamic, 1U, llvm_library_offset) &&
+                 elf_append_dynamic(&dynamic, 29U, llvm_runpath_offset);
+        if (ok)
+            ok = elf_append_dynamic(&dynamic, 4U, base + hash_offset) &&
+                 elf_append_dynamic(&dynamic, 5U, base + dynstr_offset) &&
+                 elf_append_dynamic(&dynamic, 6U, base + dynsym_offset) &&
+                 elf_append_dynamic(&dynamic, 10U, dynstr_size) &&
+                 elf_append_dynamic(&dynamic, 11U, 24U) &&
+                 elf_append_dynamic(&dynamic, 3U, base + got_offset) &&
+                 elf_append_dynamic(&dynamic, 2U, rela_plt_size) &&
+                 elf_append_dynamic(&dynamic, 20U, 7U) &&
+                 elf_append_dynamic(&dynamic, 23U, base + rela_plt_offset) &&
+                 elf_append_dynamic(&dynamic, 9U, 24U) &&
+                 elf_append_dynamic(&dynamic, 0U, 0U);
         if (ok && dynamic.size == dynamic_size)
             memcpy(output->data + dynamic_offset, dynamic.data, dynamic.size);
         else

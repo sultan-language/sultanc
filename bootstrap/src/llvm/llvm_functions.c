@@ -11,6 +11,7 @@
 #include "semantic/generic.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 /* Finds the LLVM function by semantic. */
 __LLVM_Function__ *__LLVM_Find_Function_By_Semantic__(__LLVM_Emitter__ *emitter,
@@ -106,7 +107,18 @@ static int __LLVM_Declare_One_Function__(__LLVM_Emitter__ *emitter,
     free(parameter_types);
     if (function_type == NULL)
         return __LLVM_Fail__("LLVM function Type creation failed for L2.3");
-    snprintf(symbol, sizeof(symbol), "sultanc.fn.%zu", entry->__Index__);
+    if (function->__External__)
+    {
+        size_t copy_count = function->__Name__.__Length__ < sizeof(symbol) - 1U
+                                ? function->__Name__.__Length__
+                                : sizeof(symbol) - 1U;
+        memcpy(symbol, function->__Name__.__Data__, copy_count);
+        symbol[copy_count] = '\0';
+    }
+    else
+    {
+        snprintf(symbol, sizeof(symbol), "sultanc.fn.%zu", entry->__Index__);
+    }
     emitter->functions[output_index].semantic = entry;
     emitter->functions[output_index].type = function_type;
     emitter->functions[output_index].value = LLVMAddFunction(emitter->module, symbol, function_type);
@@ -171,7 +183,15 @@ int __LLVM_Emit_Function_Body__(__LLVM_Emitter__ *emitter, __LLVM_Function__ *ll
     int path_terminated = 0;
 
     if (llvm_function == NULL || (entry = llvm_function->semantic) == NULL ||
-        (function = entry->__Function__) == NULL || function->__Body__ == NULL)
+        (function = entry->__Function__) == NULL)
+    {
+        return __LLVM_Fail__("L2.3 semantic function body entry is incomplete");
+    }
+    if (function->__External__)
+    {
+        return 1;
+    }
+    if (function->__Body__ == NULL)
     {
         return __LLVM_Fail__("L2.3 requires concrete scalar function bodies");
     }

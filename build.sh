@@ -40,6 +40,8 @@ llvm_flags() {
     LLVM_LIBS=
     LLVM_DISCOVERY=
     LLVM_TOOL=
+    LLVM_RUNTIME_LIBRARY=
+    LLVM_RUNTIME_DIR=
 
     if [ -n "${LLVM_CONFIG:-}" ]; then
         if [ ! -x "$LLVM_CONFIG" ]; then
@@ -58,6 +60,40 @@ llvm_flags() {
         # than deriving target libraries from the host or a target-name list.
         LLVM_LIBS=$($LLVM_TOOL --ldflags --libs all --system-libs)
         LLVM_DISCOVERY="llvm-config=$LLVM_TOOL"
+
+        # Stage1 contains SultanC's LLVM provider and therefore needs the same LLVM
+        # runtime as Stage0. Discover the monolithic shared library from llvm-config
+        # instead of embedding a Homebrew, distro, or version-specific path.
+        LLVM_RUNTIME_DIR=$($LLVM_TOOL --libdir)
+        LLVM_RUNTIME_NAMES=$($LLVM_TOOL --link-shared --libnames all 2>/dev/null || true)
+        if [ -z "$LLVM_RUNTIME_NAMES" ]; then
+            LLVM_RUNTIME_NAMES=$($LLVM_TOOL --libnames all 2>/dev/null || true)
+        fi
+        for LLVM_RUNTIME_CANDIDATE in $LLVM_RUNTIME_NAMES; do
+            LLVM_RUNTIME_BASENAME=$(basename -- "$LLVM_RUNTIME_CANDIDATE")
+            case "$LLVM_RUNTIME_BASENAME" in
+                libLLVM*.dylib|libLLVM*.so|libLLVM*.so.*)
+                    LLVM_RUNTIME_LIBRARY=$LLVM_RUNTIME_BASENAME
+                    case "$LLVM_RUNTIME_CANDIDATE" in
+                        */*) LLVM_RUNTIME_DIR=$(dirname -- "$LLVM_RUNTIME_CANDIDATE") ;;
+                    esac
+                    break
+                    ;;
+            esac
+        done
+        if [ -z "$LLVM_RUNTIME_LIBRARY" ]; then
+            LLVM_RUNTIME_FILES=$($LLVM_TOOL --link-shared --libfiles all 2>/dev/null || true)
+            for LLVM_RUNTIME_CANDIDATE in $LLVM_RUNTIME_FILES; do
+                LLVM_RUNTIME_BASENAME=$(basename -- "$LLVM_RUNTIME_CANDIDATE")
+                case "$LLVM_RUNTIME_BASENAME" in
+                    libLLVM*.dylib|libLLVM*.so|libLLVM*.so.*)
+                        LLVM_RUNTIME_LIBRARY=$LLVM_RUNTIME_BASENAME
+                        LLVM_RUNTIME_DIR=$(dirname -- "$LLVM_RUNTIME_CANDIDATE")
+                        break
+                        ;;
+                esac
+            done
+        fi
     else
         LLVM_LIBS=${SULTANC_LLVM_LIBRARY:--lLLVM}
         if [ -n "${SULTANC_LLVM_LIBRARY:-}" ]; then
@@ -65,6 +101,17 @@ llvm_flags() {
         else
             LLVM_DISCOVERY="compiler/system headers and libraries (-lLLVM)"
         fi
+        LLVM_RUNTIME_LIBRARY=${SULTANC_LLVM_RUNTIME_LIBRARY:-}
+        LLVM_RUNTIME_DIR=${SULTANC_LLVM_RUNTIME_DIR:-}
+    fi
+}
+
+require_llvm_runtime() {
+    llvm_flags
+    if [ -z "$LLVM_RUNTIME_LIBRARY" ] || [ -z "$LLVM_RUNTIME_DIR" ]; then
+        echo "sultanc-bootstrap: unable to discover the LLVM shared runtime for Stage1" >&2
+        echo "sultanc-bootstrap: use llvm-config, or set SULTANC_LLVM_RUNTIME_LIBRARY and SULTANC_LLVM_RUNTIME_DIR" >&2
+        exit 1
     fi
 }
 
@@ -148,10 +195,13 @@ build_stage1_with_stage0() {
     trap 'rm -rf "$S1_TMP"' EXIT HUP INT TERM
     mkdir -p "$S1_TMP"
 
+    require_llvm_runtime
+
     (
         cd "$PROJECT"
         "$S0_ABS" compiler/main.sn --target="$S1_TARGET" -o "$S1_TMP/compiler.o"
-        "$S0_ABS" --finalize-stage1 "$S1_TMP/compiler.o" "$S1_ABS" "$S1_TARGET"
+        "$S0_ABS" --finalize-stage1 "$S1_TMP/compiler.o" "$S1_ABS" "$S1_TARGET" \
+            "$LLVM_RUNTIME_LIBRARY" "$LLVM_RUNTIME_DIR"
     )
 
     chmod +x "$S1_ABS"
@@ -189,15 +239,46 @@ build_current_compiler() {
     # The Stage1 compiler used by this source build must remain host-native so it can execute here.
     build_bootstrap "$BOOTSTRAP_OUT" "$HOST_BOOTSTRAP_TARGET"
 
-    # The requested production target applies here: host-native Stage1 cross-compiles
-    # the final self-hosted compiler using SultanC's registered native Target layer.
+    # The requested production target applies here: host-native Stage1 emits the
+    # final compiler object. The bootstrap finalizer then links that object using
+    # LLVM runtime metadata discovered by llvm-config. Build-only installation
+    # details never enter the SultanC CLI, compiler context, or generated source.
+    require_llvm_runtime
+    FINAL_OBJECT="$BOOTSTRAP_OUT/sultanc-final-object.$$.o"
+    trap 'rm -f "$FINAL_OBJECT"' EXIT HUP INT TERM
     (
         cd "$PROJECT"
         "$BOOTSTRAP_OUT/sultanc-stage1" \
+            -c \
             --target="$OUTPUT_TARGET" \
-            -o "$OUTPUT" \
+            -o "$FINAL_OBJECT" \
             compiler/main.sn
     )
+    if [ ! -f "$FINAL_OBJECT" ]; then
+        echo "sultanc-build: Stage1 compiler object was not produced: $FINAL_OBJECT" >&2
+        exit 1
+    fi
+    # Stage1 writes the object through SultanC's host file service. Do not make
+    # Stage0 reopen that generated pathname: feed the already-verified object as
+    # its standard input and let the existing finalizer read the seekable file
+    # descriptor through /dev/fd/0. This avoids a second pathname-open boundary
+    # while preserving the same Stage0 object parser/finalizer contract.
+    chmod u+r "$FINAL_OBJECT"
+    if [ ! -r "$FINAL_OBJECT" ]; then
+        echo "sultanc-build: Stage1 compiler object is not readable: $FINAL_OBJECT" >&2
+        exit 1
+    fi
+    "$BOOTSTRAP_OUT/sultanc-stage0" \
+        --finalize-stage1 \
+        /dev/fd/0 \
+        "$OUTPUT" \
+        "$OUTPUT_TARGET" \
+        "$LLVM_RUNTIME_LIBRARY" \
+        "$LLVM_RUNTIME_DIR" \
+        < "$FINAL_OBJECT"
+    chmod +x "$OUTPUT"
+    rm -f "$FINAL_OBJECT"
+    trap - EXIT HUP INT TERM
 
     if [ ! -f "$OUTPUT" ]; then
         echo "sultanc-build: compiler output was not produced: $OUTPUT" >&2

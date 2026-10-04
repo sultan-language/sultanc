@@ -201,18 +201,18 @@ int main(int argc, char **argv)
     {
         fprintf(stderr, "usage: %s <input.sn> [--target=<target>] -o <output.o>\n", argv[0]);
         fprintf(stderr, "       %s <compiler.sn> --run <compiler-args...>\n", argv[0]);
-        fprintf(stderr, "       %s --finalize-stage1 <object.o> <output> <target>\n", argv[0]);
+        fprintf(stderr, "       %s --finalize-stage1 <object.o> <output> <target> <llvm-library> <llvm-libdir>\n", argv[0]);
         return 2;
     }
 
     if (strcmp(argv[1], "--finalize-stage1") == 0)
     {
-        if (argc != 5)
+        if (argc != 7)
         {
-            fprintf(stderr, "sultanc-stage0: --finalize-stage1 requires <object.o> <output> <target>\n");
+            fprintf(stderr, "sultanc-stage0: --finalize-stage1 requires <object.o> <output> <target> <llvm-library> <llvm-libdir>\n");
             return 2;
         }
-        if (!__Bootstrap_Finalize_Stage1__(argv[2], argv[3], argv[4]))
+        if (!__Bootstrap_Finalize_Stage1__(argv[2], argv[3], argv[4], argv[5], argv[6]))
         {
             fprintf(stderr, "sultanc-stage0: Stage1 finalization failed: %s\n",
                     __Bootstrap_Stage1_Finalizer_Error__());

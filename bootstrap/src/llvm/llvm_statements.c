@@ -259,6 +259,10 @@ static int __LLVM_Emit_Statement__(__LLVM_Emitter__ *emitter,
             return 1;
         }
 
+        case __Ast_Statement_Unsafe__:
+            return __LLVM_Emit_Statement_List__(
+                emitter, statement->__As__.__Unsafe__, return_type, path_terminated);
+
         case __Ast_Statement_While__:
         {
             /* Stores the current. */

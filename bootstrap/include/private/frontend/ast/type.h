@@ -32,6 +32,8 @@ typedef enum
     __Ast_Type_Function__,
     /* Represents the AST type named value. */
     __Ast_Type_Named__,
+    /* Represents the AST type pointer value. */
+    __Ast_Type_Pointer__,
     /* Represents the AST type reference value. */
     __Ast_Type_Reference__,
     /* Represents the AST type vector value. */

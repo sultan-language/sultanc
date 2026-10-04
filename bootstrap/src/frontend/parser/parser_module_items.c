@@ -26,9 +26,17 @@ static int __Parser_Parse_Public_Module_Item__(__Parser__ *__Parser_State__, __V
     {
         return __Parser_Parse_Type_Item__(__Parser_State__, __Items__, 1);
     }
+    if (__Parser_State__->__Current__.__Kind__ == __Token_EXTERN__)
+    {
+        if (!__Parser_Advance__(__Parser_State__))
+            return 0;
+        if (__Parser_State__->__Current__.__Kind__ != __Token_FUNCTION_DEF__)
+            return __Parser_Fail__(__Parser_State__, __Diag_Word_Syntax_Expected_Module_Item__);
+        return __Parser_Parse_Function_Item__(__Parser_State__, __Items__, 1, 1);
+    }
     if (__Parser_State__->__Current__.__Kind__ == __Token_FUNCTION_DEF__)
     {
-        return __Parser_Parse_Function_Item__(__Parser_State__, __Items__, 1);
+        return __Parser_Parse_Function_Item__(__Parser_State__, __Items__, 1, 0);
     }
     return __Parser_Fail__(__Parser_State__, __Diag_Word_Syntax_Expected_Module_Item__);
 }
@@ -65,8 +73,18 @@ int __Parser_Parse_Module_Items__(__Parser__ *__Parser_State__, __Ast_Module__ *
             case __Token_PUBLIC__:
                 __Ok__ = __Parser_Parse_Public_Module_Item__(__Parser_State__, &__Items__);
                 break;
+            case __Token_EXTERN__:
+                if (!__Parser_Advance__(__Parser_State__) ||
+                    __Parser_State__->__Current__.__Kind__ != __Token_FUNCTION_DEF__)
+                {
+                    __Ok__ = __Parser_Fail__(
+                        __Parser_State__, __Diag_Word_Syntax_Expected_Module_Item__);
+                    break;
+                }
+                __Ok__ = __Parser_Parse_Function_Item__(__Parser_State__, &__Items__, 0, 1);
+                break;
             case __Token_FUNCTION_DEF__:
-                __Ok__ = __Parser_Parse_Function_Item__(__Parser_State__, &__Items__, 0);
+                __Ok__ = __Parser_Parse_Function_Item__(__Parser_State__, &__Items__, 0, 0);
                 break;
             default:
                 __Ok__ =

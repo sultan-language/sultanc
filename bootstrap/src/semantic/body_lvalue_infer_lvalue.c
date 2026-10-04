@@ -203,8 +203,8 @@ static int __Body_Infer_Lvalue_Access__(__Semantic_Body_Context__ *__Context__,
         if (!__Body_Infer_Lvalue_Access__(
                 __Context__, __Lvalue__->__As__.__Index__.__Parent__, &__Parent_Type__, NULL,
                 __Require_Read__) ||
-            !__Body_Infer_Atom__(
-                __Context__, &__Lvalue__->__As__.__Index__.__Index__, &__Index_Type__))
+            !__Body_Infer_Expression__(
+                __Context__, __Lvalue__->__As__.__Index__.__Index__, &__Index_Type__))
         {
             return 0;
         }
@@ -225,8 +225,8 @@ static int __Body_Infer_Lvalue_Access__(__Semantic_Body_Context__ *__Context__,
         {
             /* Tracks the known index. */
             int64_t __Known_Index__ = 0;
-            if (__Semantic_Integer_Literal_Atom_Value__(&__Lvalue__->__As__.__Index__.__Index__,
-                                                        &__Known_Index__))
+            if (__Semantic_Integer_Literal_Expression_Value__(
+                    __Lvalue__->__As__.__Index__.__Index__, &__Known_Index__))
             {
                 /* References the sequence local. */
                 __Semantic_Local__ *__Sequence_Local__ =
@@ -280,9 +280,17 @@ static int __Body_Infer_Lvalue_Access__(__Semantic_Body_Context__ *__Context__,
             }
         }
 
+        if (__Resolved__.__Kind__ == __Resolved_Type_Pointer__ &&
+            __Context__->__Unsafe_Depth__ == 0U)
+        {
+            return __Body_Fail__(
+                __Context__, __E0400_Mismatched_Types__, __Lvalue__->__Header__.__Span__);
+        }
+
         if (__Resolved__.__Kind__ != __Resolved_Type_Vector__ &&
             __Resolved__.__Kind__ != __Resolved_Type_String__ &&
-            __Resolved__.__Kind__ != __Resolved_Type_Box__)
+            __Resolved__.__Kind__ != __Resolved_Type_Box__ &&
+            __Resolved__.__Kind__ != __Resolved_Type_Pointer__)
         {
             return __Body_Fail__(
                 __Context__, __E0400_Mismatched_Types__, __Lvalue__->__Header__.__Span__);

@@ -42,5 +42,6 @@ int __Parser_Parse_While__(__Parser__ *__Parser_State__, __Vector__ *__Statement
     }
     __Statement__->__As__.__While__.__Condition__ = __Condition__;
     __Statement__->__As__.__While__.__Body__ = __Body__;
+    (void)__Parser_Accept__(__Parser_State__, __Token_SEMICOLON_OPERATOR__);
     return __Parser_Push_Statement__(__Parser_State__, __Statements__, __Statement__);
 }
