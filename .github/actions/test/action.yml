@@ -1,46 +1,23 @@
-# Names this repository-local test runner.
+# This wrapper executes repository-owned checks; it does not invent a test system.
 name: SultanC Test
-# Describes why the action accepts a repository-owned command instead of inventing a second test system.
-description: Run a named SultanC repository qualification command with strict shell failure handling.
+description: >-
+  Run a named, trusted SultanC repository qualification command with strict shell
+  failure handling.
 
-# Declares the test metadata and command supplied by workflows.
 inputs:
-  # Declares the readable qualification name.
   name:
-    # Explains that the name appears in the run summary.
-    description: Human-readable name of the qualification being executed.
-    # Requires every test invocation to identify itself.
+    description: Human-readable qualification name for the run summary.
     required: true
-  # Declares the repository-owned command to execute.
   command:
-    # Explains that the workflow remains orchestration while SultanC owns the actual command.
     description: Trusted repository qualification command to execute.
-    # Requires callers to provide the real qualification command.
     required: true
 
-# Declares the implementation as a composite action.
 runs:
-  # Executes the test directly on the current runner.
   using: composite
-  # Starts the test steps.
   steps:
-    # Labels the repository qualification step.
     - name: Run SultanC qualification
-      # Uses Bash with strict shell semantics.
       shell: bash
-      # Places caller values into environment variables rather than direct shell interpolation.
       env:
-        # Stores the readable qualification name.
         SULTANC_TEST_NAME: ${{ inputs.name }}
-        # Stores the trusted repository-owned qualification command.
         SULTANC_TEST_COMMAND: ${{ inputs.command }}
-      # Starts the qualification wrapper.
-      run: |
-        # Makes any qualification failure fail the action.
-        set -euo pipefail
-        # Records the qualification name in the GitHub step summary.
-        printf '### %s\n' "$SULTANC_TEST_NAME" >> "$GITHUB_STEP_SUMMARY"
-        # Executes the repository-owned command in a strict Bash process.
-        bash -euo pipefail -c "$SULTANC_TEST_COMMAND"
-        # Records successful completion in the GitHub step summary.
-        printf -- '- Result: PASS\n' >> "$GITHUB_STEP_SUMMARY"
+      run: "$GITHUB_ACTION_PATH/run.sh"

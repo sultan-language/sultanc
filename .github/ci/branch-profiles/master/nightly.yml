@@ -1,0 +1,106 @@
+# Master owns scheduled deep qualification because it is the default branch.
+name: SultanC Nightly
+
+on:
+  schedule:
+    - cron: '17 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sultanc-nightly
+  cancel-in-progress: true
+
+jobs:
+  main-deep:
+    name: Deep Qualification / main
+    uses: ./.github/workflows/qualification.yml
+    with:
+      candidate-ref: main
+      profile: main
+      mode: deep
+
+  beta-deep:
+    name: Deep Qualification / beta
+    uses: ./.github/workflows/qualification.yml
+    with:
+      candidate-ref: beta
+      profile: beta
+      mode: deep
+
+  required:
+    name: Required / SultanC Nightly
+    if: ${{ always() }}
+    needs: [main-deep, beta-deep]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Checkout immutable nightly harness
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.workflow_sha }}
+          path: harness
+          persist-credentials: false
+
+      - name: Enforce nightly qualification
+        shell: bash
+        env:
+          MAIN_RESULT: ${{ needs.main-deep.result }}
+          BETA_RESULT: ${{ needs.beta-deep.result }}
+          MAIN_SHA: ${{ needs.main-deep.outputs.candidate_sha }}
+          BETA_SHA: ${{ needs.beta-deep.outputs.candidate_sha }}
+        run: ./harness/.github/scripts/nightly-required.sh
+
+  report-main-failure:
+    name: Report main Nightly Failure
+    if: ${{ always() && needs.main-deep.result == 'failure' }}
+    needs: main-deep
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      actions: read
+      contents: read
+      issues: write
+    steps:
+      - name: Checkout trusted reporting harness
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.workflow_sha }}
+          persist-credentials: false
+
+      - name: Create or update main nightly issue
+        uses: ./.github/actions/report-ci-failure
+        with:
+          component-labels: compiler,nightly
+          tested-branch: main
+          tested-sha: ${{ needs.main-deep.outputs.candidate_sha }}
+          harness-sha: ${{ needs.main-deep.outputs.harness_sha }}
+          job-name-filter: Deep Qualification / main
+
+  report-beta-failure:
+    name: Report beta Nightly Failure
+    if: ${{ always() && needs.beta-deep.result == 'failure' }}
+    needs: beta-deep
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      actions: read
+      contents: read
+      issues: write
+    steps:
+      - name: Checkout trusted reporting harness
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.workflow_sha }}
+          persist-credentials: false
+
+      - name: Create or update beta nightly issue
+        uses: ./.github/actions/report-ci-failure
+        with:
+          component-labels: compiler,nightly
+          tested-branch: beta
+          tested-sha: ${{ needs.beta-deep.outputs.candidate_sha }}
+          harness-sha: ${{ needs.beta-deep.outputs.harness_sha }}
+          job-name-filter: Deep Qualification / beta

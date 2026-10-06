@@ -1,4 +1,0 @@
-# Prevents unstructured blank issues so compiler reports remain reproducible.
-blank_issues_enabled: false
-# Declares optional external support links shown by GitHub's issue chooser.
-contact_links: []

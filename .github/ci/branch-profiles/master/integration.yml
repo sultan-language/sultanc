@@ -1,9 +1,9 @@
-# Branch-specific landed-commit qualification for `main`.
+# Branch-specific landed-commit qualification for `master`.
 name: SultanC Integration
 
 on:
   push:
-    branches: [main]
+    branches: [master]
   workflow_dispatch:
 
 permissions:
@@ -11,7 +11,7 @@ permissions:
 
 # Every landed SHA gets its own immutable evidence; do not cancel older landed commits.
 concurrency:
-  group: sultanc-integration-main-${{ github.sha }}
+  group: sultanc-integration-master-${{ github.sha }}
   cancel-in-progress: false
 
 jobs:
@@ -20,7 +20,7 @@ jobs:
     uses: ./.github/workflows/qualification.yml
     with:
       candidate-ref: ${{ github.sha }}
-      profile: main
+      profile: master
       mode: full
 
   required:
@@ -41,7 +41,7 @@ jobs:
         shell: bash
         env:
           RESULT: ${{ needs.qualification.result }}
-          BRANCH: main
+          BRANCH: master
           READY: ${{ needs.qualification.outputs.promotion_ready }}
           CANDIDATE_SHA: ${{ needs.qualification.outputs.candidate_sha }}
           EXPECTED_SHA: ${{ github.sha }}
@@ -75,6 +75,6 @@ jobs:
         uses: ./.github/actions/report-ci-failure
         with:
           component-labels: compiler,integration
-          tested-branch: main
+          tested-branch: master
           tested-sha: ${{ github.sha }}
           harness-sha: ${{ needs.qualification.outputs.harness_sha }}

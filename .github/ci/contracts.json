@@ -1,0 +1,108 @@
+{
+  "schema_version": 3,
+  "updated": "2026-10-04",
+  "build": {
+    "entrypoint": "./build.sh",
+    "host_build": {
+      "state": "delivered",
+      "command": "./build.sh"
+    },
+    "target_build": {
+      "state": "delivered",
+      "command": "./build.sh --target={target}"
+    },
+    "backend_forwarding": {
+      "state": "pending",
+      "question": "Confirm the exact build.sh backend forwarding contract and whether it selects the producer compiler, the built compiler, or generated program output."
+    }
+  },
+  "cli": {
+    "state": "incoming",
+    "compiler": "build/sultanc",
+    "default_compile": "{compiler} {source}",
+    "run": "{compiler} run {source}",
+    "check": "{compiler} check {source}",
+    "targets": "{compiler} targets",
+    "backend_short": "-b {backend}",
+    "backend_long": "--backend={backend}",
+    "target_short": "-t {target}",
+    "target_long": "--target={target}",
+    "object_output": "-c",
+    "emit": "--emit={kind}",
+    "output": "-o {file}",
+    "diagnostic_language": "--lang=auto|ar|en"
+  },
+  "llvm_toolchain": {
+    "state": "pending",
+    "version": null,
+    "required_headers": [],
+    "required_components": [],
+    "required_targets_built": [],
+    "platforms": {
+      "linux": {
+        "distribution": "ubuntu-apt",
+        "packages": [],
+        "llvm_config": null
+      },
+      "macos": {
+        "distribution": "homebrew",
+        "formula": null,
+        "llvm_config": null
+      }
+    },
+    "reason": "A pinned LLVM development version, platform-specific distributions, llvm-config paths, required headers/components, and required target families have not been supplied."
+  },
+  "backend_smoke": {
+    "state": "pending",
+    "source": null,
+    "reason": "A minimal portable source for explicit native/LLVM host smoke has not been supplied.",
+    "validators": {
+      "x86_64-linux": {
+        "type": "elf",
+        "file_regex": "ELF 64-bit.*x86-64",
+        "class": "ELF64",
+        "machine_regex": "Advanced Micro Devices X86-64|AMD x86-64"
+      },
+      "arm64-darwin": {
+        "type": "macho",
+        "file_regex": "Mach-O 64-bit.*arm64",
+        "header_regex": "(Format:.*Mach-O|Arch:.*(aarch64|arm64)|CpuType:.*ARM64)"
+      }
+    }
+  },
+  "examples": {
+    "state": "pending",
+    "manifest": null,
+    "reason": "Approved runnable example inventory and expected exit/stdout/stderr contract have not been supplied."
+  },
+  "tests": {
+    "state": "pending",
+    "roots": [
+      "tests/ar",
+      "tests/en"
+    ],
+    "runner": null,
+    "result_contract": {
+      "path": null,
+      "executed_jq": null,
+      "passed_jq": null,
+      "failed_jq": null
+    },
+    "reason": "The SultanC-native runner command and its execution-result/count schema have not been supplied."
+  },
+  "llvm_broad": {
+    "state": "pending",
+    "reason": "Per-family portable source/output/inspection contracts have not been supplied. Individual target activation lives in llvm-targets.json."
+  },
+  "promotion": {
+    "state": "pending",
+    "auth_mode": null,
+    "app_id_secret": null,
+    "private_key_secret": null,
+    "token_secret": null,
+    "merge_method": "merge",
+    "reason": "Approved GitHub App/PAT credential names, ruleset/auto-merge or merge-queue settings, and compatible review policy have not been supplied. Automatic promotion code remains blocked until configured.",
+    "integration_workflow": "integration.yml",
+    "required_integration_job": "Required / SultanC Integration"
+  }
+}

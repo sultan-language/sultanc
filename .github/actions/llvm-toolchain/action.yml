@@ -1,0 +1,21 @@
+# One owner installs and verifies LLVM on both Linux and macOS runners.
+name: SultanC LLVM Toolchain
+description: >-
+  Enforce the staged, platform-specific LLVM development-toolchain contract
+  without silently installing an unpinned LLVM.
+
+inputs:
+  contracts:
+    description: Path to the trusted CI contracts JSON.
+    required: false
+    default: .github/ci/contracts.json
+
+runs:
+  using: composite
+  steps:
+    - name: Resolve and enforce LLVM toolchain contract
+      shell: bash
+      env:
+        CONTRACTS: ${{ inputs.contracts }}
+      run: |
+        "$GITHUB_ACTION_PATH/setup.sh" "$CONTRACTS"

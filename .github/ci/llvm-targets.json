@@ -1,0 +1,451 @@
+{
+  "schema_version": 2,
+  "description": "Expected SultanC LLVM target identifiers for CI coverage. This is CI coverage input, not compiler target policy.",
+  "targets": [
+    {
+      "id": "arm64-darwin",
+      "family": "AArch64",
+      "shard": 0,
+      "output_contract": {
+        "state": "pending",
+        "kind": null,
+        "source": null,
+        "inspection": null,
+        "validator": null
+      }
+    },
+    {
+      "id": "x86_64-linux",
+      "family": "X86",
+      "shard": 1,
+      "output_contract": {
+        "state": "pending",
+        "kind": null,
+        "source": null,
+        "inspection": null,
+        "validator": null
+      }
+    },
+    {
+      "id": "aarch64-linux-gnu",
+      "family": "AArch64",
+      "shard": 2,
+      "output_contract": {
+        "state": "pending",
+        "kind": null,
+        "source": null,
+        "inspection": null,
+        "validator": null
+      }
+    },
+    {
+      "id": "aarch64-windows-msvc",
+      "family": "AArch64",
+      "shard": 3,
+      "output_contract": {
+        "state": "pending",
+        "kind": null,
+        "source": null,
+        "inspection": null,
+        "validator": null
+      }
+    },
+    {
+      "id": "aarch64-android",
+      "family": "AArch64",
+      "shard": 0,
+      "output_contract": {
+        "state": "pending",
+        "kind": null,
+        "source": null,
+        "inspection": null,
+        "validator": null
+      }
+    },
+    {
+      "id": "aarch64-freebsd",
+      "family": "AArch64",
+      "shard": 1,
+      "output_contract": {
+        "state": "pending",
+        "kind": null,
+        "source": null,
+        "inspection": null,
+        "validator": null
+      }
+    },
+    {
+      "id": "x86_64-darwin",
+      "family": "X86",
+      "shard": 2,
+      "output_contract": {
+        "state": "pending",
+        "kind": null,
+        "source": null,
+        "inspection": null,
+        "validator": null
+      }
+    },
+    {
+      "id": "x86_64-windows-msvc",
+      "family": "X86",
+      "shard": 3,
+      "output_contract": {
+        "state": "pending",
+        "kind": null,
+        "source": null,
+        "inspection": null,
+        "validator": null
+      }
+    },
+    {
+      "id": "x86_64-android",
+      "family": "X86",
+      "shard": 0,
+      "output_contract": {
+        "state": "pending",
+        "kind": null,
+        "source": null,
+        "inspection": null,
+        "validator": null
+      }
+    },
+    {
+      "id": "x86_64-freebsd",
+      "family": "X86",
+      "shard": 1,
+      "output_contract": {
+        "state": "pending",
+        "kind": null,
+        "source": null,
+        "inspection": null,
+        "validator": null
+      }
+    },
+    {
+      "id": "i686-linux-gnu",
+      "family": "X86",
+      "shard": 2,
+      "output_contract": {
+        "state": "pending",
+        "kind": null,
+        "source": null,
+        "inspection": null,
+        "validator": null
+      }
+    },
+    {
+      "id": "armv7-linux-gnueabihf",
+      "family": "ARM",
+      "shard": 3,
+      "output_contract": {
+        "state": "pending",
+        "kind": null,
+        "source": null,
+        "inspection": null,
+        "validator": null
+      }
+    },
+    {
+      "id": "armv7-android",
+      "family": "ARM",
+      "shard": 0,
+      "output_contract": {
+        "state": "pending",
+        "kind": null,
+        "source": null,
+        "inspection": null,
+        "validator": null
+      }
+    },
+    {
+      "id": "riscv64-linux-gnu",
+      "family": "RISCV",
+      "shard": 1,
+      "output_contract": {
+        "state": "pending",
+        "kind": null,
+        "source": null,
+        "inspection": null,
+        "validator": null
+      }
+    },
+    {
+      "id": "riscv64-freebsd",
+      "family": "RISCV",
+      "shard": 2,
+      "output_contract": {
+        "state": "pending",
+        "kind": null,
+        "source": null,
+        "inspection": null,
+        "validator": null
+      }
+    },
+    {
+      "id": "riscv32-unknown-elf",
+      "family": "RISCV",
+      "shard": 3,
+      "output_contract": {
+        "state": "pending",
+        "kind": null,
+        "source": null,
+        "inspection": null,
+        "validator": null
+      }
+    },
+    {
+      "id": "wasm32-wasi",
+      "family": "WebAssembly",
+      "shard": 0,
+      "output_contract": {
+        "state": "pending",
+        "kind": null,
+        "source": null,
+        "inspection": null,
+        "validator": null
+      }
+    },
+    {
+      "id": "wasm32-browser",
+      "family": "WebAssembly",
+      "shard": 1,
+      "output_contract": {
+        "state": "pending",
+        "kind": null,
+        "source": null,
+        "inspection": null,
+        "validator": null
+      }
+    },
+    {
+      "id": "wasm64-unknown-unknown",
+      "family": "WebAssembly",
+      "shard": 2,
+      "output_contract": {
+        "state": "pending",
+        "kind": null,
+        "source": null,
+        "inspection": null,
+        "validator": null
+      }
+    },
+    {
+      "id": "amdgcn-amd-amdhsa",
+      "family": "AMDGPU",
+      "shard": 3,
+      "output_contract": {
+        "state": "pending",
+        "kind": null,
+        "source": null,
+        "inspection": null,
+        "validator": null
+      }
+    },
+    {
+      "id": "avr-unknown-unknown",
+      "family": "AVR",
+      "shard": 0,
+      "output_contract": {
+        "state": "pending",
+        "kind": null,
+        "source": null,
+        "inspection": null,
+        "validator": null
+      }
+    },
+    {
+      "id": "bpfel-unknown-none",
+      "family": "BPF",
+      "shard": 1,
+      "output_contract": {
+        "state": "pending",
+        "kind": null,
+        "source": null,
+        "inspection": null,
+        "validator": null
+      }
+    },
+    {
+      "id": "hexagon-unknown-elf",
+      "family": "Hexagon",
+      "shard": 2,
+      "output_contract": {
+        "state": "pending",
+        "kind": null,
+        "source": null,
+        "inspection": null,
+        "validator": null
+      }
+    },
+    {
+      "id": "lanai-unknown-unknown",
+      "family": "Lanai",
+      "shard": 3,
+      "output_contract": {
+        "state": "pending",
+        "kind": null,
+        "source": null,
+        "inspection": null,
+        "validator": null
+      }
+    },
+    {
+      "id": "loongarch64-linux-gnu",
+      "family": "LoongArch",
+      "shard": 0,
+      "output_contract": {
+        "state": "pending",
+        "kind": null,
+        "source": null,
+        "inspection": null,
+        "validator": null
+      }
+    },
+    {
+      "id": "mips64el-linux-gnuabi64",
+      "family": "Mips",
+      "shard": 1,
+      "output_contract": {
+        "state": "pending",
+        "kind": null,
+        "source": null,
+        "inspection": null,
+        "validator": null
+      }
+    },
+    {
+      "id": "msp430-unknown-elf",
+      "family": "MSP430",
+      "shard": 2,
+      "output_contract": {
+        "state": "pending",
+        "kind": null,
+        "source": null,
+        "inspection": null,
+        "validator": null
+      }
+    },
+    {
+      "id": "nvptx64-nvidia-cuda",
+      "family": "NVPTX",
+      "shard": 3,
+      "output_contract": {
+        "state": "pending",
+        "kind": null,
+        "source": null,
+        "inspection": null,
+        "validator": null
+      }
+    },
+    {
+      "id": "powerpc64le-linux-gnu",
+      "family": "PowerPC",
+      "shard": 0,
+      "output_contract": {
+        "state": "pending",
+        "kind": null,
+        "source": null,
+        "inspection": null,
+        "validator": null
+      }
+    },
+    {
+      "id": "sparcv9-linux-gnu",
+      "family": "Sparc",
+      "shard": 1,
+      "output_contract": {
+        "state": "pending",
+        "kind": null,
+        "source": null,
+        "inspection": null,
+        "validator": null
+      }
+    },
+    {
+      "id": "spirv64-unknown-unknown",
+      "family": "SPIRV",
+      "shard": 2,
+      "output_contract": {
+        "state": "pending",
+        "kind": null,
+        "source": null,
+        "inspection": null,
+        "validator": null
+      }
+    },
+    {
+      "id": "s390x-linux-gnu",
+      "family": "SystemZ",
+      "shard": 3,
+      "output_contract": {
+        "state": "pending",
+        "kind": null,
+        "source": null,
+        "inspection": null,
+        "validator": null
+      }
+    },
+    {
+      "id": "ve-linux-gnu",
+      "family": "VE",
+      "shard": 0,
+      "output_contract": {
+        "state": "pending",
+        "kind": null,
+        "source": null,
+        "inspection": null,
+        "validator": null
+      }
+    },
+    {
+      "id": "xcore-unknown-unknown",
+      "family": "XCore",
+      "shard": 1,
+      "output_contract": {
+        "state": "pending",
+        "kind": null,
+        "source": null,
+        "inspection": null,
+        "validator": null
+      }
+    }
+  ],
+  "expected_count": 34,
+  "expected_ids": [
+    "arm64-darwin",
+    "x86_64-linux",
+    "aarch64-linux-gnu",
+    "aarch64-windows-msvc",
+    "aarch64-android",
+    "aarch64-freebsd",
+    "x86_64-darwin",
+    "x86_64-windows-msvc",
+    "x86_64-android",
+    "x86_64-freebsd",
+    "i686-linux-gnu",
+    "armv7-linux-gnueabihf",
+    "armv7-android",
+    "riscv64-linux-gnu",
+    "riscv64-freebsd",
+    "riscv32-unknown-elf",
+    "wasm32-wasi",
+    "wasm32-browser",
+    "wasm64-unknown-unknown",
+    "amdgcn-amd-amdhsa",
+    "avr-unknown-unknown",
+    "bpfel-unknown-none",
+    "hexagon-unknown-elf",
+    "lanai-unknown-unknown",
+    "loongarch64-linux-gnu",
+    "mips64el-linux-gnuabi64",
+    "msp430-unknown-elf",
+    "nvptx64-nvidia-cuda",
+    "powerpc64le-linux-gnu",
+    "sparcv9-linux-gnu",
+    "spirv64-unknown-unknown",
+    "s390x-linux-gnu",
+    "ve-linux-gnu",
+    "xcore-unknown-unknown"
+  ]
+}

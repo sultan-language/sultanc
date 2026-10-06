@@ -1,168 +1,25 @@
-# Names the repository-local example qualification action.
+# Examples count as evidence only when an approved expectation contract exists.
 name: SultanC Examples
-# Describes the bilingual example contract checked by this action.
-description: Build and run mirrored English and Arabic examples through native code generation and the interpreter.
+description: >-
+  Run approved deterministic Arabic/English example pairs and verify expected
+  results plus native/interpreter parity.
 
-# Declares values workflows may provide to this action.
 inputs:
-  # Declares the compiler executable used for example qualification.
   compiler:
-    # Explains that the path is resolved inside the selected source checkout.
-    description: SultanC compiler executable relative to the selected working directory.
-    # Keeps callers on the canonical final compiler artifact by default.
+    description: Compiler path relative to the candidate checkout.
     required: false
-    # Uses the normal self-hosted compiler path.
     default: build/sultanc
-  # Declares the source checkout containing examples and the compiler.
   working-directory:
-    # Supports qualifying refs checked out beside the CI definition checkout.
-    description: Repository directory containing examples and the SultanC compiler.
-    # Keeps normal main workflows at the repository root.
+    description: Candidate checkout directory.
     required: false
-    # Uses the current repository root unless another checkout is supplied.
     default: "."
 
-# Declares this action as normal steps executed on the current runner.
 runs:
-  # Runs the example checks directly on the selected native host.
   using: composite
-  # Starts the example qualification steps.
   steps:
-    # Labels the bilingual example run in the Actions log.
-    - name: Run English and Arabic examples
-      # Uses Bash because both supported GitHub hosts provide it.
+    - name: Verify approved examples
       shell: bash
-      # Moves action inputs into environment variables instead of shell source text.
       env:
-        # Stores the compiler path relative to the source checkout.
         SULTANC_COMPILER: ${{ inputs.compiler }}
-        # Stores the source checkout directory containing the examples.
         SULTANC_WORKING_DIRECTORY: ${{ inputs.working-directory }}
-      # Starts bilingual example qualification.
-      run: |
-        # Fails on command errors, unset variables, or failed pipelines.
-        set -euo pipefail
-        # Enters the source checkout being qualified.
-        cd -- "$SULTANC_WORKING_DIRECTORY"
-        # Requires the self-hosted compiler to exist before examples are exercised.
-        test -x "$SULTANC_COMPILER"
-        # Requires both public example surfaces to exist.
-        test -d examples/en
-        # Requires the Arabic example mirror to exist.
-        test -d examples/ar
-        # Creates isolated native binaries and captured output for this runner only.
-        EXAMPLE_TMP="$(mktemp -d "${TMPDIR:-/tmp}/sultanc-examples.XXXXXX")"
-        # Removes all temporary example artifacts when this step exits.
-        trap 'rm -rf "$EXAMPLE_TMP"' EXIT
-        # Starts the count used to prove at least one mirrored executable example was checked.
-        PAIR_COUNT=0
-        # Walks English examples in stable filename order so logs are reproducible.
-        while IFS= read -r EN_SOURCE; do
-          # Skips helper modules that are imported by an executable example rather than run directly.
-          if [[ "$(basename -- "$EN_SOURCE")" == "helper.sn" ]]; then
-            # Continues to the next source file without treating the helper as an entry point.
-            continue
-          # Ends helper-module filtering.
-          fi
-          # Derives the source path relative to the English example root.
-          RELATIVE_SOURCE="${EN_SOURCE#examples/en/}"
-          # Maps the English source to its required Arabic counterpart.
-          AR_SOURCE="examples/ar/$RELATIVE_SOURCE"
-          # Fails immediately when the mirrored Arabic source is missing.
-          if [[ ! -f "$AR_SOURCE" ]]; then
-            # Reports the exact missing bilingual pair.
-            printf 'Missing Arabic example counterpart: %s\n' "$AR_SOURCE" >&2
-            # Fails the example action because the documented mirror contract is broken.
-            exit 1
-          # Ends counterpart validation.
-          fi
-          # Advances the pair count for isolated filenames and the final summary.
-          PAIR_COUNT=$((PAIR_COUNT + 1))
-          # Creates a private directory for this mirrored example pair.
-          PAIR_DIR="$EXAMPLE_TMP/$PAIR_COUNT"
-          # Creates the pair directory before compiling outputs into it.
-          mkdir -p "$PAIR_DIR"
-          # Defines the English native executable path.
-          EN_NATIVE="$PAIR_DIR/en-native"
-          # Defines the Arabic native executable path.
-          AR_NATIVE="$PAIR_DIR/ar-native"
-          # Reports the mirrored source pair currently being qualified.
-          printf '=== %s <-> %s ===\n' "$EN_SOURCE" "$AR_SOURCE"
-          # Compiles the English surface example through the native backend.
-          "$SULTANC_COMPILER" "$EN_SOURCE" -o "$EN_NATIVE"
-          # Compiles the Arabic surface example through the same native backend.
-          "$SULTANC_COMPILER" "$AR_SOURCE" -o "$AR_NATIVE"
-          # Temporarily allows example programs to return intentional non-zero result values.
-          set +e
-          # Runs the English native executable and captures standard output independently.
-          "$EN_NATIVE" >"$PAIR_DIR/en-native.stdout" 2>"$PAIR_DIR/en-native.stderr"
-          # Records the English native program's result value.
-          EN_NATIVE_STATUS=$?
-          # Runs the English source through the verified-MSIR interpreter and captures output.
-          "$SULTANC_COMPILER" interpret "$EN_SOURCE" >"$PAIR_DIR/en-interpret.stdout" 2>"$PAIR_DIR/en-interpret.stderr"
-          # Records the English interpreter result value.
-          EN_INTERPRET_STATUS=$?
-          # Runs the Arabic native executable and captures standard output independently.
-          "$AR_NATIVE" >"$PAIR_DIR/ar-native.stdout" 2>"$PAIR_DIR/ar-native.stderr"
-          # Records the Arabic native program's result value.
-          AR_NATIVE_STATUS=$?
-          # Runs the Arabic source through the same verified-MSIR interpreter path.
-          "$SULTANC_COMPILER" interpret "$AR_SOURCE" >"$PAIR_DIR/ar-interpret.stdout" 2>"$PAIR_DIR/ar-interpret.stderr"
-          # Records the Arabic interpreter result value.
-          AR_INTERPRET_STATUS=$?
-          # Restores strict failure handling after intentional program result capture.
-          set -e
-          # Requires English native and interpreter execution to agree on the program result.
-          if [[ "$EN_NATIVE_STATUS" -ne "$EN_INTERPRET_STATUS" ]]; then
-            # Reports the exact English native/interpreter mismatch.
-            printf 'English native/interpreter exit mismatch for %s: native=%d interpret=%d\n' "$EN_SOURCE" "$EN_NATIVE_STATUS" "$EN_INTERPRET_STATUS" >&2
-            # Fails because native and interpreter semantics diverged.
-            exit 1
-          # Ends English result comparison.
-          fi
-          # Requires Arabic native and interpreter execution to agree on the program result.
-          if [[ "$AR_NATIVE_STATUS" -ne "$AR_INTERPRET_STATUS" ]]; then
-            # Reports the exact Arabic native/interpreter mismatch.
-            printf 'Arabic native/interpreter exit mismatch for %s: native=%d interpret=%d\n' "$AR_SOURCE" "$AR_NATIVE_STATUS" "$AR_INTERPRET_STATUS" >&2
-            # Fails because native and interpreter semantics diverged.
-            exit 1
-          # Ends Arabic result comparison.
-          fi
-          # Requires the two source-language surfaces to produce the same program result.
-          if [[ "$EN_NATIVE_STATUS" -ne "$AR_NATIVE_STATUS" ]]; then
-            # Reports a bilingual semantic mismatch with both result values.
-            printf 'English/Arabic exit mismatch for %s: en=%d ar=%d\n' "$RELATIVE_SOURCE" "$EN_NATIVE_STATUS" "$AR_NATIVE_STATUS" >&2
-            # Fails because mirrored source surfaces no longer represent the same program.
-            exit 1
-          # Ends bilingual result comparison.
-          fi
-          # Requires English native and interpreter standard output to remain identical.
-          cmp "$PAIR_DIR/en-native.stdout" "$PAIR_DIR/en-interpret.stdout"
-          # Requires Arabic native and interpreter standard output to remain identical.
-          cmp "$PAIR_DIR/ar-native.stdout" "$PAIR_DIR/ar-interpret.stdout"
-          # Requires mirrored English and Arabic examples to emit identical standard output.
-          cmp "$PAIR_DIR/en-native.stdout" "$PAIR_DIR/ar-native.stdout"
-          # Reports the verified result value for this mirrored example pair.
-          printf 'PASS exit=%d\n' "$EN_NATIVE_STATUS"
-        # Supplies every English example source in deterministic order to the loop.
-        done < <(find examples/en -type f -name '*.sn' | LC_ALL=C sort)
-        # Requires the repository to contain at least one executable mirrored example pair.
-        if [[ "$PAIR_COUNT" -eq 0 ]]; then
-          # Reports an empty example tree as a configuration error.
-          printf 'No executable English examples were found.\n' >&2
-          # Fails rather than allowing an empty example job to appear green.
-          exit 1
-        # Ends the non-empty example-tree assertion.
-        fi
-        # Counts Arabic executable examples independently to detect extra unmatched files.
-        AR_PAIR_COUNT="$(find examples/ar -type f -name '*.sn' ! -name 'helper.sn' | wc -l | tr -d '[:space:]')"
-        # Requires both surface trees to contain the same number of executable examples.
-        if [[ "$PAIR_COUNT" -ne "$AR_PAIR_COUNT" ]]; then
-          # Reports the mismatched bilingual example counts.
-          printf 'English/Arabic executable example count mismatch: en=%d ar=%s\n' "$PAIR_COUNT" "$AR_PAIR_COUNT" >&2
-          # Fails because one surface contains an unmatched executable example.
-          exit 1
-        # Ends bilingual count validation.
-        fi
-        # Adds the successful bilingual example count to the GitHub run summary.
-        printf '### SultanC examples\n- Mirrored pairs: `%d`\n- Native/interpreter parity: `PASS`\n- English/Arabic parity: `PASS`\n' "$PAIR_COUNT" >> "$GITHUB_STEP_SUMMARY"
+      run: "$GITHUB_ACTION_PATH/run.sh"

@@ -1,12 +1,12 @@
-# Branch-specific PR/merge-queue entry point for `main`.
+# Branch-specific PR/merge-queue entry point for `master`.
 name: SultanC Gate
 
 on:
   pull_request:
-    branches: [main]
+    branches: [master]
   merge_group:
     types: [checks_requested]
-    branches: [main]
+    branches: [master]
 
 permissions:
   contents: read
@@ -14,7 +14,7 @@ permissions:
 # Supersede stale candidate runs, but never share concurrency across branches.
 concurrency:
   group: >-
-    sultanc-gate-main-${{
+    sultanc-gate-master-${{
       github.event.pull_request.number ||
       github.event.merge_group.head_sha ||
       github.ref
@@ -27,8 +27,8 @@ jobs:
     uses: ./.github/workflows/qualification.yml
     with:
       candidate-ref: ${{ github.sha }}
-      profile: main
-      mode: ${{ github.event_name == 'pull_request' && 'pr' || 'full' }}
+      profile: master
+      mode: full
 
   # One stable aggregate is suitable for branch-protection required checks.
   required:
@@ -49,6 +49,6 @@ jobs:
         shell: bash
         env:
           RESULT: ${{ needs.qualification.result }}
-          DESTINATION: main
+          DESTINATION: master
           CANDIDATE_SHA: ${{ github.sha }}
         run: ./harness/.github/scripts/gate-required.sh

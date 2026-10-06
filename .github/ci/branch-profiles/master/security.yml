@@ -3,19 +3,21 @@ name: SultanC Security
 
 on:
   pull_request:
-    branches: [main]
+    branches: [master]
   merge_group:
     types: [checks_requested]
-    branches: [main]
+    branches: [master]
   push:
-    branches: [main]
+    branches: [master]
+  schedule:
+    - cron: '41 4 * * 1'
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: sultanc-security-main-${{ github.ref }}
+  group: sultanc-security-master-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -134,6 +136,6 @@ jobs:
         uses: ./.github/actions/report-ci-failure
         with:
           component-labels: security
-          tested-branch: main
+          tested-branch: master
           tested-sha: ${{ github.sha }}
           harness-sha: ${{ github.workflow_sha }}

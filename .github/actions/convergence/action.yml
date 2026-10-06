@@ -1,88 +1,29 @@
-# Names the repository-local self-host convergence action.
+# Self-host convergence is distinct evidence from the regression suite.
 name: SultanC Self-Host Convergence
-# Describes the byte-for-byte self-host property verified by this action.
-description: Rebuild SultanC with itself twice and require the generated compiler stages to converge exactly.
+description: >-
+  Rebuild SultanC with itself twice and require Stage2, Stage3, and Stage4 to
+  converge byte-for-byte.
 
-# Declares values workflows may provide to this action.
 inputs:
-  # Declares the native target used by every self-host generation.
   target:
-    # Explains that convergence must stay on the runner's executable host target.
-    description: Host-native SultanC target used for Stage3 and Stage4 generation.
-    # Requires every convergence caller to state the target explicitly.
+    description: Host-native target used for Stage3 and Stage4 generation.
     required: true
-  # Declares the compiler used as the already-built Stage2 input.
   compiler:
-    # Explains that the path is resolved inside the selected source checkout.
-    description: Existing self-hosted SultanC compiler relative to the selected working directory.
-    # Keeps the canonical final compiler as the Stage2 input.
+    description: Stage2 compiler path relative to the candidate checkout.
     required: false
-    # Uses the normal compiler artifact produced by build.sh.
     default: build/sultanc
-  # Declares the repository directory containing compiler/main.sn and the Stage2 compiler.
   working-directory:
-    # Supports qualification of refs checked out beside the CI definition checkout.
-    description: Repository directory containing the SultanC source tree.
-    # Keeps normal main workflows rooted at the repository checkout.
+    description: Candidate repository directory.
     required: false
-    # Uses the current repository root by default.
     default: "."
 
-# Declares this action as a composite sequence on the current runner.
 runs:
-  # Executes convergence directly on the native target host.
   using: composite
-  # Starts self-host convergence steps.
   steps:
-    # Labels the convergence boundary in the Actions log.
     - name: Verify self-host convergence
-      # Uses Bash for native execution, hashing, and byte comparison.
       shell: bash
-      # Moves action inputs into environment variables.
       env:
-        # Stores the explicit host-native target.
         SULTANC_TARGET: ${{ inputs.target }}
-        # Stores the Stage2 compiler path relative to the source checkout.
         SULTANC_COMPILER: ${{ inputs.compiler }}
-        # Stores the source checkout directory.
         SULTANC_WORKING_DIRECTORY: ${{ inputs.working-directory }}
-      # Starts self-host convergence verification.
-      run: |
-        # Fails on compiler, hashing, or byte-comparison errors.
-        set -euo pipefail
-        # Enters the source checkout whose compiler is being qualified.
-        cd -- "$SULTANC_WORKING_DIRECTORY"
-        # Requires the already-built Stage2 compiler to be executable.
-        test -x "$SULTANC_COMPILER"
-        # Creates isolated convergence artifacts outside tracked source files.
-        CONVERGENCE_TMP="$(mktemp -d "${TMPDIR:-/tmp}/sultanc-convergence.XXXXXX")"
-        # Removes generated compilers when the convergence check exits.
-        trap 'rm -rf "$CONVERGENCE_TMP"' EXIT
-        # Defines the Stage3 compiler produced by Stage2.
-        STAGE3="$CONVERGENCE_TMP/stage3"
-        # Defines the Stage4 compiler produced by Stage3.
-        STAGE4="$CONVERGENCE_TMP/stage4"
-        # Uses the existing self-hosted compiler to generate the next compiler stage.
-        "$SULTANC_COMPILER" --target="$SULTANC_TARGET" -o "$STAGE3" compiler/main.sn
-        # Uses Stage3 itself to generate Stage4 through the same registered target.
-        "$STAGE3" --target="$SULTANC_TARGET" -o "$STAGE4" compiler/main.sn
-        # Requires both generated compiler stages to be executable on this host.
-        test -x "$STAGE3"
-        # Requires the final convergence stage to be executable as well.
-        test -x "$STAGE4"
-        # Prints SHA-256 values with the utility available on the current host.
-        if command -v sha256sum >/dev/null 2>&1; then
-          # Uses GNU sha256sum on Linux hosted runners.
-          sha256sum "$SULTANC_COMPILER" "$STAGE3" "$STAGE4"
-        # Selects the portable macOS hashing utility when GNU sha256sum is absent.
-        else
-          # Uses shasum in SHA-256 mode on macOS hosted runners.
-          shasum -a 256 "$SULTANC_COMPILER" "$STAGE3" "$STAGE4"
-        # Ends platform-specific hashing.
-        fi
-        # Requires Stage2 and Stage3 compiler binaries to be byte-for-byte identical.
-        cmp "$SULTANC_COMPILER" "$STAGE3"
-        # Requires Stage3 and Stage4 compiler binaries to remain byte-for-byte identical.
-        cmp "$STAGE3" "$STAGE4"
-        # Adds the convergence result to the GitHub run summary.
-        printf '### SultanC self-host convergence\n- Target: `%s`\n- Stage2 = Stage3 = Stage4: `PASS`\n' "$SULTANC_TARGET" >> "$GITHUB_STEP_SUMMARY"
+      run: "$GITHUB_ACTION_PATH/run.sh"

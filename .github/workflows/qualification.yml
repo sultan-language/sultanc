@@ -1,166 +1,320 @@
-# Names the manually requested deep qualification workflow.
+# Shared read-only qualification implementation for all protected branch profiles.
 name: SultanC Qualification
 
-# Keeps deep qualification manually runnable while allowing trusted promotion workflows to reuse the exact same gate.
 on:
-  # Allows maintainers to start qualification from the GitHub Actions UI.
-  workflow_dispatch:
-    # Declares the inputs shown in the manual-run dialog.
-    inputs:
-      # Lets maintainers qualify any trusted repository ref without requiring that ref to contain CI files.
-      ref:
-        # Explains which commit, branch, or tag will be checked out as the candidate.
-        description: Branch, tag, or commit to qualify.
-        # Requires an explicit ref to avoid qualifying an accidental default.
-        required: true
-        # Uses main as the normal qualification candidate.
-        default: main
-        # Treats the input as a normal text field.
-        type: string
-  # Allows the promotion workflow to reuse this qualification instead of duplicating compiler checks.
   workflow_call:
-    # Declares the candidate ref supplied by the trusted caller.
     inputs:
-      # Carries the branch, tag, or commit that must pass before promotion continues.
-      ref:
-        # Requires the caller to choose the exact qualification candidate.
+      candidate-ref:
+        description: Immutable SHA or trusted ref to qualify.
         required: true
-        # Uses a string because Git refs and commit hashes are textual identifiers.
         type: string
+      profile:
+        description: "Destination profile: main, beta, or master."
+        required: true
+        type: string
+      mode:
+        description: "Qualification depth: pr, full, or deep."
+        required: true
+        type: string
+    outputs:
+      candidate_sha:
+        description: Exact candidate commit that was qualified.
+        value: ${{ jobs.required.outputs.candidate_sha }}
+      promotion_ready:
+        description: True only when all external CI contracts are activated.
+        value: ${{ jobs.required.outputs.promotion_ready }}
+      harness_sha:
+        description: Immutable reusable-workflow harness revision.
+        value: ${{ jobs.required.outputs.harness_sha }}
 
-# Gives deep qualification read-only repository access.
+  workflow_dispatch:
+    inputs:
+      candidate-ref:
+        description: Branch, tag, or commit to qualify.
+        required: true
+        default: main
+        type: string
+      profile:
+        description: Qualification profile.
+        required: true
+        default: main
+        type: choice
+        options: [main, beta, master]
+      mode:
+        description: Qualification depth. Deep includes broad LLVM coverage.
+        required: true
+        default: deep
+        type: choice
+        options: [pr, full, deep]
+
 permissions:
-  # Allows source checkout only.
   contents: read
 
-# Prevents duplicate deep qualification of the same requested ref.
-concurrency:
-  # Groups qualification by the manually selected ref.
-  group: sultanc-qualification-${{ inputs.ref }}
-  # Cancels an obsolete manual qualification if the same ref is restarted.
-  cancel-in-progress: true
-
-# Declares deep qualification jobs.
 jobs:
-  # Builds every supported target, runs public examples, and proves self-host convergence.
-  targets:
-    # Shows the exact target in the qualification result list.
-    name: Target / ${{ matrix.target }}
-    # Uses the matching native host.
-    runs-on: ${{ matrix.runner }}
-    # Allows additional time for examples and two self-host regeneration stages.
-    timeout-minutes: 120
-
-    # Declares the supported target matrix.
-    strategy:
-      # Keeps all target results visible.
-      fail-fast: false
-      # Starts the explicit target rows.
-      matrix:
-        # Declares the exact target/runner mapping.
-        include:
-          # Declares x86_64 Linux.
-          - target: x86_64-linux
-            # Uses Ubuntu x64.
-            runner: ubuntu-24.04
-            # Expects Linux.
-            host_os: Linux
-            # Expects x86_64.
-            host_arch: x86_64
-            # Expects ELF x86-64.
-            file_pattern: 'ELF 64-bit.*x86-64'
-          # Declares ARM64 Darwin.
-          - target: arm64-darwin
-            # Uses macOS ARM64.
-            runner: macos-15
-            # Expects Darwin.
-            host_os: Darwin
-            # Expects arm64.
-            host_arch: arm64
-            # Expects Mach-O ARM64.
-            file_pattern: 'Mach-O 64-bit.*arm64'
-
-    # Starts target qualification.
+  # Resolve a moving ref once; every later job consumes the resulting immutable SHA.
+  resolve:
+    name: Resolve Candidate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    outputs:
+      sha: ${{ steps.resolve.outputs.sha }}
     steps:
-      # Checks out main only to provide the current repository-owned CI actions.
-      - name: Checkout CI definitions
-        # Pins checkout to the immutable v7.0.1 commit.
+      - name: Checkout immutable qualification harness
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        # Keeps CI ownership on main even when the qualified ref is beta, master, or a tag.
         with:
-          # Uses the current integration branch as the canonical CI definition source.
-          ref: main
-          # Prevents workflow-token persistence.
+          ref: ${{ job.workflow_sha }}
+          path: harness
           persist-credentials: false
 
-      # Checks out the selected candidate into an isolated directory beside the CI definitions.
-      - name: Checkout qualification candidate
-        # Pins checkout to the same immutable v7.0.1 commit.
+      - name: Checkout candidate for immutable resolution
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        # Configures the candidate checkout independently of main's CI files.
         with:
-          # Checks out the requested branch, tag, or commit.
-          ref: ${{ inputs.ref }}
-          # Places candidate source where local CI actions cannot be replaced by the candidate ref.
+          ref: ${{ inputs.candidate-ref }}
           path: candidate
-          # Prevents workflow-token persistence inside the candidate checkout.
+          persist-credentials: false
+          fetch-depth: 1
+
+      - name: Validate request and record immutable candidate SHA
+        id: resolve
+        shell: bash
+        env:
+          PROFILE: ${{ inputs.profile }}
+          MODE: ${{ inputs.mode }}
+          REQUESTED_REF: ${{ inputs.candidate-ref }}
+          CANDIDATE_DIR: candidate
+        run: ./harness/.github/scripts/qualification-resolve.sh
+
+  # Native lanes prove both host targets and exercise native, LLVM, and interpreter paths.
+  native:
+    name: Native Host / ${{ matrix.target }}
+    needs: resolve
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: x86_64-linux
+            runner: ubuntu-24.04
+            host_os: Linux
+            host_arch: x86_64
+            file_pattern: 'ELF 64-bit.*x86-64'
+          - target: arm64-darwin
+            runner: macos-15
+            host_os: Darwin
+            host_arch: arm64
+            file_pattern: 'Mach-O 64-bit.*arm64'
+    steps:
+      - name: Checkout immutable CI harness
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ job.workflow_sha }}
+          path: harness
           persist-credentials: false
 
-      # Builds the candidate through the explicit registered target.
-      - name: Build qualification target
-        # Reuses the current main-branch build action.
-        uses: ./.github/actions/build
-        # Supplies the selected target and candidate checkout.
+      - name: Checkout immutable candidate
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
-          # Passes the exact registered target.
+          ref: ${{ needs.resolve.outputs.sha }}
+          path: candidate
+          persist-credentials: false
+
+      - name: Record harness and runner identity
+        shell: bash
+        run: |
+          {
+            echo "### Qualification harness"
+            echo '- Harness SHA: `${{ job.workflow_sha }}`'
+            echo '- Candidate SHA: `${{ needs.resolve.outputs.sha }}`'
+            printf -- '- Runner: `%s / %s`\n' "$(uname -s)" "$(uname -m)"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Build native host compiler
+        uses: ./harness/.github/actions/build
+        with:
           target: ${{ matrix.target }}
-          # Directs the action to the isolated candidate source tree.
           working-directory: candidate
 
-      # Verifies candidate target identity and native binary format.
-      - name: Verify qualification target
-        # Reuses the current main-branch target verifier.
-        uses: ./.github/actions/target
-        # Supplies the candidate target contract.
+      - name: Verify native host compiler
+        uses: ./harness/.github/actions/target
         with:
-          # Names the target.
           target: ${{ matrix.target }}
-          # Supplies the host OS.
           expected-host-os: ${{ matrix.host_os }}
-          # Supplies the host architecture.
           expected-host-arch: ${{ matrix.host_arch }}
-          # Supplies the binary-format expectation.
           expected-file-pattern: ${{ matrix.file_pattern }}
-          # Directs binary inspection to the candidate checkout.
           working-directory: candidate
 
-      # Builds and runs every mirrored English and Arabic example from the candidate ref.
-      - name: Run bilingual examples
-        # Reuses the current main-branch example action.
-        uses: ./.github/actions/examples
-        # Selects the isolated candidate checkout.
+      - name: Exercise default compile and run behavior
+        uses: ./harness/.github/actions/examples
         with:
-          # Directs example compilation and execution to the candidate source tree.
           working-directory: candidate
 
-      # Proves the candidate compiler reproduces itself byte-for-byte across two more stages.
+      - name: Exercise explicit native backend
+        shell: bash
+        run: >-
+          ./harness/.github/scripts/backend-smoke.sh
+          candidate native '${{ matrix.target }}'
+
+      - name: Exercise explicit LLVM backend
+        shell: bash
+        run: >-
+          ./harness/.github/scripts/backend-smoke.sh
+          candidate llvm '${{ matrix.target }}'
+
+      - name: Run delivered SultanC test suite
+        shell: bash
+        run: ./harness/.github/scripts/test-suite.sh candidate
+
       - name: Verify self-host convergence
-        # Reuses the current main-branch convergence action.
-        uses: ./.github/actions/convergence
-        # Supplies the candidate target and checkout.
+        if: ${{ inputs.mode != 'pr' }}
+        uses: ./harness/.github/actions/convergence
         with:
-          # Keeps generated compiler stages on the runner's native target.
           target: ${{ matrix.target }}
-          # Directs self-host generation to the candidate source tree.
           working-directory: candidate
 
-      # Verifies that qualification left the candidate's tracked sources unchanged.
-      - name: Verify clean qualification tree
-        # Reuses the strict repository qualification wrapper.
-        uses: ./.github/actions/test
-        # Supplies the candidate-aware check command.
+      - name: Verify clean candidate tree
+        uses: ./harness/.github/actions/test
         with:
-          # Names the cleanliness check.
-          name: Qualification source cleanliness
-          # Rejects tracked source rewrites inside the isolated candidate checkout.
+          name: Candidate source cleanliness
           command: git -C candidate diff --exit-code
+
+      - name: Retain native qualification diagnostics on failure
+        if: ${{ failure() }}
+        uses: ./harness/.github/actions/upload-diagnostics
+        with:
+          name: native-${{ matrix.target }}-${{ needs.resolve.outputs.sha }}
+          path: ${{ runner.temp }}/sultanc-ci
+
+  # Broad LLVM checks are skipped for fast main PR/full runs, but never for beta/master.
+  llvm-contracts:
+    name: LLVM Coverage Contracts
+    if: ${{ inputs.profile != 'main' || inputs.mode == 'deep' }}
+    needs: resolve
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    outputs:
+      active: ${{ steps.contracts.outputs.active }}
+      complete: ${{ steps.contracts.outputs.complete }}
+      shards: ${{ steps.contracts.outputs.shards }}
+    steps:
+      - name: Checkout immutable CI harness
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ job.workflow_sha }}
+          path: harness
+          persist-credentials: false
+
+      - name: Validate all 34 LLVM coverage contracts
+        id: contracts
+        shell: bash
+        run: ./harness/.github/scripts/llvm-contracts.sh
+
+  llvm-broad:
+    name: LLVM Broad / Shard ${{ matrix.shard }}
+    if: >-
+      ${{
+        needs.llvm-contracts.result == 'success' &&
+        needs.llvm-contracts.outputs.active == 'true'
+      }}
+    needs: [resolve, llvm-contracts]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        shard: >-
+          ${{ fromJSON(
+            needs.llvm-contracts.outputs.shards || '[0,1,2,3]'
+          ) }}
+    steps:
+      - name: Checkout immutable CI harness
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ job.workflow_sha }}
+          path: harness
+          persist-credentials: false
+
+      - name: Checkout immutable candidate
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ needs.resolve.outputs.sha }}
+          path: candidate
+          persist-credentials: false
+
+      - name: Build host compiler once for this LLVM shard
+        uses: ./harness/.github/actions/build
+        with:
+          target: x86_64-linux
+          working-directory: candidate
+
+      - name: Record compiler target inventory
+        shell: bash
+        env:
+          CANDIDATE_DIR: candidate
+          SHARD: ${{ matrix.shard }}
+        run: ./harness/.github/scripts/record-target-inventory.sh
+
+      - name: Generate and inspect assigned LLVM outputs
+        shell: bash
+        run: >-
+          ./harness/.github/scripts/llvm-shard.sh
+          candidate '${{ matrix.shard }}'
+
+      - name: Verify clean candidate tree
+        shell: bash
+        run: git -C candidate diff --exit-code
+
+      - name: Retain LLVM shard diagnostics on failure
+        if: ${{ failure() }}
+        uses: ./harness/.github/actions/upload-diagnostics
+        with:
+          name: llvm-shard-${{ matrix.shard }}-${{ needs.resolve.outputs.sha }}
+          path: ${{ runner.temp }}/sultanc-ci
+
+  # Required remains green only when every mandatory job result is acceptable.
+  required:
+    name: Qualification Required
+    if: ${{ always() }}
+    needs: [resolve, native, llvm-contracts, llvm-broad]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    outputs:
+      candidate_sha: ${{ needs.resolve.outputs.sha }}
+      promotion_ready: ${{ steps.readiness.outputs.ready }}
+      harness_sha: ${{ job.workflow_sha }}
+    steps:
+      - name: Checkout immutable CI harness
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ job.workflow_sha }}
+          path: harness
+          persist-credentials: false
+
+      - name: Enforce mandatory job results
+        shell: bash
+        env:
+          RESOLVE_RESULT: ${{ needs.resolve.result }}
+          NATIVE_RESULT: ${{ needs.native.result }}
+          LLVM_CONTRACTS_RESULT: ${{ needs.llvm-contracts.result }}
+          LLVM_BROAD_RESULT: ${{ needs.llvm-broad.result }}
+          LLVM_ACTIVE: ${{ needs.llvm-contracts.outputs.active }}
+          LLVM_COMPLETE: ${{ needs.llvm-contracts.outputs.complete }}
+          PROFILE: ${{ inputs.profile }}
+          MODE: ${{ inputs.mode }}
+        run: ./harness/.github/scripts/qualification-required.sh
+
+      - name: Record contract readiness
+        id: readiness
+        shell: bash
+        run: ./harness/.github/scripts/qualification-readiness.sh
+
+      - name: Record final qualification identity
+        shell: bash
+        run: |
+          {
+            echo "### Qualification result"
+            echo '- Candidate SHA: `${{ needs.resolve.outputs.sha }}`'
+            echo '- Harness SHA: `${{ job.workflow_sha }}`'
+            echo '- Required jobs: `PASS`'
+          } >> "$GITHUB_STEP_SUMMARY"

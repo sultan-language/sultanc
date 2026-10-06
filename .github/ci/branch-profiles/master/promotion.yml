@@ -1,0 +1,179 @@
+# Trusted default-branch controller for automatic main -> beta -> master progression.
+name: SultanC Promotion
+
+on:
+  workflow_run:
+    workflows: [SultanC Integration]
+    types: [completed]
+    branches: [main, beta]
+  workflow_dispatch:
+    inputs:
+      source:
+        description: >-
+          Recovery source edge. The exact current SHA must already have a
+          successful landed integration run.
+        required: true
+        type: choice
+        options: [main, beta]
+
+permissions:
+  contents: read
+  actions: read
+
+# Serialize each source edge. Duplicate completion events remain idempotent.
+concurrency:
+  group: >-
+    sultanc-promotion-${{
+      github.event.workflow_run.head_branch ||
+      inputs.source
+    }}
+  cancel-in-progress: false
+
+jobs:
+  # Preflight has read-only permissions and never executes candidate code with write secrets.
+  preflight:
+    name: Validate Promotion Evidence
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    outputs:
+      source: ${{ steps.resolve.outputs.source }}
+      destination: ${{ steps.resolve.outputs.destination }}
+      source_sha: ${{ steps.resolve.outputs.source_sha }}
+      destination_sha: ${{ steps.resolve.outputs.destination_sha }}
+      trigger_run_id: ${{ steps.resolve.outputs.trigger_run_id }}
+      trigger_run_attempt: ${{ steps.resolve.outputs.trigger_run_attempt }}
+      ready: ${{ steps.readiness.outputs.ready }}
+      contract_digest: ${{ steps.contract.outputs.digest }}
+      credential_state: ${{ steps.auth.outputs.state }}
+      auth_mode: ${{ steps.auth.outputs.auth_mode }}
+      app_id_secret: ${{ steps.auth.outputs.app_id_secret }}
+      private_key_secret: ${{ steps.auth.outputs.private_key_secret }}
+      token_secret: ${{ steps.auth.outputs.token_secret }}
+      merge_method: ${{ steps.auth.outputs.merge_method }}
+    steps:
+      - name: Checkout trusted controller harness
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.workflow_sha }}
+          path: harness
+          persist-credentials: false
+
+      - name: Resolve exact successful integration evidence
+        id: resolve
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          EVENT_RUN_ID: ${{ github.event.workflow_run.id }}
+          MANUAL_SOURCE: ${{ inputs.source }}
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          CONTRACTS_FILE: harness/.github/ci/contracts.json
+        run: ./harness/.github/scripts/promotion-evidence.sh
+
+      - name: Checkout exact landed source as data
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ steps.resolve.outputs.source_sha }}
+          path: source
+          persist-credentials: false
+
+      - name: Require promotion-grade source contracts
+        id: readiness
+        shell: bash
+        run: >-
+          ./harness/.github/scripts/qualification-readiness.sh
+          source/.github/ci/contracts.json
+          source/.github/ci/llvm-targets.json
+
+      - name: Bind qualification contract revision
+        id: contract
+        shell: bash
+        env:
+          CONTRACTS_FILE: source/.github/ci/contracts.json
+          TARGETS_FILE: source/.github/ci/llvm-targets.json
+        run: ./harness/.github/scripts/promotion-contract-digest.sh
+
+      - name: Validate trusted promotion authentication contract
+        id: auth
+        shell: bash
+        env:
+          CONTRACTS_FILE: harness/.github/ci/contracts.json
+          SOURCE_BRANCH: ${{ steps.resolve.outputs.source }}
+          DESTINATION_BRANCH: ${{ steps.resolve.outputs.destination }}
+          SOURCE_SHA: ${{ steps.resolve.outputs.source_sha }}
+          DESTINATION_SHA: ${{ steps.resolve.outputs.destination_sha }}
+          TRIGGER_RUN_ID: ${{ steps.resolve.outputs.trigger_run_id }}
+          TRIGGER_RUN_ATTEMPT: ${{ steps.resolve.outputs.trigger_run_attempt }}
+          READINESS: ${{ steps.readiness.outputs.ready }}
+        run: ./harness/.github/scripts/promotion-auth.sh
+
+  # Pending contracts or credentials are visible failures, never skipped promotion success.
+  blocked:
+    name: Automatic Promotion Prerequisite Gate
+    needs: preflight
+    if: >-
+      ${{
+        always() &&
+        needs.preflight.result == 'success' &&
+        (
+          needs.preflight.outputs.ready != 'true' ||
+          needs.preflight.outputs.credential_state != 'configured'
+        )
+      }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Stop incomplete promotion
+        shell: bash
+        env:
+          READY: ${{ needs.preflight.outputs.ready }}
+          CREDENTIAL_STATE: ${{ needs.preflight.outputs.credential_state }}
+        run: |
+          echo "Automatic promotion is not ready." >&2
+          echo "qualification readiness: $READY" >&2
+          echo "credential state: $CREDENTIAL_STATE" >&2
+          exit 1
+
+  # This is the only job that receives a write-capable external credential.
+  promote:
+    name: Protected Automatic Promotion
+    needs: preflight
+    if: >-
+      ${{
+        needs.preflight.result == 'success' &&
+        needs.preflight.outputs.ready == 'true' &&
+        needs.preflight.outputs.credential_state == 'configured'
+      }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - name: Checkout trusted controller harness only
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.workflow_sha }}
+          path: harness
+          persist-credentials: false
+
+      - name: Construct candidate and request protected auto-merge
+        shell: bash
+        env:
+          AUTH_MODE: ${{ needs.preflight.outputs.auth_mode }}
+          SULTANC_PAT: ${{ secrets[needs.preflight.outputs.token_secret] }}
+          SULTANC_APP_ID: ${{ secrets[needs.preflight.outputs.app_id_secret] }}
+          SULTANC_APP_PRIVATE_KEY: >-
+            ${{ secrets[needs.preflight.outputs.private_key_secret] }}
+          SULTANC_REPOSITORY: ${{ github.repository }}
+          SOURCE_BRANCH: ${{ needs.preflight.outputs.source }}
+          DESTINATION_BRANCH: ${{ needs.preflight.outputs.destination }}
+          SOURCE_SHA: ${{ needs.preflight.outputs.source_sha }}
+          DESTINATION_SHA: ${{ needs.preflight.outputs.destination_sha }}
+          TRIGGER_RUN_ID: ${{ needs.preflight.outputs.trigger_run_id }}
+          TRIGGER_RUN_ATTEMPT: >-
+            ${{ needs.preflight.outputs.trigger_run_attempt }}
+          HARNESS_SHA: ${{ github.workflow_sha }}
+          CONTRACT_DIGEST: ${{ needs.preflight.outputs.contract_digest }}
+          MERGE_METHOD: ${{ needs.preflight.outputs.merge_method }}
+        run: ./harness/.github/scripts/promotion-execute.sh
