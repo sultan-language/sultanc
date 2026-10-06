@@ -1,6 +1,6 @@
 {
   "schema_version": 3,
-  "updated": "2026-10-04",
+  "updated": "2026-10-05",
   "build": {
     "entrypoint": "./build.sh",
     "host_build": {
@@ -33,24 +33,66 @@
     "diagnostic_language": "--lang=auto|ar|en"
   },
   "llvm_toolchain": {
-    "state": "pending",
-    "version": null,
-    "required_headers": [],
-    "required_components": [],
-    "required_targets_built": [],
+    "state": "confirmed",
+    "version": "22.1.8",
+    "provider": "llvm-project-release",
+    "cache": {
+      "namespace": "sultanc-llvm",
+      "schema_version": 1
+    },
+    "required_headers": [
+      "llvm-c/Analysis.h",
+      "llvm-c/Core.h",
+      "llvm-c/Error.h",
+      "llvm-c/ExecutionEngine.h",
+      "llvm-c/Target.h",
+      "llvm-c/TargetMachine.h",
+      "llvm-c/Transforms/PassBuilder.h"
+    ],
+    "link_contract": {
+      "libraries": "all",
+      "shared_runtime": true
+    },
+    "required_targets_built": [
+      "AArch64",
+      "X86",
+      "ARM",
+      "RISCV",
+      "WebAssembly",
+      "AMDGPU",
+      "AVR",
+      "BPF",
+      "Hexagon",
+      "Lanai",
+      "LoongArch",
+      "Mips",
+      "MSP430",
+      "NVPTX",
+      "PowerPC",
+      "Sparc",
+      "SPIRV",
+      "SystemZ",
+      "VE",
+      "XCore"
+    ],
     "platforms": {
       "linux": {
-        "distribution": "ubuntu-apt",
-        "packages": [],
-        "llvm_config": null
+        "host_arch": "x86_64",
+        "archive": "LLVM-22.1.8-Linux-X64.tar.xz",
+        "root": "LLVM-22.1.8-Linux-X64",
+        "url": "https://github.com/llvm/llvm-project/releases/download/llvmorg-22.1.8/LLVM-22.1.8-Linux-X64.tar.xz",
+        "sha256": "df0e1ecf16caf3489a272a5eea4eec9b0d82878f6477fa309504f918a0006384",
+        "llvm_config": "bin/llvm-config"
       },
       "macos": {
-        "distribution": "homebrew",
-        "formula": null,
-        "llvm_config": null
+        "host_arch": "arm64",
+        "archive": "LLVM-22.1.8-macOS-ARM64.tar.xz",
+        "root": "LLVM-22.1.8-macOS-ARM64",
+        "url": "https://github.com/llvm/llvm-project/releases/download/llvmorg-22.1.8/LLVM-22.1.8-macOS-ARM64.tar.xz",
+        "sha256": "f260f4f7c0d430828a81ae8a3826a1d63fc0963ec2459489308cc23b1f7eab4f",
+        "llvm_config": "bin/llvm-config"
       }
-    },
-    "reason": "A pinned LLVM development version, platform-specific distributions, llvm-config paths, required headers/components, and required target families have not been supplied."
+    }
   },
   "backend_smoke": {
     "state": "pending",

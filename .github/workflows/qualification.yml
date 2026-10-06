@@ -129,6 +129,11 @@ jobs:
             printf -- '- Runner: `%s / %s`\n' "$(uname -s)" "$(uname -m)"
           } >> "$GITHUB_STEP_SUMMARY"
 
+      - name: Restore or provision pinned LLVM toolchain
+        uses: ./harness/.github/actions/llvm-toolchain
+        with:
+          contracts: harness/.github/ci/contracts.json
+
       - name: Build native host compiler
         uses: ./harness/.github/actions/build
         with:
@@ -241,6 +246,11 @@ jobs:
           ref: ${{ needs.resolve.outputs.sha }}
           path: candidate
           persist-credentials: false
+
+      - name: Restore or provision pinned LLVM toolchain
+        uses: ./harness/.github/actions/llvm-toolchain
+        with:
+          contracts: harness/.github/ci/contracts.json
 
       - name: Build host compiler once for this LLVM shard
         uses: ./harness/.github/actions/build

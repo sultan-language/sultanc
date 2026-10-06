@@ -1,8 +1,8 @@
-# One owner installs and verifies LLVM on both Linux and macOS runners.
+# Restore the exact LLVM development bundle or provision it once from llvm-project.
 name: SultanC LLVM Toolchain
 description: >-
-  Enforce the staged, platform-specific LLVM development-toolchain contract
-  without silently installing an unpinned LLVM.
+  Restore the pinned LLVM development bundle from the Actions cache, or verify
+  and provision the exact upstream release archive on a cache miss.
 
 inputs:
   contracts:
@@ -13,9 +13,32 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Resolve and enforce LLVM toolchain contract
+    - name: Resolve pinned LLVM cache contract
+      id: contract
       shell: bash
       env:
         CONTRACTS: ${{ inputs.contracts }}
-      run: |
-        "$GITHUB_ACTION_PATH/setup.sh" "$CONTRACTS"
+      run: >-
+        "$GITHUB_ACTION_PATH/setup.sh" resolve "$CONTRACTS"
+
+    - name: Restore pinned LLVM toolchain
+      id: cache
+      uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+      with:
+        path: ${{ steps.contract.outputs.toolchain_path }}
+        key: ${{ steps.contract.outputs.cache_key }}
+
+    - name: Provision and verify pinned LLVM toolchain
+      shell: bash
+      env:
+        CACHE_HIT: ${{ steps.cache.outputs.cache-hit }}
+        CONTRACTS: ${{ inputs.contracts }}
+      run: >-
+        "$GITHUB_ACTION_PATH/setup.sh" activate "$CONTRACTS" "$CACHE_HIT"
+
+    - name: Save provisioned LLVM toolchain
+      if: ${{ steps.cache.outputs.cache-hit != 'true' }}
+      uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+      with:
+        path: ${{ steps.contract.outputs.toolchain_path }}
+        key: ${{ steps.contract.outputs.cache_key }}
