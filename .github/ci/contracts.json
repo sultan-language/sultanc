@@ -35,10 +35,23 @@
   "llvm_toolchain": {
     "state": "confirmed",
     "version": "22.1.8",
-    "provider": "llvm-project-release",
+    "provider": "sultanc-actions-cache",
     "cache": {
       "namespace": "sultanc-llvm",
-      "schema_version": 1
+      "schema_version": 2
+    },
+    "source": {
+      "archive": "llvm-project-22.1.8.src.tar.xz",
+      "root": "llvm-project-22.1.8.src",
+      "url": "https://github.com/llvm/llvm-project/releases/download/llvmorg-22.1.8/llvm-project-22.1.8.src.tar.xz",
+      "sha256": "922f1817a0df7b1489272d18134ee0087a8b068828f87ac63b9861b1a9965888"
+    },
+    "build": {
+      "type": "Release",
+      "parallel_jobs": 2,
+      "llvm_build_llvm_dylib": true,
+      "llvm_link_llvm_dylib": true,
+      "llvm_dylib_components": "all"
     },
     "required_headers": [
       "llvm-c/Analysis.h",
@@ -78,19 +91,13 @@
     "platforms": {
       "linux": {
         "host_arch": "x86_64",
-        "archive": "LLVM-22.1.8-Linux-X64.tar.xz",
-        "root": "LLVM-22.1.8-Linux-X64",
-        "url": "https://github.com/llvm/llvm-project/releases/download/llvmorg-22.1.8/LLVM-22.1.8-Linux-X64.tar.xz",
-        "sha256": "df0e1ecf16caf3489a272a5eea4eec9b0d82878f6477fa309504f918a0006384",
-        "llvm_config": "bin/llvm-config"
+        "llvm_config": "bin/llvm-config",
+        "shared_runtime": "lib/libLLVM.so"
       },
       "macos": {
         "host_arch": "arm64",
-        "archive": "LLVM-22.1.8-macOS-ARM64.tar.xz",
-        "root": "LLVM-22.1.8-macOS-ARM64",
-        "url": "https://github.com/llvm/llvm-project/releases/download/llvmorg-22.1.8/LLVM-22.1.8-macOS-ARM64.tar.xz",
-        "sha256": "f260f4f7c0d430828a81ae8a3826a1d63fc0963ec2459489308cc23b1f7eab4f",
-        "llvm_config": "bin/llvm-config"
+        "llvm_config": "bin/llvm-config",
+        "shared_runtime": "lib/libLLVM.dylib"
       }
     }
   },

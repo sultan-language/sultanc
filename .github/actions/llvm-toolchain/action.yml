@@ -1,8 +1,8 @@
-# Restore the exact LLVM development bundle or provision it once from llvm-project.
+# Restore and verify the exact SultanC-controlled LLVM development toolchain.
 name: SultanC LLVM Toolchain
 description: >-
-  Restore the pinned LLVM development bundle from the Actions cache, or verify
-  and provision the exact upstream release archive on a cache miss.
+  Restore the pinned SultanC LLVM development toolchain from the Actions cache,
+  verify its manifest and development contract, and export it for the build.
 
 inputs:
   contracts:
@@ -21,24 +21,17 @@ runs:
       run: >-
         "$GITHUB_ACTION_PATH/setup.sh" resolve "$CONTRACTS"
 
-    - name: Restore pinned LLVM toolchain
+    - name: Restore pinned SultanC LLVM toolchain
       id: cache
       uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
       with:
         path: ${{ steps.contract.outputs.toolchain_path }}
         key: ${{ steps.contract.outputs.cache_key }}
 
-    - name: Provision and verify pinned LLVM toolchain
+    - name: Verify and activate pinned LLVM toolchain
       shell: bash
       env:
         CACHE_HIT: ${{ steps.cache.outputs.cache-hit }}
         CONTRACTS: ${{ inputs.contracts }}
       run: >-
         "$GITHUB_ACTION_PATH/setup.sh" activate "$CONTRACTS" "$CACHE_HIT"
-
-    - name: Save provisioned LLVM toolchain
-      if: ${{ steps.cache.outputs.cache-hit != 'true' }}
-      uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
-      with:
-        path: ${{ steps.contract.outputs.toolchain_path }}
-        key: ${{ steps.contract.outputs.cache_key }}
