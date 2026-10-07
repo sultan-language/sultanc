@@ -70,6 +70,73 @@ __Semantic_Function_Entry__ *__LLVM_Resolve_Ordinary_Callee__(__LLVM_Emitter__ *
     return callee;
 }
 
+/* Returns whether two LLVM function types describe the same external ABI. */
+static int __LLVM_External_Function_Types_Match__(LLVMTypeRef left, LLVMTypeRef right)
+{
+    LLVMTypeRef *parameters = NULL;
+    LLVMTypeRef *left_parameters;
+    LLVMTypeRef *right_parameters;
+    unsigned count;
+    unsigned index;
+    int matches = 1;
+
+    if (left == NULL || right == NULL ||
+        LLVMGetTypeKind(left) != LLVMFunctionTypeKind ||
+        LLVMGetTypeKind(right) != LLVMFunctionTypeKind ||
+        LLVMGetReturnType(left) != LLVMGetReturnType(right) ||
+        LLVMIsFunctionVarArg(left) != LLVMIsFunctionVarArg(right))
+    {
+        return 0;
+    }
+    count = LLVMCountParamTypes(left);
+    if (count != LLVMCountParamTypes(right))
+        return 0;
+    if (count == 0U)
+        return 1;
+
+    parameters = (LLVMTypeRef *)calloc((size_t)count * 2U, sizeof(*parameters));
+    if (parameters == NULL)
+        return -1;
+    left_parameters = parameters;
+    right_parameters = parameters + count;
+    LLVMGetParamTypes(left, left_parameters);
+    LLVMGetParamTypes(right, right_parameters);
+    for (index = 0U; index < count; ++index)
+    {
+        if (left_parameters[index] != right_parameters[index])
+        {
+            matches = 0;
+            break;
+        }
+    }
+    free(parameters);
+    return matches;
+}
+
+/* Declares one external symbol once and reuses matching repeated declarations. */
+static LLVMValueRef __LLVM_Declare_External_Function__(__LLVM_Emitter__ *emitter,
+                                                       const char *symbol,
+                                                       LLVMTypeRef function_type)
+{
+    LLVMValueRef existing = LLVMGetNamedFunction(emitter->module, symbol);
+    int types_match;
+    if (existing == NULL)
+        return LLVMAddFunction(emitter->module, symbol, function_type);
+    types_match = __LLVM_External_Function_Types_Match__(
+        LLVMGlobalGetValueType(existing), function_type);
+    if (types_match < 0)
+    {
+        __LLVM_Fail__("out of memory while validating repeated L2.3 external declaration");
+        return NULL;
+    }
+    if (!types_match)
+    {
+        __LLVM_Fail__("conflicting L2.3 external declarations for one linker symbol");
+        return NULL;
+    }
+    return existing;
+}
+
 static int __LLVM_Declare_One_Function__(__LLVM_Emitter__ *emitter,
                                        __Semantic_Function_Entry__ *entry,
                                        size_t output_index)
@@ -121,7 +188,10 @@ static int __LLVM_Declare_One_Function__(__LLVM_Emitter__ *emitter,
     }
     emitter->functions[output_index].semantic = entry;
     emitter->functions[output_index].type = function_type;
-    emitter->functions[output_index].value = LLVMAddFunction(emitter->module, symbol, function_type);
+    emitter->functions[output_index].value =
+        function->__External__
+            ? __LLVM_Declare_External_Function__(emitter, symbol, function_type)
+            : LLVMAddFunction(emitter->module, symbol, function_type);
     return emitter->functions[output_index].value != NULL
                ? 1
                : __LLVM_Fail__("LLVM function declaration failed for L2.3");

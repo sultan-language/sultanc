@@ -26,6 +26,9 @@ LLVMValueRef __LLVM_Runtime_C_String__(__LLVM_Emitter__ *emitter,
 LLVMValueRef __LLVM_Runtime_Literal_C_String__(__LLVM_Emitter__ *emitter,
                                                const char *literal,
                                                const char *name);
+LLVMValueRef __LLVM_Runtime_Malloc__(__LLVM_Emitter__ *emitter,
+                                     LLVMValueRef byte_count,
+                                     const char *name);
 int __LLVM_Runtime_Free__(__LLVM_Emitter__ *emitter, LLVMValueRef pointer);
 
 #endif

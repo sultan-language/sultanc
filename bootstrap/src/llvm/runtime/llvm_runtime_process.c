@@ -63,22 +63,6 @@ LLVMValueRef __LLVM_Strlen__(__LLVM_Emitter__ *emitter, LLVMValueRef data)
                           "argument.length");
 }
 
-/* Emits the LLVM argument count. */
-__LLVM_Value__ __LLVM_Emit_Argument_Count__(__LLVM_Emitter__ *emitter,
-                                                   __Ast_Type__ *expected)
-{
-    /* Stores the operation result. */
-    __LLVM_Value__ result = __LLVM_Invalid_Value__();
-    /* Stores the LLVM i64 type. */
-    LLVMTypeRef i64 = LLVMIntTypeInContext(emitter->context, 64U);
-    if (!__LLVM_Ensure_Process_Globals__(emitter))
-        return result;
-    result.value =
-        LLVMBuildLoad2(emitter->builder, i64, emitter->process_argc_global, "argument.count");
-    result.type = &__LLVM_Integer_Type__;
-    return expected != NULL ? __LLVM_Coerce__(emitter, result, expected) : result;
-}
-
 /* Returns the LLVM bootstrap target identity code embedded in generated code. */
 static int __LLVM_Bootstrap_Host_Identity_Code__(__LLVM_Emitter__ *emitter,
                                                  __Name_Builtin_Function__ builtin,
@@ -156,42 +140,3 @@ __LLVM_Value__ __LLVM_Emit_Host_Identity__(__LLVM_Emitter__ *emitter,
     return expected != NULL ? __LLVM_Coerce__(emitter, result, expected) : result;
 }
 
-/* Emits the LLVM runtime exit. */
-__LLVM_Value__ __LLVM_Emit_Runtime_Exit__(__LLVM_Emitter__ *emitter,
-                                                 __Ast_Expression__ *expression)
-{
-    /* Stores the operation result. */
-    __LLVM_Value__ result = __LLVM_Invalid_Value__();
-    /* Stores the status. */
-    __LLVM_Value__ status;
-    /* Stores the LLVM i32 type. */
-    LLVMTypeRef i32 = LLVMIntTypeInContext(emitter->context, 32U);
-    /* Stores the parameters. */
-    LLVMTypeRef parameters[1] = {i32};
-    /* Stores the function type. */
-    LLVMTypeRef function_type;
-    /* Stores the function. */
-    LLVMValueRef function;
-    /* Stores the call arguments. */
-    LLVMValueRef arguments[1];
-    if (expression->__As__.__Call__.__Argument_Count__ != 1U)
-    {
-        __LLVM_Fail__("exit disagrees with canonical builtin arity");
-        return result;
-    }
-    status = __LLVM_Emit_Expression__(
-        emitter, expression->__As__.__Call__.__Arguments__[0], &__LLVM_Integer_Type__);
-    if (status.value == NULL)
-        return result;
-    status = __LLVM_Coerce__(emitter, status, &__LLVM_Integer_Type__);
-    if (status.value == NULL)
-        return result;
-    function = __LLVM_Declare_Runtime_Function__(
-        emitter, "exit", LLVMVoidTypeInContext(emitter->context), parameters, 1U, &function_type);
-    if (function == NULL)
-        return result;
-    arguments[0] = LLVMBuildTrunc(emitter->builder, status.value, i32, "runtime.exit.status");
-    result.value = LLVMBuildCall2(emitter->builder, function_type, function, arguments, 1U, "");
-    result.type = &__LLVM_Void_Type__;
-    return result;
-}

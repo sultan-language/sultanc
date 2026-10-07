@@ -244,6 +244,8 @@ static int __LLVM_Store_Tagged_Payload_Value__(__LLVM_Emitter__ *emitter,
         return 0;
     payload_temp =
         __LLVM_Allocate_Stack__(emitter, payload_llvm_type, "runtime.result.payload.temp");
+    if (payload_temp == NULL)
+        return 0;
     LLVMBuildStore(emitter->builder, payload.value, payload_temp);
     destination = __LLVM_Tagged_Byte_Address__(emitter,
                                                tagged_type,

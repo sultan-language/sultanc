@@ -8,12 +8,8 @@
 
 int __LLVM_Ensure_Process_Globals__(__LLVM_Emitter__ *emitter);
 LLVMValueRef __LLVM_Strlen__(__LLVM_Emitter__ *emitter, LLVMValueRef data);
-__LLVM_Value__ __LLVM_Emit_Argument_Count__(__LLVM_Emitter__ *emitter,
-                                            __Ast_Type__ *expected);
 __LLVM_Value__ __LLVM_Emit_Host_Identity__(__LLVM_Emitter__ *emitter,
                                            __Name_Builtin_Function__ builtin,
                                            __Ast_Type__ *expected);
-__LLVM_Value__ __LLVM_Emit_Runtime_Exit__(__LLVM_Emitter__ *emitter,
-                                          __Ast_Expression__ *expression);
 
 #endif

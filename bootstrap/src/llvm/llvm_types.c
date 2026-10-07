@@ -404,26 +404,9 @@ __Ast_Type__ *__LLVM_Expression_Integer_Type__(__LLVM_Emitter__ *emitter,
             switch (__LLVM_Builtin_Call_Identity__(emitter, expression))
             {
                 case __Name_Builtin_Length__:
-                case __Name_Builtin_Open_File_Read__:
-                case __Name_Builtin_Read_File_Byte__:
-                case __Name_Builtin_Read_File_Segment__:
-                case __Name_Builtin_Create_File_Write__:
-                case __Name_Builtin_Write_File_Segment__:
-                case __Name_Builtin_Close_File__:
-                case __Name_Builtin_Open_Directory__:
-                case __Name_Builtin_Read_Directory_Entry__:
-                case __Name_Builtin_Close_Directory__:
-                case __Name_Builtin_Read_Stdin_Byte__:
-                case __Name_Builtin_Read_Stdin_Segment__:
                 case __Name_Builtin_Host_Architecture__:
                 case __Name_Builtin_Host_Platform__:
                 case __Name_Builtin_Host_Environment__:
-                case __Name_Builtin_Argument_Count__:
-                case __Name_Builtin_Stdout_Write__:
-                case __Name_Builtin_Stderr_Write__:
-                case __Name_Builtin_Path_Type__:
-                case __Name_Builtin_Path_Size__:
-                case __Name_Builtin_Path_Modified_Time__:
                     return &__LLVM_Integer_Type__;
                 default:
                     return NULL;
@@ -496,36 +479,12 @@ __Ast_Type__ *__LLVM_Expression_Type__(__LLVM_Emitter__ *emitter,
             switch (builtin)
             {
                 case __Name_Builtin_Length__:
-                case __Name_Builtin_Open_File_Read__:
-                case __Name_Builtin_Read_File_Byte__:
-                case __Name_Builtin_Read_File_Segment__:
-                case __Name_Builtin_Create_File_Write__:
-                case __Name_Builtin_Write_File_Segment__:
-                case __Name_Builtin_Close_File__:
-                case __Name_Builtin_Open_Directory__:
-                case __Name_Builtin_Read_Directory_Entry__:
-                case __Name_Builtin_Close_Directory__:
-                case __Name_Builtin_Read_Stdin_Byte__:
-                case __Name_Builtin_Read_Stdin_Segment__:
                 case __Name_Builtin_Host_Architecture__:
                 case __Name_Builtin_Host_Platform__:
                 case __Name_Builtin_Host_Environment__:
-                case __Name_Builtin_Argument_Count__:
-                case __Name_Builtin_Stdout_Write__:
-                case __Name_Builtin_Stderr_Write__:
-                case __Name_Builtin_Path_Type__:
-                case __Name_Builtin_Path_Size__:
-                case __Name_Builtin_Path_Modified_Time__:
                     return &__LLVM_Integer_Type__;
-                case __Name_Builtin_Argument__:
-                case __Name_Builtin_Text_From_Bytes__:
-                    return &__LLVM_String_Type__;
-                    return &__LLVM_Result_Text_Integer_Type__;
-                case __Name_Builtin_Write_Executable_Bytes__:
-                    return &__LLVM_Result_Integer_Integer_Type__;
                 case __Name_Builtin_Append__:
                 case __Name_Builtin_Swap__:
-                case __Name_Builtin_Process_Exit__:
                     return &__LLVM_Void_Type__;
                 default:
                     return expression->__Contextual_Type__;

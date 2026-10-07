@@ -5,6 +5,7 @@
 #include "llvm/llvm_context.h"
 #include "llvm/llvm_functions.h"
 #include "llvm/llvm_target.h"
+#include "llvm/runtime/llvm_runtime_exports.h"
 #include "kernel/type/type.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -130,7 +131,8 @@ int __LLVM_Prepare_Program_Module__(__Semantic_Context__ *semantic,
     LLVMSetModuleDataLayout(emitter->module, *data);
 
     if (!__LLVM_Predeclare_Aggregate_Types__(emitter) ||
-        !__LLVM_Define_Aggregate_Types__(emitter) || !__LLVM_Declare_Functions__(emitter))
+        !__LLVM_Define_Aggregate_Types__(emitter) || !__LLVM_Declare_Functions__(emitter) ||
+        !__LLVM_Define_Runtime_Exports__(emitter))
         return 0;
     for (index = 0U; index < emitter->function_count; ++index)
         if (!__LLVM_Emit_Function_Body__(emitter, &emitter->functions[index]))

@@ -719,8 +719,7 @@ __LLVM_Value__ __LLVM_Emit_Expression__(__LLVM_Emitter__ *emitter,
             /* Stores the builtin. */
             __Name_Builtin_Function__ builtin = __LLVM_Builtin_Call_Identity__(emitter, expression);
             if (builtin != __Name_Builtin_None__)
-                return __LLVM_Emit_Builtin_Call__(
-                    emitter, expression, expected, tagged_target, builtin);
+                return __LLVM_Emit_Builtin_Call__(emitter, expression, expected, builtin);
             /* References the enum type. */
             __Semantic_Type_Entry__ *enum_type = NULL;
             /* References the enum constructor. */

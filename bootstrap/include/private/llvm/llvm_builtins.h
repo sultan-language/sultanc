@@ -12,10 +12,10 @@ __Name_Builtin_Function__ __LLVM_Builtin_Call_Identity__(__LLVM_Emitter__ *emitt
 __LLVM_Value__ __LLVM_Emit_Builtin_Call__(__LLVM_Emitter__ *emitter,
                                           __Ast_Expression__ *expression,
                                           __Ast_Type__ *expected,
-                                          __Ast_Type__ *tagged_target,
                                           __Name_Builtin_Function__ builtin);
 __LLVM_Value__ __LLVM_Build_Runtime_Result__(__LLVM_Emitter__ *emitter,
                                              __Ast_Type__ *result_type,
+                                             LLVMValueRef storage,
                                              LLVMValueRef status,
                                              __LLVM_Value__ success_payload);
 int __LLVM_Resolve_Builtin_Tagged_Construct__(__Ast_Type__ *target_type,

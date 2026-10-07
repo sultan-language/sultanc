@@ -18,7 +18,7 @@ typedef enum
     __Name_Lookup_Ambiguous__
 } __Name_Lookup_Status__;
 
-/* Canonical intrinsic function identities. */
+/* Canonical intrinsic function identities used by Stage0. */
 typedef enum
 {
     /* Represents the name builtin none value. */
@@ -29,54 +29,12 @@ typedef enum
     __Name_Builtin_Append__,
     /* Represents the name builtin swap value. */
     __Name_Builtin_Swap__,
-    /* Represents the name builtin open file read value. */
-    __Name_Builtin_Open_File_Read__,
-    /* Represents the name builtin read file byte value. */
-    __Name_Builtin_Read_File_Byte__,
-    /* Represents the name builtin read file segment value. */
-    __Name_Builtin_Read_File_Segment__,
-    /* Represents the name builtin create file write value. */
-    __Name_Builtin_Create_File_Write__,
-    /* Represents the name builtin write file segment value. */
-    __Name_Builtin_Write_File_Segment__,
-    /* Represents the name builtin close file value. */
-    __Name_Builtin_Close_File__,
-    /* Represents the name builtin open directory value. */
-    __Name_Builtin_Open_Directory__,
-    /* Represents the name builtin read directory entry value. */
-    __Name_Builtin_Read_Directory_Entry__,
-    /* Represents the name builtin close directory value. */
-    __Name_Builtin_Close_Directory__,
-    /* Represents the name builtin read stdin byte value. */
-    __Name_Builtin_Read_Stdin_Byte__,
-    /* Represents the name builtin read stdin segment value. */
-    __Name_Builtin_Read_Stdin_Segment__,
-    /* Represents the name builtin write executable bytes value. */
-    __Name_Builtin_Write_Executable_Bytes__,
-    /* Represents the name builtin stdout write value. */
-    __Name_Builtin_Stdout_Write__,
-    /* Represents the name builtin stderr write value. */
-    __Name_Builtin_Stderr_Write__,
-    /* Represents the name builtin host architecture value. */
+    /* Represents the selected-target architecture query. */
     __Name_Builtin_Host_Architecture__,
-    /* Represents the name builtin host platform value. */
+    /* Represents the selected-target platform query. */
     __Name_Builtin_Host_Platform__,
-    /* Represents the name builtin host environment value. */
-    __Name_Builtin_Host_Environment__,
-    /* Represents the name builtin argument count value. */
-    __Name_Builtin_Argument_Count__,
-    /* Represents the name builtin argument value. */
-    __Name_Builtin_Argument__,
-    /* Represents the name builtin process exit value. */
-    __Name_Builtin_Process_Exit__,
-    /* Represents the name builtin text from bytes value. */
-    __Name_Builtin_Text_From_Bytes__,
-    /* Represents the name builtin path type value. */
-    __Name_Builtin_Path_Type__,
-    /* Represents the name builtin path size value. */
-    __Name_Builtin_Path_Size__,
-    /* Represents the name builtin path modified time value. */
-    __Name_Builtin_Path_Modified_Time__
+    /* Represents the selected-target environment query. */
+    __Name_Builtin_Host_Environment__
 } __Name_Builtin_Function__;
 
 /* Finds the name builtin function. */

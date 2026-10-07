@@ -163,8 +163,9 @@ LLVMValueRef __LLVM_Declare_Runtime_Function__(__LLVM_Emitter__ *emitter,
 }
 
 /* Returns the LLVM runtime malloc. */
-static LLVMValueRef
-__LLVM_Runtime_Malloc__(__LLVM_Emitter__ *emitter, LLVMValueRef byte_count, const char *name)
+LLVMValueRef __LLVM_Runtime_Malloc__(__LLVM_Emitter__ *emitter,
+                                     LLVMValueRef byte_count,
+                                     const char *name)
 {
     /* Stores the LLVM i8 type. */
     LLVMTypeRef i8 = LLVMIntTypeInContext(emitter->context, 8U);

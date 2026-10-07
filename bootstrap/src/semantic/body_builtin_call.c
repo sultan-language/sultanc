@@ -260,25 +260,7 @@ static int __Body_Builtin_Require_Argument_Count__(__Semantic_Body_Context__ *__
         __Context__, __E0400_Mismatched_Types__, __Expression__->__Header__.__Span__);
 }
 
-/* Checks the body builtin runtime argument. */
-static int __Body_Builtin_Check_Runtime_Argument__(__Semantic_Body_Context__ *__Context__,
-                                                   __Ast_Expression__ *__Expression__,
-                                                   size_t __Index__,
-                                                   __Ast_Type__ *__Expected__)
-{
-    /* References the argument. */
-    __Ast_Expression__ *__Argument__;
-
-    if (__Index__ >= __Expression__->__As__.__Call__.__Argument_Count__)
-    {
-        return 0;
-    }
-    __Argument__ = __Expression__->__As__.__Call__.__Arguments__[__Index__];
-    return __Body_Check_Expression_Compatible__(
-        __Context__, __Expected__, __Argument__, __Argument__->__Header__.__Span__);
-}
-
-/* Returns the body builtin runtime. */
+/* Returns the retained compiler builtin type. */
 static int __Body_Builtin_Runtime__(__Semantic_Body_Context__ *__Context__,
                                     __Ast_Expression__ *__Expression__,
                                     __Name_Builtin_Function__ __Builtin__,
@@ -289,200 +271,15 @@ static int __Body_Builtin_Runtime__(__Semantic_Body_Context__ *__Context__,
 
     switch (__Builtin__)
     {
-        case __Name_Builtin_Open_File_Read__:
-        case __Name_Builtin_Create_File_Write__:
-        case __Name_Builtin_Open_Directory__:
-        case __Name_Builtin_Path_Type__:
-        case __Name_Builtin_Path_Size__:
-        case __Name_Builtin_Path_Modified_Time__:
-            if (!__Body_Builtin_Require_Argument_Count__(__Context__, __Expression__, 1U) ||
-                !__Body_Builtin_Check_Runtime_Argument__(
-                    __Context__, __Expression__, 0U, &__Body_Builtin_String_Type__))
-            {
-                return 0;
-            }
-            __Result_Type__ = &__Body_Builtin_Int_Type__;
-            break;
-        case __Name_Builtin_Read_File_Byte__:
-        case __Name_Builtin_Close_File__:
-        case __Name_Builtin_Close_Directory__:
-            if (!__Body_Builtin_Require_Argument_Count__(__Context__, __Expression__, 1U) ||
-                !__Body_Builtin_Check_Runtime_Argument__(
-                    __Context__, __Expression__, 0U, &__Body_Builtin_Int_Type__))
-            {
-                return 0;
-            }
-            __Result_Type__ = &__Body_Builtin_Int_Type__;
-            break;
-        case __Name_Builtin_Read_Stdin_Byte__:
-            if (!__Body_Builtin_Require_Argument_Count__(__Context__, __Expression__, 0U))
-                return 0;
-            __Result_Type__ = &__Body_Builtin_Int_Type__;
-            break;
-        case __Name_Builtin_Read_Stdin_Segment__:
-        {
-            /* References the bytes type. */
-            __Ast_Type__ *__Bytes_Type__ = NULL;
-            /* Stores the bytes resolved. */
-            __Resolved_Type__ __Bytes_Resolved__;
-            /* Stores the element resolved. */
-            __Resolved_Type__ __Element_Resolved__;
-            if (!__Body_Builtin_Require_Argument_Count__(__Context__, __Expression__, 3U) ||
-                !__Body_Infer_Expression__(__Context__,
-                                           __Expression__->__As__.__Call__.__Arguments__[0],
-                                           &__Bytes_Type__) ||
-                !__Type_Resolve__(__Context__->__Semantic__, __Bytes_Type__, &__Bytes_Resolved__) ||
-                __Bytes_Resolved__.__Kind__ != __Resolved_Type_Vector__ ||
-                !__Type_Resolve__(__Context__->__Semantic__,
-                                  __Bytes_Resolved__.__Inner__,
-                                  &__Element_Resolved__) ||
-                __Element_Resolved__.__Kind__ != __Resolved_Type_Unsigned_Integer__ ||
-                __Element_Resolved__.__Bits__ != 8U ||
-                !__Body_Builtin_Check_Runtime_Argument__(
-                    __Context__, __Expression__, 1U, &__Body_Builtin_Int_Type__) ||
-                !__Body_Builtin_Check_Runtime_Argument__(
-                    __Context__, __Expression__, 2U, &__Body_Builtin_Int_Type__))
-            {
-                return __Body_Fail__(
-                    __Context__, __E0400_Mismatched_Types__, __Expression__->__Header__.__Span__);
-            }
-            __Result_Type__ = &__Body_Builtin_Int_Type__;
-            break;
-        }
-        case __Name_Builtin_Read_File_Segment__:
-        case __Name_Builtin_Write_File_Segment__:
-        case __Name_Builtin_Read_Directory_Entry__:
-        {
-            /* References the bytes type. */
-            __Ast_Type__ *__Bytes_Type__ = NULL;
-            /* Stores the bytes resolved. */
-            __Resolved_Type__ __Bytes_Resolved__;
-            /* Stores the element resolved. */
-            __Resolved_Type__ __Element_Resolved__;
-            if (!__Body_Builtin_Require_Argument_Count__(__Context__, __Expression__, 4U) ||
-                !__Body_Builtin_Check_Runtime_Argument__(
-                    __Context__, __Expression__, 0U, &__Body_Builtin_Int_Type__) ||
-                !__Body_Infer_Expression__(__Context__,
-                                           __Expression__->__As__.__Call__.__Arguments__[1],
-                                           &__Bytes_Type__) ||
-                !__Type_Resolve__(__Context__->__Semantic__, __Bytes_Type__, &__Bytes_Resolved__) ||
-                __Bytes_Resolved__.__Kind__ != __Resolved_Type_Vector__ ||
-                !__Type_Resolve__(__Context__->__Semantic__,
-                                  __Bytes_Resolved__.__Inner__,
-                                  &__Element_Resolved__) ||
-                __Element_Resolved__.__Kind__ != __Resolved_Type_Unsigned_Integer__ ||
-                __Element_Resolved__.__Bits__ != 8U ||
-                !__Body_Builtin_Check_Runtime_Argument__(
-                    __Context__, __Expression__, 2U, &__Body_Builtin_Int_Type__) ||
-                !__Body_Builtin_Check_Runtime_Argument__(
-                    __Context__, __Expression__, 3U, &__Body_Builtin_Int_Type__))
-            {
-                return __Body_Fail__(
-                    __Context__, __E0400_Mismatched_Types__, __Expression__->__Header__.__Span__);
-            }
-            __Result_Type__ = &__Body_Builtin_Int_Type__;
-            break;
-        }
-        case __Name_Builtin_Write_Executable_Bytes__:
-        {
-            /* References the bytes type. */
-            __Ast_Type__ *__Bytes_Type__ = NULL;
-            /* Stores the bytes resolved. */
-            __Resolved_Type__ __Bytes_Resolved__;
-            /* Stores the element resolved. */
-            __Resolved_Type__ __Element_Resolved__;
-            if (!__Body_Builtin_Require_Argument_Count__(__Context__, __Expression__, 2U) ||
-                !__Body_Builtin_Check_Runtime_Argument__(
-                    __Context__, __Expression__, 0U, &__Body_Builtin_String_Type__) ||
-                !__Body_Infer_Expression__(__Context__,
-                                           __Expression__->__As__.__Call__.__Arguments__[1],
-                                           &__Bytes_Type__) ||
-                !__Type_Resolve__(__Context__->__Semantic__, __Bytes_Type__, &__Bytes_Resolved__) ||
-                __Bytes_Resolved__.__Kind__ != __Resolved_Type_Vector__ ||
-                !__Type_Resolve__(__Context__->__Semantic__,
-                                  __Bytes_Resolved__.__Inner__,
-                                  &__Element_Resolved__) ||
-                __Element_Resolved__.__Kind__ != __Resolved_Type_Unsigned_Integer__ ||
-                __Element_Resolved__.__Bits__ != 8U)
-            {
-                return __Body_Fail__(
-                    __Context__, __E0400_Mismatched_Types__, __Expression__->__Header__.__Span__);
-            }
-            __Result_Type__ = __Body_Synthetic_Result_Type__(
-                __Context__, &__Body_Builtin_Int_Type__, &__Body_Builtin_Int_Type__);
-            break;
-        }
-        case __Name_Builtin_Stdout_Write__:
-        case __Name_Builtin_Stderr_Write__:
-            if (!__Body_Builtin_Require_Argument_Count__(__Context__, __Expression__, 1U) ||
-                !__Body_Builtin_Check_Runtime_Argument__(
-                    __Context__, __Expression__, 0U, &__Body_Builtin_String_Type__))
-            {
-                return 0;
-            }
-            __Result_Type__ = &__Body_Builtin_Int_Type__;
-            break;
         case __Name_Builtin_Host_Architecture__:
         case __Name_Builtin_Host_Platform__:
         case __Name_Builtin_Host_Environment__:
-        case __Name_Builtin_Argument_Count__:
             if (!__Body_Builtin_Require_Argument_Count__(__Context__, __Expression__, 0U))
             {
                 return 0;
             }
             __Result_Type__ = &__Body_Builtin_Int_Type__;
             break;
-        case __Name_Builtin_Argument__:
-            if (!__Body_Builtin_Require_Argument_Count__(__Context__, __Expression__, 1U) ||
-                !__Body_Builtin_Check_Runtime_Argument__(
-                    __Context__, __Expression__, 0U, &__Body_Builtin_Int_Type__))
-            {
-                return 0;
-            }
-            __Result_Type__ = &__Body_Builtin_String_Type__;
-            break;
-        case __Name_Builtin_Process_Exit__:
-            if (!__Body_Builtin_Require_Argument_Count__(__Context__, __Expression__, 1U) ||
-                !__Body_Builtin_Check_Runtime_Argument__(
-                    __Context__, __Expression__, 0U, &__Body_Builtin_Int_Type__))
-            {
-                return 0;
-            }
-            __Result_Type__ = &__Body_Builtin_Void_Type__;
-            break;
-        case __Name_Builtin_Text_From_Bytes__:
-        {
-            /* References the bytes type. */
-            __Ast_Type__ *__Bytes_Type__ = NULL;
-            /* Stores the bytes resolved. */
-            __Resolved_Type__ __Bytes_Resolved__;
-            /* Stores the element resolved. */
-            __Resolved_Type__ __Element_Resolved__;
-
-            if (!__Body_Builtin_Require_Argument_Count__(__Context__, __Expression__, 1U))
-            {
-                return 0;
-            }
-            if (!__Body_Infer_Expression__(__Context__,
-                                           __Expression__->__As__.__Call__.__Arguments__[0],
-                                           &__Bytes_Type__) ||
-                !__Type_Resolve__(__Context__->__Semantic__, __Bytes_Type__, &__Bytes_Resolved__))
-            {
-                return 0;
-            }
-            if (__Bytes_Resolved__.__Kind__ != __Resolved_Type_Vector__ ||
-                !__Type_Resolve__(__Context__->__Semantic__,
-                                  __Bytes_Resolved__.__Inner__,
-                                  &__Element_Resolved__) ||
-                __Element_Resolved__.__Kind__ != __Resolved_Type_Unsigned_Integer__ ||
-                __Element_Resolved__.__Bits__ != 8U)
-            {
-                return __Body_Fail__(
-                    __Context__, __E0400_Mismatched_Types__, __Expression__->__Header__.__Span__);
-            }
-            __Result_Type__ = &__Body_Builtin_String_Type__;
-            break;
-        }
         case __Name_Builtin_None__:
         case __Name_Builtin_Length__:
         case __Name_Builtin_Append__:
@@ -530,30 +327,9 @@ int __Body_Try_Infer_Builtin_Call__(__Semantic_Body_Context__ *__Context__,
             return 1;
         case __Name_Builtin_Swap__:
             return __Body_Builtin_Swap__(__Context__, __Expression__, __Out_Type__);
-        case __Name_Builtin_Open_File_Read__:
-        case __Name_Builtin_Read_File_Byte__:
-        case __Name_Builtin_Read_File_Segment__:
-        case __Name_Builtin_Create_File_Write__:
-        case __Name_Builtin_Write_File_Segment__:
-        case __Name_Builtin_Close_File__:
-        case __Name_Builtin_Open_Directory__:
-        case __Name_Builtin_Read_Directory_Entry__:
-        case __Name_Builtin_Close_Directory__:
-        case __Name_Builtin_Read_Stdin_Byte__:
-        case __Name_Builtin_Read_Stdin_Segment__:
-        case __Name_Builtin_Write_Executable_Bytes__:
-        case __Name_Builtin_Stdout_Write__:
-        case __Name_Builtin_Stderr_Write__:
         case __Name_Builtin_Host_Architecture__:
         case __Name_Builtin_Host_Platform__:
         case __Name_Builtin_Host_Environment__:
-        case __Name_Builtin_Argument_Count__:
-        case __Name_Builtin_Argument__:
-        case __Name_Builtin_Process_Exit__:
-        case __Name_Builtin_Text_From_Bytes__:
-        case __Name_Builtin_Path_Type__:
-        case __Name_Builtin_Path_Size__:
-        case __Name_Builtin_Path_Modified_Time__:
             return __Body_Builtin_Runtime__(__Context__, __Expression__, __Builtin__, __Out_Type__);
     }
     return 0;

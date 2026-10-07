@@ -6,12 +6,8 @@
 #include "llvm/llvm_expressions.h"
 #include "llvm/llvm_types.h"
 #include "llvm/llvm_values.h"
-#include "llvm/runtime/llvm_runtime_directory.h"
-#include "llvm/runtime/llvm_runtime_file.h"
 #include "llvm/runtime/llvm_runtime_memory.h"
 #include "llvm/runtime/llvm_runtime_process.h"
-#include "llvm/runtime/llvm_runtime_stream.h"
-#include "frontend/identifier_identity.h"
 #include "kernel/layout/layout.h"
 #include "kernel/memory/memory.h"
 #include "kernel/name/name.h"
@@ -50,209 +46,29 @@ __Name_Builtin_Function__ __LLVM_Builtin_Call_Identity__(__LLVM_Emitter__ *emitt
 
     unit = (emitter->current_function == NULL) ? NULL : emitter->current_function->__Unit__;
     resolved_name = name;
-    if (unit == NULL || !__Name_Resolve_Module_Alias_Name__(unit, name, &resolved_name) ||
-        __Identifier_Identity_Equals__(resolved_name, name))
-        return __Name_Builtin_None__;
-    return __Name_Find_Builtin_Function__(resolved_name);
+    if (unit != NULL)
+        (void)__Name_Resolve_Module_Alias_Name__(unit, name, &resolved_name);
+
+    direct = __Name_Find_Builtin_Function__(resolved_name);
+    if (direct != __Name_Builtin_None__)
+        return direct;
+
+    return __Name_Builtin_None__;
 }
 
-
-/* Emits the LLVM argument. */
-static __LLVM_Value__ __LLVM_Emit_Argument__(__LLVM_Emitter__ *emitter,
-                                             __Ast_Expression__ *expression,
-                                             __Ast_Type__ *expected)
-{
-    /* Stores the operation result. */
-    __LLVM_Value__ result = __LLVM_Invalid_Value__();
-    /* Tracks the index. */
-    __LLVM_Value__ index;
-    /* Stores the LLVM i8 type. */
-    LLVMTypeRef i8 = LLVMIntTypeInContext(emitter->context, 8U);
-    /* Stores the LLVM i64 type. */
-    LLVMTypeRef i64 = LLVMIntTypeInContext(emitter->context, 64U);
-    /* Stores the LLVM i8 pointer type. */
-    LLVMTypeRef i8_pointer = LLVMPointerType(i8, 0U);
-    /* Stores the argv type. */
-    LLVMTypeRef argv_type = LLVMPointerType(i8_pointer, 0U);
-    /* Stores the string type. */
-    LLVMTypeRef string_type = __LLVM_Type__(emitter, &__LLVM_String_Type__);
-    /* Stores the argument count. */
-    LLVMValueRef argc;
-    /* References the argument vector. */
-    LLVMValueRef argv;
-    /* Stores the negative. */
-    LLVMValueRef negative;
-    /* Stores the too large. */
-    LLVMValueRef too_large;
-    /* Stores the invalid. */
-    LLVMValueRef invalid;
-    /* Tracks the host index. */
-    LLVMValueRef host_index;
-    /* Stores the slot. */
-    LLVMValueRef slot;
-    /* Stores the data. */
-    LLVMValueRef data;
-    /* Stores the length. */
-    LLVMValueRef length;
-    /* Stores the value. */
-    LLVMValueRef value;
-    if (expression->__As__.__Call__.__Argument_Count__ != 1U ||
-        !__LLVM_Ensure_Process_Globals__(emitter) || string_type == NULL)
-    {
-        __LLVM_Fail__("argument builtin disagrees with canonical semantics");
-        return result;
-    }
-    index = __LLVM_Emit_Expression__(
-        emitter, expression->__As__.__Call__.__Arguments__[0], &__LLVM_Integer_Type__);
-    if (index.value == NULL)
-        return result;
-    index = __LLVM_Coerce__(emitter, index, &__LLVM_Integer_Type__);
-    if (index.value == NULL)
-        return result;
-    argc = LLVMBuildLoad2(emitter->builder, i64, emitter->process_argc_global, "argument.count");
-    negative = LLVMBuildICmp(emitter->builder,
-                             LLVMIntSLT,
-                             index.value,
-                             LLVMConstInt(i64, 0U, 0),
-                             "argument.index.negative");
-    too_large =
-        LLVMBuildICmp(emitter->builder, LLVMIntUGE, index.value, argc, "argument.index.large");
-    invalid = LLVMBuildOr(emitter->builder, negative, too_large, "argument.index.invalid");
-    if (!__LLVM_Emit_Trap_If__(emitter, invalid, "argument.index.out.of.range"))
-        return result;
-    argv = LLVMBuildLoad2(emitter->builder, argv_type, emitter->process_argv_global, "argv");
-    host_index = LLVMBuildAdd(
-        emitter->builder, index.value, LLVMConstInt(i64, 1U, 0), "argument.host.index");
-    slot = LLVMBuildGEP2(emitter->builder, i8_pointer, argv, &host_index, 1U, "argument.slot");
-    data = LLVMBuildLoad2(emitter->builder, i8_pointer, slot, "argument.data");
-    length = __LLVM_Strlen__(emitter, data);
-    if (length == NULL)
-        return result;
-    value = LLVMConstNull(string_type);
-    value = LLVMBuildInsertValue(emitter->builder, value, data, 0U, "argument.with.data");
-    value = LLVMBuildInsertValue(emitter->builder, value, length, 1U, "argument.with.length");
-    value = LLVMBuildInsertValue(
-        emitter->builder, value, LLVMConstInt(i64, 0U, 0), 2U, "argument.with.capacity");
-    result.value = value;
-    result.type = &__LLVM_String_Type__;
-    return expected != NULL ? __LLVM_Coerce__(emitter, result, expected) : result;
-}
-
-/* Maps the bytes to the LLVM emit text. */
-static __LLVM_Value__ __LLVM_Emit_Text_From_Bytes__(__LLVM_Emitter__ *emitter,
-                                                    __Ast_Expression__ *expression,
-                                                    __Ast_Type__ *expected)
-{
-    /* Stores the operation result. */
-    __LLVM_Value__ result = __LLVM_Invalid_Value__();
-    /* References the source type. */
-    __Ast_Type__ *source_type;
-    /* Stores the resolved. */
-    __Resolved_Type__ resolved;
-    /* Stores the source. */
-    __LLVM_Value__ source;
-    /* Stores the LLVM i8 type. */
-    LLVMTypeRef i8 = LLVMIntTypeInContext(emitter->context, 8U);
-    /* Stores the LLVM i8 pointer type. */
-    LLVMTypeRef i8_pointer = LLVMPointerType(i8, 0U);
-    /* Stores the data. */
-    LLVMValueRef data;
-    /* Stores the length. */
-    LLVMValueRef length;
-    /* Stores the capacity. */
-    LLVMValueRef capacity;
-    if (expression->__As__.__Call__.__Argument_Count__ != 1U)
-    {
-        __LLVM_Fail__("text_from_bytes disagrees with canonical builtin arity");
-        return result;
-    }
-    source_type = __LLVM_Expression_Type__(emitter, expression->__As__.__Call__.__Arguments__[0]);
-    if (source_type == NULL || !__Type_Resolve__(emitter->semantic, source_type, &resolved) ||
-        resolved.__Kind__ != __Resolved_Type_Vector__)
-    {
-        __LLVM_Fail__("text_from_bytes requires canonical byte-vector Type");
-        return result;
-    }
-    source = __LLVM_Emit_Expression__(
-        emitter, expression->__As__.__Call__.__Arguments__[0], source_type);
-    if (source.value == NULL)
-        return result;
-    data = LLVMBuildPointerCast(
-        emitter->builder,
-        LLVMBuildExtractValue(emitter->builder, source.value, 0U, "text.from.bytes.data"),
-        i8_pointer,
-        "text.from.bytes.pointer");
-    length = LLVMBuildExtractValue(emitter->builder, source.value, 1U, "text.from.bytes.length");
-    capacity =
-        LLVMBuildExtractValue(emitter->builder, source.value, 2U, "text.from.bytes.capacity");
-    result = __LLVM_Make_Text_Value__(
-        emitter, data, length, capacity, expected != NULL ? expected : &__LLVM_String_Type__);
-    return result;
-}
-
-/* Checks whether a builtin consumes the currently qualified Stage0 platform runtime ABI. */
-static int __LLVM_Builtin_Requires_Qualified_Runtime__(__Name_Builtin_Function__ builtin)
-{
-    switch (builtin)
-    {
-        case __Name_Builtin_Open_File_Read__:
-        case __Name_Builtin_Read_File_Byte__:
-        case __Name_Builtin_Read_File_Segment__:
-        case __Name_Builtin_Create_File_Write__:
-        case __Name_Builtin_Write_File_Segment__:
-        case __Name_Builtin_Close_File__:
-        case __Name_Builtin_Open_Directory__:
-        case __Name_Builtin_Read_Directory_Entry__:
-        case __Name_Builtin_Close_Directory__:
-        case __Name_Builtin_Read_Stdin_Byte__:
-        case __Name_Builtin_Read_Stdin_Segment__:
-        case __Name_Builtin_Write_Executable_Bytes__:
-        case __Name_Builtin_Stdout_Write__:
-        case __Name_Builtin_Stderr_Write__:
-        case __Name_Builtin_Path_Type__:
-        case __Name_Builtin_Path_Size__:
-        case __Name_Builtin_Path_Modified_Time__:
-            return 1;
-        default:
-            return 0;
-    }
-}
-
-/* Requires a runtime ABI that has been qualified for the selected target. */
-static int __LLVM_Require_Qualified_Runtime__(__LLVM_Emitter__ *emitter,
-                                             __Name_Builtin_Function__ builtin)
-{
-    char message[320];
-    if (!__LLVM_Builtin_Requires_Qualified_Runtime__(builtin))
-        return 1;
-    if (__Bootstrap_Target_Runtime_Qualified__(&emitter->target))
-        return 1;
-    snprintf(message,
-             sizeof(message),
-             "Bootstrap runtime/platform ABI is not qualified for target '%s'",
-             emitter->target.triple != NULL ? emitter->target.triple : "unknown");
-    return __LLVM_Fail__(message);
-}
 
 /* Emits the LLVM builtin call. */
 __LLVM_Value__ __LLVM_Emit_Builtin_Call__(__LLVM_Emitter__ *emitter,
                                           __Ast_Expression__ *expression,
                                           __Ast_Type__ *expected,
-                                          __Ast_Type__ *tagged_target,
                                           __Name_Builtin_Function__ builtin)
 {
     /* Stores the operation result. */
     __LLVM_Value__ result = __LLVM_Invalid_Value__();
-    if (!__LLVM_Require_Qualified_Runtime__(emitter, builtin))
-        return result;
     if (builtin == __Name_Builtin_Host_Architecture__ ||
         builtin == __Name_Builtin_Host_Platform__ ||
         builtin == __Name_Builtin_Host_Environment__)
         return __LLVM_Emit_Host_Identity__(emitter, builtin, expected);
-    if (builtin == __Name_Builtin_Argument_Count__)
-        return __LLVM_Emit_Argument_Count__(emitter, expected);
-    if (builtin == __Name_Builtin_Argument__)
-        return __LLVM_Emit_Argument__(emitter, expression, expected);
     if (builtin == __Name_Builtin_Length__)
     {
         /* References the argument type. */
@@ -572,44 +388,6 @@ __LLVM_Value__ __LLVM_Emit_Builtin_Call__(__LLVM_Emitter__ *emitter,
             return result;
         }
     }
-    if (builtin == __Name_Builtin_Open_File_Read__)
-        return __LLVM_Emit_Runtime_Open_File_Service__(emitter, expression, expected, 0);
-    if (builtin == __Name_Builtin_Read_File_Byte__)
-        return __LLVM_Emit_Runtime_Read_Byte_Service__(emitter, expression, expected, 0);
-    if (builtin == __Name_Builtin_Read_File_Segment__)
-        return __LLVM_Emit_Runtime_Read_Segment_Service__(emitter, expression, expected, 0);
-    if (builtin == __Name_Builtin_Create_File_Write__)
-        return __LLVM_Emit_Runtime_Open_File_Service__(emitter, expression, expected, 1);
-    if (builtin == __Name_Builtin_Write_File_Segment__)
-        return __LLVM_Emit_Runtime_Write_Segment_Service__(emitter, expression, expected);
-    if (builtin == __Name_Builtin_Close_File__)
-        return __LLVM_Emit_Runtime_Close_File_Service__(emitter, expression, expected);
-    if (builtin == __Name_Builtin_Open_Directory__)
-        return __LLVM_Emit_Runtime_Open_Directory_Service__(emitter, expression, expected);
-    if (builtin == __Name_Builtin_Read_Directory_Entry__)
-        return __LLVM_Emit_Runtime_Read_Directory_Entry_Service__(emitter, expression, expected);
-    if (builtin == __Name_Builtin_Close_Directory__)
-        return __LLVM_Emit_Runtime_Close_Directory_Service__(emitter, expression, expected);
-    if (builtin == __Name_Builtin_Read_Stdin_Byte__)
-        return __LLVM_Emit_Runtime_Read_Byte_Service__(emitter, expression, expected, 1);
-    if (builtin == __Name_Builtin_Read_Stdin_Segment__)
-        return __LLVM_Emit_Runtime_Read_Segment_Service__(emitter, expression, expected, 1);
-    if (builtin == __Name_Builtin_Write_Executable_Bytes__)
-        return __LLVM_Emit_Runtime_Write_Executable_Bytes__(
-            emitter, expression, tagged_target);
-    if (builtin == __Name_Builtin_Stdout_Write__)
-        return __LLVM_Emit_Runtime_Stream__(emitter, expression, expected, 1);
-    if (builtin == __Name_Builtin_Stderr_Write__)
-        return __LLVM_Emit_Runtime_Stream__(emitter, expression, expected, 2);
-    if (builtin == __Name_Builtin_Process_Exit__)
-        return __LLVM_Emit_Runtime_Exit__(emitter, expression);
-    if (builtin == __Name_Builtin_Text_From_Bytes__)
-        return __LLVM_Emit_Text_From_Bytes__(emitter, expression, expected);
-    if (builtin == __Name_Builtin_Path_Type__ ||
-        builtin == __Name_Builtin_Path_Size__ ||
-        builtin == __Name_Builtin_Path_Modified_Time__)
-        return __LLVM_Emit_Runtime_Path_Metadata_Service__(
-            emitter, expression, expected, builtin);
     if (builtin != __Name_Builtin_None__)
     {
         __LLVM_Fail__("canonical builtin is outside the native runtime lowering boundary");
@@ -621,6 +399,7 @@ __LLVM_Value__ __LLVM_Emit_Builtin_Call__(__LLVM_Emitter__ *emitter,
 /* Builds the LLVM runtime result. */
 __LLVM_Value__ __LLVM_Build_Runtime_Result__(__LLVM_Emitter__ *emitter,
                                                     __Ast_Type__ *result_type,
+                                                    LLVMValueRef storage,
                                                     LLVMValueRef status,
                                                     __LLVM_Value__ success_payload)
 {
@@ -632,8 +411,6 @@ __LLVM_Value__ __LLVM_Build_Runtime_Result__(__LLVM_Emitter__ *emitter,
     LLVMTypeRef llvm_type;
     /* Stores the LLVM i64 type. */
     LLVMTypeRef i64 = LLVMIntTypeInContext(emitter->context, 64U);
-    /* Stores the storage. */
-    LLVMValueRef storage;
     /* Tracks whether the value is error. */
     LLVMValueRef is_error;
     /* Stores the function. */
@@ -647,7 +424,7 @@ __LLVM_Value__ __LLVM_Build_Runtime_Result__(__LLVM_Emitter__ *emitter,
     /* Stores the error payload. */
     __LLVM_Value__ error_payload;
 
-    if (result_type == NULL || status == NULL ||
+    if (result_type == NULL || storage == NULL || status == NULL ||
         !__Type_Resolve__(emitter->semantic, result_type, &resolved) ||
         resolved.__Kind__ != __Resolved_Type_Result__)
     {
@@ -657,7 +434,6 @@ __LLVM_Value__ __LLVM_Build_Runtime_Result__(__LLVM_Emitter__ *emitter,
     llvm_type = __LLVM_Type__(emitter, result_type);
     if (llvm_type == NULL)
         return result;
-    storage = __LLVM_Allocate_Stack__(emitter, llvm_type, "runtime.result.storage");
     LLVMBuildStore(emitter->builder, LLVMConstNull(llvm_type), storage);
     is_error = LLVMBuildICmp(
         emitter->builder, LLVMIntSLT, status, LLVMConstInt(i64, 0U, 0), "runtime.result.is.error");
