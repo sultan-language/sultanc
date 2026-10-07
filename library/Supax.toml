@@ -1,0 +1,20 @@
+[package]
+name = "std"
+
+[package.names]
+en = "std"
+ar = "المكتبة"
+
+[imports-alias]
+io       = { en = "io",       ar = "دخ",      fr = "entree_sortie", es = "entrada_salida" }
+fs       = { en = "fs",       ar = "ملفات",   fr = "fichiers",      es = "archivos" }
+text     = { en = "text",     ar = "نصوص",    fr = "texte",         es = "texto" }
+chars    = { en = "chars",    ar = "حروف",    fr = "caracteres" }
+bytes    = { en = "bytes",    ar = "بايتات",  fr = "octets" }
+encoding = { en = "encoding", ar = "ترميز",   fr = "encodage" }
+memory   = { en = "memory",   ar = "ذاكرة",   fr = "memoire" }
+net      = { en = "net",      ar = "شبكة",    fr = "reseau",        es = "red" }
+http     = { en = "http",     ar = "ويب" }
+
+[lib]
+path = "std"
