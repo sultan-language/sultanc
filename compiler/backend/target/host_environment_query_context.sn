@@ -2,9 +2,10 @@
 استورد compiler.runtime.primitive_identity;
 استورد compiler.runtime.host_environment_model;
 
-// Target owns projection of a selected target descriptor into the neutral host
-// identity embedded in the executable being generated. Backends consume this
-// query rather than reconstructing platform tuples independently.
+// These queries describe the execution environment, not the compiler build host.
+// For ahead-of-time output the selected runnable target is the future execution
+// environment; interpretation queries the current host through its own provider.
+// Backends consume this Target-owned projection instead of rebuilding tuples.
 عام عرف رمز_بدائي_هوية_مضيف_للهدف(
     الهدف: &واصف_هدف,
     البدائي: هوية_بدائي_مترجم
@@ -41,7 +42,8 @@
         }
         | هوية_بيئة.مسل -> {
             أرجع اختيار.بعض(رمز_بيئة_مضيف(هوية_بيئة_مضيف.مسل()));
-        };
+        }
+        | _ -> { أرجع اختيار.لا_شيء(); };
     }
     | _ -> { أرجع اختيار.لا_شيء(); };
 }

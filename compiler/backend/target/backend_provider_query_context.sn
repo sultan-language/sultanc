@@ -1,0 +1,29 @@
+استورد compiler.backend.target.target_model;
+
+// Target owns which backend providers may consume each registered target.
+// The native provider remains limited to its two implemented machine paths;
+// LLVM may consume every registered target and delegates machine lowering to
+// the LLVM TargetMachine selected from the target's canonical triple.
+عام عرف يدعم_مزود_الخلفية(
+    الهدف: &واصف_هدف,
+    المزود: هوية_مزود_خلفية
+): منطقي {
+    طابق المزود مع
+    | هوية_مزود_خلفية.أصلي -> {
+        طابق تركيب_الهدف_الأصلي(الهدف) مع
+        | هوية_تركيب_هدف_أصلي.ذراع_أربعة_وستون_داروين_ماتشو -> { أرجع صواب; }
+        | هوية_تركيب_هدف_أصلي.إكس_ستة_وثمانون_أربعة_وستون_لينكس_إلف -> { أرجع صواب; }
+        | هوية_تركيب_هدف_أصلي.ترجمة_متقاطعة_مفوضة -> { أرجع خطأ; };
+    }
+    | هوية_مزود_خلفية.إل_إل_في_إم -> { أرجع صواب; };
+}
+
+// This is the single owner for implicit backend selection. CLI records only
+// whether the user supplied an explicit backend; Driver asks Target policy once
+// the canonical target has been resolved.
+عام عرف مزود_الخلفية_المفضل(الهدف: &واصف_هدف): هوية_مزود_خلفية {
+    لو (يدعم_مزود_الخلفية(الهدف, هوية_مزود_خلفية.أصلي())) {
+        أرجع هوية_مزود_خلفية.أصلي();
+    };
+    أرجع هوية_مزود_خلفية.إل_إل_في_إم();
+}

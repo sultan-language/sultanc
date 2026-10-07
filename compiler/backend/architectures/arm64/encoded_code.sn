@@ -3,7 +3,7 @@
 استورد compiler.backend.codegen.allocation_contract;
 استورد compiler.backend.target.target_model;
 استورد compiler.backend.object.object_reference_model;
-استورد compiler.backend.codegen.cfi;
+استورد compiler.backend.codegen.call_frame_information;
 
 // ناتج AArch64 المشفر يبقى ملك المعمارية. الكاتب الكائني اللاحق يترجم التثبيتات إلى تنسيق الكائن المختار.
 عام نوع كلمة_ذراع_أربعة_وستون_مشفرة = {

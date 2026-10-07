@@ -1,0 +1,14 @@
+استورد std.fs.path;
+استورد std.text.compare;
+
+// Shared SultanC source-file classification. Driver project discovery and
+// Frontend package discovery use this same pure predicate so extension policy
+// is not implemented independently in two layers.
+عام عرف هو_مسار_مصدر_سلطان(المسار: &نص): منطقي {
+    طابق امتداد_المسار(المسار) مع
+    | اختيار.لا_شيء -> { أرجع خطأ; }
+    | اختيار.بعض(الامتداد) -> {
+        دع المطلوب: نص = «sn»;
+        أرجع نصان_متساويان(&الامتداد, &المطلوب);
+    };
+}

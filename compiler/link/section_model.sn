@@ -1,0 +1,49 @@
+استورد compiler.link.model;
+
+عام نوع معرف_قسم_ربط = {
+    القيمة: غير_موقع
+};
+
+عام عرف معرف_قسم_ربط_من(القيمة: غير_موقع): معرف_قسم_ربط {
+    دع المعرف: معرف_قسم_ربط = { القيمة: القيمة };
+    أرجع المعرف;
+}
+
+// Canonical linker sections keep graph identity plus the original format-section
+// identity and bytes. Format providers still own native flags and serialization.
+عام نوع صنف_قسم_ربط =
+    | شفرة
+    | بيانات_للقراءة
+    | بيانات_قابلة_للكتابة
+    | بيانات_صفرية
+    | تصحيح
+    | بيانات_تعريفية
+    | خاص_بالصيغة
+;
+
+عام نوع هوية_اسم_قسم_ربط = {
+    اسم_القسم: متجه غ8,
+    اسم_الحاوية: اختيار متجه غ8
+};
+
+// Preserve exact producer-format section facts required by the selected linker
+// provider. Generic link algorithms must not infer executable permissions,
+// allocation, or zero-fill semantics from section names.
+عام نوع حقائق_صيغة_قسم_ربط =
+    | غير_محددة
+    | إلف بنوع (غير_موقع, غير_موقع)
+    | ماتشو بنوع غير_موقع
+;
+
+عام نوع قسم_ربط = {
+    المعرف: معرف_قسم_ربط,
+    المدخل: معرف_مدخل_ربط,
+    فهرس_قسم_الصيغة: غير_موقع,
+    الاسم: هوية_اسم_قسم_ربط,
+    حقائق_الصيغة: حقائق_صيغة_قسم_ربط,
+    الصنف: صنف_قسم_ربط,
+    المحاذاة: غير_موقع,
+    الحجم: غير_موقع,
+    المحتوى: اختيار متجه غ8,
+    حي: منطقي
+};

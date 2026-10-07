@@ -160,6 +160,11 @@
         | لغة_تشخيص.الإنجليزية -> { أرجع «The compiler invocation, selected target, or file environment is invalid for this operation. Correct the option, target, path, or missing value identified by the diagnostic and run the command again.»; }
         | لغة_تشخيص.العربية -> { أرجع «استدعاء المترجم أو الهدف المختار أو بيئة الملفات غير صالح لهذه العملية. صحح الخيار أو الهدف أو المسار أو القيمة المفقودة التي يحددها التشخيص ثم أعد التنفيذ.»; };
     }
+    | معرف_تشخيص.بيان_حزمة_غير_صالح -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «SultanC found Supax.toml package metadata but could not use it. Correct the manifest syntax, field type, package path, dependency, alias, or unsupported setting identified by the diagnostic.»; }
+        | لغة_تشخيص.العربية -> { أرجع «عثر SultanC على بيانات الحزمة في Supax.toml لكنه تعذر عليه استخدامها. صحح صياغة البيان أو نوع الحقل أو مسار الحزمة أو الاعتماد أو الاسم البديل أو الإعداد غير المدعوم الذي يحدده التشخيص.»; };
+    }
     | معرف_تشخيص.نوع_ملف_إدخال_غير_معروف -> {
         طابق اللغة مع
         | لغة_تشخيص.الإنجليزية -> { أرجع «Name or module resolution could not establish an unambiguous semantic binding. Check declarations, imports, exports, logical module paths, and related source spans before changing later type errors.»; }

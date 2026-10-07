@@ -380,15 +380,9 @@
                 دع هوية_الهدف: معرف_اسم = قنن_اسما_مصدريا(
                     سياق_الأسماء, مرجع_المصدر, التصريح.الهدف.النطاق
                 );
-                دع رمز_الهدف_المحلي: متغير اختيار معرف_رمز = اختيار.لا_شيء();
-                لو (التصريح.علني) {
-                    رمز_الهدف_المحلي := ابحث_محليا_بهوية(
-                        سياق_الأسماء, الجذر, هوية_الهدف
-                    );
-                } وإلا لو (وحدة_تسمح_بجسر_بدائي_داخلي(&الوحدة)) {
-                    // Private intrinsic aliases are a Module capability, not general source syntax.
-                    رمز_الهدف_المحلي := حل_رمز_بدائي_بهوية(سياق_الأسماء, هوية_الهدف);
-                };
+                دع رمز_الهدف_المحلي: اختيار معرف_رمز = حل_هدف_مرادف_غير_مؤهل(
+                    سياق_الأسماء, الجذر, هوية_الهدف, التصريح.علني
+                );
                 طابق رمز_الهدف_المحلي مع
                 | اختيار.لا_شيء -> {
                     ألحق(الأهداف_المفقودة, التصريح.الهدف.النطاق);
@@ -414,9 +408,8 @@
                             } وإلا {
                                 طابق علنية_رمز_عند(سياق_الأسماء, رمز_الهدف) مع
                                 | اختيار.بعض(علني) -> {
-                                    // Public aliases may only re-export public ordinary symbols.
-                                    // Private aliases may only reach hidden primitive symbols; those
-                                    // symbols themselves remain private to imported modules.
+                                    // Preserve existing alias visibility: public aliases target public
+                                    // symbols and private aliases target private symbols, including intrinsics.
                                     لو ((التصريح.علني && علني) || (!التصريح.علني && !علني)) {
                                         دع نتيجة_المرادف: نتيجة_إضافة = أضف_اسما_بديلا_لتصريح_مصدري(
                                             سياق_الأسماء,

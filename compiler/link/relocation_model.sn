@@ -1,0 +1,17 @@
+استورد compiler.link.section_model;
+استورد compiler.link.symbol_model;
+
+// The generic graph records the edge; it does not invent a universal relocation
+// opcode. The selected object-format/architecture provider owns relocation meaning.
+عام نوع مرجع_إزاحة_ربط =
+    | رمز بنوع معرف_رمز_ربط
+    | قسم بنوع معرف_قسم_ربط
+;
+
+عام نوع حافة_إزاحة_ربط = {
+    القسم: معرف_قسم_ربط,
+    الإزاحة: غير_موقع,
+    المرجع: مرجع_إزاحة_ربط,
+    إضافة: عدد,
+    رمز_صيغة: غير_موقع
+};

@@ -5,7 +5,7 @@
 استورد compiler.backend.codegen.allocation_contract;
 استورد compiler.backend.codegen.selected_code_core;
 استورد compiler.backend.codegen.virtual_registers;
-استورد compiler.backend.codegen.cfi;
+استورد compiler.backend.codegen.call_frame_information;
 استورد compiler.backend.target.target_model;
 استورد compiler.backend.target.register_query_context;
 استورد compiler.backend.target.runtime_query_context;
@@ -670,8 +670,9 @@
     | نتيجة_دفعة_ترميز_ذراع.نجحت -> { };
     ألحق_فرع_شرط_قصير_ذراع(&متغير تحقق_الأدنى, 1, 2);
     ألحق_فخ_ذراع(&متغير تحقق_الأدنى);
+    دع طول_تحقق_الأدنى: غير_موقع = الطول(تحقق_الأدنى) مثل غير_موقع;
     ألحق_فرع_شرط_قصير_ذراع(
-        الكلمات, 1, (الطول(تحقق_الأدنى) مثل غير_موقع) + 1
+        الكلمات, 1, طول_تحقق_الأدنى + 1
     );
     دع فحص: متغير غير_موقع = 0;
     بينما (فحص < (الطول(تحقق_الأدنى) مثل غير_موقع)) {

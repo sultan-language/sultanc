@@ -2,7 +2,7 @@
 استورد compiler.backend.codegen.selected_code_core;
 استورد compiler.backend.target.target_model;
 استورد compiler.backend.object.object_reference_model;
-استورد compiler.backend.codegen.cfi;
+استورد compiler.backend.codegen.call_frame_information;
 
 // ناتج x86_64 المشفر يملك بايتات ISA وتثبيتات الفروع الداخلية وإزاحات النداء الرمزية فقط.
 // سياسة ELF تبقى خارج المعمارية.

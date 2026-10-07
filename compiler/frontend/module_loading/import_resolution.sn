@@ -55,13 +55,13 @@
     المرجع: &متجه غ8
 ): نتيجة_حل_استيراد {
     دع أصل_المستورد: مفتاح_وحدة_مقنن = *المستورد;
-    دع الجذر_الهدف: متغير اختيار معرف_جذر_مكتبة = اختيار.لا_شيء();
+    دع حل_الجذر: متغير اختيار حل_اسم_جذر_مكتبة = اختيار.لا_شيء();
     طابق أول_جزء_مرجع_استيراد(المرجع) مع
     | اختيار.لا_شيء -> {
         أرجع نتيجة_حل_استيراد.خطأ(خطأ_حل_استيراد.مرجع_غير_صالح());
     }
     | اختيار.بعض(الجزء) -> {
-        الجذر_الهدف := حل_اسم_جذر(
+        حل_الجذر := حل_اسم_جذر_مفصل(
             البيئة,
             أصل_المستورد.الجذر,
             &الجزء.البايتات
@@ -69,15 +69,16 @@
     };
 
     دع الجذر: متغير معرف_جذر_مكتبة = أصل_المستورد.الجذر;
-    طابق الجذر_الهدف مع
+    دع يستهلك_التهجئة: متغير منطقي = خطأ;
+    طابق حل_الجذر مع
     | اختيار.لا_شيء -> {
         // Unbound dotted roots are project-module paths under the importer's
-        // own configured source root. Registered library names (for example
-        // `std`) still redirect to their independent RootID above.
+        // own configured source root.
         الجذر := أصل_المستورد.الجذر;
     }
-    | اختيار.بعض(المعرف) -> {
-        الجذر := المعرف;
+    | اختيار.بعض(الحل) -> {
+        الجذر := الحل.الجذر;
+        يستهلك_التهجئة := الحل.يستهلك_التهجئة;
     };
 
     طابق حل_مسار_عام_مسجل(البيئة, أصل_المستورد.الجذر, المرجع) مع
@@ -94,8 +95,18 @@
     // `compiler.frontend.lexer.token`). In that case the root spelling is part
     // of the canonical project path, so preserve the full reference. External
     // library roots (for example `std`) use the path after the root spelling.
-    لو (معرفا_جذر_مكتبة_متساويان(الجذر, أصل_المستورد.الجذر)) {
-        طابق قنن_مسار_وحدة_منطقي(المرجع) مع
+    لو (
+        معرفا_جذر_مكتبة_متساويان(الجذر, أصل_المستورد.الجذر)
+        && !يستهلك_التهجئة
+    ) {
+        // Package aliases are valid inside their owning package as well as
+        // through an external root spelling. Canonicalize the complete local
+        // path once before constructing the ModuleKey. With no declared alias
+        // this is an identity operation, preserving manifest-free projects.
+        دع المرجع_المقنن: متجه غ8 = قنن_تهجئة_حزمة(
+            البيئة, الجذر, المرجع
+        );
+        طابق قنن_مسار_وحدة_منطقي(&المرجع_المقنن) مع
         | نتيجة_مسار_وحدة_منطقي.غير_صالح -> {
             أرجع نتيجة_حل_استيراد.خطأ(خطأ_حل_استيراد.مسار_منطقي_غير_صالح());
         }
@@ -110,7 +121,10 @@
         أرجع نتيجة_حل_استيراد.خطأ(خطأ_حل_استيراد.مرجع_غير_صالح());
     }
     | اختيار.بعض(الباقي) -> {
-        طابق قنن_مسار_وحدة_منطقي(&الباقي) مع
+        // Package aliases canonicalize the path spelling only. They never own
+        // package membership or create a second module identity.
+        دع الباقي_المقنن: متجه غ8 = قنن_تهجئة_حزمة(البيئة, الجذر, &الباقي);
+        طابق قنن_مسار_وحدة_منطقي(&الباقي_المقنن) مع
         | نتيجة_مسار_وحدة_منطقي.غير_صالح -> {
             أرجع نتيجة_حل_استيراد.خطأ(خطأ_حل_استيراد.مسار_منطقي_غير_صالح());
         }
@@ -125,8 +139,11 @@
 }
 
 // Classification is deterministic: only ./ and ../ are relative. Every other
-// valid non-absolute spelling is a named-root import. Missing roots fail here;
-// there is no reinterpretation against the importer directory.
+// valid non-absolute spelling is a named logical import. A first component that
+// is bound in the logical environment (for example `std` or `المكتبة`) selects
+// that canonical library RootID. An unbound first component remains a project
+// logical path under the importer's configured RootID; it is never reinterpreted
+// relative to the importer directory. Missing sources fail later in the locator.
 عام عرف حل_مرجع_استيراد(
     البيئة: &بيئة_وحدات_منطقية,
     المستورد: &مفتاح_وحدة_مقنن,

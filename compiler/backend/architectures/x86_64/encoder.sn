@@ -3,7 +3,7 @@
 استورد compiler.backend.architectures.x86_64.instruction_model;
 استورد compiler.backend.codegen.allocation_contract;
 استورد compiler.backend.codegen.selected_code_core;
-استورد compiler.backend.codegen.cfi;
+استورد compiler.backend.codegen.call_frame_information;
 استورد compiler.backend.target.target_model;
 استورد compiler.backend.abi.abi_model;
 استورد compiler.backend.target.register_query_context;
