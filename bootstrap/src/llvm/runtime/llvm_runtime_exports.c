@@ -523,6 +523,118 @@ static int define_close_directory(__LLVM_Emitter__ *emitter)
     return 1;
 }
 
+static int define_path_mutation(__LLVM_Emitter__ *emitter,
+                                const char *export_name,
+                                const char *host_name,
+                                int create_directory)
+{
+    LLVMValueRef function = runtime_export(emitter, export_name, 1U);
+    LLVMTypeRef i8 = LLVMIntTypeInContext(emitter->context, 8U);
+    LLVMTypeRef i8_pointer = LLVMPointerType(i8, 0U);
+    LLVMTypeRef i32 = LLVMIntTypeInContext(emitter->context, 32U);
+    LLVMValueRef c_path;
+    LLVMValueRef arguments[2];
+    LLVMValueRef status;
+    LLVMValueRef failed;
+    if (function == NULL)
+        return 1;
+    if (runtime_export_failed(function))
+        return 0;
+
+    c_path = __LLVM_Runtime_C_String__(
+        emitter, LLVMGetParam(function, 0U), "runtime.path.mutation.path");
+    if (c_path == NULL)
+        return 0;
+    arguments[0] = c_path;
+    if (create_directory)
+    {
+        LLVMTypeRef parameters[2] = {i8_pointer, i32};
+        arguments[1] = LLVMConstInt(i32, 0777U, 0);
+        status = runtime_call(emitter,
+                              host_name,
+                              i32,
+                              parameters,
+                              2U,
+                              arguments,
+                              "runtime.path.mutation.status");
+    }
+    else
+    {
+        LLVMTypeRef parameters[1] = {i8_pointer};
+        status = runtime_call(emitter,
+                              host_name,
+                              i32,
+                              parameters,
+                              1U,
+                              arguments,
+                              "runtime.path.mutation.status");
+    }
+    if (status == NULL || !__LLVM_Runtime_Free__(emitter, c_path))
+        return 0;
+    failed = LLVMBuildICmp(emitter->builder,
+                           LLVMIntSLT,
+                           status,
+                           LLVMConstInt(i32, 0U, 0),
+                           "runtime.path.mutation.failed");
+    LLVMBuildRet(emitter->builder,
+                 LLVMBuildSelect(emitter->builder,
+                                 failed,
+                                 i64_constant(emitter, -2),
+                                 i64_constant(emitter, 0),
+                                 "runtime.path.mutation.result"));
+    return 1;
+}
+
+static int define_rename_path(__LLVM_Emitter__ *emitter)
+{
+    LLVMValueRef function = runtime_export(emitter, "تشغيل_إعادة_تسمية", 2U);
+    LLVMTypeRef i8 = LLVMIntTypeInContext(emitter->context, 8U);
+    LLVMTypeRef i8_pointer = LLVMPointerType(i8, 0U);
+    LLVMTypeRef i32 = LLVMIntTypeInContext(emitter->context, 32U);
+    LLVMTypeRef parameters[2] = {i8_pointer, i8_pointer};
+    LLVMValueRef source_path;
+    LLVMValueRef destination_path;
+    LLVMValueRef arguments[2];
+    LLVMValueRef status;
+    LLVMValueRef failed;
+    if (function == NULL)
+        return 1;
+    if (runtime_export_failed(function))
+        return 0;
+
+    source_path = __LLVM_Runtime_C_String__(
+        emitter, LLVMGetParam(function, 0U), "runtime.rename.source");
+    if (source_path == NULL)
+        return 0;
+    destination_path = __LLVM_Runtime_C_String__(
+        emitter, LLVMGetParam(function, 1U), "runtime.rename.destination");
+    if (destination_path == NULL)
+    {
+        (void)__LLVM_Runtime_Free__(emitter, source_path);
+        return 0;
+    }
+    arguments[0] = source_path;
+    arguments[1] = destination_path;
+    status = runtime_call(
+        emitter, "rename", i32, parameters, 2U, arguments, "runtime.rename.status");
+    if (status == NULL ||
+        !__LLVM_Runtime_Free__(emitter, destination_path) ||
+        !__LLVM_Runtime_Free__(emitter, source_path))
+        return 0;
+    failed = LLVMBuildICmp(emitter->builder,
+                           LLVMIntSLT,
+                           status,
+                           LLVMConstInt(i32, 0U, 0),
+                           "runtime.rename.failed");
+    LLVMBuildRet(emitter->builder,
+                 LLVMBuildSelect(emitter->builder,
+                                 failed,
+                                 i64_constant(emitter, -2),
+                                 i64_constant(emitter, 0),
+                                 "runtime.rename.result"));
+    return 1;
+}
+
 static int define_read_directory(__LLVM_Emitter__ *emitter)
 {
     LLVMValueRef function = runtime_export(emitter, "تشغيل_قراءة_مدخل_دليل", 4U);
@@ -824,6 +936,517 @@ static int define_path_metadata(__LLVM_Emitter__ *emitter, const char *name, uns
     return 1;
 }
 
+static int define_environment_variable_length(__LLVM_Emitter__ *emitter)
+{
+    LLVMValueRef function = runtime_export(emitter, "تشغيل_طول_متغير_بيئة", 1U);
+    LLVMTypeRef i8 = LLVMIntTypeInContext(emitter->context, 8U);
+    LLVMTypeRef i8_pointer = LLVMPointerType(i8, 0U);
+    LLVMTypeRef i64 = LLVMIntTypeInContext(emitter->context, 64U);
+    LLVMTypeRef getenv_parameters[1] = {i8_pointer};
+    LLVMTypeRef strlen_parameters[1] = {i8_pointer};
+    LLVMValueRef name;
+    LLVMValueRef getenv_arguments[1];
+    LLVMValueRef value;
+    LLVMValueRef missing;
+    LLVMValueRef strlen_arguments[1];
+    LLVMValueRef value_length;
+    LLVMValueRef status_slot;
+    LLVMBasicBlockRef missing_block;
+    LLVMBasicBlockRef found_block;
+    LLVMBasicBlockRef done_block;
+
+    if (function == NULL)
+        return 1;
+    if (runtime_export_failed(function))
+        return 0;
+
+    name = __LLVM_Runtime_C_String__(
+        emitter, LLVMGetParam(function, 0U), "runtime.environment.name");
+    if (name == NULL)
+        return 0;
+    getenv_arguments[0] = name;
+    value = runtime_call(emitter,
+                         "getenv",
+                         i8_pointer,
+                         getenv_parameters,
+                         1U,
+                         getenv_arguments,
+                         "runtime.environment.value");
+    if (value == NULL || !__LLVM_Runtime_Free__(emitter, name))
+        return 0;
+
+    status_slot = LLVMBuildAlloca(emitter->builder, i64, "runtime.environment.status");
+    missing = LLVMBuildICmp(emitter->builder,
+                            LLVMIntEQ,
+                            value,
+                            LLVMConstNull(i8_pointer),
+                            "runtime.environment.missing");
+    missing_block = LLVMAppendBasicBlockInContext(emitter->context, function, "missing");
+    found_block = LLVMAppendBasicBlockInContext(emitter->context, function, "found");
+    done_block = LLVMAppendBasicBlockInContext(emitter->context, function, "done");
+    LLVMBuildCondBr(emitter->builder, missing, missing_block, found_block);
+
+    LLVMPositionBuilderAtEnd(emitter->builder, missing_block);
+    LLVMBuildStore(emitter->builder, i64_constant(emitter, -2), status_slot);
+    LLVMBuildBr(emitter->builder, done_block);
+
+    LLVMPositionBuilderAtEnd(emitter->builder, found_block);
+    strlen_arguments[0] = value;
+    value_length = runtime_call(emitter,
+                                "strlen",
+                                i64,
+                                strlen_parameters,
+                                1U,
+                                strlen_arguments,
+                                "runtime.environment.length");
+    if (value_length == NULL)
+        return 0;
+    LLVMBuildStore(emitter->builder, value_length, status_slot);
+    LLVMBuildBr(emitter->builder, done_block);
+
+    LLVMPositionBuilderAtEnd(emitter->builder, done_block);
+    LLVMBuildRet(emitter->builder,
+                 LLVMBuildLoad2(emitter->builder,
+                                i64,
+                                status_slot,
+                                "runtime.environment.length.result"));
+    return 1;
+}
+
+static int define_environment_variable_read(__LLVM_Emitter__ *emitter)
+{
+    LLVMValueRef function = runtime_export(emitter, "تشغيل_قراءة_متغير_بيئة", 4U);
+    LLVMTypeRef i8 = LLVMIntTypeInContext(emitter->context, 8U);
+    LLVMTypeRef i8_pointer = LLVMPointerType(i8, 0U);
+    LLVMTypeRef i64 = LLVMIntTypeInContext(emitter->context, 64U);
+    LLVMTypeRef getenv_parameters[1] = {i8_pointer};
+    LLVMTypeRef strlen_parameters[1] = {i8_pointer};
+    LLVMValueRef name;
+    LLVMValueRef vector;
+    LLVMValueRef offset;
+    LLVMValueRef requested;
+    LLVMValueRef data;
+    LLVMValueRef length;
+    LLVMValueRef invalid;
+    LLVMValueRef remaining;
+    LLVMValueRef getenv_arguments[1];
+    LLVMValueRef value;
+    LLVMValueRef missing;
+    LLVMValueRef strlen_arguments[1];
+    LLVMValueRef source_length;
+    LLVMValueRef source_too_short;
+    LLVMValueRef status_slot;
+    LLVMValueRef destination;
+    LLVMBasicBlockRef unavailable_block;
+    LLVMBasicBlockRef inspect_block;
+    LLVMBasicBlockRef invalid_block;
+    LLVMBasicBlockRef copy_block;
+    LLVMBasicBlockRef done_block;
+
+    if (function == NULL)
+        return 1;
+    if (runtime_export_failed(function))
+        return 0;
+
+    name = __LLVM_Runtime_C_String__(
+        emitter, LLVMGetParam(function, 0U), "runtime.environment.read.name");
+    if (name == NULL)
+        return 0;
+    vector = LLVMGetParam(function, 1U);
+    offset = LLVMGetParam(function, 2U);
+    requested = LLVMGetParam(function, 3U);
+    data = vector_data(emitter, vector, "runtime.environment.read.data");
+    length = vector_length(emitter, vector, "runtime.environment.read.length");
+
+    invalid = LLVMBuildICmp(emitter->builder,
+                            LLVMIntSLT,
+                            offset,
+                            i64_constant(emitter, 0),
+                            "runtime.environment.read.offset.negative");
+    invalid = LLVMBuildOr(
+        emitter->builder,
+        invalid,
+        LLVMBuildICmp(emitter->builder,
+                      LLVMIntSLT,
+                      requested,
+                      i64_constant(emitter, 0),
+                      "runtime.environment.read.count.negative"),
+        "runtime.environment.read.invalid.sign");
+    invalid = LLVMBuildOr(
+        emitter->builder,
+        invalid,
+        LLVMBuildICmp(emitter->builder,
+                      LLVMIntUGT,
+                      offset,
+                      length,
+                      "runtime.environment.read.offset.large"),
+        "runtime.environment.read.invalid.offset");
+    remaining = LLVMBuildSub(
+        emitter->builder, length, offset, "runtime.environment.read.remaining");
+    invalid = LLVMBuildOr(
+        emitter->builder,
+        invalid,
+        LLVMBuildICmp(emitter->builder,
+                      LLVMIntUGT,
+                      requested,
+                      remaining,
+                      "runtime.environment.read.count.large"),
+        "runtime.environment.read.invalid.count");
+
+    getenv_arguments[0] = name;
+    value = runtime_call(emitter,
+                         "getenv",
+                         i8_pointer,
+                         getenv_parameters,
+                         1U,
+                         getenv_arguments,
+                         "runtime.environment.read.value");
+    if (value == NULL || !__LLVM_Runtime_Free__(emitter, name))
+        return 0;
+
+    status_slot = LLVMBuildAlloca(emitter->builder, i64, "runtime.environment.read.status");
+    missing = LLVMBuildICmp(emitter->builder,
+                            LLVMIntEQ,
+                            value,
+                            LLVMConstNull(i8_pointer),
+                            "runtime.environment.read.missing");
+    unavailable_block = LLVMAppendBasicBlockInContext(emitter->context, function, "unavailable");
+    inspect_block = LLVMAppendBasicBlockInContext(emitter->context, function, "inspect");
+    invalid_block = LLVMAppendBasicBlockInContext(emitter->context, function, "invalid");
+    copy_block = LLVMAppendBasicBlockInContext(emitter->context, function, "copy");
+    done_block = LLVMAppendBasicBlockInContext(emitter->context, function, "done");
+    LLVMBuildCondBr(emitter->builder,
+                    LLVMBuildOr(emitter->builder,
+                                invalid,
+                                missing,
+                                "runtime.environment.read.unavailable"),
+                    unavailable_block,
+                    inspect_block);
+
+    LLVMPositionBuilderAtEnd(emitter->builder, unavailable_block);
+    LLVMBuildStore(emitter->builder, i64_constant(emitter, -2), status_slot);
+    LLVMBuildBr(emitter->builder, done_block);
+
+    LLVMPositionBuilderAtEnd(emitter->builder, inspect_block);
+    strlen_arguments[0] = value;
+    source_length = runtime_call(emitter,
+                                 "strlen",
+                                 i64,
+                                 strlen_parameters,
+                                 1U,
+                                 strlen_arguments,
+                                 "runtime.environment.read.source.length");
+    if (source_length == NULL)
+        return 0;
+    source_too_short = LLVMBuildICmp(emitter->builder,
+                                     LLVMIntUGT,
+                                     requested,
+                                     source_length,
+                                     "runtime.environment.read.source.short");
+    LLVMBuildCondBr(emitter->builder, source_too_short, invalid_block, copy_block);
+
+    LLVMPositionBuilderAtEnd(emitter->builder, invalid_block);
+    LLVMBuildStore(emitter->builder, i64_constant(emitter, -2), status_slot);
+    LLVMBuildBr(emitter->builder, done_block);
+
+    LLVMPositionBuilderAtEnd(emitter->builder, copy_block);
+    destination = LLVMBuildGEP2(
+        emitter->builder, i8, data, &offset, 1U, "runtime.environment.read.destination");
+    if (LLVMBuildMemCpy(emitter->builder, destination, 1U, value, 1U, requested) == NULL)
+        return __LLVM_Fail__("Stage0 environment-variable copy failed");
+    LLVMBuildStore(emitter->builder, requested, status_slot);
+    LLVMBuildBr(emitter->builder, done_block);
+
+    LLVMPositionBuilderAtEnd(emitter->builder, done_block);
+    LLVMBuildRet(emitter->builder,
+                 LLVMBuildLoad2(emitter->builder,
+                                i64,
+                                status_slot,
+                                "runtime.environment.read.result"));
+    return 1;
+}
+
+static int define_working_directory(__LLVM_Emitter__ *emitter)
+{
+    LLVMValueRef function = runtime_export(emitter, "تشغيل_دليل_العمل", 3U);
+    LLVMTypeRef i8 = LLVMIntTypeInContext(emitter->context, 8U);
+    LLVMTypeRef i8_pointer = LLVMPointerType(i8, 0U);
+    LLVMTypeRef i64 = LLVMIntTypeInContext(emitter->context, 64U);
+    LLVMTypeRef getcwd_parameters[2] = {i8_pointer, i64};
+    LLVMTypeRef strlen_parameters[1] = {i8_pointer};
+    LLVMValueRef vector;
+    LLVMValueRef offset;
+    LLVMValueRef requested;
+    LLVMValueRef data;
+    LLVMValueRef length;
+    LLVMValueRef invalid;
+    LLVMValueRef remaining;
+    LLVMValueRef destination;
+    LLVMValueRef getcwd_arguments[2];
+    LLVMValueRef result_pointer;
+    LLVMValueRef failed;
+    LLVMValueRef strlen_arguments[1];
+    LLVMValueRef directory_length;
+    LLVMValueRef status_slot;
+    LLVMBasicBlockRef invalid_block;
+    LLVMBasicBlockRef read_block;
+    LLVMBasicBlockRef failed_block;
+    LLVMBasicBlockRef success_block;
+    LLVMBasicBlockRef done_block;
+
+    if (function == NULL)
+        return 1;
+    if (runtime_export_failed(function))
+        return 0;
+
+    vector = LLVMGetParam(function, 0U);
+    offset = LLVMGetParam(function, 1U);
+    requested = LLVMGetParam(function, 2U);
+    data = vector_data(emitter, vector, "runtime.working.directory.data");
+    length = vector_length(emitter, vector, "runtime.working.directory.length");
+
+    invalid = LLVMBuildICmp(emitter->builder,
+                            LLVMIntSLT,
+                            offset,
+                            i64_constant(emitter, 0),
+                            "runtime.working.directory.offset.negative");
+    invalid = LLVMBuildOr(
+        emitter->builder,
+        invalid,
+        LLVMBuildICmp(emitter->builder,
+                      LLVMIntSLT,
+                      requested,
+                      i64_constant(emitter, 0),
+                      "runtime.working.directory.count.negative"),
+        "runtime.working.directory.invalid.sign");
+    invalid = LLVMBuildOr(
+        emitter->builder,
+        invalid,
+        LLVMBuildICmp(emitter->builder,
+                      LLVMIntUGT,
+                      offset,
+                      length,
+                      "runtime.working.directory.offset.large"),
+        "runtime.working.directory.invalid.offset");
+    remaining = LLVMBuildSub(
+        emitter->builder, length, offset, "runtime.working.directory.remaining");
+    invalid = LLVMBuildOr(
+        emitter->builder,
+        invalid,
+        LLVMBuildICmp(emitter->builder,
+                      LLVMIntUGT,
+                      requested,
+                      remaining,
+                      "runtime.working.directory.count.large"),
+        "runtime.working.directory.invalid.count");
+
+    status_slot = LLVMBuildAlloca(emitter->builder, i64, "runtime.working.directory.status");
+    invalid_block = LLVMAppendBasicBlockInContext(emitter->context, function, "invalid");
+    read_block = LLVMAppendBasicBlockInContext(emitter->context, function, "read");
+    failed_block = LLVMAppendBasicBlockInContext(emitter->context, function, "failed");
+    success_block = LLVMAppendBasicBlockInContext(emitter->context, function, "success");
+    done_block = LLVMAppendBasicBlockInContext(emitter->context, function, "done");
+    LLVMBuildCondBr(emitter->builder, invalid, invalid_block, read_block);
+
+    LLVMPositionBuilderAtEnd(emitter->builder, invalid_block);
+    LLVMBuildStore(emitter->builder, i64_constant(emitter, -2), status_slot);
+    LLVMBuildBr(emitter->builder, done_block);
+
+    LLVMPositionBuilderAtEnd(emitter->builder, read_block);
+    destination = LLVMBuildGEP2(
+        emitter->builder, i8, data, &offset, 1U, "runtime.working.directory.destination");
+    getcwd_arguments[0] = destination;
+    getcwd_arguments[1] = requested;
+    result_pointer = runtime_call(emitter,
+                                  "getcwd",
+                                  i8_pointer,
+                                  getcwd_parameters,
+                                  2U,
+                                  getcwd_arguments,
+                                  "runtime.working.directory.pointer");
+    if (result_pointer == NULL)
+        return 0;
+    failed = LLVMBuildICmp(emitter->builder,
+                           LLVMIntEQ,
+                           result_pointer,
+                           LLVMConstNull(i8_pointer),
+                           "runtime.working.directory.failed");
+    LLVMBuildCondBr(emitter->builder, failed, failed_block, success_block);
+
+    LLVMPositionBuilderAtEnd(emitter->builder, failed_block);
+    LLVMBuildStore(emitter->builder, i64_constant(emitter, -2), status_slot);
+    LLVMBuildBr(emitter->builder, done_block);
+
+    LLVMPositionBuilderAtEnd(emitter->builder, success_block);
+    strlen_arguments[0] = result_pointer;
+    directory_length = runtime_call(emitter,
+                                    "strlen",
+                                    i64,
+                                    strlen_parameters,
+                                    1U,
+                                    strlen_arguments,
+                                    "runtime.working.directory.result.length");
+    if (directory_length == NULL)
+        return 0;
+    LLVMBuildStore(emitter->builder, directory_length, status_slot);
+    LLVMBuildBr(emitter->builder, done_block);
+
+    LLVMPositionBuilderAtEnd(emitter->builder, done_block);
+    LLVMBuildRet(emitter->builder,
+                 LLVMBuildLoad2(emitter->builder,
+                                i64,
+                                status_slot,
+                                "runtime.working.directory.result"));
+    return 1;
+}
+
+static int define_temporary_directory(__LLVM_Emitter__ *emitter)
+{
+    LLVMValueRef function = runtime_export(emitter, "تشغيل_الدليل_المؤقت", 3U);
+    LLVMTypeRef i8 = LLVMIntTypeInContext(emitter->context, 8U);
+    LLVMTypeRef i8_pointer = LLVMPointerType(i8, 0U);
+    LLVMTypeRef i64 = LLVMIntTypeInContext(emitter->context, 64U);
+    LLVMTypeRef getenv_parameters[1] = {i8_pointer};
+    LLVMTypeRef strlen_parameters[1] = {i8_pointer};
+    LLVMValueRef vector;
+    LLVMValueRef offset;
+    LLVMValueRef requested;
+    LLVMValueRef data;
+    LLVMValueRef length;
+    LLVMValueRef invalid;
+    LLVMValueRef remaining;
+    LLVMValueRef environment_name;
+    LLVMValueRef getenv_arguments[1];
+    LLVMValueRef environment_value;
+    LLVMValueRef fallback_value;
+    LLVMValueRef source;
+    LLVMValueRef strlen_arguments[1];
+    LLVMValueRef source_length;
+    LLVMValueRef too_long;
+    LLVMValueRef status_slot;
+    LLVMValueRef destination;
+    LLVMBasicBlockRef invalid_block;
+    LLVMBasicBlockRef copy_block;
+    LLVMBasicBlockRef done_block;
+
+    if (function == NULL)
+        return 1;
+    if (runtime_export_failed(function))
+        return 0;
+
+    vector = LLVMGetParam(function, 0U);
+    offset = LLVMGetParam(function, 1U);
+    requested = LLVMGetParam(function, 2U);
+    data = vector_data(emitter, vector, "runtime.temporary.directory.data");
+    length = vector_length(emitter, vector, "runtime.temporary.directory.length");
+
+    invalid = LLVMBuildICmp(emitter->builder,
+                            LLVMIntSLT,
+                            offset,
+                            i64_constant(emitter, 0),
+                            "runtime.temporary.directory.offset.negative");
+    invalid = LLVMBuildOr(
+        emitter->builder,
+        invalid,
+        LLVMBuildICmp(emitter->builder,
+                      LLVMIntSLT,
+                      requested,
+                      i64_constant(emitter, 0),
+                      "runtime.temporary.directory.count.negative"),
+        "runtime.temporary.directory.invalid.sign");
+    invalid = LLVMBuildOr(
+        emitter->builder,
+        invalid,
+        LLVMBuildICmp(emitter->builder,
+                      LLVMIntUGT,
+                      offset,
+                      length,
+                      "runtime.temporary.directory.offset.large"),
+        "runtime.temporary.directory.invalid.offset");
+    remaining = LLVMBuildSub(
+        emitter->builder, length, offset, "runtime.temporary.directory.remaining");
+    invalid = LLVMBuildOr(
+        emitter->builder,
+        invalid,
+        LLVMBuildICmp(emitter->builder,
+                      LLVMIntUGT,
+                      requested,
+                      remaining,
+                      "runtime.temporary.directory.count.large"),
+        "runtime.temporary.directory.invalid.count");
+
+    environment_name = LLVMBuildGlobalStringPtr(
+        emitter->builder, "TMPDIR", "runtime.temporary.directory.environment.name");
+    getenv_arguments[0] = environment_name;
+    environment_value = runtime_call(emitter,
+                                     "getenv",
+                                     i8_pointer,
+                                     getenv_parameters,
+                                     1U,
+                                     getenv_arguments,
+                                     "runtime.temporary.directory.environment.value");
+    if (environment_value == NULL)
+        return 0;
+    fallback_value = LLVMBuildGlobalStringPtr(
+        emitter->builder, "/tmp", "runtime.temporary.directory.fallback");
+    source = LLVMBuildSelect(
+        emitter->builder,
+        LLVMBuildICmp(emitter->builder,
+                      LLVMIntEQ,
+                      environment_value,
+                      LLVMConstNull(i8_pointer),
+                      "runtime.temporary.directory.environment.missing"),
+        fallback_value,
+        environment_value,
+        "runtime.temporary.directory.source");
+
+    strlen_arguments[0] = source;
+    source_length = runtime_call(emitter,
+                                 "strlen",
+                                 i64,
+                                 strlen_parameters,
+                                 1U,
+                                 strlen_arguments,
+                                 "runtime.temporary.directory.source.length");
+    if (source_length == NULL)
+        return 0;
+    too_long = LLVMBuildICmp(emitter->builder,
+                             LLVMIntUGT,
+                             source_length,
+                             requested,
+                             "runtime.temporary.directory.too.long");
+    invalid = LLVMBuildOr(
+        emitter->builder, invalid, too_long, "runtime.temporary.directory.invalid");
+
+    status_slot = LLVMBuildAlloca(
+        emitter->builder, i64, "runtime.temporary.directory.status");
+    invalid_block = LLVMAppendBasicBlockInContext(emitter->context, function, "invalid");
+    copy_block = LLVMAppendBasicBlockInContext(emitter->context, function, "copy");
+    done_block = LLVMAppendBasicBlockInContext(emitter->context, function, "done");
+    LLVMBuildCondBr(emitter->builder, invalid, invalid_block, copy_block);
+
+    LLVMPositionBuilderAtEnd(emitter->builder, invalid_block);
+    LLVMBuildStore(emitter->builder, i64_constant(emitter, -2), status_slot);
+    LLVMBuildBr(emitter->builder, done_block);
+
+    LLVMPositionBuilderAtEnd(emitter->builder, copy_block);
+    destination = LLVMBuildGEP2(
+        emitter->builder, i8, data, &offset, 1U, "runtime.temporary.directory.destination");
+    if (LLVMBuildMemCpy(
+            emitter->builder, destination, 1U, source, 1U, source_length) == NULL)
+        return __LLVM_Fail__("Stage0 temporary-directory copy failed");
+    LLVMBuildStore(emitter->builder, source_length, status_slot);
+    LLVMBuildBr(emitter->builder, done_block);
+
+    LLVMPositionBuilderAtEnd(emitter->builder, done_block);
+    LLVMBuildRet(emitter->builder,
+                 LLVMBuildLoad2(emitter->builder,
+                                i64,
+                                status_slot,
+                                "runtime.temporary.directory.result"));
+    return 1;
+}
+
 static LLVMValueRef error_class(__LLVM_Emitter__ *emitter,
                                 LLVMValueRef error,
                                 unsigned code,
@@ -971,6 +1594,345 @@ static int define_argument(__LLVM_Emitter__ *emitter)
     value = LLVMBuildInsertValue(emitter->builder, value, length, 1U, "runtime.argument.with.length");
     value = LLVMBuildInsertValue(emitter->builder, value, i64_constant(emitter, 0), 2U, "runtime.argument.with.capacity");
     LLVMBuildRet(emitter->builder, value);
+    return 1;
+}
+
+static int define_spawn_process(__LLVM_Emitter__ *emitter)
+{
+    LLVMValueRef function = runtime_export(emitter, "تشغيل_تشغيل_عملية", 2U);
+    LLVMTypeRef i8 = LLVMIntTypeInContext(emitter->context, 8U);
+    LLVMTypeRef i8_pointer = LLVMPointerType(i8, 0U);
+    LLVMTypeRef i8_pointer_pointer = LLVMPointerType(i8_pointer, 0U);
+    LLVMTypeRef i32 = LLVMIntTypeInContext(emitter->context, 32U);
+    LLVMTypeRef i32_pointer = LLVMPointerType(i32, 0U);
+    LLVMTypeRef i64 = LLVMIntTypeInContext(emitter->context, 64U);
+    LLVMTypeRef text_type;
+    LLVMTypeRef spawn_parameters[6] = {
+        i32_pointer,
+        i8_pointer,
+        i8_pointer,
+        i8_pointer,
+        i8_pointer_pointer,
+        i8_pointer_pointer
+    };
+    LLVMValueRef program;
+    LLVMValueRef arguments_vector;
+    LLVMValueRef arguments_data;
+    LLVMValueRef argument_count;
+    LLVMValueRef program_c_string;
+    LLVMValueRef argv_bytes;
+    LLVMValueRef argv;
+    LLVMValueRef pid_slot;
+    LLVMValueRef build_index_slot;
+    LLVMValueRef cleanup_index_slot;
+    LLVMValueRef slot;
+    LLVMValueRef index;
+    LLVMValueRef condition;
+    LLVMValueRef argument_pointer;
+    LLVMValueRef argument_text;
+    LLVMValueRef argument_c_string;
+    LLVMValueRef next_index;
+    LLVMValueRef environment;
+    LLVMValueRef spawn_arguments[6];
+    LLVMValueRef spawn_status;
+    LLVMValueRef pid;
+    LLVMValueRef result;
+    LLVMBasicBlockRef build_condition_block;
+    LLVMBasicBlockRef build_body_block;
+    LLVMBasicBlockRef spawn_block;
+    LLVMBasicBlockRef cleanup_condition_block;
+    LLVMBasicBlockRef cleanup_body_block;
+    LLVMBasicBlockRef cleanup_done_block;
+
+    if (function == NULL)
+        return 1;
+    if (runtime_export_failed(function))
+        return 0;
+
+    program = LLVMGetParam(function, 0U);
+    arguments_vector = LLVMGetParam(function, 1U);
+    text_type = LLVMTypeOf(program);
+    arguments_data = LLVMBuildExtractValue(
+        emitter->builder, arguments_vector, 0U, "runtime.process.arguments.data");
+    argument_count = LLVMBuildExtractValue(
+        emitter->builder, arguments_vector, 1U, "runtime.process.arguments.count");
+
+    pid_slot = LLVMBuildAlloca(emitter->builder, i32, "runtime.process.pid");
+    build_index_slot = LLVMBuildAlloca(
+        emitter->builder, i64, "runtime.process.build.index");
+    cleanup_index_slot = LLVMBuildAlloca(
+        emitter->builder, i64, "runtime.process.cleanup.index");
+
+    program_c_string = __LLVM_Runtime_C_String__(
+        emitter, program, "runtime.process.program");
+    if (program_c_string == NULL)
+        return 0;
+
+    argv_bytes = LLVMBuildMul(
+        emitter->builder,
+        LLVMBuildAdd(emitter->builder,
+                     argument_count,
+                     i64_constant(emitter, 2),
+                     "runtime.process.argv.count"),
+        i64_constant(emitter, 8),
+        "runtime.process.argv.bytes");
+    argv = __LLVM_Runtime_Malloc__(emitter, argv_bytes, "runtime.process.argv");
+    if (argv == NULL)
+        return 0;
+    argv = LLVMBuildPointerCast(
+        emitter->builder, argv, i8_pointer_pointer, "runtime.process.argv.typed");
+
+    index = i64_constant(emitter, 0);
+    slot = LLVMBuildGEP2(
+        emitter->builder, i8_pointer, argv, &index, 1U, "runtime.process.argv.zero");
+    LLVMBuildStore(emitter->builder, program_c_string, slot);
+    LLVMBuildStore(emitter->builder, i64_constant(emitter, 0), build_index_slot);
+
+    build_condition_block = LLVMAppendBasicBlockInContext(
+        emitter->context, function, "arguments.condition");
+    build_body_block = LLVMAppendBasicBlockInContext(
+        emitter->context, function, "arguments.body");
+    spawn_block = LLVMAppendBasicBlockInContext(emitter->context, function, "spawn");
+    LLVMBuildBr(emitter->builder, build_condition_block);
+
+    LLVMPositionBuilderAtEnd(emitter->builder, build_condition_block);
+    index = LLVMBuildLoad2(
+        emitter->builder, i64, build_index_slot, "runtime.process.build.index.value");
+    condition = LLVMBuildICmp(emitter->builder,
+                              LLVMIntULT,
+                              index,
+                              argument_count,
+                              "runtime.process.arguments.remaining");
+    LLVMBuildCondBr(emitter->builder, condition, build_body_block, spawn_block);
+
+    LLVMPositionBuilderAtEnd(emitter->builder, build_body_block);
+    argument_pointer = LLVMBuildGEP2(emitter->builder,
+                                     text_type,
+                                     arguments_data,
+                                     &index,
+                                     1U,
+                                     "runtime.process.argument.pointer");
+    argument_text = LLVMBuildLoad2(emitter->builder,
+                                   text_type,
+                                   argument_pointer,
+                                   "runtime.process.argument");
+    argument_c_string = __LLVM_Runtime_C_String__(
+        emitter, argument_text, "runtime.process.argument.cstring");
+    if (argument_c_string == NULL)
+        return 0;
+    next_index = LLVMBuildAdd(emitter->builder,
+                              index,
+                              i64_constant(emitter, 1),
+                              "runtime.process.argument.argv.index");
+    slot = LLVMBuildGEP2(emitter->builder,
+                         i8_pointer,
+                         argv,
+                         &next_index,
+                         1U,
+                         "runtime.process.argument.argv.slot");
+    LLVMBuildStore(emitter->builder, argument_c_string, slot);
+    LLVMBuildStore(emitter->builder, next_index, build_index_slot);
+    LLVMBuildBr(emitter->builder, build_condition_block);
+
+    LLVMPositionBuilderAtEnd(emitter->builder, spawn_block);
+    index = LLVMBuildAdd(emitter->builder,
+                         argument_count,
+                         i64_constant(emitter, 1),
+                         "runtime.process.argv.end.index");
+    slot = LLVMBuildGEP2(
+        emitter->builder, i8_pointer, argv, &index, 1U, "runtime.process.argv.end");
+    LLVMBuildStore(emitter->builder, LLVMConstNull(i8_pointer), slot);
+
+    if (emitter->target.platform == __Bootstrap_Target_Platform_Darwin__)
+    {
+        LLVMTypeRef environ_parameters[1] = {i8_pointer};
+        LLVMValueRef environment_holder = runtime_call(
+            emitter,
+            "_NSGetEnviron",
+            i8_pointer,
+            environ_parameters,
+            0U,
+            NULL,
+            "runtime.process.environment.holder");
+        if (environment_holder == NULL)
+            return 0;
+        environment = LLVMBuildLoad2(emitter->builder,
+                                     i8_pointer_pointer,
+                                     environment_holder,
+                                     "runtime.process.environment");
+    }
+    else
+    {
+        LLVMValueRef environment_global = LLVMGetNamedGlobal(emitter->module, "environ");
+        if (environment_global == NULL)
+            environment_global = LLVMAddGlobal(emitter->module, i8_pointer_pointer, "environ");
+        if (environment_global == NULL)
+            return __LLVM_Fail__("Stage0 could not declare the process environment pointer");
+        LLVMSetLinkage(environment_global, LLVMExternalLinkage);
+        environment = LLVMBuildLoad2(emitter->builder,
+                                     i8_pointer_pointer,
+                                     environment_global,
+                                     "runtime.process.environment");
+    }
+
+    spawn_arguments[0] = pid_slot;
+    spawn_arguments[1] = program_c_string;
+    spawn_arguments[2] = LLVMConstNull(i8_pointer);
+    spawn_arguments[3] = LLVMConstNull(i8_pointer);
+    spawn_arguments[4] = argv;
+    spawn_arguments[5] = environment;
+    spawn_status = runtime_call(emitter,
+                                "posix_spawn",
+                                i32,
+                                spawn_parameters,
+                                6U,
+                                spawn_arguments,
+                                "runtime.process.spawn.status");
+    if (spawn_status == NULL)
+        return 0;
+    pid = LLVMBuildLoad2(emitter->builder, i32, pid_slot, "runtime.process.spawn.pid");
+    result = LLVMBuildSelect(
+        emitter->builder,
+        LLVMBuildICmp(emitter->builder,
+                      LLVMIntEQ,
+                      spawn_status,
+                      LLVMConstInt(i32, 0U, 0),
+                      "runtime.process.spawn.succeeded"),
+        LLVMBuildSExt(emitter->builder, pid, i64, "runtime.process.spawn.pid.result"),
+        LLVMBuildNeg(emitter->builder,
+                     LLVMBuildSExt(emitter->builder,
+                                   spawn_status,
+                                   i64,
+                                   "runtime.process.spawn.error.extended"),
+                     "runtime.process.spawn.error"),
+        "runtime.process.spawn.result");
+
+    LLVMBuildStore(emitter->builder, i64_constant(emitter, 0), cleanup_index_slot);
+    cleanup_condition_block = LLVMAppendBasicBlockInContext(
+        emitter->context, function, "cleanup.condition");
+    cleanup_body_block = LLVMAppendBasicBlockInContext(
+        emitter->context, function, "cleanup.body");
+    cleanup_done_block = LLVMAppendBasicBlockInContext(
+        emitter->context, function, "cleanup.done");
+    LLVMBuildBr(emitter->builder, cleanup_condition_block);
+
+    LLVMPositionBuilderAtEnd(emitter->builder, cleanup_condition_block);
+    index = LLVMBuildLoad2(emitter->builder,
+                           i64,
+                           cleanup_index_slot,
+                           "runtime.process.cleanup.index.value");
+    condition = LLVMBuildICmp(
+        emitter->builder,
+        LLVMIntULT,
+        index,
+        LLVMBuildAdd(emitter->builder,
+                     argument_count,
+                     i64_constant(emitter, 1),
+                     "runtime.process.cleanup.count"),
+        "runtime.process.cleanup.remaining");
+    LLVMBuildCondBr(emitter->builder, condition, cleanup_body_block, cleanup_done_block);
+
+    LLVMPositionBuilderAtEnd(emitter->builder, cleanup_body_block);
+    slot = LLVMBuildGEP2(
+        emitter->builder, i8_pointer, argv, &index, 1U, "runtime.process.cleanup.slot");
+    argument_c_string = LLVMBuildLoad2(
+        emitter->builder, i8_pointer, slot, "runtime.process.cleanup.value");
+    if (!__LLVM_Runtime_Free__(emitter, argument_c_string))
+        return 0;
+    next_index = LLVMBuildAdd(emitter->builder,
+                              index,
+                              i64_constant(emitter, 1),
+                              "runtime.process.cleanup.next");
+    LLVMBuildStore(emitter->builder, next_index, cleanup_index_slot);
+    LLVMBuildBr(emitter->builder, cleanup_condition_block);
+
+    LLVMPositionBuilderAtEnd(emitter->builder, cleanup_done_block);
+    if (!__LLVM_Runtime_Free__(emitter, argv))
+        return 0;
+    LLVMBuildRet(emitter->builder, result);
+    return 1;
+}
+
+static int define_wait_process(__LLVM_Emitter__ *emitter)
+{
+    LLVMValueRef function = runtime_export(emitter, "تشغيل_انتظار_عملية", 1U);
+    LLVMTypeRef i32 = LLVMIntTypeInContext(emitter->context, 32U);
+    LLVMTypeRef i32_pointer = LLVMPointerType(i32, 0U);
+    LLVMTypeRef i64 = LLVMIntTypeInContext(emitter->context, 64U);
+    LLVMTypeRef wait_parameters[3] = {i32, i32_pointer, i32};
+    LLVMValueRef status_slot;
+    LLVMValueRef wait_arguments[3];
+    LLVMValueRef waited_pid;
+    LLVMValueRef raw_status;
+    LLVMValueRef signal_number;
+    LLVMValueRef exit_code;
+    LLVMValueRef normal_exit;
+    LLVMValueRef encoded_status;
+    LLVMValueRef result;
+
+    if (function == NULL)
+        return 1;
+    if (runtime_export_failed(function))
+        return 0;
+
+    status_slot = LLVMBuildAlloca(emitter->builder, i32, "runtime.process.wait.status");
+    LLVMBuildStore(emitter->builder, LLVMConstInt(i32, 0U, 0), status_slot);
+    wait_arguments[0] = LLVMBuildTrunc(
+        emitter->builder, LLVMGetParam(function, 0U), i32, "runtime.process.wait.pid");
+    wait_arguments[1] = status_slot;
+    wait_arguments[2] = LLVMConstInt(i32, 0U, 0);
+    waited_pid = runtime_call(emitter,
+                              "waitpid",
+                              i32,
+                              wait_parameters,
+                              3U,
+                              wait_arguments,
+                              "runtime.process.wait.result");
+    if (waited_pid == NULL)
+        return 0;
+
+    raw_status = LLVMBuildLoad2(
+        emitter->builder, i32, status_slot, "runtime.process.wait.raw.status");
+    signal_number = LLVMBuildAnd(emitter->builder,
+                                 raw_status,
+                                 LLVMConstInt(i32, 0x7FU, 0),
+                                 "runtime.process.wait.signal");
+    exit_code = LLVMBuildAnd(
+        emitter->builder,
+        LLVMBuildLShr(emitter->builder,
+                      raw_status,
+                      LLVMConstInt(i32, 8U, 0),
+                      "runtime.process.wait.exit.shifted"),
+        LLVMConstInt(i32, 0xFFU, 0),
+        "runtime.process.wait.exit.code");
+    normal_exit = LLVMBuildICmp(emitter->builder,
+                                LLVMIntEQ,
+                                signal_number,
+                                LLVMConstInt(i32, 0U, 0),
+                                "runtime.process.wait.exited");
+    encoded_status = LLVMBuildSelect(
+        emitter->builder,
+        normal_exit,
+        exit_code,
+        LLVMBuildAdd(emitter->builder,
+                     signal_number,
+                     LLVMConstInt(i32, 256U, 0),
+                     "runtime.process.wait.signal.encoded"),
+        "runtime.process.wait.encoded");
+    result = LLVMBuildSelect(
+        emitter->builder,
+        LLVMBuildICmp(emitter->builder,
+                      LLVMIntSLT,
+                      waited_pid,
+                      LLVMConstInt(i32, 0U, 0),
+                      "runtime.process.wait.failed"),
+        i64_constant(emitter, -2),
+        LLVMBuildZExt(emitter->builder,
+                      encoded_status,
+                      i64,
+                      "runtime.process.wait.status.result"),
+        "runtime.process.wait.runtime.result");
+    LLVMBuildRet(emitter->builder, result);
     return 1;
 }
 
@@ -1147,6 +2109,14 @@ int __LLVM_Define_Runtime_Exports__(__LLVM_Emitter__ *emitter)
         !define_open_directory(emitter) ||
         !define_read_directory(emitter) ||
         !define_close_directory(emitter) ||
+        !define_path_mutation(emitter, "تشغيل_إنشاء_دليل", "mkdir", 1) ||
+        !define_path_mutation(emitter, "تشغيل_إزالة_ملف", "unlink", 0) ||
+        !define_path_mutation(emitter, "تشغيل_إزالة_دليل", "rmdir", 0) ||
+        !define_rename_path(emitter) ||
+        !define_environment_variable_length(emitter) ||
+        !define_environment_variable_read(emitter) ||
+        !define_working_directory(emitter) ||
+        !define_temporary_directory(emitter) ||
         !define_read_byte(emitter, "تشغيل_قراءة_بايت_الدخل_القياسي", 1) ||
         !define_segment(emitter, "تشغيل_قراءة_مقطع_الدخل_القياسي", 1, 0) ||
         !define_write_executable(emitter) ||
@@ -1154,6 +2124,8 @@ int __LLVM_Define_Runtime_Exports__(__LLVM_Emitter__ *emitter)
         !define_stream(emitter, "تشغيل_كتابة_الخطأ_القياسي", 2U) ||
         !define_argument_count(emitter) ||
         !define_argument(emitter) ||
+        !define_spawn_process(emitter) ||
+        !define_wait_process(emitter) ||
         !define_process_exit(emitter) ||
         !define_text_from_bytes(emitter) ||
         !define_path_metadata(emitter, "تشغيل_نوع_مسار", 0U) ||

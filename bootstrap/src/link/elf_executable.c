@@ -277,6 +277,7 @@ int __Bootstrap_Finalize_ELF_X86_64__(const uint8_t *object,
     size_t symbol_count = 0U;
     size_t external_count = 0U;
     size_t main_symbol = SIZE_MAX;
+    size_t entry_symbol = SIZE_MAX;
     size_t i;
     size_t cursor;
     size_t start_offset = page;
@@ -393,9 +394,18 @@ int __Bootstrap_Finalize_ELF_X86_64__(const uint8_t *object,
                 }
                 main_symbol = i;
             }
+            if (symbols[i].section != ELF_SHN_UNDEF && strcmp(name, "_start") == 0)
+            {
+                if (entry_symbol != SIZE_MAX)
+                {
+                    ok = 0;
+                    break;
+                }
+                entry_symbol = i;
+            }
         }
     }
-    if (ok && main_symbol == SIZE_MAX)
+    if (ok && main_symbol == SIZE_MAX && entry_symbol == SIZE_MAX)
         ok = 0;
     if (ok && needs_llvm &&
         (llvm_runtime_library == NULL || llvm_runtime_library[0] == '\0' ||
@@ -523,12 +533,14 @@ int __Bootstrap_Finalize_ELF_X86_64__(const uint8_t *object,
 
     if (ok)
     {
-        uint16_t main_section = symbols[main_symbol].section;
-        if (main_section >= section_count || section_offsets[main_section] == SIZE_MAX ||
-            symbols[main_symbol].value > SIZE_MAX - section_offsets[main_section])
+        size_t selected_symbol = entry_symbol == SIZE_MAX ? main_symbol : entry_symbol;
+        uint16_t selected_section = symbols[selected_symbol].section;
+        if (selected_section >= section_count || section_offsets[selected_section] == SIZE_MAX ||
+            symbols[selected_symbol].value > SIZE_MAX - section_offsets[selected_section])
             ok = 0;
         else
-            main_address = base + section_offsets[main_section] + (size_t)symbols[main_symbol].value;
+            main_address = base + section_offsets[selected_section] +
+                           (size_t)symbols[selected_symbol].value;
     }
 
     if (ok)
@@ -547,9 +559,10 @@ int __Bootstrap_Finalize_ELF_X86_64__(const uint8_t *object,
         uint32_t call_disp;
         uint64_t call_place = base + start_offset + 16U;
         if (!__Bootstrap_Byte_Buffer_Resize_Zero__(output, file_end) ||
-            !elf_relative32(call_place, main_address, -4, &call_disp))
+            (entry_symbol == SIZE_MAX &&
+             !elf_relative32(call_place, main_address, -4, &call_disp)))
             ok = 0;
-        if (ok)
+        if (ok && entry_symbol == SIZE_MAX)
         {
             memcpy(output->data + start_offset, startup_template, sizeof(startup_template));
             if (!__Bootstrap_Byte_Buffer_Write_U32_LE__(output, start_offset + 16U, call_disp))
@@ -872,7 +885,9 @@ int __Bootstrap_Finalize_ELF_X86_64__(const uint8_t *object,
             __Bootstrap_Byte_Buffer_Write_U32_LE__(output, 16U,
                                                    (uint32_t)2U | ((uint32_t)62U << 16U));
             __Bootstrap_Byte_Buffer_Write_U32_LE__(output, 20U, 1U);
-            __Bootstrap_Byte_Buffer_Write_U64_LE__(output, 24U, base + start_offset);
+            __Bootstrap_Byte_Buffer_Write_U64_LE__(output, 24U,
+                                                   entry_symbol == SIZE_MAX ?
+                                                   base + start_offset : main_address);
             __Bootstrap_Byte_Buffer_Write_U64_LE__(output, 32U, 64U);
             __Bootstrap_Byte_Buffer_Write_U64_LE__(output, 40U, 0U);
             __Bootstrap_Byte_Buffer_Write_U32_LE__(output, 48U, 0U);

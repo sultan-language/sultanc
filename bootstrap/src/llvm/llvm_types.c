@@ -43,7 +43,8 @@ int __LLVM_Resolve_Integer__(__LLVM_Emitter__ *emitter,
     __Resolved_Type__ resolved;
     if (type == NULL || !__Type_Resolve__(emitter->semantic, type, &resolved) ||
         (resolved.__Kind__ != __Resolved_Type_Signed_Integer__ &&
-         resolved.__Kind__ != __Resolved_Type_Unsigned_Integer__))
+         resolved.__Kind__ != __Resolved_Type_Unsigned_Integer__ &&
+         resolved.__Kind__ != __Resolved_Type_Character__))
     {
         return 0;
     }
@@ -221,6 +222,10 @@ LLVMTypeRef __LLVM_Type__(__LLVM_Emitter__ *emitter, __Ast_Type__ *type)
     }
     if (resolved.__Kind__ == __Resolved_Type_Signed_Integer__ ||
         resolved.__Kind__ == __Resolved_Type_Unsigned_Integer__)
+    {
+        return LLVMIntTypeInContext(emitter->context, resolved.__Bits__);
+    }
+    if (resolved.__Kind__ == __Resolved_Type_Character__)
     {
         return LLVMIntTypeInContext(emitter->context, resolved.__Bits__);
     }
