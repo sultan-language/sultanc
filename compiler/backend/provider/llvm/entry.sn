@@ -1,0 +1,122 @@
+استورد compiler.backend.provider.llvm.model;
+استورد compiler.backend.provider.llvm.ffi.core;
+استورد compiler.backend.provider.llvm.ffi.types;
+استورد compiler.msir.identifiers;
+استورد compiler.backend.target.target_model;
+
+// The target CRT calls main(argc, argv). The language entry remains parameterless.
+// The LLVM module itself performs process-argument initialization; no C launcher
+// or object-symbol renaming is necessary at link time.
+عام عرف أنشئ_مدخل_عملية_إل_إل_في_إم(
+    الحالة: &حالة_مزود_إل_إل_في_إم,
+    الهدف: &واصف_هدف,
+    دالة_الدخول: &اختيار معرف_دالة_مسير
+): فراغ {
+    // WASI uses _start and does not provide a CRT main(argc, argv).
+    لو ((*الهدف).صيغة_الكائن == صيغة_كائن_هدف.ويب_أسمبلي()) {
+        أرجع;
+    };
+    طابق *دالة_الدخول مع
+    | اختيار.لا_شيء -> { أرجع; }
+    | اختيار.بعض(_) -> { };
+
+    دع اسم_المدخل: متغير متجه غ8 = [0x6D, 0x61, 0x69, 0x6E, 0];
+    دع مدخل_اللغة: مرجع_قيمة_إل_إل_في_إم = LLVMGetNamedFunction(
+        (*الحالة).الوحدة, &متغير اسم_المدخل[0]
+    );
+    دع اسم_الداخلي: متغير متجه غ8 = [
+        0x73, 0x75, 0x6C, 0x74, 0x61, 0x6E, 0x63, 0x2E,
+        0x65, 0x6E, 0x74, 0x72, 0x79
+    ];
+    LLVMSetValueName2(مدخل_اللغة, &متغير اسم_الداخلي[0], الطول(اسم_الداخلي) مثل غير_موقع);
+
+    دع السياق: مرجع_سياق_إل_إل_في_إم = (*الحالة).السياق;
+    دع عدد_صحيح32: مرجع_نوع_إل_إل_في_إم = LLVMInt32TypeInContext(السياق);
+    دع عدد_صحيح64: مرجع_نوع_إل_إل_في_إم = LLVMInt64TypeInContext(السياق);
+    دع نوع_المؤشر: مرجع_نوع_إل_إل_في_إم = LLVMPointerTypeInContext(السياق, 0);
+    دع المعاملات: متغير متجه مرجع_نوع_إل_إل_في_إم = [عدد_صحيح32, نوع_المؤشر];
+    دع نوع_المدخل: مرجع_نوع_إل_إل_في_إم = LLVMFunctionType(
+        عدد_صحيح32, &متغير المعاملات[0], 2, 0
+    );
+    دع مدخل_النظام: مرجع_قيمة_إل_إل_في_إم = LLVMAddFunction(
+        (*الحالة).الوحدة, &متغير اسم_المدخل[0], نوع_المدخل
+    );
+    دع اسم_الكتلة: متغير متجه غ8 = [0x65, 0x6E, 0x74, 0x72, 0x79, 0];
+    دع الكتلة: مرجع_كتلة_إل_إل_في_إم = LLVMAppendBasicBlockInContext(
+        السياق, مدخل_النظام, &متغير اسم_الكتلة[0]
+    );
+    دع الباني: مرجع_بان_إل_إل_في_إم = LLVMCreateBuilderInContext(السياق);
+    LLVMPositionBuilderAtEnd(الباني, الكتلة);
+
+    دع اسم_عدد_الوسائط: متغير متجه غ8 = [
+        0x73, 0x75, 0x6C, 0x74, 0x61, 0x6E, 0x63, 0x2E,
+        0x62, 0x6F, 0x6F, 0x74, 0x73, 0x74, 0x72, 0x61,
+        0x70, 0x2E, 0x61, 0x72, 0x67, 0x63, 0
+    ];
+    دع اسم_مؤشر_الوسائط: متغير متجه غ8 = [
+        0x73, 0x75, 0x6C, 0x74, 0x61, 0x6E, 0x63, 0x2E,
+        0x62, 0x6F, 0x6F, 0x74, 0x73, 0x74, 0x72, 0x61,
+        0x70, 0x2E, 0x61, 0x72, 0x67, 0x76, 0
+    ];
+    دع عدد_الوسائط: مرجع_قيمة_إل_إل_في_إم = LLVMAddGlobal(
+        (*الحالة).الوحدة, عدد_صحيح64, &متغير اسم_عدد_الوسائط[0]
+    );
+    دع مؤشر_الوسائط: مرجع_قيمة_إل_إل_في_إم = LLVMAddGlobal(
+        (*الحالة).الوحدة, نوع_المؤشر, &متغير اسم_مؤشر_الوسائط[0]
+    );
+    // These are definitions, not extern declarations. The native bootstrap
+    // runtime may already provide the same globals, so allow its strong
+    // definitions to win at link time without losing the standalone ones.
+    LLVMSetInitializer(عدد_الوسائط, LLVMConstInt(عدد_صحيح64, 0, 0));
+    LLVMSetInitializer(مؤشر_الوسائط, LLVMConstNull(نوع_المؤشر));
+    // Darwin's executable owns these process globals directly. Weak definitions
+    // can still be lowered into GOT_LOAD relocations even with hidden visibility;
+    // the Mach-O static linker handles ordinary local PAGE21/PAGEOFF12 instead.
+    لو ((*الهدف).صيغة_الكائن == صيغة_كائن_هدف.ماتشو()) {
+        دع الظهور_المخفي: تعداد_إل_إل_في_إم = 1;
+        LLVMSetVisibility(عدد_الوسائط, الظهور_المخفي);
+        LLVMSetVisibility(مؤشر_الوسائط, الظهور_المخفي);
+    } وإلا {
+        دع الربط_الضعيف: تعداد_إل_إل_في_إم = ربط_ضعيف_إل_إل_في_إم();
+        LLVMSetLinkage(عدد_الوسائط, الربط_الضعيف);
+        LLVMSetLinkage(مؤشر_الوسائط, الربط_الضعيف);
+    };
+
+    دع واحد: مرجع_قيمة_إل_إل_في_إم = LLVMConstInt(عدد_صحيح32, 1, 0);
+    دع اسم_فارغ: متغير متجه غ8 = [0];
+    دع عدد_الوسائط_المستخدم: مرجع_قيمة_إل_إل_في_إم = LLVMBuildSub(
+        الباني, LLVMGetParam(مدخل_النظام, 0), واحد, &متغير اسم_فارغ[0]
+    );
+    دع عدد_الوسائط64: مرجع_قيمة_إل_إل_في_إم = LLVMBuildZExt(
+        الباني, عدد_الوسائط_المستخدم, عدد_صحيح64, &متغير اسم_فارغ[0]
+    );
+    LLVMBuildStore(الباني, عدد_الوسائط64, عدد_الوسائط);
+    LLVMBuildStore(الباني, LLVMGetParam(مدخل_النظام, 1), مؤشر_الوسائط);
+
+    دع لا_معاملات: متغير متجه مرجع_قيمة_إل_إل_في_إم = [مدخل_اللغة];
+    // LLVMBuildCall2 ignores the arguments pointer when its count is zero.
+    دع توقيع_اللغة: مرجع_نوع_إل_إل_في_إم = LLVMGlobalGetValueType(مدخل_اللغة);
+    دع نوع_ناتج_اللغة: مرجع_نوع_إل_إل_في_إم = LLVMGetReturnType(توقيع_اللغة);
+    دع الناتج: مرجع_قيمة_إل_إل_في_إم = LLVMBuildCall2(
+        الباني, توقيع_اللغة, مدخل_اللغة,
+        &متغير لا_معاملات[0], 0, &متغير اسم_فارغ[0]
+    );
+    دع نتيجة_الدخول: مرجع_قيمة_إل_إل_في_إم;
+    لو (LLVMGetTypeKind(نوع_ناتج_اللغة) == 0) {
+        // A void language entry exits successfully.
+        نتيجة_الدخول := LLVMConstInt(عدد_صحيح32, 0, 0);
+    } وإلا {
+        دع العرض: غ32 = LLVMGetIntTypeWidth(نوع_ناتج_اللغة);
+        لو (العرض > 32) {
+            نتيجة_الدخول := LLVMBuildTrunc(
+                الباني, الناتج, عدد_صحيح32, &متغير اسم_فارغ[0]
+            );
+        } وإلا لو (العرض < 32) {
+            نتيجة_الدخول := LLVMBuildZExt(
+                الباني, الناتج, عدد_صحيح32, &متغير اسم_فارغ[0]
+            );
+        } وإلا { نتيجة_الدخول := الناتج; };
+    };
+    LLVMBuildRet(الباني, نتيجة_الدخول);
+    LLVMDisposeBuilder(الباني);
+}

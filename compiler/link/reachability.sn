@@ -145,3 +145,22 @@
         فهرس_القسم := فهرس_القسم + 1;
     }
 }
+
+// A shared object must retain every externally visible definition because any
+// one of them may be selected by a future dynamic consumer. Local symbols are
+// intentionally absent from the canonical global symbol table.
+عام عرف أضف_جذور_تعريفات_مشتركة_للربط(
+    الحالة: &متغير حالة_وصول_ربط,
+    الرموز: &جدول_رموز_ربط
+): فراغ {
+    دع فهرس_الرمز: متغير غير_موقع = 0;
+    بينما (فهرس_الرمز < (الطول((*الرموز).الرموز) مثل غير_موقع)) {
+        دع الرمز: &رمز_ربط = &(*الرموز).الرموز[فهرس_الرمز];
+        طابق (*الرمز).الحالة مع
+        | حالة_رمز_ربط.معرف(_) -> {
+            أضف_جذر_رمز_ربط(الحالة, (*الرمز).المعرف);
+        }
+        | _ -> { };
+        فهرس_الرمز := فهرس_الرمز + 1;
+    }
+}

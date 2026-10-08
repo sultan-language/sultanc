@@ -78,11 +78,6 @@
 عام خارجي عرف LLVMInitializeSparcTargetMC(): فراغ;
 عام خارجي عرف LLVMInitializeSparcAsmPrinter(): فراغ;
 
-عام خارجي عرف LLVMInitializeSPIRVTargetInfo(): فراغ;
-عام خارجي عرف LLVMInitializeSPIRVTarget(): فراغ;
-عام خارجي عرف LLVMInitializeSPIRVTargetMC(): فراغ;
-عام خارجي عرف LLVMInitializeSPIRVAsmPrinter(): فراغ;
-
 عام خارجي عرف LLVMInitializeSystemZTargetInfo(): فراغ;
 عام خارجي عرف LLVMInitializeSystemZTarget(): فراغ;
 عام خارجي عرف LLVMInitializeSystemZTargetMC(): فراغ;
@@ -194,9 +189,11 @@
     LLVMInitializeSparcTargetInfo(); LLVMInitializeSparcTarget(); LLVMInitializeSparcTargetMC();
         LLVMInitializeSparcAsmPrinter();
 }
+// LLVM installations without the SPIR-V target must report unavailability
+// through LLVMGetTargetFromTriple, never invent target-registration symbols.
 عام عرف هيئ_هدف_سبير_في_إل_إل_في_إم(): فراغ {
-    LLVMInitializeSPIRVTargetInfo(); LLVMInitializeSPIRVTarget(); LLVMInitializeSPIRVTargetMC();
-        LLVMInitializeSPIRVAsmPrinter();
+    // LLVMGetTargetFromTriple rejects SPIR-V on installations without its backend.
+    دع لا_تشغيل: عدد = 0;
 }
 عام عرف هيئ_هدف_سيستم_زد_إل_إل_في_إم(): فراغ {
     LLVMInitializeSystemZTargetInfo(); LLVMInitializeSystemZTarget(); LLVMInitializeSystemZTargetMC();

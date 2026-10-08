@@ -1,0 +1,16 @@
+استورد compiler.link.model;
+
+// LLVM/LLD installs the WebAssembly linker as wasm-ld. Keep the selected
+// program explicit in LinkPlan metadata instead of probing host paths here.
+عام عرف برنامج_رابط_ويب_أسمبلي_الافتراضي(): نص {
+    أرجع «wasm-ld»;
+}
+
+عام عرف ثبت_أداة_ويب_أسمبلي_الافتراضية(
+    الخطة: &متغير خطة_ربط
+): فراغ {
+    ثبت_برنامج_رابط_ويب_أسمبلي_في_خطة_ربط(
+        الخطة,
+        برنامج_رابط_ويب_أسمبلي_الافتراضي()
+    );
+}

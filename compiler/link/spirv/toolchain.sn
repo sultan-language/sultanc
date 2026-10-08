@@ -1,0 +1,17 @@
+استورد compiler.link.model;
+
+// Clang's SPIR-V driver delegates multi-module linking to the Khronos
+// SPIRV-Tools linker. Keep that dependency explicit in LinkPlan metadata so
+// the linker never guesses a host library ABI or silently rewrites SPIR-V IDs.
+عام عرف برنامج_رابط_سبير_في_الافتراضي(): نص {
+    أرجع «spirv-link»;
+}
+
+عام عرف ثبت_أداة_سبير_في_الافتراضية(
+    الخطة: &متغير خطة_ربط
+): فراغ {
+    ثبت_برنامج_رابط_سبير_في_في_خطة_ربط(
+        الخطة,
+        برنامج_رابط_سبير_في_الافتراضي()
+    );
+}
