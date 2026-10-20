@@ -21,6 +21,17 @@ int __Type_Integer_Literal_Fits__(__Semantic_Context__ *__Context__,
                                   int64_t __Value__,
                                   __Ast_Type__ *__Target_Type__);
 
+/* Returns whether a cast moves an owned متجه غ8 into owned نص (canonical
+ * هل_نقل_متجه_بايتات_إلى_نص). */
+int __Type_Is_Byte_Vector_To_Text_Move__(__Semantic_Context__ *__Context__,
+                                         __Ast_Type__ *__Source__,
+                                         __Ast_Type__ *__Target__);
+
+/* Returns whether an unsigned-wide literal (> INT64_MAX) fits the type:
+ * only 64-bit unsigned integer types can represent it. */
+int __Type_Unsigned_Wide_Literal_Fits__(__Semantic_Context__ *__Context__,
+                                        __Ast_Type__ *__Target_Type__);
+
 /* Classifies the type conversion. */
 __Type_Conversion_Class__ __Type_Conversion_Classify__(__Semantic_Context__ *__Context__,
                                                        __Ast_Type__ *__Source__,

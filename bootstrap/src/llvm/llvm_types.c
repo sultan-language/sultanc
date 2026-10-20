@@ -10,6 +10,7 @@
 #include "kernel/layout/layout.h"
 #include "kernel/name/name.h"
 #include "kernel/type/type.h"
+#include "semantic/body_internal.h"
 #include <limits.h>
 #include <stdlib.h>
 
@@ -413,6 +414,15 @@ __Ast_Type__ *__LLVM_Expression_Integer_Type__(__LLVM_Emitter__ *emitter,
                 case __Name_Builtin_Host_Platform__:
                 case __Name_Builtin_Host_Environment__:
                     return &__LLVM_Integer_Type__;
+                case __Name_Builtin_F64_Bits__:
+                case __Name_Builtin_Raw_Kernel_Call__:
+                    return &__Body_Builtin_U64_Type__;
+                case __Name_Builtin_F64_From_Bits__:
+                    return &__Body_Builtin_F64_Type__;
+                case __Name_Builtin_F32_Bits__:
+                    return &__Body_Builtin_U32_Type__;
+                case __Name_Builtin_F32_From_Bits__:
+                    return &__Body_Builtin_F32_Type__;
                 default:
                     return NULL;
             }
@@ -488,15 +498,54 @@ __Ast_Type__ *__LLVM_Expression_Type__(__LLVM_Emitter__ *emitter,
                 case __Name_Builtin_Host_Platform__:
                 case __Name_Builtin_Host_Environment__:
                     return &__LLVM_Integer_Type__;
+                case __Name_Builtin_F64_Bits__:
+                case __Name_Builtin_Raw_Kernel_Call__:
+                    return &__Body_Builtin_U64_Type__;
+                case __Name_Builtin_F64_From_Bits__:
+                    return &__Body_Builtin_F64_Type__;
+                case __Name_Builtin_F32_Bits__:
+                    return &__Body_Builtin_U32_Type__;
+                case __Name_Builtin_F32_From_Bits__:
+                    return &__Body_Builtin_F32_Type__;
                 case __Name_Builtin_Append__:
                 case __Name_Builtin_Swap__:
+                case __Name_Builtin_Release__:
                     return &__LLVM_Void_Type__;
+                case __Name_Builtin_None__:
+                {
+                    /* A call through a function value (including a generic
+                     * alias such as كاتب<ح>) has its callable's output type,
+                     * matching the indirect-call lowering. */
+                    __Ast_Type__ *callable_type =
+                        __LLVM_Lvalue_Type__(emitter, expression->__As__.__Call__.__Function__);
+                    __Resolved_Type__ callable_resolved;
+                    if (callable_type != NULL &&
+                        __Type_Resolve__(emitter->semantic, callable_type, &callable_resolved) &&
+                        callable_resolved.__Kind__ == __Resolved_Type_Function__)
+                        return callable_resolved.__Output__;
+                    return expression->__Contextual_Type__;
+                }
                 default:
                     return expression->__Contextual_Type__;
             }
         }
         case __Ast_Expression_Binary__:
-            return __LLVM_Expression_Integer_Type__(emitter, expression);
+            /* Comparisons and logical connectives always produce the
+             * canonical boolean; only arithmetic follows its integer operands. */
+            switch (expression->__As__.__Binary__.__Operation__)
+            {
+                case __Binary_Equal__:
+                case __Binary_Not_Equal__:
+                case __Binary_Less_Than__:
+                case __Binary_Less_Or_Equal__:
+                case __Binary_Greater_Than__:
+                case __Binary_Greater_Or_Equal__:
+                case __Binary_Logical_And__:
+                case __Binary_Logical_Or__:
+                    return &__LLVM_Boolean_Type__;
+                default:
+                    return __LLVM_Expression_Integer_Type__(emitter, expression);
+            }
         case __Ast_Expression_Unary__:
         {
             /* Stores the operation. */

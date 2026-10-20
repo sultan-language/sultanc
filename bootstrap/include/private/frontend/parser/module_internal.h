@@ -35,6 +35,15 @@ int __Parser_Parse_Function_Item__(__Parser__ *__Parser_State__,
                                    int __Public__,
                                    int __External__);
 
+/* Parses one external data item (current token "دع", "خارجي" already consumed). */
+int __Parser_Parse_Global_Item__(__Parser__ *__Parser_State__,
+                                 __Vector__ *__Items__,
+                                 int __Public__,
+                                 __Source_Position__ __Start__);
+
+/* Parses one top-level target predicate against the parser's selected target. */
+int __Parser_Parse_Target_Condition__(__Parser__ *__Parser_State__, int *__Out_Value__);
+
 /* Parses the parser alias item. */
 int __Parser_Parse_Alias_Item__(__Parser__ *__Parser_State__,
                                 __Vector__ *__Items__,

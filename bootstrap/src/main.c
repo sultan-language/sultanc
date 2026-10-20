@@ -1,13 +1,13 @@
 /* Runs the Stage0 bootstrap compiler command-line entry point. */
 
 #include "llvm/llvm_emitter.h"
-#include "link/stage1_finalizer.h"
 #include "core/program.h"
 #include "semantic/body.h"
 #include "semantic/check.h"
 #include "semantic/context_collection.h"
 #include "semantic/context_lifecycle.h"
 #include "core/diagnostic.h"
+#include "target/bootstrap_target.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -178,110 +178,76 @@ int main(int argc, char **argv)
     const char *output = NULL;
     /* References the requested LLVM object target. */
     const char *target = SULTANC_BOOTSTRAP_DEFAULT_TARGET;
-    /* Tracks whether --target was provided on this invocation. */
-    int target_explicit = 0;
-    /* References the run argv. */
-    const char **run_argv = NULL;
-    /* Stores the run argc. */
-    int run_argc = 0;
-    /* Stores the run start. */
-    int run_start = -1;
-    /* Stores the run mode. */
-    int run_mode = 0;
-    /* Stores the process status. */
-    int process_status = 1;
-    /* Tracks the loop index. */
-    int i;
+    /* Owns the one canonical compilation target used by loading and emission. */
+    __Bootstrap_Target__ target_model;
+    /* Stores a target-model error. */
+    char target_error[256];
     /* Stores the program. */
     __Program__ program;
     /* Stores the semantic context. */
     __Semantic_Context__ sem;
+    /* Tracks command-line arguments. */
+    int argument_index;
 
     if (argc < 2)
     {
         fprintf(stderr, "usage: %s <input.sn> [--target=<target>] -o <output.o>\n", argv[0]);
-        fprintf(stderr, "       %s <compiler.sn> --run <compiler-args...>\n", argv[0]);
-        fprintf(stderr, "       %s --finalize-stage1 <object.o> <output> <target> <llvm-library> <llvm-libdir>\n", argv[0]);
         return 2;
     }
 
-    if (strcmp(argv[1], "--finalize-stage1") == 0)
-    {
-        if (argc != 7)
-        {
-            fprintf(stderr, "sultanc-stage0: --finalize-stage1 requires <object.o> <output> <target> <llvm-library> <llvm-libdir>\n");
-            return 2;
-        }
-        if (!__Bootstrap_Finalize_Stage1__(argv[2], argv[3], argv[4], argv[5], argv[6]))
-        {
-            fprintf(stderr, "sultanc-stage0: Stage1 finalization failed: %s\n",
-                    __Bootstrap_Stage1_Finalizer_Error__());
-            return 1;
-        }
-        return 0;
-    }
-
     input = argv[1];
-    for (i = 2; i < argc; ++i)
+    for (argument_index = 2; argument_index < argc; ++argument_index)
     {
-        if (strcmp(argv[i], "--run") == 0)
+        if (strncmp(argv[argument_index], "--target=", 9U) == 0)
         {
-            run_mode = 1;
-            run_start = i + 1;
-            break;
-        }
-        else if (strncmp(argv[i], "--target=", 9U) == 0)
-        {
-            target = argv[i] + 9U;
-            target_explicit = 1;
+            target = argv[argument_index] + 9U;
             if (target[0] == '\0')
             {
                 fprintf(stderr, "sultanc-stage0: --target requires a value\n");
                 return 2;
             }
         }
-        else if (strcmp(argv[i], "--target") == 0)
+        else if (strcmp(argv[argument_index], "--target") == 0)
         {
-            if (i + 1 >= argc)
+            if (argument_index + 1 >= argc)
             {
                 fprintf(stderr, "sultanc-stage0: --target requires a value\n");
                 return 2;
             }
-            target = argv[++i];
-            target_explicit = 1;
+            target = argv[++argument_index];
         }
-        else if (strcmp(argv[i], "-o") == 0 && i + 1 < argc)
+        else if (strcmp(argv[argument_index], "-o") == 0 && argument_index + 1 < argc)
         {
-            output = argv[++i];
-        }
-        else if (strcmp(argv[i], "--emit-llvm-object") == 0 && i + 1 < argc)
-        {
-            /* Compatibility spelling: still the same single LLVM object-output path. */
-            output = argv[++i];
+            output = argv[++argument_index];
         }
         else
         {
-            fprintf(stderr, "sultanc-stage0: unknown argument: %s\n", argv[i]);
+            fprintf(stderr, "sultanc-stage0: unknown argument: %s\n", argv[argument_index]);
             return 2;
         }
     }
 
-    if (run_mode && target_explicit)
-    {
-        fprintf(stderr, "sultanc-stage0: --run uses the host LLVM target; --target is not valid with --run\n");
-        return 2;
-    }
-    if (!run_mode && !output)
+    if (!output)
     {
         fprintf(stderr, "sultanc-stage0: missing -o <output.o>\n");
         return 2;
     }
 
-    __Program_Init__(&program);
+    /* Target selection precedes loading: top-level target conditions select
+     * imports and declarations, so loading and emission share one target. */
+    target_error[0] = '\0';
+    if (!__Bootstrap_Target_Init__(&target_model, target, target_error, sizeof(target_error)))
+    {
+        fprintf(stderr, "sultanc-stage0: invalid target: %s\n", target_error);
+        return 1;
+    }
+
+    __Program_Init__(&program, &target_model);
     if (!__Program_Load_Root__(&program, input))
     {
         print_diag("load", __Program_Diagnostic__(&program));
         __Program_Destroy__(&program);
+        __Bootstrap_Target_Destroy__(&target_model);
         return 1;
     }
 
@@ -292,52 +258,23 @@ int main(int argc, char **argv)
         print_diag("semantic", &sem.__Diagnostic__);
         __Semantic_Context_Destroy__(&sem);
         __Program_Destroy__(&program);
+        __Bootstrap_Target_Destroy__(&target_model);
         return 1;
     }
 
-    if (run_mode)
+    if (!__Bootstrap_Emit_LLVM_Object__(&sem, output, &target_model))
     {
-        /* Stores the user count. */
-        int user_count = argc - run_start;
-        run_argc = user_count + 1;
-        run_argv = (const char **)calloc((size_t)run_argc, sizeof(*run_argv));
-        if (run_argv == NULL)
-        {
-            fprintf(stderr, "sultanc-stage0: unable to allocate JIT argument vector\n");
-            __Semantic_Context_Destroy__(&sem);
-            __Program_Destroy__(&program);
-            return 1;
-        }
-        run_argv[0] = "sultanc-stage1-bootstrap";
-        for (i = 0; i < user_count; ++i)
-            run_argv[i + 1] = argv[run_start + i];
-        if (!__Bootstrap_Run_LLVM_Program__(&sem, run_argc, run_argv, &process_status))
-        {
-            fprintf(stderr,
-                    "sultanc-stage0: LLVM execution failed: %s\n",
-                    __Bootstrap_LLVM_Emitter_Error__());
-            free(run_argv);
-            __Semantic_Context_Destroy__(&sem);
-            __Program_Destroy__(&program);
-            return 1;
-        }
-    }
-    else
-    {
-        if (!__Bootstrap_Emit_LLVM_Object__(&sem, output, target))
-        {
-            fprintf(stderr,
-                    "sultanc-stage0: LLVM object emission failed: %s\n",
-                    __Bootstrap_LLVM_Emitter_Error__());
-            __Semantic_Context_Destroy__(&sem);
-            __Program_Destroy__(&program);
-            return 1;
-        }
-        process_status = 0;
+        fprintf(stderr,
+                "sultanc-stage0: LLVM object emission failed: %s\n",
+                __Bootstrap_LLVM_Emitter_Error__());
+        __Semantic_Context_Destroy__(&sem);
+        __Program_Destroy__(&program);
+        __Bootstrap_Target_Destroy__(&target_model);
+        return 1;
     }
 
-    free(run_argv);
     __Semantic_Context_Destroy__(&sem);
     __Program_Destroy__(&program);
-    return process_status;
+    __Bootstrap_Target_Destroy__(&target_model);
+    return 0;
 }

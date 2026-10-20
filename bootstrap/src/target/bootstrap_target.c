@@ -1,6 +1,7 @@
 /* Owns canonical Stage0 target aliases, normalized triples, and bootstrap target policy. */
 
 #include "target/bootstrap_target.h"
+#include "llvm/llvm_c_api.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -62,7 +63,6 @@ static void target_classify(__Bootstrap_Target__ *target)
     char architecture[32];
     char platform[32];
     char environment[32];
-    char format[32];
 
     if (target == NULL || target->triple == NULL)
         return;
@@ -75,27 +75,23 @@ static void target_classify(__Bootstrap_Target__ *target)
             target->architecture = __Bootstrap_Target_Architecture_X86_64__;
         else if (strcmp(architecture, "riscv64") == 0)
             target->architecture = __Bootstrap_Target_Architecture_RISCV64__;
-        if (strncmp(architecture, "wasm", 4U) == 0)
-            target->object_format = __Bootstrap_Target_Object_Wasm__;
+        else if (strcmp(architecture, "wasm32") == 0)
+            target->architecture = __Bootstrap_Target_Architecture_Wasm32__;
+        else if (strcmp(architecture, "wasm64") == 0)
+            target->architecture = __Bootstrap_Target_Architecture_Wasm64__;
     }
 
     if (target_component(target->triple, 2U, platform, sizeof(platform)))
     {
         if (strncmp(platform, "darwin", 6U) == 0 || strncmp(platform, "macos", 5U) == 0)
-        {
             target->platform = __Bootstrap_Target_Platform_Darwin__;
-            target->object_format = __Bootstrap_Target_Object_MachO__;
-        }
         else if (strcmp(platform, "linux") == 0)
-        {
             target->platform = __Bootstrap_Target_Platform_Linux__;
-            target->object_format = __Bootstrap_Target_Object_ELF__;
-        }
         else if (strcmp(platform, "windows") == 0 || strcmp(platform, "win32") == 0)
-        {
             target->platform = __Bootstrap_Target_Platform_Windows__;
-            target->object_format = __Bootstrap_Target_Object_COFF__;
-        }
+        else if (strcmp(platform, "wasi") == 0 || strcmp(platform, "wasip1") == 0 ||
+                 strcmp(platform, "wasip2") == 0)
+            target->platform = __Bootstrap_Target_Platform_Wasi__;
     }
 
     if (target_component(target->triple, 3U, environment, sizeof(environment)))
@@ -106,18 +102,6 @@ static void target_classify(__Bootstrap_Target__ *target)
             target->environment = __Bootstrap_Target_Environment_Musl__;
         else if (strcmp(environment, "msvc") == 0)
             target->environment = __Bootstrap_Target_Environment_MSVC__;
-    }
-
-    if (target_component(target->triple, 4U, format, sizeof(format)))
-    {
-        if (strcmp(format, "elf") == 0)
-            target->object_format = __Bootstrap_Target_Object_ELF__;
-        else if (strcmp(format, "macho") == 0)
-            target->object_format = __Bootstrap_Target_Object_MachO__;
-        else if (strcmp(format, "coff") == 0)
-            target->object_format = __Bootstrap_Target_Object_COFF__;
-        else if (strcmp(format, "wasm") == 0)
-            target->object_format = __Bootstrap_Target_Object_Wasm__;
     }
 }
 
@@ -135,7 +119,6 @@ int __Bootstrap_Target_Init__(__Bootstrap_Target__ *target,
     if (requested != NULL && requested[0] == '\0')
         return target_fail(error, error_size, "empty bootstrap target");
 
-    target->explicit_target = requested != NULL;
     if (requested != NULL)
     {
         source = target_alias(requested);
@@ -164,6 +147,113 @@ int __Bootstrap_Target_Init__(__Bootstrap_Target__ *target,
     return 1;
 }
 
+const char *__Bootstrap_Target_Condition_Value__(const __Bootstrap_Target__ *target,
+                                                 __Bootstrap_Target_Condition_Field__ field)
+{
+    if (target == NULL || target->triple == NULL)
+        return NULL;
+    switch (field)
+    {
+        case __Bootstrap_Target_Condition_Platform__:
+            /* تهجئة_منصة_شرط_هدف */
+            switch (target->platform)
+            {
+                case __Bootstrap_Target_Platform_Darwin__:
+                    return "macos";
+                case __Bootstrap_Target_Platform_Linux__:
+                    return "linux";
+                case __Bootstrap_Target_Platform_Windows__:
+                    return "windows";
+                case __Bootstrap_Target_Platform_Wasi__:
+                    return "wasi";
+                case __Bootstrap_Target_Platform_Unknown__:
+                    return "unknown";
+            }
+            return NULL;
+        case __Bootstrap_Target_Condition_Environment__:
+            /* تهجئة_بيئة_شرط_هدف */
+            switch (target->environment)
+            {
+                case __Bootstrap_Target_Environment_GNU__:
+                    return "gnu";
+                case __Bootstrap_Target_Environment_Musl__:
+                    return "musl";
+                case __Bootstrap_Target_Environment_MSVC__:
+                    return "msvc";
+                case __Bootstrap_Target_Environment_Unknown__:
+                    return "unknown";
+            }
+            return NULL;
+        case __Bootstrap_Target_Condition_Architecture__:
+            /* تهجئة_معمارية_هدف: an unclassified architecture has no spelling. */
+            switch (target->architecture)
+            {
+                case __Bootstrap_Target_Architecture_AArch64__:
+                    return "aarch64";
+                case __Bootstrap_Target_Architecture_X86_64__:
+                    return "x86_64";
+                case __Bootstrap_Target_Architecture_RISCV64__:
+                    return "riscv64";
+                case __Bootstrap_Target_Architecture_Wasm32__:
+                    return "wasm32";
+                case __Bootstrap_Target_Architecture_Wasm64__:
+                    return "wasm64";
+                case __Bootstrap_Target_Architecture_Unknown__:
+                    return NULL;
+            }
+            return NULL;
+        case __Bootstrap_Target_Condition_Platform_Family__:
+            switch (target->platform)
+            {
+                case __Bootstrap_Target_Platform_Darwin__:
+                case __Bootstrap_Target_Platform_Linux__:
+                    return "unix";
+                case __Bootstrap_Target_Platform_Windows__:
+                    return "windows";
+                case __Bootstrap_Target_Platform_Wasi__:
+                    return "wasm";
+                case __Bootstrap_Target_Platform_Unknown__:
+                    return "none";
+            }
+            return NULL;
+        case __Bootstrap_Target_Condition_Object_Format__:
+            /* تهجئة_صيغة_شرط_هدف for the platforms Stage0 classifies. */
+            switch (target->platform)
+            {
+                case __Bootstrap_Target_Platform_Darwin__:
+                    return "macho";
+                case __Bootstrap_Target_Platform_Linux__:
+                    return "elf";
+                case __Bootstrap_Target_Platform_Windows__:
+                    return "coff";
+                case __Bootstrap_Target_Platform_Wasi__:
+                    return "wasm";
+                case __Bootstrap_Target_Platform_Unknown__:
+                    return NULL;
+            }
+            return NULL;
+        case __Bootstrap_Target_Condition_Byte_Order__:
+            /* Every architecture Stage0 classifies is little-endian. */
+            return target->architecture == __Bootstrap_Target_Architecture_Unknown__ ? NULL
+                                                                                    : "little";
+        case __Bootstrap_Target_Condition_Pointer_Width__:
+            switch (target->architecture)
+            {
+                case __Bootstrap_Target_Architecture_AArch64__:
+                case __Bootstrap_Target_Architecture_X86_64__:
+                case __Bootstrap_Target_Architecture_RISCV64__:
+                case __Bootstrap_Target_Architecture_Wasm64__:
+                    return "64";
+                case __Bootstrap_Target_Architecture_Wasm32__:
+                    return "32";
+                case __Bootstrap_Target_Architecture_Unknown__:
+                    return NULL;
+            }
+            return NULL;
+    }
+    return NULL;
+}
+
 void __Bootstrap_Target_Destroy__(__Bootstrap_Target__ *target)
 {
     if (target == NULL)
@@ -173,29 +263,3 @@ void __Bootstrap_Target_Destroy__(__Bootstrap_Target__ *target)
     memset(target, 0, sizeof(*target));
 }
 
-int __Bootstrap_Target_Runtime_Qualified__(const __Bootstrap_Target__ *target)
-{
-    if (target == NULL)
-        return 0;
-    if (target->architecture == __Bootstrap_Target_Architecture_AArch64__ &&
-        target->platform == __Bootstrap_Target_Platform_Darwin__)
-        return 1;
-    return target->architecture == __Bootstrap_Target_Architecture_X86_64__ &&
-           target->platform == __Bootstrap_Target_Platform_Linux__ &&
-           target->environment == __Bootstrap_Target_Environment_GNU__;
-}
-
-__Bootstrap_Target_Finalizer__
-__Bootstrap_Target_Finalizer_Kind__(const __Bootstrap_Target__ *target)
-{
-    if (target == NULL)
-        return __Bootstrap_Target_Finalizer_Unsupported__;
-    if (target->architecture == __Bootstrap_Target_Architecture_AArch64__ &&
-        target->platform == __Bootstrap_Target_Platform_Darwin__)
-        return __Bootstrap_Target_Finalizer_MachO_ARM64__;
-    if (target->architecture == __Bootstrap_Target_Architecture_X86_64__ &&
-        target->platform == __Bootstrap_Target_Platform_Linux__ &&
-        target->environment == __Bootstrap_Target_Environment_GNU__)
-        return __Bootstrap_Target_Finalizer_ELF_X86_64__;
-    return __Bootstrap_Target_Finalizer_Unsupported__;
-}

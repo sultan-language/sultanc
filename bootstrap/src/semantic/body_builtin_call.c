@@ -1,6 +1,7 @@
 /* Checks built-in calls and their effects. */
 
 #include "semantic/body_internal.h"
+#include "semantic/generic.h"
 #include "kernel/memory/memory.h"
 #include "kernel/name/name.h"
 #include "frontend/identifier_identity.h"
@@ -247,6 +248,43 @@ static int __Body_Builtin_Swap__(__Semantic_Body_Context__ *__Context__,
     return 1;
 }
 
+/* Consumes an owned local once, using Stage0's existing safety facts.
+ * Runtime disposal is intentionally not claimed without the canonical provider. */
+static int __Body_Builtin_Release__(__Semantic_Body_Context__ *context,
+                                    __Ast_Expression__ *expression,
+                                    __Ast_Type__ **out_type)
+{
+    __Ast_Expression__ *argument;
+    __Ast_Lvalue__ *lvalue;
+    __Ast_Type__ *type = NULL;
+    __Semantic_Local__ *local;
+    if (expression->__Semantic_Effects_Applied__)
+    {
+        *out_type = &__Body_Builtin_Void_Type__;
+        return 1;
+    }
+    if (expression->__As__.__Call__.__Argument_Count__ != 1U ||
+        (argument = expression->__As__.__Call__.__Arguments__[0]) == NULL ||
+        argument->__Kind__ != __Ast_Expression_Atom__ ||
+        argument->__As__.__Atom__.__Kind__ != __Ast_Atom_Lvalue__ ||
+        (lvalue = argument->__As__.__Atom__.__As__.__Lvalue__) == NULL ||
+        lvalue->__Kind__ != __Ast_Lvalue_Base__ ||
+        (local = __Body_Find_Local__(context, lvalue)) == NULL ||
+        !__Body_Infer_Expression__(context, argument, &type) ||
+        !__Memory_Type_Is_Owned__(context->__Semantic__, type))
+        return __Body_Fail__(context, __E0400_Mismatched_Types__,
+                             expression->__Header__.__Span__);
+    if (!expression->__Semantic_Effects_Applied__)
+    {
+        if (!__Body_Safety_Move_Expression__(context, argument, NULL))
+            return 0;
+        expression->__Semantic_Effects_Applied__ = 1;
+    }
+    (void)local;
+    *out_type = &__Body_Builtin_Void_Type__;
+    return 1;
+}
+
 /* Requires the body builtin argument count. */
 static int __Body_Builtin_Require_Argument_Count__(__Semantic_Body_Context__ *__Context__,
                                                    __Ast_Expression__ *__Expression__,
@@ -271,6 +309,42 @@ static int __Body_Builtin_Runtime__(__Semantic_Body_Context__ *__Context__,
 
     switch (__Builtin__)
     {
+        case __Name_Builtin_F64_Bits__:
+        case __Name_Builtin_F64_From_Bits__:
+        case __Name_Builtin_F32_Bits__:
+        case __Name_Builtin_F32_From_Bits__:
+        {
+            __Ast_Type__ *argument_type = NULL;
+            __Ast_Type__ *required_type;
+            __Resolved_Type__ actual;
+            __Resolved_Type__ required;
+            if (!__Body_Builtin_Require_Argument_Count__(__Context__, __Expression__, 1U))
+                return 0;
+            required_type = (__Builtin__ == __Name_Builtin_F64_Bits__)
+                                ? &__Body_Builtin_F64_Type__
+                                : (__Builtin__ == __Name_Builtin_F64_From_Bits__)
+                                      ? &__Body_Builtin_U64_Type__
+                                      : (__Builtin__ == __Name_Builtin_F32_Bits__)
+                                            ? &__Body_Builtin_F32_Type__
+                                            : &__Body_Builtin_U32_Type__;
+            if (!__Body_Infer_Expression__(__Context__,
+                                         __Expression__->__As__.__Call__.__Arguments__[0],
+                                         &argument_type) ||
+                !__Type_Resolve__(__Context__->__Semantic__, argument_type, &actual) ||
+                !__Type_Resolve__(__Context__->__Semantic__, required_type, &required) ||
+                actual.__Kind__ != required.__Kind__ ||
+                actual.__Bits__ != required.__Bits__)
+                return __Body_Fail__(__Context__, __E0400_Mismatched_Types__,
+                                     __Expression__->__Header__.__Span__);
+            __Result_Type__ = (__Builtin__ == __Name_Builtin_F64_Bits__)
+                                  ? &__Body_Builtin_U64_Type__
+                                  : (__Builtin__ == __Name_Builtin_F64_From_Bits__)
+                                        ? &__Body_Builtin_F64_Type__
+                                        : (__Builtin__ == __Name_Builtin_F32_Bits__)
+                                              ? &__Body_Builtin_U32_Type__
+                                              : &__Body_Builtin_F32_Type__;
+            break;
+        }
         case __Name_Builtin_Host_Architecture__:
         case __Name_Builtin_Host_Platform__:
         case __Name_Builtin_Host_Environment__:
@@ -280,10 +354,74 @@ static int __Body_Builtin_Runtime__(__Semantic_Body_Context__ *__Context__,
             }
             __Result_Type__ = &__Body_Builtin_Int_Type__;
             break;
+        case __Name_Builtin_Raw_Kernel_Call__:
+        {
+            /* Canonical slot typing (compiler/frontend/types/primitive_call.sn):
+             * slot 0 is غ64; slots 1..6 are غ64, a raw pointer, or a reference
+             * to a fixed-width scalar. Result is the raw غ64 kernel word. */
+            size_t index;
+            if (!__Body_Builtin_Require_Argument_Count__(__Context__, __Expression__, 7U))
+                return 0;
+            if (!__Body_Check_Expression_Compatible__(
+                    __Context__, &__Body_Builtin_U64_Type__,
+                    __Expression__->__As__.__Call__.__Arguments__[0],
+                    __Expression__->__Header__.__Span__))
+                return 0;
+            for (index = 1U; index < 7U; ++index)
+            {
+                __Ast_Expression__ *argument = __Expression__->__As__.__Call__.__Arguments__[index];
+                __Ast_Type__ *argument_type = NULL;
+                __Resolved_Type__ resolved;
+                __Resolved_Type__ inner;
+                int64_t literal = 0;
+                if (__Semantic_Integer_Literal_Expression_Value__(argument, &literal) ||
+                    __Semantic_Integer_Literal_Expression_Is_Unsigned_Wide__(argument))
+                {
+                    if (!__Body_Check_Expression_Compatible__(
+                            __Context__, &__Body_Builtin_U64_Type__, argument,
+                            __Expression__->__Header__.__Span__))
+                        return 0;
+                    continue;
+                }
+                if (!__Body_Infer_Expression__(__Context__, argument, &argument_type) ||
+                    !__Type_Resolve__(__Context__->__Semantic__, argument_type, &resolved))
+                    return 0;
+                /* The emitter lowers each word from its verified semantic
+                 * type; record it so address-of operands keep their type.
+                 * Inferred reference types live in the per-body synthetic
+                 * arena, so persist a program-lifetime copy. */
+                argument_type = __Semantic_Generic_Substitute_Type__(
+                    __Context__->__Semantic__, argument_type, NULL, NULL, 0U, NULL);
+                if (argument_type == NULL)
+                    return __Body_Fail__(__Context__, __E1100_Internal_Context_Error__,
+                                         __Expression__->__Header__.__Span__);
+                if ((resolved.__Kind__ == __Resolved_Type_Unsigned_Integer__ &&
+                     resolved.__Bits__ == 64U) ||
+                    resolved.__Kind__ == __Resolved_Type_Pointer__)
+                {
+                    argument->__Contextual_Type__ = argument_type;
+                    continue;
+                }
+                if (resolved.__Kind__ == __Resolved_Type_Reference__ && resolved.__Inner__ != NULL &&
+                    __Type_Resolve__(__Context__->__Semantic__, resolved.__Inner__, &inner) &&
+                    (inner.__Kind__ == __Resolved_Type_Unsigned_Integer__ ||
+                     inner.__Kind__ == __Resolved_Type_Signed_Integer__ ||
+                     inner.__Kind__ == __Resolved_Type_Float__))
+                {
+                    argument->__Contextual_Type__ = argument_type;
+                    continue;
+                }
+                return __Body_Fail__(__Context__, __E0400_Mismatched_Types__,
+                                     __Expression__->__Header__.__Span__);
+            }
+            __Result_Type__ = &__Body_Builtin_U64_Type__;
+            break;
+        }
         case __Name_Builtin_None__:
         case __Name_Builtin_Length__:
         case __Name_Builtin_Append__:
         case __Name_Builtin_Swap__:
+        case __Name_Builtin_Release__:
             return 0;
     }
 
@@ -327,9 +465,16 @@ int __Body_Try_Infer_Builtin_Call__(__Semantic_Body_Context__ *__Context__,
             return 1;
         case __Name_Builtin_Swap__:
             return __Body_Builtin_Swap__(__Context__, __Expression__, __Out_Type__);
+        case __Name_Builtin_Release__:
+            return __Body_Builtin_Release__(__Context__, __Expression__, __Out_Type__);
+        case __Name_Builtin_F64_Bits__:
+        case __Name_Builtin_F64_From_Bits__:
+        case __Name_Builtin_F32_Bits__:
+        case __Name_Builtin_F32_From_Bits__:
         case __Name_Builtin_Host_Architecture__:
         case __Name_Builtin_Host_Platform__:
         case __Name_Builtin_Host_Environment__:
+        case __Name_Builtin_Raw_Kernel_Call__:
             return __Body_Builtin_Runtime__(__Context__, __Expression__, __Builtin__, __Out_Type__);
     }
     return 0;

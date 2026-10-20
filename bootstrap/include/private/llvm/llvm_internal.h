@@ -42,6 +42,8 @@ typedef struct
     LLVMValueRef value;
     /* Stores the type. */
     LLVMTypeRef type;
+    /* Tracks whether a live function references this declaration. */
+    int queued;
 } __LLVM_Function__;
 
 /* Defines the LLVM aggregate type structure. */
@@ -69,8 +71,8 @@ typedef struct
 {
     /* References the semantic. */
     __Semantic_Context__ *semantic;
-    /* Stores the canonical bootstrap compilation target. */
-    __Bootstrap_Target__ target;
+    /* Borrows the canonical bootstrap compilation target owned by the driver. */
+    const __Bootstrap_Target__ *target;
     /* Stores the context. */
     LLVMContextRef context;
     /* Stores the module. */
@@ -93,6 +95,9 @@ typedef struct
     __LLVM_Function__ *functions;
     /* Stores the function count. */
     size_t function_count;
+    /* Worklist of reachable functions, populated during LLVM lowering. */
+    __LLVM_Function__ **function_worklist;
+    size_t function_worklist_count;
     /* References the aggregate types. */
     __LLVM_Aggregate_Type__ *aggregate_types;
     /* Stores the aggregate type count. */
@@ -111,14 +116,6 @@ typedef struct
     LLVMValueRef memcmp_function;
     /* Stores the memcmp type. */
     LLVMTypeRef memcmp_type;
-    /* Stores the strlen function. */
-    LLVMValueRef strlen_function;
-    /* Stores the strlen type. */
-    LLVMTypeRef strlen_type;
-    /* Stores the process argc global. */
-    LLVMValueRef process_argc_global;
-    /* Stores the process argv global. */
-    LLVMValueRef process_argv_global;
     /* Stores the string literal count. */
     size_t string_literal_count;
     /* Tracks the failed state. */

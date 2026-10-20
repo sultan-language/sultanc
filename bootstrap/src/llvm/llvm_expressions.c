@@ -384,6 +384,22 @@ __LLVM_Value__ __LLVM_Emit_Expression__(__LLVM_Emitter__ *emitter,
     {
         expected = expression->__Contextual_Type__;
     }
+    if (expression->__Semantic_Null_Pointer__)
+    {
+        __Resolved_Type__ resolved;
+        LLVMTypeRef llvm_type;
+        if (expected == NULL || !__Type_Resolve__(emitter->semantic, expected, &resolved) ||
+            resolved.__Kind__ != __Resolved_Type_Pointer__ ||
+            (llvm_type = __LLVM_Type__(emitter, expected)) == NULL ||
+            LLVMGetTypeKind(llvm_type) != LLVMPointerTypeKind)
+        {
+            __LLVM_Fail__("contextual null must have a verified raw pointer type");
+            return result;
+        }
+        result.value = LLVMConstNull(llvm_type);
+        result.type = expected;
+        return result;
+    }
     switch (expression->__Kind__)
     {
         case __Ast_Expression_Atom__:
@@ -519,6 +535,51 @@ __LLVM_Value__ __LLVM_Emit_Expression__(__LLVM_Emitter__ *emitter,
                                              "boolean.compare");
                 result.type = &__LLVM_Boolean_Type__;
                 return result;
+            }
+
+            /* Canonical pointer identity (compiler/msir/lowering/expressions.sn):
+             * raw pointers compare with typed ==/!=, never through an integer
+             * conversion. A contextual null operand takes the other side's
+             * verified pointer type from semantic analysis. */
+            if (operation == __Binary_Equal__ || operation == __Binary_Not_Equal__)
+            {
+                __Ast_Type__ *pointer_type = NULL;
+                if (left_expression_type != NULL &&
+                    __Type_Resolve__(emitter->semantic, left_expression_type, &left_resolved) &&
+                    left_resolved.__Kind__ == __Resolved_Type_Pointer__)
+                {
+                    pointer_type = left_expression_type;
+                }
+                else if (right_expression_type != NULL &&
+                         __Type_Resolve__(emitter->semantic, right_expression_type, &right_resolved) &&
+                         right_resolved.__Kind__ == __Resolved_Type_Pointer__)
+                {
+                    pointer_type = right_expression_type;
+                }
+                if (pointer_type != NULL)
+                {
+                    left = __LLVM_Emit_Expression__(
+                        emitter, expression->__As__.__Binary__.__Left__, pointer_type);
+                    if (left.value == NULL)
+                        return result;
+                    right = __LLVM_Emit_Expression__(
+                        emitter, expression->__As__.__Binary__.__Right__, pointer_type);
+                    if (right.value == NULL)
+                        return result;
+                    if (LLVMGetTypeKind(LLVMTypeOf(left.value)) != LLVMPointerTypeKind ||
+                        LLVMGetTypeKind(LLVMTypeOf(right.value)) != LLVMPointerTypeKind)
+                    {
+                        __LLVM_Fail__("pointer identity requires raw pointer operands");
+                        return result;
+                    }
+                    result.value = LLVMBuildICmp(emitter->builder,
+                                                 operation == __Binary_Equal__ ? LLVMIntEQ : LLVMIntNE,
+                                                 left.value,
+                                                 right.value,
+                                                 "pointer.compare");
+                    result.type = &__LLVM_Boolean_Type__;
+                    return result;
+                }
             }
 
             if (operation == __Binary_Equal__ || operation == __Binary_Not_Equal__)
@@ -887,6 +948,8 @@ __LLVM_Value__ __LLVM_Emit_Expression__(__LLVM_Emitter__ *emitter,
                 __LLVM_Fail__("L2.3 ordinary callee has no LLVM declaration");
                 return result;
             }
+            if (!__LLVM_Queue_Function__(emitter, llvm_callee))
+                return result;
             if (expression->__As__.__Call__.__Argument_Count__ !=
                 callee->__Function__->__Parameter_Count__)
             {

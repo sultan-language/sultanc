@@ -7,6 +7,7 @@
 #include "parser.h"
 #include "frontend/lexer/lexer.h"
 #include "support/containers/vector.h"
+#include "target/bootstrap_target.h"
 
 #include <stddef.h>
 
@@ -29,6 +30,9 @@ typedef struct
     __Diagnostic__ *__Diagnostic__;
     /* borrowed from result */
     __Temporary_Id__ __Next_Temporary__;
+    /* Borrows the selected compilation target for top-level target conditions.
+     * NULL means no target was selected; target conditions are then rejected. */
+    const __Bootstrap_Target__ *__Target__;
     /* Tracks the failed state. */
     int __Failed__;
 } __Parser__;

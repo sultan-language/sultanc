@@ -93,6 +93,11 @@ extern __Ast_Type__ __Body_Builtin_Void_Type__;
 /* Stores the body builtin u 8 type. */
 extern __Ast_Type__ __Body_Builtin_U8_Type__;
 
+extern __Ast_Type__ __Body_Builtin_U32_Type__;
+extern __Ast_Type__ __Body_Builtin_U64_Type__;
+extern __Ast_Type__ __Body_Builtin_F32_Type__;
+extern __Ast_Type__ __Body_Builtin_F64_Type__;
+
 /* Begins the body diagnostic. */
 __Diagnostic__ *
 __Body_Begin_Diagnostic__(__Semantic_Body_Context__ *, __Error_Id__, __Source_Span__);
@@ -212,6 +217,7 @@ void __Body_Safety_Merge__(__Semantic_Body_Context__ *,
 void __Body_Safety_Snapshot_Destroy__(__Body_Safety_Snapshot__ *);
 
 /* Returns the body safety move expression. */
+int __Body_Is_Unbound_Null_Name__(__Semantic_Body_Context__ *, __Ast_Expression__ *);
 int __Body_Safety_Move_Expression__(__Semantic_Body_Context__ *,
                                     __Ast_Expression__ *,
                                     __Semantic_Local__ *);

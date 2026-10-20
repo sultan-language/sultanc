@@ -4,6 +4,7 @@
 #include "llvm/llvm_context.h"
 #include "llvm/llvm_expressions.h"
 #include "llvm/llvm_functions.h"
+#include "llvm/llvm_globals.h"
 #include "llvm/llvm_types.h"
 #include "kernel/layout/layout.h"
 #include "kernel/name/name.h"
@@ -384,6 +385,18 @@ __LLVM_Coerce__(__LLVM_Emitter__ *emitter, __LLVM_Value__ source, __Ast_Type__ *
         result.type = target;
         return result;
     }
+    if (__Type_Is_Byte_Vector_To_Text_Move__(emitter->semantic, source.type, target))
+    {
+        /* {ptr, i64, i64} for both متجه غ8 and نص (checked by __LLVM_Type__). */
+        LLVMTypeRef text_type = __LLVM_Type__(emitter, target);
+        if (text_type == NULL || LLVMTypeOf(source.value) != text_type)
+        {
+            __LLVM_Fail__("byte vector and text disagree with the canonical sequence layout");
+            return __LLVM_Invalid_Value__();
+        }
+        result.type = target;
+        return result;
+    }
     {
         /* Stores the source resolved. */
         __Resolved_Type__ source_resolved;
@@ -462,6 +475,20 @@ __Ast_Type__ *__LLVM_Lvalue_Type__(__LLVM_Emitter__ *emitter, __Ast_Lvalue__ *lv
                 return function->__Callable_Type__;
             }
         }
+        if (lvalue->__As__.__Base__.__Kind__ == __Ast_Lvalue_Base_Identifier__ &&
+            emitter->current_function != NULL)
+        {
+            /* Module-level values: the declared value Type (top-level متغير removed). */
+            __Semantic_Global_Entry__ *global = NULL;
+            if (__Name_Resolve_Global__(
+                    emitter->semantic, emitter->current_function->__Unit__,
+                    lvalue->__As__.__Base__.__As__.__Identifier__, &global) ==
+                    __Name_Lookup_Found__ &&
+                global != NULL && global->__Declaration__ != NULL)
+            {
+                return __Type_Unwrap_Mutable__(global->__Declaration__->__Type__);
+            }
+        }
         return NULL;
     }
     if (lvalue->__Kind__ == __Ast_Lvalue_Field__)
@@ -531,6 +558,11 @@ __LLVM_Place__ __LLVM_Emit_Place__(__LLVM_Emitter__ *emitter, __Ast_Lvalue__ *lv
     {
         /* References the local. */
         __LLVM_Local__ *local = __LLVM_Find_Local_Base__(emitter, lvalue);
+        if (local == NULL && __LLVM_Resolve_Global_Place__(emitter, lvalue, &place))
+        {
+            /* Module-level external data is an ordinary place after locals. */
+            return place;
+        }
         if (local == NULL || local->address == NULL)
         {
             __LLVM_Fail__("L2.7 could not find value-producing local storage");
@@ -746,6 +778,8 @@ __LLVM_Value__ __LLVM_Emit_Lvalue__(__LLVM_Emitter__ *emitter, __Ast_Lvalue__ *l
                 __LLVM_Fail__("function value has no LLVM declaration");
                 return result;
             }
+            if (!__LLVM_Queue_Function__(emitter, llvm_function))
+                return result;
             result.value = llvm_function->value;
             result.type = function->__Callable_Type__;
             return result;

@@ -213,6 +213,18 @@ static int __Semantic_Unit_Name_Exists__(__Semantic_Context__ *__Context__,
             return 1;
         }
     }
+    for (__Index__ = 0U; __Index__ < __Context__->__Globals__.__Count__; ++__Index__)
+    {
+        /* References the entry. */
+        const __Semantic_Global_Entry__ *__Entry__ =
+            (const __Semantic_Global_Entry__ *)__Vector_At_Const__(&__Context__->__Globals__,
+                                                                   __Index__);
+        if (__Entry__ != NULL && __Entry__->__Unit__ == __Unit__ &&
+            __Identifier_Identity_Equals__(__Entry__->__Name__, __Name__))
+        {
+            return 1;
+        }
+    }
     return 0;
 }
 
@@ -240,10 +252,12 @@ int __Semantic_Collect_Globals__(__Semantic_Context__ *__Context__)
         __Range__.__Unit__ = __Unit__;
         __Range__.__Type_Begin__ = __Context__->__Types__.__Count__;
         __Range__.__Function_Begin__ = __Context__->__Functions__.__Count__;
+        __Range__.__Global_Begin__ = __Context__->__Globals__.__Count__;
         if (__Unit__ == NULL)
         {
             __Range__.__Type_End__ = __Context__->__Types__.__Count__;
             __Range__.__Function_End__ = __Context__->__Functions__.__Count__;
+            __Range__.__Global_End__ = __Context__->__Globals__.__Count__;
             if (__Vector_Push__(&__Context__->__Unit_Name_Ranges__, &__Range__) == NULL)
             {
                 return __Semantic_Fail__(
@@ -343,9 +357,47 @@ int __Semantic_Collect_Globals__(__Semantic_Context__ *__Context__)
                                              __Item__->__Header__.__Span__);
                 }
             }
+            else if (__Item__->__Kind__ == __Ast_Module_Item_Global__)
+            {
+                /* Stores the entry. */
+                __Semantic_Global_Entry__ __Entry__;
+
+                if (__Item__->__As__.__Global__ == NULL)
+                {
+                    return __Semantic_Fail__(__Context__,
+                                             __E1100_Internal_Context_Error__,
+                                             __Item__->__Header__.__Span__);
+                }
+                if (__Semantic_Unit_Name_Exists__(__Context__, __Unit__, __Item__->__Name__))
+                {
+                    return __Semantic_Fail__(__Context__,
+                                             __E0205_Duplicate_Declaration__,
+                                             __Item__->__Header__.__Span__);
+                }
+                memset(&__Entry__, 0, sizeof(__Entry__));
+                __Entry__.__Name__ = __Item__->__Name__;
+                __Entry__.__Declaration__ = __Item__->__As__.__Global__;
+                __Entry__.__Unit__ = __Unit__;
+                __Entry__.__Public__ = __Item__->__Public__;
+                /* The declared Type names resolve in the declaring unit's scope. */
+                if (!__Semantic_Record_Type_Owner__(
+                        __Context__, __Entry__.__Declaration__->__Type__, __Unit__))
+                {
+                    return __Semantic_Fail__(__Context__,
+                                             __E1100_Internal_Context_Error__,
+                                             __Item__->__Header__.__Span__);
+                }
+                if (__Vector_Push__(&__Context__->__Globals__, &__Entry__) == NULL)
+                {
+                    return __Semantic_Fail__(__Context__,
+                                             __E1100_Internal_Context_Error__,
+                                             __Item__->__Header__.__Span__);
+                }
+            }
         }
         __Range__.__Type_End__ = __Context__->__Types__.__Count__;
         __Range__.__Function_End__ = __Context__->__Functions__.__Count__;
+        __Range__.__Global_End__ = __Context__->__Globals__.__Count__;
         if (__Vector_Push__(&__Context__->__Unit_Name_Ranges__, &__Range__) == NULL)
         {
             return __Semantic_Fail__(

@@ -119,6 +119,41 @@ static __Ast_Type__ *__Body_Generic_Expand_Alias__(__Semantic_Body_Context__ *__
     return __Type__;
 }
 
+/* Expands a generic alias written in a template signature, such as
+ * `كاتب<ح>`, into its aliased structure with the template's own type
+ * parameters left as named placeholders.  No concrete instance is created and
+ * no placeholder name is resolved: inference must see the structure before
+ * the template parameters are bound. */
+static __Ast_Type__ *__Body_Generic_Expand_Template_Alias__(__Semantic_Body_Context__ *__Context__,
+                                                            __Ast_Type__ *__Type__)
+{
+    __Semantic_Type_Entry__ *__Entry__ = NULL;
+    const __Program_Unit__ *__Owner_Unit__;
+    __Ast_Type_Declaration__ *__Declaration__;
+    if (__Type__ == NULL || __Type__->__Kind__ != __Ast_Type_Named__ ||
+        __Type__->__As__.__Named__.__Argument_Count__ == 0U)
+        return __Type__;
+    __Owner_Unit__ = __Semantic_Type_Owner_Unit__(__Context__->__Semantic__, __Type__);
+    if (__Owner_Unit__ == NULL)
+        __Owner_Unit__ = __Context__->__Semantic__->__Active_Unit__;
+    if (__Name_Resolve_Type__(__Context__->__Semantic__, __Owner_Unit__,
+                              __Type__->__As__.__Named__.__Name__, &__Entry__) !=
+            __Name_Lookup_Found__ ||
+        __Entry__ == NULL || __Entry__->__Declaration__ == NULL)
+        return __Type__;
+    __Declaration__ = __Entry__->__Declaration__;
+    if (__Declaration__->__Kind__ != __Ast_Type_Decl_Alias__ ||
+        __Declaration__->__Type_Parameter_Count__ != __Type__->__As__.__Named__.__Argument_Count__)
+        return __Type__;
+    {
+        __Ast_Type__ *__Expanded__ = __Semantic_Generic_Substitute_Type__(
+            __Context__->__Semantic__, __Declaration__->__As__.__Alias__,
+            __Declaration__->__Type_Parameters__, __Type__->__As__.__Named__.__Arguments__,
+            __Declaration__->__Type_Parameter_Count__, __Entry__->__Unit__);
+        return __Expanded__ == NULL ? __Type__ : __Expanded__;
+    }
+}
+
 static int __Body_Generic_Type_Contains_Parameter__(
     const __Ast_Function__ *__Template_Function__,
     __Ast_Type__ *__Type__)
@@ -204,6 +239,15 @@ static int __Body_Generic_Infer_Type__(__Semantic_Body_Context__ *__Context__,
     }
 
     __Actual_Type__ = __Body_Generic_Expand_Alias__(__Context__, __Actual_Type__);
+    if (__Template_Type__->__Kind__ == __Ast_Type_Named__ &&
+        __Actual_Type__->__Kind__ != __Ast_Type_Named__)
+    {
+        __Ast_Type__ *__Expanded_Template__ =
+            __Body_Generic_Expand_Template_Alias__(__Context__, __Template_Type__);
+        if (__Expanded_Template__ != __Template_Type__)
+            return __Body_Generic_Infer_Type__(__Context__, __Template_Function__,
+                                               __Expanded_Template__, __Actual_Type__, __Bindings__);
+    }
     if (__Template_Type__->__Kind__ != __Actual_Type__->__Kind__)
     {
         return __Type_Compatible__(__Context__->__Semantic__, __Template_Type__, __Actual_Type__);

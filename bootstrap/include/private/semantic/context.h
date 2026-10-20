@@ -64,6 +64,20 @@ typedef struct
     size_t __Composite_View_Return_Parameter__;
 } __Semantic_Function_Entry__;
 
+/* Defines one module-level value declaration (canonical قيمة_عليا). Stage0
+ * only collects external data; the declared Type is the value Type. */
+typedef struct
+{
+    /* Stores the source name. */
+    __Text_Slice__ __Name__;
+    /* References the declaration. */
+    __Ast_Global__ *__Declaration__;
+    /* References the declaring unit. */
+    const __Program_Unit__ *__Unit__;
+    /* Tracks the public state. */
+    int __Public__;
+} __Semantic_Global_Entry__;
+
 /* Defines the semantic type owner fact structure. */
 typedef struct
 {
@@ -86,6 +100,10 @@ typedef struct
     size_t __Function_Begin__;
     /* Stores one-past the last function entry. */
     size_t __Function_End__;
+    /* Stores the first module-level value entry. */
+    size_t __Global_Begin__;
+    /* Stores one-past the last module-level value entry. */
+    size_t __Global_End__;
 } __Semantic_Unit_Name_Range__;
 
 /* Defines the semantic context structure. */
@@ -97,6 +115,8 @@ typedef struct
     __Vector__ __Types__;
     /* Stores semantic type entries. */
     __Vector__ __Functions__;
+    /* Stores module-level value entries (__Semantic_Global_Entry__). */
+    __Vector__ __Globals__;
     /* Stores arena-owned instantiated generic type entry pointers. */
     __Vector__ __Generic_Types__;
     /* Stores arena-owned instantiated generic semantic function entry pointers. */

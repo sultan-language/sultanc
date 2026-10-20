@@ -73,10 +73,13 @@ typedef enum
 /* Defines the integer literal structure. */
 typedef struct
 {
-    /* Stores the value. */
+    /* Stores the value; an unsigned-wide literal stores its 64-bit pattern. */
     int64_t __Value__;
     /* Stores the spelling. */
     __Text_Slice__ __Spelling__;
+    /* Marks a literal above INT64_MAX: canonical unsigned literal token
+     * (compiler/frontend/lexer/numbers.sn, قيمة_عدد_صحيح_رمز.غير_موقع). */
+    int __Unsigned_Wide__;
 } __Integer_Literal__;
 
 /* Defines the token payload union. */

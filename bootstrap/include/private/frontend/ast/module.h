@@ -15,7 +15,9 @@ typedef enum
     /* Represents the AST module item inline value. */
     __Ast_Module_Item_Inline__,
     /* Represents the AST module item alias value. */
-    __Ast_Module_Item_Alias__
+    __Ast_Module_Item_Alias__,
+    /* Represents one module-level value declaration (canonical قيمة_عليا). */
+    __Ast_Module_Item_Global__
 } __Ast_Module_Item_Kind__;
 
 /* Empty Parent means the module-root namespace; otherwise Parent.Name is a
@@ -36,6 +38,22 @@ typedef struct
     /* Stores the target. */
     __Ast_Alias_Path__ __Target__;
 } __Ast_Module_Alias__;
+
+/* Defines one module-level value declaration. This mirrors the canonical
+ * Frontend تصريح_قيمة_عليا (compiler/frontend/ast/declarations.sn). Stage0 only
+ * accepts the external-data initialization form (تهيئة_قيمة_عليا.خارجية):
+ * an imported linker symbol with an explicit name and no initializer. */
+typedef struct
+{
+    /* Stores the header. */
+    __Ast_Header__ __Header__;
+    /* References the declared value Type. */
+    __Ast_Type__ *__Type__;
+    /* Stores the AST-owned linker symbol bytes (nonempty, without NUL). */
+    __Text_Slice__ __Link_Name__;
+    /* Tracks whether the value is external data (always true in Stage0). */
+    int __External__;
+} __Ast_Global__;
 
 /* Defines the AST module item structure. */
 struct __Ast_Module_Item__
@@ -59,6 +77,8 @@ struct __Ast_Module_Item__
         __Text_Slice__ __Inline__;
         /* Stores the alias. */
         __Ast_Module_Alias__ __Alias__;
+        /* References the module-level value declaration. */
+        __Ast_Global__ *__Global__;
     } __As__;
 };
 

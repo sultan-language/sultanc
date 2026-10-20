@@ -54,19 +54,29 @@ static int __Lexer_Number_Separators_Valid__(__Text_Slice__ __Spelling__)
     }
     return 1;
 }
-/* Parses the lexer integer value. */
-static int __Lexer_Parse_Integer_Value__(__Text_Slice__ __Spelling__, int64_t *__Out_Value__)
+/* Parses the lexer integer value.
+ *
+ * Mirrors canonical قيمة_العدد (compiler/frontend/lexer/numbers.sn): binary,
+ * hexadecimal and decimal spellings accept the full unsigned 64-bit range.
+ * Values above INT64_MAX are unsigned-wide literals; their bit pattern is
+ * stored in the signed payload and the flag restricts them to 64-bit unsigned
+ * types during semantic checking. */
+static int __Lexer_Parse_Integer_Value__(__Text_Slice__ __Spelling__,
+                                         int64_t *__Out_Value__,
+                                         int *__Out_Unsigned_Wide__)
 {
     /* Stores the buffer. */
     char __Buffer__[256];
-    /* References the end. */
-    char *__End__ = NULL;
     /* Stores the input. */
     size_t __Input__ = 0U;
     /* Stores the output. */
     size_t __Output__ = 0U;
+    /* Tracks the first digit position. */
+    size_t __Index__ = 0U;
     /* Stores the base. */
-    int __Base__ = 10;
+    uint64_t __Base__ = 10U;
+    /* Stores the accumulated value. */
+    uint64_t __Value__ = 0U;
     if (__Spelling__.__Length__ >= sizeof(__Buffer__))
     {
         return 0;
@@ -83,36 +93,41 @@ static int __Lexer_Parse_Integer_Value__(__Text_Slice__ __Spelling__, int64_t *_
     __Buffer__[__Output__] = '\0';
     if (__Output__ >= 2U && __Buffer__[0] == '0' && __Buffer__[1] == 'b')
     {
-        /* Tracks the index. */
-        size_t __Index__ = 2U;
-        /* Stores the value. */
-        uint64_t __Value__ = 0U;
-        if (__Output__ == 2U)
+        __Base__ = 2U;
+        __Index__ = 2U;
+    }
+    else if (__Output__ >= 2U && __Buffer__[0] == '0' && __Buffer__[1] == 'x')
+    {
+        __Base__ = 16U;
+        __Index__ = 2U;
+    }
+    if (__Index__ >= __Output__)
+    {
+        return 0;
+    }
+    for (; __Index__ < __Output__; ++__Index__)
+    {
+        /* Stores the character. */
+        char __Character__ = __Buffer__[__Index__];
+        /* Stores the digit. */
+        uint64_t __Digit__;
+        if (__Character__ >= '0' && __Character__ <= '9')
+            __Digit__ = (uint64_t)(__Character__ - '0');
+        else if (__Character__ >= 'a' && __Character__ <= 'f')
+            __Digit__ = (uint64_t)(__Character__ - 'a') + 10U;
+        else if (__Character__ >= 'A' && __Character__ <= 'F')
+            __Digit__ = (uint64_t)(__Character__ - 'A') + 10U;
+        else
+            return 0;
+        if (__Digit__ >= __Base__ || __Value__ > (UINT64_MAX - __Digit__) / __Base__)
         {
             return 0;
         }
-        for (; __Index__ < __Output__; ++__Index__)
-        {
-            if (__Buffer__[__Index__] != '0' && __Buffer__[__Index__] != '1')
-            {
-                return 0;
-            }
-            if (__Value__ > ((uint64_t)INT64_MAX >> 1U))
-            {
-                return 0;
-            }
-            __Value__ = (__Value__ << 1U) | (uint64_t)(__Buffer__[__Index__] - '0');
-        }
-        *__Out_Value__ = (int64_t)__Value__;
-        return 1;
+        __Value__ = __Value__ * __Base__ + __Digit__;
     }
-    if (__Output__ >= 2U && __Buffer__[0] == '0' && __Buffer__[1] == 'x')
-    {
-        __Base__ = 16;
-    }
-    errno = 0;
-    *__Out_Value__ = strtoll(__Buffer__, &__End__, __Base__);
-    return errno != ERANGE && __End__ != __Buffer__ && *__End__ == '\0';
+    *__Out_Unsigned_Wide__ = __Value__ > (uint64_t)INT64_MAX;
+    *__Out_Value__ = (int64_t)__Value__;
+    return 1;
 }
 
 /* Scans the lexer decimal digits. */
@@ -234,7 +249,8 @@ int __Lexer_Scan_Number__(__Lexer__ *__Lexer_State__,
         __Integer_Literal__ __Integer__;
         __Integer__.__Spelling__ = __Source_Slice__(
             __Lexer_State__->__Source__, __Start_Offset__, __Lexer_State__->__Offset__);
-        if (!__Lexer_Parse_Integer_Value__(__Integer__.__Spelling__, &__Integer__.__Value__))
+        if (!__Lexer_Parse_Integer_Value__(
+                __Integer__.__Spelling__, &__Integer__.__Value__, &__Integer__.__Unsigned_Wide__))
         {
             return __Lexer_Fail__(__Lexer_State__,
                                   __E0001_Syntax_Error__,

@@ -109,7 +109,8 @@ int __Program_Load_File__(__Program__ *__Program_State__, const char *__Path__)
         free(__Unit__.__Path__);
         return 0;
     }
-    if (!__Parser_Parse_Module__(__Unit__.__Source__, &__Unit__.__Parse__))
+    if (!__Parser_Parse_Module__(
+            __Unit__.__Source__, __Program_State__->__Target__, &__Unit__.__Parse__))
     {
         __Program_Adopt_Diagnostic__(__Program_State__, &__Unit__.__Parse__.__Diagnostic__);
         __Parse_Result_Destroy__(&__Unit__.__Parse__);

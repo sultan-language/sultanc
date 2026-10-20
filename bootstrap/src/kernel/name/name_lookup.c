@@ -425,6 +425,110 @@ __Name_Lookup_Status__ __Name_Resolve_Function__(__Semantic_Context__ *__Context
     return __Private_Match__ ? __Name_Lookup_Private__ : __Name_Lookup_Missing__;
 }
 
+/* Finds a module-level value declaration inside one unit only. */
+static __Semantic_Global_Entry__ *__Name_Find_Global_In_Unit__(__Semantic_Context__ *__Context__,
+                                                               const __Program_Unit__ *__Unit__,
+                                                               __Text_Slice__ __Name__)
+{
+    const __Semantic_Unit_Name_Range__ *__Range__ = __Name_Unit_Range__(__Context__, __Unit__);
+    __Text_Slice__ __Resolved_Name__;
+    size_t __Index__;
+
+    if (__Range__ == NULL ||
+        !__Name_Resolve_Module_Alias_Name__(__Unit__, __Name__, &__Resolved_Name__))
+    {
+        return NULL;
+    }
+    for (__Index__ = __Range__->__Global_Begin__; __Index__ < __Range__->__Global_End__;
+         ++__Index__)
+    {
+        __Semantic_Global_Entry__ *__Entry__ =
+            (__Semantic_Global_Entry__ *)__Vector_At__(&__Context__->__Globals__, __Index__);
+        if (__Entry__ != NULL &&
+            __Identifier_Identity_Equals__(__Entry__->__Name__, __Resolved_Name__))
+        {
+            return __Entry__;
+        }
+    }
+    return NULL;
+}
+
+/* Resolves the name global. */
+__Name_Lookup_Status__ __Name_Resolve_Global__(__Semantic_Context__ *__Context__,
+                                               const __Program_Unit__ *__From_Unit__,
+                                               __Text_Slice__ __Name__,
+                                               __Semantic_Global_Entry__ **__Out_Entry__)
+{
+    /* References the imported match. */
+    __Semantic_Global_Entry__ *__Imported_Match__ = NULL;
+    /* Stores the private match. */
+    int __Private_Match__ = 0;
+    /* References the local match. */
+    __Semantic_Global_Entry__ *__Local__;
+    /* Tracks the import index. */
+    size_t __Import_Index__;
+
+    if (__Out_Entry__ != NULL)
+    {
+        *__Out_Entry__ = NULL;
+    }
+    /* Module-level values are only reachable from a known unit scope. */
+    if (__Context__ == NULL || __From_Unit__ == NULL ||
+        __Name_Unit_Range__(__Context__, __From_Unit__) == NULL)
+    {
+        return __Name_Lookup_Missing__;
+    }
+    __Local__ = __Name_Find_Global_In_Unit__(__Context__, __From_Unit__, __Name__);
+    if (__Local__ != NULL)
+    {
+        if (__Out_Entry__ != NULL)
+        {
+            *__Out_Entry__ = __Local__;
+        }
+        return __Name_Lookup_Found__;
+    }
+    for (__Import_Index__ = 0U;
+         __Import_Index__ < __From_Unit__->__Imported_Unit_Indexes__.__Count__;
+         ++__Import_Index__)
+    {
+        const size_t *__Imported_Index__ = (const size_t *)__Vector_At_Const__(
+            &__From_Unit__->__Imported_Unit_Indexes__, __Import_Index__);
+        const __Program_Unit__ *__Imported_Unit__;
+        __Semantic_Global_Entry__ *__Entry__;
+
+        if (__Imported_Index__ == NULL)
+        {
+            continue;
+        }
+        __Imported_Unit__ =
+            __Program_Unit_At_Const__(__Context__->__Program__, *__Imported_Index__);
+        __Entry__ = __Name_Find_Global_In_Unit__(__Context__, __Imported_Unit__, __Name__);
+        if (__Entry__ == NULL)
+        {
+            continue;
+        }
+        if (!__Entry__->__Public__)
+        {
+            __Private_Match__ = 1;
+            continue;
+        }
+        if (__Imported_Match__ != NULL && __Imported_Match__ != __Entry__)
+        {
+            return __Name_Lookup_Ambiguous__;
+        }
+        __Imported_Match__ = __Entry__;
+    }
+    if (__Imported_Match__ != NULL)
+    {
+        if (__Out_Entry__ != NULL)
+        {
+            *__Out_Entry__ = __Imported_Match__;
+        }
+        return __Name_Lookup_Found__;
+    }
+    return __Private_Match__ ? __Name_Lookup_Private__ : __Name_Lookup_Missing__;
+}
+
 /* Finds the name type. */
 __Semantic_Type_Entry__ *__Name_Find_Type__(__Semantic_Context__ *__Context__,
                                             __Text_Slice__ __Name__)

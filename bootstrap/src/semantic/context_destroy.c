@@ -14,6 +14,7 @@ void __Semantic_Context_Destroy__(__Semantic_Context__ *__Context__)
     }
     __Vector_Destroy__(&__Context__->__Types__);
     __Vector_Destroy__(&__Context__->__Functions__);
+    __Vector_Destroy__(&__Context__->__Globals__);
     __Vector_Destroy__(&__Context__->__Generic_Types__);
     __Vector_Destroy__(&__Context__->__Generic_Functions__);
     __Vector_Destroy__(&__Context__->__Type_Owners__);

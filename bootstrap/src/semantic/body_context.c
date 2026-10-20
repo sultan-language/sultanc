@@ -22,6 +22,16 @@ __Ast_Type__ __Body_Builtin_Void_Type__ = {.__Kind__ = __Ast_Type_Void__};
 __Ast_Type__ __Body_Builtin_U8_Type__ = {.__Kind__ = __Ast_Type_Machine__,
                                          .__As__.__Machine__ = __Machine_U8__};
 
+/* Exact built-in scalar types for float bit reinterpretation. */
+__Ast_Type__ __Body_Builtin_U32_Type__ = {.__Kind__ = __Ast_Type_Machine__,
+                                          .__As__.__Machine__ = __Machine_U32__};
+__Ast_Type__ __Body_Builtin_U64_Type__ = {.__Kind__ = __Ast_Type_Machine__,
+                                          .__As__.__Machine__ = __Machine_U64__};
+__Ast_Type__ __Body_Builtin_F32_Type__ = {.__Kind__ = __Ast_Type_Machine__,
+                                          .__As__.__Machine__ = __Machine_F32__};
+__Ast_Type__ __Body_Builtin_F64_Type__ = {.__Kind__ = __Ast_Type_Machine__,
+                                          .__As__.__Machine__ = __Machine_F64__};
+
 /* Begins the body diagnostic. */
 __Diagnostic__ *__Body_Begin_Diagnostic__(__Semantic_Body_Context__ *__Context__,
                                           __Error_Id__ __Id__,
@@ -331,6 +341,12 @@ int __Body_Check_Atom_Compatible__(__Semantic_Body_Context__ *__Context__,
     {
         return 1;
     }
+    if (__Semantic_Integer_Literal_Atom_Is_Unsigned_Wide__(__Atom__))
+    {
+        if (__Type_Unsigned_Wide_Literal_Fits__(__Context__->__Semantic__, __Expected__))
+            return 1;
+        return __Body_Fail__(__Context__, __E0400_Mismatched_Types__, __Span__);
+    }
     if (!__Body_Infer_Atom__(__Context__, __Atom__, &__Actual__))
     {
         return 0;
@@ -364,6 +380,12 @@ int __Body_Check_Expression_Compatible__(__Semantic_Body_Context__ *__Context__,
         __Type_Integer_Literal_Fits__(__Context__->__Semantic__, __Literal_Value__, __Expected__))
     {
         return 1;
+    }
+    if (__Semantic_Integer_Literal_Expression_Is_Unsigned_Wide__(__Expression__))
+    {
+        if (__Type_Unsigned_Wide_Literal_Fits__(__Context__->__Semantic__, __Expected__))
+            return 1;
+        return __Body_Fail__(__Context__, __E0400_Mismatched_Types__, __Span__);
     }
     __Expression__->__Contextual_Type__ = __Expected__;
     if (!__Body_Infer_Expression__(__Context__, __Expression__, &__Actual__))

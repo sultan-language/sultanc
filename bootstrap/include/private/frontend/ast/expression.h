@@ -36,10 +36,12 @@ struct __Ast_Literal__
         /* Defines the struct structure. */
         struct
         {
-            /* Stores the value. */
+            /* Stores the value; an unsigned-wide literal stores its 64-bit pattern. */
             int64_t __Value__;
             /* Stores the spelling. */
             __Text_Slice__ __Spelling__;
+            /* Marks a literal above INT64_MAX, typed only as a 64-bit unsigned value. */
+            int __Unsigned_Wide__;
         } __Integer__;
         /* Stores the character. */
         uint32_t __Character__;
@@ -223,6 +225,8 @@ struct __Ast_Expression__
     __Ast_Type__ *__Contextual_Type__;
     /* Semantic side effects such as moves/releases are applied at most once. */
     int __Semantic_Effects_Applied__;
+    /* Type-checked contextual raw null; never represents a source lvalue. */
+    int __Semantic_Null_Pointer__;
     /* Defines the struct structure. */
     union
     {

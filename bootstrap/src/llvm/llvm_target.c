@@ -9,5 +9,7 @@ int __LLVM_Initialize_Targets__(void)
     LLVMInitializeAllTargets();
     LLVMInitializeAllTargetMCs();
     LLVMInitializeAllAsmPrinters();
+    /* Object emission parses the inline assembly of بدائي_نداء_نواة_خام. */
+    LLVMInitializeAllAsmParsers();
     return 1;
 }

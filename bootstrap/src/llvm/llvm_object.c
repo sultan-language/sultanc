@@ -3,13 +3,12 @@
 #include "llvm/llvm_internal.h"
 #include "llvm/llvm_context.h"
 #include "llvm/llvm_module.h"
-#include "llvm/llvm_optimization.h"
 #include <string.h>
 
 /* Emits the bootstrap LLVM object. */
 int __Bootstrap_Emit_LLVM_Object__(__Semantic_Context__ *semantic,
                                   const char *path,
-                                  const char *target)
+                                  const __Bootstrap_Target__ *target)
 {
     /* Stores the emitter. */
     __LLVM_Emitter__ emitter;
@@ -30,23 +29,15 @@ int __Bootstrap_Emit_LLVM_Object__(__Semantic_Context__ *semantic,
     if (__LLVM_Prepare_Program_Module__(
             semantic, target, &emitter, &saved_unit, &machine, &data))
     {
-        if (__LLVM_Optimize_Module__(&emitter, machine))
+        if (LLVMTargetMachineEmitToFile(
+                machine, emitter.module, (char *)path, LLVMObjectFile, &message))
         {
-            if (LLVMVerifyModule(emitter.module, LLVMReturnStatusAction, &message))
-            {
-                __LLVM_Fail_Message__("LLVM verifier rejected optimized module", message);
-                message = NULL;
-            }
-            else if (LLVMTargetMachineEmitToFile(
-                         machine, emitter.module, (char *)path, LLVMObjectFile, &message))
-            {
-                __LLVM_Fail_Message__("LLVM native object emission failed", message);
-                message = NULL;
-            }
-            else
-            {
-                ok = 1;
-            }
+            __LLVM_Fail_Message__("LLVM native object emission failed", message);
+            message = NULL;
+        }
+        else
+        {
+            ok = 1;
         }
     }
     if (message != NULL)

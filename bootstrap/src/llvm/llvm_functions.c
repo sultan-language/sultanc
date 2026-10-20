@@ -5,7 +5,6 @@
 #include "llvm/llvm_statements.h"
 #include "llvm/llvm_types.h"
 #include "llvm/llvm_values.h"
-#include "llvm/runtime/llvm_runtime_process.h"
 #include "kernel/name/name.h"
 #include "kernel/type/type.h"
 #include "semantic/generic.h"
@@ -192,6 +191,9 @@ static int __LLVM_Declare_One_Function__(__LLVM_Emitter__ *emitter,
         function->__External__
             ? __LLVM_Declare_External_Function__(emitter, symbol, function_type)
             : LLVMAddFunction(emitter->module, symbol, function_type);
+    /* These definitions belong to this executable, not its public ABI. */
+    if (!function->__External__ && emitter->functions[output_index].value != NULL)
+        LLVMSetLinkage(emitter->functions[output_index].value, LLVMInternalLinkage);
     return emitter->functions[output_index].value != NULL
                ? 1
                : __LLVM_Fail__("LLVM function declaration failed for L2.3");
@@ -234,6 +236,57 @@ int __LLVM_Declare_Functions__(__LLVM_Emitter__ *emitter)
         if (slot == NULL || *slot == NULL ||
             !__LLVM_Declare_One_Function__(emitter, *slot, output_index++))
             return 0;
+    }
+    return 1;
+}
+
+/* Queue a referenced declaration exactly once. All entries are predeclared. */
+int __LLVM_Queue_Function__(__LLVM_Emitter__ *emitter,
+                            __LLVM_Function__ *llvm_function)
+{
+    if (llvm_function == NULL || emitter->function_worklist == NULL)
+        return __LLVM_Fail__("Stage0 reachability worklist is not initialized");
+    if (llvm_function->queued)
+        return 1;
+    if (emitter->function_worklist_count >= emitter->function_count)
+        return __LLVM_Fail__("Stage0 reachability worklist exceeds declared functions");
+    llvm_function->queued = 1;
+    emitter->function_worklist[emitter->function_worklist_count++] = llvm_function;
+    return 1;
+}
+
+/* Emit only functions whose code or address is used by the language entry. */
+int __LLVM_Emit_Reachable_Function_Bodies__(
+    __LLVM_Emitter__ *emitter,
+    __Semantic_Function_Entry__ *language_entry)
+{
+    __LLVM_Function__ *entry = __LLVM_Find_Function_By_Semantic__(emitter, language_entry);
+    size_t next_function = 0U;
+    if (entry == NULL || entry->semantic->__Function__->__External__)
+        return __LLVM_Fail__("Stage0 language entry must be a defined function");
+    emitter->function_worklist = (__LLVM_Function__ **)calloc(
+        emitter->function_count, sizeof(*emitter->function_worklist));
+    if (emitter->function_worklist == NULL)
+        return __LLVM_Fail__("out of memory while preparing Stage0 reachability");
+    if (!__LLVM_Queue_Function__(emitter, entry))
+        return 0;
+    while (next_function < emitter->function_worklist_count)
+    {
+        __LLVM_Function__ *current = emitter->function_worklist[next_function++];
+        if (!__LLVM_Emit_Function_Body__(emitter, current))
+        {
+            /* Emission failures carry no source span; name the function so
+             * the failure is actionable. */
+            size_t used = strlen(__LLVM_Error__);
+            if (current->semantic != NULL && used + 16U < sizeof(__LLVM_Error__))
+            {
+                snprintf(__LLVM_Error__ + used, sizeof(__LLVM_Error__) - used,
+                         " (function: %.*s)",
+                         (int)current->semantic->__Name__.__Length__,
+                         current->semantic->__Name__.__Data__);
+            }
+            return 0;
+        }
     }
     return 1;
 }
@@ -337,90 +390,3 @@ int __LLVM_Emit_Function_Body__(__LLVM_Emitter__ *emitter, __LLVM_Function__ *ll
     return 1;
 }
 
-/* Emits the LLVM process entry. */
-int __LLVM_Emit_Process_Entry__(__LLVM_Emitter__ *emitter)
-{
-    /* References the language entry. */
-    __LLVM_Function__ *language_entry;
-    /* Stores the output resolved. */
-    __Resolved_Type__ output_resolved;
-    /* Stores the LLVM i8 type. */
-    LLVMTypeRef i8 = LLVMIntTypeInContext(emitter->context, 8U);
-    /* Stores the LLVM i32 type. */
-    LLVMTypeRef i32 = LLVMIntTypeInContext(emitter->context, 32U);
-    /* Stores the LLVM i64 type. */
-    LLVMTypeRef i64 = LLVMIntTypeInContext(emitter->context, 64U);
-    /* Stores the LLVM i8 pointer type. */
-    LLVMTypeRef i8_pointer = LLVMPointerType(i8, 0U);
-    /* Stores the argv type. */
-    LLVMTypeRef argv_type = LLVMPointerType(i8_pointer, 0U);
-    /* Stores the parameters. */
-    LLVMTypeRef parameters[2];
-    /* Stores the main type. */
-    LLVMTypeRef main_type;
-    /* Stores the main value. */
-    LLVMValueRef main_value;
-    /* Stores the block. */
-    LLVMBasicBlockRef block;
-    /* Stores the argument count. */
-    LLVMValueRef argc;
-    /* References the argument vector. */
-    LLVMValueRef argv;
-    /* Stores the user argc. */
-    LLVMValueRef user_argc;
-    /* Stores the call. */
-    LLVMValueRef call;
-    /* Stores the status. */
-    LLVMValueRef status;
-
-    language_entry = __LLVM_Find_Function_By_Semantic__(emitter, emitter->semantic->__Main__);
-    if (language_entry == NULL || emitter->semantic->__Main__ == NULL ||
-        emitter->semantic->__Main__->__Function__ == NULL ||
-        !__Type_Resolve__(emitter->semantic,
-                          emitter->semantic->__Main__->__Function__->__Output__.__Type__,
-                          &output_resolved) ||
-        (output_resolved.__Kind__ != __Resolved_Type_Signed_Integer__ &&
-         output_resolved.__Kind__ != __Resolved_Type_Unsigned_Integer__) ||
-        output_resolved.__Bits__ == 0U)
-    {
-        return __LLVM_Fail__("cannot bridge canonical SultanC entry to host process ABI");
-    }
-
-    if (!__LLVM_Ensure_Process_Globals__(emitter))
-        return 0;
-
-    parameters[0] = i32;
-    parameters[1] = argv_type;
-    main_type = LLVMFunctionType(i32, parameters, 2U, 0);
-    main_value = LLVMAddFunction(emitter->module, "main", main_type);
-    if (main_value == NULL)
-        return __LLVM_Fail__("cannot create host process entry wrapper");
-    block = LLVMAppendBasicBlockInContext(emitter->context, main_value, "entry");
-    LLVMPositionBuilderAtEnd(emitter->builder, block);
-    argc = LLVMGetParam(main_value, 0U);
-    argv = LLVMGetParam(main_value, 1U);
-    user_argc = LLVMBuildSub(emitter->builder,
-                             LLVMBuildSExt(emitter->builder, argc, i64, "argc.i64"),
-                             LLVMConstInt(i64, 1U, 0),
-                             "user.argc");
-    LLVMBuildStore(emitter->builder, user_argc, emitter->process_argc_global);
-    LLVMBuildStore(emitter->builder, argv, emitter->process_argv_global);
-    call = LLVMBuildCall2(emitter->builder,
-                          language_entry->type,
-                          language_entry->value,
-                          NULL,
-                          0U,
-                          "language.entry.status");
-    if (call == NULL)
-        return __LLVM_Fail__("cannot call canonical SultanC entry");
-    if (output_resolved.__Bits__ > 32U)
-        status = LLVMBuildTrunc(emitter->builder, call, i32, "process.status");
-    else if (output_resolved.__Bits__ < 32U)
-        status = output_resolved.__Kind__ == __Resolved_Type_Signed_Integer__
-                     ? LLVMBuildSExt(emitter->builder, call, i32, "process.status")
-                     : LLVMBuildZExt(emitter->builder, call, i32, "process.status");
-    else
-        status = call;
-    LLVMBuildRet(emitter->builder, status);
-    return 1;
-}

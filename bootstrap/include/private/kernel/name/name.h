@@ -34,7 +34,17 @@ typedef enum
     /* Represents the selected-target platform query. */
     __Name_Builtin_Host_Platform__,
     /* Represents the selected-target environment query. */
-    __Name_Builtin_Host_Environment__
+    __Name_Builtin_Host_Environment__,
+    /* Canonical scalar bit-reinterpretation primitives (never numeric casts). */
+    __Name_Builtin_F64_Bits__,
+    __Name_Builtin_F64_From_Bits__,
+    __Name_Builtin_F32_Bits__,
+    __Name_Builtin_F32_From_Bits__,
+    __Name_Builtin_Release__,
+    /* Canonical بدائي_نداء_نواة_خام: one Linux 64-bit kernel entry instruction
+     * (compiler/frontend/names/primitive_registry.sn). Stage0 only emits it;
+     * the syscall number and operand meaning are owned by the STD source. */
+    __Name_Builtin_Raw_Kernel_Call__
 } __Name_Builtin_Function__;
 
 /* Finds the name builtin function. */
@@ -59,6 +69,14 @@ __Name_Lookup_Status__ __Name_Resolve_Function__(__Semantic_Context__ *__Context
                                                  const __Program_Unit__ *__From_Unit__,
                                                  __Text_Slice__ __Name__,
                                                  __Semantic_Function_Entry__ **__Out_Entry__);
+
+/* Resolves one module-level value (canonical قيمة_عليا) visible from a unit:
+ * the unit's own declarations first, then public declarations of directly
+ * imported units, with the same privacy and ambiguity rules as functions. */
+__Name_Lookup_Status__ __Name_Resolve_Global__(__Semantic_Context__ *__Context__,
+                                               const __Program_Unit__ *__From_Unit__,
+                                               __Text_Slice__ __Name__,
+                                               __Semantic_Global_Entry__ **__Out_Entry__);
 
 /* Finds the name error ID. */
 __Error_Id__ __Name_Lookup_Error_Id__(__Name_Lookup_Status__ __Status__);

@@ -17,4 +17,12 @@ int __Type_Integer_Literal_Fits__(__Semantic_Context__ *__Context__,
                                   int64_t __Value__,
                                   __Ast_Type__ *__Target_Type__);
 
+int __Semantic_Integer_Literal_Atom_Is_Unsigned_Wide__(const __Ast_Atom__ *__Atom__);
+
+int __Semantic_Integer_Literal_Expression_Is_Unsigned_Wide__(
+    const __Ast_Expression__ *__Expression__);
+
+int __Type_Unsigned_Wide_Literal_Fits__(__Semantic_Context__ *__Context__,
+                                        __Ast_Type__ *__Target_Type__);
+
 #endif
