@@ -1,0 +1,4 @@
+[project]
+name = "sultanc"
+version = "0.1.0-dev"
+build_dir = "build"
