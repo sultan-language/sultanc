@@ -12,7 +12,7 @@ file(GLOB_RECURSE SULTANC_COMPILER_SOURCES CONFIGURE_DEPENDS
     "${SULTANC_SOURCE_ROOT}/compiler/*.sn"
     "${SULTANC_SOURCE_ROOT}/library/std/*.sn")
 list(APPEND SULTANC_COMPILER_SOURCES
-    "${SULTANC_SOURCE_ROOT}/supax.toml"
+    "${SULTANC_SOURCE_ROOT}/Supax.toml"
     "${SULTANC_SOURCE_ROOT}/library/Supax.toml")
 file(CONFIGURE
     OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/sultanc-stage1-target.txt"
