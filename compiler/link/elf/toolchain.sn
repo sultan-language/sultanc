@@ -59,6 +59,28 @@
     | _ -> { أرجع اختيار.لا_شيء(); };
 }
 
+// Shared ELF images need load-time RELATIVE/GLOB_DAT/JUMP_SLOT relocations,
+// interposition and (when necessary) TLS/PLT handling. The internal final-image
+// writer currently resolves relocations at link time and cannot encode that
+// complete contract. Select the established delegated linker for this output
+// kind, including the two architectures with internal executable support.
+// This is explicit target policy, never a fallback after a failed internal link.
+عام عرف برنامج_رابط_إلف_مشترك_مفوض_للهدف(
+    الهدف: &واصف_هدف
+): اختيار نص {
+    لو (!منصة_إلف_نظامية_قابلة_للربط((*الهدف).المنصة.المنصة)) {
+        أرجع اختيار.لا_شيء();
+    };
+    طابق (*الهدف).المعمارية.الهوية مع
+    | هوية_معمارية.إكس_ستة_وثمانون_أربعة_وستون -> {
+        أرجع اختيار.بعض(«ld.lld»);
+    }
+    | هوية_معمارية.ذراع_أربعة_وستون -> {
+        أرجع اختيار.بعض(«ld.lld»);
+    }
+    | _ -> { أرجع برنامج_رابط_إلف_مفوض_للهدف(الهدف); };
+}
+
 // Relocatable/target-module linking must preserve the target's real REL/RELA
 // and machine-specific relocation encoding. Delegate that work to mature tools
 // instead of making the generic ELF serializer guess an ABI. BPF uses LLD's
@@ -110,7 +132,7 @@
         اختيار_البرنامج := برنامج_رابط_إلف_مفوض_للهدف(الهدف);
     }
     | نوع_خرج_ربط.مكتبة_مشتركة -> {
-        اختيار_البرنامج := برنامج_رابط_إلف_مفوض_للهدف(الهدف);
+        اختيار_البرنامج := برنامج_رابط_إلف_مشترك_مفوض_للهدف(الهدف);
     }
     | نوع_خرج_ربط.كائن_مترابط -> {
         اختيار_البرنامج := برنامج_دمج_كائنات_إلف_مفوض_للهدف(الهدف);
@@ -123,12 +145,10 @@
     | اختيار.بعض(القيمة) -> { البرنامج := القيمة; };
 
     دع المحمل: متغير اختيار متجه غ8 = اختيار.لا_شيء();
-    دع مكتبة_النظام: متغير اختيار متجه غ8 = اختيار.لا_شيء();
     طابق إعداد_ربط_ديناميكي_للهدف(الهدف) مع
     | اختيار.لا_شيء -> { }
     | اختيار.بعض(الإعداد) -> {
         المحمل := اختيار.بعض(انسخ_بايتات_بيانات_أداة_إلف(&الإعداد.مفسر_إلف));
-        مكتبة_النظام := اختيار.بعض(انسخ_بايتات_بيانات_أداة_إلف(&الإعداد.مكتبة_نظام_افتراضية));
     };
 
     // Mature linkers deliberately do not infer a cross-target sysroot from the
@@ -138,7 +158,6 @@
         الخطة,
         البرنامج,
         المحمل,
-        مكتبة_النظام,
         مسارات_البحث
     );
 }

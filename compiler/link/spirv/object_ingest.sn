@@ -3,6 +3,7 @@
 استورد compiler.link.section_model;
 استورد compiler.link.spirv.reader;
 استورد compiler.backend.target.target_model;
+استورد std.text.from_bytes;
 
 عام نوع خطأ_استيعاب_سبير_في =
     | وحدة_غير_صالحة
@@ -25,9 +26,7 @@
 }
 
 عرف اسم_قسم_سبير_في_القانوني(): متجه غ8 {
-    دع الاسم: متجه غ8 = [
-        0x2E, 0x73, 0x70, 0x69, 0x72, 0x76
-    ];
+    دع الاسم: متجه غ8 = بايتات_من_نص(«.spirv»);
     أرجع الاسم;
 }
 

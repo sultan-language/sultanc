@@ -1,0 +1,129 @@
+// A system error is a pair of the issuing ABI's error namespace and its
+// unmodified native code. A Unix errno, a Win32 error and a Winsock error
+// can have equal numbers without representing the same failure.
+//
+// Platform implementations must retrieve an error before another system
+// operation can overwrite it. Classification is separate from this identity.
+عام نوع مصدر_خطأ_نظام =
+    | يونكس
+    | وين32
+    | وينسوك
+    | واسي
+    | واجهة_مضيف
+;
+
+عام نوع خطأ_نظام_أصلي = {
+    المصدر: مصدر_خطأ_نظام,
+    الرمز: عدد
+};
+
+عام عرف أنشئ_خطأ_نظام_أصلي(المصدر: مصدر_خطأ_نظام, الرمز: عدد): خطأ_نظام_أصلي {
+    دع الخطأ: خطأ_نظام_أصلي = { المصدر: المصدر, الرمز: الرمز };
+    أرجع الخطأ;
+}
+
+عام عرف نفس_خطأ_النظام_الأصلي(الأول: &خطأ_نظام_أصلي, الثاني: &خطأ_نظام_أصلي): منطقي {
+    أرجع ((*الأول).المصدر == (*الثاني).المصدر)
+        && ((*الأول).الرمز == (*الثاني).الرمز);
+}
+
+عام مرادف native_os_error_source = مصدر_خطأ_نظام;
+عام مرادف native_os_error = خطأ_نظام_أصلي;
+عام مرادف make_native_os_error = أنشئ_خطأ_نظام_أصلي;
+عام مرادف same_native_os_error = نفس_خطأ_النظام_الأصلي;
+عام مرادف native_os_error_source.unix = مصدر_خطأ_نظام.يونكس;
+عام مرادف native_os_error_source.win32 = مصدر_خطأ_نظام.وين32;
+عام مرادف native_os_error_source.winsock = مصدر_خطأ_نظام.وينسوك;
+عام مرادف native_os_error_source.wasi = مصدر_خطأ_نظام.واسي;
+عام مرادف native_os_error_source.host_interface = مصدر_خطأ_نظام.واجهة_مضيف;
+
+// Portable classification is an annotation of an actual native error, never
+// a replacement for its platform namespace and original code. Only the
+// platform implementation can translate the issuing ABI's error values.
+عام نوع صنف_خطأ_نظام =
+    | غير_معروف
+    | غير_موجود
+    | موجود_مسبقا
+    | وصول_مرفوض
+    | وسيط_غير_صالح
+    | مورد_مشغول
+    | استنفاد_الموارد
+    | عملية_ستحظر
+    | عملية_انقطعت
+    | انتهت_المهلة
+    | اتصال_مرفوض
+    | اتصال_انقطع
+    | شبكة_غير_متاحة
+    | غير_مدعوم
+    | هو_دليل
+    | ليس_دليلا
+;
+
+عام نوع خطأ_نظام = {
+    الأصلي: خطأ_نظام_أصلي,
+    الصنف: صنف_خطأ_نظام
+};
+
+عام عرف صنف_خطأ_نظام_أصليا(
+    الأصلي: خطأ_نظام_أصلي,
+    الصنف: صنف_خطأ_نظام
+): خطأ_نظام {
+    دع الخطأ: خطأ_نظام = { الأصلي: الأصلي, الصنف: الصنف };
+    أرجع الخطأ;
+}
+
+عام عرف نفس_خطأ_النظام(الأول: &خطأ_نظام, الثاني: &خطأ_نظام): منطقي {
+    أرجع نفس_خطأ_النظام_الأصلي(&(*الأول).الأصلي, &(*الثاني).الأصلي);
+}
+
+عام مرادف os_error_kind = صنف_خطأ_نظام;
+عام مرادف os_error = خطأ_نظام;
+عام مرادف classify_native_os_error = صنف_خطأ_نظام_أصليا;
+عام مرادف same_os_error = نفس_خطأ_النظام;
+
+// The inherited runtime ABI uses negative signed status values. They are not
+// necessarily errno values: the native-error namespace is only known to the
+// selected platform provider. Preserve the complete status without guessing.
+عام نوع خطأ_حد_نظام =
+    | غير_موجود
+    | وسيط_غير_صالح
+    | مورد_مغلق
+    | قيمة_خارج_النطاق
+    | اسم_شبكة_غير_موجود
+    | رد_شبكة_غير_صالح
+    | نظام بنوع خطأ_نظام_أصلي
+    | فشل_تشغيل بنوع عدد
+;
+
+عام عرف نتيجة_حالة_تشغيل_نظام(الحالة: عدد): نتيجة عدد, خطأ_حد_نظام {
+    لو (الحالة < 0) {
+        أرجع نتيجة.خطأ(خطأ_حد_نظام.فشل_تشغيل(الحالة));
+    };
+    أرجع نتيجة.نجح(الحالة);
+}
+
+عام مرادف os_boundary_error = خطأ_حد_نظام;
+عام مرادف os_runtime_status = نتيجة_حالة_تشغيل_نظام;
+
+// This legacy classification value is portable only within the current
+// runtime protocol. It is NOT an OS errno, a Win32 error, or a substitute for
+// retrieving a native error at the issuing ABI boundary.
+// The raw protocol is intentionally not remapped to a second enum here;
+// the existing std.fs.error consumer remains the canonical interpreter.
+
+// Existing std APIs return integer error codes. This is the sole lossy
+// conversion at that older public boundary; std.os keeps the native source
+// namespace and code in the typed variant above.
+عام عرف رمز_خطأ_حد_النظام(الخطأ: خطأ_حد_نظام): عدد {
+    طابق الخطأ مع
+    | خطأ_حد_نظام.غير_موجود -> { أرجع -2; }
+    | خطأ_حد_نظام.وسيط_غير_صالح -> { أرجع -22; }
+    | خطأ_حد_نظام.مورد_مغلق -> { أرجع -9; }
+    | خطأ_حد_نظام.قيمة_خارج_النطاق -> { أرجع -75; }
+    | خطأ_حد_نظام.اسم_شبكة_غير_موجود -> { أرجع -2; }
+    | خطأ_حد_نظام.رد_شبكة_غير_صالح -> { أرجع -71; }
+    | خطأ_حد_نظام.نظام(الأصلي) -> {
+        أرجع 0 - الأصلي.الرمز;
+    }
+    | خطأ_حد_نظام.فشل_تشغيل(الحالة) -> { أرجع الحالة; };
+}

@@ -1,0 +1,6 @@
+// Canonical Unicode release identifier for the pinned UCD source version.
+// Normative source: https://www.unicode.org/Public/18.0.0/ucd/
+// Version metadata alone does not establish completeness of the property data.
+عام عرف إصدار_بيانات_يونيكود_داخلية(): نص {
+    أرجع «18.0.0»;
+}

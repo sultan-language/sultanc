@@ -1,0 +1,10 @@
+// WASI preview 1 process provider. `proc_exit` is a host import; the target
+// owner binds external functions of a WASI target to the system interface
+// module `wasi_snapshot_preview1` (compiler/backend/target/
+// runtime_symbol_query_context.sn). proc_exit terminates the instance and
+// reports the code to the host; it does not return.
+خارجي عرف proc_exit(الرمز: غ32): فراغ;
+
+عام عرف اخرج_من_عملية_واسي(الرمز: غ32): فراغ {
+    proc_exit(الرمز);
+}

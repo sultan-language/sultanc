@@ -1,0 +1,28 @@
+// Canonical std.unicode public interface. Immediate package members own the
+// Arabic implementations; the English aliases are declared once here.
+// The module loader discovers the immediate package files; nested data and
+// algorithms remain separate packages. No forwarding functions or registry.
+استورد unicode.scalar;
+استورد unicode.general_category;
+استورد unicode.properties;
+استورد unicode.case_mapping;
+استورد unicode.case_folding;
+استورد unicode.normalization;
+استورد unicode.grapheme;
+استورد unicode.word_boundary;
+استورد unicode.sentence_boundary;
+استورد unicode.version;
+
+عام مرادف unicode_category_of = فئة_محرف_يونيكود;
+عام مرادف is_unicode_alphabetic = محرف_أبجدي_يونيكود;
+عام مرادف is_unicode_numeric = محرف_رقمي_يونيكود;
+عام مرادف is_unicode_uppercase = محرف_كبير_يونيكود;
+عام مرادف is_unicode_lowercase = محرف_صغير_يونيكود;
+عام مرادف is_unicode_whitespace = محرف_فراغ_يونيكود;
+عام مرادف unicode_to_upper = إلى_حروف_كبيرة_يونيكود;
+عام مرادف unicode_to_lower = إلى_حروف_صغيرة_يونيكود;
+عام مرادف unicode_to_title = إلى_حروف_عنوان_يونيكود;
+عام مرادف unicode_case_fold = طي_حالة_الأحرف_يونيكود;
+عام مرادف unicode_normalization_form = صورة_تطبيع_يونيكود;
+عام مرادف unicode_normalize = طبع_نص_يونيكود;
+عام مرادف unicode_data_version = إصدار_بيانات_يونيكود;

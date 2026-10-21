@@ -1,8 +1,59 @@
-خارجي عرف تشغيل_نص_من_بايتات(الحجة_0: متجه غ8): نص;
-
 // Materializes text by copying bytes; it does not validate UTF-8.
 عام عرف من_بايتات(البايتات: &متجه غ8): نص {
-    أرجع تشغيل_نص_من_بايتات(*البايتات);
+    دع المصدر: متجه غ8 = *البايتات;
+    دع النسخة: متغير متجه غ8 = [];
+    دع العدد: غير_موقع = الطول(المصدر) مثل غير_موقع;
+    دع الفهرس: متغير غير_موقع = 0;
+    بينما (الفهرس < العدد) {
+        ألحق(النسخة, المصدر[الفهرس]);
+        الفهرس := الفهرس + 1;
+    }
+    أرجع النسخة مثل نص;
+}
+
+// The bytes of a text value (its UTF-8 encoding). Names, paths and ABI
+// spellings are written as readable literals and converted here where an API
+// needs bytes, instead of being hand-encoded as byte arrays.
+عام عرف بايتات_من_نص(النص: نص): متجه غ8 {
+    دع الناتج: متغير متجه غ8 = [];
+    دع العدد: غير_موقع = الطول(النص) مثل غير_موقع;
+    دع الفهرس: متغير غير_موقع = 0;
+    بينما (الفهرس < العدد) {
+        ألحق(الناتج, النص[الفهرس]);
+        الفهرس := الفهرس + 1;
+    }
+    أرجع الناتج;
+}
+
+// The same bytes followed by one NUL byte (the C string ABI, e.g. LLVM names).
+عام عرف بايتات_منتهية_بصفر_من_نص(النص: نص): متجه غ8 {
+    دع الناتج: متغير متجه غ8 = بايتات_من_نص(النص);
+    ألحق(الناتج, 0 مثل غ8);
+    أرجع الناتج;
+}
+
+// Appends the bytes of a text value to an existing byte vector, for output
+// built piecewise (escape sequences, separators, suffixes) without spelling
+// the text as byte codes and without an intermediate vector.
+عام عرف ألحق_بايتات_نص(الهدف: &متغير متجه غ8, النص: نص): فراغ {
+    دع العدد: غير_موقع = الطول(النص) مثل غير_موقع;
+    دع الفهرس: متغير غير_موقع = 0;
+    بينما (الفهرس < العدد) {
+        ألحق(*الهدف, النص[الفهرس]);
+        الفهرس := الفهرس + 1;
+    }
+}
+
+// The byte of a one-byte (ASCII) text value, so byte-oriented parsers can
+// compare against «:» instead of a concealed byte code. A text of any other
+// length yields none.
+عام عرف بايت_نص(النص: نص): اختيار غ8 {
+    لو ((الطول(النص) مثل غير_موقع) != 1) { أرجع اختيار.لا_شيء(); };
+    أرجع اختيار.بعض(النص[0]);
 }
 
 عام مرادف from_bytes = من_بايتات;
+عام مرادف bytes_from_text = بايتات_من_نص;
+عام مرادف nul_terminated_bytes_from_text = بايتات_منتهية_بصفر_من_نص;
+عام مرادف append_text_bytes = ألحق_بايتات_نص;
+عام مرادف text_byte = بايت_نص;

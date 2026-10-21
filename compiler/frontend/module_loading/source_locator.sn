@@ -1,4 +1,11 @@
 استورد compiler.source.source_kind;
+استورد compiler.backend.target.target_model;
+استورد compiler.frontend.lexer.lexer;
+استورد compiler.frontend.lexer.result;
+استورد compiler.frontend.lexer.token;
+استورد compiler.frontend.parser.parser;
+استورد compiler.frontend.parser.result;
+استورد compiler.source.source_file;
 استورد compiler.frontend.module_loading.library_root_identity;
 استورد compiler.frontend.module_loading.module_paths;
 استورد compiler.frontend.module_loading.logical_environment;
@@ -117,11 +124,50 @@
 }
 
 // Discover only immediate .sn members of the requested physical package.
+// A file consisting entirely of inactive top-level target guards has no
+// declarations or imports for this target. Filter it at the canonical Module
+// discovery boundary, before a package member can enter Name resolution.
+// Ordinary empty files and invalid sources remain visible, preserving their
+// canonical ModuleKey and the normal frontend diagnostics. Only the parser's
+// already-defined conditional grammar determines target applicability.
+عرف عضو_مصدر_نشط_للهدف(
+    البيئة: &بيئة_وحدات_منطقية,
+    المفتاح: &مفتاح_وحدة_مقنن,
+    الهدف: &اختيار واصف_هدف
+): منطقي {
+    طابق *الهدف مع
+    | اختيار.لا_شيء -> { أرجع صواب; }
+    | اختيار.بعض(_) -> { };
+    طابق حدد_مصدر_وحدة(البيئة, المفتاح) مع
+    | نتيجة_تحديد_مصدر.خطأ(_) -> { أرجع صواب; }
+    | نتيجة_تحديد_مصدر.موجود({
+        المفتاح: _, مسار_ملف_المصدر: مسار_الملف, المحتوى: المحتوى
+    }) -> {
+        دع المصدر: مصدر = مصدر_جديد(0, مسار_الملف, المحتوى);
+        طابق حلل_معجميا(&المصدر) مع
+        | نتيجة_تحليل_معجمي.مرفوض(_) -> { أرجع صواب; }
+        | نتيجة_تحليل_معجمي.سلسلة(السلسلة) -> {
+            لو ((الطول(السلسلة.الرموز) مثل غير_موقع) == 0
+                || السلسلة.الرموز[0].النوع != رمز.لو()) {
+                أرجع صواب;
+            };
+            طابق حلل_الرموز_لهدف(&المصدر, &السلسلة.الرموز, الهدف) مع
+            | نتيجة_تحليل.شجرة(الشجرة) -> {
+                أرجع الطول(الشجرة.العناصر) != 0
+                    || الطول(الشجرة.الاستيرادات) != 0
+                    || الطول(الشجرة.مرادفات_الأسماء) != 0;
+            }
+            | _ -> { أرجع صواب; };
+        };
+    };
+}
+
 // Subdirectories remain distinct packages and are never flattened. Names are
 // sorted before ModuleKeys are formed so export discovery is deterministic.
-عام عرف اكتشف_أعضاء_حزمة_مصدر(
+عام عرف اكتشف_أعضاء_حزمة_مصدر_لهدف(
     البيئة: &بيئة_وحدات_منطقية,
-    مفتاح_الحزمة: &مفتاح_وحدة_مقنن
+    مفتاح_الحزمة: &مفتاح_وحدة_مقنن,
+    الهدف: &اختيار واصف_هدف
 ): نتيجة_اكتشاف_أعضاء_حزمة {
     دع مسار_الحزمة: نص;
     طابق مسار_دليل_حزمة_مشتق_من_الجذر(البيئة, مفتاح_الحزمة) مع
@@ -170,11 +216,23 @@
             دع المفتاح: مفتاح_وحدة_مقنن = مفتاح_وحدة_مقنن_من(
                 (*مفتاح_الحزمة).الجذر, المسار
             );
-            ألحق(الأعضاء, المفتاح);
+            لو (عضو_مصدر_نشط_للهدف(البيئة, &المفتاح, الهدف)) {
+                ألحق(الأعضاء, المفتاح);
+            };
         };
         ف := ف + (1 مثل غير_موقع);
     }
     أرجع نتيجة_اكتشاف_أعضاء_حزمة.موجودة(الأعضاء);
+}
+
+// Neutral discovery remains the public compatibility entry for tooling that
+// intentionally does not select a compilation target.
+عام عرف اكتشف_أعضاء_حزمة_مصدر(
+    البيئة: &بيئة_وحدات_منطقية,
+    مفتاح_الحزمة: &مفتاح_وحدة_مقنن
+): نتيجة_اكتشاف_أعضاء_حزمة {
+    دع الهدف: اختيار واصف_هدف = اختيار.لا_شيء();
+    أرجع اكتشف_أعضاء_حزمة_مصدر_لهدف(البيئة, مفتاح_الحزمة, &الهدف);
 }
 
 عام عرف حدد_مصدر_وحدة(
@@ -213,4 +271,18 @@
             أرجع نتيجة_تحديد_مصدر.موجود(المصدر);
         };
     };
+}
+
+// Direct imports must obey the same target inclusion decision as package
+// discovery. A file inactive for the requested target has no loadable Module
+// identity for that compilation; it cannot bypass the filter by exact path.
+عام عرف حدد_مصدر_وحدة_لهدف(
+    البيئة: &بيئة_وحدات_منطقية,
+    المفتاح: &مفتاح_وحدة_مقنن,
+    الهدف: &اختيار واصف_هدف
+): نتيجة_تحديد_مصدر {
+    لو (!عضو_مصدر_نشط_للهدف(البيئة, المفتاح, الهدف)) {
+        أرجع نتيجة_تحديد_مصدر.خطأ(خطأ_تحديد_مصدر.غير_موجود());
+    };
+    أرجع حدد_مصدر_وحدة(البيئة, المفتاح);
 }

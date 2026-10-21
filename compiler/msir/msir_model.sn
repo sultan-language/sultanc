@@ -2,6 +2,7 @@
 استورد compiler.frontend.types.type_identity;
 استورد compiler.frontend.names.identifiers;
 استورد compiler.runtime.primitive_identity;
+استورد compiler.runtime.primitive_semantic_contract;
 استورد compiler.source.provenance;
 استورد compiler.debuginfo.model;
 استورد compiler.msir.debug_contract;
@@ -18,18 +19,35 @@
     | منطق بنوع منطقي
     | صحيح_موقع بنوع عدد
     | صحيح_غير_موقع بنوع غير_موقع
+    | مؤشر_فارغ
     | عشري بنوع متجه غ8
     | نص بنوع متجه غ8
+    | متجه بنوع متجه ثابت_مسير
     | دالة بنوع معرف_دالة_مسير
 ;
 
-// Mutable module-level storage. Immutable top-level constants are substituted during lowering
-// and therefore do not occupy runtime storage.
+// Module-level scalar constants may be substituted by lowering. Aggregate
+// constants retain canonical global storage and their source mutability.
+// One linker-owned storage identity must have one canonical MSIR global.
+// Repeated equivalent declarations across imported modules reuse that identity;
+// distinct types must remain distinguishable for verification to reject them.
+عام عرف اسما_عام_خارجي_متساويان_لمسير(الأول: &متجه غ8, الثاني: &متجه غ8): منطقي {
+    لو ((الطول(*الأول) مثل غير_موقع) != (الطول(*الثاني) مثل غير_موقع)) { أرجع خطأ; };
+    دع الموضع: متغير غير_موقع = 0;
+    بينما (الموضع < (الطول(*الأول) مثل غير_موقع)) {
+        لو ((*الأول)[الموضع] != (*الثاني)[الموضع]) { أرجع خطأ; };
+        الموضع := الموضع + 1;
+    }
+    أرجع صواب;
+}
+
 عام نوع عام_مسير = {
     المعرف: معرف_عام_مسير,
     النوع: معرف_نوع,
     التهيئة: ثابت_مسير,
-    قابل_للكتابة: منطقي
+    قابل_للكتابة: منطقي,
+    // Nonempty only for imported linker storage. No initializer is emitted.
+    الاسم_الخارجي: اختيار متجه غ8
 };
 
 عام عرف انسخ_ثابت_مسير(الثابت: &ثابت_مسير): ثابت_مسير {
@@ -37,6 +55,7 @@
     | ثابت_مسير.منطق(القيمة) -> { أرجع ثابت_مسير.منطق(القيمة); }
     | ثابت_مسير.صحيح_موقع(القيمة) -> { أرجع ثابت_مسير.صحيح_موقع(القيمة); }
     | ثابت_مسير.صحيح_غير_موقع(القيمة) -> { أرجع ثابت_مسير.صحيح_غير_موقع(القيمة); }
+    | ثابت_مسير.مؤشر_فارغ -> { أرجع ثابت_مسير.مؤشر_فارغ(); }
     | ثابت_مسير.عشري(البايتات) -> {
         دع المصدر: متجه غ8 = البايتات;
         دع النسخة: متغير متجه غ8 = [];
@@ -50,6 +69,15 @@
         دع ف: متغير غير_موقع = 0;
         بينما (ف < (الطول(المصدر) مثل غير_موقع)) { ألحق(النسخة, المصدر[ف]); ف := ف + 1; }
         أرجع ثابت_مسير.نص(النسخة);
+    }
+    | ثابت_مسير.متجه(العناصر) -> {
+        دع النسخة: متغير متجه ثابت_مسير = [];
+        دع فهرس_العنصر: متغير غير_موقع = 0;
+        بينما (فهرس_العنصر < (الطول(العناصر) مثل غير_موقع)) {
+            ألحق(النسخة, انسخ_ثابت_مسير(&العناصر[فهرس_العنصر]));
+            فهرس_العنصر := فهرس_العنصر + 1;
+        }
+        أرجع ثابت_مسير.متجه(النسخة);
     }
     | ثابت_مسير.دالة(المعرف) -> { أرجع ثابت_مسير.دالة(المعرف); };
 }
@@ -164,6 +192,12 @@
     المرجع: معرف_قيمة_مسير
 };
 
+// A verified, explicit ownership move from an owned byte vector to text.
+// The sequence header is unchanged and ownership of its buffer is transferred.
+عام نوع نقل_تسلسل_مملوك_مسير = {
+    المصدر: معرف_قيمة_مسير
+};
+
 // هوية هدف النداء المقننة في MSIR تحفظ الفرق الدلالي بين دالة سلطانC
 // وبدائي المترجم. البدائي هنا ليس خدمة Runtime منخفضة المستوى.
 عام نوع هدف_نداء_مسير =
@@ -173,12 +207,55 @@
     | قيمة_دالة بنوع معرف_قيمة_مسير
 ;
 
+// A machine call keeps its ABI arguments unchanged. Memory access is a separate,
+// verified semantic fact; a word does not become a pointer by numeric coincidence.
+عام نوع إذن_ذاكرة_نداء_مسير =
+    | قراءة
+    | كتابة
+    | قراءة_وكتابة
+;
+
+عام نوع نطاق_ذاكرة_نداء_مسير = {
+    فهرس_الحجة: غير_موقع,
+    // The actual machine argument and its semantic storage origin remain distinct.
+    المؤشر: معرف_قيمة_مسير,
+    الأصل: معرف_قيمة_مسير,
+    // Verified byte capacity of the live source allocation.
+    الطول: معرف_قيمة_مسير,
+    // Explicit maximum byte extent that the target OS call may access.
+    // Absent until the source/OS contract supplies this independent witness.
+    // This is NOT inferred from the allocation's capacity or syscall arguments.
+    المطلوب: اختيار معرف_قيمة_مسير,
+    الإذن: إذن_ذاكرة_نداء_مسير
+};
+
+// This is not an eighth machine argument. Only the frontend can produce the
+// witness from resolved canonical selector + enum constructor identities.
+عام نوع عقد_نواة_مسير = {
+    المنشئ: معرف_رمز,
+    الترتيب: غير_موقع,
+    المنتقي: معرف_دالة_مسير,
+    الرقم: معرف_قيمة_مسير
+};
+
+// Attestation is minted from Frontend-resolved RootID+ModuleKey+SymbolIDs,
+// never from the call's requested operation or a source-authored mask.
+عام نوع مصدر_عقد_نواة_مسير = {
+    المنشئ: معرف_رمز,
+    الترتيب: غير_موقع,
+    المنتقي: معرف_دالة_مسير,
+    التوقيع: توقيع_نداء_بدائي
+};
+
 عام نوع نداء_مسير = {
     الهدف: هدف_نداء_مسير,
     الحجج: متجه معرف_قيمة_مسير,
     // البدائيات ذات أثر lvalue تحمل المكان الدلالي صراحة. الحجج تبقى قيما
     // عادية، والمكان لا يتحول إلى قيمة من الدرجة الأولى. حاليا append فقط.
-    مكان_التعديل: اختيار معرف_قيمة_مسير
+    مكان_التعديل: اختيار معرف_قيمة_مسير,
+    // Empty only when no accessible machine-call buffers are declared.
+    نطاقات_الذاكرة: متجه نطاق_ذاكرة_نداء_مسير,
+    عقد_النواة: اختيار عقد_نواة_مسير
 };
 
 // Aggregate membership uses canonical semantic member order only; it carries no physical offsets.
@@ -292,6 +369,7 @@
     | مقارنة_عشري بنوع مقارنة_عشري_مسير
     | تحويل_صحيح بنوع تحويل_صحيح_مسير
     | مرجع_إلى_مؤشر بنوع مرجع_إلى_مؤشر_مسير
+    | نقل_تسلسل_مملوك بنوع نقل_تسلسل_مملوك_مسير
     | تجميع بنوع تجميع_مسير
     | تهيئة_متجه بنوع تهيئة_متجه_مسير
     | استخراج_حقل بنوع استخراج_حقل_مسير
@@ -369,13 +447,36 @@
     الناتج: اختيار معرف_نوع
 };
 
+// The three bound allocation-service providers (all or none).
+عام نوع مزودات_تخصيص_ذاكرة_مسير = {
+    التخصيص: معرف_دالة_مسير,
+    إعادة_التخصيص: معرف_دالة_مسير,
+    التحرير: معرف_دالة_مسير
+};
+
 // Rich debug metadata is owned by compiler/debuginfo and connected through
 // compiler/msir/debug_contract. MSIR itself keeps only compact IDs per instruction.
 عام نوع برنامج_مسير = {
     الدوال: متجه دالة_مسير,
+    أصول_النواة: متجه مصدر_عقد_نواة_مسير,
     الدوال_الخارجية: متجه دالة_خارجية_مسير,
     العوام: متجه عام_مسير,
-    دالة_بدء_البرنامج: اختيار معرف_دالة_مسير
+    دالة_بدء_البرنامج: اختيار معرف_دالة_مسير,
+    // The STD process-exit provider (std.os.process) called by a native
+    // executable's startup after the language entry returns. A program fact,
+    // so backends call the canonical definition directly, never by name.
+    دالة_خروج_العملية: اختيار معرف_دالة_مسير,
+    // The STD allocation-service providers (std os/allocation.sn) on targets
+    // whose runtime has no C allocator. A program fact, like the exit
+    // provider: backends call these definitions for the compiler's storage
+    // services instead of an external malloc/realloc/free.
+    مزودات_تخصيص_الذاكرة: اختيار مزودات_تخصيص_ذاكرة_مسير,
+    // Loader-visible only for standalone objects: runs before main and before
+    // the executable startup globals are populated. The verifier permits only
+    // compiler-owned vector construction and stores into local empty headers.
+    // Executable initialization instead calls the same generated routine at
+    // language entry, after the CRT/startup wrapper has initialized its ABI data.
+    دالة_تهيئة_الوحدة: اختيار معرف_دالة_مسير
 };
 
 عام عرف عدد_التقاطات_دالة_مسير(الدالة: &دالة_مسير): غير_موقع {
@@ -405,14 +506,11 @@
     لو (!عام_مسير_موجود(البرنامج, المعرف)) { أرجع اختيار.لا_شيء(); };
     دع الحالة: برنامج_مسير = *البرنامج;
     دع مرجع_العام: &عام_مسير = &الحالة.العوام[المعرف.القيمة];
-    دع قيمة_العام: عام_مسير = *مرجع_العام;
-    دع تهيئة_العام: ثابت_مسير = انسخ_ثابت_مسير(&قيمة_العام.التهيئة);
-    دع العام: عام_مسير = {
-        المعرف: قيمة_العام.المعرف,
-        النوع: قيمة_العام.النوع,
-        التهيئة: تهيئة_العام,
-        قابل_للكتابة: قيمة_العام.قابل_للكتابة
-    };
+    // Copy the whole record once, then replace its initializer with an
+    // independent constant copy; no owned field is moved out of a record.
+    دع تهيئة_العام: ثابت_مسير = انسخ_ثابت_مسير(&(*مرجع_العام).التهيئة);
+    دع العام: متغير عام_مسير = *مرجع_العام;
+    العام.التهيئة := تهيئة_العام;
     أرجع اختيار.بعض(العام);
 }
 
@@ -441,6 +539,14 @@
 ): اختيار معرف_دالة_مسير {
     دع الحالة: برنامج_مسير = *البرنامج;
     أرجع الحالة.دالة_بدء_البرنامج;
+}
+
+// مزود خروج العملية من المكتبة القياسية، إن كان ضمن البرنامج.
+عام عرف معرف_دالة_خروج_عملية_مسير(
+    البرنامج: &برنامج_مسير
+): اختيار معرف_دالة_مسير {
+    دع الحالة: برنامج_مسير = *البرنامج;
+    أرجع الحالة.دالة_خروج_العملية;
 }
 
 // استعلامات العضوية البنائية المقننة يملكها نموذج MSIR نفسه.

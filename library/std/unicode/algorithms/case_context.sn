@@ -1,0 +1,39 @@
+// Unicode SpecialCasing.txt Final_Sigma context (default, locale-independent).
+// The supplied classifications must come from the SAME versioned UCD.
+// The caller must select this context for U+03A3; this operation does not
+// implement Turkish or Lithuanian locale-specific casing.
+عام عرف سيغما_نهائية_في_نص(
+    ذو_حالة: &متجه منطقي,
+    متجاهل_للحالة: &متجه منطقي,
+    الموضع: غير_موقع
+): اختيار منطقي {
+    دع العدد: غير_موقع = الطول(*ذو_حالة) مثل غير_موقع;
+    لو (العدد != (الطول(*متجاهل_للحالة) مثل غير_موقع) || الموضع >= العدد) {
+        أرجع اختيار.لا_شيء();
+    };
+
+    // Final_Sigma requires a preceding Cased character, ignoring Case_Ignorable.
+    دع السابق: متغير غير_موقع = الموضع;
+    دع وجد_السابق: متغير منطقي = خطأ;
+    دع استمر: متغير منطقي = صواب;
+    بينما (السابق > 0 && استمر) {
+        السابق := السابق - 1;
+        لو ((*متجاهل_للحالة)[السابق]) {
+            // Ignore for the purpose of this context.
+        } وإلا {
+            وجد_السابق := (*ذو_حالة)[السابق];
+            استمر := خطأ;
+        };
+    }
+    لو (!وجد_السابق) { أرجع اختيار.بعض(خطأ); };
+
+    // There must be NO following Cased character after Case_Ignorable*.
+    دع التالي: متغير غير_موقع = الموضع + 1;
+    بينما (التالي < العدد) {
+        لو (!(*متجاهل_للحالة)[التالي]) {
+            أرجع اختيار.بعض(!(*ذو_حالة)[التالي]);
+        };
+        التالي := التالي + 1;
+    }
+    أرجع اختيار.بعض(صواب);
+}

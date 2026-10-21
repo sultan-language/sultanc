@@ -1,6 +1,6 @@
 // Canonical target-neutral identities for compiler-internal allocation services.
-// Ordinary std/runtime operations use typed external declarations and
-// هوية_تصدير_تشغيل instead of compiler semantic service identities.
+// Ordinary STD operations use compiled source declarations and symbolic calls;
+// these identities are reserved for compiler-owned storage services.
 عام نوع هوية_خدمة_تشغيل =
     | تخصيص
     | إعادة_تخصيص

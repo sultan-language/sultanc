@@ -1,0 +1,18 @@
+// Unicode code points are in U+0000..U+10FFFF; scalar values also
+// exclude the UTF-16 surrogate interval U+D800..U+DFFF.
+// This operation is independent of the versioned Unicode Character Database.
+عام عرف نقطة_شيفرة_يونيكود_صالحة(القيمة: غ32): منطقي {
+    أرجع القيمة <= 0x10FFFF;
+}
+
+عام عرف قيمة_يونيكود_قياسية_صالحة(القيمة: غ32): منطقي {
+    أرجع (القيمة <= 0x10FFFF)
+        && !((القيمة >= 0xD800) && (القيمة <= 0xDFFF));
+}
+
+عام عرف بديل_يوتيف16_يونيكود(القيمة: غ32): منطقي {
+    أرجع (القيمة >= 0xD800) && (القيمة <= 0xDFFF);
+}
+عام مرادف is_unicode_code_point = نقطة_شيفرة_يونيكود_صالحة;
+عام مرادف is_unicode_scalar = قيمة_يونيكود_قياسية_صالحة;
+عام مرادف is_unicode_surrogate = بديل_يوتيف16_يونيكود;

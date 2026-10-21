@@ -1,7 +1,8 @@
 استورد compiler.backend.target.target_model;
 
 // Target owns which backend providers may consume each registered target.
-// The native provider remains limited to its two implemented machine paths;
+// The native provider consumes the targets with an implemented machine path
+// (arm64 Mach-O, x86-64 Linux ELF, wasm32 WebAssembly modules);
 // LLVM may consume every registered target and delegates machine lowering to
 // the LLVM TargetMachine selected from the target's canonical triple.
 عام عرف يدعم_مزود_الخلفية(
@@ -13,6 +14,7 @@
         طابق تركيب_الهدف_الأصلي(الهدف) مع
         | هوية_تركيب_هدف_أصلي.ذراع_أربعة_وستون_داروين_ماتشو -> { أرجع صواب; }
         | هوية_تركيب_هدف_أصلي.إكس_ستة_وثمانون_أربعة_وستون_لينكس_إلف -> { أرجع صواب; }
+        | هوية_تركيب_هدف_أصلي.ويب_أسمبلي_اثنان_وثلاثون_وحدة -> { أرجع صواب; }
         | هوية_تركيب_هدف_أصلي.ترجمة_متقاطعة_مفوضة -> { أرجع خطأ; };
     }
     | هوية_مزود_خلفية.إل_إل_في_إم -> { أرجع صواب; };

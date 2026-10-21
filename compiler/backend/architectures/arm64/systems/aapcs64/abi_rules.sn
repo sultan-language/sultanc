@@ -1,0 +1,85 @@
+استورد compiler.backend.abi.abi_model;
+استورد compiler.backend.abi.aggregate_leaves;
+استورد compiler.backend.abi.foreign_plan;
+استورد compiler.frontend.types.type_identity;
+استورد compiler.frontend.types.type_context;
+استورد compiler.backend.layout.layout_model;
+استورد compiler.backend.target.target_model;
+
+// AAPCS64 ("Procedure Call Standard for the Arm 64-bit Architecture",
+// Arm ABI repository, §6.8 parameter passing) for calls to foreign (C)
+// functions on AArch64 Linux, Android, FreeBSD and Windows targets
+// (Windows on Arm follows AAPCS64 for non-variadic calls). Darwin AArch64
+// has its own registered ABI (systems/macos/abi_rules.sn). Clang reference:
+// AArch64ABIInfo with the AAPCS kind.
+// - Integers and floats use x0-x7 / v0-v7; integers are not extended
+//   (only Apple's variant requires caller extension).
+// - A homogeneous floating aggregate (1-4 floats of one size, B.2) uses
+//   consecutive v registers as one block, or goes wholly to the stack (C.3).
+// - Any other composite of at most 16 bytes uses one or two consecutive x
+//   registers as one block, or goes wholly to the stack (C.10-C.13).
+// - A larger composite is passed by address of a caller-made copy (B.4).
+// - Results follow the same classification; a larger composite returns
+//   through memory whose address the caller passes in x8.
+// SultanC types never need 16-byte alignment, so the even-register rule for
+// 16-byte-aligned composites (C.8) does not arise. Unsupported: variadic
+// calls (none declared) and short vectors (no such type).
+
+عرف صنف_قيمة_إيه_إيه_بي_سي_إس_أربعة_وستون(
+    الأنواع: &سجل_أنواع,
+    الهدف: &واصف_هدف,
+    سجل_التخطيط: &متغير سجل_تخطيط,
+    النوع: معرف_نوع
+): نتيجة قيمة_مصنفة_واجهة, خطأ_واجهة {
+    دع الوصف: وصف_قيمة_خارجية;
+    طابق صف_قيمة_خارجية(الأنواع, الهدف, سجل_التخطيط, النوع) مع
+    | نتيجة.خطأ(الخطأ) -> { أرجع نتيجة.خطأ(الخطأ); }
+    | نتيجة.نجح(القيمة) -> { الوصف := القيمة; };
+    لو (الوصف.فارغة) { أرجع نتيجة.نجح(قيمة_متجاهلة_خارجية()); };
+    لو (!الوصف.بنية) {
+        أرجع نتيجة.نجح(قيمة_سلمية_خارجية(&الوصف, توسيع_عدد_واجهة.بلا_توسيع()));
+    };
+    طابق حجم_عنصر_متجانس_عائم_واجهة(&الوصف.الأوراق, الوصف.الحجم, 4) مع
+    | اختيار.بعض(حجم_العنصر) -> {
+        دع العدد: غير_موقع = الوصف.الحجم / حجم_العنصر;
+        أرجع نتيجة.نجح(قيمة_أجزاء_خارجية(
+            &الوصف,
+            أشكال_أجزاء_منتظمة_واجهة(الوصف.الحجم, حجم_العنصر, العدد, فئة_سجل_واجهة.عائم_متجه()),
+            صواب
+        ));
+    }
+    | اختيار.لا_شيء -> { };
+    لو (الوصف.الحجم <= 8) {
+        أرجع نتيجة.نجح(قيمة_صحيحة_واحدة_خارجية(&الوصف));
+    };
+    لو (الوصف.الحجم <= 16) {
+        أرجع نتيجة.نجح(قيمة_أجزاء_خارجية(
+            &الوصف,
+            أشكال_أجزاء_منتظمة_واجهة(الوصف.الحجم, 8, 2, فئة_سجل_واجهة.عدد_صحيح()),
+            صواب
+        ));
+    };
+    أرجع نتيجة.نجح(قيمة_غير_مباشرة_خارجية(&الوصف));
+}
+
+عام عرف صنف_واجهة_إيه_إيه_بي_سي_إس_أربعة_وستون_خارجية(
+    الأنواع: &سجل_أنواع,
+    الهدف: &واصف_هدف,
+    سجل_التخطيط: &متغير سجل_تخطيط,
+    المعاملات: &متجه معرف_نوع,
+    الناتج: معرف_نوع
+): نتيجة خطة_دالة_واجهة, خطأ_واجهة {
+    دع القيم: متغير متجه قيمة_مصنفة_واجهة = [];
+    دع ف: متغير غير_موقع = 0;
+    بينما (ف < (الطول(*المعاملات) مثل غير_موقع)) {
+        طابق صنف_قيمة_إيه_إيه_بي_سي_إس_أربعة_وستون(الأنواع, الهدف, سجل_التخطيط, (*المعاملات)[ف]) مع
+        | نتيجة.خطأ(الخطأ) -> { أرجع نتيجة.خطأ(الخطأ); }
+        | نتيجة.نجح(القيمة) -> { ألحق(القيم, القيمة); };
+        ف := ف + 1;
+    }
+    دع قيمة_الناتج: قيمة_مصنفة_واجهة;
+    طابق صنف_قيمة_إيه_إيه_بي_سي_إس_أربعة_وستون(الأنواع, الهدف, سجل_التخطيط, الناتج) مع
+    | نتيجة.خطأ(الخطأ) -> { أرجع نتيجة.خطأ(الخطأ); }
+    | نتيجة.نجح(القيمة) -> { قيمة_الناتج := القيمة; };
+    أرجع نتيجة.نجح(ابن_خطة_واجهة_خارجية(المعاملات, &القيم, الناتج, &قيمة_الناتج, 8, 16));
+}

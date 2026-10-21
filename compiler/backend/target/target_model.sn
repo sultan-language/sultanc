@@ -130,6 +130,7 @@
 عام نوع مزود_تشغيل_هدف =
     | داروين
     | لينكس
+    | واسي
     | غير_متاح
 ;
 
@@ -144,6 +145,9 @@
 عام نوع هوية_تركيب_هدف_أصلي =
     | ذراع_أربعة_وستون_داروين_ماتشو
     | إكس_ستة_وثمانون_أربعة_وستون_لينكس_إلف
+    // wasm32 WebAssembly modules (WASI command or browser): the native wasm32
+    // selector and the WebAssembly object writer; runtime facts as delegated.
+    | ويب_أسمبلي_اثنان_وثلاثون_وحدة
     | ترجمة_متقاطعة_مفوضة
 ;
 

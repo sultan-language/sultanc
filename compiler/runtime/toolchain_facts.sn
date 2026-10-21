@@ -1,0 +1,33 @@
+// Facts about the compiling toolchain that the compiler exposes to the program
+// it compiles as compile-time constants, through the two toolchain primitives
+// (primitive_identity.sn: إصدار_إل_إل_في_إم_للأداة, مكتبة_إل_إل_في_إم_للأداة).
+//
+// Owner and flow: the LLVM provider discovers the facts of the libLLVM the
+// running compiler uses (backend/provider/llvm/toolchain.sn); the Driver hands
+// them to MSIR lowering (msir/semantic_lowering.sn), which folds each
+// primitive call into a constant. No backend, verifier or interpreter ever
+// sees these primitives.
+//
+// Consumer and reason: a compiler built for a WASI host links no libLLVM and
+// cannot discover one, yet the executables it links for a native target (the
+// compiler itself) depend on libLLVM. Its toolchain facts are therefore the
+// facts of the compiler that built it, recorded at build time, the same way a
+// mature cross toolchain records its configured locations when it is built.
+// A WASI compiler rebuilding itself passes its recorded facts on unchanged.
+//
+// Major version 0 and an empty library path mean "no LLVM": the compiling
+// toolchain had none, and no LLVM link dependency can be recorded.
+عام نوع حقائق_أداة_مترجم = {
+    إصدار_إل_إل_في_إم_الكبير: غير_موقع,
+    // Absolute path of the libLLVM shared library, or empty when unknown.
+    مسار_مكتبة_إل_إل_في_إم: متجه غ8
+};
+
+عام عرف حقائق_أداة_مترجم_فارغة(): حقائق_أداة_مترجم {
+    دع المسار: متجه غ8 = [];
+    دع الحقائق: حقائق_أداة_مترجم = {
+        إصدار_إل_إل_في_إم_الكبير: 0,
+        مسار_مكتبة_إل_إل_في_إم: المسار
+    };
+    أرجع الحقائق;
+}

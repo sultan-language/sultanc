@@ -2,12 +2,14 @@
 استورد compiler.frontend.ast.types;
 استورد compiler.frontend.ast.statements;
 استورد compiler.frontend.ast.unit;
+استورد compiler.frontend.ast.declarations;
 استورد compiler.source.source_file;
 استورد compiler.frontend.lexer.values;
 استورد compiler.frontend.parser.cursor;
 استورد compiler.frontend.parser.result;
 استورد compiler.frontend.parser.error;
 استورد compiler.frontend.parser.declarations;
+استورد compiler.backend.target.target_model;
 
 // مدخل التحليل النحوي يستهلك رموزا دلالية جاهزة ولا يفرّع حسب لغة source.
 عام عرف حلل_الرموز(المصدر: &مصدر, الرموز: &متجه رمز_مصدر): نتيجة_تحليل {
@@ -24,4 +26,50 @@
 ): وحدة_مصدر {
     دع المؤشر: متغير مؤشر = مؤشر_جديد();
     أرجع حلل_وحدة_للأدوات(المصدر, الرموز, &متغير المؤشر, الأخطاء);
+}
+
+// Target-aware parser entry for compilation and package export discovery.
+// The historical target-neutral API remains for tools and older clients.
+عام عرف حلل_الرموز_لهدف(
+    المصدر: &مصدر, الرموز: &متجه رمز_مصدر, الهدف: &اختيار واصف_هدف
+): نتيجة_تحليل {
+    دع المؤشر: متغير مؤشر = مؤشر_جديد();
+    أرجع حلل_وحدة_لهدف(المصدر, الرموز, &متغير المؤشر, الهدف);
+}
+
+// Recovery preserves the historical permissive parser for target-neutral source.
+// A top-level platform guard, however, must never be recovered by blindly
+// collecting declarations from an inactive arm. Parse that source with the
+// selected target, and leave its tree empty if the guard is invalid.
+عام عرف حلل_الرموز_للأدوات_لهدف(
+    المصدر: &مصدر,
+    الرموز: &متجه رمز_مصدر,
+    الهدف: &اختيار واصف_هدف,
+    الأخطاء: &متغير متجه خطأ_نحوي
+): وحدة_مصدر {
+    دع العمق: متغير غير_موقع = 0;
+    دع حارس: متغير منطقي = خطأ;
+    دع ف: متغير غير_موقع = 0;
+    بينما (ف < (الطول(*الرموز) مثل غير_موقع)) {
+        دع النوع: رمز = (*الرموز)[ف].النوع;
+        لو (العمق == 0 && النوع == رمز.لو()) { حارس := صواب; };
+        لو (النوع == رمز.معقوف_يسار()) { العمق := العمق + 1; };
+        لو (النوع == رمز.معقوف_يمين() && العمق > 0) { العمق := العمق - 1; };
+        ف := ف + 1;
+    }
+    لو (!حارس) {
+        أرجع حلل_الرموز_للأدوات(المصدر, الرموز, الأخطاء);
+    };
+    طابق حلل_الرموز_لهدف(المصدر, الرموز, الهدف) مع
+    | نتيجة_تحليل.شجرة(الشجرة) -> { أرجع الشجرة; }
+    | نتيجة_تحليل.مرفوض(الخطأ) -> { ألحق(*الأخطاء, الخطأ); }
+    | نتيجة_تحليل.خلل_داخلي -> { };
+    دع استيرادات_فارغة: متجه استيراد = [];
+    دع عناصر_فارغة: متجه عنصر_وحدة = [];
+    دع مرادفات_فارغة: متجه تصريح_مرادف_اسم = [];
+    دع فارغ: وحدة_مصدر = {
+        معرف_المصدر: (*المصدر).المعرف,
+        الاستيرادات: استيرادات_فارغة, العناصر: عناصر_فارغة, مرادفات_الأسماء: مرادفات_فارغة
+    };
+    أرجع فارغ;
 }

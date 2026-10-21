@@ -1,0 +1,94 @@
+استورد compiler.backend.abi.abi_model;
+استورد compiler.backend.abi.aggregate_leaves;
+استورد compiler.backend.abi.foreign_plan;
+استورد compiler.frontend.types.type_identity;
+استورد compiler.frontend.types.type_context;
+استورد compiler.backend.layout.layout_model;
+استورد compiler.backend.target.target_model;
+
+// 64-bit ELF V2 ABI for Power ("64-Bit ELF V2 ABI Specification", OpenPOWER,
+// §2.2.3 parameter passing) for foreign (C) calls on powerpc64le Linux.
+// Clang reference: PPC64_SVR4_ABIInfo with the ELFv2 kind.
+// - Integers narrower than 64 bits are extended by signedness; floats use
+//   FPRs; the code generator also mirrors arguments into the parameter save
+//   area as the ABI requires.
+// - A homogeneous floating aggregate of at most eight floats of one size is
+//   passed in consecutive FPRs as one block (also returned in f1-f8).
+// - Any other structure of at most 64 bytes is passed as a block of
+//   doublewords in GPRs (continuing in the parameter save area); a larger
+//   one is copied by value into the parameter save area.
+// - Other results of at most 16 bytes return in r3/r4; larger ones through
+//   memory whose address the caller passes.
+// Unsupported: variadic calls (none declared) and quad-precision floats and
+// vectors (no such types).
+
+عرف صنف_قيمة_إلف_الثانية_باور(
+    الأنواع: &سجل_أنواع,
+    الهدف: &واصف_هدف,
+    سجل_التخطيط: &متغير سجل_تخطيط,
+    النوع: معرف_نوع,
+    ناتج: منطقي
+): نتيجة قيمة_مصنفة_واجهة, خطأ_واجهة {
+    دع الوصف: وصف_قيمة_خارجية;
+    طابق صف_قيمة_خارجية(الأنواع, الهدف, سجل_التخطيط, النوع) مع
+    | نتيجة.خطأ(الخطأ) -> { أرجع نتيجة.خطأ(الخطأ); }
+    | نتيجة.نجح(القيمة) -> { الوصف := القيمة; };
+    لو (الوصف.فارغة) { أرجع نتيجة.نجح(قيمة_متجاهلة_خارجية()); };
+    لو (!الوصف.بنية) {
+        أرجع نتيجة.نجح(قيمة_سلمية_خارجية(
+            &الوصف, توسيع_عدد_ضيق_واجهة(الأنواع, النوع, 64, 0)
+        ));
+    };
+    طابق حجم_عنصر_متجانس_عائم_واجهة(&الوصف.الأوراق, الوصف.الحجم, 8) مع
+    | اختيار.بعض(حجم_العنصر) -> {
+        دع العدد: غير_موقع = الوصف.الحجم / حجم_العنصر;
+        دع الأشكال: متجه شكل_جزء_واجهة = أشكال_أجزاء_منتظمة_واجهة(
+            الوصف.الحجم, حجم_العنصر, العدد, فئة_سجل_واجهة.عائم_متجه()
+        );
+        // Arguments travel as one FPR block; results as separate FPR values.
+        أرجع نتيجة.نجح(قيمة_أجزاء_خارجية(&الوصف, الأشكال, !ناتج));
+    }
+    | اختيار.لا_شيء -> { };
+    لو (ناتج) {
+        لو (الوصف.الحجم <= 8) { أرجع نتيجة.نجح(قيمة_صحيحة_واحدة_خارجية(&الوصف)); };
+        لو (الوصف.الحجم <= 16) {
+            أرجع نتيجة.نجح(قيمة_أجزاء_خارجية(
+                &الوصف,
+                أشكال_أجزاء_منتظمة_واجهة(الوصف.الحجم, 8, 2, فئة_سجل_واجهة.عدد_صحيح()),
+                خطأ
+            ));
+        };
+        أرجع نتيجة.نجح(قيمة_غير_مباشرة_خارجية(&الوصف));
+    };
+    لو (الوصف.الحجم <= 64) {
+        دع العدد: غير_موقع = (الوصف.الحجم + 7) / 8;
+        أرجع نتيجة.نجح(قيمة_أجزاء_خارجية(
+            &الوصف,
+            أشكال_أجزاء_منتظمة_واجهة(الوصف.الحجم, 8, العدد, فئة_سجل_واجهة.عدد_صحيح()),
+            صواب
+        ));
+    };
+    أرجع نتيجة.نجح(قيمة_في_الذاكرة_خارجية(&الوصف));
+}
+
+عام عرف صنف_واجهة_إلف_الثانية_باور_خارجية(
+    الأنواع: &سجل_أنواع,
+    الهدف: &واصف_هدف,
+    سجل_التخطيط: &متغير سجل_تخطيط,
+    المعاملات: &متجه معرف_نوع,
+    الناتج: معرف_نوع
+): نتيجة خطة_دالة_واجهة, خطأ_واجهة {
+    دع القيم: متغير متجه قيمة_مصنفة_واجهة = [];
+    دع ف: متغير غير_موقع = 0;
+    بينما (ف < (الطول(*المعاملات) مثل غير_موقع)) {
+        طابق صنف_قيمة_إلف_الثانية_باور(الأنواع, الهدف, سجل_التخطيط, (*المعاملات)[ف], خطأ) مع
+        | نتيجة.خطأ(الخطأ) -> { أرجع نتيجة.خطأ(الخطأ); }
+        | نتيجة.نجح(القيمة) -> { ألحق(القيم, القيمة); };
+        ف := ف + 1;
+    }
+    دع قيمة_الناتج: قيمة_مصنفة_واجهة;
+    طابق صنف_قيمة_إلف_الثانية_باور(الأنواع, الهدف, سجل_التخطيط, الناتج, صواب) مع
+    | نتيجة.خطأ(الخطأ) -> { أرجع نتيجة.خطأ(الخطأ); }
+    | نتيجة.نجح(القيمة) -> { قيمة_الناتج := القيمة; };
+    أرجع نتيجة.نجح(ابن_خطة_واجهة_خارجية(المعاملات, &القيم, الناتج, &قيمة_الناتج, 8, 16));
+}

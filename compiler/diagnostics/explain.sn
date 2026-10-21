@@ -140,6 +140,16 @@
         | لغة_تشخيص.الإنجليزية -> { أرجع «The compiler invocation, selected target, or file environment is invalid for this operation. Correct the option, target, path, or missing value identified by the diagnostic and run the command again.»; }
         | لغة_تشخيص.العربية -> { أرجع «استدعاء المترجم أو الهدف المختار أو بيئة الملفات غير صالح لهذه العملية. صحح الخيار أو الهدف أو المسار أو القيمة المفقودة التي يحددها التشخيص ثم أعد التنفيذ.»; };
     }
+    | معرف_تشخيص.خلفية_مترجم_غير_متاحة -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «The requested --backend cannot produce this target in this compiler: either the compiler was built for a WASI host and contains no LLVM, or the libLLVM it uses was built without this target. The compiler never switches backends on its own. Use --backend=native, or use a compiler whose libLLVM includes the target.»; }
+        | لغة_تشخيص.العربية -> { أرجع «لا تستطيع الخلفية المطلوبة عبر --backend إنتاج هذا الهدف في هذا المترجم: إما أن المترجم مبني لمضيف WASI ولا يحتوي LLVM، وإما أن مكتبة LLVM التي يستخدمها بنيت دون هذا الهدف. لا يبدل المترجم الخلفية من تلقاء نفسه. استخدم --backend=native، أو مترجما تتضمن مكتبة LLVM لديه هذا الهدف.»; };
+    }
+    | معرف_تشخيص.أداة_ربط_غير_موجودة -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «This output is linked by an external program, named by the path argument (wasm-ld for WebAssembly, ld.lld for delegated ELF links; both belong to LLVM's LLD), and the system could not find it. Install LLD and make that program reachable through PATH, then run the command again.»; }
+        | لغة_تشخيص.العربية -> { أرجع «يربط هذا المخرج برنامج خارجي يسميه معامل المسار (wasm-ld لويب أسمبلي، وld.lld لربط إلف المفوض؛ وكلاهما من LLD ضمن مشروع LLVM)، ولم يجده النظام. ثبّت LLD واجعل ذلك البرنامج متاحا عبر PATH ثم أعد التنفيذ.»; };
+    }
     | معرف_تشخيص.هدف_مضيف_مترجم_غير_متاح -> {
         طابق اللغة مع
         | لغة_تشخيص.الإنجليزية -> { أرجع «The compiler invocation, selected target, or file environment is invalid for this operation. Correct the option, target, path, or missing value identified by the diagnostic and run the command again.»; }

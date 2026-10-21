@@ -1,0 +1,35 @@
+استورد os.error;
+استورد os.platform.unix.linux.syscalls.kernel_result;
+استورد os.platform.unix.linux.syscalls.operations;
+استورد os.platform.unix.linux.syscalls.selection;
+
+// Kernel CSPRNG through getrandom(2) with flags 0: the call blocks only until
+// the kernel pool is first initialized and never returns predictable data.
+// It may transfer fewer bytes than requested or fail with EINTR (4); both
+// are retried. Every other kernel error keeps its native errno.
+عام عرف املأ_عشوائية_نواة_لينكس(المخزن: &متغير متجه غ8): نتيجة غير_موقع, خطأ_نظام_أصلي {
+    دع البايتات: متغير متجه غ8 = *المخزن;
+    دع الحجم: غير_موقع = الطول(البايتات) مثل غير_موقع;
+    دع المكتمل: متغير غير_موقع = 0;
+    بينما (المكتمل < الحجم) {
+        دع المطلوب: غير_موقع = الحجم - المكتمل;
+        دع الخام: غ64 = بدائي_نداء_نواة_خام(
+            رقم_نداء_نواة_لينكس(عملية_نداء_نواة_لينكس.عشوائية_النواة()),
+            &متغير البايتات[المكتمل], المطلوب مثل غ64,
+            0 مثل غ64, 0 مثل غ64, 0 مثل غ64, 0 مثل غ64
+        );
+        طابق حلل_نتيجة_نداء_نواة_لينكس(الخام) مع
+        | نتيجة.خطأ(الخطأ) -> {
+            لو (الخطأ.الرمز != 4) { أرجع نتيجة.خطأ(الخطأ); };
+        }
+        | نتيجة.نجح(المنقول) -> {
+            لو (المنقول == 0 || (المنقول مثل غير_موقع) > المطلوب) {
+                // A zero or oversized transfer is not a valid getrandom reply.
+                أرجع نتيجة.خطأ(أنشئ_خطأ_نظام_أصلي(مصدر_خطأ_نظام.يونكس(), 5));
+            };
+            المكتمل := المكتمل + (المنقول مثل غير_موقع);
+        };
+    }
+    *المخزن := البايتات;
+    أرجع نتيجة.نجح(الحجم);
+}

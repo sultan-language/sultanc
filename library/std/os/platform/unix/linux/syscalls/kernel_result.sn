@@ -1,0 +1,73 @@
+استورد os.error;
+
+// Decode the Linux ABIs that report errors as a negative return word.
+// This is NOT a libc status: no errno TLS, C wrapper, or runtime is involved.
+// On these ABIs the unsigned range [-4095, -1] encodes errno; MIPS a3,
+// PowerPC sc cr0.SO and SPARC carry instead require the flagged decoder.
+// PowerPC scv uses the negative-return-word convention.
+//
+// Keep the result unsigned: a successful pointer-valued syscall need not
+// be representable as a signed SultanC integer. The caller must interpret
+// successful values according to the specific syscall's return contract.
+// This module does not issue syscalls. A genuine target-specific machine
+// instruction/ABI facility is required to produce the raw result word.
+عام عرف حلل_نتيجة_نداء_نواة_لينكس(
+    القيمة_الخام: غير_موقع
+): نتيجة غير_موقع, خطأ_نظام_أصلي {
+    دع الحد_الأعلى: غير_موقع = ~((0 مثل غير_موقع));
+    لو (القيمة_الخام >= (الحد_الأعلى - 4094)) {
+        دع رمز_الخطأ: عدد = (الحد_الأعلى - القيمة_الخام + 1) مثل عدد;
+        أرجع نتيجة.خطأ(أنشئ_خطأ_نظام_أصلي(
+            مصدر_خطأ_نظام.يونكس(), رمز_الخطأ
+        ));
+    };
+    أرجع نتيجة.نجح(القيمة_الخام);
+}
+
+// MIPS (a3), PowerPC64 sc (cr0.SO) and SPARC64 (carry) explicitly report
+// syscall errors in a second register or condition flag. On failure the
+// *positive* errno is in the value register. Do not negate or reinterpret
+// it as an unsigned Linux -errno return. The target's machine ABI provider
+// must supply the actual flag; this function does NOT read host CPU state.
+//
+// References: Linux syscall(2) architecture calling-convention table and
+// Documentation/powerpc/syscall64-abi.rst in the Linux kernel tree.
+عام عرف حلل_نتيجة_نداء_نواة_لينكس_بعلم_خطأ(
+    القيمة_الخام: غير_موقع,
+    فشل: منطقي
+): نتيجة غير_موقع, خطأ_نظام_أصلي {
+    لو (فشل) {
+        أرجع نتيجة.خطأ(أنشئ_خطأ_نظام_أصلي(
+            مصدر_خطأ_نظام.يونكس(), القيمة_الخام مثل عدد
+        ));
+    };
+    أرجع نتيجة.نجح(القيمة_الخام);
+}
+
+// Linux UAPI asm-generic/errno-base.h (1..34). The classification never
+// discards the original kernel errno value or claims every architecture's
+// extended errno namespace shares identical numbering.
+عام عرف صنف_خطأ_نواة_لينكس_أساسيا(الرمز: عدد): صنف_خطأ_نظام {
+    لو (الرمز == 2) { أرجع صنف_خطأ_نظام.غير_موجود(); }; // ENOENT
+    لو (الرمز == 4) { أرجع صنف_خطأ_نظام.عملية_انقطعت(); }; // EINTR
+    لو (الرمز == 11) { أرجع صنف_خطأ_نظام.عملية_ستحظر(); }; // EAGAIN
+    لو (الرمز == 12) { أرجع صنف_خطأ_نظام.استنفاد_الموارد(); }; // ENOMEM
+    لو (الرمز == 13) { أرجع صنف_خطأ_نظام.وصول_مرفوض(); }; // EACCES
+    لو (الرمز == 16) { أرجع صنف_خطأ_نظام.مورد_مشغول(); }; // EBUSY
+    لو (الرمز == 17) { أرجع صنف_خطأ_نظام.موجود_مسبقا(); }; // EEXIST
+    لو (الرمز == 20) { أرجع صنف_خطأ_نظام.ليس_دليلا(); }; // ENOTDIR
+    لو (الرمز == 21) { أرجع صنف_خطأ_نظام.هو_دليل(); }; // EISDIR
+    لو (الرمز == 22) { أرجع صنف_خطأ_نظام.وسيط_غير_صالح(); }; // EINVAL
+    لو (الرمز == 23) { أرجع صنف_خطأ_نظام.استنفاد_الموارد(); }; // ENFILE
+    لو (الرمز == 24) { أرجع صنف_خطأ_نظام.استنفاد_الموارد(); }; // EMFILE
+    لو (الرمز == 28) { أرجع صنف_خطأ_نظام.استنفاد_الموارد(); }; // ENOSPC
+    أرجع صنف_خطأ_نظام.غير_معروف();
+}
+
+عام عرف ترجم_نتيجة_نداء_نواة_لينكس(
+    الخطأ: خطأ_نظام_أصلي
+): خطأ_نظام {
+    أرجع صنف_خطأ_نظام_أصليا(
+        الخطأ, صنف_خطأ_نواة_لينكس_أساسيا(الخطأ.الرمز)
+    );
+}

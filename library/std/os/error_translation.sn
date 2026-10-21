@@ -1,0 +1,39 @@
+استورد os.error;
+
+// File-operation integer errors are the inherited STD boundary. The native
+// OS error itself retains its origin in os.error. A negative integer alone
+// cannot identify a Winsock error versus a Win32 error: do not apply this
+// file-only classifier to socket errors.
+لو (الهدف.المنصة == «linux» && (الهدف.المعمارية == «x86_64» || الهدف.المعمارية == «aarch64»)) {
+    استورد os.platform.unix.linux.syscalls.kernel_result;
+    عام عرف صنف_خطأ_ملفات_النظام(الحالة: عدد): صنف_خطأ_نظام {
+        لو (الحالة >= 0) { أرجع صنف_خطأ_نظام.غير_معروف(); };
+        أرجع صنف_خطأ_نواة_لينكس_أساسيا(0 - الحالة);
+    }
+}
+
+لو (الهدف.المنصة == «windows») {
+    استورد os.platform.windows.win32.error_translation;
+    عام عرف صنف_خطأ_ملفات_النظام(الحالة: عدد): صنف_خطأ_نظام {
+        لو (الحالة >= 0 || الحالة < -4294967295) {
+            أرجع صنف_خطأ_نظام.غير_معروف();
+        };
+        أرجع صنف_خطأ_وين32((0 - الحالة) مثل غ32);
+    }
+}
+
+لو (الهدف.المنصة == «macos») {
+    استورد os.platform.unix.apple.darwin.error_translation;
+    عام عرف صنف_خطأ_ملفات_النظام(الحالة: عدد): صنف_خطأ_نظام {
+        لو (الحالة >= 0) { أرجع صنف_خطأ_نظام.غير_معروف(); };
+        أرجع صنف_خطأ_داروين_أساسيا(0 - الحالة);
+    }
+}
+
+لو (الهدف.المنصة == «wasi») {
+    استورد os.platform.wasi.preview1.error_translation;
+    عام عرف صنف_خطأ_ملفات_النظام(الحالة: عدد): صنف_خطأ_نظام {
+        لو (الحالة >= 0) { أرجع صنف_خطأ_نظام.غير_معروف(); };
+        أرجع صنف_خطأ_واسي_أساسيا(0 - الحالة);
+    }
+}

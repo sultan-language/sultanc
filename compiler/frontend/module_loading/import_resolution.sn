@@ -160,3 +160,24 @@
         أرجع حل_استيراد_بجذر_مسمى(البيئة, المستورد, المرجع);
     };
 }
+
+// Compiler-required standard-library providers (for example the process-exit
+// provider of a self-started executable) are resolved exactly as a module of
+// the trusted standard library would import them, so they share the one
+// canonical ModuleKey with ordinary std imports. Without a trusted std root
+// there is nothing to resolve; the consumer reports the missing provider.
+عام عرف حل_وحدة_مكتبة_قياسية_موثوقة(
+    البيئة: &بيئة_وحدات_منطقية,
+    المرجع: &متجه غ8
+): اختيار مفتاح_وحدة_مقنن {
+    طابق جذر_قياسي_موثوق_لبيئة(البيئة) مع
+    | اختيار.لا_شيء -> { أرجع اختيار.لا_شيء(); }
+    | اختيار.بعض(الجذر) -> {
+        دع المستورد: مفتاح_وحدة_مقنن = مفتاح_وحدة_مقنن_من(
+            الجذر, مسار_وحدة_منطقي_فارغ()
+        );
+        طابق حل_استيراد_بجذر_مسمى(البيئة, &المستورد, المرجع) مع
+        | نتيجة_حل_استيراد.محلول(المفتاح) -> { أرجع اختيار.بعض(المفتاح); }
+        | نتيجة_حل_استيراد.خطأ(_) -> { أرجع اختيار.لا_شيء(); };
+    };
+}

@@ -1,0 +1,20 @@
+استورد os.platform.unix.linux.syscalls.operations;
+
+// Source target guards are evaluated by the canonical frontend before import
+// resolution. No host probing or independent target table is introduced.
+// The current raw-kernel-call lowering covers only these two Linux ABIs.
+لو (الهدف.المنصة == «linux» && الهدف.المعمارية == «x86_64» && الهدف.عرض_المؤشر == «64») {
+    استورد os.platform.unix.linux.syscalls.numbers_x86_64;
+
+    عام عرف رقم_نداء_نواة_لينكس(العملية: عملية_نداء_نواة_لينكس): غ64 {
+        أرجع رقم_نداء_نواة_لينكس_اكس86_64(العملية) مثل غ64;
+    }
+}
+
+لو (الهدف.المنصة == «linux» && الهدف.المعمارية == «aarch64» && الهدف.عرض_المؤشر == «64») {
+    استورد os.platform.unix.linux.syscalls.numbers_asm_generic_64;
+
+    عام عرف رقم_نداء_نواة_لينكس(العملية: عملية_نداء_نواة_لينكس): غ64 {
+        أرجع رقم_نداء_نواة_لينكس_اسم_غالب_64(العملية) مثل غ64;
+    }
+}

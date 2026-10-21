@@ -2,6 +2,7 @@
 استورد compiler.backend.provider.llvm.toolchain;
 استورد compiler.frontend.types.type_identity;
 استورد compiler.msir.identifiers;
+استورد compiler.msir.msir_model;
 استورد compiler.runtime.primitive_identity;
 استورد compiler.backend.target.runtime_service_model;
 
@@ -59,11 +60,6 @@
 };
 
 
-عام نوع تصريح_خدمة_تشغيل_إل_إل_في_إم = {
-    الاسم: متجه غ8,
-    الدالة: مرجع_قيمة_إل_إل_في_إم
-};
-
 عام نوع حالة_مزود_إل_إل_في_إم = {
     السياق: مرجع_سياق_إل_إل_في_إم,
     الوحدة: مرجع_وحدة_إل_إل_في_إم,
@@ -77,7 +73,14 @@
     الدوال_الخارجية: متجه اختيار قيد_دالة_خارجية_إل_إل_في_إم,
     العوام: متجه اختيار قيد_عام_إل_إل_في_إم,
     بدائيات_التشغيل: متجه تصريح_بدائي_نداء_إل_إل_في_إم,
-    خدمات_التشغيل: متجه تصريح_خدمة_تشغيل_إل_إل_في_إم
+    // True when the target has no double-width integer multiply (WebAssembly):
+    // LLVM legalizes llvm.*mul.with.overflow there into compiler-rt calls
+    // (__multi3), which no SultanC link provides, so the checked product is
+    // expanded with native division instead (lowering.sn).
+    ضرب_التجاوز_بالقسمة: منطقي,
+    // The program's std allocation-service providers (MSIR program fact), used
+    // for storage services where the target has no C allocator (wasm32).
+    مزودات_تخصيص_الذاكرة: اختيار مزودات_تخصيص_ذاكرة_مسير
 };
 
 عام نوع فشل_مزود_إل_إل_في_إم =
@@ -103,8 +106,21 @@
     | تحسين_إل_إل_في_إم_فشل بنوع متجه غ8
     | إصدار_مخرج_إل_إل_في_إم_فشل بنوع متجه غ8
     | تصحيح_إل_إل_في_إم_فشل
+    // The target's declared machine output is assembly (e.g. NVPTX PTX, XCore),
+    // so a binary object cannot be produced for it.
+    | مخرج_كائن_غير_مدعوم
 ;
 
+
+// Selection vector from compiler/msir/msir_consumer.sn
+// (كل_دوال_مسير_مطلوبة / دوال_مسير_تنفيذية_مطلوبة), indexed by MSIR function id.
+عام عرف دالة_إل_إل_في_إم_مطلوبة(
+    المطلوبة: &متجه منطقي,
+    المعرف: معرف_دالة_مسير
+): منطقي {
+    لو (المعرف.القيمة >= (الطول(*المطلوبة) مثل غير_موقع)) { أرجع خطأ; };
+    أرجع (*المطلوبة)[المعرف.القيمة];
+}
 
 عام عرف ابحث_قيد_دالة_إل_إل_في_إم(
     الحالة: &حالة_مزود_إل_إل_في_إم,

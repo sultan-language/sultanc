@@ -1,0 +1,9 @@
+// OS-owned bounds validation for pointers borrowed by native platform calls.
+// Check by subtraction so that offset + length cannot overflow.
+عام عرف نطاق_بايتات_نظام_صالح(
+    الحجم: عدد, الإزاحة: عدد, المطلوب: عدد
+): منطقي {
+    لو (الحجم < 0 || الإزاحة < 0 || المطلوب < 0) { أرجع خطأ; };
+    لو (الإزاحة > الحجم) { أرجع خطأ; };
+    أرجع المطلوب <= (الحجم - الإزاحة);
+}

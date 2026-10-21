@@ -3,6 +3,7 @@
 استورد compiler.link.section_model;
 استورد compiler.link.wasm.reader;
 استورد compiler.backend.target.target_model;
+استورد std.text.from_bytes;
 
 عام نوع خطأ_استيعاب_ويب_أسمبلي =
     | وحدة_غير_صالحة
@@ -25,9 +26,7 @@
 }
 
 عرف اسم_قسم_وحدة_ويب_أسمبلي(): متجه غ8 {
-    دع الاسم: متجه غ8 = [
-        0x2E, 0x77, 0x61, 0x73, 0x6D
-    ];
+    دع الاسم: متجه غ8 = بايتات_من_نص(«.wasm»);
     أرجع الاسم;
 }
 

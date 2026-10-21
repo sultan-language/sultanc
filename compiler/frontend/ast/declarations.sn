@@ -58,6 +58,15 @@
     الشكل: شكل_تصريح_نوع
 };
 
+// Module-level aggregates reuse the same expression elements as local initializers.
+// Unlike a runtime expression, the aggregate is evaluated before MSIR emission.
+عام نوع تهيئة_قيمة_عليا =
+    | تعبير بنوع تعبير
+    | متجه بنوع متجه تعبير
+    // Explicit target linker data symbol; no initializer or owned storage.
+    | خارجية بنوع متجه غ8
+;
+
 // Top-level value declarations use the existing `let` surface. An outer
 // `mutable` wrapper on the declared Type denotes writable global storage;
 // otherwise the declaration is an immutable compile-time constant.
@@ -66,5 +75,5 @@
     الاسم: اسم,
     النوع: نوع_تركيبي,
     علني: منطقي,
-    التهيئة: تعبير
+    التهيئة: تهيئة_قيمة_عليا
 };

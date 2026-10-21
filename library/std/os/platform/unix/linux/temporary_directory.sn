@@ -1,0 +1,29 @@
+استورد os.environment_validation;
+استورد os.path;
+
+// Linux temporary-directory policy is derived from process environment,
+// not a kernel syscall. An absent TMPDIR must be handled by a separately
+// configured policy: silently substituting /tmp ignores sandboxes/mounts.
+عام نوع خطأ_دليل_مؤقت_لينكس =
+    | لا_مصدر_بيئة
+    | مسار_غير_صالح
+;
+
+// This function consumes an owned startup environment value after the
+// compiler's startup-ABI handoff becomes available. It never accesses an
+// uninitialized process environment or guesses the compilation host.
+عام عرف اختر_دليل_مؤقت_لينكس(
+    قيمة_متغير_مؤقت: اختيار نص
+): نتيجة نص, خطأ_دليل_مؤقت_لينكس {
+    طابق قيمة_متغير_مؤقت مع
+    | اختيار.لا_شيء -> {
+        أرجع نتيجة.خطأ(خطأ_دليل_مؤقت_لينكس.لا_مصدر_بيئة());
+    }
+    | اختيار.بعض(المسار) -> {
+        لو (الطول(المسار) == 0 || المسار[0] != 47
+            || !مسار_نظام_بلا_صفر_مدمج(&المسار)) {
+            أرجع نتيجة.خطأ(خطأ_دليل_مؤقت_لينكس.مسار_غير_صالح());
+        };
+        أرجع نتيجة.نجح(المسار);
+    };
+}

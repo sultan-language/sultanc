@@ -1,0 +1,19 @@
+استورد std.env.environment;
+
+// Parent directory of the transient workspace an external link step writes
+// its inputs and output into (removed when the step ends). TMPDIR selects it
+// when the host sets one; std validates that value and rejects an invalid
+// one. Without TMPDIR the current working directory is used: std
+// deliberately invents no system-wide temporary path, and the workspace is
+// short-lived and cleaned up either way. Shared by the ELF, WebAssembly and
+// SPIR-V external link providers.
+عام عرف جذر_مساحة_عمل_الربط(): نتيجة نص, عدد {
+    دع اسم_المؤقت: نص = «TMPDIR»;
+    طابق متغير_بيئة(&اسم_المؤقت) مع
+    | نتيجة.خطأ(الحالة) -> { أرجع نتيجة.خطأ(الحالة); }
+    | نتيجة.نجح(القيمة) -> {
+        طابق القيمة مع
+        | اختيار.لا_شيء -> { أرجع دليل_العمل(); }
+        | اختيار.بعض(_) -> { أرجع الدليل_المؤقت(); };
+    };
+}

@@ -80,26 +80,113 @@
     | غير_مباشر بنوع موضع_جزء_واجهة
 ;
 
+// Physical shape of one register part of a value passed or returned in
+// registers: the bytes [الإزاحة, الإزاحة + الحجم) of the value travel in one
+// register of class الفئة. Floating parts are 4 or 8 bytes; integer parts
+// are 1 to 16 bytes (16 only for a part the ABI places in an aligned register
+// pair). The shapes live in the plan entry (خطة_معامل_واجهة/خطة_ناتج_واجهة),
+// which already owns vectors; a classifier that uses only 8-byte integer
+// chunks leaves them empty and consumers derive those chunks from الحجم.
+عام نوع شكل_جزء_واجهة = {
+    الإزاحة: غير_موقع,
+    الحجم: غير_موقع,
+    الفئة: فئة_سجل_واجهة
+};
+
+// Extension of an integer narrower than its argument register, required of
+// the caller (arguments) or the callee (results) by the platform ABI.
+عام نوع توسيع_عدد_واجهة =
+    | بلا_توسيع
+    | توسيع_صفري
+    | توسيع_إشاري
+;
+
+// True when a direct or split location lives in registers (not the stack).
+عام عرف موقع_في_سجلات_واجهة(الموقع: &موقع_تمرير_واجهة): منطقي {
+    طابق *الموقع مع
+    | موقع_تمرير_واجهة.مباشر(الموضع) -> {
+        طابق الموضع مع
+        | موضع_جزء_واجهة.سجل(_) -> { أرجع صواب; }
+        | موضع_جزء_واجهة.مكدس(_) -> { أرجع خطأ; };
+    }
+    | موقع_تمرير_واجهة.مجزأ(المواضع) -> {
+        لو ((الطول(المواضع) مثل غير_موقع) == 0) { أرجع خطأ; };
+        طابق المواضع[0] مع
+        | موضع_جزء_واجهة.سجل(_) -> { أرجع صواب; }
+        | موضع_جزء_واجهة.مكدس(_) -> { أرجع خطأ; };
+    }
+    | _ -> { أرجع خطأ; };
+}
+
 عام نوع تصنيف_قيمة_واجهة = {
     الطريقة: طريقة_تمرير_واجهة,
     الحجم: غير_موقع,
     المحاذاة: غير_موقع,
     عدد_الأجزاء: غير_موقع,
     فئة_السجل: اختيار فئة_سجل_واجهة,
-    تجميعي: منطقي
+    تجميعي: منطقي,
+    التوسيع: توسيع_عدد_واجهة,
+    // The parts form one consecutive register block that the ABI never
+    // splits between registers and the stack (AAPCS64 composites and HFAs,
+    // ELFv2 aggregates): the code generator passes them as one array value.
+    كتلة_متصلة: منطقي,
+    // An indirect argument points to a copy owned by the caller for this call
+    // (foreign C ABIs: the callee may modify it). SultanC's own indirect
+    // arguments pass the address of an immutable value instead.
+    نسخة_للمستدعى: منطقي,
+    // The register parts share doubleword argument slots: a 32-bit part
+    // occupies the half of its slot its offset selects (SPARC V9 structures
+    // with single-precision float members; LLVM `inreg`). Elsewhere every
+    // part occupies a whole register.
+    أجزاء_مرصوصة: منطقي
 };
+
+// A classification with no extension and no special lowering.
+عام عرف تصنيف_قيمة_واجهة_أساسي(
+    الطريقة: طريقة_تمرير_واجهة,
+    الحجم: غير_موقع,
+    المحاذاة: غير_موقع,
+    عدد_الأجزاء: غير_موقع,
+    فئة_السجل: اختيار فئة_سجل_واجهة,
+    تجميعي: منطقي
+): تصنيف_قيمة_واجهة {
+    دع التصنيف: تصنيف_قيمة_واجهة = {
+        الطريقة: الطريقة,
+        الحجم: الحجم,
+        المحاذاة: المحاذاة,
+        عدد_الأجزاء: عدد_الأجزاء,
+        فئة_السجل: فئة_السجل,
+        تجميعي: تجميعي,
+        التوسيع: توسيع_عدد_واجهة.بلا_توسيع(),
+        كتلة_متصلة: خطأ,
+        نسخة_للمستدعى: خطأ,
+        أجزاء_مرصوصة: خطأ
+    };
+    أرجع التصنيف;
+}
+
+عام عرف شكل_جزء_واجهة_جديد(
+    الإزاحة: غير_موقع,
+    الحجم: غير_موقع,
+    الفئة: فئة_سجل_واجهة
+): شكل_جزء_واجهة {
+    دع الشكل: شكل_جزء_واجهة = { الإزاحة: الإزاحة, الحجم: الحجم, الفئة: الفئة };
+    أرجع الشكل;
+}
 
 عام نوع خطة_معامل_واجهة = {
     الفهرس: غير_موقع,
     النوع: معرف_نوع,
     التصنيف: تصنيف_قيمة_واجهة,
-    الموقع: موقع_تمرير_واجهة
+    الموقع: موقع_تمرير_واجهة,
+    أشكال_الأجزاء: متجه شكل_جزء_واجهة
 };
 
 عام نوع خطة_ناتج_واجهة = {
     النوع: معرف_نوع,
     التصنيف: تصنيف_قيمة_واجهة,
-    الموقع: موقع_تمرير_واجهة
+    الموقع: موقع_تمرير_واجهة,
+    أشكال_الأجزاء: متجه شكل_جزء_واجهة
 };
 
 عام نوع خطة_دالة_واجهة = {
