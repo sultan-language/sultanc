@@ -1,3 +1,29 @@
+استورد os.error;
+استورد os.platform.unix.apple.darwin.file_descriptors;
+
+// Darwin's POSIX clock_gettime(CLOCK_REALTIME=0) writes a timespec with
+// two 64-bit signed longs on the supported arm64 macOS ABI. This is wall
+// time; it cannot be substituted by mach_absolute_time's uptime epoch.
+خارجي عرف clock_gettime(معرف_الساعة: ص32, الوقت: *متغير ص64): ص32;
+
+عام عرف اقرأ_وقت_داروين_جداري_نانو(): نتيجة عدد, خطأ_حد_نظام {
+    دع الحقول: متغير متجه ص64 = [0, 0];
+    دع الحالة: ص32 = clock_gettime(0, &متغير الحقول[0]);
+    لو (الحالة != 0) {
+        أرجع نتيجة.خطأ(خطأ_حد_نظام.نظام(خطأ_داروين_الحالي()));
+    };
+    دع الثواني: ص64 = الحقول[0];
+    دع النانو: ص64 = الحقول[1];
+    لو (الثواني < 0 || الثواني > 9223372035 || النانو < 0 || النانو >= 1000000000) {
+        أرجع نتيجة.خطأ(خطأ_حد_نظام.قيمة_خارج_النطاق());
+    };
+    دع الكلي: غ64 = (الثواني مثل غ64) * 1000000000;
+    لو ((النانو مثل غ64) > 9223372036854775807 - الكلي) {
+        أرجع نتيجة.خطأ(خطأ_حد_نظام.قيمة_خارج_النطاق());
+    };
+    أرجع نتيجة.نجح((الكلي + (النانو مثل غ64)) مثل عدد);
+}
+
 // Mach's supported monotonic clock API. Unlike POSIX clock_gettime, these
 // declarations name Mach timing interfaces, not libc functions.
 // mach_timebase_info_data_t contains two uint32_t fields.
