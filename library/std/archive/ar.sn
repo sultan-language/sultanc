@@ -1,3 +1,5 @@
+// Generic System V/BSD Unix ar container header decoding. Archive symbol
+// selection, thin member resolution and object/link policy stay with consumers.
 عام نوع حقيقة_عضو_حاوية_أرشيف = {
     موضع_الرأس: غير_موقع,
     موضع_المحتوى: غير_موقع,
@@ -154,3 +156,10 @@
     };
     أرجع اختيار.بعض(الحقيقة);
 }
+
+// English spellings point to the same generic ar declarations.
+عام مرادف ar_member_header = حقيقة_عضو_حاوية_أرشيف;
+عام مرادف ar_magic_valid = تحقق_توقيع_حاوية_أرشيف;
+عام مرادف ar_thin_magic_valid = تحقق_توقيع_حاوية_أرشيف_رفيع;
+عام مرادف ar_read_member_header = اقرأ_حقيقة_عضو_حاوية_أرشيف;
+عام مرادف ar_read_thin_header = اقرأ_رأس_عضو_حاوية_أرشيف;

@@ -1,7 +1,7 @@
 استورد compiler.link.context;
 استورد compiler.link.model;
 استورد compiler.link.archive_model;
-استورد compiler.link.archive.ar_container;
+استورد std.archive.ar;
 استورد compiler.link.provider;
 استورد compiler.link.elf.object_ingest;
 استورد compiler.link.macho.object_ingest;

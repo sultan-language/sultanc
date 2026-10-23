@@ -32,7 +32,7 @@
 استورد compiler.backend.provider.llvm.llvm_codegen;
 استورد compiler.backend.provider.llvm.toolchain;
 استورد compiler.runtime.toolchain_facts;
-استورد compiler.link.archive.ar_container;
+استورد std.archive.ar;
 استورد compiler.link.input_kind;
 استورد std.fs.read_file;
 استورد compiler.link.model;

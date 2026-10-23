@@ -1,6 +1,6 @@
 استورد compiler.link.context;
 استورد compiler.link.model;
-استورد compiler.link.archive.ar_container;
+استورد std.archive.ar;
 استورد compiler.link.archive.index_policy;
 استورد std.text.from_bytes;
 

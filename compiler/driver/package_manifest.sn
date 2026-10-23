@@ -1,4 +1,4 @@
-استورد compiler.driver.toml;
+استورد std.toml.parser;
 استورد compiler.frontend.lexer.identifier_queries;
 استورد compiler.source.source_kind;
 استورد std.fs.read_file;

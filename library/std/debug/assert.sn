@@ -1,0 +1,22 @@
+استورد io.println;
+استورد process.exit;
+
+// Assertions remain active in all build modes. The condition is evaluated once.
+// Failure writes to stderr and terminates with a nonzero status.
+عام عرف تأكد(الشرط: منطقي): فراغ {
+    لو (!الشرط) {
+        دع تجاهل: نتيجة عدد, عدد = اطبع_سطر_خطأ(«assertion failed»);
+        اخرج(1);
+    };
+}
+
+// An optional diagnostic message, evaluated by the caller before the call.
+عام عرف تأكد_برسالة(الشرط: منطقي, الرسالة: &نص): فراغ {
+    لو (!الشرط) {
+        دع تجاهل: نتيجة عدد, عدد = اطبع_سطر_خطأ(*الرسالة);
+        اخرج(1);
+    };
+}
+
+عام مرادف assert = تأكد;
+عام مرادف assert_with_message = تأكد_برسالة;

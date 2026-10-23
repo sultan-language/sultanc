@@ -2,6 +2,8 @@
 // Do not edit token identities here; edit the canonical registry and regenerate.
 
 عام نوع رمز =
+    | وقت_الترجمة
+    | علامة_سمة
     | نوع_دالة
     | بقيمة
     | من_مصدر

@@ -1,4 +1,4 @@
-استورد compiler.link.archive.ar_container;
+استورد std.archive.ar;
 
 // Input classification is based on container bytes, not filename spelling.
 // The selected format provider remains responsible for validating the full file.

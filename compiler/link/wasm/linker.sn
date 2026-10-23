@@ -1,4 +1,4 @@
-استورد compiler.link.archive.ar_container;
+استورد std.archive.ar;
 استورد compiler.link.context;
 استورد compiler.link.workspace_root;
 استورد compiler.link.model;

@@ -1,9 +1,7 @@
 // حد ABI لمحمل المكتبات الديناميكية في النظام.
 // الأسماء الإنجليزية هنا فقط لأنها أسماء رموز C خارجية فعلية.
-// Used only where the platform's own loader is the system interface (Darwin's
-// dyld in libSystem). Linux hosts read /proc/self/maps instead (see
-// compiler/backend/provider/llvm/toolchain.sn); no C library is called there.
-// Previously this module also declared dlopen/dlsym/dlclose, which nothing used.
+// Darwin dladdr is provided by libSystem. This module holds only the
+// platform C ABI and generic C-string extraction, not compiler policy.
 
 عام نوع معلومات_عنوان_محمل_ديناميكي = {
     اسم_الملف: *غ8,

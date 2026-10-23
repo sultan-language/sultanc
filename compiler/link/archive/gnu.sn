@@ -2,7 +2,7 @@
 استورد compiler.link.model;
 استورد compiler.link.resolution;
 استورد compiler.link.archive.index_policy;
-استورد compiler.link.archive.ar_container;
+استورد std.archive.ar;
 استورد std.fs.path;
 استورد std.text.from_bytes;
 

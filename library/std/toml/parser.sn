@@ -1,6 +1,6 @@
-استورد std.text.from_bytes;
-استورد std.text.compare;
-استورد std.encoding.utf8;
+استورد text.from_bytes;
+استورد text.compare;
+استورد encoding.utf8;
 
 // Generic TOML document model. Package semantics belong to package_manifest.sn.
 // Tables/arrays are arena-indexed so recursive TOML values do not require a
@@ -1259,3 +1259,11 @@
     دع القيم: متجه قيمة_تومل = *مرجع_القيم;
     أرجع القيم;
 }
+
+// English spellings reference the canonical Arabic TOML declarations.
+عام مرادف parse_toml = حلل_تومل;
+عام مرادف toml_value_at = قيمة_مفتاح_تومل;
+عام مرادف toml_table_at = جدول_مفتاح_تومل;
+عام مرادف toml_document = وثيقة_تومل;
+عام مرادف toml_value = قيمة_تومل;
+عام مرادف toml_error = خطأ_تومل;

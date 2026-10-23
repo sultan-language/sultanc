@@ -193,7 +193,7 @@
 // Other hosts: the dynamic loader of the system interface (Darwin's dyld in
 // libSystem) reports the image that holds LLVM's global context.
 لو (الهدف.المنصة != «wasi» && الهدف.المنصة != «linux») {
-    استورد compiler.link.dependency.ffi.dynamic_loader;
+    استورد std.os.platform.unix.apple.darwin.dynamic_loader;
 
     عام عرف مسار_مكتبة_إل_إل_في_إم_الحالي(): اختيار متجه غ8 {
         دع حارس_مؤشر: متغير غ8 = 0;

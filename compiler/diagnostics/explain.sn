@@ -360,6 +360,11 @@
         | لغة_تشخيص.الإنجليزية -> { أرجع «Semantic analysis or MSIR lowering found inconsistent or missing program facts. Read the structured arguments and related spans to identify the expected type, callable, constructor, binding, or lowering fact.»; }
         | لغة_تشخيص.العربية -> { أرجع «وجد التحليل الدلالي أو خفض MSIR حقائق برنامج غير متوافقة أو مفقودة. راجع الحجج المنظمة والنطاقات المرتبطة لمعرفة النوع أو الاستدعاء أو المنشئ أو الربط أو حقيقة الخفض المطلوبة.»; };
     }
+    | معرف_تشخيص.تعبير_وقت_الترجمة_غير_ثابت -> {
+        طابق اللغة مع
+        | لغة_تشخيص.الإنجليزية -> { أرجع «This expression depends on runtime values or operations. Only pure compile-time constants are supported here.»; }
+        | لغة_تشخيص.العربية -> { أرجع «يعتمد هذا التعبير على قيم وقت التشغيل أو عمليات غير ثابتة. الثوابت النقية فقط مدعومة هنا.»; };
+    }
     | معرف_تشخيص.خفض_تعبير_غير_مدعوم -> {
         طابق اللغة مع
         | لغة_تشخيص.الإنجليزية -> { أرجع «Semantic analysis or MSIR lowering found inconsistent or missing program facts. Read the structured arguments and related spans to identify the expected type, callable, constructor, binding, or lowering fact.»; }
