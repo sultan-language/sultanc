@@ -1,0 +1,5 @@
+// اختبار: قبول
+// خروج: 0
+import "modules/shadow_helper.sn";
+def helper(): int { return 42; }
+def main(): int { return helper(); }

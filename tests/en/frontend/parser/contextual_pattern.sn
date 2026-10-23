@@ -1,0 +1,2 @@
+type E = | option | Value of int;
+def main(value: E): int { match value with | E.option -> { return 42; } | E.Value(x) -> { return x; } }

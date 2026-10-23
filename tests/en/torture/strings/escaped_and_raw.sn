@@ -1,0 +1,12 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// فئة: strings
+def main(): int {
+    let escaped: string = "a\"b";
+    let raw: string = «alpha beta»;
+    if (length(escaped) != 3) { return 1; };
+    if (length(raw) != 10) { return 2; };
+    return 42;
+}

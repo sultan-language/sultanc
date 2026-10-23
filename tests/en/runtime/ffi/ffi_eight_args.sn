@@ -1,0 +1,30 @@
+extern def getdirentriesattr(
+    fd: i32,
+    attrs: *mutable u8,
+    buffer: *mutable u8,
+    buffer_size: uint,
+    count: *mutable u32,
+    base: *mutable u32,
+    state: *mutable u32,
+    options: u32
+): i32;
+
+def main(): i32 {
+    let attrs: mutable u8 = 0;
+    let buffer: mutable u8 = 0;
+    let count: mutable u32 = 0;
+    let base: mutable u32 = 0;
+    let state: mutable u32 = 0;
+    let attrs_p: *mutable u8 = & mutable attrs;
+    let buffer_p: *mutable u8 = & mutable buffer;
+    let count_p: *mutable u32 = & mutable count;
+    let base_p: *mutable u32 = & mutable base;
+    let state_p: *mutable u32 = & mutable state;
+    unsafe {
+        let status: i32 = getdirentriesattr(-1, attrs_p, buffer_p, 0, count_p, base_p, state_p, 0);
+        if (status < 0) {
+            return 42;
+        };
+    }
+    return 0;
+}

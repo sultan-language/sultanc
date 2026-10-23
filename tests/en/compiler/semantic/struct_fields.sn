@@ -1,0 +1,7 @@
+type Pair = { left: int, right: int };
+
+def main(): int {
+    let pair: mutable Pair = { left: 40, right: 1 };
+    pair.right := pair.right + 1;
+    return pair.left + pair.right;
+}

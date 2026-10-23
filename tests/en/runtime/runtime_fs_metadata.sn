@@ -1,0 +1,28 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+import std.fs.metadata;
+
+def main(): int {
+    let path: string = "library/std/fs/metadata.sn";
+    match try_path_type(&path) with
+    | result.err(_) -> { return 1; }
+    | result.ok(kind) -> {
+        match kind with
+        | نوع_مسار.ملف -> { }
+        | _ -> { return 2; };
+    };
+
+    match path_size(&path) with
+    | result.err(_) -> { return 3; }
+    | result.ok(size) -> {
+        if (size <= 0) { return 4; };
+    };
+
+    match path_modified_time_ns(&path) with
+    | result.err(_) -> { return 5; }
+    | result.ok(stamp) -> {
+        if (stamp <= 0) { return 6; };
+    };
+    return 42;
+}

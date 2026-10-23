@@ -1,0 +1,11 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 0
+// خرج-قياسي: <فارغ>
+// خطأ-قياسي: <فارغ>
+import std.process.exit;
+
+def main(): i32 {
+    exit(0);
+    return 42;
+}

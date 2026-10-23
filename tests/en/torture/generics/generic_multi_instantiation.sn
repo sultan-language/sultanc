@@ -1,0 +1,15 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// فئة: generics
+def identity<T>(value: T): T { return value; }
+
+def main(): int {
+    let number: int = identity(42);
+    let truth: bool = identity(true);
+    let small: u8 = identity(7);
+    if (!truth) { return 1; };
+    if (small != 7) { return 2; };
+    return number;
+}

@@ -1,0 +1,12 @@
+// اختبار: تفاضلي
+// أهداف: x86_64-linux
+// خروج: 42
+def main(): i32 {
+    let sum: mutable i32 = 0;
+    for (let i: mutable i32 = 0; i < 10; i := i + 1) {
+        if (i == 3) { continue; };
+        if (i == 8) { break; };
+        sum := sum + i;
+    }
+    return sum + 17;
+}

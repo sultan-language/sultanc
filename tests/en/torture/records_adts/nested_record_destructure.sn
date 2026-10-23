@@ -1,0 +1,18 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// فئة: records-adts
+type Point = { x: int, y: int };
+type Box = { start: Point, end: Point };
+
+def main(): int {
+    let left: Point = { x: 10, y: 11 };
+    let right: Point = { x: 12, y: 9 };
+    let region: Box = { start: left, end: right };
+    match region.start with
+    | { x: a, y: b } -> {
+        match region.end with
+        | { x: c, y: d } -> { return a + b + c + d; };
+    };
+}

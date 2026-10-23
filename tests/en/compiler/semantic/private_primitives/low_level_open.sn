@@ -1,0 +1,8 @@
+// اختبار: رفض
+// خروج: 1
+// تشخيص: SULTANC-NAME-UNKNOWN
+def main(): int {
+    let path: string = "x";
+    بدائي_فتح_ملف_للقراءة(path);
+    return 0;
+}

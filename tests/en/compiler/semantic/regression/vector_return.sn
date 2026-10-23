@@ -1,0 +1,8 @@
+def make(): vector int {
+    let values: vector int = [40, 2];
+    return values;
+}
+def main(): int {
+    let values: vector int = make();
+    return values[0] + values[1];
+}

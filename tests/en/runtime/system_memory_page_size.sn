@@ -1,0 +1,9 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 0
+import std.memory.system;
+def main(): i32 {
+    let page: uint = page_size();
+    if (page > 0) { return 0; };
+    return 1;
+}

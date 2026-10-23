@@ -1,0 +1,31 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// فئة: collections
+from std.collections import map, new_map, map_insert, map_get;
+
+type Item = { value: i32 };
+def hash_i32(value: &i32): uint { return ((*value) as uint) * 17; }
+def eq_i32(left: &i32, right: &i32): bool { return *left == *right; }
+
+def main(): i32 {
+    let values: mutable map<i32, Item> = new_map(hash_i32, eq_i32);
+    let first: Item = { value: 40 };
+    let second: Item = { value: 2 };
+    match map_insert(&mutable values, 1, first) with
+    | option.none -> { }
+    | option.some(_) -> { return 1; };
+    match map_insert(&mutable values, 2, second) with
+    | option.none -> { }
+    | option.some(_) -> { return 2; };
+    let one: i32 = 1;
+    let two: i32 = 2;
+    match map_get(&values, &one) with
+    | option.none -> { return 3; }
+    | option.some(a) -> {
+        match map_get(&values, &two) with
+        | option.none -> { return 4; }
+        | option.some(b) -> { return a.value + b.value; };
+    };
+}

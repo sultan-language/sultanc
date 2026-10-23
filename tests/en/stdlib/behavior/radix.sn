@@ -1,0 +1,23 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+import std.text.radix;
+import std.text.compare;
+
+def main(): int {
+    match int_to_text_radix(-255, 16, false) with
+    | result.err(_) -> { return 1; }
+    | result.ok(text) -> {
+        let expected: string = "-ff";
+        if (!texts_equal(&text, &expected)) { return 2; };
+    };
+
+    let input: string = "7fffffff";
+    match parse_int_radix(&input, 16) with
+    | result.err(_) -> { return 3; }
+    | result.ok(value) -> {
+        if (value != 2147483647) { return 4; };
+    };
+    return 42;
+}

@@ -1,0 +1,17 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/en/language/surface/enum_match.sn
+نوع Option = | None | Some بنوع ص32;
+
+عرف القلعة(): ص32 {
+    دع value: Option = Option.Some(40);
+    طابق value مع
+    | Option.None -> {
+        أرجع 0;
+    }
+    | Option.Some(x) -> {
+        أرجع x + 2;
+    };
+}

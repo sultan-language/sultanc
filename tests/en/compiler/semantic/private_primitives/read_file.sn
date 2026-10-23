@@ -1,0 +1,7 @@
+// اختبار: رفض
+// خروج: 1
+// تشخيص: SULTANC-NAME-UNKNOWN
+def main(): int {
+    let path: string = "x"; read_file(path);
+    return 0;
+}

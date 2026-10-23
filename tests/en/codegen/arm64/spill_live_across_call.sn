@@ -1,0 +1,76 @@
+def keep(value: int): int {
+    return value;
+}
+
+def main(): int {
+    let v0: mutable int = 0;
+    let v1: mutable int = 1;
+    let v2: mutable int = 2;
+    let v3: mutable int = 3;
+    let v4: mutable int = 4;
+    let v5: mutable int = 5;
+    let v6: mutable int = 6;
+    let v7: mutable int = 7;
+    let v8: mutable int = 8;
+    let v9: mutable int = 9;
+    let v10: mutable int = 10;
+    let v11: mutable int = 11;
+    let v12: mutable int = 12;
+    let v13: mutable int = 13;
+    let v14: mutable int = 14;
+    let v15: mutable int = 15;
+    let v16: mutable int = 16;
+    let v17: mutable int = 17;
+    let v18: mutable int = 18;
+    let v19: mutable int = 19;
+    let v20: mutable int = 20;
+    let v21: mutable int = 21;
+    let v22: mutable int = 22;
+    let v23: mutable int = 23;
+    let v24: mutable int = 24;
+    let v25: mutable int = 25;
+    let v26: mutable int = 26;
+    let v27: mutable int = 27;
+    let v28: mutable int = 28;
+    let v29: mutable int = 29;
+    let v30: mutable int = 30;
+    let v31: mutable int = 31;
+    let call_value: int = keep(keep(v31));
+    if (v30 != 30) {
+        return 0;
+    };
+    let total: mutable int = call_value;
+    total := total + v0;
+    total := total + v1;
+    total := total + v2;
+    total := total + v3;
+    total := total + v4;
+    total := total + v5;
+    total := total + v6;
+    total := total + v7;
+    total := total + v8;
+    total := total + v9;
+    total := total + v10;
+    total := total + v11;
+    total := total + v12;
+    total := total + v13;
+    total := total + v14;
+    total := total + v15;
+    total := total + v16;
+    total := total + v17;
+    total := total + v18;
+    total := total + v19;
+    total := total + v20;
+    total := total + v21;
+    total := total + v22;
+    total := total + v23;
+    total := total + v24;
+    total := total + v25;
+    total := total + v26;
+    total := total + v27;
+    total := total + v28;
+    total := total + v29;
+    total := total + v30;
+    total := total + v31;
+    return total - 485;
+}

@@ -1,0 +1,5 @@
+import compiler.frontend.lexer.token;
+
+def main(): int {
+    return 42;
+}

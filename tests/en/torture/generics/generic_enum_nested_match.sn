@@ -1,0 +1,21 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// فئة: generics
+type Maybe<T> = | None | Some of T;
+type Pair = { left: int, right: int };
+
+def unwrap<T>(value: Maybe<T>, fallback: T): T {
+    match value with
+    | Maybe.None -> { return fallback; }
+    | Maybe.Some(item) -> { return item; };
+}
+
+def main(): int {
+    let pair: Pair = { left: 40, right: 2 };
+    let wrapped: Maybe<Pair> = Maybe.Some(pair);
+    let fallback: Pair = { left: 1, right: 1 };
+    let actual: Pair = unwrap(wrapped, fallback);
+    return actual.left + actual.right;
+}

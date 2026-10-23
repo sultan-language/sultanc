@@ -1,0 +1,2 @@
+def take(x: u8): i32 { return 42; }
+def main(): i32 { return take(256); }

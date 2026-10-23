@@ -1,0 +1,17 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// فئة: integers
+def above(a: u64, b: u64): bool { return a > b; }
+
+def main(): i32 {
+    let byte: u8 = 255;
+    let word: u16 = 65535;
+    let wide_byte: u64 = byte as u64;
+    let wide_word: u64 = word as u64;
+    if (!above(wide_word, wide_byte)) { return 1; };
+    if (wide_byte != 255) { return 2; };
+    if (wide_word != 65535) { return 3; };
+    return 42;
+}

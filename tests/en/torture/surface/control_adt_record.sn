@@ -1,0 +1,20 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// فئة: surface
+// نظير: tests/ar/torture/surface/control_adt_record.sn
+type PairSurface = { left_surface: int, right_surface: int };
+type ChoiceSurface = | EmptySurface | PairSurfaceValue of PairSurface;
+
+def main(): int {
+    let pair_surface: PairSurface = { left_surface: 40, right_surface: 2 };
+    let choice_surface: ChoiceSurface = ChoiceSurface.PairSurfaceValue(pair_surface);
+    match choice_surface with
+    | ChoiceSurface.EmptySurface -> { return 1; }
+    | ChoiceSurface.PairSurfaceValue({ left_surface: a, right_surface: b }) -> {
+        let value: mutable int = a;
+        while (value < (a + b)) { value := value + 1; }
+        return value;
+    };
+}

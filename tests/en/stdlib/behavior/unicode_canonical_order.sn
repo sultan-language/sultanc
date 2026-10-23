@@ -1,0 +1,17 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+import std.unicode.algorithms.canonical_order;
+
+def main(): int {
+    let mut scalars: vector u32 = [0x61, 0x0301, 0x0323, 0x0300, 0x62, 0x0323];
+    let mut classes: vector u8 = [0, 230, 220, 230, 0, 220];
+    if (!رتب_دمج_يونيكود(&mut scalars, &mut classes)) { return 1; };
+    if (scalars[0] != 0x61 || scalars[1] != 0x0323) { return 2; };
+    if (scalars[2] != 0x0301 || scalars[3] != 0x0300) { return 3; };
+    if (scalars[4] != 0x62 || scalars[5] != 0x0323) { return 4; };
+    let mut mismatched: vector u8 = [0];
+    if (رتب_دمج_يونيكود(&mut scalars, &mut mismatched)) { return 5; };
+    return 42;
+}

@@ -1,0 +1,4 @@
+// اختبار: رفض
+// خروج: 1
+import "modules/middle.sn";
+def main(): int { return leaf(); }

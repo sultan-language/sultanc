@@ -1,0 +1,6 @@
+def main(): int {
+    let value: result int, int = result.ok(42);
+    match value with
+    | _ -> { return 1; }
+    | result.ok(x) -> { return x; }
+}

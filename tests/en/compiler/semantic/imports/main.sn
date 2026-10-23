@@ -1,0 +1,8 @@
+// اختبار: قبول
+// خروج: 0
+// مرحلة0: نعم
+import "helper.sn";
+
+def main(): int {
+    return helper();
+}

@@ -1,0 +1,7 @@
+// اختبار: رفض
+// خروج: 1
+from std.missing import print;
+
+def main(): int {
+    return 0;
+}

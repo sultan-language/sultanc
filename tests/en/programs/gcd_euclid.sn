@@ -1,0 +1,20 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/programs/gcd_euclid.sn
+def gcd(a0: int, b0: int): int {
+    let a: mutable int = a0;
+    let b: mutable int = b0;
+    while (b != 0) {
+        let remainder: int = a % b;
+        a := b;
+        b := remainder;
+    }
+    return a;
+}
+
+def main(): int {
+    if (gcd(1071, 462) == 21) { return 42; };
+    return 1;
+}

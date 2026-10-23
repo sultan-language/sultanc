@@ -1,0 +1,3 @@
+// اختبار: رفض
+// تشخيص: SULTANC-LEX-INVALID-TOKEN
+def main(): int { return @; }

@@ -1,0 +1,7 @@
+// اختبار: قبول
+// خروج: 0
+from std.crypto import شا256;
+
+def main(): int {
+    return 0;
+}

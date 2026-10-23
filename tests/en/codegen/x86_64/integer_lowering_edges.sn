@@ -1,0 +1,36 @@
+// اختبار: تشغيل
+// أهداف: x86_64-linux
+// خروج: 42
+def main(): i32 {
+    let s: i64 = -84;
+    let d: i64 = 5;
+    if ((s / d) != -16) { return 1; };
+    if ((s % d) != -4) { return 2; };
+
+    let u: u64 = 18446744073709551600;
+    let ud: u64 = 7;
+    if ((u / ud) != 2635249153387078800) { return 3; };
+    if ((u % ud) != 0) { return 4; };
+
+    let left: u64 = 1 << 17;
+    if (left != 131072) { return 5; };
+    if ((left >> 16) != 2) { return 6; };
+
+    let negative: i64 = -64;
+    if ((negative >>> 3) != -8) { return 7; };
+
+    if (!(negative < 0)) { return 8; };
+    if (!(u > 9223372036854775807)) { return 9; };
+    if (!(left == 131072)) { return 10; };
+    if (left != 131072) { return 11; };
+
+    let narrowed: i8 = (-1 as i8);
+    let widened_signed: i64 = narrowed as i64;
+    if (widened_signed != -1) { return 12; };
+
+    let byte: u8 = 255;
+    let widened_unsigned: u64 = byte as u64;
+    if (widened_unsigned != 255) { return 13; };
+
+    return 42;
+}

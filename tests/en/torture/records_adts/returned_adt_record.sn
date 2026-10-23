@@ -1,0 +1,20 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// فئة: records-adts
+type Payload = { base: int, delta: int };
+type ResultValue = | Failed of int | Ready of Payload;
+
+def build(base: int): ResultValue {
+    let payload: Payload = { base: base, delta: 2 };
+    return ResultValue.Ready(payload);
+}
+
+def consume(value: ResultValue): int {
+    match value with
+    | ResultValue.Failed(code) -> { return code; }
+    | ResultValue.Ready({ base: base, delta: delta }) -> { return base + delta; };
+}
+
+def main(): int { return consume(build(40)); }

@@ -1,0 +1,43 @@
+// اختبار: تشغيل
+// أهداف: x86_64-linux
+// خروج: 42
+def identity(value: int): int {
+    return value;
+}
+
+def main(): int {
+    let s0: i8 = -1;
+    let s1: i8 = -2;
+    let s2: i16 = -300;
+    let s3: i16 = -301;
+    let s4: i32 = -70000;
+    let s5: i32 = -70001;
+    let u0: u8 = 255;
+    let u1: u8 = 254;
+    let u2: u16 = 65535;
+    let u3: u16 = 65534;
+    let u4: u32 = 4294967295;
+    let u5: u32 = 4294967294;
+    let keep0: int = 11;
+    let keep1: int = 12;
+    let keep2: int = 13;
+    let keep3: int = 14;
+
+    let call_result: int = identity(keep3);
+    if (call_result != 14) { return 1; };
+
+    if ((s0 as i64) != -1) { return 2; };
+    if ((s1 as i64) != -2) { return 3; };
+    if ((s2 as i64) != -300) { return 4; };
+    if ((s3 as i64) != -301) { return 5; };
+    if ((s4 as i64) != -70000) { return 6; };
+    if ((s5 as i64) != -70001) { return 7; };
+    if ((u0 as u64) != 255) { return 8; };
+    if ((u1 as u64) != 254) { return 9; };
+    if ((u2 as u64) != 65535) { return 10; };
+    if ((u3 as u64) != 65534) { return 11; };
+    if ((u4 as u64) != 4294967295) { return 12; };
+    if ((u5 as u64) != 4294967294) { return 13; };
+    if ((keep0 + keep1 + keep2 + keep3) != 50) { return 14; };
+    return 42;
+}

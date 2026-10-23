@@ -1,0 +1,9 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+
+def main(): int {
+    let x: int = comptime 6 * 7;
+    return x;
+}

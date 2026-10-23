@@ -1,0 +1,28 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// خرج-قياسي: <فارغ>
+// خطأ-قياسي: <فارغ>
+import std.fs.read_file;
+import std.fs.write_file;
+
+def main(): int {
+    let path: string = "stage0-utf8.tmp";
+    let content: string = "ع";
+    let written: result int, int = write_file(&path, &content);
+    match written with
+    | result.err(e) -> { return e; }
+    | result.ok(n) -> {
+        let loaded: result string, int = read_file(&path);
+        match loaded with
+        | result.err(e) -> { return e; }
+        | result.ok(text) -> {
+            if (n > 0) {
+                if (text[0] > 0) {
+                    return 42;
+                };
+            };
+            return 0;
+        }
+    }
+}

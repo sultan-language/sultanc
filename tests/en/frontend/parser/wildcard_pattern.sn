@@ -1,0 +1,2 @@
+type E = | A | B of int;
+def main(value: E): int { match value with | E.B(x) -> { return x; } | _ -> { return 42; } }

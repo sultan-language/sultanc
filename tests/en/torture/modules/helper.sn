@@ -1,0 +1,9 @@
+public def module_value(seed: int): int {
+    let value: mutable int = seed;
+    let i: mutable int = 0;
+    while (i < 2) {
+        value := value + 1;
+        i := i + 1;
+    }
+    return value;
+}

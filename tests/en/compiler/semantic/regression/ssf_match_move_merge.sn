@@ -1,0 +1,8 @@
+def main(): int {
+    let text: string = "hello";
+    let choice: option int = option.some(1);
+    match choice with
+    | option.some(value) -> { let moved: string = text; }
+    | option.none() -> { let keep: int = 0; }
+    return length(text);
+}

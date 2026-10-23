@@ -1,0 +1,26 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+def main(): i32 {
+    let positive_zero: f64 = 0.0;
+    let negative_zero: f64 = -0.0;
+    if (positive_zero != negative_zero) { return 1; };
+
+    let one: f64 = 1.0;
+    let negative_one: f64 = -1.0;
+    let positive_infinity: f64 = one / positive_zero;
+    let negative_infinity: f64 = negative_one / positive_zero;
+    if (!(positive_infinity > 0.0)) { return 2; };
+    if (!(negative_infinity < 0.0)) { return 3; };
+
+    let f32_left: f32 = 40.0;
+    let f32_right: f32 = 2.5;
+    if ((f32_left + f32_right) != 42.5) { return 4; };
+
+    let nan: f64 = positive_zero / positive_zero;
+    if (nan < one) { return 5; };
+    if (nan > one) { return 6; };
+    if (nan == one) { return 7; };
+    return 42;
+}

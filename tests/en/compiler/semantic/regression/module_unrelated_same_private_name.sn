@@ -1,0 +1,5 @@
+// اختبار: قبول
+// خروج: 0
+import "modules/unrelated_left.sn";
+import "modules/unrelated_right.sn";
+def main(): int { return left_value() + right_value(); }

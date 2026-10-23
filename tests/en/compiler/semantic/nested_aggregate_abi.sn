@@ -1,0 +1,18 @@
+type Pair = { left: i32, right: i32 };
+type Wrap = { a: Pair, b: Pair, tail: i32 };
+
+def sum(value: Wrap): i32 {
+    return value.a.left + value.a.right + value.b.left + value.b.right + value.tail;
+}
+
+def make(): Wrap {
+    let p1: Pair = { left: 10, right: 11 };
+    let p2: Pair = { left: 9, right: 10 };
+    let w: Wrap = { a: p1, b: p2, tail: 2 };
+    return w;
+}
+
+def main(): i32 {
+    let w: Wrap = make();
+    return sum(w);
+}

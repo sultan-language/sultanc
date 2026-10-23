@@ -1,0 +1,73 @@
+def main(): i32 {
+    let s8_cell: mutable i8 = -2;
+    let s16_cell: mutable i16 = -300;
+    let s32_cell: mutable i32 = -70000;
+    let u8_cell: mutable u8 = 128;
+    let u16_cell: mutable u16 = 32768;
+    let u32_cell: mutable u32 = 2147483648;
+
+    let s8_ref: & mutable i8 = & mutable s8_cell;
+    let s16_ref: & mutable i16 = & mutable s16_cell;
+    let s32_ref: & mutable i32 = & mutable s32_cell;
+    let u8_ref: & mutable u8 = & mutable u8_cell;
+    let u16_ref: & mutable u16 = & mutable u16_cell;
+    let u32_ref: & mutable u32 = & mutable u32_cell;
+
+    let s8_loaded: i8 = *s8_ref;
+    let s16_loaded: i16 = *s16_ref;
+    let s32_loaded: i32 = *s32_ref;
+    let u8_loaded: u8 = *u8_ref;
+    let u16_loaded: u16 = *u16_ref;
+    let u32_loaded: u32 = *u32_ref;
+
+    if (s8_loaded != -2) { return 1; };
+    if (s16_loaded != -300) { return 2; };
+    if (s32_loaded != -70000) { return 3; };
+    if (u8_loaded != 128) { return 4; };
+    if (u16_loaded != 32768) { return 5; };
+    if (u32_loaded != 2147483648) { return 6; };
+
+    let logical_signed: i8 = s8_loaded >> 1;
+    if (logical_signed != 127) { return 7; };
+
+    let arithmetic_unsigned: u8 = u8_loaded >>> 1;
+    if (arithmetic_unsigned != 192) { return 8; };
+
+    let signed_one: i8 = s8_loaded + 1;
+    let widened_unsigned: u16 = signed_one as u16;
+    if (widened_unsigned != 65535) { return 9; };
+
+    let widened_signed: i16 = u8_loaded as i16;
+    if (widened_signed != 128) { return 10; };
+
+    let wide: i64 = (u32_loaded as i64) + 255;
+    let narrowed: i8 = wide as i8;
+    *s8_ref := narrowed;
+    if (*s8_ref != -1) { return 11; };
+
+    let divisor: i16 = 7;
+    let quotient: i16 = s16_loaded / divisor;
+    let remainder: i16 = s16_loaded % divisor;
+    if (quotient != -42) { return 12; };
+    if (remainder != -6) { return 13; };
+
+    let unsigned_divisor: u32 = 3;
+    let unsigned_quotient: u32 = u32_loaded / unsigned_divisor;
+    let unsigned_remainder: u32 = u32_loaded % unsigned_divisor;
+    if (unsigned_quotient != 715827882) { return 14; };
+    if (unsigned_remainder != 2) { return 15; };
+
+    let one: u8 = u8_loaded >> 7;
+    let left: u8 = one << 5;
+    if (left != 32) { return 16; };
+
+    let added: i16 = quotient + 2;
+    let subtracted: i16 = added - 1;
+    let multiplied: i16 = subtracted * -1;
+    if (multiplied != 41) { return 17; };
+
+    if (!(s32_loaded < -1)) { return 18; };
+    if (!(u32_loaded > 2147483647)) { return 19; };
+
+    return 42;
+}

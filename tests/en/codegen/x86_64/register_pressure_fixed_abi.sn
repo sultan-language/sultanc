@@ -1,0 +1,33 @@
+// اختبار: تشغيل
+// أهداف: x86_64-linux
+// خروج: 42
+def combine10(a: int, b: int, c: int, d: int, e: int, f: int, g: int, h: int, i: int, j: int): int {
+    return a + b + c + d + e + f + g + h + i + j;
+}
+
+def main(): int {
+    let v0: int = 1;
+    let v1: int = 2;
+    let v2: int = 3;
+    let v3: int = 4;
+    let v4: int = 5;
+    let v5: int = 6;
+    let v6: int = 7;
+    let v7: int = 8;
+    let v8: int = 9;
+    let v9: int = 10;
+    let v10: int = 11;
+    let v11: int = 12;
+    let v12: int = 13;
+    let v13: int = 14;
+    let v14: int = 15;
+    let v15: int = 16;
+
+    let call_result: int = combine10(v5, v4, v3, v2, v1, v0, v6, v7, v8, v9);
+    if (call_result != 55) { return 1; };
+
+    let live_sum: int = v0 + v1 + v2 + v3 + v4 + v5 + v6 + v7
+        + v8 + v9 + v10 + v11 + v12 + v13 + v14 + v15;
+    if (live_sum != 136) { return 2; };
+    return 42;
+}

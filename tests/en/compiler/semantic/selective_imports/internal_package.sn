@@ -1,0 +1,7 @@
+// اختبار: رفض
+// خروج: 1
+from std.internal import anything;
+
+def main(): int {
+    return 0;
+}

@@ -1,0 +1,7 @@
+type Holder = { view: [] int };
+def make(): Holder {
+    let values: [] int = [40, 2];
+    let holder: Holder = { view: values };
+    return holder;
+}
+def main(): int { return 42; }

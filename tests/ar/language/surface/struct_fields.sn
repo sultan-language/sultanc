@@ -1,0 +1,12 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/en/language/surface/struct_fields.sn
+نوع Pair = { left: عدد, right: عدد };
+
+عرف القلعة(): عدد {
+    دع pair: متغير Pair = { left: 40, right: 1 };
+    pair.right := pair.right + 1;
+    أرجع pair.left + pair.right;
+}

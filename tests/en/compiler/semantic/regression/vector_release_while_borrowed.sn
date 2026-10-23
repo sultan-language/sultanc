@@ -1,0 +1,6 @@
+def main(): int {
+    let values: mutable vector int = [40, 2];
+    let item: &int = &values[0];
+    release(values);
+    return *item;
+}

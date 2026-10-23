@@ -1,0 +1,12 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+import std.debug.assert;
+
+def main(): int {
+    assert(true);
+    let message: string = "not reached";
+    assert_with_message(2 + 2 == 4, &message);
+    return 42;
+}

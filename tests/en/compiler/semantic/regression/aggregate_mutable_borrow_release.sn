@@ -1,0 +1,8 @@
+type Holder = { item: &mutable int };
+def main(): int {
+    let values: mutable vector int = [40, 2];
+    let item: &mutable int = & mutable values[0];
+    let holder: Holder = { item: item };
+    release(values);
+    return *holder.item;
+}

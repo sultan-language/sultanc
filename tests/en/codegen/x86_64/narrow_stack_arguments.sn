@@ -1,0 +1,18 @@
+def check_stack_narrow(
+    a: i8,
+    b: i8,
+    c: i8,
+    d: i8,
+    e: i8,
+    f: i8,
+    signed_stack: i8,
+    unsigned_stack: u8
+): i32 {
+    if (signed_stack != -2) { return 1; };
+    if (unsigned_stack != 254) { return 2; };
+    return 42;
+}
+
+def main(): i32 {
+    return check_stack_narrow(1, 2, 3, 4, 5, 6, -2, 254);
+}

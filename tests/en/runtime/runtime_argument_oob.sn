@@ -1,0 +1,12 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// خرج-قياسي: <فارغ>
+// خطأ-قياسي: <فارغ>
+import std.process.argument;
+
+def main(): i32 {
+    match argument(9) with
+    | option.none -> { return 42; }
+    | option.some(_) -> { return 0; }
+}

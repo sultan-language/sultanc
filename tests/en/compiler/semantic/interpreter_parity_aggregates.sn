@@ -1,0 +1,14 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+type Pair = { left: i32, right: i32 };
+type Wrap = { pair: Pair, tail: i32 };
+
+def main(): i32 {
+    let pair: Pair = { left: 40, right: 0 };
+    let wrapped: Wrap = { pair: pair, tail: 2 };
+    let tail: i32 = wrapped.tail;
+    let extracted: Pair = wrapped.pair;
+    return extracted.left + tail;
+}

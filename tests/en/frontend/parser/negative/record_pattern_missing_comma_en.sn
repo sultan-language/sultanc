@@ -1,0 +1,3 @@
+// اختبار: رفض
+// تشخيص: SULTANC-PARSE-SYNTAX
+def f(value: int): int { match value with | {left: x right: y} -> { return 0; }; }

@@ -1,0 +1,5 @@
+def main(): i32 {
+    let values: mutable vector i32 = [1];
+    append(values, "hello");
+    return 0;
+}

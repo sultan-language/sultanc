@@ -1,0 +1,11 @@
+type Holder = { item: &int };
+def wrap(value: &int): Holder {
+    let holder: Holder = { item: value };
+    return holder;
+}
+def main(): int {
+    let value: int = 42;
+    let reference: &int = &value;
+    let holder: Holder = wrap(reference);
+    return *holder.item;
+}

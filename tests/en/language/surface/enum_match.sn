@@ -1,0 +1,17 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/language/surface/enum_match.sn
+type Option = | None | Some of i32;
+
+def main(): i32 {
+    let value: Option = Option.Some(40);
+    match value with
+    | Option.None -> {
+        return 0;
+    }
+    | Option.Some(x) -> {
+        return x + 2;
+    };
+}

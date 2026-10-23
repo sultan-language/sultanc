@@ -1,0 +1,20 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+import std.text.search;
+import std.text.transform;
+import std.text.compare;
+
+def main(): int {
+    let source: string = "  SultanC compiler  ";
+    let trimmed: string = trim(&source);
+    let expected: string = "SultanC compiler";
+    if (!texts_equal(&trimmed, &expected)) { return 1; };
+
+    let prefix: string = "SultanC";
+    let needle: string = "compiler";
+    if (!starts_with(&trimmed, &prefix)) { return 2; };
+    if (!contains(&trimmed, &needle)) { return 3; };
+    return 42;
+}

@@ -1,0 +1,101 @@
+from std.fs import read_bytes;
+from std.net import
+    parse_socket_addr,
+    tcp_bind_with_options,
+    tcp_accept,
+    tcp_stream_close,
+    tcp_listener_close,
+    socket_option,
+    reuse_address;
+from std.tls import
+    tls_server_identity,
+    tls_server_config,
+    tls_server_identity_pkcs12,
+    tls_server_config_new,
+    tls_server_accept,
+    tls_read,
+    tls_write,
+    tls_close;
+
+def zero_bytes(count: int): vector u8 {
+    let out: mutable vector u8 = [];
+    let i: mutable int = 0;
+    while (i < count) {
+        append(out, 0);
+        i := i + 1;
+    }
+    return out;
+}
+
+def load_bytes(path: &string): vector u8 {
+    match read_bytes(path) with
+    | result.err(_) -> { let empty: vector u8 = []; return empty; }
+    | result.ok(data) -> { return data; };
+}
+
+def main(): int {
+    let text: string = "127.0.0.1:38443";
+    match parse_socket_addr(&text) with
+    | result.err(_) -> { return 1; }
+    | result.ok(addr) -> {
+        let options: vector socket_option = [reuse_address(true)];
+        match tcp_bind_with_options(&addr, 1, &options) with
+        | result.err(_) -> { return 2; }
+        | result.ok(listener) -> {
+            match tcp_accept(&listener) with
+            | result.err(_) -> {
+                match tcp_listener_close(listener) with
+                | result.err(_) -> { }
+                | result.ok(_) -> { };
+                return 3;
+            }
+            | result.ok(stream) -> {
+                let p12_path: string = "/tmp/sultanc_tls_test/server.p12";
+                let identity_bytes: vector u8 = load_bytes(&p12_path);
+                if (length(identity_bytes) == 0) {
+                    match tcp_stream_close(stream) with
+                    | result.err(_) -> { }
+                    | result.ok(_) -> { };
+                    match tcp_listener_close(listener) with
+                    | result.err(_) -> { }
+                    | result.ok(_) -> { };
+                    return 4;
+                };
+                let password: string = "sultanc-test";
+                let identity: tls_server_identity = tls_server_identity_pkcs12(identity_bytes, &password);
+                let config: tls_server_config = tls_server_config_new(identity);
+                match tls_server_accept(stream, &config) with
+                | result.err(_) -> {
+                    match tcp_listener_close(listener) with
+                    | result.err(_) -> { }
+                    | result.ok(_) -> { };
+                    return 5;
+                }
+                | result.ok(secure_stream) -> {
+                    let input: mutable vector u8 = zero_bytes(4);
+                    match tls_read(&secure_stream, &mutable input, 0, 4) with
+                    | result.err(_) -> { return 6; }
+                    | result.ok(got) -> {
+                        if (got != 4) { return 7; };
+                        if ((input[0] != 112) || (input[1] != 105) || (input[2] != 110) || (input[3] != 103)) {
+                            return 8;
+                        };
+                    };
+                    let output: vector u8 = [112, 111, 110, 103];
+                    match tls_write(&secure_stream, &output, 0, 4) with
+                    | result.err(_) -> { return 9; }
+                    | result.ok(wrote) -> {
+                        if (wrote != 4) { return 10; };
+                    };
+                    match tls_close(secure_stream) with
+                    | result.err(_) -> { return 11; }
+                    | result.ok(_) -> { };
+                    match tcp_listener_close(listener) with
+                    | result.err(_) -> { return 12; }
+                    | result.ok(_) -> { };
+                    return 42;
+                };
+            };
+        };
+    };
+}

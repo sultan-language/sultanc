@@ -1,0 +1,18 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// فئة: functions
+type Ops = { first: fn(i32): i32, second: fn(i32): i32 };
+
+def twice(value: i32): i32 { return value + value; }
+def plus_two(value: i32): i32 { return value + 2; }
+def apply(callback: fn(i32): i32, value: i32): i32 { return callback(value); }
+
+def main(): i32 {
+    let ops: Ops = { first: twice, second: plus_two };
+    let a: i32 = apply(ops.first, 20);
+    let b: i32 = apply(ops.second, a);
+    if (a != 40) { return 1; };
+    return b;
+}

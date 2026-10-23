@@ -1,0 +1,9 @@
+// اختبار: قبول
+// خروج: 0
+from std.io import print, println;
+
+def main(): int {
+    print("A");
+    println("B");
+    return 0;
+}

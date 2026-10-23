@@ -1,0 +1,5 @@
+def make(): [] int {
+    let values: [] int = [40, 2];
+    return values;
+}
+def main(): int { return 42; }

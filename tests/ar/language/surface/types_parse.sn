@@ -1,0 +1,7 @@
+نوع Pair = { left: عدد, right: عدد };
+نوع Result = | Empty | Value بنوع عدد | PairValue بنوع (عدد, عدد);
+نوع Count = عدد;
+
+عرف القلعة(): عدد {
+    أرجع 42;
+}

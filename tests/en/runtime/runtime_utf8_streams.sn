@@ -1,0 +1,12 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// خرج-قياسي: عم
+// خطأ-قياسي: <فارغ>
+import std.io.print;
+
+def main(): i32 {
+    print("ع");
+    print("م");
+    return 42;
+}

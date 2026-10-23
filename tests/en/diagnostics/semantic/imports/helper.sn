@@ -1,0 +1,4 @@
+def helper(): i32 {
+    let value: i32 = 42
+    return value;
+}

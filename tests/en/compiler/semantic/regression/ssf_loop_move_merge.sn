@@ -1,0 +1,6 @@
+def main(): int {
+    let text: string = "hello";
+    let again: mutable bool = true;
+    while (again) { let moved: string = text; again := false; }
+    return length(text);
+}

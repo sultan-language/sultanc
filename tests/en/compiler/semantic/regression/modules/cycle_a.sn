@@ -1,0 +1,2 @@
+import "cycle_b.sn";
+public def cycle_a(): int { return 1; }

@@ -1,0 +1,9 @@
+extern def pthread_self(): uint;
+
+def main(): i32 {
+    unsafe {
+        let identity: uint = pthread_self();
+        if (identity != 0) { return 42; };
+    }
+    return 1;
+}

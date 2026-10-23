@@ -1,0 +1,5 @@
+def main(): int {
+    let values: vector int = [0, 42];
+    let index: int = 1;
+    return values[index];
+}

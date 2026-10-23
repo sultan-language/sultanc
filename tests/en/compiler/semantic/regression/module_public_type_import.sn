@@ -1,0 +1,7 @@
+// اختبار: قبول
+// خروج: 0
+import "modules/public_type.sn";
+def main(): int {
+    let value: Shared = make_shared();
+    return value.value;
+}

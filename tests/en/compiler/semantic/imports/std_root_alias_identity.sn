@@ -1,0 +1,10 @@
+// اختبار: قبول
+// خروج: 0
+import std.chars.ascii;
+import المكتبة.حروف.ascii;
+
+def main(): int {
+    if (!رقم_عشري(0x35)) { return 1; };
+    if (!is_decimal_digit(0x35)) { return 2; };
+    return 0;
+}

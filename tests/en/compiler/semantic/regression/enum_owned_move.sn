@@ -1,0 +1,9 @@
+type Holder = | None | Text of string;
+def main(): int {
+    let text: string = "hello";
+    let holder: Holder = Holder.Text(text);
+    let moved: Holder = holder;
+    match holder with
+    | Holder.None -> { return 0; }
+    | Holder.Text(value) -> { return length(value); }
+}

@@ -1,0 +1,42 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+from std.collections import map, set, new_map, map_insert, map_get, map_length, map_remove, map_contains, new_set, set_insert, set_contains, set_remove;
+
+def hash_i32(x: &i32): uint { return ((*x) as uint) * 17; }
+def eq_i32(a: &i32, b: &i32): bool { return *a == *b; }
+
+def main(): i32 {
+    let m: mutable map<i32, i32> = new_map(hash_i32, eq_i32);
+    let i: mutable i32 = 0;
+    while (i < 10) {
+        let key: i32 = i;
+        let value: i32 = i + 1;
+        match map_insert(&mutable m, key, value) with
+        | option.none -> { }
+        | option.some(_) -> { return 10; };
+        i := i + 1;
+    }
+    match map_insert(&mutable m, 7, 99) with
+    | option.some(old) -> { if (old != 8) { return 11; }; }
+    | option.none -> { return 12; };
+    let k: i32 = 7;
+    match map_get(&m, &k) with
+    | option.some(v) -> { if (v != 99) { return 13; }; }
+    | option.none -> { return 14; };
+    if (map_length(&m) != 10) { return 15; };
+    match map_remove(&mutable m, &k) with
+    | option.some(v) -> { if (v != 99) { return 16; }; }
+    | option.none -> { return 17; };
+    if (map_contains(&m, &k)) { return 18; };
+
+    let s: mutable set<i32> = new_set(hash_i32, eq_i32);
+    if (!set_insert(&mutable s, 5)) { return 20; };
+    if (set_insert(&mutable s, 5)) { return 21; };
+    let five: i32 = 5;
+    if (!set_contains(&s, &five)) { return 22; };
+    if (!set_remove(&mutable s, &five)) { return 23; };
+    if (set_contains(&s, &five)) { return 24; };
+    return 42;
+}

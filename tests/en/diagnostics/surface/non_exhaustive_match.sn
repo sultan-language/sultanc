@@ -1,0 +1,5 @@
+def main(): i32 {
+    let value: result i32, i32 = result.ok(42);
+    match value with
+    | result.ok(x) -> { return x; }
+}

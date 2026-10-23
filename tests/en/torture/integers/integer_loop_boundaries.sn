@@ -1,0 +1,17 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// فئة: integers
+def main(): i32 {
+    let value: mutable i16 = -5;
+    let total: mutable i32 = 0;
+    while (value <= 5) {
+        total := total + (value as i32);
+        value := value + 1;
+    }
+    if (total != 0) { return 1; };
+    let max: u8 = 255;
+    if ((max as u16) != 255) { return 2; };
+    return 42;
+}

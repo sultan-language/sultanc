@@ -1,0 +1,40 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+import std.encoding.hex;
+import std.encoding.base64;
+import std.encoding.utf16;
+import std.text.compare;
+
+def main(): int {
+    let bytes: vector u8 = [0x53, 0x75, 0x6C];
+
+    let hexed: string = hex_encode(&bytes);
+    let expected_hex: string = "53756c";
+    if (!texts_equal(&hexed, &expected_hex)) { return 1; };
+    match hex_decode(&hexed) with
+    | result.err(_) -> { return 2; }
+    | result.ok(decoded) -> {
+        if (length(decoded) != 3) { return 3; };
+        if ((decoded[0] != 0x53) || (decoded[1] != 0x75) || (decoded[2] != 0x6C)) { return 4; };
+    };
+
+    let base64: string = base64_encode(&bytes);
+    let expected_base64: string = "U3Vs";
+    if (!texts_equal(&base64, &expected_base64)) { return 5; };
+
+    let unicode_text: string = "A😀";
+    match text_to_utf16(&unicode_text) with
+    | result.err(_) -> { return 6; }
+    | result.ok(units) -> {
+        if (length(units) != 3) { return 7; };
+        if ((units[0] != 0x0041) || (units[1] != 0xD83D) || (units[2] != 0xDE00)) { return 8; };
+        match utf16_to_text(&units) with
+        | result.err(_) -> { return 9; }
+        | result.ok(roundtrip) -> {
+            if (!texts_equal(&roundtrip, &unicode_text)) { return 10; };
+        };
+    };
+    return 42;
+}

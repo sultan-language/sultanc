@@ -1,0 +1,8 @@
+def main(): i32 {
+    let value: mutable i32 = 42;
+    let pointer: *mutable i32 = & mutable value;
+    unsafe {
+        let reference: &mutable i32 = pointer as &mutable i32;
+        return *reference;
+    }
+}

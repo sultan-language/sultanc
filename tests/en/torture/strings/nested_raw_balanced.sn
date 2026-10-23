@@ -1,0 +1,12 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// فئة: strings
+def main(): int {
+    let first: string = «outer «inner» outer»;
+    let second: string = «one «two «three» two» one»;
+    if (length(first) == 0) { return 1; };
+    if (length(second) == 0) { return 2; };
+    return 42;
+}

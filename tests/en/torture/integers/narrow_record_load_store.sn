@@ -1,0 +1,19 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// فئة: integers
+type Bytes = { a: u8, b: i8, c: u16 };
+
+def score(value: Bytes): i32 {
+    return (value.a as i32) + (value.b as i32) + (value.c as i32);
+}
+
+def main(): i32 {
+    let value: mutable Bytes = { a: 40, b: -1, c: 2 };
+    value.b := 0;
+    if (score(value) != 42) { return 1; };
+    value.a := 41;
+    value.c := 1;
+    return score(value);
+}

@@ -1,0 +1,45 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/language/surface/literal_patterns.sn
+def match_integer(value: int): int {
+    match value with
+    | -7 | 42 -> { return 1; }
+    | range 10 to 20 -> { return 3; }
+    | _ -> { return 0; };
+}
+
+def match_character(value: char): int {
+    match value with
+    | 'A' | 'س' -> { return 3; }
+    | range '0' to '9' -> { return 4; }
+    | _ -> { return 0; };
+}
+
+def match_string(value: string): int {
+    match value with
+    | "sultan" | «compiler» -> { return 5; }
+    | _ -> { return 0; };
+}
+
+def match_boolean(value: bool): int {
+    match value with
+    | true -> { return 8; }
+    | false -> { return 9; }
+    | _ -> { return 0; };
+}
+
+def main(): int {
+    return match_integer(-7)
+        + match_integer(42)
+        + match_integer(15)
+        + match_character('A')
+        + match_character('س')
+        + match_character('5')
+        + match_string("sultan")
+        + match_string(«compiler»)
+        + match_string("other")
+        + match_boolean(true)
+        + match_boolean(false);
+}

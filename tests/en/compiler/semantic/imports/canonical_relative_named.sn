@@ -1,0 +1,9 @@
+// اختبار: قبول
+// خروج: 0
+// مرحلة0: نعم
+import "helper.sn";
+import tests.compiler.semantic.imports.helper;
+
+def main(): int {
+    return helper();
+}

@@ -1,0 +1,7 @@
+// اختبار: رفض
+// خروج: 1
+// تشخيص: SULTANC-NAME-UNKNOWN
+def main(): int {
+    let data: vector u8 = []; text_from_bytes(data);
+    return 0;
+}

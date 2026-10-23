@@ -1,0 +1,21 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+
+type Handler = { callback: fn(i32): i32 };
+type Action = | Direct of i32 | Through of Handler;
+
+def add_delta(value: i32): i32 { return value + 2; }
+
+def evaluate(action: Action): i32 {
+    match action with
+    | Action.Direct(value) -> { return value; }
+    | Action.Through(handler) -> { return handler.callback(40); };
+}
+
+def main(): i32 {
+    let handler: Handler = { callback: add_delta };
+    let action: Action = Action.Through(handler);
+    return evaluate(action);
+}

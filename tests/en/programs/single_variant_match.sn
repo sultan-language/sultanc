@@ -1,0 +1,29 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/programs/single_variant_match.sn
+// Regression: a match on a single-constructor type binds the payload in the
+// arm; the binding must dominate its uses in verified MSIR.
+type Wrapper = | Holds of int;
+
+def unwrap(value: Wrapper): int {
+    match value with
+    | Wrapper.Holds(inner) -> { return inner; };
+}
+
+def main(): int {
+    let total: mutable int = 0;
+    let items: vector Wrapper = [Wrapper.Holds(40), Wrapper.Holds(2)];
+    let index: mutable uint = 0;
+    while (index < (length(items) as uint)) {
+        let item: &Wrapper = &items[index];
+        match *item with
+        | Wrapper.Holds(inner) -> {
+            if (inner == 0) { return 1; };
+            total := total + unwrap(Wrapper.Holds(inner));
+        };
+        index := index + 1;
+    }
+    return total;
+}

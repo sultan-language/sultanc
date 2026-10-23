@@ -1,0 +1,4 @@
+def main(): i32 {
+    let value: box i32 = box 40;
+    return *value + 2;
+}

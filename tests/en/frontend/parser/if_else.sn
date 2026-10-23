@@ -1,0 +1,1 @@
+def main(): int { let value: mutable int = 1; if (value == 1) { return 42; } else { return 0; }; }

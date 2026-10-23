@@ -1,0 +1,26 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+
+type Holder<T> = { value: T };
+type Maybe<T> = | None | Some of T;
+
+def identity<T>(value: T): T { return value; }
+
+def main(): int {
+    let holder: Holder<int> = { value: 39 };
+    let wrapped: Maybe<Holder<int> > = Maybe.Some(identity(holder));
+    match wrapped with
+    | Maybe.None -> { return 1; }
+    | Maybe.Some(actual) -> {
+        let delta: int = 3;
+        let nested: Maybe<int> = Maybe.Some(delta);
+        match nested with
+        | Maybe.None -> { return 2; }
+        | Maybe.Some(extra) -> {
+            if ((actual.value + extra) != 42) { return 3; };
+            return 42;
+        };
+    };
+}

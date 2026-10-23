@@ -1,0 +1,4 @@
+// اختبار: رفض
+// تشخيص: SULTANC-PARSE-SYNTAX
+type E = | A | B of int;
+def main(value: E): int { match value with | E.A => { return 1; } | E.B(x) -> { return x; }; }

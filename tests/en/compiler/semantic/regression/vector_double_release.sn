@@ -1,0 +1,6 @@
+def main(): int {
+    let values: vector int = [40, 2];
+    release(values);
+    release(values);
+    return 42;
+}

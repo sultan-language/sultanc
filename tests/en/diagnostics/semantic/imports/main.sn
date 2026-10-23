@@ -1,0 +1,2 @@
+import "helper.sn";
+def main(): i32 { return helper(); }

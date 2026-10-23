@@ -1,0 +1,11 @@
+// اختبار: قبول
+// خروج: 0
+def consume(value: string): int {
+    return 0;
+}
+
+def main(): int {
+    let text: string = "moved exactly once";
+    consume(text);
+    return 42;
+}

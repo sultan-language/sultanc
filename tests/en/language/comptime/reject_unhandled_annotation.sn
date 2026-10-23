@@ -1,0 +1,5 @@
+// اختبار: رفض
+// خروج: 1
+@cache
+@route("/hello")
+def main(): int { return 42; }

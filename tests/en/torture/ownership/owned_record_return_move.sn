@@ -1,0 +1,20 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// فئة: ownership
+type Holder = { text: string, value: int };
+
+def build(): Holder {
+    let holder: Holder = { text: "answer", value: 36 };
+    return holder;
+}
+
+def consume(holder: Holder): int {
+    return holder.value + (length(holder.text) as int);
+}
+
+def main(): int {
+    let holder: Holder = build();
+    return consume(holder);
+}

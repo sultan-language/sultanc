@@ -1,0 +1,16 @@
+// اختبار: رفض
+// خروج: 1
+from std.fs import create_file_handle_write, file_handle_close, file_handle_tell;
+def main(): i32 {
+    let path: string = "/tmp/sultanc-affine-handle-test.tmp";
+    match create_file_handle_write(&path) with
+    | result.ok(handle) -> {
+        match file_handle_close(handle) with
+        | result.ok(_) -> { }
+        | result.err(_) -> { return 2; };
+        match file_handle_tell(&handle) with
+        | result.ok(_) -> { return 3; }
+        | result.err(_) -> { return 4; };
+    }
+    | result.err(_) -> { return 1; };
+}

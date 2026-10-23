@@ -1,0 +1,19 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+import std.random.prng;
+
+def main(): int {
+    let generator: mutable prng = new_prng(1);
+    let first: uint = prng_next(&mutable generator);
+    let second: uint = prng_next(&mutable generator);
+    if (first != 48271) { return 1; };
+    if (second != 182605794) { return 2; };
+    match prng_below(&mutable generator, 10) with
+    | option.none -> { return 3; }
+    | option.some(value) -> {
+        if (value >= 10) { return 4; };
+    };
+    return 42;
+}

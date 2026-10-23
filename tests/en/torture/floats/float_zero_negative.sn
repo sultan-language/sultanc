@@ -1,0 +1,16 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// فئة: floats
+def transform(value: f32): f32 { return (value * -2.0) + 2.0; }
+
+def main(): i32 {
+    let positive_zero: f64 = 0.0;
+    let negative_zero: f64 = -0.0;
+    if (positive_zero != negative_zero) { return 1; };
+    let value: f32 = -20.0;
+    let answer: f32 = transform(value);
+    if (answer != 42.0) { return 2; };
+    return 42;
+}

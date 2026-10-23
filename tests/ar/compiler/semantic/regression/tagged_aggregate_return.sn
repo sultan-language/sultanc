@@ -1,0 +1,75 @@
+نوع Node = { a: عدد, b: عدد, c: عدد, d: عدد, e: عدد, f: عدد };
+نوع Holder = { items: متجه عدد };
+
+عرف node(value: عدد): Node {
+    دع n: Node = { a: value, b: 1, c: 2, d: 3, e: 4, f: 5 };
+    أرجع n;
+}
+
+عرف make(value: عدد): اختيار Node {
+    دع n: Node = node(value);
+    أرجع اختيار.بعض(n);
+}
+
+عرف forward(value: عدد): اختيار Node {
+    أرجع make(value);
+}
+
+عرف choose(flag: منطقي, value: عدد): اختيار Node {
+    لو (flag) { أرجع make(value); } وإلا { أرجع اختيار.لا_شيء(); };
+}
+
+عرف consume(value: اختيار Node): عدد {
+    طابق value مع
+    | اختيار.بعض(n) -> { أرجع n.a + n.b + n.c + n.d + n.e + n.f; }
+    | اختيار.لا_شيء() -> { أرجع 0; }
+}
+
+عرف make_result(value: عدد): نتيجة Node, عدد {
+    دع n: Node = node(value);
+    أرجع نتيجة.نجح(n);
+}
+
+عرف consume_result(value: نتيجة Node, عدد): عدد {
+    طابق value مع
+    | نتيجة.نجح(n) -> { أرجع n.a + n.f; }
+    | نتيجة.خطأ(code) -> { أرجع code; }
+}
+
+عرف make_owned(): اختيار Holder {
+    دع items: متجه عدد = [40, 2];
+    دع holder: Holder = { items: items };
+    أرجع اختيار.بعض(holder);
+}
+
+عرف القلعة(): عدد {
+    دع direct: اختيار Node = اختيار.بعض(node(10));
+    لو (consume(direct) != 25) { أرجع 1; };
+
+    دع one: اختيار Node = make(11);
+    لو (consume(one) != 26) { أرجع 2; };
+
+    دع two: اختيار Node = forward(12);
+    لو (consume(two) != 27) { أرجع 3; };
+
+    طابق make(13) مع
+    | اختيار.بعض(n) -> { لو (n.a + n.f != 18) { أرجع 4; }; }
+    | اختيار.لا_شيء() -> { أرجع 5; };
+
+    لو (consume(make(14)) != 29) { أرجع 6; };
+
+    دع first: اختيار Node = make(15);
+    دع second: اختيار Node = make(25);
+    لو (consume(first) != 30) { أرجع 7; };
+    لو (consume(second) != 40) { أرجع 8; };
+
+    لو (consume(choose(صواب, 16)) != 31) { أرجع 9; };
+    لو (consume(choose(خطأ, 16)) != 0) { أرجع 10; };
+
+    لو (consume_result(make_result(37)) != 42) { أرجع 11; };
+
+    دع owned: اختيار Holder = make_owned();
+    طابق owned مع
+    | اختيار.بعض(h) -> { أرجع h.items[0] + h.items[1]; }
+    | اختيار.لا_شيء() -> { أرجع 12; };
+}

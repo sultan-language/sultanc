@@ -1,0 +1,49 @@
+// اختبار: تشغيل
+// أهداف: x86_64-linux
+// خروج: 42
+def load_i8(value: & i8): i64 {
+    let loaded: i8 = *value;
+    return loaded as i64;
+}
+
+def load_i16(value: & i16): i64 {
+    let loaded: i16 = *value;
+    return loaded as i64;
+}
+
+def load_i32(value: & i32): i64 {
+    let loaded: i32 = *value;
+    return loaded as i64;
+}
+
+def load_u8(value: & u8): u64 {
+    let loaded: u8 = *value;
+    return loaded as u64;
+}
+
+def load_u16(value: & u16): u64 {
+    let loaded: u16 = *value;
+    return loaded as u64;
+}
+
+def load_u32(value: & u32): u64 {
+    let loaded: u32 = *value;
+    return loaded as u64;
+}
+
+def main(): i32 {
+    let a: i8 = -2;
+    let b: i16 = -300;
+    let c: i32 = -70000;
+    let d: u8 = 254;
+    let e: u16 = 65534;
+    let f: u32 = 4294967294;
+
+    if (load_i8(&a) != -2) { return 1; };
+    if (load_i16(&b) != -300) { return 2; };
+    if (load_i32(&c) != -70000) { return 3; };
+    if (load_u8(&d) != 254) { return 4; };
+    if (load_u16(&e) != 65534) { return 5; };
+    if (load_u32(&f) != 4294967294) { return 6; };
+    return 42;
+}

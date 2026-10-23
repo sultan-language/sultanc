@@ -1,0 +1,2 @@
+import "definitely_missing_module.sn";
+def main(): i32 { return 42; }

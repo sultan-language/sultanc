@@ -1,0 +1,8 @@
+// تشخيص: SULTANC-NAME-UNKNOWN
+// اختبار: رفض
+// خروج: 1
+from std.fs import افتح_للقراءة;
+
+def main(): int {
+    return 0;
+}

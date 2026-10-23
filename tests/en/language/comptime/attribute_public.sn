@@ -1,0 +1,4 @@
+// اختبار: قبول
+// أهداف: arm64-darwin,x86_64-linux
+@public def exported(): int { return 42; }
+def main(): int { return exported(); }

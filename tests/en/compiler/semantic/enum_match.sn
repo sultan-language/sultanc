@@ -1,0 +1,14 @@
+// اختبار: قبول
+// خروج: 0
+type Option = | None | Some of i32;
+
+def main(): i32 {
+    let value: Option = Option.Some(40);
+    match value with
+    | Option.None -> {
+        return 0;
+    }
+    | Option.Some(x) -> {
+        return x + 2;
+    };
+}

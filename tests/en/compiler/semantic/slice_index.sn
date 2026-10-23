@@ -1,0 +1,6 @@
+def main(): int {
+    let values: mutable [] int = [40, 1, 0];
+    let index: int = 2;
+    values[index] := 2;
+    return values[0] + values[index];
+}

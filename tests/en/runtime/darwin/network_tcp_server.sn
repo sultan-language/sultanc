@@ -1,0 +1,72 @@
+from std.net import
+    parse_socket_addr,
+    tcp_bind_with_options,
+    tcp_accept,
+    tcp_read,
+    tcp_write,
+    tcp_stream_close,
+    tcp_listener_close,
+    socket_option,
+    reuse_address;
+
+def zero_bytes(count: int): vector u8 {
+    let out: mutable vector u8 = [];
+    let i: mutable int = 0;
+    while (i < count) {
+        append(out, 0);
+        i := i + 1;
+    }
+    return out;
+}
+
+def main(): int {
+    let text: string = "127.0.0.1:38444";
+    match parse_socket_addr(&text) with
+    | result.err(_) -> { return 1; }
+    | result.ok(addr) -> {
+        let options: vector socket_option = [reuse_address(true)];
+        match tcp_bind_with_options(&addr, 1, &options) with
+        | result.err(_) -> { return 2; }
+        | result.ok(listener) -> {
+            match tcp_accept(&listener) with
+            | result.err(_) -> {
+                match tcp_listener_close(listener) with
+                | result.err(_) -> { }
+                | result.ok(_) -> { };
+                return 3;
+            }
+            | result.ok(stream) -> {
+                let input: mutable vector u8 = zero_bytes(4);
+                match tcp_read(&stream, &mutable input, 0, 4) with
+                | result.err(_) -> {
+                    match tcp_stream_close(stream) with
+                    | result.err(_) -> { }
+                    | result.ok(_) -> { };
+                    match tcp_listener_close(listener) with
+                    | result.err(_) -> { }
+                    | result.ok(_) -> { };
+                    return 4;
+                }
+                | result.ok(got) -> {
+                    if (got != 4) { return 5; };
+                    if ((input[0] != 112) || (input[1] != 105) || (input[2] != 110) || (input[3] != 103)) {
+                        return 6;
+                    };
+                    let output: vector u8 = [112, 111, 110, 103];
+                    match tcp_write(&stream, &output, 0, 4) with
+                    | result.err(_) -> { return 7; }
+                    | result.ok(wrote) -> {
+                        if (wrote != 4) { return 8; };
+                    };
+                };
+                match tcp_stream_close(stream) with
+                | result.err(_) -> { return 9; }
+                | result.ok(_) -> { };
+                match tcp_listener_close(listener) with
+                | result.err(_) -> { return 10; }
+                | result.ok(_) -> { };
+                return 42;
+            };
+        };
+    };
+}

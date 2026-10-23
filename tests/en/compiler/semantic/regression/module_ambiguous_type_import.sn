@@ -1,0 +1,8 @@
+// اختبار: رفض
+// خروج: 1
+import "modules/ambiguous_type_a.sn";
+import "modules/ambiguous_type_b.sn";
+def main(): int {
+    let value: SharedType = { value: 42 };
+    return value.value;
+}

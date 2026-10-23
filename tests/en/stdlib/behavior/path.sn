@@ -1,0 +1,21 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+import std.fs.path;
+import std.text.compare;
+
+def main(): int {
+    let raw: string = "alpha/./beta/../gamma";
+    let normalized: string = normalize(&raw);
+    let expected: string = "alpha/gamma";
+    if (!texts_equal(&normalized, &expected)) { return 1; };
+
+    let left: string = "/tmp/example";
+    let right: string = "child/../file.txt";
+    let joined: string = join(&left, &right);
+    let joined_expected: string = "/tmp/example/file.txt";
+    if (!texts_equal(&joined, &joined_expected)) { return 2; };
+    if (!is_absolute(&joined)) { return 3; };
+    return 42;
+}

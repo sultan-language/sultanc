@@ -1,0 +1,13 @@
+type Holder = { items: vector int };
+def make(): Holder {
+    let items: vector int = [40, 2];
+    let holder: Holder = { items: items };
+    return holder;
+}
+def sum(holder: Holder): int {
+    return holder.items[0] + holder.items[1];
+}
+def main(): int {
+    let holder: Holder = make();
+    return sum(holder);
+}

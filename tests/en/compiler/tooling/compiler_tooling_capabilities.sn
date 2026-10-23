@@ -1,0 +1,93 @@
+import compiler.driver.source_inputs;
+import compiler.frontend.semantic_pipeline;
+import compiler.frontend.cancellation;
+import compiler.frontend.module_loading.logical_environment;
+import compiler.frontend.types.semantic_pipeline;
+import compiler.frontend.names.identifiers;
+import compiler.frontend.names.symbols;
+
+def interface_for(path: string): int {
+    let extras: vector string = [];
+    match ابن_إعداد_تجميع_مباشر(&path, &extras) with
+    | نتيجة_إعداد_تجميع_مباشر.غير_صالح -> { return 10; }
+    | نتيجة_إعداد_تجميع_مباشر.جاهز(setup) -> {
+        let env_ref: &بيئة_وحدات_منطقية = &setup.البيئة;
+        let env: بيئة_وحدات_منطقية = *env_ref;
+        let key_ref: &مفتاح_وحدة_مقنن = &setup.المفتاح_الجذري;
+        let key: مفتاح_وحدة_مقنن = *key_ref;
+        let req: طلب_واجهة_وحدة = {
+            البيئة: env,
+            المفتاح_الجذري: key,
+            احتفظ_بحقائق_الأدوات: true
+        };
+        match ابن_واجهة_وحدة(req) with
+        | نتيجة_بناء_واجهة_وحدة.مرفوضة(_) -> { return 20; }
+        | نتيجة_بناء_واجهة_وحدة.مكتملة(frontend) -> {
+            if ((length(frontend.علاقات_هرم_الأنواع) as غير_موقع) < 2) { return 21; }
+            let first: علاقة_هرم_نوع = frontend.علاقات_هرم_الأنواع[0];
+            let supers: vector معرف_رمز = أنواع_عليا_لرمز_واجهة(&frontend, first.النوع_الفرعي);
+            let subs: vector معرف_رمز = أنواع_فرعية_لرمز_واجهة(&frontend, first.النوع_العلوي);
+            if ((length(supers) as غير_موقع) == 0) { return 22; }
+            if ((length(subs) as غير_موقع) == 0) { return 23; }
+            return 42;
+        };
+    };
+}
+
+def recovery_for(path: string): int {
+    let extras: vector string = [];
+    match ابن_إعداد_تجميع_مباشر(&path, &extras) with
+    | نتيجة_إعداد_تجميع_مباشر.غير_صالح -> { return 30; }
+    | نتيجة_إعداد_تجميع_مباشر.جاهز(setup) -> {
+        let env_ref: &بيئة_وحدات_منطقية = &setup.البيئة;
+        let env: بيئة_وحدات_منطقية = *env_ref;
+        let key_ref: &مفتاح_وحدة_مقنن = &setup.المفتاح_الجذري;
+        let key: مفتاح_وحدة_مقنن = *key_ref;
+        let req: طلب_واجهة_وحدة = {
+            البيئة: env,
+            المفتاح_الجذري: key,
+            احتفظ_بحقائق_الأدوات: true
+        };
+        match ابن_واجهة_وحدة(req) with
+        | نتيجة_بناء_واجهة_وحدة.مرفوضة(_) -> { return 31; }
+        | نتيجة_بناء_واجهة_وحدة.مكتملة(frontend) -> {
+            if (frontend.كاملة_دلاليا) { return 32; }
+            if (frontend.تشخيصات_الأدوات.عدد_الأخطاء == 0) { return 33; }
+            if ((length(frontend.الوحدات) as غير_موقع) == 0) { return 34; }
+            let source_id: غير_موقع = frontend.الوحدات[0].المصدر.المعرف;
+            let symbols: vector رمز_دلالي = رموز_واجهة_لمصدر(&frontend, source_id);
+            if ((length(symbols) as غير_موقع) < 2) { return 35; }
+            return 42;
+        };
+    };
+}
+
+def cancellation_for(path: string): int {
+    let extras: vector string = [];
+    match ابن_إعداد_تجميع_مباشر(&path, &extras) with
+    | نتيجة_إعداد_تجميع_مباشر.غير_صالح -> { return 40; }
+    | نتيجة_إعداد_تجميع_مباشر.جاهز(setup) -> {
+        let env_ref: &بيئة_وحدات_منطقية = &setup.البيئة;
+        let env: بيئة_وحدات_منطقية = *env_ref;
+        let key_ref: &مفتاح_وحدة_مقنن = &setup.المفتاح_الجذري;
+        let key: مفتاح_وحدة_مقنن = *key_ref;
+        let req: طلب_واجهة_وحدة = {
+            البيئة: env,
+            المفتاح_الجذري: key,
+            احتفظ_بحقائق_الأدوات: true
+        };
+        let cancel: mutable حالة_إلغاء_واجهة = حالة_إلغاء_واجهة_جديدة();
+        اطلب_إلغاء_واجهة(&mutable cancel);
+        match ابن_واجهة_وحدة_قابلة_للإلغاء(req, &cancel) with
+        | نتيجة_بناء_واجهة_قابلة_للإلغاء.ملغاة -> { return 42; }
+        | _ -> { return 41; };
+    };
+}
+
+def main(): int {
+    let hierarchy: int = interface_for("tests/en/compiler/tooling/hierarchy/source.sn");
+    if (hierarchy != 42) { return hierarchy; }
+    let recovery: int = recovery_for("tests/en/compiler/tooling/recovery/source.sn");
+    if (recovery != 42) { return recovery; }
+    return cancellation_for("tests/en/compiler/tooling/hierarchy/source.sn");
+}

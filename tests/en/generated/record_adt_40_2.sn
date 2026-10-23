@@ -1,0 +1,23 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+
+type Pair = { left: int, right: int };
+type Choice = | Empty | Some of Pair;
+
+def make(): Choice {
+    let pair: Pair = { left: 40, right: 2 };
+    return Choice.Some(pair);
+}
+
+def evaluate(value: Choice): int {
+    match value with
+    | Choice.Empty -> { return 0; }
+    | Choice.Some({ left: a, right: b }) -> { return a + b; };
+}
+
+def main(): int {
+    if (evaluate(make()) != 42) { return 1; };
+    return 42;
+}

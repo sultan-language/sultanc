@@ -1,0 +1,10 @@
+extern def memset(destination: *mutable int, value: i32, count: uint): *mutable int;
+
+def main(): int {
+    let value: mutable int = 40;
+    let pointer: *mutable int = & mutable value;
+    unsafe {
+        let returned: *mutable int = memset(pointer, 42, 1);
+        return *returned;
+    }
+}
