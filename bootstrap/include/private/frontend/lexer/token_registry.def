@@ -11,6 +11,8 @@
  *   Future_Reserved — deliberately lexed but parser-dormant and qualification-frozen.
  */
 
+SULTANC__TOKEN__(COMPTIME, "وقت_الترجمة", Keyword, Active, None)
+SULTANC__TOKEN__(AT_OPERATOR, "علامة_سمة", Operator, Active, None)
 SULTANC__TOKEN__(FUNCTION_TYPE, "نوع_دالة", Keyword, Active, None)
 SULTANC__TOKEN__(OF, "بقيمة", Keyword, Active, None)
 SULTANC__TOKEN__(FROM, "من_مصدر", Keyword, Active, None)
@@ -101,6 +103,7 @@ SULTANC__TOKEN__(LIT_BOOL, "حرفي_منطقي", Keyword, Active, Boolean)
 SULTANC__TOKEN__(EOF, "نهاية_الملف", Eof, Active, None)
 
 /* Canonical bilingual keyword spellings: exactly one English and one Arabic spelling. */
+SULTANC__KEYWORD__(COMPTIME, "comptime", "وقت_الترجمة")
 SULTANC__KEYWORD__(FUNCTION_TYPE, "fn", "دالة")
 SULTANC__KEYWORD__(OF, "of", "بنوع")
 SULTANC__KEYWORD__(FROM, "from", "من")
@@ -161,6 +164,7 @@ SULTANC__OPERATOR__(LEFT_SHIFT_OPERATOR, "<<")
 SULTANC__OPERATOR__(RIGHT_SHIFT_OPERATOR, ">>")
 SULTANC__OPERATOR__(OPERATOR_ASSIGNMENT_COLON, ":=")
 SULTANC__OPERATOR__(RIGHT_ARROW_OPERATOR, "->")
+SULTANC__OPERATOR__(AT_OPERATOR, "@")
 SULTANC__OPERATOR__(PLUS_OPERATOR, "+")
 SULTANC__OPERATOR__(MINUS_OPERATOR, "-")
 SULTANC__OPERATOR__(STAR_OPERATOR, "*")

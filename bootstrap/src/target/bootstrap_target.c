@@ -19,8 +19,10 @@ static const char *target_alias(const char *requested)
 {
     if (requested == NULL)
         return NULL;
+    /* The OS version makes LLVM emit LC_BUILD_VERSION (minos 11.0), matching the
+     * native Mach-O writer; Apple ld warns about objects without it. */
     if (strcmp(requested, "arm64-darwin") == 0)
-        return "aarch64-apple-darwin";
+        return "aarch64-apple-macosx11.0.0";
     if (strcmp(requested, "x86_64-linux") == 0)
         return "x86_64-unknown-linux-gnu";
     return requested;
