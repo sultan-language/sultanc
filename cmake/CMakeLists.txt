@@ -10,9 +10,9 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/modules")
 #   stage0     the C seed compiler (Stage0)
 #   stage1     Stage0 compiles the SultanC compiler into the Stage1 executable
 #   bootstrap  Stage0 + Stage1 only: produce the bootstrap compiler, nothing more
-#   stage2     Stage1 self-hosts the production compiler (native backend)
-#   verify     stage2, then Stage3/Stage4 convergence for the native and the
-#              LLVM backends (byte comparison; a difference fails the build)
+#   stage2     Stage1 self-hosts the production compiler (explicit backend)
+#   verify     stage2, then Stage3/Stage4 byte-identical convergence of the
+#              available selected backend(s)
 set(SULTANC_REQUESTED_STAGE "stage2" CACHE STRING
     "Requested build stage: stage0, stage1, stage2, bootstrap, verify")
 set_property(CACHE SULTANC_REQUESTED_STAGE PROPERTY STRINGS
@@ -21,6 +21,12 @@ set(SULTANC_REQUESTED_TARGET "" CACHE STRING
     "Requested target; Stage1 always runs on the build host")
 set(SULTANC_REQUESTED_OUTPUT "" CACHE STRING
     "Optional output path, or output directory for bootstrap")
+set(SULTANC_STAGE2_BACKEND "native" CACHE STRING
+    "Backend used by Stage1 to build Stage2: native or llvm (never implicit fallback)")
+set_property(CACHE SULTANC_STAGE2_BACKEND PROPERTY STRINGS native llvm)
+if(NOT SULTANC_STAGE2_BACKEND MATCHES "^(native|llvm)$")
+    message(FATAL_ERROR "Unsupported SULTANC_STAGE2_BACKEND=${SULTANC_STAGE2_BACKEND}; choose native or llvm")
+endif()
 
 if(NOT SULTANC_REQUESTED_STAGE MATCHES "^(stage0|stage1|stage2|bootstrap|verify)$")
     message(FATAL_ERROR "Unknown SultanC bootstrap stage: ${SULTANC_REQUESTED_STAGE}")
@@ -35,6 +41,16 @@ if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Darwin" AND
 elseif(CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux" AND
        CMAKE_HOST_SYSTEM_PROCESSOR MATCHES "^(x86_64|amd64)$")
     set(SULTANC_HOST_TARGET "x86_64-linux")
+elseif(CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
+    # CMAKE_HOST_SYSTEM_PROCESSOR is the real host architecture, not the
+    # generator's selected cross/compatibility architecture.
+    if(CMAKE_HOST_SYSTEM_PROCESSOR MATCHES "^(AMD64|amd64|x86_64)$")
+        set(SULTANC_HOST_TARGET "x86_64-windows-msvc")
+        set(_sultanc_windows_arch "x64")
+    elseif(CMAKE_HOST_SYSTEM_PROCESSOR MATCHES "^(ARM64|arm64|aarch64)$")
+        set(SULTANC_HOST_TARGET "aarch64-windows-msvc")
+        set(_sultanc_windows_arch "ARM64")
+    endif()
 endif()
 
 if(SULTANC_REQUESTED_STAGE STREQUAL "stage0")
@@ -104,6 +120,67 @@ if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Darwin" AND
     endif()
 endif()
 
+# Stage1 is a native executable. Reject emulated/mismatched Windows toolchains
+# instead of linking an object for the host into a different-architecture EXE.
+if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows" AND
+   NOT SULTANC_REQUESTED_STAGE STREQUAL "stage0")
+    if(NOT MSVC)
+        message(FATAL_ERROR
+            "Windows Stage1 requires the MSVC ABI (MSVC or clang-cl). "
+            "MinGW/GNU C toolchains are not supported by this host bootstrap.")
+    endif()
+    if(NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
+        message(FATAL_ERROR "Windows Stage1 requires a 64-bit C toolchain.")
+    endif()
+    # Different spellings are normal (AMD64 versus x86_64), so normalize
+    # the processor, generator platform and compiler's reported architecture.
+    set(_sultanc_compiler_arch "${CMAKE_SYSTEM_PROCESSOR}")
+    foreach(_sultanc_arch_fact IN ITEMS
+            "${CMAKE_VS_PLATFORM_NAME}" "${CMAKE_GENERATOR_PLATFORM}"
+            "${CMAKE_C_COMPILER_ARCHITECTURE_ID}" "${_sultanc_compiler_arch}")
+        if(NOT _sultanc_arch_fact)
+            continue()
+        endif()
+        if(_sultanc_arch_fact MATCHES "^(x64|X64|AMD64|amd64|x86_64)$")
+            set(_sultanc_arch_fact "x64")
+        elseif(_sultanc_arch_fact MATCHES "^(ARM64|arm64|aarch64)$")
+            set(_sultanc_arch_fact "ARM64")
+        else()
+            message(FATAL_ERROR
+                "Unsupported Windows C toolchain architecture: ${_sultanc_arch_fact}")
+        endif()
+        if(NOT _sultanc_arch_fact STREQUAL _sultanc_windows_arch)
+            message(FATAL_ERROR
+                "Windows Stage1 host is ${SULTANC_HOST_TARGET}, but the C "
+                "toolchain/generator targets ${_sultanc_arch_fact}.")
+        endif()
+    endforeach()
+    if(CMAKE_C_COMPILER_TARGET)
+        if(_sultanc_windows_arch STREQUAL "x64" AND
+           NOT CMAKE_C_COMPILER_TARGET MATCHES "^(x86_64|amd64)(-|$)")
+            message(FATAL_ERROR "C compiler target ${CMAKE_C_COMPILER_TARGET} does not match ${SULTANC_HOST_TARGET}")
+        elseif(_sultanc_windows_arch STREQUAL "ARM64" AND
+               NOT CMAKE_C_COMPILER_TARGET MATCHES "^(aarch64|arm64)(-|$)")
+            message(FATAL_ERROR "C compiler target ${CMAKE_C_COMPILER_TARGET} does not match ${SULTANC_HOST_TARGET}")
+        endif()
+        if(NOT CMAKE_C_COMPILER_TARGET MATCHES "windows-msvc")
+            message(FATAL_ERROR "Windows Stage1 requires an MSVC target triple, not ${CMAKE_C_COMPILER_TARGET}")
+        endif()
+    endif()
+endif()
+
+# The registered Windows targets currently support delegated cross-compilation,
+# not native machine code generation. Explicit LLVM is required for Stage2.
+if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows" AND
+   (SULTANC_REQUESTED_STAGE STREQUAL "stage2" OR
+    SULTANC_REQUESTED_STAGE STREQUAL "verify") AND
+   SULTANC_STAGE2_BACKEND STREQUAL "native")
+    message(FATAL_ERROR
+        "Windows Native Stage2 is unavailable in the canonical target/backend "
+        "implementation. Configure with -DSULTANC_STAGE2_BACKEND=llvm; "
+        "no backend fallback is performed.")
+endif()
+
 # Native backend coverage for the Stage2 target is validated by the compiler
 # itself (compiler/backend/target/target_registry.sn); an unsupported target
 # fails in Stage1 with the compiler's diagnostic, never with an LLVM fallback.
@@ -158,11 +235,22 @@ function(sultanc_export_executable source destination comment)
     else()
         set(_file "${source}")
     endif()
+    set(_runtime_copy "")
+    set(_runtime_deps "")
+    if(WIN32)
+        # Every exported compiler imports LLVM-C.dll. Keep its runtime next to
+        # the executable, including explicit and per-configuration exports.
+        list(APPEND _runtime_copy
+            COMMAND "${CMAKE_COMMAND}" -E copy_if_different
+                "${SULTANC_LLVM_DLL}" "${_destination_directory}/LLVM-C.dll")
+        list(APPEND _runtime_deps "${SULTANC_LLVM_DLL}")
+    endif()
     add_custom_command(
         OUTPUT "${destination}"
         COMMAND "${CMAKE_COMMAND}" -E make_directory "${_destination_directory}"
         COMMAND "${CMAKE_COMMAND}" -E copy "${_file}" "${destination}"
-        DEPENDS "${source}"
+        ${_runtime_copy}
+        DEPENDS "${source}" ${_runtime_deps}
         COMMENT "${comment}"
         VERBATIM)
 endfunction()

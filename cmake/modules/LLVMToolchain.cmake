@@ -1,31 +1,36 @@
 # Select one LLVM 19-23 development installation and expose it as
-# SultanC::LLVM (shared library + matching C API include directory) for both
-# bootstrap stages.
+# SultanC::LLVM (shared LLVM library, or Windows import lib + DLL, together
+# with its matching C API headers) for both bootstrap stages.
 #
 # Selection, in precedence order (an explicit selection that is invalid is a
 # configuration error, never a reason to fall back to discovery):
 #   1. SULTANC_LLVM_LIBRARY                                   (library pin)
 #   2. LLVM_CONFIG (cache variable or environment): one llvm-config executable
 #   3. LLVM_DIR: the LLVM CMake package directory (LLVM's documented contract)
-#   4. Automatic discovery: the newest major found under CMake's prefixes,
+#   4. SULTANC_LLVM_ROOT: an explicitly pinned SDK installation prefix
+#   5. Automatic discovery: the newest major found under CMake's prefixes,
 #      llvm-config programs on PATH and the Homebrew prefix. Neither package
 #      metadata nor llvm-config is required for discovery.
 # SULTANC_LLVM_INCLUDE_DIR (one directory or a list) overrides only the
 # include directories of whichever installation was selected above.
 #
-# The version is identified from library names, llvm-config or package
-# version files. Include directories come from the selected installation's
-# metadata (llvm-config --includedir/--cppflags, the package's
-# LLVM_INCLUDE_DIRS) and are kept complete, including Debian's split
-# <root>/include/llvm-N + <root>/include/llvm-c-N layout; individual headers
-# are never probed and no compile or link test is run. A system prefix holding
-# several majors gets the directories of the selected major, not an ambiguous
-# ${prefix}/include. Include directories never decide selection: when the
-# metadata reports none, the installation is still selected and SultanC::LLVM
-# carries no include directory. An explicit SULTANC_LLVM_INCLUDE_DIR replaces
-# only the include directories: library selection is unaffected by it. The linked
-# library is always the monolithic shared libLLVM, never a component library.
+# Non-Windows version identity is resolved from library names, llvm-config or
+# package metadata. Includes use that installation's metadata, preserving all
+# reported paths (including Debian's split llvm-N / llvm-c-N directories).
+# Missing non-Windows include metadata leaves the compiler's normal header
+# search path intact; a component library cannot substitute for shared libLLVM.
+# Windows additionally checks llvm-c/Core.h and the selected major in
+# llvm/Config/llvm-config.h, then requires LLVM-C.lib and LLVM-C.dll from
+# the selected SDK. Explicit header overrides do not alter library selection.
 set(_sultanc_llvm_versions 23 22 21 20 19)
+set(SULTANC_LLVM_ROOT "" CACHE PATH
+    "Explicit root of an LLVM 19-23 development SDK (especially on Windows)")
+set(_sultanc_pin_dll "")
+if(WIN32 AND SULTANC_LLVM_DLL AND
+   NOT SULTANC_LLVM_DLL STREQUAL _SULTANC_LLVM_AUTO_DLL AND
+   NOT SULTANC_LLVM_DLL MATCHES "-NOTFOUND$")
+    set(_sultanc_pin_dll "${SULTANC_LLVM_DLL}")
+endif()
 
 function(_sultanc_llvm_supported major output)
     set(${output} FALSE PARENT_SCOPE)
@@ -54,6 +59,12 @@ set(_sultanc_llvm_config "${LLVM_CONFIG}")
 if(NOT _sultanc_llvm_config AND DEFINED ENV{LLVM_CONFIG} AND
    NOT "$ENV{LLVM_CONFIG}" STREQUAL "")
     set(_sultanc_llvm_config "$ENV{LLVM_CONFIG}")
+endif()
+
+if(SULTANC_LLVM_ROOT AND (_sultanc_llvm_config OR LLVM_DIR OR _sultanc_pin_library))
+    message(FATAL_ERROR
+        "SULTANC_LLVM_ROOT cannot be combined with LLVM_CONFIG, LLVM_DIR or "
+        "SULTANC_LLVM_LIBRARY; select one authoritative SDK source.")
 endif()
 
 # --- Installation facts ------------------------------------------------------
@@ -90,6 +101,13 @@ function(_sultanc_llvm_majors prefix output)
     if(EXISTS "${prefix}/bin/llvm-config")
         _sultanc_llvm_config_query("${prefix}/bin/llvm-config" _reported --version)
         if(_reported MATCHES "^([0-9]+)\\.")
+            list(APPEND _majors "${CMAKE_MATCH_1}")
+        endif()
+    endif()
+    if(WIN32 AND EXISTS "${prefix}/include/llvm/Config/llvm-config.h")
+        file(STRINGS "${prefix}/include/llvm/Config/llvm-config.h" _line
+            REGEX "^#define[ \t]+LLVM_VERSION_MAJOR[ \t]+[0-9]+")
+        if(_line MATCHES "LLVM_VERSION_MAJOR[ \t]+([0-9]+)")
             list(APPEND _majors "${CMAKE_MATCH_1}")
         endif()
     endif()
@@ -131,6 +149,10 @@ endfunction()
 # <root>/lib/<arch> of the same root; it is derived, not hardcoded.
 function(_sultanc_llvm_library_dirs prefix version output)
     set(_dirs "${prefix}/lib" "${prefix}/lib64")
+    if(WIN32 AND _sultanc_windows_arch)
+        # SDKs with per-architecture import libraries must not mix ARM64/x64.
+        list(PREPEND _dirs "${prefix}/lib/${_sultanc_windows_arch}")
+    endif()
     if(CMAKE_LIBRARY_ARCHITECTURE)
         list(APPEND _dirs "${prefix}/lib/${CMAKE_LIBRARY_ARCHITECTURE}")
         if(version AND prefix MATCHES "^(.*)/lib/llvm-${version}$")
@@ -192,6 +214,27 @@ endfunction()
 # The shared LLVM library of `version` in `dirs` (an installation's library
 # directories). `prefix` identifies the installation for generic names.
 function(_sultanc_llvm_library prefix version dirs output)
+    if(WIN32)
+        set(_candidates "")
+        if(_sultanc_pin_library)
+            list(APPEND _candidates "${_sultanc_pin_library}")
+        else()
+            foreach(_dir IN LISTS dirs)
+                list(APPEND _candidates "${_dir}/LLVM-C.lib")
+            endforeach()
+        endif()
+        foreach(_candidate IN LISTS _candidates)
+            if(EXISTS "${_candidate}")
+                get_filename_component(_name "${_candidate}" NAME)
+                if(_name STREQUAL "LLVM-C.lib")
+                    set(${output} "${_candidate}" PARENT_SCOPE)
+                    return()
+                endif()
+            endif()
+        endforeach()
+        set(${output} "" PARENT_SCOPE)
+        return()
+    endif()
     set(_candidates "")
     if(_sultanc_pin_library)
         list(APPEND _candidates "${_sultanc_pin_library}")
@@ -310,12 +353,12 @@ function(_sultanc_llvm_library prefix version dirs output)
     set(${output} "${_library}" PARENT_SCOPE)
 endfunction()
 
-# Monolithic shared LLVM library names (libLLVM, libLLVM-N, libLLVM.so.N,
-# libLLVM.N.dylib and their versioned forms). Component libraries such as
-# libLLVMCore.so are not the monolithic dependency.
+# Shared LLVM library names on ELF/Mach-O, and Windows LLVM-C import library.
+# Component libraries such as libLLVMCore are never the runtime dependency.
 function(_sultanc_llvm_monolithic_name name output)
     set(${output} FALSE PARENT_SCOPE)
-    if(name MATCHES "^libLLVM(-[0-9]+)?([.]so([.][0-9]+)*|([.][0-9]+)*[.]dylib)$")
+    if((WIN32 AND name STREQUAL "LLVM-C.lib") OR
+       name MATCHES "^libLLVM(-[0-9]+)?([.]so([.][0-9]+)*|([.][0-9]+)*[.]dylib)$")
         set(${output} TRUE PARENT_SCOPE)
     endif()
 endfunction()
@@ -357,6 +400,13 @@ function(_sultanc_llvm_includes prefix version output)
         endif()
     endif()
     set(_dirs "")
+    if(WIN32)
+        if(IS_DIRECTORY "${prefix}/include")
+            list(APPEND _dirs "${prefix}/include")
+        endif()
+        set(${output} "${_dirs}" PARENT_SCOPE)
+        return()
+    endif()
     set(_root "${prefix}")
     if(prefix MATCHES "^(.*)/lib/llvm-${version}$")
         set(_root "${CMAKE_MATCH_1}")
@@ -467,22 +517,32 @@ elseif(LLVM_DIR AND NOT _sultanc_pin_library)
 else()
     # Automatic discovery or pinned files.
     set(_sultanc_roots ${CMAKE_PREFIX_PATH})
-    if(DEFINED ENV{CMAKE_PREFIX_PATH} AND NOT "$ENV{CMAKE_PREFIX_PATH}" STREQUAL "")
+    if(SULTANC_LLVM_ROOT)
+        if(NOT IS_DIRECTORY "${SULTANC_LLVM_ROOT}")
+            message(FATAL_ERROR "SULTANC_LLVM_ROOT does not exist: ${SULTANC_LLVM_ROOT}")
+        endif()
+        set(_sultanc_roots "${SULTANC_LLVM_ROOT}")
+    endif()
+    if(NOT SULTANC_LLVM_ROOT AND
+       DEFINED ENV{CMAKE_PREFIX_PATH} AND NOT "$ENV{CMAKE_PREFIX_PATH}" STREQUAL "")
         file(TO_CMAKE_PATH "$ENV{CMAKE_PREFIX_PATH}" _sultanc_env_prefixes)
         list(APPEND _sultanc_roots ${_sultanc_env_prefixes})
     endif()
     # Optional llvm-config programs on PATH identify nonstandard installations.
-    foreach(_tool llvm-config-23 llvm-config-22 llvm-config-21 llvm-config-20
-                  llvm-config-19 llvm-config)
-        find_program(_sultanc_config NAMES "${_tool}" NO_CACHE)
-        if(_sultanc_config)
-            _sultanc_llvm_config_query("${_sultanc_config}" _reported_prefix --prefix)
-            if(IS_DIRECTORY "${_reported_prefix}")
-                list(APPEND _sultanc_roots "${_reported_prefix}")
+    # A pinned root must not be overridden by an unrelated llvm-config.
+    if(NOT SULTANC_LLVM_ROOT)
+        foreach(_tool llvm-config-23 llvm-config-22 llvm-config-21 llvm-config-20
+                      llvm-config-19 llvm-config)
+            find_program(_sultanc_config NAMES "${_tool}" NO_CACHE)
+            if(_sultanc_config)
+                _sultanc_llvm_config_query("${_sultanc_config}" _reported_prefix --prefix)
+                if(IS_DIRECTORY "${_reported_prefix}")
+                    list(APPEND _sultanc_roots "${_reported_prefix}")
+                endif()
             endif()
-        endif()
-        unset(_sultanc_config)
-    endforeach()
+            unset(_sultanc_config)
+        endforeach()
+    endif()
     if(_sultanc_pin_library)
         get_filename_component(_sultanc_pin_libdir "${_sultanc_pin_library}" DIRECTORY)
         get_filename_component(_sultanc_pin_prefix "${_sultanc_pin_libdir}" DIRECTORY)
@@ -490,12 +550,18 @@ else()
            _sultanc_pin_libdir MATCHES "/lib/${CMAKE_LIBRARY_ARCHITECTURE}$")
             get_filename_component(_sultanc_pin_prefix "${_sultanc_pin_prefix}" DIRECTORY)
         endif()
+        if(WIN32 AND _sultanc_pin_libdir MATCHES "/lib/(x64|ARM64)$")
+            get_filename_component(_sultanc_pin_prefix "${_sultanc_pin_prefix}" DIRECTORY)
+        endif()
         set(_sultanc_roots "${_sultanc_pin_prefix}")
     endif()
-    if(NOT _sultanc_pin_library)
+    if(NOT _sultanc_pin_library AND NOT SULTANC_LLVM_ROOT)
         # CMake's platform prefixes plus the Homebrew prefix when Homebrew is
         # present; no machine-specific directory list is embedded here.
         list(APPEND _sultanc_roots ${CMAKE_SYSTEM_PREFIX_PATH})
+        if(WIN32 AND DEFINED ENV{ProgramFiles})
+            list(APPEND _sultanc_roots "$ENV{ProgramFiles}/LLVM")
+        endif()
         if(DEFINED ENV{HOMEBREW_PREFIX} AND NOT "$ENV{HOMEBREW_PREFIX}" STREQUAL "")
             list(PREPEND _sultanc_roots "$ENV{HOMEBREW_PREFIX}")
         endif()
@@ -542,6 +608,20 @@ else()
                 list(APPEND _sultanc_unlinked "LLVM ${_version} at ${_prefix}")
                 continue()
             endif()
+            if(WIN32)
+                if(NOT EXISTS "${_prefix}/include/llvm-c/Core.h")
+                    list(APPEND _sultanc_unlinked "LLVM ${_version} at ${_prefix} (missing llvm-c/Core.h)")
+                    continue()
+                endif()
+                get_filename_component(_lib_directory "${_library}" DIRECTORY)
+                if(NOT _sultanc_pin_dll AND
+                   NOT EXISTS "${_prefix}/bin/LLVM-C.dll" AND
+                   NOT EXISTS "${_prefix}/bin/${_sultanc_windows_arch}/LLVM-C.dll" AND
+                   NOT EXISTS "${_lib_directory}/LLVM-C.dll")
+                    list(APPEND _sultanc_unlinked "LLVM ${_version} at ${_prefix} (missing LLVM-C.dll)")
+                    continue()
+                endif()
+            endif()
             set(_sultanc_selected_prefix "${_prefix}")
             set(_sultanc_selected_version "${_version}")
             set(_sultanc_selected_library "${_library}")
@@ -552,34 +632,102 @@ else()
         endif()
     endforeach()
     if(NOT _sultanc_selected_prefix)
+        if(SULTANC_LLVM_ROOT)
+            message(FATAL_ERROR
+                "SULTANC_LLVM_ROOT=${SULTANC_LLVM_ROOT} has no supported LLVM "
+                "19-23 development SDK with the required link library. ${_sultanc_unlinked}")
+        endif()
         if(_sultanc_unlinked)
             string(JOIN ", " _missing ${_sultanc_unlinked})
-            message(FATAL_ERROR "LLVM found (${_missing}), but no linkable LLVM shared library was found.")
+            message(FATAL_ERROR "LLVM found (${_missing}), but the required LLVM link library or Windows SDK components were not found.")
         endif()
         message(FATAL_ERROR "No installed LLVM 19-23 version was detected. "
-            "Install LLVM, or select one with LLVM_CONFIG, LLVM_DIR or CMAKE_PREFIX_PATH.")
+            "Install LLVM, or select one with SULTANC_LLVM_ROOT, LLVM_CONFIG, LLVM_DIR or CMAKE_PREFIX_PATH.")
     endif()
     if(_sultanc_unlinked)
-        message(STATUS "SultanC LLVM installations without linking libraries: ${_sultanc_unlinked}")
+        message(STATUS "SultanC LLVM installations without usable development libraries: ${_sultanc_unlinked}")
     endif()
     _sultanc_llvm_includes("${_sultanc_selected_prefix}" "${_sultanc_selected_version}"
         _sultanc_selected_include)
     set(_sultanc_selection_source "discovery")
 endif()
 
+# A Windows LLVM-C import library is useful only with its exact DLL runtime.
+# The compiler's generated PE files import LLVM-C.dll by that name.
+if(WIN32)
+    get_filename_component(_sultanc_implib_name
+        "${_sultanc_selected_library}" NAME)
+    if(NOT _sultanc_implib_name STREQUAL "LLVM-C.lib")
+        message(FATAL_ERROR "Windows needs the LLVM-C.lib import library, not a static LLVM component library: ${_sultanc_selected_library}")
+    endif()
+    set(_dll_candidates "")
+    if(_sultanc_pin_dll)
+        list(APPEND _dll_candidates "${_sultanc_pin_dll}")
+    else()
+        get_filename_component(_implib_dir "${_sultanc_selected_library}" DIRECTORY)
+        list(APPEND _dll_candidates
+            "${_sultanc_selected_prefix}/bin/${_sultanc_windows_arch}/LLVM-C.dll"
+            "${_sultanc_selected_prefix}/bin/LLVM-C.dll"
+            "${_implib_dir}/LLVM-C.dll")
+    endif()
+    set(_sultanc_selected_dll "")
+    foreach(_dll IN LISTS _dll_candidates)
+        if(EXISTS "${_dll}")
+            get_filename_component(_dll_name "${_dll}" NAME)
+            if(_dll_name STREQUAL "LLVM-C.dll")
+                set(_sultanc_selected_dll "${_dll}")
+                break()
+            endif()
+        endif()
+    endforeach()
+    if(NOT _sultanc_selected_dll)
+        message(FATAL_ERROR
+            "LLVM ${_sultanc_selected_version} has an import library "
+            "(${_sultanc_selected_library}) but no LLVM-C.dll runtime. "
+            "Set SULTANC_LLVM_DLL to the matching LLVM-C.dll in the SDK.")
+    endif()
+endif()
+
 # An explicit include override is exactly the given directory list.
 if(_sultanc_pin_include)
     set(_sultanc_selected_include "${_sultanc_pin_include}")
 endif()
-# Include directories never qualify or disqualify an installation: selection
-# rests on the version and the linkable library alone. When the metadata names
-# no include directory, SultanC::LLVM carries none and the C compiler's own
-# search paths apply.
+# On non-Windows hosts, missing include metadata does not override the
+# compiler's normal header search paths (preserving existing discovery).
 
+if(WIN32)
+    set(_sultanc_core_found FALSE)
+    set(_sultanc_version_found FALSE)
+    foreach(_inc IN LISTS _sultanc_selected_include)
+        if(EXISTS "${_inc}/llvm-c/Core.h")
+            set(_sultanc_core_found TRUE)
+        endif()
+        if(EXISTS "${_inc}/llvm/Config/llvm-config.h")
+            file(STRINGS "${_inc}/llvm/Config/llvm-config.h" _major_line
+                REGEX "^#define[ \t]+LLVM_VERSION_MAJOR[ \t]+[0-9]+")
+            if(_major_line MATCHES "LLVM_VERSION_MAJOR[ \t]+([0-9]+)" AND
+               CMAKE_MATCH_1 STREQUAL _sultanc_selected_version)
+                set(_sultanc_version_found TRUE)
+            endif()
+        endif()
+    endforeach()
+    if(NOT _sultanc_core_found OR NOT _sultanc_version_found)
+        message(FATAL_ERROR
+            "LLVM ${_sultanc_selected_version} Windows development headers "
+            "are missing or mismatched: expected llvm-c/Core.h and a matching "
+            "llvm/Config/llvm-config.h in ${_sultanc_selected_include}.")
+    endif()
+    set(SULTANC_LLVM_DLL "${_sultanc_selected_dll}" CACHE FILEPATH
+        "Selected Windows LLVM-C.dll runtime" FORCE)
+    if(NOT _sultanc_pin_dll)
+        set(_SULTANC_LLVM_AUTO_DLL "${SULTANC_LLVM_DLL}" CACHE INTERNAL
+            "Automatically selected LLVM DLL" FORCE)
+    endif()
+endif()
 set(SULTANC_LLVM_INCLUDE_DIR "${_sultanc_selected_include}" CACHE STRING
     "Selected LLVM include directories (a list)" FORCE)
 set(SULTANC_LLVM_LIBRARY "${_sultanc_selected_library}" CACHE FILEPATH
-    "Selected LLVM shared library" FORCE)
+    "Selected LLVM shared library (Windows: LLVM-C.lib import library)" FORCE)
 if(NOT _sultanc_pin_include)
     set(_SULTANC_LLVM_AUTO_INCLUDE_DIR "${SULTANC_LLVM_INCLUDE_DIR}"
         CACHE INTERNAL "Automatically selected LLVM include directory" FORCE)
@@ -590,14 +738,23 @@ if(NOT _sultanc_pin_library)
 endif()
 set(SULTANC_LLVM_VERSION_MAJOR "${_sultanc_selected_version}")
 add_library(SultanC::LLVM SHARED IMPORTED GLOBAL)
-set_target_properties(SultanC::LLVM PROPERTIES
-    IMPORTED_LOCATION "${SULTANC_LLVM_LIBRARY}")
+if(WIN32)
+    set_target_properties(SultanC::LLVM PROPERTIES
+        IMPORTED_IMPLIB "${SULTANC_LLVM_LIBRARY}"
+        IMPORTED_LOCATION "${SULTANC_LLVM_DLL}")
+else()
+    set_target_properties(SultanC::LLVM PROPERTIES
+        IMPORTED_LOCATION "${SULTANC_LLVM_LIBRARY}")
+endif()
 if(SULTANC_LLVM_INCLUDE_DIR)
     set_target_properties(SultanC::LLVM PROPERTIES
         INTERFACE_INCLUDE_DIRECTORIES "${SULTANC_LLVM_INCLUDE_DIR}")
 endif()
 message(STATUS "SultanC selected LLVM ${SULTANC_LLVM_VERSION_MAJOR} (${_sultanc_selection_source}): ${_sultanc_selected_prefix}")
 message(STATUS "SultanC LLVM library: ${SULTANC_LLVM_LIBRARY}")
+if(WIN32)
+    message(STATUS "SultanC LLVM runtime DLL: ${SULTANC_LLVM_DLL}")
+endif()
 if(SULTANC_LLVM_INCLUDE_DIR)
     message(STATUS "SultanC LLVM include: ${SULTANC_LLVM_INCLUDE_DIR}")
 else()

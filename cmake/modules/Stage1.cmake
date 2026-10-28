@@ -12,7 +12,7 @@ file(GLOB_RECURSE SULTANC_COMPILER_SOURCES CONFIGURE_DEPENDS
     "${SULTANC_SOURCE_ROOT}/compiler/*.sn"
     "${SULTANC_SOURCE_ROOT}/library/std/*.sn")
 list(APPEND SULTANC_COMPILER_SOURCES
-    "${SULTANC_SOURCE_ROOT}/Supax.toml"
+    "${SULTANC_SOURCE_ROOT}/supax.toml"
     "${SULTANC_SOURCE_ROOT}/library/Supax.toml")
 file(CONFIGURE
     OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/sultanc-stage1-target.txt"
@@ -23,8 +23,15 @@ if(SULTANC_MULTI_CONFIG)
 else()
     set(SULTANC_STAGE1_OBJECT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/stage1")
 endif()
+# Stage0 emits the host's object format; CMake consumes it as an external
+# object (MSVC/clang-cl: COFF .obj, Darwin/Linux: their normal .o extension).
+if(WIN32)
+    set(_sultanc_stage1_object_extension ".obj")
+else()
+    set(_sultanc_stage1_object_extension "${CMAKE_C_OUTPUT_EXTENSION}")
+endif()
 set(SULTANC_STAGE1_OBJECT
-    "${SULTANC_STAGE1_OBJECT_DIRECTORY}/sultanc-stage1${CMAKE_C_OUTPUT_EXTENSION}")
+    "${SULTANC_STAGE1_OBJECT_DIRECTORY}/sultanc-stage1${_sultanc_stage1_object_extension}")
 add_custom_command(
     OUTPUT "${SULTANC_STAGE1_OBJECT}"
     COMMAND "${CMAKE_COMMAND}" -E make_directory "${SULTANC_STAGE1_OBJECT_DIRECTORY}"
@@ -75,4 +82,12 @@ target_link_libraries(sultanc-stage1-executable PRIVATE SultanC::LLVM)
 if(_sultanc_stage1_export)
     sultanc_export_executable(sultanc-stage1-executable "${_sultanc_stage1_export}"
         "Exporting Stage1 to ${SULTANC_EXPORT_DIRECTORY}/bootstrap")
+endif()
+
+# An explicitly placed Stage1 executable also needs its own runtime DLL.
+if(WIN32)
+    add_custom_command(TARGET sultanc-stage1-executable POST_BUILD
+        COMMAND "${CMAKE_COMMAND}" -E copy_if_different
+            "${SULTANC_LLVM_DLL}" "$<TARGET_FILE_DIR:sultanc-stage1-executable>/LLVM-C.dll"
+        VERBATIM)
 endif()

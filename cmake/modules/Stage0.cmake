@@ -60,3 +60,12 @@ if(_sultanc_stage0_export)
     sultanc_export_executable(sultanc-stage0-executable "${_sultanc_stage0_export}"
         "Exporting Stage0 to ${SULTANC_EXPORT_DIRECTORY}/bootstrap")
 endif()
+
+# Stage1 executes Stage0, so the selected LLVM-C runtime must be deployable
+# alongside it. Both live in CMake's per-configuration bin directory.
+if(WIN32)
+    add_custom_command(TARGET sultanc-stage0-executable POST_BUILD
+        COMMAND "${CMAKE_COMMAND}" -E copy_if_different
+            "${SULTANC_LLVM_DLL}" "$<TARGET_FILE_DIR:sultanc-stage0-executable>/LLVM-C.dll"
+        VERBATIM)
+endif()
