@@ -1,0 +1,123 @@
+# Trusted, manual cache writer for SultanC's pinned LLVM 22.1.8 toolchains.
+name: Provision SultanC LLVM Toolchain
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/actions/llvm-toolchain/**
+      - .github/ci/contracts.json
+      - .github/workflows/llvm-toolchain-provision.yml
+  workflow_dispatch:
+    inputs:
+      host:
+        description: Toolchain host to provision.
+        required: true
+        default: both
+        type: choice
+        options:
+          - both
+          - linux-x86_64
+          - macos-arm64
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sultanc-llvm-toolchain-${{ inputs.host }}
+  cancel-in-progress: false
+
+jobs:
+  linux:
+    name: Provision LLVM / linux-x86_64
+    if: ${{ github.event_name == 'push' || inputs.host == 'both' || inputs.host == 'linux-x86_64' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 240
+    steps:
+      - name: Checkout trusted provisioning harness
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.workflow_sha }}
+          persist-credentials: false
+
+      - name: Resolve pinned LLVM cache contract
+        id: contract
+        shell: bash
+        run: >-
+          .github/actions/llvm-toolchain/setup.sh
+          resolve .github/ci/contracts.json
+
+      - name: Check for existing pinned toolchain
+        id: cache
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ${{ steps.contract.outputs.toolchain_path }}
+          key: ${{ steps.contract.outputs.cache_key }}
+
+      - name: Verify existing pinned toolchain
+        if: ${{ steps.cache.outputs.cache-hit == 'true' }}
+        shell: bash
+        run: >-
+          .github/actions/llvm-toolchain/setup.sh
+          activate .github/ci/contracts.json true
+
+      - name: Build and verify pinned LLVM toolchain
+        if: ${{ steps.cache.outputs.cache-hit != 'true' }}
+        shell: bash
+        run: >-
+          .github/actions/llvm-toolchain/setup.sh
+          provision .github/ci/contracts.json
+
+      - name: Save pinned LLVM toolchain
+        if: ${{ steps.cache.outputs.cache-hit != 'true' }}
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ${{ steps.contract.outputs.toolchain_path }}
+          key: ${{ steps.contract.outputs.cache_key }}
+
+  macos:
+    name: Provision LLVM / macos-arm64
+    if: ${{ github.event_name == 'push' || inputs.host == 'both' || inputs.host == 'macos-arm64' }}
+    runs-on: macos-15
+    timeout-minutes: 240
+    steps:
+      - name: Checkout trusted provisioning harness
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.workflow_sha }}
+          persist-credentials: false
+
+      - name: Resolve pinned LLVM cache contract
+        id: contract
+        shell: bash
+        run: >-
+          .github/actions/llvm-toolchain/setup.sh
+          resolve .github/ci/contracts.json
+
+      - name: Check for existing pinned toolchain
+        id: cache
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ${{ steps.contract.outputs.toolchain_path }}
+          key: ${{ steps.contract.outputs.cache_key }}
+
+      - name: Verify existing pinned toolchain
+        if: ${{ steps.cache.outputs.cache-hit == 'true' }}
+        shell: bash
+        run: >-
+          .github/actions/llvm-toolchain/setup.sh
+          activate .github/ci/contracts.json true
+
+      - name: Build and verify pinned LLVM toolchain
+        if: ${{ steps.cache.outputs.cache-hit != 'true' }}
+        shell: bash
+        run: >-
+          .github/actions/llvm-toolchain/setup.sh
+          provision .github/ci/contracts.json
+
+      - name: Save pinned LLVM toolchain
+        if: ${{ steps.cache.outputs.cache-hit != 'true' }}
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ${{ steps.contract.outputs.toolchain_path }}
+          key: ${{ steps.contract.outputs.cache_key }}

@@ -24,10 +24,5 @@ else
   ./build.sh 2>&1 | tee "$diag/build.log"
 fi
 
-compiler=build/sultanc
-if [[ "${RUNNER_OS:-}" == "Windows" ]]; then
-  compiler=build/sultanc.exe
-fi
-
-[[ -x "$compiler" ]] || fail "$compiler was not produced or is not executable"
-file "$compiler" | tee "$diag/compiler-file.txt"
+[[ -x build/sultanc ]] || fail "build/sultanc was not produced"
+file build/sultanc | tee "$diag/compiler-file.txt"

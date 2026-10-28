@@ -1,8 +1,8 @@
 # Self-host convergence is distinct evidence from the regression suite.
 name: SultanC Self-Host Convergence
 description: >-
-  Rebuild SultanC with itself twice and require Stage2, Stage3, and Stage4 to
-  converge byte-for-byte.
+  Rebuild SultanC through Stage3 and Stage4 and require those self-hosted
+  compilers to converge byte-for-byte.
 
 inputs:
   target:
