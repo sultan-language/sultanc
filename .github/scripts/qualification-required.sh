@@ -10,6 +10,7 @@ fail() {
 
 : "${RESOLVE_RESULT:?resolve result is required}"
 : "${NATIVE_RESULT:?native result is required}"
+: "${WINDOWS_RESULT:?Windows result is required}"
 : "${LLVM_CONTRACTS_RESULT:?LLVM contract result is required}"
 : "${LLVM_BROAD_RESULT:?LLVM broad result is required}"
 : "${LLVM_ACTIVE:=false}"
@@ -21,6 +22,8 @@ fail() {
   "candidate resolution did not succeed"
 [[ "$NATIVE_RESULT" == "success" ]] || fail \
   "native qualification did not succeed"
+[[ "$WINDOWS_RESULT" == "success" ]] || fail \
+  "Windows compiler build did not succeed"
 
 broad_expected="false"
 if [[ "$PROFILE" != "main" || "$MODE" == "deep" ]]; then

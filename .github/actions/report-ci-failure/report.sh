@@ -111,17 +111,17 @@ trim() {
 failed_jobs() {
   local filter
 
-  filter='
-    .jobs[] |
-    select(.conclusion == "failure") |
-    [
-      .id,
-      .name,
-      (.runner_name // "unknown"),
-      (.labels | join(", ")),
-      ([.steps[]? | select(.conclusion == "failure") | .name][0] // "unknown")
-    ] |
-    @tsv
+  filter='\
+    .jobs[] |\
+    select(.conclusion == "failure") |\
+    [\
+      .id,\
+      .name,\
+      (.runner_name // "unknown"),\
+      (.labels | join(", ")),\
+      ([.steps[]? | select(.conclusion == "failure") | .name][0] // "unknown")\
+    ] |\
+    @tsv\
   '
 
   gh api --paginate \
@@ -147,12 +147,10 @@ issue_for_failure_key() {
 
   jq -r \
     --arg marker "$marker" \
-    '
-      .[] |
-      select(.pull_request == null) |
-      select((.body // "") | contains($marker)) |
-      .number
-    ' \
+    '.[] |\
+     select(.pull_request == null) |\
+     select((.body // "") | contains($marker)) |\
+     .number' \
     <<< "$issues" \
     | head -n1
 }

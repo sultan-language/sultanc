@@ -19,8 +19,14 @@ diag="${RUNNER_TEMP:-/tmp}/sultanc-ci/target/$target"
 mkdir -p "$diag"
 cd -- "$working_directory"
 
-actual_os="$(uname -s)"
-actual_arch="$(uname -m)"
+# Git Bash uname includes a variable Windows version; Actions runner identity is stable.
+if [[ "${RUNNER_OS:-}" == "Windows" ]]; then
+  actual_os="$RUNNER_OS"
+  actual_arch="${RUNNER_ARCH:?runner architecture is required}"
+else
+  actual_os="$(uname -s)"
+  actual_arch="$(uname -m)"
+fi
 printf '%s\n' "$actual_os" > "$diag/host-os.txt"
 printf '%s\n' "$actual_arch" > "$diag/host-arch.txt"
 
