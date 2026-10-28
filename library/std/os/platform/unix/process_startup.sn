@@ -1,5 +1,6 @@
 // Unix process startup data (Linux and Darwin). The executable entry stores
-// the CRT/kernel argc, argv and envp in these linker data symbols before
+// the argc, argv and envp the kernel (Linux, through SultanC's `_start`) or
+// dyld (Darwin) passes in these linker data symbols before
 // SultanC code runs; the layout is identical on every Unix target. Only this OS provider dereferences the foreign arrays.
 // All public consumers receive owned copies, never borrowed native pointers.
 خارجي دع عدد_وسائط_إقلاع_يونكس: غير_موقع = «sultanc.bootstrap.argc»;
@@ -23,7 +24,7 @@
 }
 
 عام عرف اقرأ_عدد_وسائط_إقلاع_يونكس(): اختيار غير_موقع {
-    // The CRT supplies argv[argc] == NULL. Bound argc before indexing.
+    // The kernel and dyld supply argv[argc] == NULL. Bound argc before indexing.
     لو (عدد_وسائط_إقلاع_يونكس > 65536) { أرجع اختيار.لا_شيء(); };
     لو (عدد_وسائط_إقلاع_يونكس > 0 && مؤشر_وسائط_إقلاع_يونكس == الفارغ) {
         أرجع اختيار.لا_شيء();
