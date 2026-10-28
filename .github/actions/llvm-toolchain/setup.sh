@@ -579,6 +579,13 @@ activate_toolchain() {
   load_contract "$1"
 
   if [[ "$cache_hit" != "true" ]]; then
+    if [[ "$platform" == "windows" ]]; then
+      fail \
+        "Pinned SultanC LLVM cache is missing for $platform/$architecture "\
+        "(key=$cache_key). Run 'Provision SultanC LLVM Toolchain' on main "\
+        "with host=windows-$architecture (or host=all), and confirm the "\
+        "published-cache restore verification passes."
+    fi
     fail \
       "Pinned SultanC LLVM cache is missing for $platform/$architecture. "\
       "Run the 'Provision SultanC LLVM Toolchain' workflow on main."

@@ -11,7 +11,7 @@ on:
   workflow_dispatch:
     inputs:
       host:
-        description: Toolchain host to provision.
+        description: Toolchain host (both = Linux/macOS; all includes Windows).
         required: true
         default: both
         type: choice
@@ -137,6 +137,16 @@ jobs:
           ref: ${{ github.workflow_sha }}
           persist-credentials: false
 
+      # Qualification can restore this cache from other branches only when
+      # the provisioning cache was published in the default branch scope.
+      - name: Require default-branch LLVM cache scope
+        shell: bash
+        run: |
+          if [[ "$GITHUB_REF" != 'refs/heads/main' ]]; then
+            echo 'Windows LLVM cache provisioning must run on main for qualification to restore it.' >&2
+            exit 1
+          fi
+
       - name: Activate native MSVC development tools
         shell: pwsh
         run: '& "./.github/actions/llvm-toolchain/msvc-env.ps1"'
@@ -175,6 +185,30 @@ jobs:
         with:
           path: ${{ steps.contract.outputs.toolchain_path }}
           key: ${{ steps.contract.outputs.cache_key }}
+
+      # Cache save can warn rather than fail when publication is denied.
+      # Read the exact entry back so provisioning cannot report success without
+      # an entry qualification can actually restore and verify.
+      - name: Restore published pinned LLVM cache
+        id: published-cache
+        if: ${{ steps.cache.outputs.cache-hit != 'true' }}
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ${{ steps.contract.outputs.toolchain_path }}
+          key: ${{ steps.contract.outputs.cache_key }}
+          fail-on-cache-miss: true
+
+      - name: Verify published pinned LLVM cache
+        if: ${{ steps.cache.outputs.cache-hit != 'true' }}
+        shell: bash
+        env:
+          PUBLISHED_CACHE_HIT: ${{ steps.published-cache.outputs.cache-hit }}
+        run: |
+          if [[ "$PUBLISHED_CACHE_HIT" != 'true' ]]; then
+            echo "Windows LLVM cache not published under expected key: ${{ steps.contract.outputs.cache_key }}" >&2
+            exit 1
+          fi
+          .github/actions/llvm-toolchain/setup.sh activate .github/ci/contracts.json true
 
   windows_arm64:
     name: Provision LLVM / windows-arm64
@@ -188,6 +222,16 @@ jobs:
           ref: ${{ github.workflow_sha }}
           persist-credentials: false
 
+      # Qualification can restore this cache from other branches only when
+      # the provisioning cache was published in the default branch scope.
+      - name: Require default-branch LLVM cache scope
+        shell: bash
+        run: |
+          if [[ "$GITHUB_REF" != 'refs/heads/main' ]]; then
+            echo 'Windows LLVM cache provisioning must run on main for qualification to restore it.' >&2
+            exit 1
+          fi
+
       - name: Activate native MSVC development tools
         shell: pwsh
         run: '& "./.github/actions/llvm-toolchain/msvc-env.ps1"'
@@ -226,3 +270,27 @@ jobs:
         with:
           path: ${{ steps.contract.outputs.toolchain_path }}
           key: ${{ steps.contract.outputs.cache_key }}
+
+      # Cache save can warn rather than fail when publication is denied.
+      # Read the exact entry back so provisioning cannot report success without
+      # an entry qualification can actually restore and verify.
+      - name: Restore published pinned LLVM cache
+        id: published-cache
+        if: ${{ steps.cache.outputs.cache-hit != 'true' }}
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ${{ steps.contract.outputs.toolchain_path }}
+          key: ${{ steps.contract.outputs.cache_key }}
+          fail-on-cache-miss: true
+
+      - name: Verify published pinned LLVM cache
+        if: ${{ steps.cache.outputs.cache-hit != 'true' }}
+        shell: bash
+        env:
+          PUBLISHED_CACHE_HIT: ${{ steps.published-cache.outputs.cache-hit }}
+        run: |
+          if [[ "$PUBLISHED_CACHE_HIT" != 'true' ]]; then
+            echo "Windows LLVM cache not published under expected key: ${{ steps.contract.outputs.cache_key }}" >&2
+            exit 1
+          fi
+          .github/actions/llvm-toolchain/setup.sh activate .github/ci/contracts.json true
