@@ -14,7 +14,9 @@
 //   Linux x86_64/aarch64  one reserved address range from raw mmap, committed
 //                   by mprotect (os.platform.unix.linux.virtual_memory);
 //   macOS           the same through libSystem's mmap/mprotect, the supported
-//                   Darwin kernel interface (os.platform.unix.apple.darwin).
+//                   Darwin kernel interface (os.platform.unix.apple.darwin);
+//   Windows         the same through kernel32's VirtualAlloc reserve and commit
+//                   (os.platform.windows.win32.virtual_memory).
 // 0 is a failed allocation, which the generated code turns into a trap.
 //
 // Layout (word W = 4 bytes on wasm32, 8 on 64-bit native targets). The state
@@ -114,7 +116,7 @@
 }
 
 // Native 64-bit targets with a std page source.
-لو ((الهدف.المنصة == «linux» && (الهدف.المعمارية == «x86_64» || الهدف.المعمارية == «aarch64»)) || الهدف.المنصة == «macos») {
+لو ((الهدف.المنصة == «linux» && (الهدف.المعمارية == «x86_64» || الهدف.المعمارية == «aarch64»)) || الهدف.المنصة == «macos» || الهدف.المنصة == «windows») {
     مرادف اقرأ_ذاكرة_الآلة = بدائي_اقرأ_ذاكرة_الآلة;
     مرادف اكتب_ذاكرة_الآلة = بدائي_اكتب_ذاكرة_الآلة;
 
@@ -205,8 +207,17 @@
     }
 }
 
+لو (الهدف.المنصة == «windows») {
+    استورد os.platform.windows.win32.virtual_memory;
+
+    عرف احجز_صفحات_كومة_الآلة(الطول: غ64): غ64 { أرجع احجز_عناوين_ويندوز(الطول); }
+    عرف ثبت_صفحات_كومة_الآلة(العنوان: غ64, الطول: غ64): منطقي {
+        أرجع ثبت_عناوين_ويندوز(العنوان, الطول);
+    }
+}
+
 // The allocator itself, shared by every page source above.
-لو (الهدف.المعمارية == «wasm32» || ((الهدف.المنصة == «linux» && (الهدف.المعمارية == «x86_64» || الهدف.المعمارية == «aarch64»)) || الهدف.المنصة == «macos»)) {
+لو (الهدف.المعمارية == «wasm32» || ((الهدف.المنصة == «linux» && (الهدف.المعمارية == «x86_64» || الهدف.المعمارية == «aarch64»)) || الهدف.المنصة == «macos» || الهدف.المنصة == «windows»)) {
     عرف وسم_كتلة_مخصصة(): غ64 { أرجع 0x53554C41; }
     عرف وسم_كتلة_محررة(): غ64 { أرجع 0x53554C46; }
     عرف وسم_حالة_مخصص(): غ64 { أرجع 0x53554C53; }

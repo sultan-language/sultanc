@@ -4,15 +4,18 @@
 // Win32 virtual memory has distinct reserve/commit and release semantics.
 // These kernel32 interfaces are not CRT allocators or POSIX mmap wrappers.
 // Registered Windows targets are 64-bit; SIZE_T is 64-bit on both.
+// Addresses are passed as 64-bit integers (LPVOID on Win64), as the Darwin
+// provider passes mmap addresses, so the heap page source can use them
+// directly; 0 is NULL.
 خارجي عرف VirtualAlloc(
-    العنوان: *غ8, الطول: غ64, نوع_الحجز: غ32, الحماية: غ32
-): *متغير غ8;
-خارجي عرف VirtualFree(العنوان: *متغير غ8, الطول: غ64, النوع: غ32): ص32;
+    العنوان: غ64, الطول: غ64, نوع_الحجز: غ32, الحماية: غ32
+): غ64;
+خارجي عرف VirtualFree(العنوان: غ64, الطول: غ64, النوع: غ32): ص32;
 خارجي عرف VirtualProtect(
-    العنوان: *متغير غ8, الطول: غ64, الحماية: غ32, السابقة: *متغير غ32
+    العنوان: غ64, الطول: غ64, الحماية: غ32, السابقة: *متغير غ32
 ): ص32;
-خارجي عرف VirtualLock(العنوان: *متغير غ8, الطول: غ64): ص32;
-خارجي عرف VirtualUnlock(العنوان: *متغير غ8, الطول: غ64): ص32;
+خارجي عرف VirtualLock(العنوان: غ64, الطول: غ64): ص32;
+خارجي عرف VirtualUnlock(العنوان: غ64, الطول: غ64): ص32;
 // SYSTEM_INFO is 48 bytes with 8-byte alignment on Win64; dwPageSize is
 // the DWORD at offset 4 and dwAllocationGranularity at offset 40.
 خارجي عرف GetSystemInfo(البيانات: *متغير غ64): فراغ;
@@ -20,7 +23,7 @@
 // fields on Win64, a pointer and SIZE_T. Available since Windows 8.
 خارجي عرف GetCurrentProcess(): غ64;
 عام نوع منطقة_استباق_ويندوز = {
-    العنوان: *متغير غ8,
+    العنوان: غ64,
     الطول: غ64
 };
 خارجي عرف PrefetchVirtualMemory(
@@ -52,7 +55,7 @@
 ;
 
 عام نوع منطقة_ذاكرة_ويندوز = {
-    العنوان: *متغير غ8,
+    العنوان: غ64,
     الطول: غ64,
     نشطة: منطقي
 };
@@ -63,10 +66,10 @@
     الطول: غ64, الحماية: حماية_صفحات_ويندوز
 ): نتيجة منطقة_ذاكرة_ويندوز, خطأ_ذاكرة_ويندوز {
     لو (الطول == 0) { أرجع نتيجة.خطأ(خطأ_ذاكرة_ويندوز.نطاق_غير_صالح()); };
-    دع العنوان: *متغير غ8 = VirtualAlloc(
-        الفارغ, الطول, 0x3000, أعلام_حماية_صفحات_ويندوز(الحماية)
+    دع العنوان: غ64 = VirtualAlloc(
+        0, الطول, 0x3000, أعلام_حماية_صفحات_ويندوز(الحماية)
     );
-    لو (العنوان == الفارغ) {
+    لو (العنوان == 0) {
         أرجع نتيجة.خطأ(خطأ_ذاكرة_ويندوز.نظام(التقط_خطأ_وين32()));
     };
     دع المنطقة: منطقة_ذاكرة_ويندوز = { العنوان: العنوان, الطول: الطول, نشطة: صواب };
@@ -157,7 +160,7 @@
         أرجع نتيجة.خطأ(خطأ_ذاكرة_ويندوز.منطقة_محررة());
     };
     // This Win64 ABI uses a pointer followed by SIZE_T, both 64 bits.
-    دع العنوان: *متغير غ8 = (*المنطقة).العنوان;
+    دع العنوان: غ64 = (*المنطقة).العنوان;
     دع الإدخال: متغير منطقة_استباق_ويندوز = {
         العنوان: العنوان, الطول: (*المنطقة).الطول
     };
@@ -165,4 +168,17 @@
         أرجع نتيجة.خطأ(خطأ_ذاكرة_ويندوز.نظام(التقط_خطأ_وين32()));
     };
     أرجع نتيجة.نجح(0);
+}
+
+// Heap page source of std os/allocation.sn: MEM_RESERVE (0x2000) with
+// PAGE_NOACCESS reserves one address range, and MEM_COMMIT (0x1000) with
+// PAGE_READWRITE commits pages of it, which the system zero-fills. The same
+// reserve/commit split as the Linux and Darwin page sources; 0 or false on
+// failure.
+عام عرف احجز_عناوين_ويندوز(الطول: غ64): غ64 {
+    أرجع VirtualAlloc(0, الطول, 0x2000, 0x01);
+}
+
+عام عرف ثبت_عناوين_ويندوز(العنوان: غ64, الطول: غ64): منطقي {
+    أرجع VirtualAlloc(العنوان, الطول, 0x1000, 0x04) != 0;
 }

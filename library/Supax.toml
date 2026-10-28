@@ -16,6 +16,7 @@ memory   = { en = "memory",   ar = "ذاكرة",   fr = "memoire" }
 net      = { en = "net",      ar = "شبكة",    fr = "reseau",        es = "red" }
 http     = { en = "http",     ar = "ويب" }
 debug    = { en = "debug",    ar = "تصحيح" }
+meta     = { en = "meta",     ar = "انعكاس" }
 
 [lib]
 path = "std"

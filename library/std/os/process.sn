@@ -22,6 +22,7 @@
 لو (الهدف.المنصة == «windows») {
     استورد os.platform.windows.win32.process_control;
     استورد os.platform.windows.win32.error;
+    استورد os.platform.windows.win32.file_handles;
     عرف خطأ_عملية_ويندوز_للنظام(الخطأ: خطأ_عملية_ويندوز): خطأ_حد_نظام {
         طابق الخطأ مع
         | خطأ_عملية_ويندوز.وسيط_غير_صالح -> { أرجع خطأ_حد_نظام.وسيط_غير_صالح(); }
