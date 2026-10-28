@@ -11,9 +11,20 @@ endif()
 file(GLOB_RECURSE SULTANC_COMPILER_SOURCES CONFIGURE_DEPENDS
     "${SULTANC_SOURCE_ROOT}/compiler/*.sn"
     "${SULTANC_SOURCE_ROOT}/library/std/*.sn")
+# The canonical manifest name is case-sensitive: Supax.toml. The repository
+# may have a legacy lowercase supax.toml, which is not a package manifest.
+# Track the optional root manifest only when its directory entry has the exact
+# canonical spelling. CONFIGURE_DEPENDS notices creation/removal as well.
 list(APPEND SULTANC_COMPILER_SOURCES
-    "${SULTANC_SOURCE_ROOT}/supax.toml"
     "${SULTANC_SOURCE_ROOT}/library/Supax.toml")
+file(GLOB _sultanc_root_toml CONFIGURE_DEPENDS
+    "${SULTANC_SOURCE_ROOT}/*.toml")
+foreach(_sultanc_root_toml IN LISTS _sultanc_root_toml)
+    get_filename_component(_sultanc_root_name "${_sultanc_root_toml}" NAME)
+    if(_sultanc_root_name STREQUAL "Supax.toml")
+        list(APPEND SULTANC_COMPILER_SOURCES "${_sultanc_root_toml}")
+    endif()
+endforeach()
 file(CONFIGURE
     OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/sultanc-stage1-target.txt"
     CONTENT "${SULTANC_STAGE1_TARGET}\n")
