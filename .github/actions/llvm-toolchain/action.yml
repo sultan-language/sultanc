@@ -13,6 +13,11 @@ inputs:
 runs:
   using: composite
   steps:
+    - name: Activate native MSVC development tools
+      if: ${{ runner.os == 'Windows' }}
+      shell: pwsh
+      run: '& "$env:GITHUB_ACTION_PATH/msvc-env.ps1"'
+
     - name: Resolve pinned LLVM cache contract
       id: contract
       shell: bash

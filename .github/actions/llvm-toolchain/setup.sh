@@ -47,6 +47,16 @@ host_architecture() {
   esac
 }
 
+# llvm-config.exe reports native Windows paths; Git Bash filesystem checks use
+# MSYS paths. Leave Linux/macOS paths unchanged.
+tool_path() {
+  if [[ "$platform" == "windows" ]]; then
+    cygpath -u "$1"
+  else
+    printf '%s\n' "$1"
+  fi
+}
+
 sha256_file() {
   local file="$1"
 
@@ -261,6 +271,7 @@ verify_link_contract() {
 
   runtime_files="$($llvm_config --link-shared --libfiles all)"
   for runtime_file in $runtime_files; do
+    runtime_file="$(tool_path "$runtime_file")"
     case "$(basename -- "$runtime_file")" in
       libLLVM*.dylib|libLLVM*.so|libLLVM*.so.*)
         [[ -e "$runtime_file" ]] || continue
@@ -276,6 +287,7 @@ verify_link_contract() {
     [[ -f "$runtime_path" ]] || fail \
       "LLVM monolithic runtime DLL is missing: $runtime_relative"
     for runtime_file in $runtime_files; do
+      runtime_file="$(tool_path "$runtime_file")"
       case "$(basename -- "$runtime_file")" in
         LLVM.lib|libLLVM.dll.a)
           [[ -f "$runtime_file" ]] || continue
@@ -407,9 +419,9 @@ verify_development_contract() {
   [[ "$actual_version" == "$version" ]] || fail \
     "LLVM version mismatch: expected=$version actual=$actual_version"
 
-  include_dir="$($llvm_config --includedir)"
-  lib_dir="$($llvm_config --libdir)"
-  bin_dir="$($llvm_config --bindir)"
+  include_dir="$(tool_path "$($llvm_config --includedir)")"
+  lib_dir="$(tool_path "$($llvm_config --libdir)")"
+  bin_dir="$(tool_path "$($llvm_config --bindir)")"
   [[ -d "$include_dir" && -d "$lib_dir" && -d "$bin_dir" ]] || fail \
     "LLVM development include/lib/bin directories are incomplete"
 
@@ -472,11 +484,23 @@ provision_toolchain() {
   local actual_sha
   local targets
 
-  # LLVM documents that the two mandated monolithic shared-library flags
-  # are unavailable with the Microsoft toolchain. Do not swap in static LLVM,
-  # LLVM-C.dll, MinGW, or an image-installed LLVM as a hidden substitute.
+  # LLVM 22.1.8 permits its monolithic LLVM.dll with MSVC when explicit
+  # symbol visibility is enabled. This retains both required DYLIB options,
+  # the same upstream source, all components, and the existing cache contract.
+  local windows_cmake_args=()
+  local source_dir_arg
+  local build_dir_arg
+  local install_dir_arg
+  local temp_root="${RUNNER_TEMP:-/tmp}"
   if [[ "$platform" == "windows" ]]; then
-    fail "BLOCKED: LLVM $version MSVC provisioning requires LLVM_BUILD_LLVM_DYLIB=ON and LLVM_LINK_LLVM_DYLIB=ON, which upstream LLVM does not support on Windows; the LLVM/build contract owner must provide a supported equivalent before provisioning."
+    require_command cygpath
+    require_command cl.exe
+    temp_root="$(cygpath -u "$temp_root")"
+    windows_cmake_args=(
+      -DLLVM_BUILD_LLVM_DYLIB_VIS=ON
+      -DCMAKE_C_COMPILER=cl
+      -DCMAKE_CXX_COMPILER=cl
+    )
   fi
 
   require_command curl
@@ -484,7 +508,7 @@ provision_toolchain() {
   require_command cmake
   require_command ninja
 
-  download_dir="$(mktemp -d "${RUNNER_TEMP:-/tmp}/sultanc-llvm-source.XXXXXX")"
+  download_dir="$(mktemp -d "$temp_root/sultanc-llvm-source.XXXXXX")"
   archive_path="$download_dir/$source_archive"
   extract_dir="$download_dir/source"
   build_dir="$download_dir/build"
@@ -509,13 +533,24 @@ provision_toolchain() {
     jq -r '.llvm_toolchain.required_targets_built[]' "$contracts" | paste -sd ';' -
   )"
 
+  source_dir_arg="$extract_dir/$source_root/llvm"
+  build_dir_arg="$build_dir"
+  install_dir_arg="$toolchain_path"
+  if [[ "$platform" == "windows" ]]; then
+    # Native Windows CMake requires drive-qualified paths, not /c/... paths.
+    source_dir_arg="$(cygpath -m "$source_dir_arg")"
+    build_dir_arg="$(cygpath -m "$build_dir_arg")"
+    install_dir_arg="$(cygpath -m "$install_dir_arg")"
+  fi
+
   rm -rf "$toolchain_path"
   cmake \
-    -S "$extract_dir/$source_root/llvm" \
-    -B "$build_dir" \
+    -S "$source_dir_arg" \
+    -B "$build_dir_arg" \
     -G Ninja \
     -DCMAKE_BUILD_TYPE="$build_type" \
-    -DCMAKE_INSTALL_PREFIX="$toolchain_path" \
+    -DCMAKE_INSTALL_PREFIX="$install_dir_arg" \
+    "${windows_cmake_args[@]}" \
     -DLLVM_TARGETS_TO_BUILD="$targets" \
     -DLLVM_BUILD_LLVM_DYLIB=ON \
     -DLLVM_LINK_LLVM_DYLIB=ON \
@@ -528,7 +563,7 @@ provision_toolchain() {
     -DLLVM_INCLUDE_BENCHMARKS=OFF \
     -DLLVM_ENABLE_BINDINGS=OFF
 
-  cmake --build "$build_dir" --target install --parallel "$parallel_jobs"
+  cmake --build "$build_dir_arg" --target install --parallel "$parallel_jobs"
   rm -rf "$download_dir"
 
   ensure_runtime_alias

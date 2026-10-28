@@ -137,6 +137,10 @@ jobs:
           ref: ${{ github.workflow_sha }}
           persist-credentials: false
 
+      - name: Activate native MSVC development tools
+        shell: pwsh
+        run: '& "./.github/actions/llvm-toolchain/msvc-env.ps1"'
+
       - name: Resolve pinned LLVM cache contract
         id: contract
         shell: bash
@@ -183,6 +187,10 @@ jobs:
         with:
           ref: ${{ github.workflow_sha }}
           persist-credentials: false
+
+      - name: Activate native MSVC development tools
+        shell: pwsh
+        run: '& "./.github/actions/llvm-toolchain/msvc-env.ps1"'
 
       - name: Resolve pinned LLVM cache contract
         id: contract
