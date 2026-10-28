@@ -4,6 +4,7 @@
 استورد compiler.frontend.cancellation;
 استورد compiler.frontend.lexer.lexer;
 استورد compiler.frontend.parser.parser;
+استورد compiler.frontend.annotations.decorators;
 استورد compiler.frontend.module_loading.module_loader;
 استورد compiler.frontend.names.name_context;
 استورد compiler.frontend.names.scopes;
@@ -837,6 +838,12 @@
             «type», «type.unsupported-expression-type»
         );
     }
+    | خطأ_بناء_سياقات_أنواع.سمة_تصريح_غير_مدعومة(النطاق) -> {
+        أرجع تشخيصات_فشل_واجهة_مفصلة(
+            معرف_تشخيص.سمة_تصريح_غير_مدعومة(), مصدر_تشخيص_من_نطاق_محمل(المحمل, النطاق),
+            «type», «annotation.processing-not-implemented»
+        );
+    }
     | خطأ_بناء_سياقات_أنواع.حقل_سجل_غير_معروف(النطاق) -> {
         أرجع تشخيصات_فشل_واجهة_مفصلة(
             معرف_تشخيص.حقل_سجل_غير_معروف(), مصدر_تشخيص_من_نطاق_محمل(المحمل, النطاق),
@@ -1300,7 +1307,15 @@
             | اختيار.لا_شيء -> {
                 أرجع اختيار.بعض(خطأ_واجهة_وحدة.خلل_نحوي_داخلي());
             }
-            | اختيار.بعض(الشجرة) -> {
+            | اختيار.بعض(الشجرة_النحوية) -> {
+                // Function decorators expand into ordinary declarations
+                // before any semantic phase (annotations/decorators.sn).
+                دع الشجرة: متغير وحدة_مصدر = الشجرة_النحوية;
+                لو (!وسع_مزخرفات_وحدة(
+                    &متغير الشجرة, سياق_المصادر, مرجع_المصدر, &(*المحمل).الهدف
+                )) {
+                    أرجع اختيار.بعض(خطأ_واجهة_وحدة.خلل_نحوي_داخلي());
+                };
                 لو (!ابدأ_تحميل_استيرادات_وحدة(المحمل, المعرف)) {
                     أرجع اختيار.بعض(
                         خطأ_واجهة_وحدة.تحميل(خطأ_تحميل_وحدة.دورة_استيراد())

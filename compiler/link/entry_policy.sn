@@ -16,40 +16,6 @@
 ;
 
 
-عرف يوجد_رمز_ربط_معرف_بالاسم(
-    السياق: &سياق_ربط,
-    الاسم: &متجه غ8
-): منطقي {
-    طابق ابحث_رمز_ربط_بالاسم(&(*السياق).الرموز, الاسم) مع
-    | اختيار.لا_شيء -> { أرجع خطأ; }
-    | اختيار.بعض(الرمز) -> {
-        طابق الرمز.الحالة مع
-        | حالة_رمز_ربط.معرف(_) -> { أرجع صواب; }
-        | _ -> { أرجع خطأ; };
-    };
-}
-
-// PE console images enter through the CRT startup symbol, not through the
-// language-level main function. Match lld-link/MSVC inference for the two
-// console entry spellings supported by the current PE subsystem policy.
-عرف اسم_رمز_دخول_كوف_الافتراضي(
-    السياق: &سياق_ربط
-): اختيار متجه غ8 {
-    دع الرئيسي: متجه غ8 = اسم_رمز_رئيسي_كوف();
-    لو (يوجد_رمز_ربط_معرف_بالاسم(السياق, &الرئيسي)) {
-        دع البدء: متجه غ8 = اسم_رمز_بدء_رئيسي_كوف();
-        أرجع اختيار.بعض(البدء);
-    };
-
-    دع الرئيسي_الواسع: متجه غ8 = اسم_رمز_رئيسي_واسع_كوف();
-    لو (يوجد_رمز_ربط_معرف_بالاسم(السياق, &الرئيسي_الواسع)) {
-        دع البدء: متجه غ8 = اسم_رمز_بدء_رئيسي_واسع_كوف();
-        أرجع اختيار.بعض(البدء);
-    };
-
-    أرجع اختيار.لا_شيء();
-}
-
 عرف اسم_رمز_دخول_افتراضي_للربط(
     السياق: &سياق_ربط
 ): اختيار متجه غ8 {
@@ -61,7 +27,7 @@
         أرجع اختيار.بعض(اسم_رمز_دخول_ماتشو_الافتراضي());
     }
     | هوية_مزود_ربط.كوف -> {
-        أرجع اسم_رمز_دخول_كوف_الافتراضي(السياق);
+        أرجع اختيار.بعض(اسم_رمز_بدء_عملية_كوف());
     }
     | هوية_مزود_ربط.ويب_أسمبلي -> {
         لو ((*السياق).الهدف.المنصة.المنصة == هوية_منصة.واسي()) {
@@ -89,6 +55,25 @@
     };
 }
 
+// The entry name this executable link uses: the plan's explicit entry, or the
+// target default recorded into the plan here. None when the target has no
+// default entry.
+// The linker resolves this name as an undefined root before the entry check,
+// so an archive member defining it is extracted (input_ingest.sn).
+عام عرف اسم_رمز_دخول_خطة_الربط(
+    السياق: &متغير سياق_ربط
+): اختيار متجه غ8 {
+    طابق ثبت_اسم_رمز_دخول_خطة_الربط(السياق) مع
+    | نتيجة_تهيئة_دخول_ربط.نجح -> { }
+    | _ -> { أرجع اختيار.لا_شيء(); };
+    طابق (*السياق).الخطة.رمز_الدخول مع
+    | اختيار.لا_شيء -> { أرجع اختيار.لا_شيء(); }
+    | اختيار.بعض(الاسم) -> {
+        دع النسخة: متجه غ8 = الاسم;
+        أرجع اختيار.بعض(النسخة);
+    };
+}
+
 عام عرف أضف_جذر_دخول_خطة_الربط(
     السياق: &متغير سياق_ربط
 ): نتيجة_تهيئة_دخول_ربط {
@@ -101,9 +86,9 @@
         أرجع نتيجة_تهيئة_دخول_ربط.مزود_غير_مدعوم();
     };
 
-    // WebAssembly linking is delegated to wasm-ld. The canonical context keeps
-    // whole Wasm modules rather than reconstructing the Wasm linking symbol
-    // table, so entry-symbol resolution belongs to the delegated linker.
+    // The canonical context keeps whole Wasm modules rather than the Wasm
+    // linking symbol table; the only Wasm link output is a final module passed
+    // through unchanged (wasm/linker.sn), so there is no entry to resolve.
     لو (مزود_ربط_للهدف(&(*السياق).الهدف) == هوية_مزود_ربط.ويب_أسمبلي()) {
         أرجع نتيجة_تهيئة_دخول_ربط.نجح();
     };

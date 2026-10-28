@@ -48,7 +48,6 @@
 استورد compiler.frontend.names.modules;
 استورد compiler.frontend.names.declaration_collection;
 استورد compiler.runtime.primitive_semantic_contract;
-استورد compiler.runtime.toolchain_facts;
 استورد compiler.runtime.primitive_runtime_abi;
 
 // Generic functions remain semantic templates until MSIR requests concrete instances.
@@ -289,7 +288,7 @@
     // Keep it strictly compiler-generated: constant elements, owned-vector
     // construction, and stores to new local vector headers only. The canonical
     // MSIR verifier enforces this restriction even after optimizer rewrites.
-    // Executables call this routine at language entry, after CRT startup.
+    // Executables call this routine at language entry, after the process start.
     طابق الدالة_الأصلية مع
     | اختيار.لا_شيء -> {
         (*البرنامج).دالة_تهيئة_الوحدة := اختيار.بعض(دالة_التهيئة);
@@ -316,7 +315,8 @@
     };
     دع التعليمة: تعليمة_مسير = {
         الناتج: اختيار.لا_شيء(), العملية: عملية_مسير.نداء(النداء),
-        الأصل: أصل_فارغ, موقع_التصحيح: موقع_فارغ, نطاق_التصحيح: نطاق_فارغ
+        الأصل: أصل_فارغ, موقع_التصحيح: موقع_فارغ, نطاق_التصحيح: نطاق_فارغ,
+        تقييم_وقت_الترجمة: خطأ
     };
     // Prepend the initializer call in place: append it, then rotate it to the
     // front with element swaps. Instructions stay owned by the entry block.
@@ -478,15 +478,13 @@
     تحققات_الأنماط: &متجه ربط_تحقق_نمط_وحدة,
     هويات_البدائيات: &متجه ربط_رمز_بدائي_مترجم,
     رمز_بدء_البرنامج: اختيار معرف_رمز,
-    أصل_نواة_لينكس: &اختيار أصل_نواة_موثق_واجهة,
-    حقائق_الأداة: &حقائق_أداة_مترجم
+    أصل_نواة_لينكس: &اختيار أصل_نواة_موثق_واجهة
 ): نتيجة_خفض_مسير {
     دع البرنامج: متغير برنامج_مسير = برنامج_مسير_جديد();
     دع تهيئات_مملوكة: متغير متجه تهيئة_عام_متجه_مملوك = [];
     دع التصحيح: متغير بيانات_تصحيح_مسير = بيانات_تصحيح_مسير_جديدة();
     دع الأصول: متغير سجل_أصول_مصدر = سجل_أصول_مصدر_جديد();
     دع دوال_الخفض: متغير سياق_دوال_خفض = سياق_دوال_خفض_جديد();
-    دوال_الخفض.حقائق_الأداة := *حقائق_الأداة;
     دع بلا_استبدالات: متجه ربط_استبدال_نوع = [];
     اجمع_رموز_عقد_نواة_لينكس(&متغير دوال_الخفض, أصل_نواة_لينكس);
     سجل_وحدات_تصحيح_مسير(&متغير التصحيح, الوحدات_الدلالية, خريطة_المصادر);
@@ -758,11 +756,8 @@
 
 // Public Frontend -> MSIR handoff. Driver passes the canonical whole-unit semantic result
 // without unpacking owner-specific contexts. MSIR consumes the semantic facts internally.
-// حقائق_الأداة: the compiling toolchain's facts (runtime/toolchain_facts.sn),
-// supplied by the Driver and folded into toolchain-primitive constants.
 عام عرف اخفض_واجهة_وحدة_إلى_مسير(
-    الواجهة: متغير نتيجة_واجهة_وحدة,
-    حقائق_الأداة: &حقائق_أداة_مترجم
+    الواجهة: متغير نتيجة_واجهة_وحدة
 ): نتيجة_خفض_واجهة_مسير {
     // Lower directly from the owned Frontend result. The previous boundary copied
     // every large semantic field into a second aggregate before lowering, keeping
@@ -780,8 +775,7 @@
         &الواجهة.سياق_الأنماط.التحققات,
         &الواجهة.هويات_البدائيات,
         الواجهة.رمز_بدء_البرنامج,
-        &الواجهة.أصل_نواة_لينكس,
-        حقائق_الأداة
+        &الواجهة.أصل_نواة_لينكس
     ) مع
     | نتيجة_خفض_مسير.ناجح(البرنامج, التصحيح, الأصول) -> {
         // Verification (including the loader-exposed module-initializer

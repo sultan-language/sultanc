@@ -399,7 +399,10 @@
     العملية: عملية_مسير,
     الأصل: اختيار معرف_أصل_مصدر,
     موقع_التصحيح: اختيار معرف_موقع_تصحيح,
-    نطاق_التصحيح: اختيار معرف_نطاق_تصحيح
+    نطاق_التصحيح: اختيار معرف_نطاق_تصحيح,
+    // Explicit frontend comptime obligation, discharged after complete MSIR lowering.
+    // Never reaches a backend while still marked.
+    تقييم_وقت_الترجمة: منطقي
 };
 
 // Block arguments هي تمثيل الدمج الوحيد؛ لا توجد PHI nodes موازية.
@@ -408,8 +411,22 @@
     الحجج: متجه معرف_قيمة_مسير
 };
 
+// A target-neutral integer dispatch. Cases must have distinct keys;
+// the default edge handles every key not explicitly present.
+عام نوع حالة_فرع_متعدد_مسير = {
+    الوسم: غير_موقع,
+    الحافة: حافة_مسير
+};
+
+عام نوع فرع_متعدد_مسير = {
+    المميز: معرف_قيمة_مسير,
+    الحالات: متجه حالة_فرع_متعدد_مسير,
+    الافتراضي: حافة_مسير
+};
+
 عام نوع منهي_مسير =
     | فرع بنوع حافة_مسير
+    | فرع_متعدد بنوع فرع_متعدد_مسير
     | فرع_شرطي بنوع (معرف_قيمة_مسير, حافة_مسير, حافة_مسير)
     | إرجاع بنوع اختيار معرف_قيمة_مسير
     | فخ
@@ -425,6 +442,9 @@
 عام نوع دالة_مسير = {
     المعرف: معرف_دالة_مسير,
     المعاملات: متجه قيمة_مسير,
+    // Compile-time parameters remain attached to the canonical function
+    // identity; callers must discharge these arguments before codegen.
+    معاملات_وقت_الترجمة: متجه منطقي,
     // Capture Types form the lexical environment interface for closure-created functions.
     // They are not source parameters and therefore never enter the ordinary call ABI.
     الالتقاطات: متجه معرف_نوع,
@@ -475,7 +495,7 @@
     // the executable startup globals are populated. The verifier permits only
     // compiler-owned vector construction and stores into local empty headers.
     // Executable initialization instead calls the same generated routine at
-    // language entry, after the CRT/startup wrapper has initialized its ABI data.
+    // language entry, after the process start has initialized its ABI data.
     دالة_تهيئة_الوحدة: اختيار معرف_دالة_مسير
 };
 

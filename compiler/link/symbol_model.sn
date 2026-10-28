@@ -55,18 +55,31 @@
     | ديناميكي بنوع معرف_مدخل_ربط
 ;
 
+// مستخدم: a regular (non-shared, non-lazy) object references or defines this
+// name. A shared library's export enters the table as ديناميكي without it, and
+// only the used ones are imported into the output's dynamic symbols; LLD keeps
+// the same fact (isUsedInRegularObj, lld/ELF/Symbols.h: "true for all symbols
+// except for unreferenced DSO symbols, lazy (archive) symbols ..."), so linking
+// against a large library such as libLLVM imports only what is referenced.
 عام نوع رمز_ربط = {
     المعرف: معرف_رمز_ربط,
     الاسم: متجه غ8,
-    الحالة: حالة_رمز_ربط
+    الحالة: حالة_رمز_ربط,
+    مستخدم: منطقي
 };
+
+عام عرف حالة_رمز_ربط_من_كائن_عادي(الحالة: &حالة_رمز_ربط): منطقي {
+    طابق *الحالة مع
+    | حالة_رمز_ربط.غير_معرف(_) -> { أرجع صواب; }
+    | حالة_رمز_ربط.معرف(_) -> { أرجع صواب; }
+    | _ -> { أرجع خطأ; };
+}
 
 عام نوع قرار_حل_رمز_ربط =
     | احتفظ_بالموجود
     | استبدل_بالمرشح
     | استخرج_عضو_أرشيف بنوع (معرف_مدخل_ربط, غير_موقع)
     | تعريفان_قويان بنوع (معرف_مدخل_ربط, معرف_مدخل_ربط)
-    | يحتاج_سياسة_متخصصة
 ;
 
 عام عرف قوة_تعريف_رمز_ربط_قوية(القوة: قوة_تعريف_رمز_ربط): منطقي {
@@ -75,8 +88,21 @@
     | قوة_تعريف_رمز_ربط.ضعيف -> { أرجع خطأ; };
 }
 
-// Universal regular-object rules live here. Ordering/as-needed/versioning for
-// archives and shared libraries stays explicit at the format/provider policy layer.
+// Universal resolution rules, following LLD's Symbol::resolve:
+//   * undefined is replaced by a definition or a shared definition, and
+//     extracts the archive member of a lazy symbol;
+//   * of two definitions, a strong one replaces a weak one, two strong ones
+//     are a duplicate, and otherwise the existing one stays;
+//   * a definition stays against lazy and shared offers;
+//   * the first lazy offer stays against later lazy or shared offers, and is
+//     replaced by a definition;
+//   * a shared definition is replaced by a regular definition only.
+// Common symbols, references that must not extract members (link/context.sn
+// مراجع_رمز_ربط), COMDAT selection and as-needed libraries are format and
+// context policy layered on these states. Every pair of states has a
+// decision. Previously a second lazy offer of a symbol, or a shared library
+// after an archive offering it, produced a "needs a specialised policy"
+// outcome that failed the link; that outcome no longer exists.
 عام عرف قرر_حل_رمز_ربط(
     الموجود: &حالة_رمز_ربط,
     المرشح: &حالة_رمز_ربط
@@ -117,7 +143,14 @@
             أرجع قرار_حل_رمز_ربط.استخرج_عضو_أرشيف(الأرشيف, العضو);
         }
         | حالة_رمز_ربط.معرف(_) -> { أرجع قرار_حل_رمز_ربط.استبدل_بالمرشح(); }
-        | _ -> { أرجع قرار_حل_رمز_ربط.يحتاج_سياسة_متخصصة(); };
+        // Another archive (or another index entry) offering the same symbol:
+        // the first offer stays, as in LLD, where a lazy symbol is replaced
+        // only by a definition or extracted by a reference.
+        | حالة_رمز_ربط.كسول(_, _) -> { أرجع قرار_حل_رمز_ربط.احتفظ_بالموجود(); }
+        // A shared library after an archive: the archive member keeps the
+        // first claim and is extracted if a regular object references the
+        // symbol (LLD resolves lazy symbols before shared ones by order).
+        | حالة_رمز_ربط.ديناميكي(_) -> { أرجع قرار_حل_رمز_ربط.احتفظ_بالموجود(); };
     }
     | حالة_رمز_ربط.ديناميكي(_) -> {
         طابق *المرشح مع

@@ -1,4 +1,6 @@
 استورد compiler.backend.target.target_model;
+استورد compiler.backend.target.target_registry;
+استورد std.text.compare;
 
 // Dynamic-loader facts are Target-owned. Libraries are explicit link inputs;
 // an unresolved symbol must never inject a system C runtime dependency.
@@ -27,6 +29,57 @@
     أرجع الإعداد;
 }
 
+// A 64-bit GNU/Linux target of the given byte order. The glibc program
+// interpreter depends on the ABI, and these are the facts that select it.
+عرف هدف_جنو_أربعة_وستون_بترتيب(
+    الهدف: &واصف_هدف,
+    الترتيب: ترتيب_بايت
+): منطقي {
+    أرجع (*الهدف).المنصة.البيئة == هوية_بيئة.جنو()
+        && (*الهدف).نموذج_البيانات.عرض_المؤشر == 64
+        && (*الهدف).نموذج_البيانات.ترتيب_البايت == الترتيب;
+}
+
+// The ABI name of the target's code-generation baseline
+// (target_registry.sn أساس_توليد_شفرة_للهدف). RISC-V and LoongArch glibc
+// name the program interpreter after it, so the loader is derived from the
+// same fact the code generator uses rather than restated here.
+عرف واجهة_أساس_الهدف_تساوي(الهدف: &واصف_هدف, الواجهة: نص): منطقي {
+    دع الأساس: أساس_توليد_هدف = أساس_توليد_شفرة_للهدف(الهدف);
+    دع مرجع_الواجهة: &نص = &الأساس.الواجهة;
+    أرجع نصان_متساويان(مرجع_الواجهة, &الواجهة);
+}
+
+// glibc program interpreters (PT_INTERP) of the other 64-bit GNU/Linux
+// targets, as glibc installs them and as Clang's Linux::getDynamicLinker
+// (clang/lib/Driver/ToolChains/Linux.cpp) and GCC's GLIBC_DYNAMIC_LINKER
+// definitions spell them; for mips64, powerpc64, sparcv9 and s390x glibc's
+// per-ABI loader list (libc-alpha, "dynamic linker names", 2014) gives the
+// same names:
+//   * riscv64 with the baseline ABI lp64d: /lib/ld-linux-riscv64-lp64d.so.1.
+//   * loongarch64 with the baseline ABI lp64d:
+//     /lib64/ld-linux-loongarch-lp64d.so.1.
+//   (Only the registered baseline ABI is mapped; a different ABI name in the
+//   baseline yields no interpreter until its loader is added here.)
+//   * mips64 n64 (64-bit pointers) with the legacy NaN encoding: the baseline
+//     leaves the CPU to LLVM's default for the triple, a pre-R6 CPU, so the
+//     loader is /lib64/ld.so.1 for either byte order. A NaN2008 (R6) ABI
+//     uses ld-linux-mipsn8.so.1 and is not registered.
+//   * powerpc64 little-endian, ELFv2 (the default powerpc64le ABI of LLVM
+//     and glibc; the baseline sets no other): /lib64/ld64.so.2. Big-endian
+//     powerpc64 has ELFv1 and ELFv2 loaders and no registered target, so it
+//     has no interpreter here.
+//   * sparcv9: /lib64/ld-linux.so.2.
+//   * s390x: /lib/ld64.so.1.
+//   * NEC VE (SX-Aurora, run by VEOS): /opt/nec/ve/lib/ld-linux-ve.so.1,
+//     the VE glibc loader Clang uses for the ve triple.
+// Any other ABI of these architectures has no interpreter: no loader path
+// is guessed. A static link needs none of this, and the interpreter path adds
+// no library or object to any link: it only names the target system's loader
+// in PT_INTERP of an executable that imports from shared libraries it was
+// explicitly given. SultanC's ELF linker currently links executables only for
+// Linux x86_64 and AArch64 (link/elf/target_policy.sn), so these entries are
+// not used for any output yet.
 عرف إعداد_ربط_ديناميكي_لينكس(
     الهدف: &واصف_هدف
 ): اختيار إعداد_ربط_ديناميكي_هدف {
@@ -54,6 +107,61 @@
             ));
         }
         | _ -> { أرجع اختيار.لا_شيء(); };
+    }
+    | هوية_معمارية.رايسك_في_أربعة_وستون -> {
+        لو (!هدف_جنو_أربعة_وستون_بترتيب(الهدف, ترتيب_بايت.صغير())) {
+            أرجع اختيار.لا_شيء();
+        };
+        لو (واجهة_أساس_الهدف_تساوي(الهدف, «lp64d»)) {
+            أرجع اختيار.بعض(إعداد_ربط_ديناميكي_بأسماء(
+                «/lib/ld-linux-riscv64-lp64d.so.1»
+            ));
+        };
+        أرجع اختيار.لا_شيء();
+    }
+    | هوية_معمارية.لونغ_آرتش_أربعة_وستون -> {
+        لو (!هدف_جنو_أربعة_وستون_بترتيب(الهدف, ترتيب_بايت.صغير())) {
+            أرجع اختيار.لا_شيء();
+        };
+        لو (واجهة_أساس_الهدف_تساوي(الهدف, «lp64d»)) {
+            أرجع اختيار.بعض(إعداد_ربط_ديناميكي_بأسماء(
+                «/lib64/ld-linux-loongarch-lp64d.so.1»
+            ));
+        };
+        أرجع اختيار.لا_شيء();
+    }
+    | هوية_معمارية.ميبس_أربعة_وستون -> {
+        لو (!هدف_جنو_أربعة_وستون_بترتيب(الهدف, ترتيب_بايت.صغير())
+            && !هدف_جنو_أربعة_وستون_بترتيب(الهدف, ترتيب_بايت.كبير())) {
+            أرجع اختيار.لا_شيء();
+        };
+        أرجع اختيار.بعض(إعداد_ربط_ديناميكي_بأسماء(«/lib64/ld.so.1»));
+    }
+    | هوية_معمارية.باور_بي_سي_أربعة_وستون -> {
+        لو (!هدف_جنو_أربعة_وستون_بترتيب(الهدف, ترتيب_بايت.صغير())) {
+            أرجع اختيار.لا_شيء();
+        };
+        أرجع اختيار.بعض(إعداد_ربط_ديناميكي_بأسماء(«/lib64/ld64.so.2»));
+    }
+    | هوية_معمارية.سبارك_أربعة_وستون -> {
+        لو (!هدف_جنو_أربعة_وستون_بترتيب(الهدف, ترتيب_بايت.كبير())) {
+            أرجع اختيار.لا_شيء();
+        };
+        أرجع اختيار.بعض(إعداد_ربط_ديناميكي_بأسماء(«/lib64/ld-linux.so.2»));
+    }
+    | هوية_معمارية.سيستم_زد -> {
+        لو (!هدف_جنو_أربعة_وستون_بترتيب(الهدف, ترتيب_بايت.كبير())) {
+            أرجع اختيار.لا_شيء();
+        };
+        أرجع اختيار.بعض(إعداد_ربط_ديناميكي_بأسماء(«/lib/ld64.so.1»));
+    }
+    | هوية_معمارية.في_إي -> {
+        لو (!هدف_جنو_أربعة_وستون_بترتيب(الهدف, ترتيب_بايت.صغير())) {
+            أرجع اختيار.لا_شيء();
+        };
+        أرجع اختيار.بعض(إعداد_ربط_ديناميكي_بأسماء(
+            «/opt/nec/ve/lib/ld-linux-ve.so.1»
+        ));
     }
     | _ -> { أرجع اختيار.لا_شيء(); };
 }

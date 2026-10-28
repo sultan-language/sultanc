@@ -1,115 +1,25 @@
-استورد compiler.runtime.toolchain_facts;
-
-// LLVM provider owns discovery of the LLVM ABI used by this compiler toolchain.
-// The linker receives this as explicit plan metadata and never inspects the host
-// process or asks LLVM for its version during dependency resolution.
-عام نوع بيانات_أداة_إل_إل_في_إم = {
-    الإصدار_الكبير: غير_موقع,
-    الإصدار_الصغير: غير_موقع,
-    إصدار_الرقعة: غير_موقع
-};
-
-// The running compiler reports the libLLVM it is linked with. A compiler
-// built for a WASI host links no LLVM and cannot discover one: it reports the
-// facts of the compiler that built it, which MSIR lowering recorded as
-// compile-time constants (runtime/toolchain_facts.sn). Previously a WASI
-// compiler reported major version 0 and no location, so every executable it
-// linked against libLLVM (the compiler itself) failed with
-// link.missing-toolchain-metadata.
-
-// Splits the absolute path of the loaded libLLVM into its directory and
-// file name.
-عرف قسم_مسار_مكتبة_إل_إل_في_إم(
-    المسار: &متجه غ8,
-    اسم_المكتبة: &متغير اختيار متجه غ8,
-    دليل_البحث: &متغير اختيار متجه غ8
-): منطقي {
-    دع الطول_الكلي: غير_موقع = الطول(*المسار) مثل غير_موقع;
-    لو (الطول_الكلي == 0) {
-        أرجع خطأ;
-    };
-
-    دع موضع_الفاصل: متغير غير_موقع = الطول_الكلي;
-    دع الفهرس: متغير غير_موقع = الطول_الكلي;
-    بينما (الفهرس > 0 && موضع_الفاصل == الطول_الكلي) {
-        دع الحالي: غير_موقع = الفهرس - 1;
-        لو ((*المسار)[الحالي] == 0x2F) {
-            موضع_الفاصل := الحالي;
-        };
-        الفهرس := الحالي;
-    }
-    لو (موضع_الفاصل == الطول_الكلي || موضع_الفاصل + 1 >= الطول_الكلي) {
-        أرجع خطأ;
-    };
-
-    دع الدليل: متغير متجه غ8 = [];
-    دع الاسم: متغير متجه غ8 = [];
-    دع موضع_البايت: متغير غير_موقع = 0;
-    بينما (موضع_البايت < موضع_الفاصل) {
-        ألحق(الدليل, (*المسار)[موضع_البايت]);
-        موضع_البايت := موضع_البايت + 1;
-    }
-    لو ((الطول(الدليل) مثل غير_موقع) == 0) {
-        ألحق(الدليل, 0x2F);
-    };
-    موضع_البايت := موضع_الفاصل + 1;
-    بينما (موضع_البايت < الطول_الكلي) {
-        ألحق(الاسم, (*المسار)[موضع_البايت]);
-        موضع_البايت := موضع_البايت + 1;
-    }
-
-    *اسم_المكتبة := اختيار.بعض(الاسم);
-    *دليل_البحث := اختيار.بعض(الدليل);
-    أرجع صواب;
-}
-
-
-// The location of the libLLVM this compiler uses, split into file name and
-// directory for the link plan.
-عام عرف اكتشف_موقع_مكتبة_إل_إل_في_إم_الحالية(
-    اسم_المكتبة: &متغير اختيار متجه غ8,
-    دليل_البحث: &متغير اختيار متجه غ8
-): منطقي {
-    طابق مسار_مكتبة_إل_إل_في_إم_الحالي() مع
-    | اختيار.لا_شيء -> { أرجع خطأ; }
-    | اختيار.بعض(المسار) -> {
-        أرجع قسم_مسار_مكتبة_إل_إل_في_إم(&المسار, اسم_المكتبة, دليل_البحث);
-    };
-}
-
-// The facts MSIR lowering records for a program compiled by this compiler
-// (the toolchain primitives). Empty when this compiler uses no LLVM.
-عام عرف حقائق_أداة_مترجم_الحالية(): حقائق_أداة_مترجم {
-    دع الحقائق: متغير حقائق_أداة_مترجم = حقائق_أداة_مترجم_فارغة();
-    دع البيانات: بيانات_أداة_إل_إل_في_إم = بيانات_أداة_إل_إل_في_إم_الحالية();
-    لو (البيانات.الإصدار_الكبير == 0) { أرجع الحقائق; };
-    الحقائق.إصدار_إل_إل_في_إم_الكبير := البيانات.الإصدار_الكبير;
-    طابق مسار_مكتبة_إل_إل_في_إم_الحالي() مع
-    | اختيار.لا_شيء -> { }
-    | اختيار.بعض(المسار) -> { الحقائق.مسار_مكتبة_إل_إل_في_إم := المسار; };
-    أرجع الحقائق;
-}
-
+// LLVM provider owns discovery of the LLVM implementation the running
+// compiler is linked with (its "host toolchain" LLVM, in the build/host/target
+// terms of LLVM's cross-compilation guide). These are facts about the host
+// that runs this compiler, never about the target of the code it generates:
+//
+// - The location is the file the host's loader mapped (Linux /proc/self/maps,
+//   Darwin dladdr). The Driver records it in the link plan together with the
+//   compiler's registered host target, and the LLVM link-dependency resolver
+//   (link/dependency/llvm.sn) uses it only for outputs whose target IS that
+//   host target, by ingesting that very file as a dynamic-library input; an
+//   output for any other target needs the target's own libLLVM as an explicit
+//   link input, as with Clang/LLD and a target sysroot.
+// - A compiler built for a WASI host links no libLLVM and has no host LLVM:
+//   no location. It never carries facts of the compiler that built it. Previously the toolchain primitives recorded the builder's
+//   libLLVM path and version into the WASI compiler, which then wrote that
+//   builder library (for example a macOS `libLLVM.23.1.dylib`) into the
+//   dynamic section of executables it linked for Linux.
+// The non-WASI hosts bind the LLVM C API (Darwin's discovery below asks the
+// loader which image holds LLVM's global context).
 لو (الهدف.المنصة != «wasi») {
     استورد compiler.backend.provider.llvm.ffi.core;
     استورد compiler.backend.provider.llvm.ffi.types;
-
-    عام عرف بيانات_أداة_إل_إل_في_إم_الحالية(): بيانات_أداة_إل_إل_في_إم {
-        دع الكبير: متغير غ32 = 0;
-        دع الصغير: متغير غ32 = 0;
-        دع الرقعة: متغير غ32 = 0;
-        اقرأ_إصدار_إل_إل_في_إم(
-            &متغير الكبير,
-            &متغير الصغير,
-            &متغير الرقعة
-        );
-        دع البيانات: بيانات_أداة_إل_إل_في_إم = {
-            الإصدار_الكبير: الكبير مثل غير_موقع,
-            الإصدار_الصغير: الصغير مثل غير_موقع,
-            إصدار_الرقعة: الرقعة مثل غير_موقع
-        };
-        أرجع البيانات;
-    }
 }
 
 // Linux: the kernel's own map of this process (/proc/self/maps) names the
@@ -190,9 +100,20 @@
     }
 }
 
+// Windows: outputs for Windows import LLVM-C.dll by name
+// (runtime_symbol_query_context.sn مكتبة_إل_إل_في_إم_باسم_للهدف), so the
+// linker never reads the host library file and no location is recorded.
+// Previously Windows fell into the Darwin block below and referenced dladdr,
+// which no Windows DLL exports.
+لو (الهدف.المنصة == «windows») {
+    عام عرف مسار_مكتبة_إل_إل_في_إم_الحالي(): اختيار متجه غ8 {
+        أرجع اختيار.لا_شيء();
+    }
+}
+
 // Other hosts: the dynamic loader of the system interface (Darwin's dyld in
 // libSystem) reports the image that holds LLVM's global context.
-لو (الهدف.المنصة != «wasi» && الهدف.المنصة != «linux») {
+لو (الهدف.المنصة != «wasi» && الهدف.المنصة != «linux» && الهدف.المنصة != «windows») {
     استورد std.os.platform.unix.apple.darwin.dynamic_loader;
 
     عام عرف مسار_مكتبة_إل_إل_في_إم_الحالي(): اختيار متجه غ8 {
@@ -219,26 +140,8 @@
 }
 
 لو (الهدف.المنصة == «wasi») {
-    // The recorded facts of the compiler that built this one (see above).
-    استورد compiler.backend.provider.llvm.recorded_toolchain;
-
+    // A WASI host has no libLLVM (see above).
     عام عرف مسار_مكتبة_إل_إل_في_إم_الحالي(): اختيار متجه غ8 {
-        دع المسار: نص = مسار_مكتبة_إل_إل_في_إم_المسجل();
-        لو ((الطول(المسار) مثل غير_موقع) == 0) { أرجع اختيار.لا_شيء(); };
-        دع البايتات: متغير متجه غ8 = [];
-        دع ف: متغير غير_موقع = 0;
-        بينما (ف < (الطول(المسار) مثل غير_موقع)) {
-            ألحق(البايتات, المسار[ف]);
-            ف := ف + 1;
-        }
-        أرجع اختيار.بعض(البايتات);
-    }
-
-    عام عرف بيانات_أداة_إل_إل_في_إم_الحالية(): بيانات_أداة_إل_إل_في_إم {
-        دع الكبير: غ32 = إصدار_إل_إل_في_إم_المسجل();
-        دع البيانات: بيانات_أداة_إل_إل_في_إم = {
-            الإصدار_الكبير: الكبير مثل غير_موقع, الإصدار_الصغير: 0, إصدار_الرقعة: 0
-        };
-        أرجع البيانات;
+        أرجع اختيار.لا_شيء();
     }
 }

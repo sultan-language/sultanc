@@ -310,8 +310,9 @@
                 أرجع الاسم;
             }
             | صيغة_كائن_هدف.كوف -> {
-                // main; the PE linker/CRT owns the process-entry startup symbol.
-                دع الاسم: متجه غ8 = بايتات_من_نص(«main»);
+                // _start, the PE entry point (link/coff/names.sn); an executable's
+                // process start renames it (entry.sn أضف_بدء_عملية_بلا_وسائط_إل_إل_في_إم).
+                دع الاسم: متجه غ8 = بايتات_من_نص(«_start»);
                 أرجع الاسم;
             }
             | صيغة_كائن_هدف.ويب_أسمبلي -> {
@@ -349,7 +350,8 @@
     }
     | اختيار.لا_شيء -> { };
     // All ordinary SultanC functions use one hidden closure-environment
-    // parameter. The process entry alone keeps the platform CRT ABI.
+    // parameter. The process entry alone keeps the plain C ABI its caller (the
+    // process start, dyld or the WASI host) uses.
     دع له_بيئة: منطقي = !هو_مدخل_البرنامج;
     دع التوقيع: وصف_توقيع_إل_إل_في_إم;
     طابق ابن_توقيع_إل_إل_في_إم(الحالة, الحقائق, الهدف, سجل_التخطيط, &الخطة, له_بيئة) مع

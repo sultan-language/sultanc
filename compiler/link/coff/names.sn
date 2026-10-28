@@ -4,23 +4,12 @@
     أرجع الاسم;
 }
 
-عام عرف اسم_رمز_رئيسي_كوف(): متجه غ8 {
-    دع الاسم: متجه غ8 = بايتات_من_نص(«main»);
+// The PE entry point of a SultanC executable: the process start the LLVM
+// provider emits (backend/provider/llvm/entry.sn), which calls the language
+// entry and exits through kernel32's ExitProcess. It is the same spelling as
+// the ELF and WASI process starts. Previously the image entered through the
+// C runtime's mainCRTStartup/wmainCRTStartup, which called main or wmain.
+عام عرف اسم_رمز_بدء_عملية_كوف(): متجه غ8 {
+    دع الاسم: متجه غ8 = بايتات_من_نص(«_start»);
     أرجع الاسم;
 }
-
-عام عرف اسم_رمز_رئيسي_واسع_كوف(): متجه غ8 {
-    دع الاسم: متجه غ8 = بايتات_من_نص(«wmain»);
-    أرجع الاسم;
-}
-
-عام عرف اسم_رمز_بدء_رئيسي_كوف(): متجه غ8 {
-    دع الاسم: متجه غ8 = بايتات_من_نص(«mainCRTStartup»);
-    أرجع الاسم;
-}
-
-عام عرف اسم_رمز_بدء_رئيسي_واسع_كوف(): متجه غ8 {
-    دع الاسم: متجه غ8 = بايتات_من_نص(«wmainCRTStartup»);
-    أرجع الاسم;
-}
-

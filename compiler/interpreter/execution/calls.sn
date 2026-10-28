@@ -9,6 +9,8 @@
 استورد compiler.frontend.types.type_identity;
 استورد compiler.frontend.types.type_context;
 استورد compiler.interpreter.memory.memory;
+استورد compiler.runtime.primitive_semantic_contract;
+استورد compiler.runtime.primitive_identity;
 
 عام نوع نتيجة_نداء_مفسر =
     | استمر
@@ -157,6 +159,15 @@
 ): نتيجة_نداء_مفسر {
     دع التفعيل: معرف_تفعيل_مفسر = خذ_معرف_تفعيل_مفسر(الحالة);
     دع الاستمرار: استمرار_إرجاع_مفسر = { الوجهة: الوجهة };
+    // Bound recursive compile-time function calls before allocating a new frame.
+    لو ((*الحالة).نمط_تقييم_مسبق &&
+        عدد_أطر_مفسر(الحالة) >= (*الحالة).حد_أطر_وقت_الترجمة) {
+        أرجع نتيجة_نداء_مفسر.أخفق(
+            فشل_تفسير_مسير.وقت_تشغيل(
+                خطأ_وقت_تشغيل_مفسر.وقت_الترجمة_تجاوز_عمق_النداء()
+            )
+        );
+    };
     دع الإطار_الجديد: إطار_تفسير_مسير;
     طابق أنشئ_إطار_دالة_مفسر(
         المسير,
@@ -278,6 +289,15 @@
         );
     }
     | هدف_نداء_مسير.دالة_خارجية(المعرف) -> {
+        // Even if runtime adapters someday support a host foreign call, CTFE
+        // never executes it: compiler-time execution must be deterministic.
+        لو ((*الحالة).نمط_تقييم_مسبق) {
+            أرجع نتيجة_نداء_مفسر.أخفق(
+                فشل_تفسير_مسير.وقت_تشغيل(
+                    خطأ_وقت_تشغيل_مفسر.وقت_الترجمة_أثر_ممنوع()
+                )
+            );
+        };
         // External calls retain their canonical MSIR symbol identity. No
         // deleted OS export is interpreted as a host-service invocation.
         طابق ابحث_دالة_خارجية_مسير(المسير, المعرف) مع
@@ -344,6 +364,29 @@
         };
     }
     | هدف_نداء_مسير.بدائي_مترجم(الهوية) -> {
+        // Shared primitive semantics are authoritative: do not invent a
+        // separate purity registry for compile-time evaluation.
+        لو ((*الحالة).نمط_تقييم_مسبق) {
+            دع العقد: عقد_دلالي_بدائي = العقد_الدلالي_للبدائي(الهوية);
+            لو (العقد.الأثر != تصنيف_أثر_بدائي.نقي()) {
+                أرجع نتيجة_نداء_مفسر.أخفق(
+                    فشل_تفسير_مسير.وقت_تشغيل(
+                        خطأ_وقت_تشغيل_مفسر.وقت_الترجمة_أثر_ممنوع()
+                    )
+                );
+            };
+            // Compiler/toolchain and link-address primitives can be classified
+            // pure while still observing host state or build configuration.
+            طابق الهوية مع
+            | هوية_بدائي_مترجم.قاعدة_كومة_خطية -> {
+                أرجع نتيجة_نداء_مفسر.أخفق(
+                    فشل_تفسير_مسير.وقت_تشغيل(
+                        خطأ_وقت_تشغيل_مفسر.وقت_الترجمة_أثر_ممنوع()
+                    )
+                );
+            }
+            | _ -> { };
+        };
         دع النتيجة: نتيجة_تنفيذ_بدائي_مفسر = نفذ_بدائي_مفسر(
             الحالة,
             موضع_الإطار,

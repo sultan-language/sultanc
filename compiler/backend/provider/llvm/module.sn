@@ -294,7 +294,8 @@
         // Verified MSIR owns one zero-argument, void module initializer.
         // Functions are only declared here; their bodies are lowered later.
         // Ordinary SultanC functions have a hidden closure-environment pointer;
-        // a loader initializer must instead have a void(void) CRT signature.
+        // a loader initializer must instead have a void(void) signature (an
+        // .init_array or .CRT$XCU entry).
         دع توقيع_اللغة: مرجع_نوع_إل_إل_في_إم = قيد_الدالة.نوع_الدالة;
         لو (!قيد_الدالة.له_بيئة_إغلاق
             || قيد_الدالة.غير_مباشر_الناتج
@@ -395,7 +396,7 @@
     // MSIR represents module initialization by exactly one of two routes:
     // an entry-prelude call for executables, or a loader constructor for
     // standalone objects. Never register the latter for an executable:
-    // it could run before CRT startup and repeat the entry-prelude call.
+    // it could run before the process start and repeat the entry-prelude call.
     طابق (*المسير).المسير.دالة_تهيئة_الوحدة مع
     | اختيار.بعض(_) -> {
         طابق (*المسير).المسير.دالة_بدء_البرنامج مع

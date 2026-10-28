@@ -37,7 +37,7 @@
         المستوى: مستوى_تحسين_مزود_إل_إل_في_إم,
         سياسة_التموضع: سياسة_تموضع_شفرة_إل_إل_في_إم,
         احتفظ_بنص_الوحدة: منطقي,
-        // True only for an executable linked without a CRT (internal ELF linker).
+        // True for an executable whose process start SultanC emits (driver بدء_عملية_ذاتي_لربط).
         بدء_عملية_ذاتي: منطقي,
         // Executables keep only the entry closure; every other output keeps
         // every function (msir_consumer.sn, دوال_مسير_مطلوبة_لمخرج), exactly
@@ -128,7 +128,7 @@
         المستوى: مستوى_تحسين_مزود_إل_إل_في_إم,
         سياسة_التموضع: سياسة_تموضع_شفرة_إل_إل_في_إم,
         احتفظ_بنص_الوحدة: منطقي,
-        // True only for an executable linked without a CRT (internal ELF linker).
+        // True for an executable whose process start SultanC emits (driver بدء_عملية_ذاتي_لربط).
         بدء_عملية_ذاتي: منطقي,
         // Executables keep only the entry closure; every other output keeps
         // every function (msir_consumer.sn, دوال_مسير_مطلوبة_لمخرج), exactly

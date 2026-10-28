@@ -1,5 +1,4 @@
 استورد compiler.backend.provider.llvm.ffi.types;
-استورد compiler.backend.provider.llvm.toolchain;
 استورد compiler.frontend.types.type_identity;
 استورد compiler.msir.identifiers;
 استورد compiler.msir.msir_model;
@@ -154,8 +153,7 @@
 عام نوع ناتج_مزود_إل_إل_في_إم = {
     البايتات: متجه غ8,
     النوع: نوع_ناتج_مزود_إل_إل_في_إم,
-    نص_الوحدة: اختيار متجه غ8,
-    بيانات_الأداة: بيانات_أداة_إل_إل_في_إم
+    نص_الوحدة: اختيار متجه غ8
 };
 
 عام نوع نتيجة_مزود_إل_إل_في_إم =

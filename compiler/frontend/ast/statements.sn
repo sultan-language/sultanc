@@ -90,6 +90,22 @@
         نطاق,
         كتلة_عبارات
     )
+    // A statement-form comptime block is lowered as an independent MSIR
+    // function and discharged before any backend sees its call.
+    | وقت_الترجمة بنوع (
+        نطاق,
+        كتلة_عبارات
+    )
+    // `place := comptime { statements; result };` (and the same as a `let`
+    // initializer): the block and its result are lowered as an independent
+    // MSIR function evaluated once at compile time; the place receives the
+    // resulting constant. The block cannot capture runtime locals.
+    | إسناد_وقت_الترجمة بنوع (
+        نطاق,
+        تعبير,
+        كتلة_عبارات,
+        تعبير
+    )
 ;
 
 
@@ -111,5 +127,7 @@
     | عبارة.طابق(النطاق, _, _) -> { أرجع النطاق; }
     | عبارة.أرجع(النطاق, _) -> { أرجع النطاق; }
     | عبارة.تجميع(النطاق, _) -> { أرجع النطاق; }
-    | عبارة.غير_آمن(النطاق, _) -> { أرجع النطاق; };
+    | عبارة.غير_آمن(النطاق, _) -> { أرجع النطاق; }
+    | عبارة.وقت_الترجمة(النطاق, _) -> { أرجع النطاق; }
+    | عبارة.إسناد_وقت_الترجمة(النطاق, _, _, _) -> { أرجع النطاق; };
 }

@@ -18,7 +18,6 @@
 استورد compiler.msir.msir_model;
 استورد compiler.msir.msir_builder;
 استورد compiler.msir.lowering.model;
-استورد compiler.runtime.toolchain_facts;
 استورد std.collections.map;
 
 استورد compiler.frontend.types.type_context;
@@ -192,8 +191,7 @@
         فهرس_الدوال: فهرس_الدوال,
         القيم_العليا: القيم_العليا,
         منتقي_لينكس: اختيار.لا_شيء(),
-        منشئات_لينكس: منشئات_لينكس,
-        حقائق_الأداة: حقائق_أداة_مترجم_فارغة()
+        منشئات_لينكس: منشئات_لينكس
     };
     أرجع السياق;
 }

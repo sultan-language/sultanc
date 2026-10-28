@@ -8,14 +8,38 @@
 استورد compiler.link.layout_model;
 استورد compiler.link.resolution;
 استورد compiler.backend.target.target_model;
+استورد std.collections.map;
+استورد std.bytes.compare;
+استورد std.hash.fnv;
+
+// How the regular objects refer to one symbol, beside its resolution state
+// in the symbol table (indexed by the same symbol id). LLD keeps the same
+// distinction on its Undefined/Lazy symbols (binding STB_WEAK, and COFF's
+// weak aliases):
+//   * مرجع_جالب: an ordinary undefined reference, which extracts the archive
+//     member that defines the symbol (ELF STB_GLOBAL, COFF EXTERNAL, a COFF
+//     weak external with IMAGE_WEAK_EXTERN_SEARCH_LIBRARY);
+//   * مرجع_ضعيف: a reference that never extracts a member (an ELF STB_WEAK
+//     undefined symbol, a COFF weak external with SEARCH_NOLIBRARY or
+//     SEARCH_ALIAS). A symbol with only such references stays lazy when an
+//     archive offers it, and is an undefined weak symbol at the end of the
+//     link: zero in an ELF executable, its alias's definition in COFF.
+عام نوع مراجع_رمز_ربط = {
+    مرجع_جالب: منطقي,
+    مرجع_ضعيف: منطقي
+};
 
 // One mutable owner for link-wide facts. Format providers may enrich their own
 // private state, but input/symbol/section identities, archive extraction,
-// reachability and final placement remain canonical here.
+// reachability and final placement remain canonical here. مجموعات_كومدات maps
+// an ELF section-group signature to the input whose group was kept, as LLD's
+// SymbolTable::comdatGroups does.
 عام نوع سياق_ربط = {
     الخطة: خطة_ربط,
     الهدف: واصف_هدف,
     الرموز: جدول_رموز_ربط,
+    مراجع_الرموز: متجه مراجع_رمز_ربط,
+    مجموعات_كومدات: الخريطة<متجه غ8, غير_موقع>,
     الأقسام: متجه قسم_ربط,
     الإزاحات: متجه حافة_إزاحة_ربط,
     الأرشيفات: سجل_أرشيف_ربط,
@@ -23,11 +47,24 @@
     التخطيط: اختيار تخطيط_خرج_ربط
 };
 
+عرف هاش_توقيع_كومدات_ربط(التوقيع: &متجه غ8): غير_موقع {
+    أرجع هاش_فنڤ1أ_غير_موقع_للبايتات(التوقيع);
+}
+
+عرف توقيعا_كومدات_ربط_متساويان(الأول: &متجه غ8, الثاني: &متجه غ8): منطقي {
+    أرجع متجها_بايتات_متساويان(الأول, الثاني);
+}
+
 عام عرف أنشئ_سياق_ربط(
     الخطة: خطة_ربط,
     الهدف: واصف_هدف
 ): سياق_ربط {
     دع الرموز: جدول_رموز_ربط = أنشئ_جدول_رموز_ربط();
+    دع المراجع: متجه مراجع_رمز_ربط = [];
+    دع المجموعات: الخريطة<متجه غ8, غير_موقع> = أنشئ_الخريطة(
+        هاش_توقيع_كومدات_ربط,
+        توقيعا_كومدات_ربط_متساويان
+    );
     دع الأقسام: متجه قسم_ربط = [];
     دع الإزاحات: متجه حافة_إزاحة_ربط = [];
     دع الأرشيفات: سجل_أرشيف_ربط = أنشئ_سجل_أرشيف_ربط();
@@ -36,6 +73,8 @@
         الخطة: الخطة,
         الهدف: الهدف,
         الرموز: الرموز,
+        مراجع_الرموز: المراجع,
+        مجموعات_كومدات: المجموعات,
         الأقسام: الأقسام,
         الإزاحات: الإزاحات,
         الأرشيفات: الأرشيفات,
@@ -141,16 +180,99 @@
     ألحق((*السياق).الإزاحات, الحافة);
 }
 
-عام عرف سجل_رمزا_غير_معرف_في_سياق_الربط(
+عرف علّم_مرجع_رمز_في_سياق_الربط(
     السياق: &متغير سياق_ربط,
-    الاسم: &متجه غ8,
-    المدخل: معرف_مدخل_ربط
+    المعرف: معرف_رمز_ربط,
+    جالب: منطقي
+): فراغ {
+    بينما ((الطول((*السياق).مراجع_الرموز) مثل غير_موقع) <= المعرف.القيمة) {
+        دع فارغ: مراجع_رمز_ربط = { مرجع_جالب: خطأ, مرجع_ضعيف: خطأ };
+        ألحق((*السياق).مراجع_الرموز, فارغ);
+    }
+    لو (جالب) {
+        (*السياق).مراجع_الرموز[المعرف.القيمة].مرجع_جالب := صواب;
+    } وإلا {
+        (*السياق).مراجع_الرموز[المعرف.القيمة].مرجع_ضعيف := صواب;
+    };
+}
+
+// Whether every regular-object reference to the symbol is one that does not
+// extract archive members (and there is at least one).
+عام عرف رمز_مرجعه_ضعيف_فقط_في_سياق_الربط(
+    السياق: &سياق_ربط,
+    المعرف: معرف_رمز_ربط
+): منطقي {
+    لو (المعرف.القيمة >= (الطول((*السياق).مراجع_الرموز) مثل غير_موقع)) {
+        أرجع خطأ;
+    };
+    أرجع (*السياق).مراجع_الرموز[المعرف.القيمة].مرجع_ضعيف
+        && !(*السياق).مراجع_الرموز[المعرف.القيمة].مرجع_جالب;
+}
+
+// Facts a linker diagnostic names, read from the canonical tables above
+// rather than kept beside the errors: an unresolved-symbol report names the
+// symbol (LLD reportUndefinedSymbols), and an input error names the input
+// file. These are copies for reporting only.
+
+// The name of a symbol, or an empty name for an id the table does not hold.
+عام عرف اسم_رمز_في_سياق_الربط(
+    السياق: &سياق_ربط,
+    المعرف: معرف_رمز_ربط
+): متجه غ8 {
+    لو (المعرف.القيمة >= (الطول((*السياق).الرموز.الرموز) مثل غير_موقع)) {
+        دع فارغ: متجه غ8 = [];
+        أرجع فارغ;
+    };
+    دع مرجع_الاسم: &متجه غ8 = &(*السياق).الرموز.الرموز[المعرف.القيمة].الاسم;
+    دع الاسم: متجه غ8 = *مرجع_الاسم;
+    أرجع الاسم;
+}
+
+// The name of the symbol a relocation refers to; empty for a reference to a
+// section.
+عام عرف اسم_رمز_مرجع_إزاحة_في_سياق_الربط(
+    السياق: &سياق_ربط,
+    المرجع: &مرجع_إزاحة_ربط
+): متجه غ8 {
+    طابق *المرجع مع
+    | مرجع_إزاحة_ربط.رمز(المعرف) -> {
+        أرجع اسم_رمز_في_سياق_الربط(السياق, المعرف);
+    }
+    | مرجع_إزاحة_ربط.قسم(_) -> {
+        دع فارغ: متجه غ8 = [];
+        أرجع فارغ;
+    };
+}
+
+// The file an input was read from. Input ids are positions in the plan
+// (model.sn أضف_مدخل_بمصدر_إلى_خطة_ربط); an input given as bytes has no path.
+عام عرف مسار_مدخل_في_سياق_الربط(
+    السياق: &سياق_ربط,
+    المعرف: معرف_مدخل_ربط
+): اختيار نص {
+    لو (المعرف.القيمة >= (الطول((*السياق).الخطة.المدخلات) مثل غير_موقع)) {
+        أرجع اختيار.لا_شيء();
+    };
+    لو (!معرفا_مدخل_ربط_متساويان(
+        (*السياق).الخطة.المدخلات[المعرف.القيمة].المعرف,
+        المعرف
+    )) {
+        أرجع اختيار.لا_شيء();
+    };
+    طابق (*السياق).الخطة.المدخلات[المعرف.القيمة].المسار مع
+    | اختيار.لا_شيء -> { أرجع اختيار.لا_شيء(); }
+    | اختيار.بعض(القيمة) -> {
+        دع مرجع_المسار: &نص = &القيمة;
+        دع المسار: نص = *مرجع_المسار;
+        أرجع اختيار.بعض(المسار);
+    };
+}
+
+// Requests the member a resolution decision named.
+عرف طبق_استخراج_تسجيل_في_سياق_الربط(
+    السياق: &متغير سياق_ربط,
+    النتيجة: نتيجة_تسجيل_رمز_ربط
 ): نتيجة_تسجيل_رمز_ربط {
-    دع النتيجة: نتيجة_تسجيل_رمز_ربط = سجل_رمزا_غير_معرف_للربط(
-        &متغير (*السياق).الرموز,
-        الاسم,
-        المدخل
-    );
     طابق النتيجة مع
     | نتيجة_تسجيل_رمز_ربط.استخرج_عضو_أرشيف(
         معرف_الرمز,
@@ -172,6 +294,87 @@
         أرجع نتيجة_تسجيل_رمز_ربط.نجح(معرف_الرمز);
     }
     | _ -> { أرجع النتيجة; };
+}
+
+// An ordinary undefined reference from a regular object. When only an
+// archive offers the symbol, its member is requested for extraction.
+عام عرف سجل_رمزا_غير_معرف_في_سياق_الربط(
+    السياق: &متغير سياق_ربط,
+    الاسم: &متجه غ8,
+    المدخل: معرف_مدخل_ربط
+): نتيجة_تسجيل_رمز_ربط {
+    دع النتيجة: نتيجة_تسجيل_رمز_ربط = طبق_استخراج_تسجيل_في_سياق_الربط(
+        السياق,
+        سجل_رمزا_غير_معرف_للربط(&متغير (*السياق).الرموز, الاسم, المدخل)
+    );
+    طابق النتيجة مع
+    | نتيجة_تسجيل_رمز_ربط.نجح(المعرف) -> {
+        علّم_مرجع_رمز_في_سياق_الربط(السياق, المعرف, صواب);
+    }
+    | _ -> { };
+    أرجع النتيجة;
+}
+
+// A reference that never extracts an archive member (مراجع_رمز_ربط). A
+// symbol that only an archive offers stays lazy (LLD replaces an undefined
+// weak symbol by the lazy one keeping its weak binding, and does not load
+// the member); a later ordinary reference still extracts it. Previously such
+// references were registered as ordinary undefined symbols and pulled
+// archive members in.
+عام عرف سجل_مرجعا_ضعيفا_في_سياق_الربط(
+    السياق: &متغير سياق_ربط,
+    الاسم: &متجه غ8,
+    المدخل: معرف_مدخل_ربط
+): نتيجة_تسجيل_رمز_ربط {
+    طابق ابحث_رمز_ربط_بالاسم(&(*السياق).الرموز, الاسم) مع
+    | اختيار.بعض(الموجود) -> {
+        طابق الموجود.الحالة مع
+        | حالة_رمز_ربط.كسول(_, _) -> {
+            (*السياق).الرموز.الرموز[الموجود.المعرف.القيمة].مستخدم := صواب;
+            علّم_مرجع_رمز_في_سياق_الربط(السياق, الموجود.المعرف, خطأ);
+            أرجع نتيجة_تسجيل_رمز_ربط.نجح(الموجود.المعرف);
+        }
+        | _ -> { };
+    }
+    | اختيار.لا_شيء -> { };
+    // Absent, undefined, defined or shared: no member can be requested.
+    دع النتيجة: نتيجة_تسجيل_رمز_ربط = سجل_رمزا_غير_معرف_للربط(
+        &متغير (*السياق).الرموز,
+        الاسم,
+        المدخل
+    );
+    طابق النتيجة مع
+    | نتيجة_تسجيل_رمز_ربط.نجح(المعرف) -> {
+        علّم_مرجع_رمز_في_سياق_الربط(السياق, المعرف, خطأ);
+    }
+    | _ -> { };
+    أرجع النتيجة;
+}
+
+// ELF section groups flagged GRP_COMDAT (gABI "Section Groups"): the first
+// group to present a signature is kept and every later group with the same
+// signature is discarded, including a second group with that signature in
+// the same object, exactly as LLD's ObjFile::initializeSections keeps a
+// group only when SymbolTable::comdatGroups.try_emplace(signature, file)
+// inserts. Returns whether this group is the kept one. The registry stores
+// its own copy of the signature, keyed by the signature alone (a group's
+// identity is independent of any symbol). A registry that cannot grow
+// reports the capacity error and is left unchanged. Previously a repeated
+// signature from the same input was kept again.
+عام عرف ثبت_مجموعة_كومدات_في_سياق_الربط(
+    السياق: &متغير سياق_ربط,
+    التوقيع: &متجه غ8,
+    المدخل: معرف_مدخل_ربط
+): نتيجة منطقي, خطأ_حل_رموز_ربط {
+    طابق ابحث_في_الخريطة(&(*السياق).مجموعات_كومدات, التوقيع) مع
+    | اختيار.بعض(_) -> { أرجع نتيجة.نجح(خطأ); }
+    | اختيار.لا_شيء -> { };
+    دع المفتاح: متجه غ8 = *التوقيع;
+    طابق أدرج_في_الخريطة(&متغير (*السياق).مجموعات_كومدات, المفتاح, المدخل.القيمة) مع
+    | نتيجة.خطأ(_) -> {
+        أرجع نتيجة.خطأ(خطأ_حل_رموز_ربط.سعة_رموز_غير_قابلة_للتمثيل());
+    }
+    | نتيجة.نجح(_) -> { أرجع نتيجة.نجح(صواب); };
 }
 
 عام عرف سجل_تعريف_قسم_رمز_في_سياق_الربط(

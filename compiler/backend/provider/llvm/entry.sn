@@ -66,9 +66,19 @@
     أرجع نتيجة.نجح(القيمة);
 }
 
-// The target CRT passes startup arguments to main. The language entry remains parameterless.
-// The LLVM module itself performs process-argument initialization; no C launcher
-// or object-symbol renaming is necessary at link time.
+// The process entry of an executable. SultanC links no C runtime, so nothing
+// but this module and the OS calls into the program:
+//   * Linux: `main(argc, argv, envp)` below records the startup globals and
+//     calls the language entry; the `_start` this provider emits for the
+//     internal ELF linker (أضف_بدء_عملية_لينكس_إل_إل_في_إم) reads the
+//     kernel's initial stack and calls it;
+//   * macOS: the same `main`, called by dyld through LC_MAIN;
+//   * WASI and Windows: no startup arguments reach the entry (std reads them
+//     from args_get or GetCommandLineW), so `_start` calls the language
+//     entry and exits through the std provider (أضف_بدء_عملية_بلا_وسائط_إل_إل_في_إم).
+// The language entry remains parameterless. Previously Windows, Android,
+// FreeBSD and delegated Linux links entered through the C runtime's startup
+// code (mainCRTStartup, __libc_start_main and their equivalents).
 عام عرف أنشئ_مدخل_عملية_إل_إل_في_إم(
     الحالة: &حالة_مزود_إل_إل_في_إم,
     الهدف: &واصف_هدف,
@@ -76,27 +86,37 @@
     المسير: &سياق_مستهلك_مسير,
     بدء_عملية_ذاتي: منطقي
 ): اختيار فشل_مزود_إل_إل_في_إم {
-    // Only these platform CRTs supply the startup arguments consumed below.
-    // Leave main untouched for WASI, Windows and other registered targets:
-    // fabricating a foreign CRT signature would silently break cross-target ABI.
+    // Only Linux (SultanC's own `_start`) and macOS (dyld) pass the startup
+    // arguments consumed below. Other targets get no such `main`: inventing a
+    // foreign start signature would silently break their ABI.
     دع بيئة_لينكس: منطقي = (*الهدف).المنصة.المنصة == هوية_منصة.لينكس()
         && ((*الهدف).المنصة.البيئة == هوية_بيئة.جنو()
             || (*الهدف).المنصة.البيئة == هوية_بيئة.مسل()
             || (*الهدف).المنصة.البيئة == هوية_بيئة.إي_إيه_بي_آي_إتش_إف());
     دع بيئة_داروين: منطقي = (*الهدف).المنصة.المنصة == هوية_منصة.ماك_أو_إس();
-    // A WASI command module's `_start` is emitted here when SultanC owns the
-    // process start (a linked executable); other WebAssembly outputs keep the
-    // language entry exported as `_start` unchanged.
-    لو ((*الهدف).مزود_التشغيل == مزود_تشغيل_هدف.واسي()) {
+    // A WASI command module's or a Windows executable's `_start` is emitted
+    // here when SultanC owns the process start (a linked executable); their
+    // other outputs keep the language entry named `_start` unchanged.
+    دع بلا_وسائط_إقلاع: منطقي =
+        (*الهدف).مزود_التشغيل == مزود_تشغيل_هدف.واسي()
+            || ((*الهدف).صيغة_الكائن == صيغة_كائن_هدف.كوف()
+                && (*الهدف).المنصة.المنصة == هوية_منصة.ويندوز());
+    لو (بلا_وسائط_إقلاع) {
         لو (!بدء_عملية_ذاتي) { أرجع اختيار.لا_شيء(); };
-        أرجع أضف_بدء_عملية_واسي_إل_إل_في_إم(الحالة, دالة_الدخول, المسير);
+        طابق أضف_بدء_عملية_بلا_وسائط_إل_إل_في_إم(الحالة, دالة_الدخول, المسير) مع
+        | اختيار.بعض(الخطأ) -> { أرجع اختيار.بعض(الخطأ); }
+        | اختيار.لا_شيء -> { };
+        لو ((*الهدف).صيغة_الكائن == صيغة_كائن_هدف.كوف()) {
+            أرجع أضف_مسبار_مكدس_ويندوز_إل_إل_في_إم(الحالة, الهدف);
+        };
+        أرجع اختيار.لا_شيء();
     };
     لو (!بيئة_لينكس && !بيئة_داروين) { أرجع اختيار.لا_شيء(); };
     دع معرف_اللغة: معرف_دالة_مسير;
     طابق *دالة_الدخول مع
     | اختيار.بعض(المعرف) -> { معرف_اللغة := المعرف; }
     | اختيار.لا_شيء -> { أرجع اختيار.لا_شيء(); };
-    // The CRT wrapper may only rename the actual verified MSIR entry.
+    // The `main` wrapper may only rename the actual verified MSIR entry.
     // A driver-selected function is not sufficient evidence by itself.
     طابق (*المسير).المسير.دالة_بدء_البرنامج مع
     | اختيار.بعض(المعرف) -> {
@@ -147,9 +167,8 @@
     // The canonical runtime startup count is u64 even on 32-bit targets;
     // only argv and envp use the target's pointer width.
     دع نوع_المؤشر: مرجع_نوع_إل_إل_في_إم = LLVMPointerTypeInContext(السياق, 0);
-    // Linux GNU/musl (including GNU EABIHF) and Darwin supply an explicit third envp
-    // argument to main. Darwin also supplies an Apple-vector fourth argument.
-    // The Windows and other CRT contracts are not assumed to match either.
+    // SultanC's Linux `_start` and Darwin's dyld pass an explicit third envp
+    // argument to main. dyld also passes an Apple-vector fourth argument.
     دع المعاملات: متغير متجه مرجع_نوع_إل_إل_في_إم = [عدد_صحيح32, نوع_المؤشر, نوع_المؤشر];
     لو (بيئة_داروين) { ألحق(المعاملات, نوع_المؤشر); };
     دع عدد_المعاملات: غ32 = الطول(المعاملات) مثل غ32;
@@ -218,8 +237,8 @@
     };
 
     دع اسم_فارغ: متغير متجه غ8 = [0];
-    // CRT argc includes argv[0]. Do not subtract one: that would discard the
-    // process name and underflow when a CRT supplies an empty argv.
+    // argc includes argv[0]. Do not subtract one: that would discard the
+    // process name and underflow when the kernel supplies an empty argv.
     دع عدد_الوسائط32: مرجع_قيمة_إل_إل_في_إم = LLVMGetParam(مدخل_النظام, 0);
     دع عدد_الوسائط64: مرجع_قيمة_إل_إل_في_إم = LLVMBuildZExt(
         الباني, عدد_الوسائط32, عدد_صحيح64, &متغير اسم_فارغ[0]
@@ -228,7 +247,7 @@
     دع متجه_الوسائط: مرجع_قيمة_إل_إل_في_إم = LLVMGetParam(مدخل_النظام, 1);
     LLVMBuildStore(الباني, متجه_الوسائط, مؤشر_الوسائط);
 
-    // Preserve the actual process environment pointer supplied by the CRT.
+    // Preserve the actual process environment pointer supplied by the start.
     // Its lifetime covers main and the canonical language entry it invokes.
     دع بداية_البيئة: مرجع_قيمة_إل_إل_في_إم = LLVMGetParam(مدخل_النظام, 2);
     LLVMBuildStore(الباني, بداية_البيئة, مؤشر_البيئة);
@@ -358,11 +377,10 @@
     أرجع نتيجة.نجح(الجسر);
 }
 
-// Linux executables linked by SultanC's internal ELF linker have no CRT, so
-// nothing else defines _start: the same role the native encoder fills with
-// encoded instructions. The stub only recovers the kernel's initial stack
-// (argc, argv, envp), runs the linker-owned .init_array range, calls the CRT-
-// style main above (which stores the startup globals and calls the language
+// Linux executables link no C runtime, so nothing else defines _start: the
+// same role the native encoder fills with encoded instructions. The stub only
+// recovers the kernel's initial stack (argc, argv, envp), runs the
+// linker-owned .init_array range, calls the main above (which stores the startup globals and calls the language
 // entry) and passes its i32 status to sultanc.process_exit. That LLVM function
 // calls the STD process-exit provider (the program fact recorded by MSIR
 // lowering) through its LLVM signature, so the provider's hidden closure-
@@ -394,12 +412,49 @@
     أرجع اختيار.لا_شيء();
 }
 
-// WASI preview 1 command: the host calls `void _start()` and takes the exit
-// status only from proc_exit (a returning `_start` means status 0). The
-// language entry is declared as `_start` for WebAssembly; rename it to the
-// internal sultanc.entry, then define `_start` to call it and pass its status
-// to sultanc.process_exit, which calls the STD exit provider (WASI proc_exit).
-عرف أضف_بدء_عملية_واسي_إل_إل_في_إم(
+// Windows stack probe. LLVM calls `__chkstk` from the prologue of every
+// Windows function whose frame exceeds one page (4 KiB), so that each page
+// is touched in order and the stack's guard page can grow the stack; skipping
+// the probe would fault. The routine is otherwise supplied by the C runtime
+// (MSVC chkstk.obj, compiler-rt chkstk.S), which SultanC never links, so a
+// SultanC executable defines it once, beside its `_start`, with the Windows
+// ABI of that routine: on x86-64 RAX holds the frame size and only R10/R11
+// and flags may change (RSP is not adjusted); on AArch64 X15 holds the size
+// in 16-byte units and only X16/X17 may change. The sequences are those of
+// compiler-rt's chkstk.S for each architecture.
+عرف أضف_مسبار_مكدس_ويندوز_إل_إل_في_إم(
+    الحالة: &حالة_مزود_إل_إل_في_إم,
+    الهدف: &واصف_هدف
+): اختيار فشل_مزود_إل_إل_في_إم {
+    دع النص: متغير متجه غ8 = [];
+    طابق (*الهدف).المعمارية.الهوية مع
+    | هوية_معمارية.إكس_ستة_وثمانون_أربعة_وستون -> {
+        دع المسبار: نص = «.text;.globl __chkstk;.def __chkstk;.scl 2;.type 32;.endef;.p2align 4;__chkstk:;pushq %rcx;pushq %rax;cmpq $0x1000,%rax;leaq 24(%rsp),%rcx;jb 1f;2:;subq $0x1000,%rcx;testq %rcx,(%rcx);subq $0x1000,%rax;cmpq $0x1000,%rax;ja 2b;1:;subq %rax,%rcx;testq %rcx,(%rcx);popq %rax;popq %rcx;retq»;
+        ألحق_نص_تجميع_إل_إل_في_إم(&متغير النص, &المسبار);
+    }
+    | هوية_معمارية.ذراع_أربعة_وستون -> {
+        دع المسبار: نص = «.text;.globl __chkstk;.def __chkstk;.scl 2;.type 32;.endef;.p2align 2;__chkstk:;lsl x16,x15,#4;mov x17,sp;1:;sub x17,x17,#4096;subs x16,x16,#4096;ldr xzr,[x17];b.gt 1b;ret»;
+        ألحق_نص_تجميع_إل_إل_في_إم(&متغير النص, &المسبار);
+    }
+    | _ -> {
+        أرجع اختيار.بعض(فشل_مزود_إل_إل_في_إم.واجهة_ثنائية_غير_متاحة());
+    };
+    دع الطول_الفعلي: غير_موقع = الطول(النص) مثل غير_موقع;
+    LLVMAppendModuleInlineAsm((*الحالة).الوحدة, &النص[0], الطول_الفعلي);
+    أرجع اختيار.لا_شيء();
+}
+
+// A process start that receives no startup arguments:
+//   * WASI preview 1 command: the host calls `void _start()` and takes the
+//     exit status only from proc_exit (a returning `_start` means status 0);
+//   * Windows: the PE entry point (link/coff/names.sn) is called with no
+//     arguments by the loader; the status reaches the OS only through
+//     ExitProcess.
+// The language entry is declared as `_start` for these targets; rename it to
+// the internal sultanc.entry, then define `_start` to call it and pass its
+// status to sultanc.process_exit, which calls the STD exit provider (WASI
+// proc_exit, kernel32 ExitProcess).
+عرف أضف_بدء_عملية_بلا_وسائط_إل_إل_في_إم(
     الحالة: &حالة_مزود_إل_إل_في_إم,
     دالة_الدخول: &اختيار معرف_دالة_مسير,
     المسير: &سياق_مستهلك_مسير

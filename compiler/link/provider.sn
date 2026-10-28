@@ -1,10 +1,17 @@
 استورد compiler.backend.target.target_model;
 استورد compiler.link.model;
 استورد compiler.link.elf.target_policy;
-استورد compiler.link.elf.toolchain;
 استورد compiler.link.coff.target_policy;
 
 // Linker families follow object formats, never code-generation providers.
+// Every supported output is produced by SultanC's own linker for that format;
+// no external linker program and no C runtime is part of any link. An output
+// kind a format's linker does not produce is unsupported here, so the Driver
+// reports it before code generation (link.target-output-unsupported).
+// Previously ELF targets other than Linux x86_64/AArch64, ELF shared
+// libraries and every WebAssembly and SPIR-V link that needed merging were
+// reported as supported and handed to ld.lld, nld, avr-ld, msp430-ld,
+// wasm-ld or spirv-link.
 عام نوع هوية_مزود_ربط =
     | إلف
     | ماتشو
@@ -36,20 +43,12 @@
         | _ -> { أرجع خطأ; };
     }
     | هوية_مزود_ربط.إلف -> {
-        أرجع يدعم_رابط_إلف_النظامي(الهدف);
+        أرجع يستخدم_رابط_إلف_الداخلي(الهدف);
     }
     | هوية_مزود_ربط.كوف -> {
         أرجع يدعم_كوف_للهدف(الهدف);
     }
-    | هوية_مزود_ربط.ويب_أسمبلي -> {
-        أرجع (*الهدف).المنصة.المنصة == هوية_منصة.واسي();
-    }
     | _ -> { أرجع خطأ; };
-}
-
-عرف يدعم_إلف_كائنا_مترابطا(الهدف: &واصف_هدف): منطقي {
-    لو (يستخدم_رابط_إلف_الداخلي(الهدف)) { أرجع صواب; };
-    أرجع يدعم_دمج_كائنات_إلف_مفوضا(الهدف);
 }
 
 عرف يدعم_إلف_وحدة_هدف(الهدف: &واصف_هدف): منطقي {
@@ -77,9 +76,6 @@
     }
     | نوع_خرج_ربط.مكتبة_مشتركة -> {
         طابق مزود_ربط_للهدف(الهدف) مع
-        | هوية_مزود_ربط.إلف -> {
-            أرجع يدعم_رابط_إلف_النظامي(الهدف);
-        }
         | هوية_مزود_ربط.ماتشو -> {
             طابق (*الهدف).المعمارية.الهوية مع
             | هوية_معمارية.ذراع_أربعة_وستون -> { }
@@ -92,13 +88,12 @@
         | هوية_مزود_ربط.كوف -> {
             أرجع يدعم_كوف_للهدف(الهدف);
         }
-        | هوية_مزود_ربط.ويب_أسمبلي -> { أرجع صواب; }
         | _ -> { أرجع خطأ; };
     }
     | نوع_خرج_ربط.كائن_مترابط -> {
         طابق مزود_ربط_للهدف(الهدف) مع
         | هوية_مزود_ربط.إلف -> {
-            أرجع يدعم_إلف_كائنا_مترابطا(الهدف);
+            أرجع يستخدم_رابط_إلف_الداخلي(الهدف);
         }
         | هوية_مزود_ربط.ماتشو -> {
             لو ((*الهدف).نموذج_البيانات.عرض_المؤشر != 64) { أرجع خطأ; };
@@ -116,8 +111,6 @@
         | هوية_مزود_ربط.كوف -> {
             أرجع يدعم_كوف_للهدف(الهدف);
         }
-        | هوية_مزود_ربط.ويب_أسمبلي -> { أرجع صواب; }
-        | هوية_مزود_ربط.سبير_في -> { أرجع صواب; }
         | _ -> { أرجع خطأ; };
     }
     | نوع_خرج_ربط.وحدة_هدف -> {

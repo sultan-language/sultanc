@@ -1,3 +1,5 @@
+استورد compiler.msir.identifiers;
+استورد compiler.msir.msir_model;
 // علاقة المقارنة المطلوبة من الاختيار مشتركة دلاليا، ثم تحولها كل معمارية إلى شرط ISA خاص بها.
 عام نوع محمول_مقارنة_منتقى =
     | يساوي
@@ -11,3 +13,57 @@
     | أكبر_غير_موقع
     | أكبر_أو_يساوي_غير_موقع
 ;
+
+// Jump-table policy for an MSIR multiway branch, shared by the native
+// selectors; each architecture only encodes the plan. It follows LLVM's
+// switch lowering: at least 4 cases (min-jump-table-entries), density
+// NumCases * 100 >= Range * 10 (jump-table-density, TargetLoweringBase::
+// isSuitableForJumpTable), and a table indexed by selector - lowest case,
+// bounds-checked against the range (SelectionDAGBuilder::
+// visitJumpTableHeader). The selector must be an unsigned 32-bit tag, and no
+// edge may carry block arguments (a table entry is a plain jump). Any other
+// switch keeps the ordered comparisons. Previously each selector required
+// tags dense from zero (more than half of 0..max present), and ARM64 also
+// rejected tags above 4095.
+عام نوع خطة_جدول_قفز_منتقاة = {
+    الأدنى: غير_موقع,
+    // Target of every tag الأدنى + i; tags without a case take the default.
+    الأهداف: متجه معرف_كتلة_مسير
+};
+
+عام عرف خطط_جدول_قفز_لفرع_متعدد(
+    الفرع: &فرع_متعدد_مسير,
+    مميز_غ32_غير_موقع: منطقي
+): اختيار خطة_جدول_قفز_منتقاة {
+    دع عدد_الحالات: غير_موقع = الطول((*الفرع).الحالات) مثل غير_موقع;
+    لو (!مميز_غ32_غير_موقع || عدد_الحالات < 4) { أرجع اختيار.لا_شيء(); };
+    لو ((الطول((*الفرع).الافتراضي.الحجج) مثل غير_موقع) != 0) { أرجع اختيار.لا_شيء(); };
+    دع الأدنى: متغير غير_موقع = (*الفرع).الحالات[0].الوسم;
+    دع الأعلى: متغير غير_موقع = (*الفرع).الحالات[0].الوسم;
+    دع ف: متغير غير_موقع = 0;
+    بينما (ف < عدد_الحالات) {
+        دع الحالة: &حالة_فرع_متعدد_مسير = &(*الفرع).الحالات[ف];
+        لو ((الطول((*الحالة).الحافة.الحجج) مثل غير_موقع) != 0) { أرجع اختيار.لا_شيء(); };
+        لو ((*الحالة).الوسم > 4294967295) { أرجع اختيار.لا_شيء(); };
+        لو ((*الحالة).الوسم < الأدنى) { الأدنى := (*الحالة).الوسم; };
+        لو ((*الحالة).الوسم > الأعلى) { الأعلى := (*الحالة).الوسم; };
+        ف := ف + 1;
+    }
+    دع المدى: غير_موقع = الأعلى - الأدنى + 1;
+    لو (عدد_الحالات * 100 < المدى * 10) { أرجع اختيار.لا_شيء(); };
+    // Fill with the default, then set each case directly: O(n + range).
+    دع الأهداف: متغير متجه معرف_كتلة_مسير = [];
+    دع موضع: متغير غير_موقع = 0;
+    بينما (موضع < المدى) {
+        ألحق(الأهداف, (*الفرع).الافتراضي.الهدف);
+        موضع := موضع + 1;
+    }
+    ف := 0;
+    بينما (ف < عدد_الحالات) {
+        دع وسم_الحالة: غير_موقع = (*الفرع).الحالات[ف].الوسم;
+        الأهداف[وسم_الحالة - الأدنى] := (*الفرع).الحالات[ف].الحافة.الهدف;
+        ف := ف + 1;
+    }
+    دع الخطة: خطة_جدول_قفز_منتقاة = { الأدنى: الأدنى, الأهداف: الأهداف };
+    أرجع اختيار.بعض(الخطة);
+}

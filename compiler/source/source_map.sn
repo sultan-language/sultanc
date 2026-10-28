@@ -41,6 +41,25 @@
     أرجع المعرف;
 }
 
+// A compiler expansion (decorator expansion, frontend/annotations/
+// decorators.sn) appends generated text after a source's own text: the new
+// content starts with the old one, so every earlier byte position is
+// unchanged and positions in the appended text map to lines after the
+// original end. The line index is rebuilt on its next use.
+عام عرف مدد_محتوى_مصدر_في_خريطة(
+    الخريطة: &متغير خريطة_مصادر,
+    المعرف: غير_موقع,
+    المحتوى_الممدد: نص
+): منطقي {
+    لو (المعرف >= (الطول((*الخريطة).المصادر) مثل غير_موقع)) { أرجع خطأ; };
+    لو (المعرف >= (الطول((*الخريطة).فهارس_السطور_جاهزة) مثل غير_موقع)) { أرجع خطأ; };
+    لو ((الطول(المحتوى_الممدد) مثل غير_موقع) < (*الخريطة).المصادر[المعرف].الطول) { أرجع خطأ; };
+    (*الخريطة).المصادر[المعرف].الطول := الطول(المحتوى_الممدد) مثل غير_موقع;
+    (*الخريطة).المصادر[المعرف].المحتوى := المحتوى_الممدد;
+    (*الخريطة).فهارس_السطور_جاهزة[المعرف] := خطأ;
+    أرجع صواب;
+}
+
 عرف جهز_فهرس_سطور_مصدر(
     الخريطة: &متغير خريطة_مصادر,
     المعرف: غير_موقع

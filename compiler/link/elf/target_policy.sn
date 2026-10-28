@@ -74,6 +74,26 @@
     | ترتيب_إلف_مدخل.كبير -> { أرجع 2; };
 }
 
+// The ELF system images SultanC links itself: Linux x86_64 and AArch64
+// fixed-base ET_EXEC executables (final_image.sn) and relocatable objects
+// (relocatable.sn). These images link no C runtime: the selected backend
+// emits the process start (backend/provider/llvm/entry.sn, the native
+// encoder) and std exits through raw kernel calls; the Driver's
+// بدء_عملية_ذاتي_لربط follows this predicate. No external linker program
+// is ever run: an ELF system target or output kind outside this predicate is
+// reported as unsupported (link/provider.sn). Previously the other
+// architectures, Android, FreeBSD and every ELF shared library were handed
+// to ld.lld or nld with the platform C runtime startup objects and libc.
+عام عرف يستخدم_رابط_إلف_الداخلي(الهدف: &واصف_هدف): منطقي {
+    لو ((*الهدف).المنصة.المنصة != هوية_منصة.لينكس()) {
+        أرجع خطأ;
+    };
+    طابق (*الهدف).المعمارية.الهوية مع
+    | هوية_معمارية.إكس_ستة_وثمانون_أربعة_وستون -> { أرجع صواب; }
+    | هوية_معمارية.ذراع_أربعة_وستون -> { أرجع صواب; }
+    | _ -> { أرجع خطأ; };
+}
+
 عام عرف منصة_إلف_نظامية_قابلة_للربط(المنصة: هوية_منصة): منطقي {
     طابق المنصة مع
     | هوية_منصة.لينكس -> { أرجع صواب; }
