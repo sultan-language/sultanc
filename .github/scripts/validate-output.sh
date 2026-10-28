@@ -19,12 +19,14 @@ require_command() {
 
 llvm_readobj() {
   local tool=""
+  local candidate
 
   if [[ -n "${LLVM_CONFIG:-}" ]]; then
     candidate="$(dirname -- "$LLVM_CONFIG")/llvm-readobj"
+    if [[ "${RUNNER_OS:-}" == "Windows" ]]; then candidate+=".exe"; fi
     [[ -x "$candidate" ]] && tool="$candidate"
   fi
-  if [[ -z "$tool" ]]; then
+  if [[ -z "$tool" && "${RUNNER_OS:-}" != "Windows" ]]; then
     tool="$(command -v llvm-readobj || true)"
   fi
 
@@ -100,6 +102,7 @@ validate_coff() {
   [[ -n "$header_regex" ]] || fail "COFF validator requires header_regex"
 
   header="$(llvm_readobj)"
+  require_regex "COFF format" '^Format: COFF-' "$header"
   require_regex "COFF header/machine" "$header_regex" "$header"
 
   if [[ -n "$file_regex" ]]; then

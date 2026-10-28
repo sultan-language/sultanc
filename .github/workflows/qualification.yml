@@ -104,6 +104,16 @@ jobs:
             host_os: Darwin
             host_arch: arm64
             file_pattern: 'Mach-O 64-bit.*arm64'
+          - target: x86_64-windows-msvc
+            runner: windows-2025
+            host_os: Windows
+            host_arch: x86_64
+            file_pattern: 'PE32\+ executable.*(x86-64|x86_64|AMD64)'
+          - target: aarch64-windows-msvc
+            runner: windows-11-arm
+            host_os: Windows
+            host_arch: arm64
+            file_pattern: 'PE32\+ executable.*(Aarch64|aarch64|ARM64|arm64)'
     steps:
       - name: Checkout immutable CI harness
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
@@ -126,7 +136,8 @@ jobs:
             echo "### Qualification harness"
             echo '- Harness SHA: `${{ job.workflow_sha }}`'
             echo '- Candidate SHA: `${{ needs.resolve.outputs.sha }}`'
-            printf -- '- Runner: `%s / %s`\n' "$(uname -s)" "$(uname -m)"
+            printf -- '- Runner: `%s / %s` (`%s / %s`)\n' \
+              "$RUNNER_OS" "$RUNNER_ARCH" "$(uname -s)" "$(uname -m)"
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Restore pinned LLVM toolchain

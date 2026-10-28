@@ -40,6 +40,9 @@ write_summary() {
 working_directory="${SULTANC_WORKING_DIRECTORY:?working directory is required}"
 target="${SULTANC_TARGET:?target is required}"
 compiler="${SULTANC_COMPILER:?compiler is required}"
+if [[ "${RUNNER_OS:-}" == "Windows" && "$compiler" != *.exe ]]; then
+  compiler+=".exe"
+fi
 
 cd -- "$working_directory"
 [[ -x "$compiler" ]] || fail "Stage2 compiler is not executable: $compiler"
@@ -48,8 +51,10 @@ convergence_dir="${RUNNER_TEMP:-${TMPDIR:-/tmp}}/sultanc-ci/convergence/$target"
 rm -rf "$convergence_dir"
 mkdir -p "$convergence_dir"
 
-stage3="$convergence_dir/stage3"
-stage4="$convergence_dir/stage4"
+suffix=""
+if [[ "${RUNNER_OS:-}" == "Windows" ]]; then suffix=".exe"; fi
+stage3="$convergence_dir/stage3$suffix"
+stage4="$convergence_dir/stage4$suffix"
 stage2_sha="$(sha256_file "$compiler")"
 stage3_sha="unavailable"
 stage4_sha="unavailable"

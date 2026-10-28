@@ -9,10 +9,10 @@ inputs:
     description: SultanC target represented by this runner.
     required: true
   expected-host-os:
-    description: Expected uname operating-system identity.
+    description: Expected native operating-system identity (Windows uses RUNNER_OS).
     required: true
   expected-host-arch:
-    description: Expected uname architecture identity.
+    description: Expected native architecture identity (Windows uses RUNNER_ARCH).
     required: true
   expected-file-pattern:
     description: Required file(1) regular expression for the compiler artifact.

@@ -24,11 +24,22 @@ host_platform() {
   case "$(uname -s)" in
     Linux) printf '%s\n' linux ;;
     Darwin) printf '%s\n' macos ;;
+    MINGW*|MSYS*|CYGWIN*)
+      [[ "${RUNNER_OS:-}" == "Windows" ]] || fail "Windows runner identity is unavailable"
+      printf '%s\n' windows ;;
     *) fail "unsupported LLVM CI host: $(uname -s)" ;;
   esac
 }
 
 host_architecture() {
+  if [[ "${RUNNER_OS:-}" == "Windows" ]]; then
+    case "${RUNNER_ARCH:-}" in
+      X64) printf '%s\n' x86_64 ;;
+      ARM64) printf '%s\n' arm64 ;;
+      *) fail "unsupported Windows runner architecture: ${RUNNER_ARCH:-unset}" ;;
+    esac
+    return
+  fi
   case "$(uname -m)" in
     x86_64|amd64) printf '%s\n' x86_64 ;;
     arm64|aarch64) printf '%s\n' arm64 ;;
@@ -110,29 +121,53 @@ load_contract() {
 
   platform="$(host_platform)"
   architecture="$(host_architecture)"
+  contract_platform="$platform"
+  if [[ "$platform" == "windows" ]]; then
+    contract_platform="windows-$architecture"
+  fi
   configured_arch="$(
-    jq -r --arg platform "$platform" \
+    jq -r --arg platform "$contract_platform" \
       '.llvm_toolchain.platforms[$platform].host_arch // empty' "$contracts"
   )"
   llvm_config_relative="$(
-    jq -r --arg platform "$platform" \
+    jq -r --arg platform "$contract_platform" \
       '.llvm_toolchain.platforms[$platform].llvm_config // empty' "$contracts"
   )"
   runtime_relative="$(
-    jq -r --arg platform "$platform" \
+    jq -r --arg platform "$contract_platform" \
       '.llvm_toolchain.platforms[$platform].shared_runtime // empty' "$contracts"
   )"
+  import_library_relative=""
+  if [[ "$platform" == "windows" ]]; then
+    import_library_relative="$(
+      jq -r --arg platform "$contract_platform" \
+        '.llvm_toolchain.platforms[$platform].import_library // empty' "$contracts"
+    )"
+    [[ -n "$import_library_relative" ]] || fail \
+      "Windows LLVM import library contract is required"
+  fi
 
   [[ "$configured_arch" == "$architecture" ]] || fail \
     "LLVM host architecture mismatch: expected=$configured_arch actual=$architecture"
   [[ -n "$llvm_config_relative" && -n "$runtime_relative" ]] || fail \
     "LLVM platform contract is incomplete for $platform"
 
-  contract_hash="$(
-    jq -S -c '.llvm_toolchain' "$contracts" | sha256_text
-  )"
+  # Preserve pre-Windows Linux/macOS cache identities and manifests exactly.
+  # Windows-only contract additions must not invalidate existing trusted caches.
+  if [[ "$platform" == "windows" ]]; then
+    contract_hash="$(jq -S -c '.llvm_toolchain' "$contracts" | sha256_text)"
+  else
+    contract_hash="$(
+      jq -S -c '.llvm_toolchain | del(.platforms["windows-x86_64"], .platforms["windows-arm64"], .required_windows_tools)' \
+        "$contracts" | sha256_text
+    )"
+  fi
 
   tool_root="${RUNNER_TOOL_CACHE:-${RUNNER_TEMP:-/tmp}}"
+  if [[ "$platform" == "windows" ]]; then
+    require_command cygpath
+    tool_root="$(cygpath -u "$tool_root")"
+  fi
   toolchain_path="$tool_root/$namespace/$version/$platform-$architecture/$contract_hash"
   cache_key="${namespace}-v${cache_schema}-${version}-${platform}-${architecture}"
   cache_key="${cache_key}-${contract_hash}"
@@ -152,7 +187,11 @@ write_output() {
 resolve_contract() {
   load_contract "$1"
 
-  write_output toolchain_path "$toolchain_path"
+  if [[ "$platform" == "windows" ]]; then
+    write_output toolchain_path "$(cygpath -w "$toolchain_path")"
+  else
+    write_output toolchain_path "$toolchain_path"
+  fi
   write_output cache_key "$cache_key"
   write_output version "$version"
   write_output platform "$platform"
@@ -172,9 +211,13 @@ prepare_runtime_environment() {
     if [[ ":${LD_LIBRARY_PATH:-}:" != *":$lib_dir:"* ]]; then
       export LD_LIBRARY_PATH="$lib_dir${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
     fi
-  elif [[ ":${DYLD_LIBRARY_PATH:-}:" != *":$lib_dir:"* ]]; then
-    export DYLD_LIBRARY_PATH="$lib_dir${DYLD_LIBRARY_PATH:+:$DYLD_LIBRARY_PATH}"
+  elif [[ "$platform" == "macos" ]]; then
+    if [[ ":${DYLD_LIBRARY_PATH:-}:" != *":$lib_dir:"* ]]; then
+      export DYLD_LIBRARY_PATH="$lib_dir${DYLD_LIBRARY_PATH:+:$DYLD_LIBRARY_PATH}"
+    fi
   fi
+  # On Windows, DLL discovery uses PATH, not DYLD_LIBRARY_PATH/LD_LIBRARY_PATH.
+  # The toolchain's bin/ is already prepended above.
 }
 
 verify_headers() {
@@ -227,6 +270,20 @@ verify_link_contract() {
     esac
   done
 
+  if [[ "$platform" == "windows" ]]; then
+    [[ -f "$toolchain_path/$import_library_relative" ]] || fail \
+      "LLVM monolithic import library is missing: $import_library_relative"
+    [[ -f "$runtime_path" ]] || fail \
+      "LLVM monolithic runtime DLL is missing: $runtime_relative"
+    for runtime_file in $runtime_files; do
+      case "$(basename -- "$runtime_file")" in
+        LLVM.lib|libLLVM.dll.a)
+          [[ -f "$runtime_file" ]] || continue
+          monolithic_runtime=true
+          break ;;
+      esac
+    done
+  fi
   [[ "$monolithic_runtime" == "true" ]] || fail \
     "llvm-config does not expose an installed monolithic shared LLVM runtime"
   [[ -d "$lib_dir" ]] || fail "LLVM library directory is missing: $lib_dir"
@@ -238,6 +295,9 @@ ensure_runtime_alias() {
   local runtime_files
 
   [[ -e "$runtime_path" ]] && return
+  if [[ "$platform" == "windows" ]]; then
+    fail "provisioned LLVM does not contain the required monolithic runtime DLL: $runtime_path"
+  fi
 
   prepare_runtime_environment
   runtime_files="$($llvm_config --link-shared --libfiles all)"
@@ -355,6 +415,14 @@ verify_development_contract() {
 
   verify_headers "$include_dir"
   verify_targets
+  if [[ "$platform" == "windows" ]]; then
+    local required_tool
+    while IFS= read -r required_tool; do
+      [[ -n "$required_tool" ]] || continue
+      [[ -x "$toolchain_path/$required_tool" ]] || fail \
+        "required pinned Windows LLVM tool is missing: $required_tool"
+    done < <(jq -r '.llvm_toolchain.required_windows_tools[]?' "$contracts")
+  fi
   verify_link_contract "$lib_dir"
 }
 
@@ -362,12 +430,16 @@ export_toolchain_environment() {
   local bin_dir="$toolchain_path/bin"
 
   prepare_runtime_environment
-  printf '%s\n' "$bin_dir" >> "$GITHUB_PATH"
+  if [[ "$platform" == "windows" ]]; then
+    printf '%s\n' "$(cygpath -w "$bin_dir")" >> "$GITHUB_PATH"
+  else
+    printf '%s\n' "$bin_dir" >> "$GITHUB_PATH"
+  fi
   printf 'LLVM_CONFIG=%s\n' "$llvm_config" >> "$GITHUB_ENV"
 
   if [[ "$platform" == "linux" ]]; then
     printf 'LD_LIBRARY_PATH=%s\n' "$LD_LIBRARY_PATH" >> "$GITHUB_ENV"
-  else
+  elif [[ "$platform" == "macos" ]]; then
     printf 'DYLD_LIBRARY_PATH=%s\n' "$DYLD_LIBRARY_PATH" >> "$GITHUB_ENV"
   fi
 }
@@ -399,6 +471,13 @@ provision_toolchain() {
   local build_dir
   local actual_sha
   local targets
+
+  # LLVM documents that the two mandated monolithic shared-library flags
+  # are unavailable with the Microsoft toolchain. Do not swap in static LLVM,
+  # LLVM-C.dll, MinGW, or an image-installed LLVM as a hidden substitute.
+  if [[ "$platform" == "windows" ]]; then
+    fail "BLOCKED: LLVM $version MSVC provisioning requires LLVM_BUILD_LLVM_DYLIB=ON and LLVM_LINK_LLVM_DYLIB=ON, which upstream LLVM does not support on Windows; the LLVM/build contract owner must provide a supported equivalent before provisioning."
+  fi
 
   require_command curl
   require_command tar

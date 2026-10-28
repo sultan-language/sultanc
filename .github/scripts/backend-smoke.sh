@@ -70,7 +70,9 @@ if [[ "$backend" == "llvm" ]]; then
 fi
 
 candidate_dir="$(cd -- "$candidate_dir" && pwd)"
-[[ -x "$candidate_dir/build/sultanc" ]] || fail "compiler missing"
+compiler="build/sultanc"
+if [[ "${RUNNER_OS:-}" == "Windows" ]]; then compiler+=".exe"; fi
+[[ -x "$candidate_dir/$compiler" ]] || fail "compiler missing: $compiler"
 [[ -f "$candidate_dir/$source_path" ]] || fail \
   "smoke source missing: $source_path"
 
@@ -82,7 +84,7 @@ out="$diag/$backend-$target.o"
 set +e
 (
   cd -- "$candidate_dir"
-  ./build/sultanc \
+  "./$compiler" \
     -c \
     -b "$backend" \
     -t "$target" \
