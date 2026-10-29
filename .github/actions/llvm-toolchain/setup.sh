@@ -476,6 +476,52 @@ write_summary() {
   } >> "$summary"
 }
 
+# Git Bash and Windows also expose the native Windows bsdtar through PATH.
+# That executable does not use MSYS symlink settings, and Windows extraction
+# cannot silently materialize or discard POSIX links in the verified archive.
+# Use Git Bash's own tar with strict native Windows links on Windows only.
+extract_windows_source_archive() {
+  local archive_path="$1"
+  local extract_dir="$2"
+  local git_tar="/usr/bin/tar.exe"
+  local git_ln="/usr/bin/ln.exe"
+  local probe_dir="$extract_dir/.sultanc-symlink-probe"
+  local expected_links
+  local actual_links
+  local tar_version
+
+  [[ -x "$git_tar" && -x "$git_ln" ]] || fail \
+    "Git Bash MSYS tar and ln are required to extract LLVM source links on Windows"
+  printf 'Windows PATH tar: %s\n' "$(command -v tar)"
+  printf 'Windows LLVM source tar: %s\n' "$git_tar"
+  tar_version="$("$git_tar" --version)"
+  printf 'Windows LLVM source tar version: %s\n' "${tar_version%%$'\n'*}"
+
+  # Fail early if the runner cannot create real links. The default MSYS
+  # deepcopy mode cannot preserve forward references in source tarballs.
+  mkdir -p "$probe_dir"
+  printf '%s\n' 'native-symlink-probe' > "$probe_dir/target"
+  MSYS=winsymlinks:nativestrict "$git_ln" -s target "$probe_dir/link" || fail \
+    "Windows runner cannot create native symbolic links required by LLVM source"
+  [[ -L "$probe_dir/link" && "$(cat "$probe_dir/link")" == 'native-symlink-probe' ]] || fail \
+    "Windows runner did not create a usable native symbolic link"
+  rm -rf "$probe_dir"
+
+  # The source archive is SHA-256 verified before this function. Compare the
+  # link inventory before and after extraction so lost or copied links fail.
+  expected_links="$(
+    MSYS=winsymlinks:nativestrict "$git_tar" -tvf "$archive_path" | \
+      LC_ALL=C awk 'substr($0, 1, 1) == "l" { n++ } END { print n+0 }'
+  )"
+  MSYS=winsymlinks:nativestrict "$git_tar" -xf "$archive_path" -C "$extract_dir"
+  [[ -d "$extract_dir/$source_root" ]] || fail \
+    "LLVM source archive root is missing after extraction: $source_root"
+  actual_links="$(find "$extract_dir/$source_root" -type l | \
+    LC_ALL=C awk 'END { print NR+0 }')"
+  [[ "$expected_links" == "$actual_links" ]] || fail \
+    "LLVM source symbolic-link count mismatch: archive=$expected_links extracted=$actual_links"
+}
+
 provision_toolchain() {
   local download_dir
   local archive_path
@@ -523,7 +569,11 @@ provision_toolchain() {
     fail "LLVM source SHA-256 mismatch: expected=$source_sha actual=$actual_sha"
   }
 
-  tar -xf "$archive_path" -C "$extract_dir"
+  if [[ "$platform" == "windows" ]]; then
+    extract_windows_source_archive "$archive_path" "$extract_dir"
+  else
+    tar -xf "$archive_path" -C "$extract_dir"
+  fi
   [[ -d "$extract_dir/$source_root/llvm" ]] || {
     rm -rf "$download_dir"
     fail "LLVM source archive root is missing: $source_root"
