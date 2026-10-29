@@ -102,17 +102,17 @@
       "windows-x86_64": {
         "host_arch": "x86_64",
         "llvm_config": "bin/llvm-config.exe",
-        "shared_runtime": "bin/LLVM.dll",
-        "import_library": "lib/LLVM.lib"
+        "link_mode": "static"
       },
       "windows-arm64": {
         "host_arch": "arm64",
         "llvm_config": "bin/llvm-config.exe",
-        "shared_runtime": "bin/LLVM.dll",
-        "import_library": "lib/LLVM.lib"
+        "link_mode": "static"
       }
     },
-    "required_windows_tools": ["bin/llvm-readobj.exe"]
+    "required_windows_tools": [
+      "bin/llvm-readobj.exe"
+    ]
   },
   "backend_smoke": {
     "state": "pending",

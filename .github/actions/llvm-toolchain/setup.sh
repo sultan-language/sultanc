@@ -120,14 +120,8 @@ load_contract() {
     "LLVM provisioning build type must be Release"
   [[ "$parallel_jobs" =~ ^[1-9][0-9]*$ ]] || fail \
     "LLVM provisioning parallel_jobs must be a positive integer"
-  [[ "$build_dylib" == "true" && "$link_dylib" == "true" ]] || fail \
-    "LLVM provisioning must build and link the monolithic shared library"
-  [[ "$dylib_components" == "all" ]] || fail \
-    "LLVM shared library must contain all required components"
   [[ "$link_libraries" == "all" ]] || fail \
-    "SultanC Stage0 requires the complete LLVM link set"
-  [[ "$shared_runtime" == "true" ]] || fail \
-    "SultanC Stage1 requires an LLVM shared runtime"
+    "SultanC requires the complete LLVM link set"
 
   platform="$(host_platform)"
   architecture="$(host_architecture)"
@@ -135,6 +129,24 @@ load_contract() {
   if [[ "$platform" == "windows" ]]; then
     contract_platform="windows-$architecture"
   fi
+  link_mode="$(
+    jq -r --arg platform "$contract_platform" \
+      '.llvm_toolchain.platforms[$platform].link_mode // "shared"' "$contracts"
+  )"
+  if [[ "$platform" == "windows" ]]; then
+    [[ "$link_mode" == "static" ]] || fail \
+      "Windows MSVC requires LLVM static component libraries"
+  else
+    [[ "$link_mode" == "shared" ]] || fail \
+      "Linux/macOS require the shared LLVM link contract"
+    [[ "$build_dylib" == "true" && "$link_dylib" == "true" ]] || fail \
+      "LLVM provisioning must build and link the monolithic shared library"
+    [[ "$dylib_components" == "all" ]] || fail \
+      "LLVM shared library must contain all required components"
+    [[ "$shared_runtime" == "true" ]] || fail \
+      "SultanC Stage1 requires an LLVM shared runtime"
+  fi
+
   configured_arch="$(
     jq -r --arg platform "$contract_platform" \
       '.llvm_toolchain.platforms[$platform].host_arch // empty' "$contracts"
@@ -147,20 +159,14 @@ load_contract() {
     jq -r --arg platform "$contract_platform" \
       '.llvm_toolchain.platforms[$platform].shared_runtime // empty' "$contracts"
   )"
-  import_library_relative=""
-  if [[ "$platform" == "windows" ]]; then
-    import_library_relative="$(
-      jq -r --arg platform "$contract_platform" \
-        '.llvm_toolchain.platforms[$platform].import_library // empty' "$contracts"
-    )"
-    [[ -n "$import_library_relative" ]] || fail \
-      "Windows LLVM import library contract is required"
-  fi
-
   [[ "$configured_arch" == "$architecture" ]] || fail \
     "LLVM host architecture mismatch: expected=$configured_arch actual=$architecture"
-  [[ -n "$llvm_config_relative" && -n "$runtime_relative" ]] || fail \
+  [[ -n "$llvm_config_relative" ]] || fail \
     "LLVM platform contract is incomplete for $platform"
+  if [[ "$platform" != "windows" ]]; then
+    [[ -n "$runtime_relative" ]] || fail \
+      "LLVM shared runtime contract is missing for $platform"
+  fi
 
   # Preserve pre-Windows Linux/macOS cache identities and manifests exactly.
   # Windows-only contract additions must not invalidate existing trusted caches.
@@ -245,31 +251,61 @@ verify_targets() {
   local targets
   local target
 
-  targets=" $($llvm_config --targets-built) "
+  if [[ "$platform" == "windows" ]]; then
+    targets=" $("$llvm_config" --targets-built | tr -d '\r') "
+  else
+    targets=" $("$llvm_config" --targets-built) "
+  fi
   while IFS= read -r target; do
     [[ -n "$target" ]] || continue
     [[ "$targets" == *" $target "* ]] || fail \
       "required LLVM target family missing: $target"
-  done < <(jq -r '.llvm_toolchain.required_targets_built[]?' "$contracts")
+  done < <(jq -rj '.llvm_toolchain.required_targets_built[]? | . + "\n"' "$contracts")
 }
 
 verify_link_contract() {
   local lib_dir="$1"
-  local runtime_path="$toolchain_path/$runtime_relative"
+  local runtime_path
   local shared_mode
   local runtime_files
   local runtime_file
   local monolithic_runtime=false
 
+  if [[ "$platform" == "windows" ]]; then
+    # LLVM's documented MSVC integration links installed component .lib files.
+    # Do not require a monolithic LLVM.dll or its import library.
+    local library_names
+    local library_name
+    local static_library_count=0
+    library_names="$("$llvm_config" --link-static --libnames all)"
+    [[ -n "$library_names" ]] || fail \
+      "llvm-config returned no static LLVM component libraries"
+    [[ "$("$llvm_config" --shared-mode all)" == "static" ]] || fail \
+      "Windows LLVM toolchain does not select static component linking"
+    "$llvm_config" --link-static --libs all --system-libs >/dev/null
+    "$llvm_config" --link-static --ldflags >/dev/null
+    for library_name in $library_names; do
+      [[ "$library_name" == LLVM*.lib && "$library_name" != */* && "$library_name" != *\\* ]] || fail \
+        "unexpected MSVC LLVM library from llvm-config: $library_name"
+      [[ -f "$lib_dir/$library_name" ]] || fail \
+        "required LLVM static library is missing: $lib_dir/$library_name"
+      ((static_library_count+=1))
+    done
+    (( static_library_count > 0 )) || fail \
+      "no LLVM static component libraries were verified"
+    return
+  fi
+
+  runtime_path="$toolchain_path/$runtime_relative"
   [[ -e "$runtime_path" ]] || fail \
     "LLVM shared runtime required by Stage1 is missing: $runtime_path"
 
   "$llvm_config" --ldflags --libs all --system-libs >/dev/null
-  shared_mode="$($llvm_config --shared-mode all)"
+  shared_mode="$("$llvm_config" --shared-mode all)"
   [[ "$shared_mode" == "shared" ]] || fail \
     "llvm-config does not select the shared LLVM link contract"
 
-  runtime_files="$($llvm_config --link-shared --libfiles all)"
+  runtime_files="$("$llvm_config" --link-shared --libfiles all)"
   for runtime_file in $runtime_files; do
     runtime_file="$(tool_path "$runtime_file")"
     case "$(basename -- "$runtime_file")" in
@@ -280,36 +316,18 @@ verify_link_contract() {
         ;;
     esac
   done
-
-  if [[ "$platform" == "windows" ]]; then
-    [[ -f "$toolchain_path/$import_library_relative" ]] || fail \
-      "LLVM monolithic import library is missing: $import_library_relative"
-    [[ -f "$runtime_path" ]] || fail \
-      "LLVM monolithic runtime DLL is missing: $runtime_relative"
-    for runtime_file in $runtime_files; do
-      runtime_file="$(tool_path "$runtime_file")"
-      case "$(basename -- "$runtime_file")" in
-        LLVM.lib|libLLVM.dll.a)
-          [[ -f "$runtime_file" ]] || continue
-          monolithic_runtime=true
-          break ;;
-      esac
-    done
-  fi
   [[ "$monolithic_runtime" == "true" ]] || fail \
     "llvm-config does not expose an installed monolithic shared LLVM runtime"
   [[ -d "$lib_dir" ]] || fail "LLVM library directory is missing: $lib_dir"
 }
 
 ensure_runtime_alias() {
+  [[ "$platform" != "windows" ]] || return
   local runtime_path="$toolchain_path/$runtime_relative"
   local runtime_file
   local runtime_files
 
   [[ -e "$runtime_path" ]] && return
-  if [[ "$platform" == "windows" ]]; then
-    fail "provisioned LLVM does not contain the required monolithic runtime DLL: $runtime_path"
-  fi
 
   prepare_runtime_environment
   runtime_files="$($llvm_config --link-shared --libfiles all)"
@@ -471,7 +489,11 @@ write_summary() {
     printf -- '- Version: `%s`\n' "$version"
     printf -- '- Cache key: `%s`\n' "$cache_key"
     printf -- '- llvm-config: `%s`\n' "$llvm_config"
-    printf -- '- Shared runtime: `%s`\n' "$runtime_relative"
+    if [[ "$platform" == "windows" ]]; then
+      echo '- LLVM link mode: `static MSVC component libraries`'
+    else
+      printf -- '- Shared runtime: `%s`\n' "$runtime_relative"
+    fi
     printf -- '- Required LLVM target families: `%s`\n' "$target_count"
   } >> "$summary"
 }
@@ -530,10 +552,14 @@ provision_toolchain() {
   local actual_sha
   local targets
 
-  # LLVM 22.1.8 permits its monolithic LLVM.dll with MSVC when explicit
-  # symbol visibility is enabled. This retains both required DYLIB options,
-  # the same upstream source, all components, and the existing cache contract.
+  # The standard MSVC LLVM development build installs static component .lib
+  # libraries. Keep the existing shared LLVM build unchanged on Linux/macOS.
   local windows_cmake_args=()
+  local dylib_cmake_args=(
+    -DLLVM_BUILD_LLVM_DYLIB=ON
+    -DLLVM_LINK_LLVM_DYLIB=ON
+    -DLLVM_DYLIB_COMPONENTS=all
+  )
   local source_dir_arg
   local build_dir_arg
   local install_dir_arg
@@ -543,9 +569,13 @@ provision_toolchain() {
     require_command cl.exe
     temp_root="$(cygpath -u "$temp_root")"
     windows_cmake_args=(
-      -DLLVM_BUILD_LLVM_DYLIB_VIS=ON
+      -DLLVM_BUILD_LLVM_C_DYLIB=OFF
       -DCMAKE_C_COMPILER=cl
       -DCMAKE_CXX_COMPILER=cl
+    )
+    dylib_cmake_args=(
+      -DLLVM_BUILD_LLVM_DYLIB=OFF
+      -DLLVM_LINK_LLVM_DYLIB=OFF
     )
   fi
 
@@ -600,9 +630,7 @@ provision_toolchain() {
     -DCMAKE_INSTALL_PREFIX="$install_dir_arg" \
     "${windows_cmake_args[@]}" \
     -DLLVM_TARGETS_TO_BUILD="$targets" \
-    -DLLVM_BUILD_LLVM_DYLIB=ON \
-    -DLLVM_LINK_LLVM_DYLIB=ON \
-    -DLLVM_DYLIB_COMPONENTS=all \
+    "${dylib_cmake_args[@]}" \
     -DLLVM_BUILD_TOOLS=ON \
     -DLLVM_BUILD_TESTS=OFF \
     -DLLVM_INCLUDE_TESTS=OFF \
