@@ -579,9 +579,7 @@ provision_toolchain() {
     fail "LLVM source archive root is missing: $source_root"
   }
 
-  targets="$(
-    jq -r '.llvm_toolchain.required_targets_built[]' "$contracts" | paste -sd ';' -
-  )"
+  targets="$(jq -rj '.llvm_toolchain.required_targets_built | join(";")' "$contracts")"
 
   source_dir_arg="$extract_dir/$source_root/llvm"
   build_dir_arg="$build_dir"
