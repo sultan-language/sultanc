@@ -54,12 +54,9 @@ if [[ "$actual_os" == "Windows" ]]; then
     "compiler output is not COFF/PE"
   grep -Eiq 'Magic: (0x20[bB]|0X20[Bb])' "$diag/compiler-pe-headers.txt" || fail \
     "compiler output is not PE32+"
-  case "$target" in
-    x86_64-windows-msvc) machine='IMAGE_FILE_MACHINE_AMD64|0x8664' ;;
-    aarch64-windows-msvc) machine='IMAGE_FILE_MACHINE_ARM64|0xAA64' ;;
-    *) fail "unexpected Windows target: $target" ;;
-  esac
-  grep -Eiq "Machine: ($machine)" "$diag/compiler-pe-headers.txt" || fail \
+  machine="${EXPECTED_HEADER_PATTERN:-}"
+  [[ -n "$machine" ]] || fail "PE target $target has no machine-header validation contract"
+  grep -Eiq -- "$machine" "$diag/compiler-pe-headers.txt" || fail \
     "PE machine does not match target $target"
 fi
 

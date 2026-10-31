@@ -17,6 +17,10 @@ inputs:
   expected-file-pattern:
     description: Required file(1) regular expression for the compiler artifact.
     required: true
+  expected-header-pattern:
+    description: PE machine-header regex from the trusted target validation contract.
+    required: false
+    default: ""
   binary:
     description: Compiler binary relative to the candidate checkout.
     required: false
@@ -36,6 +40,7 @@ runs:
         EXPECTED_HOST_OS: ${{ inputs.expected-host-os }}
         EXPECTED_HOST_ARCH: ${{ inputs.expected-host-arch }}
         EXPECTED_FILE_PATTERN: ${{ inputs.expected-file-pattern }}
+        EXPECTED_HEADER_PATTERN: ${{ inputs.expected-header-pattern }}
         SULTANC_BINARY: ${{ inputs.binary }}
         SULTANC_WORKING_DIRECTORY: ${{ inputs.working-directory }}
       run: "$GITHUB_ACTION_PATH/verify.sh"

@@ -1,6 +1,40 @@
 {
   "schema_version": 3,
   "updated": "2026-10-05",
+  "ci_hosts": [
+    {
+      "id": "linux-x86_64",
+      "runner": "ubuntu-24.04",
+      "target": "x86_64-linux",
+      "host_os": "Linux",
+      "host_arch": "x86_64",
+      "file_pattern": "ELF 64-bit.*x86-64"
+    },
+    {
+      "id": "macos-arm64",
+      "runner": "macos-15",
+      "target": "arm64-darwin",
+      "host_os": "Darwin",
+      "host_arch": "arm64",
+      "file_pattern": "Mach-O 64-bit.*arm64"
+    },
+    {
+      "id": "windows-x86_64",
+      "runner": "windows-2025",
+      "target": "x86_64-windows-msvc",
+      "host_os": "Windows",
+      "host_arch": "x86_64",
+      "file_pattern": "PE32\\+ executable.*(x86-64|x86_64|AMD64)"
+    },
+    {
+      "id": "windows-arm64",
+      "runner": "windows-11-arm",
+      "target": "aarch64-windows-msvc",
+      "host_os": "Windows",
+      "host_arch": "arm64",
+      "file_pattern": "PE32\\+ executable.*(Aarch64|aarch64|ARM64|arm64)"
+    }
+  ],
   "build": {
     "entrypoint": "./build.sh",
     "host_build": {

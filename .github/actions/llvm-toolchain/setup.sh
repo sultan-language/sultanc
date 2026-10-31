@@ -322,7 +322,9 @@ verify_link_contract() {
 }
 
 ensure_runtime_alias() {
-  [[ "$platform" != "windows" ]] || return
+  if [[ "$platform" == "windows" ]]; then
+    return 0
+  fi
   local runtime_path="$toolchain_path/$runtime_relative"
   local runtime_file
   local runtime_files
@@ -465,7 +467,11 @@ export_toolchain_environment() {
   else
     printf '%s\n' "$bin_dir" >> "$GITHUB_PATH"
   fi
-  printf 'LLVM_CONFIG=%s\n' "$llvm_config" >> "$GITHUB_ENV"
+  if [[ "$platform" == "windows" ]]; then
+    printf 'LLVM_CONFIG=%s\n' "$(cygpath -m "$llvm_config")" >> "$GITHUB_ENV"
+  else
+    printf 'LLVM_CONFIG=%s\n' "$llvm_config" >> "$GITHUB_ENV"
+  fi
 
   if [[ "$platform" == "linux" ]]; then
     printf 'LD_LIBRARY_PATH=%s\n' "$LD_LIBRARY_PATH" >> "$GITHUB_ENV"

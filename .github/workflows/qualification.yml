@@ -58,6 +58,7 @@ jobs:
     timeout-minutes: 10
     outputs:
       sha: ${{ steps.resolve.outputs.sha }}
+      matrix: ${{ steps.hosts.outputs.matrix }}
     steps:
       - name: Checkout immutable qualification harness
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
@@ -84,36 +85,20 @@ jobs:
           CANDIDATE_DIR: candidate
         run: ./harness/.github/scripts/qualification-resolve.sh
 
+      - name: Resolve native host matrix from trusted CI contract
+        id: hosts
+        shell: bash
+        run: ./harness/.github/scripts/host-matrix.sh harness/.github/ci/contracts.json all
+
   # Native lanes prove both host targets and exercise native, LLVM, and interpreter paths.
   native:
-    name: Native Host / ${{ matrix.target }}
+    name: Native Host / ${{ matrix.id }}
     needs: resolve
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 120
     strategy:
       fail-fast: false
-      matrix:
-        include:
-          - target: x86_64-linux
-            runner: ubuntu-24.04
-            host_os: Linux
-            host_arch: x86_64
-            file_pattern: 'ELF 64-bit.*x86-64'
-          - target: arm64-darwin
-            runner: macos-15
-            host_os: Darwin
-            host_arch: arm64
-            file_pattern: 'Mach-O 64-bit.*arm64'
-          - target: x86_64-windows-msvc
-            runner: windows-2025
-            host_os: Windows
-            host_arch: x86_64
-            file_pattern: 'PE32\+ executable.*(x86-64|x86_64|AMD64)'
-          - target: aarch64-windows-msvc
-            runner: windows-11-arm
-            host_os: Windows
-            host_arch: arm64
-            file_pattern: 'PE32\+ executable.*(Aarch64|aarch64|ARM64|arm64)'
+      matrix: ${{ fromJSON(needs.resolve.outputs.matrix) }}
     steps:
       - name: Checkout immutable CI harness
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
@@ -158,6 +143,7 @@ jobs:
           expected-host-os: ${{ matrix.host_os }}
           expected-host-arch: ${{ matrix.host_arch }}
           expected-file-pattern: ${{ matrix.file_pattern }}
+          expected-header-pattern: ${{ matrix.header_regex }}
           working-directory: candidate
 
       - name: Exercise default compile and run behavior
