@@ -54,14 +54,10 @@ case "$backend" in
     ;;
 esac
 
-validator="$(
-  jq -c \
-    --arg target "$target" \
-    '.backend_smoke.validators[$target] // empty' \
-    "$contracts"
-)"
-[[ -n "$validator" && "$validator" != "null" ]] || fail \
-  "no backend smoke validator for $target"
+host="$($script_dir/host-matrix.sh "$contracts" --current)"
+[[ "$(jq -r '.target' <<< "$host")" == "$target" ]] || fail \
+  "backend smoke target differs from registered CI host: $target"
+validator="$(jq -c '.object_validator' <<< "$host")"
 
 if [[ "$backend" == "llvm" ]]; then
   llvm_state="$(jq -r '.llvm_toolchain.state' "$contracts")"
@@ -70,8 +66,7 @@ if [[ "$backend" == "llvm" ]]; then
 fi
 
 candidate_dir="$(cd -- "$candidate_dir" && pwd)"
-compiler="build/sultanc"
-if [[ "${RUNNER_OS:-}" == "Windows" ]]; then compiler+=".exe"; fi
+compiler="build/sultanc${SULTANC_EXECUTABLE_SUFFIX:-}"
 [[ -x "$candidate_dir/$compiler" ]] || fail "compiler missing: $compiler"
 [[ -f "$candidate_dir/$source_path" ]] || fail \
   "smoke source missing: $source_path"

@@ -42,7 +42,7 @@ generate_output() {
     obj)
       (
         cd -- "$candidate_dir"
-        ./build/sultanc \
+        ./build/sultanc${SULTANC_EXECUTABLE_SUFFIX:-} \
           -c \
           -b llvm \
           -t "$target" \
@@ -53,7 +53,7 @@ generate_output() {
     asm|llvm-ir)
       (
         cd -- "$candidate_dir"
-        ./build/sultanc \
+        ./build/sultanc${SULTANC_EXECUTABLE_SUFFIX:-} \
           -b llvm \
           -t "$target" \
           --emit="$kind" \
@@ -77,7 +77,7 @@ summary="${GITHUB_STEP_SUMMARY:-/dev/null}"
 
 command -v jq >/dev/null 2>&1 || fail "jq is required by the CI harness"
 candidate_dir="$(cd -- "$candidate_dir" && pwd)"
-[[ -x "$candidate_dir/build/sultanc" ]] || fail "host compiler is missing"
+[[ -x "$candidate_dir/build/sultanc${SULTANC_EXECUTABLE_SUFFIX:-}" ]] || fail "host compiler is missing"
 
 diag="${RUNNER_TEMP:-/tmp}/sultanc-ci/llvm-shard-$shard"
 rm -rf "$diag"

@@ -12,7 +12,7 @@ output="$diag/target-inventory.txt"
 
 (
   cd -- "$CANDIDATE_DIR"
-  ./build/sultanc targets
+  ./build/sultanc${SULTANC_EXECUTABLE_SUFFIX:-} targets
 ) | tee "$output"
 
 {

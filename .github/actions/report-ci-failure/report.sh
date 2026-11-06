@@ -267,11 +267,12 @@ while IFS=$'\t' read -r \
     continue
   fi
 
-  target="n/a"
-  case "$job_name" in
-    *" / x86_64-linux") target="x86_64-linux" ;;
-    *" / arm64-darwin") target="arm64-darwin" ;;
-  esac
+  # The host registry defines targets for all native lanes, including new
+  # platforms. Do not maintain a separate list of OS-named failure labels.
+  host_id="${job_name##* / }"
+  target="$(jq -r --arg host "$host_id" \
+    '[.ci_hosts[] | select(.id == $host) | .target] | first // "n/a"' \
+    "$GITHUB_ACTION_PATH/../../ci/contracts.json")"
 
   failure_identity="$SULTANC_WORKFLOW|$SULTANC_BRANCH|$job_name|$target"
   failure_hash="$(stable_hash "$failure_identity")"

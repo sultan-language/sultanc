@@ -1,67 +1,73 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Verify that a native runner and built compiler match the declared target contract.
-
+# Validate native runner identity and the produced compiler using the same
+# resolved host contract consumed by LLVM provisioning and backend smoke.
 fail() {
   echo "$*" >&2
   exit 1
 }
 
 target="${SULTANC_TARGET:?target is required}"
-expected_os="${EXPECTED_HOST_OS:?expected host OS is required}"
-expected_arch="${EXPECTED_HOST_ARCH:?expected host architecture is required}"
-expected_pattern="${EXPECTED_FILE_PATTERN:?file pattern is required}"
 binary="${SULTANC_BINARY:?binary path is required}"
 working_directory="${SULTANC_WORKING_DIRECTORY:?working directory is required}"
+script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+contracts="$script_dir/../../ci/contracts.json"
+host="$("$script_dir/../../scripts/host-matrix.sh" "$contracts" --current)"
+
+expected_target="$(jq -r '.target' <<< "$host")"
+expected_os="$(jq -r '.host_os' <<< "$host")"
+expected_arch="$(jq -r '.host_arch' <<< "$host")"
+expected_pattern="$(jq -r '.file_pattern' <<< "$host")"
+identity_command="$(jq -r '.identity.command' <<< "$host")"
+validator="$(jq -c '.object_validator' <<< "$host")"
+suffix="$(jq -r '.executable_suffix' <<< "$host")"
+
+[[ "$target" == "$expected_target" ]] || fail \
+  "target does not match registered runner: requested=$target registered=$expected_target"
+# host-matrix --current already matches RUNNER_OS and RUNNER_ARCH, including
+# multiple runner labels on the same OS/architecture when host ID is supplied.
+if [[ -n "$identity_command" ]]; then
+  command -v "$identity_command" >/dev/null || fail \
+    "registered native identity tool is missing: $identity_command"
+  mapfile -t os_arguments < <(jq -r '.identity.os_arguments[]' <<< "$host")
+  mapfile -t arch_arguments < <(jq -r '.identity.arch_arguments[]' <<< "$host")
+  actual_os="$("$identity_command" "${os_arguments[@]}")"
+  actual_arch="$("$identity_command" "${arch_arguments[@]}")"
+  [[ "$actual_os" == "$expected_os" ]] || fail \
+    "native OS mismatch: expected=$expected_os actual=$actual_os"
+  [[ "$actual_arch" == "$expected_arch" ]] || fail \
+    "native architecture mismatch: expected=$expected_arch actual=$actual_arch"
+else
+  # The Actions runner tuple is attested by the runner and already checked.
+  # A host without an optional native probe must still pass binary inspection.
+  actual_os="$expected_os"
+  actual_arch="$expected_arch"
+fi
+
+if [[ -n "$suffix" && "$binary" != *"$suffix" ]]; then
+  binary+="$suffix"
+fi
 
 diag="${RUNNER_TEMP:-/tmp}/sultanc-ci/target/$target"
 mkdir -p "$diag"
 cd -- "$working_directory"
-
-actual_os="$(uname -s)"
-actual_arch="$(uname -m)"
-if [[ "${RUNNER_OS:-}" == "Windows" ]]; then
-  actual_os="$RUNNER_OS"
-  case "${RUNNER_ARCH:-}" in
-    X64) actual_arch=x86_64 ;;
-    ARM64) actual_arch=arm64 ;;
-    *) fail "unsupported Windows runner architecture: ${RUNNER_ARCH:-unset}" ;;
-  esac
-  [[ "$binary" == *.exe ]] || binary+=".exe"
-fi
+[[ -x "$binary" ]] || fail "compiler binary is not executable: $binary"
 printf '%s\n' "$actual_os" > "$diag/host-os.txt"
 printf '%s\n' "$actual_arch" > "$diag/host-arch.txt"
 printf '%s\n' "${RUNNER_OS:-unknown} / ${RUNNER_ARCH:-unknown}" > "$diag/github-runner.txt"
 
-[[ -x "$binary" ]] || fail "compiler binary is not executable: $binary"
-[[ "$actual_os" == "$expected_os" ]] || fail \
-  "runner OS mismatch: expected=$expected_os actual=$actual_os"
-[[ "$actual_arch" == "$expected_arch" ]] || fail \
-  "runner architecture mismatch: expected=$expected_arch actual=$actual_arch"
-
-description="$(file "$binary")"
+description="$(file -b "$binary")"
 printf '%s\n' "$description" | tee "$diag/compiler-file.txt"
 grep -Eiq -- "$expected_pattern" <<< "$description" || fail \
-  "compiler artifact does not match expected target pattern"
+  "compiler executable does not match registered file signature: $expected_pattern"
 
-if [[ "$actual_os" == "Windows" ]]; then
-  [[ -n "${LLVM_CONFIG:-}" ]] || fail "pinned LLVM_CONFIG is required to inspect PE headers"
-  readobj="$(dirname -- "$LLVM_CONFIG")/llvm-readobj.exe"
-  [[ -x "$readobj" ]] || fail "pinned LLVM llvm-readobj.exe is missing: $readobj"
-  "$readobj" --file-headers "$binary" > "$diag/compiler-pe-headers.txt"
-  grep -Eiq '^Format: COFF-' "$diag/compiler-pe-headers.txt" || fail \
-    "compiler output is not COFF/PE"
-  grep -Eiq 'Magic: (0x20[bB]|0X20[Bb])' "$diag/compiler-pe-headers.txt" || fail \
-    "compiler output is not PE32+"
-  machine="${EXPECTED_HEADER_PATTERN:-}"
-  [[ -n "$machine" ]] || fail "PE target $target has no machine-header validation contract"
-  grep -Eiq -- "$machine" "$diag/compiler-pe-headers.txt" || fail \
-    "PE machine does not match target $target"
-fi
+"$script_dir/../../scripts/validate-output.sh" "$binary" "$validator" executable \
+  > "$diag/compiler-validation.txt"
 
 {
   printf '### SultanC target: `%s`\n' "$target"
   printf -- '- Host: `%s / %s`\n' "$actual_os" "$actual_arch"
   printf -- '- Compiler: `%s`\n' "$description"
-} >> "$GITHUB_STEP_SUMMARY"
+  printf -- '- Format validation: `PASS`\n'
+} >> "${GITHUB_STEP_SUMMARY:-/dev/null}"

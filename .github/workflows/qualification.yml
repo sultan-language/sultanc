@@ -59,6 +59,9 @@ jobs:
     outputs:
       sha: ${{ steps.resolve.outputs.sha }}
       matrix: ${{ steps.hosts.outputs.matrix }}
+      broad_runner: ${{ steps.hosts.outputs.broad_runner }}
+      broad_host_id: ${{ steps.hosts.outputs.broad_host_id }}
+      broad_target: ${{ steps.hosts.outputs.broad_target }}
     steps:
       - name: Checkout immutable qualification harness
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
@@ -90,12 +93,17 @@ jobs:
         shell: bash
         run: ./harness/.github/scripts/host-matrix.sh harness/.github/ci/contracts.json all
 
-  # Native lanes prove both host targets and exercise native, LLVM, and interpreter paths.
+  # One job per registered host. Every step is selected by the host's gates
+  # (ci_hosts[].checks in contracts.json): "required" steps gate the result,
+  # "experimental" steps run with continue-on-error and are reported, "off"
+  # steps are skipped. Workflows and scripts never branch on an OS name.
   native:
-    name: Native Host / ${{ matrix.id }}
+    name: Host / ${{ matrix.id }}
     needs: resolve
     runs-on: ${{ matrix.runner }}
-    timeout-minutes: 120
+    env:
+      SULTANC_CI_HOST_ID: ${{ matrix.id }}
+    timeout-minutes: 180
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.resolve.outputs.matrix) }}
@@ -116,75 +124,149 @@ jobs:
 
       - name: Record harness and runner identity
         shell: bash
+        env:
+          HARNESS_SHA: ${{ job.workflow_sha }}
+          CANDIDATE_SHA: ${{ needs.resolve.outputs.sha }}
         run: |
           {
             echo "### Qualification harness"
-            echo '- Harness SHA: `${{ job.workflow_sha }}`'
-            echo '- Candidate SHA: `${{ needs.resolve.outputs.sha }}`'
-            printf -- '- Runner: `%s / %s` (`%s / %s`)\n' \
-              "$RUNNER_OS" "$RUNNER_ARCH" "$(uname -s)" "$(uname -m)"
+            printf -- '- Harness SHA: `%s`\n' "$HARNESS_SHA"
+            printf -- '- Candidate SHA: `%s`\n' "$CANDIDATE_SHA"
           } >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Restore pinned LLVM toolchain
+      - name: Initialize registered host prerequisites
+        shell: bash
+        run: ./harness/.github/scripts/host-setup.sh harness/.github/ci/contracts.json
+
+      - name: Restore pinned LLVM SDK
+        id: llvm_sdk
+        if: ${{ !cancelled() && matrix.gates['llvm-sdk'] != 'off' }}
+        continue-on-error: ${{ matrix.gates['llvm-sdk'] == 'experimental' }}
         uses: ./harness/.github/actions/llvm-toolchain
         with:
           contracts: harness/.github/ci/contracts.json
+          bootstrap: "false"
 
-      - name: Build native host compiler
+      - name: Build C Stage0 (./build.sh stage0)
+        id: c_stage0
+        if: ${{ matrix.gates['c-stage0'] != 'off' }}
+        continue-on-error: ${{ matrix.gates['c-stage0'] == 'experimental' }}
         uses: ./harness/.github/actions/build
         with:
-          target: ${{ matrix.target }}
+          stage: stage0
           working-directory: candidate
 
-      - name: Verify native host compiler
+      - name: Build from C Stage0 to Stage2 (./build.sh)
+        id: c_stage2
+        if: ${{ matrix.gates['c-stage2'] != 'off' }}
+        continue-on-error: ${{ matrix.gates['c-stage2'] == 'experimental' }}
+        uses: ./harness/.github/actions/build
+        with:
+          stage: stage2
+          working-directory: candidate
+
+      - name: Verify native compiler format
+        id: compiler_format
+        if: ${{ !cancelled() && matrix.gates['compiler-format'] != 'off' }}
+        continue-on-error: ${{ matrix.gates['compiler-format'] == 'experimental' }}
         uses: ./harness/.github/actions/target
         with:
           target: ${{ matrix.target }}
-          expected-host-os: ${{ matrix.host_os }}
-          expected-host-arch: ${{ matrix.host_arch }}
-          expected-file-pattern: ${{ matrix.file_pattern }}
-          expected-header-pattern: ${{ matrix.header_regex }}
           working-directory: candidate
 
-      - name: Exercise default compile and run behavior
+      - name: Wasm-seed bootstrap (all declared C toolchains)
+        id: seed
+        if: ${{ !cancelled() && matrix.gates.seed != 'off' }}
+        continue-on-error: ${{ matrix.gates.seed == 'experimental' }}
+        shell: bash
+        run: ./harness/.github/scripts/seed-bootstrap.sh candidate
+
+      - name: Check-only self-compile with Stage1
+        id: self_check
+        if: ${{ !cancelled() && matrix.gates['self-check'] != 'off' }}
+        continue-on-error: ${{ matrix.gates['self-check'] == 'experimental' }}
+        shell: bash
+        run: ./harness/.github/scripts/self-check.sh candidate
+
+      - name: Self-host fixed point (./build.sh verify)
+        id: fixpoint
+        if: ${{ !cancelled() && matrix.gates.fixpoint != 'off' }}
+        continue-on-error: ${{ matrix.gates.fixpoint == 'experimental' }}
+        uses: ./harness/.github/actions/convergence
+        with:
+          working-directory: candidate
+
+      - name: Run SultanC test suite (tools/tests/ci_run.sh)
+        id: tests
+        if: ${{ !cancelled() && matrix.gates.tests != 'off' }}
+        continue-on-error: ${{ matrix.gates.tests == 'experimental' }}
+        shell: bash
+        run: ./harness/.github/scripts/test-suite.sh candidate full
+
+      - name: Run portable test suite with Stage1
+        id: tests_portable
+        if: ${{ !cancelled() && matrix.gates['tests-portable'] != 'off' }}
+        continue-on-error: ${{ matrix.gates['tests-portable'] == 'experimental' }}
+        shell: bash
+        run: ./harness/.github/scripts/test-suite.sh candidate portable
+
+      - name: Exercise examples harness
+        id: examples
+        if: ${{ !cancelled() && matrix.gates.examples != 'off' }}
+        continue-on-error: ${{ matrix.gates.examples == 'experimental' }}
         uses: ./harness/.github/actions/examples
         with:
           working-directory: candidate
 
       - name: Exercise explicit native backend
+        id: smoke_native
+        if: ${{ !cancelled() && matrix.gates['backend-smoke'] != 'off' }}
+        continue-on-error: ${{ matrix.gates['backend-smoke'] == 'experimental' }}
         shell: bash
-        run: >-
-          ./harness/.github/scripts/backend-smoke.sh
-          candidate native '${{ matrix.target }}'
+        env:
+          SMOKE_TARGET: ${{ matrix.target }}
+        run: ./harness/.github/scripts/backend-smoke.sh candidate native "$SMOKE_TARGET"
 
       - name: Exercise explicit LLVM backend
+        id: smoke_llvm
+        if: ${{ !cancelled() && matrix.gates['backend-smoke'] != 'off' }}
+        continue-on-error: ${{ matrix.gates['backend-smoke'] == 'experimental' }}
         shell: bash
-        run: >-
-          ./harness/.github/scripts/backend-smoke.sh
-          candidate llvm '${{ matrix.target }}'
-
-      - name: Run delivered SultanC test suite
-        shell: bash
-        run: ./harness/.github/scripts/test-suite.sh candidate
-
-      - name: Verify self-host convergence
-        if: ${{ inputs.mode != 'pr' }}
-        uses: ./harness/.github/actions/convergence
-        with:
-          target: ${{ matrix.target }}
-          working-directory: candidate
+        env:
+          SMOKE_TARGET: ${{ matrix.target }}
+        run: ./harness/.github/scripts/backend-smoke.sh candidate llvm "$SMOKE_TARGET"
 
       - name: Verify clean candidate tree
+        if: ${{ !cancelled() }}
         uses: ./harness/.github/actions/test
         with:
           name: Candidate source cleanliness
           command: git -C candidate diff --exit-code
 
-      - name: Retain native qualification diagnostics on failure
+      - name: Record check outcomes
+        if: ${{ always() }}
+        shell: bash
+        env:
+          GATES: ${{ toJSON(matrix.gates) }}
+          OUTCOMES: >-
+            {"llvm-sdk": "${{ steps.llvm_sdk.outcome }}",
+             "c-stage0": "${{ steps.c_stage0.outcome }}",
+             "c-stage2": "${{ steps.c_stage2.outcome }}",
+             "compiler-format": "${{ steps.compiler_format.outcome }}",
+             "seed": "${{ steps.seed.outcome }}",
+             "self-check": "${{ steps.self_check.outcome }}",
+             "fixpoint": "${{ steps.fixpoint.outcome }}",
+             "tests": "${{ steps.tests.outcome }}",
+             "tests-portable": "${{ steps.tests_portable.outcome }}",
+             "examples": "${{ steps.examples.outcome }}",
+             "backend-smoke": "${{ steps.smoke_native.outcome }}/${{ steps.smoke_llvm.outcome }}"}
+        run: ./harness/.github/scripts/record-check-outcomes.sh
+
+      - name: Retain host qualification diagnostics on failure
         if: ${{ failure() }}
         uses: ./harness/.github/actions/upload-diagnostics
         with:
-          name: native-${{ matrix.target }}-${{ needs.resolve.outputs.sha }}
+          name: host-${{ matrix.id }}-${{ needs.resolve.outputs.sha }}
           path: ${{ runner.temp }}/sultanc-ci
 
   # Broad LLVM checks are skipped for fast main PR/full runs, but never for beta/master.
@@ -219,7 +301,9 @@ jobs:
         needs.llvm-contracts.outputs.active == 'true'
       }}
     needs: [resolve, llvm-contracts]
-    runs-on: ubuntu-24.04
+    runs-on: ${{ fromJSON(needs.resolve.outputs.broad_runner) }}
+    env:
+      SULTANC_CI_HOST_ID: ${{ needs.resolve.outputs.broad_host_id }}
     timeout-minutes: 120
     strategy:
       fail-fast: false
@@ -244,15 +328,20 @@ jobs:
           path: candidate
           persist-credentials: false
 
-      - name: Restore pinned LLVM toolchain
+      - name: Initialize registered host prerequisites
+        shell: bash
+        run: ./harness/.github/scripts/host-setup.sh harness/.github/ci/contracts.json
+
+      - name: Restore pinned LLVM SDK
         uses: ./harness/.github/actions/llvm-toolchain
         with:
           contracts: harness/.github/ci/contracts.json
+          bootstrap: "false"
 
       - name: Build host compiler once for this LLVM shard
         uses: ./harness/.github/actions/build
         with:
-          target: x86_64-linux
+          target: ${{ needs.resolve.outputs.broad_target }}
           working-directory: candidate
 
       - name: Record compiler target inventory

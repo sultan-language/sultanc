@@ -1,17 +1,11 @@
 # Self-host convergence is distinct evidence from the regression suite.
 name: SultanC Self-Host Convergence
 description: >-
-  Rebuild SultanC through Stage3 and Stage4 and require those self-hosted
-  compilers to converge byte-for-byte.
+  Run ./build.sh verify with the host's declared build options: Stage3 and
+  Stage4 must be byte-identical (plus the cross-backend check the build
+  defines). Reports the SHA-256 of every verify product.
 
 inputs:
-  target:
-    description: Host-native target used for Stage3 and Stage4 generation.
-    required: true
-  compiler:
-    description: Stage2 compiler path relative to the candidate checkout.
-    required: false
-    default: build/sultanc
   working-directory:
     description: Candidate repository directory.
     required: false
@@ -23,7 +17,5 @@ runs:
     - name: Verify self-host convergence
       shell: bash
       env:
-        SULTANC_TARGET: ${{ inputs.target }}
-        SULTANC_COMPILER: ${{ inputs.compiler }}
         SULTANC_WORKING_DIRECTORY: ${{ inputs.working-directory }}
-      run: "$GITHUB_ACTION_PATH/run.sh"
+      run: '"$GITHUB_ACTION_PATH/run.sh"'

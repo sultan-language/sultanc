@@ -4,7 +4,7 @@ set -euo pipefail
 # Validate generated target output without executing foreign binaries.
 
 usage() {
-  echo "usage: validate-output.sh OUTPUT VALIDATOR_JSON" >&2
+  echo "usage: validate-output.sh OUTPUT VALIDATOR_JSON [executable]" >&2
   exit 2
 }
 
@@ -22,12 +22,10 @@ llvm_readobj() {
   local candidate
 
   if [[ -n "${LLVM_CONFIG:-}" ]]; then
-    candidate="$(dirname -- "$LLVM_CONFIG")/llvm-readobj"
-    if [[ "${RUNNER_OS:-}" == "Windows" ]]; then candidate+=".exe"; fi
+    candidate="$(dirname -- "$LLVM_CONFIG")/llvm-readobj${SULTANC_EXECUTABLE_SUFFIX:-}"
     [[ -x "$candidate" ]] && tool="$candidate"
-  fi
-  if [[ -z "$tool" && "${RUNNER_OS:-}" != "Windows" ]]; then
-    tool="$(command -v llvm-readobj || true)"
+  else
+    tool="$(command -v "llvm-readobj${SULTANC_EXECUTABLE_SUFFIX:-}" || true)"
   fi
 
   [[ -n "$tool" ]] || fail \
@@ -104,6 +102,13 @@ validate_coff() {
   header="$(llvm_readobj)"
   require_regex "COFF format" '^Format: COFF-' "$header"
   require_regex "COFF header/machine" "$header_regex" "$header"
+  if [[ "$artifact_kind" == "executable" ]]; then
+    local executable_header_regex
+    executable_header_regex="$(jq -r '.executable_header_regex // empty' <<< "$validator_json")"
+    if [[ -n "$executable_header_regex" ]]; then
+      require_regex "native executable header" "$executable_header_regex" "$header"
+    fi
+  fi
 
   if [[ -n "$file_regex" ]]; then
     require_command file
@@ -113,6 +118,33 @@ validate_coff() {
     description="COFF object validated by llvm-readobj"
   fi
 
+  printf '%s\n' "$description"
+}
+
+# A new host with an LLVM-recognized binary format does not need a new
+# dispatch branch. Its registry entry supplies file and header regexes.
+validate_file_header() {
+  local description
+  local header
+  local file_regex
+  local header_regex
+  local executable_header_regex
+
+  require_command file
+  file_regex="$(jq -r '.file_regex // empty' <<< "$validator_json")"
+  header_regex="$(jq -r '.header_regex // empty' <<< "$validator_json")"
+  [[ -n "$file_regex" && -n "$header_regex" ]] || fail \
+    "file-header validator requires file_regex and header_regex"
+  description="$(file -b "$output")"
+  require_regex "file identity" "$file_regex" "$description"
+  header="$(llvm_readobj)"
+  require_regex "LLVM file headers" "$header_regex" "$header"
+  if [[ "$artifact_kind" == "executable" ]]; then
+    executable_header_regex="$(jq -r '.executable_header_regex // empty' <<< "$validator_json")"
+    if [[ -n "$executable_header_regex" ]]; then
+      require_regex "native executable header" "$executable_header_regex" "$header"
+    fi
+  fi
   printf '%s\n' "$description"
 }
 
@@ -150,9 +182,11 @@ validate_text() {
   printf 'validated %s text (%s bytes)\n' "$validator_type" "$size"
 }
 
-[[ $# -eq 2 ]] || usage
+[[ $# -ge 2 && $# -le 3 ]] || usage
 output="$1"
 validator_json="$2"
+artifact_kind="${3:-object}"
+[[ "$artifact_kind" == "object" || "$artifact_kind" == "executable" ]] || usage
 require_command jq
 [[ -s "$output" ]] || fail "output is missing or empty: $output"
 
@@ -161,6 +195,7 @@ case "$validator_type" in
   elf) validate_elf ;;
   macho) validate_macho ;;
   coff) validate_coff ;;
+  file-header) validate_file_header ;;
   wasm) validate_wasm ;;
   text-regex|llvm-ir|assembly) validate_text ;;
   *) fail "unsupported output validator type: $validator_type" ;;

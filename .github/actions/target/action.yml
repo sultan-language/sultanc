@@ -1,26 +1,13 @@
-# Native lanes prove the actual runner architecture and compiler artifact identity.
+# Native runner and generated compiler validation from the trusted CI host registry.
 name: SultanC Target Verification
 description: >-
-  Verify runner identity and the native compiler artifact while retaining the
-  inspection evidence used by CI.
+  Verify native runner identity and compiler artifact using the same resolved
+  host contract as LLVM provisioning, retaining inspection evidence.
 
 inputs:
   target:
     description: SultanC target represented by this runner.
     required: true
-  expected-host-os:
-    description: Expected native operating-system identity (Windows uses RUNNER_OS).
-    required: true
-  expected-host-arch:
-    description: Expected native architecture identity (Windows uses RUNNER_ARCH).
-    required: true
-  expected-file-pattern:
-    description: Required file(1) regular expression for the compiler artifact.
-    required: true
-  expected-header-pattern:
-    description: PE machine-header regex from the trusted target validation contract.
-    required: false
-    default: ""
   binary:
     description: Compiler binary relative to the candidate checkout.
     required: false
@@ -37,10 +24,6 @@ runs:
       shell: bash
       env:
         SULTANC_TARGET: ${{ inputs.target }}
-        EXPECTED_HOST_OS: ${{ inputs.expected-host-os }}
-        EXPECTED_HOST_ARCH: ${{ inputs.expected-host-arch }}
-        EXPECTED_FILE_PATTERN: ${{ inputs.expected-file-pattern }}
-        EXPECTED_HEADER_PATTERN: ${{ inputs.expected-header-pattern }}
         SULTANC_BINARY: ${{ inputs.binary }}
         SULTANC_WORKING_DIRECTORY: ${{ inputs.working-directory }}
       run: "$GITHUB_ACTION_PATH/verify.sh"

@@ -22,8 +22,9 @@ run_program() {
 }
 
 compiler="${SULTANC_COMPILER:?compiler is required}"
-if [[ "${RUNNER_OS:-}" == "Windows" && "$compiler" != *.exe ]]; then
-  compiler+=".exe"
+suffix="${SULTANC_EXECUTABLE_SUFFIX:-}"
+if [[ -n "$suffix" && "$compiler" != *"$suffix" ]]; then
+  compiler+="$suffix"
 fi
 working_directory="${SULTANC_WORKING_DIRECTORY:?working directory is required}"
 contracts="$GITHUB_ACTION_PATH/../../ci/contracts.json"
@@ -72,8 +73,6 @@ for ((index = 0; index < count; index++)); do
   pair="$diag/$index"
   mkdir -p "$pair"
 
-  suffix=""
-  if [[ "${RUNNER_OS:-}" == "Windows" ]]; then suffix=".exe"; fi
   "$compiler" "$english" -o "$pair/en-native$suffix" \
     >"$pair/en-compile.out" 2>"$pair/en-compile.err"
   "$compiler" "$arabic" -o "$pair/ar-native$suffix" \

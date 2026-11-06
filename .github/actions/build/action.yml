@@ -1,13 +1,17 @@
 # Build the compiler once and retain diagnostics in the shared CI artifact tree.
 name: SultanC Build
 description: >-
-  Build SultanC through the repository-owned build entry point and verify the
-  resulting compiler artifact. The caller prepares LLVM through the canonical
-  llvm-toolchain action before invoking this action.
+  Build SultanC through ./build.sh with the host's declared build options and
+  verify that the requested product exists. A caller that needs LLVM prepares
+  it with the llvm-toolchain action first.
 
 inputs:
+  stage:
+    description: "build.sh stage: stage0 (C Stage0 only), stage2 (default), or verify."
+    required: false
+    default: stage2
   target:
-    description: Optional target; empty means host auto-detection.
+    description: Optional --target for Stage2; empty means the build host.
     required: false
     default: ""
   working-directory:
@@ -21,6 +25,7 @@ runs:
     - name: Build and verify SultanC
       shell: bash
       env:
+        SULTANC_BUILD_STAGE: ${{ inputs.stage }}
         SULTANC_TARGET: ${{ inputs.target }}
         SULTANC_WORKING_DIRECTORY: ${{ inputs.working-directory }}
-      run: "$GITHUB_ACTION_PATH/run.sh"
+      run: '"$GITHUB_ACTION_PATH/run.sh"'

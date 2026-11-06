@@ -1,27 +1,28 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Execute the delivered SultanC test runner and verify its result-count contract.
+# Execute a delivered SultanC test runner and verify its result-count contract.
 # CI never infers execution from files present on disk.
+#
+#   test-suite.sh CANDIDATE_DIR full      tests.runner (tools/tests/ci_run.sh)
+#                                         with SC=build/sultanc and the host
+#                                         target; result file from the runner
+#   test-suite.sh CANDIDATE_DIR portable  tests.portable.runner
+#                                         (tools/tests/ispeak_test.sh) with
+#                                         Stage1 from the seed and the host's
+#                                         tests.portable_target; this script
+#                                         turns its summary into the same
+#                                         result schema
+# Both profiles are then checked by tests.result_contract.
 
 usage() {
-  echo "usage: test-suite.sh CANDIDATE_DIR" >&2
+  echo "usage: test-suite.sh CANDIDATE_DIR {full|portable}" >&2
   exit 2
 }
 
 fail() {
   echo "$*" >&2
   exit 1
-}
-
-require_result_contract() {
-  [[ -n "$result_path" ]] || fail "tests.result_contract.path is required"
-  [[ -n "$executed_jq" ]] || fail \
-    "tests.result_contract.executed_jq is required"
-  [[ -n "$passed_jq" ]] || fail \
-    "tests.result_contract.passed_jq is required"
-  [[ -n "$failed_jq" ]] || fail \
-    "tests.result_contract.failed_jq is required"
 }
 
 verify_test_roots() {
@@ -34,7 +35,7 @@ verify_test_roots() {
 }
 
 run_with_timeout() {
-  local timeout_seconds="${SULTANC_TEST_TIMEOUT_SECONDS:-1800}"
+  local timeout_seconds="${SULTANC_TEST_TIMEOUT_SECONDS:-3600}"
   local timeout_marker="$diag/timeout.marker"
   local runner_pid
   local watchdog_pid
@@ -84,19 +85,48 @@ read_count() {
   printf '%s\n' "$value"
 }
 
-[[ $# -eq 1 ]] || usage
+# ispeak_test.sh writes one row per test after a header row; a row fails when
+# it contains FAIL or rc=, the same rule tools/tests/ci_run.sh applies. A row
+# that built but ran nothing ("-" in NAT_RUN: the target is not the host) is
+# compile-only and is reported apart from the passes, as ci_run.sh does.
+write_portable_result() {
+  local summary_file="$1"
+  local total
+  local failed
+  local skipped
+  local compile_only
+
+  [[ -s "$summary_file" ]] || fail "portable test summary was not produced: $summary_file"
+  cp -- "$summary_file" "$diag/summary.txt"
+  total=$(($(wc -l < "$summary_file") - 1))
+  ((total > 0)) || fail "portable test summary lists no tests: $summary_file"
+  failed="$(tail -n +2 "$summary_file" | grep -Ec -- "$failure_regex" || true)"
+  skipped="$(tail -n +2 "$summary_file" | grep -Ec -- "$skip_regex" || true)"
+  compile_only="$(tail -n +2 "$summary_file" | grep -Ev -- "$failure_regex" |
+    grep -Ec -- '^[^ ]+ +run +PASS +PASS +- ' || true)"
+  jq -n --argjson total "$total" --argjson failed "$failed" --argjson skipped "$skipped" \
+    --argjson compile_only "$compile_only" --arg target "$test_target" \
+    '{executed: ($total - $skipped), passed: ($total - $skipped - $failed - $compile_only),
+      failed: $failed, skipped: $skipped, compile_only: $compile_only, target: $target,
+      suites: {ispeak: {executed: ($total - $skipped), failed: $failed,
+                        compile_only: $compile_only}}}' > "$result_file"
+}
+
+[[ $# -eq 2 ]] || usage
 candidate_dir="$1"
+profile="$2"
 script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 contracts="$script_dir/../ci/contracts.json"
 summary="${GITHUB_STEP_SUMMARY:-/dev/null}"
 
 command -v jq >/dev/null 2>&1 || fail "jq is required by the CI harness"
+host="$("$script_dir/host-matrix.sh" "$contracts" --current)"
+suffix="$(jq -r '.executable_suffix' <<< "$host")"
 
 state="$(jq -r '.tests.state' "$contracts")"
-runner="$(jq -r '.tests.runner // empty' "$contracts")"
 reason="$(jq -r '.tests.reason // empty' "$contracts")"
 
-echo "### SultanC test suite" >> "$summary"
+echo "### SultanC test suite (\`$profile\`)" >> "$summary"
 if [[ "$state" == "pending" ]]; then
   {
     echo '- Status: `PENDING`'
@@ -105,47 +135,87 @@ if [[ "$state" == "pending" ]]; then
   } >> "$summary"
   exit 0
 fi
-
 [[ "$state" == "required" ]] || fail "unsupported tests state: $state"
-[[ -n "$runner" ]] || fail "tests.runner is required when tests are required"
 
-result_path="$(jq -r '.tests.result_contract.path // empty' "$contracts")"
+case "$profile" in
+  full)
+    runner="$(jq -r '.tests.runner // empty' "$contracts")"
+    result_path="$(jq -r '.tests.result_contract.path // empty' "$contracts")"
+    compiler="./build/sultanc$suffix"
+    test_target="$(jq -r '.target' <<< "$host")"
+    ;;
+  portable)
+    runner="$(jq -r '.tests.portable.runner // empty' "$contracts")"
+    result_path="$(jq -r '.tests.portable.result_path // empty' "$contracts")"
+    failure_regex="$(jq -r '.tests.portable.failure_regex // empty' "$contracts")"
+    skip_regex="$(jq -r '.tests.portable.skip_regex // empty' "$contracts")"
+    compiler="./$(jq -r '.seed_bootstrap.output_root' "$contracts")/stage1$suffix"
+    test_target="$(jq -r '.tests.portable_target' <<< "$host")"
+    [[ -n "$failure_regex" && -n "$skip_regex" ]] || fail \
+      "tests.portable.failure_regex and skip_regex are required"
+    ;;
+  *) usage ;;
+esac
+[[ -n "$runner" ]] || fail "the $profile test runner is not configured"
+[[ -n "$result_path" ]] || fail "the $profile test result path is not configured"
+
 executed_jq="$(jq -r '.tests.result_contract.executed_jq // empty' "$contracts")"
 passed_jq="$(jq -r '.tests.result_contract.passed_jq // empty' "$contracts")"
 failed_jq="$(jq -r '.tests.result_contract.failed_jq // empty' "$contracts")"
-require_result_contract
+[[ -n "$executed_jq" && -n "$passed_jq" && -n "$failed_jq" ]] || fail \
+  "tests.result_contract executed/passed/failed queries are required"
 
 candidate_dir="$(cd -- "$candidate_dir" && pwd)"
 verify_test_roots
+[[ -x "$candidate_dir/$compiler" ]] || fail "test compiler is missing: $compiler"
 
 result_file="$candidate_dir/$result_path"
-diag="${RUNNER_TEMP:-/tmp}/sultanc-ci/tests"
+diag="${RUNNER_TEMP:-/tmp}/sultanc-ci/tests-$profile"
 rm -f -- "$result_file"
 rm -rf "$diag"
 mkdir -p "$diag"
 
+# The runners read SC (compiler) and TARGET; they run from the repository root.
+export SC="$compiler"
+export TARGET="$test_target"
+set +e
 (
   cd -- "$candidate_dir"
   run_with_timeout
 )
+runner_rc=$?
+set -e
+tail -n 40 "$diag/runner.stdout" || true
+
+if [[ "$profile" == "portable" ]]; then
+  summary_path="$(jq -r '.tests.portable.summary' "$contracts")"
+  write_portable_result "$candidate_dir/${summary_path//\{target\}/$test_target}"
+fi
 
 [[ -s "$result_file" ]] || fail \
-  "required test result file was not produced: $result_path"
+  "required test result file was not produced: $result_path (runner exit $runner_rc)"
 cp -- "$result_file" "$diag/result.json"
-jq -e . "$result_file" >/dev/null || fail \
-  "required test result file is malformed JSON"
+jq -e . "$result_file" >/dev/null || fail "required test result file is malformed JSON"
 
 executed="$(read_count "$executed_jq" "executed-test")"
 passed="$(read_count "$passed_jq" "passed-test")"
 failed="$(read_count "$failed_jq" "failed-test")"
 
-((executed > 0)) || fail "required runner reported zero executed tests"
-((failed == 0)) || fail "required runner reported $failed failed tests"
-((passed <= executed)) || fail "passed count cannot exceed executed count"
-
 {
+  printf -- '- Compiler: `%s`, target: `%s`\n' "$compiler" "$test_target"
   printf -- '- Executed: `%d`\n' "$executed"
   printf -- '- Passed: `%d`\n' "$passed"
   printf -- '- Failed: `%d`\n' "$failed"
-  echo '- Result: `PASS`'
+  printf -- '- Compile-only (not run): `%s`\n' "$(jq -r '.compile_only // 0' "$result_file")"
+  printf -- '- Skipped: `%s`\n' "$(jq -r '.skipped // 0' "$result_file")"
+  printf -- '- Runner exit: `%d`\n' "$runner_rc"
 } >> "$summary"
+
+if [[ "$failed" -ne 0 ]]; then
+  grep -E -- "${failure_regex:-FAIL|rc=}" "$diag/runner.stdout" | head -n 50 >&2 || true
+fi
+((executed > 0)) || fail "required runner reported zero executed tests"
+((failed == 0)) || fail "required runner reported $failed failed tests"
+((passed <= executed)) || fail "passed count cannot exceed executed count"
+((runner_rc == 0)) || fail "test runner exited with $runner_rc although it reported no failures"
+echo '- Result: `PASS`' >> "$summary"
