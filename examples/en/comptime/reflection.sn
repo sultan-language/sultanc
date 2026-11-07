@@ -1,0 +1,16 @@
+// Type facts computed by the compiler for the selected target.
+import std.io.println;
+import std.text.number;
+import std.meta.reflect;
+
+type Pixel = { red: u8, green: u8, blue: u8, alpha: u8 };
+type Direction = | North | East | South | West;
+
+def main(): int {
+    let pixel: Pixel = { red: 1, green: 2, blue: 3, alpha: 4 };
+    let heading: Direction = Direction.East();
+    println(uint_to_text(size_of(&pixel) as uint));
+    println(uint_to_text(field_count(&pixel) as uint));
+    println(uint_to_text(constructor_count(&heading) as uint));
+    return 0;
+}

@@ -1,0 +1,44 @@
+// Phase 2 of the error system (docs/ERRORS.md): the operator ? passes an
+// error up to the caller, the context helpers convert typed errors and wrap
+// them, and main itself returns a result: on an error the program prints the
+// frame "the program ended with an error" in its language and the error's
+// description, and exits with status 1.
+import std.error.failure;
+import std.error.context;
+import std.error.from_number;
+import std.text.number;
+import std.io.println;
+import std.text.from_bytes;
+
+def read_port(text: string): result int, Error {
+    // A number parse error is a typed error; to_error turns it into an
+    // Error before ? passes it on.
+    let port: int = to_error(parse_int(&text), error_from_integer_parse_error)?;
+    if (port < 1 || port > 65535) {
+        return result.err(error_with_kind("server", "منفذ_خارج_المدى", "يجب أن يكون المنفذ بين 1 و65535"));
+    };
+    return result.ok(port);
+}
+
+def first_of(values: &vector string): option string {
+    if ((length(*values) as uint) == 0) { return option.none(); };
+    return option.some(copy_text(&(*values)[0]));
+}
+
+// ? on an option in a function returning an option passes the absence on.
+def first_written_port(values: &vector string): option string {
+    let first: string = first_of(values)?;
+    return option.some(first);
+}
+
+def main(): result int, Error {
+    let values: mutable vector string = [];
+    append(values, "8080");
+    match first_written_port(&values) with
+    | option.some(text) -> {
+        let port: int = with_context(read_port(text), "أثناء بدء الخادم")?;
+        let ignored: result int, int = println(int_to_text(port));
+    }
+    | option.none -> { };
+    return result.ok(0);
+}

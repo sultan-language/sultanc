@@ -1,0 +1,20 @@
+// Tuples group values without naming a record; `match` takes them apart.
+import std.io.println;
+import std.text.number;
+
+def area(size: (int, int)): int {
+    match size with
+    | (width, height) -> { return width * height; };
+}
+
+def main(): int {
+    let point: (int, int) = (3, 4);
+    match point with
+    | (x, y) -> { println(int_to_text(x * x + y * y)); };
+    let size: (int, int) = (6, 7);
+    println(int_to_text(area(size)));
+    let labeled: (string, bool) = ("ready", true);
+    match labeled with
+    | (label, flag) -> { if (flag) { println(label); }; };
+    return 0;
+}

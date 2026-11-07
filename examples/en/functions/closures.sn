@@ -1,0 +1,18 @@
+// Anonymous functions capture surrounding values and can be returned.
+import std.io.println;
+import std.text.number;
+
+def make_adder(amount: int): fn(int): int {
+    return fn(value: int): int -> value + amount;
+}
+
+def main(): int {
+    let add_ten: fn(int): int = make_adder(10);
+    let add_two: fn(int): int = make_adder(2);
+    let curry: fn(int): fn(int): int = fn(a: int): fn(int): int -> fn(b: int): int -> a * b;
+    let triple: fn(int): int = curry(3);
+    println(int_to_text(add_ten(5)));
+    println(int_to_text(add_two(add_ten(30))));
+    println(int_to_text(triple(14)));
+    return 0;
+}

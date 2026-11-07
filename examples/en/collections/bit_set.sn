@@ -1,0 +1,15 @@
+// A bit set stores many yes/no flags in little memory.
+import std.io.println;
+import std.text.number;
+import std.collections.bitset;
+
+def main(): int {
+    let flags: mutable bit_set = new_bit_set(64);
+    bit_set_insert(&mutable flags, 3);
+    bit_set_insert(&mutable flags, 10);
+    bit_set_insert(&mutable flags, 63);
+    println(uint_to_text(bit_set_count(&flags)));
+    if (bit_set_contains(&flags, 10)) { println("10 is set"); };
+    if (!bit_set_contains(&flags, 11)) { println("11 is clear"); };
+    return 0;
+}

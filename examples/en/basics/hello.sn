@@ -1,0 +1,10 @@
+// Prints a greeting and a computed number. Output: two lines.
+import std.io.println;
+import std.text.number;
+
+def main(): int {
+    println("Hello from SultanC");
+    let answer: int = 6 * 7;
+    println(int_to_text(answer));
+    return 0;
+}

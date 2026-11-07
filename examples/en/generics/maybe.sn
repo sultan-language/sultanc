@@ -1,0 +1,30 @@
+// A generic ADT and generic functions instantiated with several types.
+import std.io.println;
+import std.text.number;
+
+type Maybe<T> = | Nothing | Just of T;
+type Pair<A, B> = { first: A, second: B };
+
+def value_or<T>(value: Maybe<T>, fallback: T): T {
+    match value with
+    | Maybe.Nothing -> { return fallback; }
+    | Maybe.Just(item) -> { return item; };
+}
+
+def flip<A, B>(pair: &Pair<A, B>): Pair<B, A> {
+    let result_pair: Pair<B, A> = { first: clone(&(*pair).second), second: clone(&(*pair).first) };
+    return result_pair;
+}
+
+def main(): int {
+    let present: Maybe<int> = Maybe.Just(42);
+    let missing: Maybe<int> = Maybe.Nothing();
+    let word: Maybe<string> = Maybe.Just("generic");
+    println(int_to_text(value_or(present, 0)));
+    println(int_to_text(value_or(missing, -1)));
+    println(value_or(word, "none"));
+    let pair: Pair<int, bool> = { first: 7, second: true };
+    let swapped: Pair<bool, int> = flip(&pair);
+    if (swapped.first) { println(int_to_text(swapped.second)); };
+    return 0;
+}

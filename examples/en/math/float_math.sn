@@ -1,0 +1,26 @@
+// Floating-point helpers: roots, distances, statistics and tolerant comparison.
+import std.io.println;
+import std.math.float;
+
+def close_to(value: f64, expected: f64): bool {
+    return approx_eq_f64(value, expected, 0.000001, 0.0);
+}
+
+def report(label: string, ok: bool): void {
+    if (ok) { println(label); } else { println("unexpected result"); };
+}
+
+def main(): int {
+    report("hypot(3, 4) is 5", close_to(hypot_f64(3.0, 4.0), 5.0));
+    let samples: vector f64 = [2.0, 4.0, 4.0, 4.0, 5.0, 5.0, 7.0, 9.0];
+    match mean_f64(&samples) with
+    | option.some(mean) -> { report("mean is 5", close_to(mean, 5.0)); }
+    | option.none -> { };
+    match stddev_population_f64(&samples) with
+    | option.some(spread) -> { report("standard deviation is 2", close_to(spread, 2.0)); }
+    | option.none -> { };
+    report("sqrt(2) squared is 2", close_to(sqrt_f64(2.0) * sqrt_f64(2.0), 2.0));
+    report("a circle of radius 1 has area pi", close_to(pi_f64() * 1.0 * 1.0, 3.141592653589793));
+    report("0.1 + 0.2 is close to 0.3", close_to(0.1 + 0.2, 0.3));
+    return 0;
+}

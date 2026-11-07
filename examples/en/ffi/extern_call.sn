@@ -1,0 +1,17 @@
+// Calling a C library function through `extern`; the call needs `unsafe`.
+// Build with the C library linked: sultanc extern_call.sn -l c
+// Or interpret it: sultanc interpret extern_call.sn finds labs at run time
+// (docs/INTERPRETER.md, "Dynamic C functions").
+import std.io.println;
+import std.text.number;
+
+extern def labs(value: i64): i64;
+
+def main(): int {
+    let distance: mutable i64 = 0;
+    unsafe {
+        distance := labs(-1234);
+    }
+    println(int_to_text(distance as int));
+    return 0;
+}

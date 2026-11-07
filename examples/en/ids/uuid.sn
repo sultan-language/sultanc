@@ -1,0 +1,19 @@
+// Parsing a UUID, reading its version, and printing its canonical form.
+import std.io.println;
+import std.text.number;
+import std.uuid.uuid;
+
+def main(): int {
+    let text: string = "123E4567-E89B-12D3-A456-426614174000";
+    match parse_uuid(&text) with
+    | result.ok(id) -> {
+        println(uuid_to_text(&id));
+        println(uint_to_text(uuid_version(&id)));
+    }
+    | result.err(_) -> { println("invalid uuid"); return 1; };
+    let bad: string = "not-a-uuid";
+    match parse_uuid(&bad) with
+    | result.ok(_) -> { println("unexpected"); }
+    | result.err(_) -> { println("rejected invalid uuid"); };
+    return 0;
+}

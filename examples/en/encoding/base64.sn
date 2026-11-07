@@ -1,0 +1,18 @@
+// Base64 turns bytes into text and back again.
+import std.io.println;
+import std.text.from_bytes;
+import std.encoding.base64;
+
+def main(): int {
+    let message: vector u8 = bytes_from_text("SultanC");
+    let encoded: string = base64_encode(&message);
+    println(clone(&encoded));
+    match base64_decode(&encoded) with
+    | result.ok(decoded) -> { println(from_bytes(&decoded)); }
+    | result.err(_) -> { println("invalid base64"); return 1; };
+    let broken: string = "not*base64";
+    match base64_decode(&broken) with
+    | result.ok(_) -> { println("unexpected"); }
+    | result.err(_) -> { println("rejected invalid input"); };
+    return 0;
+}

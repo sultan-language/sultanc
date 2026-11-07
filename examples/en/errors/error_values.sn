@@ -1,0 +1,75 @@
+// std.error: one common error value with an identity, a message, a cause
+// chain and notes (docs/ERRORS.md). Code decides by identity, never by text.
+import std.error.failure;
+import std.error.from_number;
+import std.error.from_os;
+import std.fs.read_file;
+import std.io.println;
+import std.text.number;
+
+def read_port(text: string): result int, Error {
+    match parse_int(&text) with
+    | result.ok(value) -> {
+        if (value < 1 || value > 65535) {
+            return result.err(error_with_kind("server", "port_out_of_range", "the port must be between 1 and 65535"));
+        };
+        return result.ok(value);
+    }
+    | result.err(problem) -> {
+        // Typed std errors stay the primary API; a converter turns one into
+        // an Error that keeps its identity («std.text.number», kind).
+        let cause: Error = error_from_integer_parse_error(&problem);
+        let failure: mutable Error = error_caused_by("the port is not a number", cause);
+        error_add_note(&mutable failure, "the port comes from the PORT setting");
+        return result.err(failure);
+    };
+}
+
+def load_config(path: string): result string, Error {
+    match read_file(&path) with
+    | result.ok(text) -> { return result.ok(text); }
+    | result.err(code) -> {
+        let cause: Error = error_from_fs_error(&code);
+        return result.err(error_caused_by("could not read the configuration", cause));
+    };
+}
+
+def main(): int {
+    match read_port("8080") with
+    | result.ok(port) -> { println(int_to_text(port)); }
+    | result.err(failure) -> { error_print(&failure); };
+
+    let number_domain: string = "std.text.number";
+    let invalid_digit: string = "رقم_غير_صالح";
+    match read_port("80x0") with
+    | result.ok(port) -> { println(int_to_text(port)); }
+    | result.err(failure) -> {
+        println(error_describe(&failure));
+        if (error_is(&failure, &number_domain, &invalid_digit)) {
+            println("decided by identity: an invalid digit");
+        };
+    };
+
+    let server_domain: string = "server";
+    let out_of_range: string = "port_out_of_range";
+    match read_port("70000") with
+    | result.ok(port) -> { println(int_to_text(port)); }
+    | result.err(failure) -> {
+        println(error_describe(&failure));
+        if (error_is(&failure, &server_domain, &out_of_range)) {
+            println("decided by identity: out of range");
+        };
+    };
+
+    let fs_domain: string = "std.fs";
+    let not_found: string = "غير_موجود";
+    match load_config("examples-missing-config.conf") with
+    | result.ok(text) -> { println(text); }
+    | result.err(failure) -> {
+        println(error_describe(&failure));
+        if (error_is(&failure, &fs_domain, &not_found)) {
+            println("decided by identity: the file is missing");
+        };
+    };
+    return 0;
+}

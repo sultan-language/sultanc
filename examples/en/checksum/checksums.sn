@@ -1,0 +1,12 @@
+// CRC-32 and Adler-32 checksums of the same bytes.
+import std.io.println;
+import std.text.number;
+import std.text.from_bytes;
+import std.checksum.checksum;
+
+def main(): int {
+    let data: vector u8 = bytes_from_text("hello world");
+    println(uint_to_text(crc32(&data) as uint));
+    println(uint_to_text(adler32(&data) as uint));
+    return 0;
+}

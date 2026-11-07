@@ -1,0 +1,16 @@
+// Formatting and parsing ISO 8601 dates.
+import std.io.println;
+import std.text.number;
+import std.time.calendar;
+import std.time.date;
+
+def main(): int {
+    match new_calendar_date(2026, 11, 4) with
+    | option.none -> { return 1; }
+    | option.some(date) -> {
+        match format_iso_date(&date) with
+        | option.some(text) -> { println(text); }
+        | option.none -> { };
+    };
+    return 0;
+}

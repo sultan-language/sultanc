@@ -1,0 +1,32 @@
+// Ownership: values move into functions, references borrow them, and
+// `&mutable` lends write access without giving the value away.
+import std.io.println;
+import std.text.number;
+
+type Account = { owner: string, balance: int };
+
+def open_account(owner: string, deposit: int): Account {
+    let account: Account = { owner: owner, balance: deposit };
+    return account;
+}
+
+def deposit(account: &mutable Account, amount: int): void {
+    (*account).balance := (*account).balance + amount;
+}
+
+def balance(account: &Account): int {
+    return (*account).balance;
+}
+
+def close(account: Account): string {
+    return clone(&account.owner);
+}
+
+def main(): int {
+    let account: mutable Account = open_account("Layla", 100);
+    deposit(&mutable account, 50);
+    println(int_to_text(balance(&account)));
+    let owner: string = close(account);
+    println(owner);
+    return 0;
+}

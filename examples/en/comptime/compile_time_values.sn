@@ -1,0 +1,32 @@
+// `comptime` runs code while compiling; the program only sees the result.
+import std.io.println;
+import std.text.number;
+
+def sum_of_squares(limit: int): int {
+    let total: mutable int = 0;
+    let i: mutable int = 1;
+    while (i <= limit) {
+        total := total + i * i;
+        i := i + 1;
+    }
+    return total;
+}
+
+def main(): int {
+    let table_size: int = comptime sum_of_squares(10);
+    let fibonacci_20: int = comptime {
+        let a: mutable int = 0;
+        let b: mutable int = 1;
+        let i: mutable int = 0;
+        while (i < 20) {
+            let next: int = a + b;
+            a := b;
+            b := next;
+            i := i + 1;
+        }
+        a
+    };
+    println(int_to_text(table_size));
+    println(int_to_text(fibonacci_20));
+    return 0;
+}

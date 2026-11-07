@@ -1,0 +1,23 @@
+// A binary heap ordered by a comparison function: smallest task first.
+import std.io.println;
+import std.text.number;
+import std.collections.heap;
+
+def by_priority(left: &int, right: &int): int {
+    return *right - *left;
+}
+
+def main(): int {
+    let tasks: mutable heap<int> = new_heap(by_priority);
+    heap_push(&mutable tasks, 5);
+    heap_push(&mutable tasks, 1);
+    heap_push(&mutable tasks, 9);
+    heap_push(&mutable tasks, 3);
+    let running: mutable bool = true;
+    while (running) {
+        match heap_pop(&mutable tasks) with
+        | option.some(task) -> { println(int_to_text(task)); }
+        | option.none -> { running := false; };
+    }
+    return 0;
+}

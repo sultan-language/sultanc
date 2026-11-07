@@ -1,0 +1,20 @@
+// Writing a file, reading it back, then removing it.
+import std.io.println;
+import std.fs.write_file;
+import std.fs.read_file;
+import std.fs.mutation;
+
+def main(): int {
+    let path: string = "sultanc-example.tmp";
+    let content: string = "saved by SultanC";
+    match write_file(&path, &content) with
+    | result.err(code) -> { println("write failed"); return code; }
+    | result.ok(_) -> { };
+    match read_file(&path) with
+    | result.ok(text) -> { println(text); }
+    | result.err(code) -> { println("read failed"); return code; };
+    match remove_file(&path) with
+    | result.ok(_) -> { println("removed"); }
+    | result.err(code) -> { return code; };
+    return 0;
+}

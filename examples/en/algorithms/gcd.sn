@@ -1,0 +1,25 @@
+// Euclid's algorithm written by hand, checked against the standard library.
+import std.io.println;
+import std.text.number;
+import std.math.integer;
+
+def euclid(a: uint, b: uint): uint {
+    let x: mutable uint = a;
+    let y: mutable uint = b;
+    while (y != 0) {
+        let rest: uint = x % y;
+        x := y;
+        y := rest;
+    }
+    return x;
+}
+
+def main(): int {
+    println(uint_to_text(euclid(1071, 462)));
+    println(uint_to_text(gcd(1071, 462)));
+    // lcm returns an option: the multiple may not fit in a uint.
+    match lcm(4, 6) with
+    | option.some(value) -> { println(uint_to_text(value)); }
+    | option.none -> { println("overflow"); };
+    return 0;
+}

@@ -1,0 +1,22 @@
+// Parsing a URI, reading its query, and percent-encoding text.
+import std.io.println;
+import std.uri.uri;
+
+def main(): int {
+    let address: string = "https://example.com/search?q=sultan&lang=ar";
+    match parse_uri(&address) with
+    | result.ok(parsed) -> { println(uri_to_text(&parsed)); }
+    | result.err(_) -> { println("invalid uri"); return 1; };
+    let query: string = "q=sultan&lang=ar";
+    match parse_uri_query(&query) with
+    | result.ok(pairs) -> {
+        let name: string = "lang";
+        match uri_query_first_value(&pairs, &name) with
+        | option.some(value) -> { println(value); }
+        | option.none -> { };
+    }
+    | result.err(_) -> { return 2; };
+    let phrase: string = "a b&c";
+    println(percent_encode(&phrase));
+    return 0;
+}

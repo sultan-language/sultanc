@@ -1,0 +1,37 @@
+// A generic stack record backed by a vector.
+import std.io.println;
+import std.text.number;
+
+type Stack<T> = { items: vector T };
+
+def new_stack<T>(): Stack<T> {
+    let empty: vector T = [];
+    let stack: Stack<T> = { items: empty };
+    return stack;
+}
+
+def push<T>(stack: &mutable Stack<T>, item: T): void {
+    append((*stack).items, item);
+}
+
+def size<T>(stack: &Stack<T>): uint {
+    return length((*stack).items) as uint;
+}
+
+def top<T>(stack: &Stack<T>): option T {
+    let count: uint = size(stack);
+    if (count == 0) { return option.none(); };
+    return option.some(clone(&(*stack).items[count - 1]));
+}
+
+def main(): int {
+    let numbers: mutable Stack<int> = new_stack();
+    push(&mutable numbers, 10);
+    push(&mutable numbers, 20);
+    push(&mutable numbers, 30);
+    println(uint_to_text(size(&numbers)));
+    match top(&numbers) with
+    | option.some(value) -> { println(int_to_text(value)); }
+    | option.none -> { println("empty"); };
+    return 0;
+}

@@ -1,0 +1,15 @@
+// Parsing and printing IPv4 addresses; malformed addresses are rejected.
+import std.io.println;
+import std.net.ip;
+
+def main(): int {
+    let home: string = "192.168.1.20";
+    match parse_ipv4(&home) with
+    | result.ok(address) -> { println(ipv4_to_text(&address)); }
+    | result.err(_) -> { println("invalid"); };
+    let wrong: string = "300.1.2.3";
+    match parse_ipv4(&wrong) with
+    | result.ok(_) -> { println("unexpected"); }
+    | result.err(_) -> { println("rejected 300.1.2.3"); };
+    return 0;
+}

@@ -1,0 +1,20 @@
+// Decorators wrap a function with another ordinary function.
+import std.io.println;
+import std.text.number;
+
+def doubled(comptime f: fn(int): int, value: int): int {
+    return f(value) * 2;
+}
+
+def plus_one(comptime f: fn(int): int, value: int): int {
+    return f(value) + 1;
+}
+
+@plus_one
+@doubled
+def square(value: int): int { return value * value; }
+
+def main(): int {
+    println(int_to_text(square(5)));
+    return 0;
+}

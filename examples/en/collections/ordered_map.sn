@@ -1,0 +1,28 @@
+// A B-tree map keeps its keys sorted, whatever the insertion order.
+import std.io.println;
+import std.text.number;
+import std.text.transform;
+import std.collections.btree_map;
+
+def compare_ints(left: &int, right: &int): int { return *left - *right; }
+
+def main(): int {
+    let scores: mutable btree_map<int, string> = new_btree_map(compare_ints);
+    btree_map_insert(&mutable scores, 30, "third");
+    btree_map_insert(&mutable scores, 10, "first");
+    btree_map_insert(&mutable scores, 20, "second");
+    let keys: vector int = btree_map_keys(&scores);
+    let texts: mutable vector string = [];
+    let i: mutable uint = 0;
+    while (i < (length(keys) as uint)) {
+        append(texts, int_to_text(keys[i]));
+        i := i + 1;
+    }
+    let space: string = " ";
+    println(join(&texts, &space));
+    let wanted: int = 20;
+    match btree_map_get(&scores, &wanted) with
+    | option.some(name) -> { println(name); }
+    | option.none -> { println("missing"); };
+    return 0;
+}

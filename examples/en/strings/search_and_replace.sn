@@ -1,0 +1,24 @@
+// Searching, splitting, joining, trimming and replacing text.
+import std.io.println;
+import std.text.number;
+import std.text.search;
+import std.text.transform;
+
+def main(): int {
+    let raw: string = "   red,green,blue   ";
+    let clean: string = trim(&raw);
+    let comma: string = ",";
+    let parts: vector string = split(&clean, &comma);
+    println(uint_to_text(length(parts) as uint));
+    let slash: string = " / ";
+    println(join(&parts, &slash));
+    let green: string = "green";
+    if (contains(&clean, &green)) { println("found green"); };
+    match find(&clean, &green) with
+    | option.some(index) -> { println(uint_to_text(index)); }
+    | option.none -> { println("missing"); };
+    let blue: string = "blue";
+    let navy: string = "navy";
+    println(replace(&clean, &blue, &navy));
+    return 0;
+}

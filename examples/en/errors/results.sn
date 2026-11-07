@@ -1,0 +1,33 @@
+// Fallible operations return `result`; each error case is a typed value.
+import std.io.println;
+import std.text.number;
+
+def parse_or_report(text: string): int {
+    match parse_int(&text) with
+    | result.ok(value) -> { return value; }
+    // Patterns use the canonical variant names; English variant aliases are
+    // accepted in expressions but not yet in patterns.
+    | result.err(خطأ_تحليل_عدد.نص_فارغ) -> { println("empty input"); }
+    | result.err(خطأ_تحليل_عدد.رقم_غير_صالح(_)) -> { println("not a number"); }
+    | result.err(_) -> { println("out of range"); };
+    return 0;
+}
+
+def safe_divide(left: int, right: int): result int, string {
+    if (right == 0) { return result.err("division by zero"); };
+    return result.ok(left / right);
+}
+
+def main(): int {
+    println(int_to_text(parse_or_report("1234")));
+    println(int_to_text(parse_or_report("-56")));
+    parse_or_report("12x");
+    parse_or_report("");
+    match safe_divide(84, 2) with
+    | result.ok(value) -> { println(int_to_text(value)); }
+    | result.err(message) -> { println(message); };
+    match safe_divide(1, 0) with
+    | result.ok(value) -> { println(int_to_text(value)); }
+    | result.err(message) -> { println(message); };
+    return 0;
+}

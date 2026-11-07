@@ -1,0 +1,10 @@
+// `exit` ends the program at once with the given status (here 3).
+import std.io.println;
+import std.process.exit;
+
+def main(): int {
+    println("exiting with status 3");
+    exit(3);
+    println("never printed");
+    return 0;
+}

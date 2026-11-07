@@ -1,0 +1,35 @@
+// Phase 3 of the error system (docs/ERRORS.md), optional: an author may give
+// an error's message in other languages. The program chooses a language
+// from a locale value it passes in, never from global state: here the
+// locale of its environment (SULTANC_LANG, LC_ALL, LC_MESSAGES, LANG) and
+// the locale of an HTTP Accept-Language header, as a server would per
+// request. Run it with SULTANC_LANG=en or SULTANC_LANG=ar.
+import std.error.failure;
+import std.text.language;
+import std.text.system_language;
+import std.io.println;
+
+def load_settings(): result int, Error {
+    let empty: mutable Error = error_with_kind("settings", "فارغ", "ملف الإعدادات فارغ");
+    error_add_language_version(&mutable empty, "en", "the settings file is empty");
+    let failure: mutable Error = error_caused_by("تعذر تحميل الإعدادات", empty);
+    error_add_language_version(&mutable failure, "en", "could not load the settings");
+    return result.err(failure);
+}
+
+def main(): int {
+    match load_settings() with
+    | result.ok(_) -> { return 0; }
+    | result.err(failure) -> {
+        // The program's own language.
+        let locale: Locale = locale_from_environment();
+        error_print_in(&failure, &locale);
+
+        // A request's language: French is preferred but has no version, so
+        // the lookup moves on to English.
+        let header: string = "fr-CH, fr;q=0.9, en;q=0.8, ar;q=0.5";
+        let request: Locale = locale_from_accept_language(&header);
+        let ignored: result int, int = println(error_describe_in(&failure, &request));
+        return 1;
+    };
+}

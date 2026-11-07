@@ -1,0 +1,11 @@
+// Uses the public part of geometry.sn; its private `double` stays hidden.
+import "geometry.sn";
+import std.io.println;
+import std.text.number;
+
+def main(): int {
+    let room: Rectangle = { width: 5, height: 4 };
+    println(int_to_text(area(&room)));
+    println(int_to_text(perimeter(&room)));
+    return 0;
+}

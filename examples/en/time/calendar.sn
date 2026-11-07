@@ -1,0 +1,21 @@
+// Calendar arithmetic: leap years, month lengths and day counts.
+import std.io.println;
+import std.text.number;
+import std.time.calendar;
+
+def main(): int {
+    if (is_leap_year(2024)) { println("2024 is a leap year"); };
+    if (!is_leap_year(2100)) { println("2100 is not"); };
+    println(uint_to_text(days_in_month(2024, 2)));
+    match new_calendar_date(2026, 11, 4) with
+    | option.none -> { return 1; }
+    | option.some(date) -> {
+        match day_of_year(&date) with
+        | option.some(day) -> { println(uint_to_text(day)); }
+        | option.none -> { };
+        match unix_days_from_date(&date) with
+        | option.some(days) -> { println(int_to_text(days)); }
+        | option.none -> { };
+    };
+    return 0;
+}

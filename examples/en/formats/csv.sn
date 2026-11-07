@@ -1,0 +1,22 @@
+// Reading CSV records and fields, including a quoted field with a comma.
+import std.io.println;
+import std.text.number;
+import std.csv.csv;
+
+def main(): int {
+    let source: string = "name,city\nNoor,\"Riyadh, KSA\"\nAdam,Toronto\n";
+    match parse_csv(&source) with
+    | result.err(_) -> { println("invalid csv"); return 1; }
+    | result.ok(document) -> {
+        println(uint_to_text(csv_record_count(&document)));
+        match csv_record_at(&document, 1) with
+        | option.none -> { return 2; }
+        | option.some(record) -> {
+            println(uint_to_text(csv_field_count(&record)));
+            match csv_field_at(&record, 1) with
+            | option.some(city) -> { println(city); }
+            | option.none -> { };
+        };
+    };
+    return 0;
+}

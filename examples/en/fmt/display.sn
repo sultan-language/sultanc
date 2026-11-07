@@ -1,0 +1,41 @@
+// Display and Debug for your own types: a custom fmt_arg holds a closure
+// that writes into the formatter (Rust's impl Display / impl Debug). It can
+// read the placeholder's spec, honour width with pad, and write the
+// pretty Debug form for {:#?}. Closures capture plain values (numbers,
+// booleans, enums and records of them).
+import std.fmt.fmt;
+
+type Currency = | Riyal | Dollar;
+type Money = { cents: int, currency: Currency };
+
+def show_money(m: &Money, f: &mutable formatter): result uint, fmt_error {
+    let code: mutable string = "SAR";
+    match (*m).currency with
+    | Currency.Dollar -> { code := "USD"; }
+    | Currency.Riyal -> { };
+    if (formatter_debug(f)) {
+        if (formatter_alternate(f)) {
+            return format_into(f, "Money {{\n    cents: {},\n    currency: {},\n}}", [fmt_arg.int((*m).cents), fmt_arg.text(&code)]);
+        };
+        return format_into(f, "Money {{ cents: {}, currency: {} }}", [fmt_arg.int((*m).cents), fmt_arg.text(&code)]);
+    };
+    // Display: format the amount, then pad it to the requested width.
+    match format("{}.{:02} {}", [fmt_arg.int((*m).cents / 100), fmt_arg.int((*m).cents % 100), fmt_arg.text(&code)]) with
+    | result.ok(text) -> { return pad(f, &text); }
+    | result.err(e) -> { return result.err(e); };
+}
+
+def money(m: Money): fmt_arg {
+    return fmt_arg.custom(fn(f: &mutable formatter): result uint, fmt_error -> show_money(&m, f));
+}
+
+def main(): int {
+    let price: Money = { cents: 1250, currency: Currency.Riyal() };
+    let tip: Money = { cents: 305, currency: Currency.Dollar() };
+    let r1: result uint, fmt_error = println_fmt("price: {}", [money(price)]);
+    let r2: result uint, fmt_error = println_fmt("[{0:>12}] [{0:<12}]", [money(price)]);
+    let r3: result uint, fmt_error = println_fmt("{:?}", [money(price)]);
+    let both: vector fmt_arg = [money(price), money(tip)];
+    let r4: result uint, fmt_error = println_fmt("{:#?}", [fmt_arg.list(&both)]);
+    return 0;
+}

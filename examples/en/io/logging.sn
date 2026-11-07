@@ -1,0 +1,17 @@
+// A logger writes to standard error and drops messages below its level;
+// log_fmt formats its message with std.fmt.
+import std.io.println;
+import std.io.log;
+import std.fmt.fmt;
+
+def main(): int {
+    let logger: logger = new_logger(log_level.info());
+    let starting: string = "starting";
+    let detail: string = "hidden detail";
+    log(&logger, log_level.info(), &starting);
+    log(&logger, log_level.debug(), &detail);
+    let file: string = "data.csv";
+    let w: result uint, fmt_error = log_fmt(&logger, log_level.warn(), "{} has {} rows, {:.1}% empty", [fmt_arg.text(&file), fmt_arg.int(1280), fmt_arg.f64(43.75)]);
+    println("done");
+    return 0;
+}

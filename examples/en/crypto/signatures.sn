@@ -1,0 +1,23 @@
+// Ed25519: sign a message with a private seed, verify it with the public key.
+import std.io.println;
+import std.text.from_bytes;
+import std.crypto.ed25519;
+
+def main(): int {
+    let seed: mutable vector u8 = [];
+    let i: mutable uint = 0;
+    while (i < 32) { append(seed, (i * 7) as u8); i := i + 1; }
+    let message: vector u8 = bytes_from_text("pay 10 to Noor");
+    let forged: vector u8 = bytes_from_text("pay 99 to Noor");
+    match ed25519_public_key(&seed) with
+    | option.none -> { return 1; }
+    | option.some(public_key) -> {
+        match ed25519_sign(&seed, &message) with
+        | option.none -> { return 2; }
+        | option.some(signature) -> {
+            if (ed25519_verify(&public_key, &message, &signature)) { println("signature valid"); };
+            if (!ed25519_verify(&public_key, &forged, &signature)) { println("forgery rejected"); };
+        };
+    };
+    return 0;
+}

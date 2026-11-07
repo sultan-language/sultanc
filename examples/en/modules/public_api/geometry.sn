@@ -1,0 +1,12 @@
+// Only `public` declarations are visible to modules that import this file.
+public type Rectangle = { width: int, height: int };
+
+public def area(shape: &Rectangle): int {
+    return (*shape).width * (*shape).height;
+}
+
+public def perimeter(shape: &Rectangle): int {
+    return double((*shape).width + (*shape).height);
+}
+
+def double(value: int): int { return value * 2; }

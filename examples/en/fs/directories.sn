@@ -1,0 +1,30 @@
+// Creating nested directories, listing and walking them, then removing the tree.
+import std.io.println;
+import std.text.number;
+import std.fs.walk;
+import std.fs.directory;
+import std.fs.write_file;
+
+def main(): int {
+    let root: string = "sultanc-example-tree";
+    let nested: string = "sultanc-example-tree/a/b";
+    let file: string = "sultanc-example-tree/a/note.txt";
+    let content: string = "note";
+    match create_dir_all(&nested) with
+    | result.err(code) -> { return code; }
+    | result.ok(_) -> { };
+    match write_file(&file, &content) with
+    | result.err(code) -> { return code; }
+    | result.ok(_) -> { };
+    let middle: string = "sultanc-example-tree/a";
+    match list_directory(&middle) with
+    | result.ok(entries) -> { println(uint_to_text(length(entries) as uint)); }
+    | result.err(code) -> { return code; };
+    match walk(&root) with
+    | result.ok(all_entries) -> { println(uint_to_text(length(all_entries) as uint)); }
+    | result.err(code) -> { return code; };
+    match remove_tree(&root) with
+    | result.ok(_) -> { println("removed"); }
+    | result.err(code) -> { return code; };
+    return 0;
+}

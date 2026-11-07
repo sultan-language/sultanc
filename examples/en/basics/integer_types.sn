@@ -1,0 +1,13 @@
+// Fixed-width integers, hexadecimal literals and explicit casts with `as`,
+// printed with std.fmt in decimal, hexadecimal and binary.
+import std.fmt.fmt;
+
+def main(): int {
+    let small: u8 = 0xFF;
+    let widened: u32 = (small as u32) + 1;
+    let negative: i16 = -300;
+    let big: u64 = (widened as u64) * 1000000;
+    let mask: u32 = 0x0F0F & 0x00FF;
+    let r: result uint, fmt_error = println_fmt("{0} = {0:#x}\n{1}\n{2} = {2:#x} as 16 bits\n{3}\n{4} = {4:#06x} = {4:#b}", [fmt_arg.u8(small), fmt_arg.u32(widened), fmt_arg.i16(negative), fmt_arg.u64(big), fmt_arg.u32(mask)]);
+    return 0;
+}

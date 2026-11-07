@@ -1,0 +1,16 @@
+// Running another program and waiting for its exit status.
+import std.io.println;
+import std.text.number;
+import std.process.child;
+
+def main(): int {
+    let program: string = "/bin/sh";
+    let arguments: vector string = ["-c", "exit 7"];
+    match run_and_wait(&program, &arguments) with
+    // Patterns use the canonical variant names; English variant aliases are
+    // accepted in expressions but not yet in patterns.
+    | result.ok(حالة_إنهاء.خرج(code)) -> { println(int_to_text(code)); }
+    | result.ok(_) -> { println("stopped by a signal"); }
+    | result.err(_) -> { println("could not start"); return 1; };
+    return 0;
+}

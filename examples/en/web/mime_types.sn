@@ -1,0 +1,16 @@
+// Choosing a media type from a file name.
+import std.io.println;
+import std.mime.mime;
+
+def main(): int {
+    let page: string = "index.html";
+    let picture: string = "logo.png";
+    let unknown: string = "archive.unknownext";
+    let page_type: mime_type = mime_type_from_path_or_default(&page);
+    let picture_type: mime_type = mime_type_from_path_or_default(&picture);
+    let unknown_type: mime_type = mime_type_from_path_or_default(&unknown);
+    println(mime_type_text(&page_type));
+    println(mime_type_text(&picture_type));
+    println(mime_type_text(&unknown_type));
+    return 0;
+}

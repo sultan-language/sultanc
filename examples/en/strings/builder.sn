@@ -1,0 +1,23 @@
+// Building text piece by piece with a text builder.
+import std.io.println;
+import std.text.number;
+import std.text.builder;
+import std.text.transform;
+
+def main(): int {
+    let line: mutable text_builder = new_text_builder();
+    let i: mutable int = 1;
+    while (i <= 5) {
+        let digit: string = int_to_text(i * i);
+        text_builder_append_text(&mutable line, &digit);
+        if (i < 5) {
+            let comma: string = ",";
+            text_builder_append_text(&mutable line, &comma);
+        };
+        i := i + 1;
+    }
+    println(text_builder_text(&line));
+    let dash: string = "-";
+    println(repeat_text(&dash, 12));
+    return 0;
+}

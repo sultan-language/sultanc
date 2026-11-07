@@ -1,0 +1,34 @@
+// std.fmt: a format string with `{}` placeholders and a vector of
+// arguments, like Rust's format! and Go's fmt.Sprintf. A spec after `:` sets
+// fill and alignment, sign, `#`, zero padding, width, precision and type.
+import std.fmt.fmt;
+
+def main(): int {
+    let name: string = "Sultan";
+    let r1: result uint, fmt_error = println_fmt("Hello, {}! You have {} messages.", [fmt_arg.text(&name), fmt_arg.int(3)]);
+
+    // Positions, escapes and alignment.
+    let r2: result uint, fmt_error = println_fmt("{1} {0} {1} {{braces}}", [fmt_arg.text(&name), fmt_arg.int(42)]);
+    let r3: result uint, fmt_error = println_fmt("[{0:<10}] [{0:^10}] [{0:>10}] [{0:*^10}]", [fmt_arg.text(&name)]);
+
+    // Numbers: sign, zero padding, bases and the alternate form.
+    let r4: result uint, fmt_error = println_fmt("{0:+} {0:06} {1:x} {1:#X} {1:#o} {2:#010b}", [fmt_arg.int(-42), fmt_arg.int(255), fmt_arg.u8(5)]);
+
+    // Floats: shortest round trip, a fixed precision, exponent form.
+    let r5: result uint, fmt_error = println_fmt("{1} {0:.2} {0:8.3} {2:e} {2:.1E}", [fmt_arg.f64(3.14159265), fmt_arg.f64(0.1 + 0.2), fmt_arg.f64(1234.5)]);
+
+    // Width and precision from arguments, and Debug output.
+    let r6: result uint, fmt_error = println_fmt("[{0:>1$.2$}]", [fmt_arg.f64(2.71828), fmt_arg.uint(9), fmt_arg.uint(3)]);
+    let items: vector string = ["tea", "\"coffee\""];
+    let ints: vector int = [1, 2, 3];
+    let r7: result uint, fmt_error = println_fmt("{:?} {:?}", [fmt_arg.texts(&items), fmt_arg.ints(&ints)]);
+
+    // A literal format string is checked at compile time: "{} {}" with no
+    // arguments does not compile. One built at run time is checked when it
+    // is used, and a mistake is an error value, not a crash.
+    let template: string = "{} {}";
+    match format(template, []) with
+    | result.ok(_) -> { return 1; }
+    | result.err(_) -> { let r8: result uint, fmt_error = println_fmt("the format string needs two arguments", []); };
+    return 0;
+}

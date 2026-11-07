@@ -1,0 +1,17 @@
+// Heap values with `box`, and raw pointers that need an `unsafe` block.
+import std.io.println;
+import std.text.number;
+
+def main(): int {
+    let boxed: box int = box 40;
+    let total: int = *boxed + 2;
+    println(int_to_text(total));
+
+    let counter: mutable int = 10;
+    let pointer: *mutable int = &mutable counter;
+    unsafe {
+        *pointer := *pointer * 3;
+    }
+    println(int_to_text(counter));
+    return 0;
+}
