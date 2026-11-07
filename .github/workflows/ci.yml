@@ -1,0 +1,83 @@
+# SultanC CI: every route proven on every host where it can run.
+#   seed         wasm seed through cmake/ with only a C compiler (no LLVM);
+#                the committed seed must equal what the sources rebuild.
+#   seed-update  bootstrap.c --update-seed, then a clean bootstrap from it.
+#   llvm         C Stage0 against LLVM 22.1.8 (pinned by version and file
+#                name, cached), LLVM-enabled Stage2, convergence, tests.
+# One script per host family: .github/ci/linux.sh and macos.sh (POSIX sh),
+# .github/ci/windows.ps1 (PowerShell).
+name: SultanC CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sultanc-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  seed:
+    name: Seed / ${{ matrix.host }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { host: linux-x86_64, runner: ubuntu-24.04, script: linux }
+          - { host: linux-arm64, runner: ubuntu-24.04-arm, script: linux }
+          - { host: macos-arm64, runner: macos-15, script: macos }
+          - { host: macos-x86_64, runner: macos-15-intel, script: macos }
+          - { host: windows-x86_64, runner: windows-2025, script: windows }
+          - { host: windows-arm64, runner: windows-11-arm, script: windows }
+    steps:
+      - uses: actions/checkout@v4
+      - name: Seed (${{ matrix.host }})
+        if: matrix.script != 'windows'
+        run: sh .github/ci/${{ matrix.script }}.sh seed
+      - name: Seed (${{ matrix.host }})
+        if: matrix.script == 'windows'
+        shell: pwsh
+        run: ./.github/ci/windows.ps1 seed
+
+  seed-update:
+    name: Seed update / linux-x86_64
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - run: sh .github/ci/linux.sh seed-update
+
+  llvm:
+    name: LLVM / ${{ matrix.host }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 360
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { host: linux-x86_64, runner: ubuntu-24.04, script: linux }
+          - { host: linux-arm64, runner: ubuntu-24.04-arm, script: linux }
+          - { host: macos-arm64, runner: macos-15, script: macos }
+          - { host: macos-x86_64, runner: macos-15-intel, script: macos }
+          - { host: windows-x86_64, runner: windows-2025, script: windows }
+          - { host: windows-arm64, runner: windows-11-arm, script: windows }
+    steps:
+      - uses: actions/checkout@v4
+      - name: LLVM SDK cache
+        uses: actions/cache@v4
+        with:
+          path: ~/llvm-sdk-22.1.8
+          key: llvm-sdk-22.1.8-${{ matrix.host }}-${{ hashFiles(format('.github/ci/{0}.*', matrix.script)) }}
+      - name: LLVM (${{ matrix.host }})
+        if: matrix.script != 'windows'
+        run: sh .github/ci/${{ matrix.script }}.sh llvm
+      - name: LLVM (${{ matrix.host }})
+        if: matrix.script == 'windows'
+        shell: pwsh
+        run: ./.github/ci/windows.ps1 llvm

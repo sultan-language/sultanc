@@ -1,139 +1,33 @@
-# CodeQL covers the Stage0 C/C++ boundary; it does not claim `.sn` analysis.
+# CodeQL over the C Stage0 (bootstrap/); it does not analyze .sn sources.
 name: SultanC Security
 
 on:
-  pull_request:
-    branches: [main]
-  merge_group:
-    types: [checks_requested]
-    branches: [main]
   push:
     branches: [main]
+  pull_request:
   workflow_dispatch:
 
 permissions:
   contents: read
-
-concurrency:
-  group: sultanc-security-main-${{ github.ref }}
-  cancel-in-progress: true
+  security-events: write
 
 jobs:
-  # Candidate code has no security-events write permission.
-  codeql-candidate:
-    name: CodeQL / Stage0 C-C++ / Candidate
-    if: >-
-      ${{
-        github.event_name == 'pull_request' ||
-        github.event_name == 'merge_group'
-      }}
+  codeql:
+    name: CodeQL / Stage0 C
     runs-on: ubuntu-24.04
-    timeout-minutes: 45
-    permissions:
-      contents: read
+    timeout-minutes: 60
     steps:
-      - name: Checkout candidate
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        with:
-          persist-credentials: false
-
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2
+      - uses: actions/checkout@v4
+      - uses: github/codeql-action/init@v3
         with:
           languages: c-cpp
-
-      - name: Prepare staged LLVM toolchain
-        uses: ./.github/actions/llvm-toolchain
-
-      - name: Build Stage0 under CodeQL extraction
-        shell: bash
+      - name: LLVM 22 (apt.llvm.org)
+        run: |
+          curl -fsSL --retry 3 https://apt.llvm.org/llvm.sh -o "$RUNNER_TEMP/llvm.sh"
+          sudo bash "$RUNNER_TEMP/llvm.sh" 22
+          sudo apt-get install -y llvm-22-dev libllvm22
+      - name: Build Stage0
         env:
-          SECURITY_LANE: candidate
-        run: ./.github/scripts/security-stage0.sh
-
-      - name: Analyze without security-event upload
-        uses: github/codeql-action/analyze@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2
-        with:
-          upload: never
-
-      - name: Retain security diagnostics on failure
-        if: ${{ failure() }}
-        uses: ./.github/actions/upload-diagnostics
-        with:
-          name: security-candidate-${{ github.sha }}
-          path: ${{ runner.temp }}/sultanc-ci/security/candidate
-
-  # Only trusted push/schedule/manual runs may publish CodeQL security events.
-  codeql-trusted:
-    name: CodeQL / Stage0 C-C++ / Trusted
-    if: >-
-      ${{
-        github.event_name != 'pull_request' &&
-        github.event_name != 'merge_group'
-      }}
-    runs-on: ubuntu-24.04
-    timeout-minutes: 45
-    permissions:
-      contents: read
-      security-events: write
-    steps:
-      - name: Checkout trusted branch
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        with:
-          persist-credentials: false
-
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2
-        with:
-          languages: c-cpp
-
-      - name: Prepare staged LLVM toolchain
-        uses: ./.github/actions/llvm-toolchain
-
-      - name: Build Stage0 under CodeQL extraction
-        shell: bash
-        env:
-          SECURITY_LANE: trusted
-        run: ./.github/scripts/security-stage0.sh
-
-      - name: Analyze and publish security events
-        uses: github/codeql-action/analyze@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2
-        with:
-          upload: always
-
-      - name: Retain security diagnostics on failure
-        if: ${{ failure() }}
-        uses: ./.github/actions/upload-diagnostics
-        with:
-          name: security-trusted-${{ github.sha }}
-          path: ${{ runner.temp }}/sultanc-ci/security/trusted
-
-  report-failure:
-    name: Report CI Failure
-    if: >-
-      ${{
-        always() &&
-        github.event_name != 'pull_request' &&
-        github.event_name != 'merge_group' &&
-        needs.codeql-trusted.result == 'failure'
-      }}
-    needs: codeql-trusted
-    runs-on: ubuntu-24.04
-    timeout-minutes: 10
-    permissions:
-      actions: read
-      contents: read
-      issues: write
-    steps:
-      - name: Checkout trusted reporting harness
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        with:
-          persist-credentials: false
-
-      - name: Create or update security failure issue
-        uses: ./.github/actions/report-ci-failure
-        with:
-          component-labels: security
-          tested-branch: main
-          tested-sha: ${{ github.sha }}
-          harness-sha: ${{ github.workflow_sha }}
+          LLVM_CONFIG: /usr/lib/llvm-22/bin/llvm-config
+        run: ./build.sh stage0
+      - uses: github/codeql-action/analyze@v3
