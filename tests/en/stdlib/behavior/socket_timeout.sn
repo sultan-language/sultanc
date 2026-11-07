@@ -1,0 +1,56 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/stdlib/behavior/socket_timeout.sn
+// receive_timeout_ms: a read on a connected socket with no data fails after
+// about the timeout instead of blocking forever.
+from std.net import
+    parse_socket_addr,
+    tcp_bind_with_options,
+    tcp_connect,
+    tcp_accept,
+    tcp_read,
+    tcp_stream_set_option,
+    tcp_stream_close,
+    tcp_listener_close,
+    socket_option,
+    reuse_address,
+    receive_timeout_ms;
+import std.time.time;
+
+def main(): int {
+    let text: string = "127.0.0.1:38517";
+    match parse_socket_addr(&text) with
+    | result.err(_) -> { return 1; }
+    | result.ok(addr) -> {
+        let options: vector socket_option = [reuse_address(true)];
+        match tcp_bind_with_options(&addr, 4, &options) with
+        | result.err(_) -> { return 2; }
+        | result.ok(listener) -> {
+            match tcp_connect(&addr) with
+            | result.err(_) -> { return 3; }
+            | result.ok(client) -> {
+                match tcp_stream_set_option(&client, receive_timeout_ms(200)) with
+                | result.err(_) -> { return 4; }
+                | result.ok(_) -> { };
+                let start: mutable int = 0;
+                match monotonic_time_ns() with
+                | result.err(_) -> { return 5; }
+                | result.ok(now) -> { start := now; };
+                let buffer: mutable vector u8 = [0, 0, 0, 0];
+                match tcp_read(&client, &mutable buffer, 0, 4) with
+                | result.ok(_) -> { return 6; }
+                | result.err(_) -> { };
+                let elapsed: mutable int = 0;
+                match monotonic_time_ns() with
+                | result.err(_) -> { return 7; }
+                | result.ok(now) -> { elapsed := now - start; };
+                if (elapsed < 150000000 || elapsed > 5000000000) { return 8; };
+                let closed_client: result int, int = tcp_stream_close(client);
+            };
+            let closed: result int, int = tcp_listener_close(listener);
+        };
+    };
+    return 42;
+}

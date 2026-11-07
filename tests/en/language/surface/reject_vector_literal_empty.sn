@@ -1,0 +1,6 @@
+// اختبار: رفض
+// خروج: 1
+// تشخيص: SULTANC-TYPE-MISMATCH
+// نظير: tests/ar/language/surface/reject_vector_literal_empty.sn
+// `[]` takes its type from its context; with none, the element type is unknown.
+def main(): int { return length([]) as int; }

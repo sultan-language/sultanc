@@ -1,0 +1,103 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/en/stdlib/error/language_lookup.sn
+// std.error language versions (docs/ERRORS.md): نص_فشل_بلغة chooses by the
+// RFC 4647 lookup, for each tag of the locale the exact tag, then its
+// shorter forms down to the primary language (ar-SA → ar); then the author's
+// message (an unknown tag); then, when that is empty, the first version.
+// Versions change neither the identity nor صف_فشل, and copies keep them.
+استورد المكتبة.أخطاء.failure;
+استورد المكتبة.نصوص.language;
+استورد المكتبة.نصوص.compare;
+
+عرف نص_بوسم(الفشل: &فشل, الوسم: نص): نص {
+    دع اللغة: لغة = لغة_من_وسم(&الوسم);
+    أرجع نص_فشل_بلغة(الفشل, &اللغة);
+}
+
+عرف نص_بترويسة(الفشل: &فشل, الترويسة: نص): نص {
+    دع اللغة: لغة = لغة_من_قبول_اللغة(&الترويسة);
+    أرجع نص_فشل_بلغة(الفشل, &اللغة);
+}
+
+عرف يساوي(الفعلي: نص, المتوقع: نص): منطقي {
+    أرجع نصان_متساويان(&الفعلي, &المتوقع);
+}
+
+عرف الرئيسية(): عدد {
+    // The author writes in English; Arabic, British English and Traditional
+    // Chinese versions are added («_» and the case of a tag do not matter).
+    دع الفشل: متغير فشل = فشل_بهوية(«config», «فارغ», «config file is empty»);
+    أضف_نسخة_لغة(&متغير الفشل, «ar», «ملف الإعدادات فارغ»);
+    أضف_نسخة_لغة(&متغير الفشل, «en_gb», «configuration file is empty»);
+    أضف_نسخة_لغة(&متغير الفشل, «ZH-hant», «設定檔是空的»);
+
+    // 1. The exact tag, whatever its case and separator.
+    لو (!يساوي(نص_بوسم(&الفشل, «ar»), «ملف الإعدادات فارغ»)) { أرجع 1; };
+    لو (!يساوي(نص_بوسم(&الفشل, «en-GB»), «configuration file is empty»)) { أرجع 2; };
+    لو (!يساوي(نص_بوسم(&الفشل, «EN_gb»), «configuration file is empty»)) { أرجع 3; };
+    لو (!يساوي(نص_بوسم(&الفشل, «zh-Hant»), «設定檔是空的»)) { أرجع 4; };
+
+    // 2. Shorter forms down to the primary language: ar-SA → ar.
+    لو (!يساوي(نص_بوسم(&الفشل, «ar-SA»), «ملف الإعدادات فارغ»)) { أرجع 5; };
+    لو (!يساوي(نص_بوسم(&الفشل, «AR_sa»), «ملف الإعدادات فارغ»)) { أرجع 6; };
+    لو (!يساوي(نص_بوسم(&الفشل, «en-GB-oxendict»), «configuration file is empty»)) { أرجع 7; };
+    لو (!يساوي(نص_بوسم(&الفشل, «zh-Hant-TW»), «設定檔是空的»)) { أرجع 8; };
+
+    // 3. The author's message: an unknown tag, a more general tag than any
+    // version (en, zh), a tag that is not well formed, no tag.
+    لو (!يساوي(نص_بوسم(&الفشل, «fr»), «config file is empty»)) { أرجع 9; };
+    لو (!يساوي(نص_بوسم(&الفشل, «en»), «config file is empty»)) { أرجع 10; };
+    لو (!يساوي(نص_بوسم(&الفشل, «en-US»), «config file is empty»)) { أرجع 11; };
+    لو (!يساوي(نص_بوسم(&الفشل, «zh»), «config file is empty»)) { أرجع 12; };
+    لو (!يساوي(نص_بوسم(&الفشل, «ar SA»), «config file is empty»)) { أرجع 13; };
+    لو (!يساوي(نص_بوسم(&الفشل, «»), «config file is empty»)) { أرجع 14; };
+
+    // A priority list from Accept-Language: each range in turn, by weight.
+    لو (!يساوي(نص_بترويسة(&الفشل, «fr, en-GB;q=0.8, ar;q=0.9»), «ملف الإعدادات فارغ»)) { أرجع 15; };
+    لو (!يساوي(نص_بترويسة(&الفشل, «fr-CA, en-GB-x-test;q=0.7»), «configuration file is empty»)) { أرجع 16; };
+    لو (!يساوي(نص_بترويسة(&الفشل, «fr, de;q=0.5»), «config file is empty»)) { أرجع 17; };
+
+    // A second version under the same tag replaces the first.
+    أضف_نسخة_لغة(&متغير الفشل, «AR», «ملف الإعدادات خال»);
+    لو (!يساوي(نص_بوسم(&الفشل, «ar-EG»), «ملف الإعدادات خال»)) { أرجع 18; };
+
+    // 4. An empty author's message: the first version given.
+    دع بلا_رسالة: متغير فشل = فشل_من(«»);
+    أضف_نسخة_لغة(&متغير بلا_رسالة, «de», «Konfigurationsdatei ist leer»);
+    أضف_نسخة_لغة(&متغير بلا_رسالة, «ar», «ملف الإعدادات فارغ»);
+    لو (!يساوي(نص_بوسم(&بلا_رسالة, «fr»), «Konfigurationsdatei ist leer»)) { أرجع 19; };
+    لو (!يساوي(نص_بوسم(&بلا_رسالة, «»), «Konfigurationsdatei ist leer»)) { أرجع 20; };
+    لو (!يساوي(نص_بوسم(&بلا_رسالة, «ar-EG»), «ملف الإعدادات فارغ»)) { أرجع 21; };
+    دع لا_شيء_فيه: فشل = فشل_من(«»);
+    لو (!يساوي(نص_بوسم(&لا_شيء_فيه, «ar»), «»)) { أرجع 22; };
+
+    // Versions change neither the identity, the message nor صف_فشل.
+    دع النطاق: نص = «config»;
+    دع النوع: نص = «فارغ»;
+    لو (!هل_من_نوع(&الفشل, &النطاق, &النوع)) { أرجع 23; };
+    لو (!يساوي(رسالة_فشل(&الفشل), «config file is empty»)) { أرجع 24; };
+    لو (!يساوي(صف_فشل(&الفشل), «config file is empty»)) { أرجع 25; };
+
+    // Copies keep the versions and are independent of the original.
+    دع نسخة: متغير فشل = استنسخ(&الفشل);
+    دع نسخة_يدوية: متغير فشل = انسخ_فشل(&الفشل);
+    لو (!يساوي(نص_بوسم(&نسخة, «ar»), «ملف الإعدادات خال»)) { أرجع 26; };
+    لو (!يساوي(نص_بوسم(&نسخة_يدوية, «zh-Hant»), «設定檔是空的»)) { أرجع 27; };
+    أضف_نسخة_لغة(&متغير نسخة, «ar», «في النسخة فقط»);
+    أضف_نسخة_لغة(&متغير نسخة_يدوية, «fr», «dans la copie seulement»);
+    لو (!يساوي(نص_بوسم(&الفشل, «ar»), «ملف الإعدادات خال»)) { أرجع 28; };
+    لو (!يساوي(نص_بوسم(&الفشل, «fr»), «config file is empty»)) { أرجع 29; };
+    لو (!يساوي(نص_بوسم(&نسخة_يدوية, «fr»), «dans la copie seulement»)) { أرجع 30; };
+
+    // A cause keeps its versions through سبب_فشل.
+    دع الأعلى: فشل = فشل_بسبب(«while starting the server», نسخة_يدوية);
+    طابق سبب_فشل(&الأعلى) مع
+    | اختياري.موجود(السبب) -> {
+        لو (!يساوي(نص_بوسم(&السبب, «ar-SA»), «ملف الإعدادات خال»)) { أرجع 31; };
+    }
+    | اختياري.لا_شيء -> { أرجع 32; };
+    أرجع 42;
+}

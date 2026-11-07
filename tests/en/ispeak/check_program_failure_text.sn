@@ -1,0 +1,32 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 0
+// نظير: tests/ar/ispeak/check_program_failure_text.sn
+import std.text.compare;
+import std.text.from_bytes;
+import std.fs.read_file;
+import compiler.diagnostics.schema;
+import compiler.diagnostics.identity;
+import compiler.driver.program_failure_text;
+
+// The words of a program's runtime failures (docs/ERRORS.md): the text of
+// library/std/process/failure_text.sn is exactly the compiler's rendering for
+// a program compiled in Arabic, which the compiler writes over it at every
+// compilation; the English rendering differs only in the compiled language.
+def main(): int {
+    let path: string = "library/std/process/failure_text.sn";
+    let written: string;
+    match read_file(&path) with
+    | result.ok(text) -> { written := text; }
+    | result.err(_) -> { return 1; };
+    let arabic: string = نص_وحدة_كلمات_فشل_البرنامج(لغة_تشخيص.العربية());
+    if (!texts_equal(&written, &arabic)) { return 2; };
+    let english: string = نص_وحدة_كلمات_فشل_البرنامج(لغة_تشخيص.الإنجليزية());
+    if (texts_equal(&english, &arabic)) { return 3; };
+    let arabic_frame: string = إطار_فشل_برنامج(
+        لغة_تشخيص.العربية(), معرف_تشخيص.انتهى_البرنامج_بخطأ(), option.none()
+    );
+    let expected_arabic: string = "خطأ[SULTANC-RUNTIME-PROGRAM-ERROR]: انتهى البرنامج بخطأ";
+    if (!texts_equal(&arabic_frame, &expected_arabic)) { return 4; };
+    return 0;
+}

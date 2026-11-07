@@ -1,0 +1,12 @@
+// اختبار: رفض
+// تشخيص: SULTANC-PATTERN-PAYLOAD-COUNT-MISMATCH
+// نظير: tests/ar/diagnostics/e2e/pattern_payload_count.sn
+// خرج-تشخيص-عربي: pattern_payload_count.ar.stderr
+// خرج-تشخيص-إنجليزي: pattern_payload_count.en.stderr
+type Maybe = | Nothing | Just of i32;
+def main(): i32 {
+    let m: Maybe = Maybe.Just(1);
+    match m with
+    | Maybe.Just(a, b) -> { return a; }
+    | Maybe.Nothing -> { return 0; };
+}

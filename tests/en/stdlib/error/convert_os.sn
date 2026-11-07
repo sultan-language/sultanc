@@ -1,0 +1,91 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/stdlib/error/convert_os.sn
+// std.error.from_os: every variant of os_error_class, and the numeric status
+// converters of std.fs, std.io and std.process.
+import std.error.failure;
+import std.error.from_os;
+import std.fs.error;
+import std.fs.read_file;
+import std.text.compare;
+
+def has_identity(failure: &Error, domain: string, kind: string): bool {
+    let its_domain: string = error_domain(failure);
+    let its_kind: string = error_kind(failure);
+    return texts_equal(&its_domain, &domain) && texts_equal(&its_kind, &kind);
+}
+
+def has_single_note(failure: &Error, expected: string): bool {
+    let notes: vector string = error_notes(failure);
+    if ((length(notes) as uint) != 1) { return false; };
+    return texts_equal(&notes[0], &expected);
+}
+
+def main(): int {
+    let classes: mutable vector os_error_class = [];
+    append(classes, os_error_class.none());
+    append(classes, os_error_class.not_found());
+    append(classes, os_error_class.permission_denied());
+    append(classes, os_error_class.already_exists());
+    append(classes, os_error_class.invalid_input());
+    append(classes, os_error_class.unsupported());
+    append(classes, os_error_class.is_directory());
+    append(classes, os_error_class.not_directory());
+    append(classes, os_error_class.resource_exhausted());
+    append(classes, os_error_class.interrupted());
+    append(classes, os_error_class.other());
+    let names: vector string = [
+        "لا_خطأ", "غير_موجود", "مرفوض_الإذن", "موجود_مسبقا", "إدخال_غير_صالح",
+        "غير_مدعوم", "هو_دليل", "ليس_دليلا", "مورد_منهك", "مقاطعة", "آخر"
+    ];
+    let i: mutable uint = 0;
+    while (i < (length(classes) as uint)) {
+        let failure: Error = error_from_os_error_class(&classes[i]);
+        if (!has_identity(&failure, "std.fs", clone(&names[i]))) { return 1; };
+        let message: string = error_message(&failure);
+        if ((length(message) as uint) == 0) { return 2; };
+        if (error_has_cause(&failure)) { return 3; };
+        i := i + 1;
+    }
+    let not_found: Error = error_from_os_error_class(&classes[1]);
+    let not_found_message: string = error_message(&not_found);
+    let expected_not_found: string = "الملف أو المسار غير موجود";
+    if (!texts_equal(&not_found_message, &expected_not_found)) { return 4; };
+
+    // Numeric statuses: the kind is the std.fs.error classification, the
+    // domain is the reporting module, the status is kept as a note.
+    let file: int = -2;
+    let file_error: Error = error_from_fs_error(&file);
+    if (!has_identity(&file_error, "std.fs", "غير_موجود")) { return 5; };
+    if (!has_single_note(&file_error, "رمز الحالة: -2")) { return 6; };
+    let io: int = -13;
+    let io_error: Error = error_from_io_error(&io);
+    if (!has_identity(&io_error, "std.io", "مرفوض_الإذن")) { return 7; };
+    if (!has_single_note(&io_error, "رمز الحالة: -13")) { return 8; };
+    let process: int = -22;
+    let process_error: Error = error_from_process_error(&process);
+    if (!has_identity(&process_error, "std.process", "إدخال_غير_صالح")) { return 9; };
+    let exists: int = -17;
+    let exists_error: Error = error_from_fs_error(&exists);
+    if (!has_identity(&exists_error, "std.fs", "موجود_مسبقا")) { return 10; };
+    let zero: int = 0;
+    let zero_error: Error = error_from_io_error(&zero);
+    if (!has_identity(&zero_error, "std.io", "لا_خطأ")) { return 11; };
+    let positive: int = 5;
+    let positive_error: Error = error_from_process_error(&positive);
+    if (!has_identity(&positive_error, "std.process", "آخر")) { return 12; };
+
+    // A real failure from std.fs.
+    let path: string = "std-error-file-that-does-not-exist.tmp";
+    match read_file(&path) with
+    | result.ok(_) -> { return 13; }
+    | result.err(code) -> {
+        let failure: Error = error_from_fs_error(&code);
+        let expected_domain: string = "std.fs";
+        let expected_kind: string = "غير_موجود";
+        if (!error_is(&failure, &expected_domain, &expected_kind)) { return 14; };
+    };
+    return 42;
+}

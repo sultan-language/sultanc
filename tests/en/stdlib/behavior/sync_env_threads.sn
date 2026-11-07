@@ -1,0 +1,79 @@
+// اختبار: تشغيل
+// أهداف: x86_64-linux
+// خروج: 0
+// std.env.table under threads: 4 threads each set, read and remove their own
+// variables 200 times while the others do the same; the process-wide table
+// lock keeps every update whole, so each thread reads back exactly what it
+// wrote and, at the end, none of the variables is left. Counterpart:
+// tests/ar/stdlib/behavior/sync_env_threads.sn. No pair directive: the
+// interpreter runs one thread.
+import std.env.variables;
+import std.env.environment;
+import std.text.number;
+import std.text.compare;
+import std.text.from_bytes;
+import std.thread.thread;
+import std.sync.arc;
+import std.sync.atomic;
+
+def fail(failures: &arc<atomic_u64>): void {
+    let f: u64 = atomic_u64_fetch_add(arc_get(failures), 1 as u64, memory_ordering.seq_cst());
+}
+
+def churn(id: uint, failures: &arc<atomic_u64>): void {
+    // Each thread owns one name; the value says which round wrote it.
+    let name: string = uint_to_text(id);
+    let full: string = text_concat_for_env(&name);
+    let i: mutable uint = 0;
+    while (i < 200) {
+        let value: string = uint_to_text(id * 1000 + i);
+        match set_environment_variable(&full, &value) with | result.ok(_) -> { } | result.err(_) -> { fail(failures); };
+        match get_environment_variable(&full) with
+        | result.ok(option.some(got)) -> { if (!texts_equal(&got, &value)) { fail(failures); }; }
+        | result.ok(option.none) -> { fail(failures); }
+        | result.err(_) -> { fail(failures); };
+        if (i % 3 == 0) {
+            match remove_environment_variable(&full) with | result.ok(_) -> { } | result.err(_) -> { fail(failures); };
+            match get_environment_variable(&full) with
+            | result.ok(option.none) -> { }
+            | _ -> { fail(failures); };
+        };
+        i := i + 1;
+    }
+    match remove_environment_variable(&full) with | result.ok(_) -> { } | result.err(_) -> { fail(failures); };
+}
+
+// "SULTANC_SYNC_" followed by the thread's number.
+def text_concat_for_env(suffix: &string): string {
+    let prefix: string = "SULTANC_SYNC_";
+    let bytes: mutable vector u8 = bytes_from_text(prefix);
+    let tail: vector u8 = bytes_from_text(copy_text(suffix));
+    let i: mutable uint = 0;
+    while (i < (length(tail) as uint)) { append(bytes, tail[i]); i := i + 1; }
+    return from_bytes(&bytes);
+}
+
+def start(id: uint, failures: &arc<atomic_u64>): option join_handle {
+    let mine: arc<atomic_u64> = arc_clone(failures);
+    match spawn(fn(): void -> churn(id, &mine)) with
+    | result.ok(h) -> { return option.some(h); }
+    | result.err(_) -> { return option.none(); };
+}
+
+def main(): i32 {
+    let failures: arc<atomic_u64> = arc_new(atomic_u64_new(0 as u64));
+    let handles: mutable vector join_handle = [];
+    let t: mutable uint = 0;
+    while (t < 4) {
+        match start(t, &failures) with
+        | option.some(h) -> { append(handles, h); }
+        | option.none -> { return 1; };
+        t := t + 1;
+    }
+    let j: mutable uint = 0;
+    while (j < (length(handles) as uint)) { join(&mutable handles[j]); j := j + 1; }
+    if (atomic_u64_load(arc_get(&failures), memory_ordering.seq_cst()) != (0 as u64)) { return 2; };
+    let left: string = "SULTANC_SYNC_2";
+    match get_environment_variable(&left) with | result.ok(option.none) -> { } | _ -> { return 3; };
+    return 0;
+}

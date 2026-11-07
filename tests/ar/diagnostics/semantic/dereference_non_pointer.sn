@@ -1,0 +1,7 @@
+// اختبار: رفض
+// تشخيص: SULTANC-TYPE-DEREFERENCE-NON-POINTER
+// نظير: tests/en/diagnostics/semantic/dereference_non_pointer.sn
+عرف الرئيسية(): ص32 {
+    دع العدد: ص32 = 1;
+    أرجع *العدد;
+}

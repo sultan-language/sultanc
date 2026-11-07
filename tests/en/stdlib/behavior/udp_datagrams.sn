@@ -1,0 +1,69 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/stdlib/behavior/udp_datagrams.sn
+// Two UDP sockets on the loopback connected to each other exchange one
+// datagram each way.
+from std.net import
+    parse_socket_addr,
+    udp_socket,
+    udp_bind,
+    udp_connect,
+    udp_send,
+    udp_recv,
+    udp_set_option,
+    udp_close,
+    receive_timeout_ms;
+
+def main(): int {
+    let text_a: string = "127.0.0.1:38611";
+    let text_b: string = "127.0.0.1:38612";
+    match parse_socket_addr(&text_a) with
+    | result.err(_) -> { return 1; }
+    | result.ok(addr_a) -> {
+        match parse_socket_addr(&text_b) with
+        | result.err(_) -> { return 2; }
+        | result.ok(addr_b) -> {
+            match udp_bind(&addr_a) with
+            | result.err(_) -> { return 3; }
+            | result.ok(a) -> {
+                match udp_bind(&addr_b) with
+                | result.err(_) -> { return 4; }
+                | result.ok(b) -> {
+                    match udp_connect(&a, &addr_b) with
+                    | result.err(_) -> { return 5; }
+                    | result.ok(_) -> { };
+                    match udp_connect(&b, &addr_a) with
+                    | result.err(_) -> { return 6; }
+                    | result.ok(_) -> { };
+                    match udp_set_option(&b, receive_timeout_ms(2000)) with
+                    | result.err(_) -> { return 7; }
+                    | result.ok(_) -> { };
+                    let message: vector u8 = [83, 117, 108, 116, 97, 110];
+                    match udp_send(&a, &message, 0, 6) with
+                    | result.err(_) -> { return 8; }
+                    | result.ok(sent) -> { if (sent != 6) { return 9; }; };
+                    let buffer: mutable vector u8 = [0, 0, 0, 0, 0, 0, 0, 0];
+                    match udp_recv(&b, &mutable buffer, 0, 8) with
+                    | result.err(_) -> { return 10; }
+                    | result.ok(count) -> {
+                        if (count != 6) { return 11; };
+                        if (buffer[0] != 83 || buffer[5] != 110) { return 12; };
+                    };
+                    let reply: vector u8 = [33];
+                    match udp_send(&b, &reply, 0, 1) with
+                    | result.err(_) -> { return 13; }
+                    | result.ok(_) -> { };
+                    let small: mutable vector u8 = [0];
+                    match udp_recv(&a, &mutable small, 0, 1) with
+                    | result.err(_) -> { return 14; }
+                    | result.ok(count) -> { if (count != 1 || small[0] != 33) { return 15; }; };
+                    let closed_b: result int, int = udp_close(b);
+                };
+                let closed_a: result int, int = udp_close(a);
+            };
+        };
+    };
+    return 42;
+}

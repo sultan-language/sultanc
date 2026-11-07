@@ -1,0 +1,189 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 0
+// نظير: tests/ar/ispeak/check_dynamic_families.sn
+import std.text.compare;
+import std.text.from_bytes;
+import compiler.diagnostics.identity;
+import compiler.diagnostics.reason;
+import compiler.ispeak.format.facts;
+import compiler.ispeak.keys.surface;
+import compiler.diagnostics.schema;
+import compiler.ispeak.ispeak;
+
+// Every source-backed specialized formatter must accept its typed facts in
+// both languages. The input identity never depends on the rendered message.
+def with_arguments(language: لغة_تشخيص, key: مفتاح_رسالة_تشخيص, facts: حقائق_رسالة): bool {
+    let origin: string = رسالة_تشخيص(language, key);
+    match رسالة_تشخيص_بحجج(language, key, facts) with
+    | option.some(text) -> {
+        if ((length(text) as uint) == 0) { return false; };
+        return !texts_equal(&text, &origin);
+    }
+    | _ -> { return false; };
+}
+
+def name_values(): حقائق_اسم_غير_معروف {
+    let values: حقائق_اسم_غير_معروف = { الاسم: "demo" };
+    return values;
+}
+
+def type_values(): حقائق_نوعان_غير_متوافقين {
+    let values: حقائق_نوعان_غير_متوافقين = { المتوقع: "i32", الموجود: "f32" };
+    return values;
+}
+
+def count_values(): حقائق_عدد_حجج_غير_مطابق {
+    let values: حقائق_عدد_حجج_غير_مطابق = { المتوقع: 2 as uint, الموجود: 3 as uint };
+    return values;
+}
+
+def text_values(): حقائق_نص_محدد {
+    let values: حقائق_نص_محدد = { القيمة: "demo" };
+    return values;
+}
+
+def link_values(): حقائق_ربط_إل_إل_في_إم {
+    let values: حقائق_ربط_إل_إل_في_إم = { الهدف: "arm64-darwin", الرمز: "LLVMGetVersion" };
+    return values;
+}
+
+def failure_values(): حقائق_فشل_وقت_الترجمة {
+    let values: حقائق_فشل_وقت_الترجمة = { الرسالة: "compiler_error() called" };
+    return values;
+}
+
+def manifest_values(): حقائق_بيان_حزمة {
+    let values: حقائق_بيان_حزمة = { المسار: "./project.toml", البايت: option.some(8 as uint), السبب: option.some(مفتاح_نص_مترجم.حقل_بيان_مطلوب_مفقود()) };
+    return values;
+}
+
+def suggestion_values(): حقائق_اقتراح_كلمة {
+    let values: حقائق_اقتراح_كلمة = { الاستبدال: "return" };
+    return values;
+}
+
+def syntax_values(): حقائق_توقع_نحوي {
+    let values: حقائق_توقع_نحوي = { المتوقع: "i32", الموجود: option.some("f32") };
+    return values;
+}
+
+def primitive_values(): حقائق_بدائي_تفسير {
+    let values: حقائق_بدائي_تفسير = { البدائي: "host.read", الفهرس: option.some(1 as uint), المتوقع: option.some(2 as uint), الموجود: option.some(3 as uint) };
+    return values;
+}
+
+def main(): int {
+    let key_1: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.اسم_غير_معروف());
+    let english_1: حقائق_رسالة = حقائق_رسالة.اسم_غير_معروف(name_values());
+    if (!with_arguments(لغة_تشخيص.الإنجليزية(), key_1, english_1)) { return 1; };
+    let arabic_1: حقائق_رسالة = حقائق_رسالة.اسم_غير_معروف(name_values());
+    if (!with_arguments(لغة_تشخيص.العربية(), key_1, arabic_1)) { return 2; };
+    let key_2: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.نوعان_غير_متوافقين());
+    let english_2: حقائق_رسالة = حقائق_رسالة.نوعان_غير_متوافقين(type_values());
+    if (!with_arguments(لغة_تشخيص.الإنجليزية(), key_2, english_2)) { return 3; };
+    let arabic_2: حقائق_رسالة = حقائق_رسالة.نوعان_غير_متوافقين(type_values());
+    if (!with_arguments(لغة_تشخيص.العربية(), key_2, arabic_2)) { return 4; };
+    let key_3: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.عدد_حجج_غير_مطابق());
+    let english_3: حقائق_رسالة = حقائق_رسالة.عدد_حجج_غير_مطابق(count_values());
+    if (!with_arguments(لغة_تشخيص.الإنجليزية(), key_3, english_3)) { return 5; };
+    let arabic_3: حقائق_رسالة = حقائق_رسالة.عدد_حجج_غير_مطابق(count_values());
+    if (!with_arguments(لغة_تشخيص.العربية(), key_3, arabic_3)) { return 6; };
+    let key_4: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.خيار_مترجم_غير_معروف());
+    let english_4: حقائق_رسالة = حقائق_رسالة.نص_محدد(text_values());
+    if (!with_arguments(لغة_تشخيص.الإنجليزية(), key_4, english_4)) { return 7; };
+    let arabic_4: حقائق_رسالة = حقائق_رسالة.نص_محدد(text_values());
+    if (!with_arguments(لغة_تشخيص.العربية(), key_4, arabic_4)) { return 8; };
+    let key_5: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.قيمة_خيار_مترجم_مفقودة());
+    let english_5: حقائق_رسالة = حقائق_رسالة.نص_محدد(text_values());
+    if (!with_arguments(لغة_تشخيص.الإنجليزية(), key_5, english_5)) { return 9; };
+    let arabic_5: حقائق_رسالة = حقائق_رسالة.نص_محدد(text_values());
+    if (!with_arguments(لغة_تشخيص.العربية(), key_5, arabic_5)) { return 10; };
+    let key_6: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.لغة_تشخيص_مترجم_غير_صالحة());
+    let english_6: حقائق_رسالة = حقائق_رسالة.نص_محدد(text_values());
+    if (!with_arguments(لغة_تشخيص.الإنجليزية(), key_6, english_6)) { return 11; };
+    let arabic_6: حقائق_رسالة = حقائق_رسالة.نص_محدد(text_values());
+    if (!with_arguments(لغة_تشخيص.العربية(), key_6, arabic_6)) { return 12; };
+    let key_7: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.صيغة_تشخيص_مترجم_غير_صالحة());
+    let english_7: حقائق_رسالة = حقائق_رسالة.نص_محدد(text_values());
+    if (!with_arguments(لغة_تشخيص.الإنجليزية(), key_7, english_7)) { return 13; };
+    let arabic_7: حقائق_رسالة = حقائق_رسالة.نص_محدد(text_values());
+    if (!with_arguments(لغة_تشخيص.العربية(), key_7, arabic_7)) { return 14; };
+    let key_8: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.لون_تشخيص_مترجم_غير_صالح());
+    let english_8: حقائق_رسالة = حقائق_رسالة.نص_محدد(text_values());
+    if (!with_arguments(لغة_تشخيص.الإنجليزية(), key_8, english_8)) { return 15; };
+    let arabic_8: حقائق_رسالة = حقائق_رسالة.نص_محدد(text_values());
+    if (!with_arguments(لغة_تشخيص.العربية(), key_8, arabic_8)) { return 16; };
+    let key_9: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.معامل_موضعي_غير_متوقع());
+    let english_9: حقائق_رسالة = حقائق_رسالة.نص_محدد(text_values());
+    if (!with_arguments(لغة_تشخيص.الإنجليزية(), key_9, english_9)) { return 17; };
+    let arabic_9: حقائق_رسالة = حقائق_رسالة.نص_محدد(text_values());
+    if (!with_arguments(لغة_تشخيص.العربية(), key_9, arabic_9)) { return 18; };
+    let key_10: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.مصدر_رئيسي_متعدد());
+    let english_10: حقائق_رسالة = حقائق_رسالة.نص_محدد(text_values());
+    if (!with_arguments(لغة_تشخيص.الإنجليزية(), key_10, english_10)) { return 19; };
+    let arabic_10: حقائق_رسالة = حقائق_رسالة.نص_محدد(text_values());
+    if (!with_arguments(لغة_تشخيص.العربية(), key_10, arabic_10)) { return 20; };
+    let key_11: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.هدف_مترجم_غير_معروف());
+    let english_11: حقائق_رسالة = حقائق_رسالة.نص_محدد(text_values());
+    if (!with_arguments(لغة_تشخيص.الإنجليزية(), key_11, english_11)) { return 21; };
+    let arabic_11: حقائق_رسالة = حقائق_رسالة.نص_محدد(text_values());
+    if (!with_arguments(لغة_تشخيص.العربية(), key_11, arabic_11)) { return 22; };
+    let key_12: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.مكتبة_إل_إل_في_إم_للهدف_مفقودة());
+    let english_12: حقائق_رسالة = حقائق_رسالة.ربط_إل_إل_في_إم(link_values());
+    if (!with_arguments(لغة_تشخيص.الإنجليزية(), key_12, english_12)) { return 23; };
+    let arabic_12: حقائق_رسالة = حقائق_رسالة.ربط_إل_إل_في_إم(link_values());
+    if (!with_arguments(لغة_تشخيص.العربية(), key_12, arabic_12)) { return 24; };
+    let key_13: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.رمز_إل_إل_في_إم_غير_محلول());
+    let english_13: حقائق_رسالة = حقائق_رسالة.ربط_إل_إل_في_إم(link_values());
+    if (!with_arguments(لغة_تشخيص.الإنجليزية(), key_13, english_13)) { return 25; };
+    let arabic_13: حقائق_رسالة = حقائق_رسالة.ربط_إل_إل_في_إم(link_values());
+    if (!with_arguments(لغة_تشخيص.العربية(), key_13, arabic_13)) { return 26; };
+    let key_14: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.فشل_وقت_الترجمة_مطلوب());
+    let english_14: حقائق_رسالة = حقائق_رسالة.فشل_وقت_الترجمة(failure_values());
+    if (!with_arguments(لغة_تشخيص.الإنجليزية(), key_14, english_14)) { return 27; };
+    let arabic_14: حقائق_رسالة = حقائق_رسالة.فشل_وقت_الترجمة(failure_values());
+    if (!with_arguments(لغة_تشخيص.العربية(), key_14, arabic_14)) { return 28; };
+    let key_15: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.بيان_حزمة_غير_صالح());
+    let english_15: حقائق_رسالة = حقائق_رسالة.بيان_حزمة(manifest_values());
+    if (!with_arguments(لغة_تشخيص.الإنجليزية(), key_15, english_15)) { return 29; };
+    let arabic_15: حقائق_رسالة = حقائق_رسالة.بيان_حزمة(manifest_values());
+    if (!with_arguments(لغة_تشخيص.العربية(), key_15, arabic_15)) { return 30; };
+    let key_16: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.تهجئة_كلمة_محجوزة_غير_معروفة());
+    let english_16: حقائق_رسالة = حقائق_رسالة.اقتراح_كلمة(suggestion_values());
+    if (!with_arguments(لغة_تشخيص.الإنجليزية(), key_16, english_16)) { return 31; };
+    let arabic_16: حقائق_رسالة = حقائق_رسالة.اقتراح_كلمة(suggestion_values());
+    if (!with_arguments(لغة_تشخيص.العربية(), key_16, arabic_16)) { return 32; };
+    let key_17: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.خطأ_نحوي());
+    let english_17: حقائق_رسالة = حقائق_رسالة.توقع_نحوي(syntax_values());
+    if (!with_arguments(لغة_تشخيص.الإنجليزية(), key_17, english_17)) { return 33; };
+    let arabic_17: حقائق_رسالة = حقائق_رسالة.توقع_نحوي(syntax_values());
+    if (!with_arguments(لغة_تشخيص.العربية(), key_17, arabic_17)) { return 34; };
+    let key_18: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.بدائي_مضيف_تفسير_غير_مدعوم());
+    let english_18: حقائق_رسالة = حقائق_رسالة.بدائي_تفسير(primitive_values());
+    if (!with_arguments(لغة_تشخيص.الإنجليزية(), key_18, english_18)) { return 35; };
+    let arabic_18: حقائق_رسالة = حقائق_رسالة.بدائي_تفسير(primitive_values());
+    if (!with_arguments(لغة_تشخيص.العربية(), key_18, arabic_18)) { return 36; };
+    let key_19: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.جسر_نص_مضيف_تفسير_غير_متاح());
+    let english_19: حقائق_رسالة = حقائق_رسالة.بدائي_تفسير(primitive_values());
+    if (!with_arguments(لغة_تشخيص.الإنجليزية(), key_19, english_19)) { return 37; };
+    let arabic_19: حقائق_رسالة = حقائق_رسالة.بدائي_تفسير(primitive_values());
+    if (!with_arguments(لغة_تشخيص.العربية(), key_19, arabic_19)) { return 38; };
+    let key_20: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.حجة_بدائي_تفسير_غير_صالحة());
+    let english_20: حقائق_رسالة = حقائق_رسالة.بدائي_تفسير(primitive_values());
+    if (!with_arguments(لغة_تشخيص.الإنجليزية(), key_20, english_20)) { return 39; };
+    let arabic_20: حقائق_رسالة = حقائق_رسالة.بدائي_تفسير(primitive_values());
+    if (!with_arguments(لغة_تشخيص.العربية(), key_20, arabic_20)) { return 40; };
+    let key_21: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.عدد_حجج_بدائي_تفسير_غير_مطابق());
+    let english_21: حقائق_رسالة = حقائق_رسالة.بدائي_تفسير(primitive_values());
+    if (!with_arguments(لغة_تشخيص.الإنجليزية(), key_21, english_21)) { return 41; };
+    let arabic_21: حقائق_رسالة = حقائق_رسالة.بدائي_تفسير(primitive_values());
+    if (!with_arguments(لغة_تشخيص.العربية(), key_21, arabic_21)) { return 42; };
+    // Every fixed diagnostic rejects unrelated dynamic arguments.
+    let key_is_fixed: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.إرجاع_مفقود());
+    let wrong_facts: حقائق_رسالة = حقائق_رسالة.نص_محدد(text_values());
+    match رسالة_تشخيص_بحجج(لغة_تشخيص.الإنجليزية(), key_is_fixed, wrong_facts) with
+    | option.none -> { }
+    | _ -> { return 43; };
+    return 0;
+}

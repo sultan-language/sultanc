@@ -1,0 +1,49 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/en/language/surface/match_tag_dispatch.sn
+// Tag dispatch with payload arms: arms of one tag are tried in source order
+// (P6(0) before P6(x)), a failing payload test falls through to the final
+// wildcard, and a match over a high subrange of tags (W12..W16) dispatches
+// through a table offset by the lowest tag.
+نوع Code =
+    | C0 | C1 | C2 | C3 | C4 | C5
+    | P6 بنوع عدد | P7 بنوع عدد | C8 | C9 | P10 بنوع عدد | C11;
+
+نوع Wide =
+    | W0 | W1 | W2 | W3 | W4 | W5 | W6 | W7 | W8 | W9
+    | W10 | W11 | W12 | W13 | W14 | W15 | W16 | W17 | W18 | W19;
+
+عرف score(code: Code): عدد {
+    طابق code مع
+    | Code.C0 -> { أرجع 1; }
+    | Code.P6(0) -> { أرجع 2; }
+    | Code.C1 -> { أرجع 3; }
+    | Code.P6(x) -> { أرجع x + 4; }
+    | Code.C2 -> { أرجع 5; }
+    | Code.P7(x) -> { أرجع x * 2; }
+    | Code.C3 -> { أرجع 7; }
+    | Code.P10(9) -> { أرجع 11; }
+    | Code.C11 -> { أرجع 13; }
+    | _ -> { أرجع 0; };
+}
+
+عرف tail(wide: Wide): عدد {
+    طابق wide مع
+    | Wide.W12 -> { أرجع 1; }
+    | Wide.W13 -> { أرجع 2; }
+    | Wide.W14 -> { أرجع 3; }
+    | Wide.W15 -> { أرجع 4; }
+    | Wide.W16 -> { أرجع 5; }
+    | _ -> { أرجع 0; };
+}
+
+عرف الرئيسية(): عدد {
+    دع first: عدد = score(Code.C0()) + score(Code.P6(0)) + score(Code.C1())
+        + score(Code.P6(5)) + score(Code.C2()) + score(Code.P7(3))
+        + score(Code.C3()) + score(Code.P10(1)) + score(Code.C9());
+    دع balance: عدد = score(Code.P10(9)) - score(Code.C11()) + 2;
+    دع second: عدد = tail(Wide.W14()) + tail(Wide.W16()) + tail(Wide.W3()) + tail(Wide.W12());
+    أرجع first + balance + second;
+}

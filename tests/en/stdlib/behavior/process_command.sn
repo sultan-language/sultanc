@@ -1,0 +1,66 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/stdlib/behavior/process_command.sn
+// std.process.command: arguments, an added environment variable, a working
+// directory, input bytes, captured output and error, the exit status, a
+// null stream and a failed start.
+import std.process.command;
+import std.process.child;
+import std.text.from_bytes;
+import std.text.compare;
+import std.error.failure;
+import std.error.from_command;
+
+def main(): int {
+    let shell: string = "sh";
+    let cmd: mutable command = new_command(&shell);
+    let script: vector string = ["-c", "echo out; echo err >&2; cat; pwd; echo $SULTANC_TEST_VAR; exit 3"];
+    command_args(&mutable cmd, &script);
+    let input: vector u8 = [104, 105, 10];
+    command_input(&mutable cmd, &input);
+    let dir: string = "/";
+    command_current_dir(&mutable cmd, &dir);
+    let name: string = "SULTANC_TEST_VAR";
+    let value: string = "value";
+    match command_env(&mutable cmd, &name, &value) with
+    | result.err(_) -> { return 1; }
+    | result.ok(_) -> {};
+    match command_output_of(&cmd) with
+    | result.err(_) -> { return 2; }
+    | result.ok(output) -> {
+        let out: string = from_bytes(&output.الخرج);
+        let err: string = from_bytes(&output.الخطأ);
+        let expected_out: string = "out\nhi\n/\nvalue\n";
+        let expected_err: string = "err\n";
+        if (!texts_equal(&out, &expected_out)) { return 3; };
+        if (!texts_equal(&err, &expected_err)) { return 4; };
+        match output.الحالة with
+        | حالة_إنهاء.خرج(3) -> {}
+        | _ -> { return 5; };
+        if (exit_success(&output.الحالة)) { return 6; };
+    };
+
+    // An empty environment and a null output: status only.
+    let quiet: mutable command = new_command(&shell);
+    let quiet_script: vector string = ["-c", "test -z \"$SULTANC_TEST_VAR\" && echo dropped"];
+    command_args(&mutable quiet, &quiet_script);
+    command_env_clear(&mutable quiet);
+    command_stdout(&mutable quiet, stdio.null());
+    match command_status(&quiet) with
+    | result.err(_) -> { return 7; }
+    | result.ok(status) -> { if (!exit_success(&status)) { return 8; }; };
+
+    let missing: string = "/nonexistent/sultanc-program";
+    let bad: command = new_command(&missing);
+    match command_status(&bad) with
+    | result.err(failure) -> {
+        let converted: Error = error_from_command_error(&failure);
+        let domain: string = "std.process";
+        let kind: string = "تشغيل";
+        if (!error_is(&converted, &domain, &kind)) { return 9; };
+    }
+    | result.ok(_) -> { return 10; };
+    return 42;
+}

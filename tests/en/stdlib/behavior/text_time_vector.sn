@@ -1,0 +1,130 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/stdlib/behavior/text_time_vector.sn
+// std.text additions (split_whitespace, splitn, replacen, strip_prefix and
+// strip_suffix, ASCII case, count_matches, char_count, eq_ignore_ascii_case),
+// std.time.duration_text (Go's duration notation both ways) and
+// std.collections.vector.
+import std.text.transform;
+import std.text.search;
+import std.text.compare;
+import std.time.duration;
+import std.time.duration_text;
+import std.collections.vector;
+import std.error.failure;
+import std.error.from_duration;
+
+def compare_int(a: &int, b: &int): int {
+    if (*a < *b) { return -1; };
+    if (*a > *b) { return 1; };
+    return 0;
+}
+def equal_int(a: &int, b: &int): bool { return *a == *b; }
+
+def format_is(nanoseconds: int, expected: string): bool {
+    let value: duration = duration_from_nanoseconds(nanoseconds);
+    let text: string = format_duration(&value);
+    return texts_equal(&text, &expected);
+}
+
+def parse_is(text: string, nanoseconds: int): bool {
+    match parse_duration(&text) with
+    | result.err(_) -> { return false; }
+    | result.ok(value) -> { return duration_nanoseconds(&value) == nanoseconds; };
+}
+
+def main(): int {
+    let spaced: string = "  alpha\tbeta \n gamma  ";
+    let words: vector string = split_whitespace(&spaced);
+    let gamma: string = "gamma";
+    if (length(words) != 3 || !texts_equal(&words[2], &gamma)) { return 1; };
+    let csv: string = "a,b,c,d";
+    let comma: string = ",";
+    let two: vector string = splitn(&csv, &comma, 2);
+    let rest: string = "b,c,d";
+    if (length(two) != 2 || !texts_equal(&two[1], &rest)) { return 2; };
+    let zero: vector string = splitn(&csv, &comma, 0);
+    if (length(zero) != 0) { return 3; };
+    let dash: string = "-";
+    let replaced: string = replacen(&csv, &comma, &dash, 2);
+    let expected_replaced: string = "a-b-c,d";
+    if (!texts_equal(&replaced, &expected_replaced)) { return 4; };
+    let file: string = "report.tar.gz";
+    let report: string = "report.";
+    let gz: string = ".gz";
+    match strip_prefix(&file, &report) with
+    | option.some(tail) -> { let expected_tail: string = "tar.gz"; if (!texts_equal(&tail, &expected_tail)) { return 5; }; }
+    | option.none -> { return 6; };
+    match strip_suffix(&file, &gz) with
+    | option.some(head) -> { let expected_head: string = "report.tar"; if (!texts_equal(&head, &expected_head)) { return 7; }; }
+    | option.none -> { return 8; };
+    match strip_prefix(&file, &gz) with
+    | option.some(_) -> { return 9; }
+    | option.none -> {};
+    let mixed: string = "SultanC 2026 سلطان";
+    let lower: string = to_ascii_lowercase(&mixed);
+    let upper: string = to_ascii_uppercase(&mixed);
+    let expected_lower: string = "sultanc 2026 سلطان";
+    let expected_upper: string = "SULTANC 2026 سلطان";
+    if (!texts_equal(&lower, &expected_lower) || !texts_equal(&upper, &expected_upper)) { return 10; };
+    if (!eq_ignore_ascii_case(&lower, &upper)) { return 11; };
+    let banana: string = "banana";
+    let ana: string = "ana";
+    let empty: string = "";
+    if (count_matches(&banana, &ana) != 1) { return 12; };
+    if (count_matches(&mixed, &empty) != char_count(&mixed) + 1) { return 13; };
+    if (char_count(&mixed) != 18) { return 14; };
+
+    if (!format_is(0, "0s") || !format_is(1, "1ns") || !format_is(1500, "1.5µs")) { return 15; };
+    if (!format_is(2500000, "2.5ms") || !format_is(1000000000, "1s") || !format_is(-2000000000, "-2s")) { return 16; };
+    if (!format_is(3723500000000, "1h2m3.5s") || !format_is(60000000000, "1m0s")) { return 17; };
+    if (!format_is(-9223372036854775807 - 1, "-2562047h47m16.854775808s")) { return 18; };
+    if (!parse_is("1h2m3.5s", 3723500000000) || !parse_is("-1.5h", -5400000000000)) { return 19; };
+    if (!parse_is("300ms", 300000000) || !parse_is("1.5µs", 1500) || !parse_is("2us", 2000) || !parse_is("0", 0)) { return 20; };
+    if (!parse_is("+.5s", 500000000) || !parse_is("1.000000001s", 1000000001)) { return 21; };
+    let bad: string = "1d";
+    match parse_duration(&bad) with
+    | result.err(failure) -> {
+        let converted: Error = error_from_duration_error(&failure);
+        let domain: string = "std.time";
+        let kind: string = "وحدة_مجهولة";
+        if (!error_is(&converted, &domain, &kind)) { return 22; };
+    }
+    | result.ok(_) -> { return 23; };
+    let huge: string = "3000000h";
+    match parse_duration(&huge) with
+    | result.err(duration_error.overflow) -> {}
+    | _ -> { return 24; };
+    let malformed: string = "1.s.";
+    match parse_duration(&malformed) with
+    | result.err(_) -> {}
+    | result.ok(_) -> { return 25; };
+    let negative: duration = duration_from_nanoseconds(-5);
+    match duration_abs(&negative) with
+    | option.some(value) -> { if (duration_nanoseconds(&value) != 5) { return 26; }; }
+    | option.none -> { return 27; };
+    match duration_divide(&negative, 0) with
+    | option.some(_) -> { return 28; }
+    | option.none -> {};
+
+    let numbers: mutable vector int = [5, 3, 9, 1, 7];
+    reverse_vector(&mutable numbers);
+    if (numbers[0] != 7 || numbers[4] != 5) { return 29; };
+    match position_max_by(&numbers, compare_int) with
+    | option.some(at) -> { if (at != 2) { return 30; }; }
+    | option.none -> { return 31; };
+    match position_min_by(&numbers, compare_int) with
+    | option.some(at) -> { if (at != 1) { return 32; }; }
+    | option.none -> { return 33; };
+    let nine: int = 9;
+    match index_of_by(&numbers, &nine, equal_int) with
+    | option.some(at) -> { if (at != 2) { return 34; }; }
+    | option.none -> { return 35; };
+    let four: int = 4;
+    if (contains_by(&numbers, &four, equal_int)) { return 36; };
+    rotate_left(&mutable numbers, 2);
+    if (numbers[0] != 9 || numbers[4] != 1) { return 37; };
+    return 42;
+}

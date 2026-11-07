@@ -1,0 +1,34 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/language/comptime/value_block.sn
+// Statement-valued compile-time blocks: locals, loops and calls inside the
+// block, the final expression supplies the value.
+def sum_squares(limit: int): int {
+    let total: mutable int = 0;
+    let i: mutable int = 1;
+    while (i <= limit) {
+        total := total + i * i;
+        i := i + 1;
+    }
+    return total;
+}
+
+def main(): int {
+    let base: int = comptime {
+        let k: mutable int = 0;
+        let acc: mutable int = 0;
+        while (k < 3) {
+            acc := acc + sum_squares(k + 1);
+            k := k + 1;
+        }
+        acc
+    };
+    let result: mutable int = 0;
+    result := comptime {
+        let extra: int = 22;
+        extra
+    };
+    return base + result;
+}

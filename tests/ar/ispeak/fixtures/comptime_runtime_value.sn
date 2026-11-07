@@ -1,0 +1,12 @@
+// اختبار: رفض
+// تشخيص: SULTANC-COMPTIME-NON-CONSTANT
+// نظير: tests/en/ispeak/fixtures/comptime_runtime_value.sn
+// Deliberately invalid: a runtime parameter is not a pure comptime constant.
+// خرج-تشخيص-عربي: comptime_runtime_value.ar.stderr
+// خرج-تشخيص-إنجليزي: comptime_runtime_value.en.stderr
+عرف القيمة(س: عدد): عدد {
+    أرجع وقت_الترجمة س;
+}
+عرف الرئيسية(): عدد {
+    أرجع القيمة(42);
+}

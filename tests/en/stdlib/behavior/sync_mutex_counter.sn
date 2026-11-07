@@ -1,0 +1,45 @@
+// اختبار: تشغيل
+// أهداف: x86_64-linux
+// خروج: 0
+// std.sync.mutex: 8 threads each take the lock 10 000 times and increment
+// one counter behind it (an Arc<Mutex<i64>>); the total is exact, and the
+// Arc is back to one handle once the threads are joined (they dropped their
+// clones). Counterpart: tests/ar/stdlib/behavior/sync_mutex_counter.sn. No
+// pair directive: the interpreter runs one thread.
+import std.sync.arc;
+import std.sync.mutex;
+import std.thread.thread;
+
+def bump(v: &mutable i64): void { *v := *v + 1; }
+def read(v: &mutable i64): i64 { return *v; }
+
+def work(m: &arc<mutex<i64>>): void {
+    let i: mutable i64 = 0;
+    while (i < 10000) {
+        with_lock(arc_get(m), fn(v: &mutable i64): void -> bump(v));
+        i := i + 1;
+    }
+}
+
+def main(): i32 {
+    let counter: arc<mutex<i64>> = arc_new(mutex_new(0 as i64));
+    let handles: mutable vector join_handle = [];
+    let t: mutable i32 = 0;
+    while (t < 8) {
+        let mine: arc<mutex<i64>> = arc_clone(&counter);
+        match spawn(fn(): void -> work(&mine)) with
+        | result.ok(h) -> { append(handles, h); }
+        | result.err(_) -> { return 1; };
+        t := t + 1;
+    }
+    let j: mutable uint = 0;
+    while (j < (length(handles) as uint)) { join(&mutable handles[j]); j := j + 1; }
+    let total: i64 = with_lock(arc_get(&counter), fn(v: &mutable i64): i64 -> read(v));
+    if (total != (80000 as i64)) { return 2; };
+    if (arc_strong_count(&counter) != 1) { return 3; };
+    // try_lock succeeds on a free lock and reports none on a held one.
+    match try_lock(arc_get(&counter), fn(v: &mutable i64): i64 -> read(v)) with
+    | option.some(n) -> { if (n != (80000 as i64)) { return 4; }; }
+    | option.none -> { return 5; };
+    return 0;
+}

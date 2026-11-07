@@ -1,0 +1,8 @@
+// اختبار: رفض
+// تشخيص: SULTANC-MUTABILITY-WRITE-TO-IMMUTABLE
+// نظير: tests/ar/diagnostics/semantic/write_to_immutable.sn
+def main(): i32 {
+    let count: i32 = 1;
+    count := 2;
+    return count;
+}

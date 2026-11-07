@@ -1,0 +1,10 @@
+// اختبار: رفض
+// تشخيص: SULTANC-TARGET-FEATURE-UNSUPPORTED
+// خروج: 3
+// نظير: tests/en/diagnostics/semantic/name_for_other_target.sn
+لو (الهدف.المنصة == «plan9») {
+    عرف قيمة_بلان9(): ص32 { أرجع 1; }
+}
+عرف الرئيسية(): ص32 {
+    أرجع قيمة_بلان9();
+}

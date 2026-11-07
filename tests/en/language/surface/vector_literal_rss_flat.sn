@@ -1,0 +1,36 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// Vector literal expressions own their storage exactly once: 10^5 rounds of
+// literals passed by value, returned, nested, indexed and measured leave the
+// allocator's live bytes where they were. Counterpart:
+// tests/ar/language/surface/vector_literal_rss_flat.sn. It has no pair
+// directive: the interpreter does not use the std allocator whose counters
+// this reads.
+import std.os.allocation;
+import std.text.number;
+
+def count(v: vector string): int { return length(v) as int; }
+def make(i: int): vector string { return [int_to_text(i), int_to_text(i + 1)]; }
+
+def round(i: int): int {
+    let total: mutable int = count([int_to_text(i), "x"]) + count(make(i));
+    let grid: vector vector string = [[int_to_text(i)], make(i), []];
+    total := total + (length(grid) as int) + (length([int_to_text(i), int_to_text(2)][0]) as int);
+    total := total + (length([make(i), make(i + 1)]) as int);
+    return total;
+}
+
+def main(): int {
+    let warm_up: int = round(0);
+    if (warm_up < 0) { return 1; };
+    let before: u64 = بايتات_حية_مخصص_النظام();
+    let i: mutable int = 0;
+    while (i < 100000) {
+        if (round(i) < 0) { return 2; };
+        i := i + 1;
+    }
+    let after: u64 = بايتات_حية_مخصص_النظام();
+    if (after != before) { return 3; };
+    return 42;
+}

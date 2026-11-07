@@ -1,0 +1,184 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/stdlib/behavior/fs_lock.sn
+// std.fs.lock between two processes (Rust File::lock, lock_shared,
+// try_lock, try_lock_shared, unlock; flock on Unix). The program starts a
+// second copy of itself with std.process.command through
+// std.env.executable (Rust's env::current_exe): the executable runs itself;
+// under the interpreter argv[0] is this source and the current executable
+// is the interpreter, so the copy is the interpreter running it again
+// (`interpret <source> -- ...`), on every host. The copy opens the same
+// file and reports through its exit status (10: would block, 11: locked)
+// or, for a blocking lock, through its output.
+import std.fs.lock;
+import std.fs.handle;
+import std.fs.temporary;
+import std.fs.mutation;
+import std.env.executable;
+import std.process.command;
+import std.process.child;
+import std.process.arguments;
+import std.text.search;
+import std.text.from_bytes;
+import std.text.compare;
+import std.io.print;
+import std.time.time;
+
+// The second process: arguments [self, "child", mode, path].
+def run_child(mode: &string, path: &string): int {
+    let handle: file_handle;
+    match open_file_handle_read(path) with
+    | result.err(_) -> { return 20; }
+    | result.ok(opened) -> { handle := opened; };
+    let exclusive: string = "try-exclusive";
+    let shared: string = "try-shared";
+    if (texts_equal(mode, &exclusive) || texts_equal(mode, &shared)) {
+        let attempt: mutable result int, try_lock_error = result.ok(0);
+        if (texts_equal(mode, &exclusive)) { attempt := file_try_lock(&handle); }
+        else { attempt := file_try_lock_shared(&handle); };
+        match attempt with
+        | result.err(try_lock_error.would_block) -> { return 10; }
+        | result.err(_) -> { return 21; }
+        | result.ok(_) -> { return 11; };
+    };
+    // "wait-exclusive": say so, block until the parent unlocks, say so.
+    let started: string = "waiting\n";
+    print(started);
+    match file_lock(&handle) with
+    | result.err(_) -> { return 22; }
+    | result.ok(_) -> {};
+    let locked: string = "locked\n";
+    print(locked);
+    match file_unlock(&handle) with
+    | result.err(_) -> { return 23; }
+    | result.ok(_) -> {};
+    return 0;
+}
+
+// A command that runs this program again with the given arguments.
+def self_command(mode: &string, path: &string): command {
+    let args: vector string = arguments();
+    let me: string = copy_text(&args[0]);
+    let source: string = ".sn";
+    let program: mutable string = copy_text(&me);
+    match current_executable() with
+    | result.err(_) -> {}
+    | result.ok(path) -> { program := path; };
+    let cmd: mutable command = new_command(&program);
+    if (ends_with(&me, &source)) {
+        let run: string = "interpret";
+        let separator: string = "--";
+        command_arg(&mutable cmd, &run);
+        command_arg(&mutable cmd, &me);
+        command_arg(&mutable cmd, &separator);
+    };
+    let child_word: string = "child";
+    command_arg(&mutable cmd, &child_word);
+    command_arg(&mutable cmd, mode);
+    command_arg(&mutable cmd, path);
+    return cmd;
+}
+
+def child_status(mode: &string, path: &string): int {
+    let cmd: command = self_command(mode, path);
+    match command_status(&cmd) with
+    | result.err(_) -> { return -1; }
+    | result.ok(حالة_إنهاء.خرج(code)) -> { return code; }
+    | result.ok(_) -> { return -2; };
+}
+
+// Reads the copy's output until a newline.
+def read_line_from(c: &mutable command_child): string {
+    let line: mutable vector u8 = [];
+    let buf: mutable vector u8 = [0];
+    while (true) {
+        match child_read_stdout(c, &mutable buf, 0, 1) with
+        | result.err(_) -> { return from_bytes(&line); }
+        | result.ok(0) -> { return from_bytes(&line); }
+        | result.ok(_) -> {
+            append(line, buf[0]);
+            if (buf[0] == 10) { return from_bytes(&line); };
+        };
+    }
+    return from_bytes(&line);
+}
+
+def main(): int {
+    let args: vector string = arguments();
+    let child_word: string = "child";
+    if ((length(args) as uint) == 4 && texts_equal(&args[1], &child_word)) {
+        return run_child(&args[2], &args[3]);
+    };
+    let prefix: string = "sultanc-lock-";
+    let path: string;
+    let mine: file_handle;
+    match create_temp_file(&prefix) with
+    | result.err(_) -> { return 1; }
+    | result.ok({ المسار: made_path, المقبض: made_handle }) -> { path := made_path; mine := made_handle; };
+    let try_exclusive: string = "try-exclusive";
+    let try_shared: string = "try-shared";
+    let wait_exclusive: string = "wait-exclusive";
+
+    // An exclusive lock here: the copy can take neither kind.
+    match file_lock(&mine) with
+    | result.err(_) -> { return 2; }
+    | result.ok(_) -> {};
+    if (child_status(&try_exclusive, &path) != 10) { return 3; };
+    if (child_status(&try_shared, &path) != 10) { return 4; };
+
+    // A shared lock here: the copy can share it but not exclude it.
+    match file_unlock(&mine) with
+    | result.err(_) -> { return 5; }
+    | result.ok(_) -> {};
+    match file_lock_shared(&mine) with
+    | result.err(_) -> { return 6; }
+    | result.ok(_) -> {};
+    if (child_status(&try_shared, &path) != 11) { return 7; };
+    if (child_status(&try_exclusive, &path) != 10) { return 8; };
+
+    // Unlocked: the copy takes the exclusive lock.
+    match file_unlock(&mine) with
+    | result.err(_) -> { return 9; }
+    | result.ok(_) -> {};
+    if (child_status(&try_exclusive, &path) != 11) { return 10; };
+
+    // A blocking lock waits for this process to let go.
+    match file_try_lock(&mine) with
+    | result.err(_) -> { return 11; }
+    | result.ok(_) -> {};
+    let waiter_cmd: mutable command = self_command(&wait_exclusive, &path);
+    command_stdout(&mutable waiter_cmd, stdio.piped());
+    let waiter: mutable command_child;
+    match command_spawn(&waiter_cmd) with
+    | result.err(_) -> { return 12; }
+    | result.ok(started) -> { waiter := started; };
+    let first: string = read_line_from(&mutable waiter);
+    let want_first: string = "waiting\n";
+    if (!texts_equal(&first, &want_first)) { return 13; };
+    match sleep_ns(300000000) with
+    | result.err(_) -> { return 14; }
+    | result.ok(_) -> {};
+    match child_try_wait(&mutable waiter) with
+    | result.err(_) -> { return 15; }
+    | result.ok(option.some(_)) -> { return 16; }
+    | result.ok(option.none) -> {};
+    match file_unlock(&mine) with
+    | result.err(_) -> { return 17; }
+    | result.ok(_) -> {};
+    let second: string = read_line_from(&mutable waiter);
+    let want_second: string = "locked\n";
+    if (!texts_equal(&second, &want_second)) { return 18; };
+    match child_wait(&mutable waiter) with
+    | result.err(_) -> { return 19; }
+    | result.ok(status) -> { if (!exit_success(&status)) { return 20; }; };
+
+    match file_handle_close(mine) with
+    | result.err(_) -> { return 21; }
+    | result.ok(_) -> {};
+    match remove_file(&path) with
+    | result.err(_) -> { return 22; }
+    | result.ok(_) -> {};
+    return 42;
+}

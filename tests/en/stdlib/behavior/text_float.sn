@@ -1,0 +1,82 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/stdlib/behavior/text_float.sn
+// std.text.float: the shortest decimal text that reads back to the same float
+// (against ECMAScript's Number::toString) and exact parsing to the nearest f64
+// (infinities, NaN, negative zero, errors).
+import std.text.float;
+import std.math.float;
+import std.text.compare;
+
+def check(bits: u64, text: string): bool {
+    let got: string = f64_to_string(f64_from_bits(bits));
+    if (!texts_equal(&got, &text)) { return false; };
+    match parse_f64(&text) with
+    | result.ok(value) -> { return f64_to_bits(value) == bits; }
+    | result.err(_) -> { return false; };
+}
+def parsed_bits(text: string): u64 {
+    match parse_f64(&text) with
+    | result.ok(value) -> { return f64_to_bits(value); }
+    | result.err(_) -> { return 1; };
+}
+def rejected(text: string): bool {
+    match parse_f64(&text) with
+    | result.ok(_) -> { return false; }
+    | result.err(_) -> { return true; };
+}
+def main(): int {
+    let failures: mutable int = 0;
+    if (!check(4591870180066957722, "0.1")) { failures := failures + 1; };
+    if (!check(4596373779694328218, "0.2")) { failures := failures + 1; };
+    if (!check(4599075939470750516, "0.30000000000000004")) { failures := failures + 1; };
+    if (!check(4607182418800017408, "1")) { failures := failures + 1; };
+    if (!check(13830554455654793216, "-1")) { failures := failures + 1; };
+    if (!check(4609434218613702656, "1.5")) { failures := failures + 1; };
+    if (!check(4636737291354636288, "100")) { failures := failures + 1; };
+    if (!check(4921056587992461136, "1e+21")) { failures := failures + 1; };
+    if (!check(4906019910204099648, "100000000000000000000")) { failures := failures + 1; };
+    if (!check(4907451598986591450, "123456789012345680000")) { failures := failures + 1; };
+    if (!check(4502148214488346440, "1e-7")) { failures := failures + 1; };
+    if (!check(4517329193108106637, "0.000001")) { failures := failures + 1; };
+    if (!check(4518434226865098134, "0.000001234")) { failures := failures + 1; };
+    if (!check(1, "5e-324")) { failures := failures + 1; };
+    if (!check(4503599627370496, "2.2250738585072014e-308")) { failures := failures + 1; };
+    if (!check(9218868437227405311, "1.7976931348623157e+308")) { failures := failures + 1; };
+    if (!check(13686771371230025365, "-2.5e-10")) { failures := failures + 1; };
+    if (!check(4614256656552045848, "3.141592653589793")) { failures := failures + 1; };
+    if (!check(4604180019048437077, "0.6666666666666666")) { failures := failures + 1; };
+    if (!check(4845873199050653696, "9007199254740992")) { failures := failures + 1; };
+    if (!check(4616583683022153318, "4.35")) { failures := failures + 1; };
+    if (!check(4653144502051863213, "1234.5678")) { failures := failures + 1; };
+    if (!check(9094988921128908188, "1e+300")) { failures := failures + 1; };
+    if (!check(4602678819172646912, "0.5")) { failures := failures + 1; };
+    if (!check(9214364837600034816, "8.98846567431158e+307")) { failures := failures + 1; };
+    if (!check(4950912855330343670, "1e+23")) { failures := failures + 1; };
+    if (!check(4512825593480736141, "5e-7")) { failures := failures + 1; };
+    if (parsed_bits(".5") != 4602678819172646912) { failures := failures + 1; };
+    if (parsed_bits("5.") != 4617315517961601024) { failures := failures + 1; };
+    if (parsed_bits("+2") != 4611686018427387904) { failures := failures + 1; };
+    if (parsed_bits("1e400") != 9218868437227405312) { failures := failures + 1; };
+    if (parsed_bits("-1E400") != 18442240474082181120) { failures := failures + 1; };
+    if (parsed_bits("-0") != 9223372036854775808) { failures := failures + 1; };
+    if (parsed_bits("1e-400") != 0) { failures := failures + 1; };
+    if (parsed_bits("INF") != 9218868437227405312) { failures := failures + 1; };
+    if (parsed_bits("-infinity") != 18442240474082181120) { failures := failures + 1; };
+    if (parsed_bits("2.2250738585072011e-308") != 4503599627370495) { failures := failures + 1; };
+    if (parsed_bits("0.1000000000000000055511151231257827021181583404541015625") != 4591870180066957722) { failures := failures + 1; };
+    if (f64_to_bits(f64_from_bits(parsed_bits("nan"))) != 9221120237041090560) { failures := failures + 1; };
+    if (!rejected("")) { failures := failures + 1; };
+    if (!rejected("abc")) { failures := failures + 1; };
+    if (!rejected("1e")) { failures := failures + 1; };
+    if (!rejected("--1")) { failures := failures + 1; };
+    if (!rejected("0x10")) { failures := failures + 1; };
+    if (!rejected("1.2.3")) { failures := failures + 1; };
+    if (!rejected(" 1")) { failures := failures + 1; };
+    if (!rejected("e5")) { failures := failures + 1; };
+    if (!rejected(".")) { failures := failures + 1; };
+    if (failures != 0) { return 1; };
+    return 42;
+}

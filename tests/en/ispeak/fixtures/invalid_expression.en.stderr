@@ -1,0 +1,6 @@
+error[SULTANC-PARSE-EXPRESSION]: Cannot parse the expression syntax — The expected result is `identifier`, but the actual result is `;`. The parser could not recognize the expression syntax.
+  --> tests/en/ispeak/fixtures/invalid_expression.sn:8:18..8:19
+   |
+ 8 |     let x: int = ;
+   |                  ^ parser discovered the problem here
+   |

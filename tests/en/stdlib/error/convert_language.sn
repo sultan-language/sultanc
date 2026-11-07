@@ -1,0 +1,126 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/stdlib/error/convert_language.sn
+// std.error converters (docs/ERRORS.md): every variant of every pilot enum
+// gives an Arabic message with an English language version; an Arabic
+// locale, or one without a version, gets the Arabic message.
+import std.error.failure;
+import std.error.from_os;
+import std.error.from_number;
+import std.error.from_json;
+import std.error.from_net;
+import std.fs.error;
+import std.text.number;
+import std.json.value;
+import std.net.ip;
+import std.net.socket_address;
+import std.text.language;
+import std.text.compare;
+
+// An English version that differs from the Arabic message, which Arabic and
+// French locales still get.
+def has_two_versions(failure: &Error): bool {
+    let arabic: string = error_message(failure);
+    let english_tag: string = "en-US";
+    let english: Locale = locale_from_tag(&english_tag);
+    let in_english: string = error_text_in(failure, &english);
+    if ((length(in_english) as uint) == 0 || texts_equal(&in_english, &arabic)) { return false; };
+    let arabic_tag: string = "ar";
+    let arabic_locale: Locale = locale_from_tag(&arabic_tag);
+    let in_arabic: string = error_text_in(failure, &arabic_locale);
+    let french_tag: string = "fr";
+    let french_locale: Locale = locale_from_tag(&french_tag);
+    let in_french: string = error_text_in(failure, &french_locale);
+    return texts_equal(&in_arabic, &arabic) && texts_equal(&in_french, &arabic);
+}
+
+def english_text_is(failure: &Error, expected: string): bool {
+    let tag: string = "en";
+    let locale: Locale = locale_from_tag(&tag);
+    let actual: string = error_text_in(failure, &locale);
+    return texts_equal(&actual, &expected);
+}
+
+def main(): int {
+    // std.fs, std.io, std.process: the 11 classes, and numeric statuses.
+    let classes: mutable vector os_error_class = [];
+    append(classes, os_error_class.none());
+    append(classes, os_error_class.not_found());
+    append(classes, os_error_class.permission_denied());
+    append(classes, os_error_class.already_exists());
+    append(classes, os_error_class.invalid_input());
+    append(classes, os_error_class.unsupported());
+    append(classes, os_error_class.is_directory());
+    append(classes, os_error_class.not_directory());
+    append(classes, os_error_class.resource_exhausted());
+    append(classes, os_error_class.interrupted());
+    append(classes, os_error_class.other());
+    let i: mutable uint = 0;
+    while (i < (length(classes) as uint)) {
+        let failure: Error = error_from_os_error_class(&classes[i]);
+        if (!has_two_versions(&failure)) { return 1; };
+        i := i + 1;
+    }
+    let not_found: Error = error_from_os_error_class(&classes[1]);
+    if (!english_text_is(&not_found, "the file or path does not exist")) { return 2; };
+    let status: int = -2;
+    let fs_failure: Error = error_from_fs_error(&status);
+    let io_failure: Error = error_from_io_error(&status);
+    let process_failure: Error = error_from_process_error(&status);
+    if (!has_two_versions(&fs_failure) || !has_two_versions(&io_failure) || !has_two_versions(&process_failure)) { return 3; };
+
+    // std.text.number: the 5 variants.
+    let number_errors: mutable vector integer_parse_error = [];
+    append(number_errors, integer_parse_error.empty_text());
+    append(number_errors, integer_parse_error.sign_without_digits());
+    append(number_errors, integer_parse_error.invalid_digit(3));
+    append(number_errors, integer_parse_error.overflow());
+    append(number_errors, integer_parse_error.negative_unsigned());
+    i := 0;
+    while (i < (length(number_errors) as uint)) {
+        let failure: Error = error_from_integer_parse_error(&number_errors[i]);
+        if (!has_two_versions(&failure)) { return 4; };
+        i := i + 1;
+    }
+    let overflow: Error = error_from_integer_parse_error(&number_errors[3]);
+    if (!english_text_is(&overflow, "the number is out of the type's range")) { return 5; };
+
+    // std.json: the 9 classes.
+    let kinds: mutable vector json_error_kind = [];
+    append(kinds, json_error_kind.unexpected_eof());
+    append(kinds, json_error_kind.unexpected_token());
+    append(kinds, json_error_kind.invalid_escape());
+    append(kinds, json_error_kind.invalid_unicode_escape());
+    append(kinds, json_error_kind.invalid_utf8());
+    append(kinds, json_error_kind.invalid_number());
+    append(kinds, json_error_kind.trailing_text());
+    append(kinds, json_error_kind.object_capacity_overflow());
+    append(kinds, json_error_kind.nesting_too_deep());
+    i := 0;
+    while (i < (length(kinds) as uint)) {
+        let problem: json_error = { الصنف: kinds[i], الإزاحة: i };
+        let failure: Error = error_from_json_error(&problem);
+        if (!has_two_versions(&failure)) { return 6; };
+        i := i + 1;
+    }
+    let trailing_problem: json_error = { الصنف: kinds[6], الإزاحة: 3 };
+    let trailing: Error = error_from_json_error(&trailing_problem);
+    if (!english_text_is(&trailing, "extra text after the JSON value")) { return 7; };
+
+    // std.net: the 2 + 3 variants.
+    let ip_syntax: خطأ_تحليل_آيبي = خطأ_تحليل_آيبي.صيغة_غير_صالحة();
+    let e1: Error = error_from_ip_parse_error(&ip_syntax);
+    let ip_range: خطأ_تحليل_آيبي = خطأ_تحليل_آيبي.جزء_خارج_المدى();
+    let e2: Error = error_from_ip_parse_error(&ip_range);
+    let socket_syntax: خطأ_تحليل_عنوان_مقبس = خطأ_تحليل_عنوان_مقبس.صيغة_غير_صالحة();
+    let e3: Error = error_from_socket_address_parse_error(&socket_syntax);
+    let socket_address: خطأ_تحليل_عنوان_مقبس = خطأ_تحليل_عنوان_مقبس.عنوان_غير_صالح();
+    let e4: Error = error_from_socket_address_parse_error(&socket_address);
+    let socket_port: خطأ_تحليل_عنوان_مقبس = خطأ_تحليل_عنوان_مقبس.منفذ_غير_صالح();
+    let e5: Error = error_from_socket_address_parse_error(&socket_port);
+    if (!has_two_versions(&e1) || !has_two_versions(&e2) || !has_two_versions(&e3) || !has_two_versions(&e4) || !has_two_versions(&e5)) { return 8; };
+    if (!english_text_is(&e5, "invalid socket address port")) { return 9; };
+    return 42;
+}

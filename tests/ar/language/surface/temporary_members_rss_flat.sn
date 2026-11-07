@@ -1,0 +1,59 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// قراءة عضو أو عنصر من قيمة مؤقتة تتلف باقيها: 10^5 جولة من قراءات الحقول
+// والحقول المتداخلة ونداءات إغلاقات الحقول والعناصر والإغلاقات المُرجعة من
+// نواتج النداءات تترك البايتات الحية في المخصص كما كانت.
+// النظير: tests/en/language/surface/temporary_members_rss_flat.sn. لا توجيه
+// نظير له: المفسر لا يستعمل مخصص std الذي تقرأ هذه الشفرة عداداته.
+استورد std.os.allocation;
+استورد std.text.number;
+
+نوع Inner = { name: نص, n: عدد };
+نوع Rec = { name: نص, id: عدد, callback: دالة(عدد): عدد, inner: Inner, items: متجه نص };
+
+عرف adder(k: عدد): دالة(عدد): عدد { أرجع دالة(x: عدد): عدد -> x + k; }
+
+عرف make(i: عدد): Rec {
+    دع items: متغير متجه نص = [];
+    ألحق(items, عدد_إلى_نص(i));
+    ألحق(items, عدد_إلى_نص(i + 10));
+    دع inner: Inner = { name: عدد_إلى_نص(i * 2), n: i };
+    دع r: Rec = { name: عدد_إلى_نص(i), id: i, callback: adder(i), inner: inner, items: items };
+    أرجع r;
+}
+
+عرف words(i: عدد): متجه نص {
+    دع w: متغير متجه نص = [];
+    ألحق(w, عدد_إلى_نص(i));
+    ألحق(w, عدد_إلى_نص(i + 100));
+    أرجع w;
+}
+
+عرف size(s: نص): عدد { أرجع الطول(s) مثل عدد; }
+
+عرف round(i: عدد): عدد {
+    دع total: متغير عدد = make(i).id;
+    دع name: نص = make(i).name;
+    total := total + size(name) + make(i).callback(3);
+    دع f: دالة(عدد): عدد = make(i).callback;
+    total := total + f(1) + size(make(i).inner.name) + make(i).inner.n;
+    total := total + (الطول(make(i).items) مثل عدد) + size(make(i).items[0]);
+    دع w: نص = words(i)[1];
+    total := total + size(w) + adder(i)(2);
+    أرجع total;
+}
+
+عرف الرئيسية(): عدد {
+    دع warm_up: عدد = round(0);
+    لو (warm_up < 0) { أرجع 1; };
+    دع before: ط64 = بايتات_حية_مخصص_النظام();
+    دع i: متغير عدد = 0;
+    طالما (i < 100000) {
+        لو (round(i) < 0) { أرجع 2; };
+        i := i + 1;
+    }
+    دع after: ط64 = بايتات_حية_مخصص_النظام();
+    لو (after != before) { أرجع 3; };
+    أرجع 42;
+}

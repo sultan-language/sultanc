@@ -1,0 +1,79 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// مرحلة0: نعم
+// نظير: tests/ar/language/propagation/positions.sn
+// The propagation operator `?` (docs/ERRORS.md) in its four positions: a let
+// initializer, an assignment, a return and an expression statement, on a
+// result and on an option. The Arabic counterpart spells it `؟`.
+import std.io.println;
+
+def parse(x: int): result int, string {
+    if (x > 0) { return result.ok(x); };
+    return result.err("سالب");
+}
+
+def double(x: int): result int, string {
+    let v: int = parse(x)?;
+    return result.ok(v * 2);
+}
+
+def assign(x: int): result int, string {
+    let v: mutable int = 0;
+    v := parse(x)?;
+    parse(x - 3)?;
+    let kept: result int, string = parse(v - 4);
+    kept?;
+    return result.ok(v + 1);
+}
+
+def wrap(x: int): result result int, string, string {
+    if (x > 100) { return result.err("كبير"); };
+    return result.ok(parse(x));
+}
+
+def return_inner(x: int): result int, string {
+    return wrap(x)?;
+}
+
+def choose(x: int): option int {
+    if (x > 0) { return option.some(x); };
+    return option.none();
+}
+
+def increment_option(x: int): option int {
+    let v: int = choose(x)?;
+    return option.some(v + 1);
+}
+
+def result_code(r: result int, string): int {
+    match r with
+    | result.ok(v) -> { return v; }
+    | result.err(e) -> {
+        let ignored: result int, int = println(e);
+        return 0 - 1;
+    };
+}
+
+def option_code(r: option int): int {
+    match r with
+    | option.some(v) -> { return v; }
+    | option.none -> { return 0 - 1; };
+}
+
+def main(): int {
+    if (result_code(double(4)) != 8) { return 1; };
+    if (result_code(double(0)) != 0 - 1) { return 2; };
+    if (result_code(assign(9)) != 10) { return 3; };
+    if (result_code(assign(0)) != 0 - 1) { return 4; };
+    if (result_code(assign(2)) != 0 - 1) { return 5; };
+    if (result_code(assign(4)) != 0 - 1) { return 6; };
+    if (result_code(assign(5)) != 6) { return 12; };
+    if (result_code(return_inner(7)) != 7) { return 7; };
+    if (result_code(return_inner(0)) != 0 - 1) { return 8; };
+    if (result_code(return_inner(200)) != 0 - 1) { return 9; };
+    if (option_code(increment_option(6)) != 7) { return 10; };
+    if (option_code(increment_option(0)) != 0 - 1) { return 11; };
+    return 42;
+}

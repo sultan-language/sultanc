@@ -1,0 +1,103 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// مرحلة0: نعم
+// نظير: tests/ar/language/propagation/generic_positions.sn
+// `?` inside generic functions, in every position: a let initializer, an
+// assignment, a return, an expression statement, and each of them nested in
+// if, while and match bodies, on a result and on an option. Every instance of
+// a generic function lowers the expansion with its own types.
+def check<T>(x: &T, ok: bool, n: int): result int, int {
+    if (ok) { return result.ok(n); };
+    return result.err(7);
+}
+
+def wrap<T>(x: &T, ok: bool): result result int, int, int {
+    return result.ok(check(x, ok, 5));
+}
+
+def pick<T>(x: &T, ok: bool): option int {
+    if (ok) { return option.some(4); };
+    return option.none();
+}
+
+def let_position<T>(x: &T, ok: bool): result int, int {
+    let v: int = check(x, ok, 5)?;
+    return result.ok(v);
+}
+
+def assign_position<T>(x: &T, ok: bool): result int, int {
+    let v: mutable int = 0;
+    v := check(x, ok, 5)?;
+    return result.ok(v);
+}
+
+def return_position<T>(x: &T, ok: bool): result int, int {
+    return wrap(x, ok)?;
+}
+
+def statement_position<T>(x: &T, ok: bool): result int, int {
+    check(x, ok, 0)?;
+    return result.ok(1);
+}
+
+def nested<T>(x: &T, ok: bool, n: int): result int, int {
+    let count: mutable int = 0;
+    if (n > 0) {
+        check(x, ok, 0)?;
+        count := count + 1;
+    } else {
+        let w: int = check(x, ok, 0)?;
+        count := count + w;
+    };
+    let i: mutable int = 0;
+    while (i < n) {
+        statement_position(x, ok)?;
+        count := count + 1;
+        i := i + 1;
+    }
+    match n with
+    | 3 -> {
+        let extra: int = statement_position(x, ok)?;
+        count := count + extra;
+    }
+    | _ -> { };
+    return result.ok(count);
+}
+
+def option_positions<T>(x: &T, ok: bool): option int {
+    let a: int = pick(x, ok)?;
+    pick(x, true)?;
+    let b: mutable int = 0;
+    b := pick(x, true)?;
+    return option.some(a + b);
+}
+
+def code(r: result int, int): int {
+    match r with
+    | result.ok(v) -> { return v; }
+    | result.err(e) -> { return 0 - e; };
+}
+
+def main(): int {
+    let n: int = 1;
+    let word: string = "w";
+    if (code(let_position(&n, true)) != 5) { return 1; };
+    if (code(let_position(&word, false)) != 0 - 7) { return 2; };
+    if (code(assign_position(&n, true)) != 5) { return 3; };
+    if (code(assign_position(&word, false)) != 0 - 7) { return 4; };
+    if (code(return_position(&n, true)) != 5) { return 5; };
+    if (code(return_position(&word, false)) != 0 - 7) { return 6; };
+    if (code(statement_position(&word, true)) != 1) { return 7; };
+    if (code(nested(&n, true, 3)) != 5) { return 8; };
+    if (code(nested(&word, false, 0)) != 0 - 7) { return 9; };
+    if (code(nested(&word, true, 2)) != 3) { return 10; };
+    match option_positions(&n, true) with
+    | option.some(v) -> { if (v != 8) { return 11; }; }
+    | option.none -> { return 12; };
+    match option_positions(&word, false) with
+    | option.some(_) -> { return 13; }
+    | option.none -> { };
+    return 42;
+}

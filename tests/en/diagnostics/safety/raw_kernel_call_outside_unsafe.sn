@@ -1,0 +1,8 @@
+// اختبار: رفض
+// تشخيص: SULTANC-SAFETY-UNSAFE-OPERATION
+// نظير: tests/ar/diagnostics/safety/raw_kernel_call_outside_unsafe.sn
+// A raw kernel call passes unchecked pointers, lengths and handles: it needs an unsafe scope.
+def main(): int {
+    let result: u64 = raw_kernel_call(39 as u64, 0 as u64, 0 as u64, 0 as u64, 0 as u64, 0 as u64, 0 as u64);
+    return 0;
+}

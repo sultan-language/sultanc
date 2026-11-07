@@ -7,7 +7,7 @@ import std.fs.read_file;
 import std.fs.write_file;
 
 def main(): int {
-    let path: string = "stage0-utf8.tmp";
+    let path: string = "build/stage0-utf8.tmp";
     let content: string = "ع";
     let written: result int, int = write_file(&path, &content);
     match written with

@@ -1,0 +1,108 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 0
+// نظير: tests/ar/ispeak/check_registry.sn
+import std.text.compare;
+import std.text.from_bytes;
+import compiler.diagnostics.identity;
+import compiler.diagnostics.reason;
+import compiler.diagnostics.registry;
+import compiler.diagnostics.schema;
+import compiler.ispeak.ispeak;
+
+// Registry contract: every public identity has a code, the code finds the same
+// identity again (so codes are unique), and proposed codes/classes are frozen.
+def matching_code(identity: معرف_تشخيص, expected: string): bool {
+    let code_definition: تعريف_تشخيص = تعريف_التشخيص(identity);
+    let actual: string = انسخ_نص(&code_definition.الكود);
+    return texts_equal(&actual, &expected);
+}
+
+def matching_class(identity: معرف_تشخيص, expected_class: فئة_تشخيص): bool {
+    let definition: تعريف_تشخيص = تعريف_التشخيص(identity);
+    return definition.الفئة == expected_class;
+}
+
+def main(): int {
+    let all_keys: vector مفتاح_رسالة_تشخيص = كل_مفاتيح_رسائل_التشخيص();
+    let number: mutable uint = 0;
+    let count: mutable uint = 0;
+    while (number < (length(all_keys) as uint)) {
+        match all_keys[number] with
+        | مفتاح_رسالة_تشخيص.تشخيص(identity) -> {
+            let code_definition: تعريف_تشخيص = تعريف_التشخيص(identity);
+            let code: string = انسخ_نص(&code_definition.الكود);
+            let empty_value: string = "";
+            if (texts_equal(&code, &empty_value)) { return 1; };
+            match معرف_تشخيص_من_كود(&code) with
+            | option.some(recovered) -> {
+                if (recovered != identity) { return 2; };
+            }
+            | option.none -> { return 2; };
+            match شرح_كود_عام(لغة_تشخيص.العربية(), &code) with
+            | option.some(_) -> { }
+            | option.none -> { return 7; };
+            count := count + 1;
+        }
+        | _ -> { };
+        number := number + 1;
+    }
+    if (count != (142 as uint)) { return 3; };
+    let unknown: string = "SULTANC-E0001";
+    match معرف_تشخيص_من_كود(&unknown) with
+    | option.none -> { }
+    | _ -> { return 8; };
+    let warning: تعريف_تشخيص = تعريف_التشخيص(معرف_تشخيص.تحذير_عام());
+    if (warning.الشدة != شدة_تشخيص.تحذير()) { return 9; };
+    if (!matching_code(معرف_تشخيص.هدف_لا_يدعم_الميزة(), "SULTANC-TARGET-FEATURE-UNSUPPORTED")) { return 4; };
+    if (!matching_class(معرف_تشخيص.هدف_لا_يدعم_الميزة(), فئة_تشخيص.بيئة())) { return 5; };
+    if (!matching_code(معرف_تشخيص.بناء_غير_مدعوم_في_الخلفية(), "SULTANC-BACKEND-UNSUPPORTED-CONSTRUCT")) { return 4; };
+    if (!matching_class(معرف_تشخيص.بناء_غير_مدعوم_في_الخلفية(), فئة_تشخيص.غير_منفذ())) { return 5; };
+    if (!matching_code(معرف_تشخيص.مدى_ترميز_متجاوز(), "SULTANC-BACKEND-RANGE-EXCEEDED")) { return 4; };
+    if (!matching_class(معرف_تشخيص.مدى_ترميز_متجاوز(), فئة_تشخيص.مستخدم())) { return 5; };
+    if (!matching_code(معرف_تشخيص.رمز_ربط_غير_معرف(), "SULTANC-LINK-UNDEFINED-SYMBOL")) { return 4; };
+    if (!matching_class(معرف_تشخيص.رمز_ربط_غير_معرف(), فئة_تشخيص.مستخدم())) { return 5; };
+    if (!matching_code(معرف_تشخيص.رمز_ربط_مكرر(), "SULTANC-LINK-DUPLICATE-SYMBOL")) { return 4; };
+    if (!matching_class(معرف_تشخيص.رمز_ربط_مكرر(), فئة_تشخيص.مستخدم())) { return 5; };
+    if (!matching_code(معرف_تشخيص.موفر_وقت_تشغيل_مفقود(), "SULTANC-TARGET-RUNTIME-PROVIDER-MISSING")) { return 4; };
+    if (!matching_class(معرف_تشخيص.موفر_وقت_تشغيل_مفقود(), فئة_تشخيص.بيئة())) { return 5; };
+    if (!matching_code(معرف_تشخيص.نفاد_ذاكرة_المترجم(), "SULTANC-HOST-OUT-OF-MEMORY")) { return 4; };
+    if (!matching_class(معرف_تشخيص.نفاد_ذاكرة_المترجم(), فئة_تشخيص.بيئة())) { return 5; };
+    if (!matching_code(معرف_تشخيص.رمز_ربط_بنوع_غير_متطابق(), "SULTANC-LINK-SYMBOL-TYPE-MISMATCH")) { return 4; };
+    if (!matching_class(معرف_تشخيص.رمز_ربط_بنوع_غير_متطابق(), فئة_تشخيص.مستخدم())) { return 5; };
+    if (!matching_code(معرف_تشخيص.رمز_خارجي_غير_مدعوم(), "SULTANC-LINK-EXTERNAL-SYMBOL-UNSUPPORTED")) { return 4; };
+    if (!matching_class(معرف_تشخيص.رمز_خارجي_غير_مدعوم(), فئة_تشخيص.غير_منفذ())) { return 5; };
+    if (!matching_code(معرف_تشخيص.إعادة_توطين_غير_مدعومة(), "SULTANC-OBJECT-RELOCATION-UNSUPPORTED")) { return 4; };
+    if (!matching_class(معرف_تشخيص.إعادة_توطين_غير_مدعومة(), فئة_تشخيص.غير_منفذ())) { return 5; };
+    if (!matching_code(معرف_تشخيص.صيغة_كائن_غير_مدعومة_للهدف(), "SULTANC-OBJECT-FORMAT-UNSUPPORTED")) { return 4; };
+    if (!matching_class(معرف_تشخيص.صيغة_كائن_غير_مدعومة_للهدف(), فئة_تشخيص.بيئة())) { return 5; };
+    if (!matching_code(معرف_تشخيص.مخرج_ربط_غير_مدعوم(), "SULTANC-LINK-OUTPUT-UNSUPPORTED")) { return 4; };
+    if (!matching_class(معرف_تشخيص.مخرج_ربط_غير_مدعوم(), فئة_تشخيص.بيئة())) { return 5; };
+    if (!matching_code(معرف_تشخيص.واجهة_استدعاء_غير_متاحة_للهدف(), "SULTANC-TARGET-ABI-UNAVAILABLE")) { return 4; };
+    if (!matching_class(معرف_تشخيص.واجهة_استدعاء_غير_متاحة_للهدف(), فئة_تشخيص.بيئة())) { return 5; };
+    if (!matching_code(معرف_تشخيص.حد_صيغة_كائن_متجاوز(), "SULTANC-OBJECT-FORMAT-LIMIT-EXCEEDED")) { return 4; };
+    if (!matching_class(معرف_تشخيص.حد_صيغة_كائن_متجاوز(), فئة_تشخيص.مستخدم())) { return 5; };
+    if (!matching_code(معرف_تشخيص.حد_وقت_الترجمة_متجاوز(), "SULTANC-COMPTIME-LIMIT-EXCEEDED")) { return 4; };
+    if (!matching_class(معرف_تشخيص.حد_وقت_الترجمة_متجاوز(), فئة_تشخيص.مستخدم())) { return 5; };
+    if (!matching_code(معرف_تشخيص.أثر_ممنوع_وقت_الترجمة(), "SULTANC-COMPTIME-PROHIBITED-EFFECT")) { return 4; };
+    if (!matching_class(معرف_تشخيص.أثر_ممنوع_وقت_الترجمة(), فئة_تشخيص.مستخدم())) { return 5; };
+    if (!matching_code(معرف_تشخيص.فشل_تنفيذ_وقت_الترجمة(), "SULTANC-COMPTIME-EVALUATION-FAILED")) { return 4; };
+    if (!matching_class(معرف_تشخيص.فشل_تنفيذ_وقت_الترجمة(), فئة_تشخيص.مستخدم())) { return 5; };
+    if (!matching_code(معرف_تشخيص.عملية_غير_مدعومة_وقت_الترجمة(), "SULTANC-COMPTIME-UNSUPPORTED-OPERATION")) { return 4; };
+    if (!matching_class(معرف_تشخيص.عملية_غير_مدعومة_وقت_الترجمة(), فئة_تشخيص.مستخدم())) { return 5; };
+    if (!matching_code(معرف_تشخيص.ناتج_وقت_الترجمة_غير_ثابت(), "SULTANC-COMPTIME-RESULT-NOT-CONSTANT")) { return 4; };
+    if (!matching_class(معرف_تشخيص.ناتج_وقت_الترجمة_غير_ثابت(), فئة_تشخيص.مستخدم())) { return 5; };
+    if (!matching_code(معرف_تشخيص.تخطيط_غير_متاح_وقت_الترجمة(), "SULTANC-COMPTIME-LAYOUT-UNAVAILABLE")) { return 4; };
+    if (!matching_class(معرف_تشخيص.تخطيط_غير_متاح_وقت_الترجمة(), فئة_تشخيص.مستخدم())) { return 5; };
+    if (!matching_code(معرف_تشخيص.عدد_حجج_وقت_الترجمة_غير_مطابق(), "SULTANC-COMPTIME-ARGUMENT-COUNT-MISMATCH")) { return 4; };
+    if (!matching_class(معرف_تشخيص.عدد_حجج_وقت_الترجمة_غير_مطابق(), فئة_تشخيص.مستخدم())) { return 5; };
+    if (!matching_code(معرف_تشخيص.نداء_خارجي_تفسير_غير_مدعوم(), "SULTANC-INTERPRETER-UNSUPPORTED-EXTERNAL-CALL")) { return 4; };
+    if (!matching_class(معرف_تشخيص.نداء_خارجي_تفسير_غير_مدعوم(), فئة_تشخيص.مستخدم())) { return 5; };
+    if (!matching_code(معرف_تشخيص.بدائي_آلة_تفسير_غير_مدعوم(), "SULTANC-INTERPRETER-UNSUPPORTED-MACHINE-PRIMITIVE")) { return 4; };
+    if (!matching_class(معرف_تشخيص.بدائي_آلة_تفسير_غير_مدعوم(), فئة_تشخيص.مستخدم())) { return 5; };
+    if (!matching_code(معرف_تشخيص.خطأ_نحوي(), "SULTANC-PARSE-SYNTAX")) { return 6; };
+    if (!matching_code(معرف_تشخيص.نقل_من_مرجع(), "SULTANC-OWNERSHIP-MOVE-OUT-OF-REFERENCE")) { return 6; };
+    if (!matching_code(معرف_تشخيص.مسير_غير_صالح(), "SULTANC-ICE-MSIR-INVALID")) { return 6; };
+    if (!matching_code(معرف_تشخيص.تحذير_عام(), "SULTANC-WARNING-GENERAL")) { return 6; };
+    return 0;
+}

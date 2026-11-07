@@ -1,6 +1,10 @@
+// اختبار: قبول
+// تشخيص: SULTANC-PATTERN-UNREACHABLE
+// نظير: tests/ar/diagnostics/semantic/unreachable_pattern.sn
+// A catch-all arm covers the arm after it: a warning, and the program builds.
 def main(): int {
     let value: result int, int = result.ok(42);
     match value with
-    | _ -> { return 1; }
+    | _ -> { return 0; }
     | result.ok(x) -> { return x; }
 }

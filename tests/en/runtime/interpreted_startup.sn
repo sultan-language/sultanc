@@ -1,0 +1,27 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// بيئة: SULTANC_STARTUP_PROBE=present
+// نظير: tests/ar/runtime/interpreted_startup.sn
+// Startup data an interpreted program sees is the executable's: argv holds
+// the program itself (no arguments are passed), and the environment it was
+// started with is all there, not only the language variables (PATH and a
+// variable set for this run).
+import std.process.argument_count;
+import std.env.environment;
+
+def main(): int {
+    if (argument_count() != 1) { return 1; };
+    let probe: string = "SULTANC_STARTUP_PROBE";
+    match get_environment_variable(&probe) with
+    | result.ok(option.some(value)) -> {
+        if (length(value) != 7) { return 2; };
+    }
+    | _ -> { return 3; };
+    let path: string = "PATH";
+    match get_environment_variable(&path) with
+    | result.ok(option.some(_)) -> { }
+    | _ -> { return 4; };
+    return 42;
+}

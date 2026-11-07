@@ -1,0 +1,6 @@
+خطأ[SULTANC-PATTERN-PAYLOAD-COUNT-MISMATCH]: عدد حمولات منشئ النمط غير مطابق — المنشئ يحمل حمولة واحدة، لكن النمط يربط حمولتين.
+  --> tests/ar/diagnostics/e2e/pattern_payload_count.sn:10:7..10:22
+    |
+ 10 |     | ربما.قيمة(أ, ب) -> { أرجع أ; }
+    |       ^^^^^^^^^^^^^^^
+    |

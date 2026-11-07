@@ -1,0 +1,4 @@
+// اختبار: رفض
+// تشخيص: SULTANC-PARSE-SYNTAX
+extern "kernel32.dll" let counter: u64 = "counter";
+def main(): int { return 0; }

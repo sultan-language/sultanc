@@ -1,0 +1,36 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 0
+// نظير: tests/en/ispeak/bench/bench_dynamic_escaped.sn
+استورد std.text.compare;
+استورد std.text.from_bytes;
+استورد compiler.diagnostics.identity;
+استورد compiler.diagnostics.reason;
+استورد compiler.ispeak.format.facts;
+استورد compiler.diagnostics.schema;
+استورد compiler.ispeak.ispeak;
+
+// 200,000 exact-match calls; direct, specialized backtick-quoted facts.
+عرف الحقائق_الاسم(): حقائق_اسم_غير_معروف {
+    دع القيم: حقائق_اسم_غير_معروف = { الاسم: «simple`identifier_0123456789_abcdefghijklmnopqrstuvwxyz» };
+    أرجع القيم;
+}
+
+عرف الرئيسية(): عدد {
+    دع المفتاح: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.اسم_غير_معروف());
+    دع المتوقع: نص = «unknown name: `simple\`identifier_0123456789_abcdefghijklmnopqrstuvwxyz`»;
+    دع طول_الرسالة: طبيعي = الطول(المتوقع) مثل طبيعي;
+    دع المجموع: متغير طبيعي = 0;
+    دع ف: متغير طبيعي = 0;
+    طالما (ف < 200000) {
+        طابق رسالة_تشخيص_بحجج(لغة_تشخيص.الإنجليزية(), المفتاح, حقائق_رسالة.اسم_غير_معروف(الحقائق_الاسم())) مع
+        | اختياري.موجود(الناتج) -> {
+            المجموع := المجموع + (الطول(الناتج) مثل طبيعي);
+            لو (ف == 0 && !نصان_متساويان(&الناتج, &المتوقع)) { أرجع 1; };
+        }
+        | اختياري.لا_شيء -> { أرجع 2; };
+        ف := ف + 1;
+    }
+    لو (المجموع != طول_الرسالة * 200000) { أرجع 3; };
+    أرجع 0;
+}

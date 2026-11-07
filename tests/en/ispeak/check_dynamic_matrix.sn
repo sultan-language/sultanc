@@ -1,0 +1,132 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 0
+// نظير: tests/ar/ispeak/check_dynamic_matrix.sn
+import std.text.search;
+import std.text.from_bytes;
+import compiler.diagnostics.identity;
+import compiler.diagnostics.reason;
+import compiler.ispeak.format.facts;
+import compiler.diagnostics.schema;
+import compiler.ispeak.ispeak;
+
+// Every one of the 645 active identities must preserve each of the 22
+// named context facts in both languages, without falling back to fixed text.
+def check(language: لغة_تشخيص, key: مفتاح_رسالة_تشخيص, payload: حقائق_رسالة): bool {
+    match رسالة_تشخيص_بحجج(language, key, payload) with
+    | option.some(output) -> {
+        let fixed_text: string = رسالة_تشخيص(language, key);
+        if ((length(output) as uint) <= (length(fixed_text) as uint)) { return false; };
+        let mark_0: string = "FACT_00_UNIQUE_MARKER";
+        if (!contains(&output, &mark_0)) { return false; };
+        let mark_1: string = "FACT_01_UNIQUE_MARKER";
+        if (!contains(&output, &mark_1)) { return false; };
+        let mark_2: string = "FACT_02_UNIQUE_MARKER";
+        if (!contains(&output, &mark_2)) { return false; };
+        let mark_3: string = "FACT_03_UNIQUE_MARKER";
+        if (!contains(&output, &mark_3)) { return false; };
+        let mark_4: string = "FACT_04_UNIQUE_MARKER";
+        if (!contains(&output, &mark_4)) { return false; };
+        let mark_5: string = "FACT_05_UNIQUE_MARKER";
+        if (!contains(&output, &mark_5)) { return false; };
+        let mark_6: string = "FACT_06_UNIQUE_MARKER";
+        if (!contains(&output, &mark_6)) { return false; };
+        let mark_7: string = "FACT_07_UNIQUE_MARKER";
+        if (!contains(&output, &mark_7)) { return false; };
+        let mark_8: string = "FACT_08_UNIQUE_MARKER";
+        if (!contains(&output, &mark_8)) { return false; };
+        let mark_9: string = "FACT_09_UNIQUE_MARKER";
+        if (!contains(&output, &mark_9)) { return false; };
+        let mark_10: string = "FACT_10_UNIQUE_MARKER";
+        if (!contains(&output, &mark_10)) { return false; };
+        let mark_11: string = "FACT_11_UNIQUE_MARKER";
+        if (!contains(&output, &mark_11)) { return false; };
+        let mark_12: string = "FACT_12_UNIQUE_MARKER";
+        if (!contains(&output, &mark_12)) { return false; };
+        let mark_13: string = "FACT_13_UNIQUE_MARKER";
+        if (!contains(&output, &mark_13)) { return false; };
+        let mark_14: string = "FACT_14_UNIQUE_MARKER";
+        if (!contains(&output, &mark_14)) { return false; };
+        let mark_15: string = "FACT_15_UNIQUE_MARKER";
+        if (!contains(&output, &mark_15)) { return false; };
+        let mark_16: string = "FACT_16_UNIQUE_MARKER";
+        if (!contains(&output, &mark_16)) { return false; };
+        let mark_17: string = "FACT_17_UNIQUE_MARKER";
+        if (!contains(&output, &mark_17)) { return false; };
+        let mark_18: string = "FACT_18_UNIQUE_MARKER";
+        if (!contains(&output, &mark_18)) { return false; };
+        let mark_19: string = "FACT_19_UNIQUE_MARKER";
+        if (!contains(&output, &mark_19)) { return false; };
+        let mark_20: string = "FACT_20_UNIQUE_MARKER";
+        if (!contains(&output, &mark_20)) { return false; };
+        let mark_21: string = "FACT_21_UNIQUE_MARKER";
+        if (!contains(&output, &mark_21)) { return false; };
+        return true;
+    }
+    | option.none -> { return false; };
+}
+
+def full_payload(): حقائق_رسالة {
+    let fact_0: string = "FACT_00_UNIQUE_MARKER";
+    let fact_1: string = "FACT_01_UNIQUE_MARKER";
+    let fact_2: string = "FACT_02_UNIQUE_MARKER";
+    let fact_3: string = "FACT_03_UNIQUE_MARKER";
+    let fact_4: string = "FACT_04_UNIQUE_MARKER";
+    let fact_5: string = "FACT_05_UNIQUE_MARKER";
+    let fact_6: string = "FACT_06_UNIQUE_MARKER";
+    let fact_7: string = "FACT_07_UNIQUE_MARKER";
+    let fact_8: string = "FACT_08_UNIQUE_MARKER";
+    let fact_9: string = "FACT_09_UNIQUE_MARKER";
+    let fact_10: string = "FACT_10_UNIQUE_MARKER";
+    let fact_11: string = "FACT_11_UNIQUE_MARKER";
+    let fact_12: string = "FACT_12_UNIQUE_MARKER";
+    let fact_13: string = "FACT_13_UNIQUE_MARKER";
+    let fact_14: string = "FACT_14_UNIQUE_MARKER";
+    let fact_15: string = "FACT_15_UNIQUE_MARKER";
+    let fact_16: string = "FACT_16_UNIQUE_MARKER";
+    let fact_17: string = "FACT_17_UNIQUE_MARKER";
+    let fact_18: string = "FACT_18_UNIQUE_MARKER";
+    let fact_19: string = "FACT_19_UNIQUE_MARKER";
+    let fact_20: string = "FACT_20_UNIQUE_MARKER";
+    let fact_21: string = "FACT_21_UNIQUE_MARKER";
+    let context: حقائق_سياق_رسالة = {
+        القيمة: option.some(قيمة_حجة_رسالة.نصية(انسخ_نص(&fact_0))),
+        المتوقع: option.some(قيمة_حجة_رسالة.نصية(انسخ_نص(&fact_1))),
+        الاستبدال: option.some(قيمة_حجة_رسالة.نصية(انسخ_نص(&fact_2))),
+        الموجود: option.some(قيمة_حجة_رسالة.نصية(انسخ_نص(&fact_3))),
+        الفهرس: option.some(قيمة_حجة_رسالة.نصية(انسخ_نص(&fact_4))),
+        الطول: option.some(قيمة_حجة_رسالة.نصية(انسخ_نص(&fact_5))),
+        المجال: option.some(قيمة_حجة_رسالة.نصية(انسخ_نص(&fact_6))),
+        النمط: option.some(قيمة_حجة_رسالة.نصية(انسخ_نص(&fact_7))),
+        المسار: option.some(قيمة_حجة_رسالة.نصية(انسخ_نص(&fact_8))),
+        الرمز: option.some(قيمة_حجة_رسالة.نصية(انسخ_نص(&fact_9))),
+        النوع: option.some(قيمة_حجة_رسالة.نصية(انسخ_نص(&fact_10))),
+        السياق: option.some(قيمة_حجة_رسالة.نصية(انسخ_نص(&fact_11))),
+        المرحلة: option.some(قيمة_حجة_رسالة.نصية(انسخ_نص(&fact_12))),
+        الهدف: option.some(قيمة_حجة_رسالة.نصية(انسخ_نص(&fact_13))),
+        الدالة: option.some(قيمة_حجة_رسالة.نصية(انسخ_نص(&fact_14))),
+        الكتلة: option.some(قيمة_حجة_رسالة.نصية(انسخ_نص(&fact_15))),
+        التعليمة: option.some(قيمة_حجة_رسالة.نصية(انسخ_نص(&fact_16))),
+        العملية: option.some(قيمة_حجة_رسالة.نصية(انسخ_نص(&fact_17))),
+        البدائي: option.some(قيمة_حجة_رسالة.نصية(انسخ_نص(&fact_18))),
+        المصدر: option.some(قيمة_حجة_رسالة.نصية(انسخ_نص(&fact_19))),
+        الوجهة: option.some(قيمة_حجة_رسالة.نصية(انسخ_نص(&fact_20))),
+        السبب: option.some(قيمة_حجة_رسالة.نصية(انسخ_نص(&fact_21)))
+    };
+    return حقائق_رسالة.سياق_تشخيص(context);
+}
+
+def main(): int {
+    let all_keys: vector مفتاح_رسالة_تشخيص = كل_مفاتيح_رسائل_التشخيص();
+    let number_value: mutable uint = 0;
+    let count: mutable uint = 0;
+    while (number_value < (length(all_keys) as uint)) {
+        let key: مفتاح_رسالة_تشخيص = all_keys[number_value];
+        if (!check(لغة_تشخيص.الإنجليزية(), key, full_payload())) { return 1; };
+        if (!check(لغة_تشخيص.العربية(), key, full_payload())) { return 2; };
+        count := count + 1;
+        number_value := number_value + 1;
+    }
+    if (count != (645 as uint)) { return 3; };
+    return 0;
+}

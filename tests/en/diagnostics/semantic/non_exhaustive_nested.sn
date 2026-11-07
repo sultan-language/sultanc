@@ -1,0 +1,10 @@
+// اختبار: رفض
+// تشخيص: SULTANC-PATTERN-NON-EXHAUSTIVE
+// نظير: tests/ar/diagnostics/semantic/non_exhaustive_nested.sn
+// option.some(false) matches no arm.
+def main(): i32 {
+    let value: option bool = option.some(true);
+    match value with
+    | option.some(true) -> { return 1; }
+    | option.none() -> { return 0; }
+}

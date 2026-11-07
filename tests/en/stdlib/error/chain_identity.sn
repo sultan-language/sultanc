@@ -1,0 +1,57 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/stdlib/error/chain_identity.sn
+// std.error: error_is searches the value and its whole cause chain,
+// checked at each level of a three-level chain.
+import std.error.failure;
+
+def main(): int {
+    let fs_domain: string = "std.fs";
+    let not_found: string = "غير_موجود";
+    let config_domain: string = "config";
+    let not_loaded: string = "غير_محمل";
+    let server_domain: string = "server";
+    let start_failed: string = "بدء_فاشل";
+    let denied: string = "مرفوض_الإذن";
+    let empty: string = "";
+
+    let third: Error = error_with_kind("std.fs", "غير_موجود", "ملف الإعدادات غير موجود");
+    let second: Error = error_with_kind_caused_by("config", "غير_محمل", "تعذر تحميل الإعدادات", third);
+    let first: Error = error_with_kind_caused_by("server", "بدء_فاشل", "أثناء بدء الخادم", second);
+
+    // Level 1 sees all three identities.
+    if (!error_is(&first, &server_domain, &start_failed)) { return 1; };
+    if (!error_is(&first, &config_domain, &not_loaded)) { return 2; };
+    if (!error_is(&first, &fs_domain, &not_found)) { return 3; };
+
+    match error_cause(&first) with
+    | option.none -> { return 4; }
+    | option.some(level2) -> {
+        // Level 2 sees itself and its cause, not the error that wraps it.
+        if (error_is(&level2, &server_domain, &start_failed)) { return 5; };
+        if (!error_is(&level2, &config_domain, &not_loaded)) { return 6; };
+        if (!error_is(&level2, &fs_domain, &not_found)) { return 7; };
+        match error_cause(&level2) with
+        | option.none -> { return 8; }
+        | option.some(level3) -> {
+            // Level 3 sees only itself.
+            if (error_is(&level3, &server_domain, &start_failed)) { return 9; };
+            if (error_is(&level3, &config_domain, &not_loaded)) { return 10; };
+            if (!error_is(&level3, &fs_domain, &not_found)) { return 11; };
+            if (error_has_cause(&level3)) { return 12; };
+        };
+    };
+
+    // The same kind in another domain is another identity.
+    if (error_is(&first, &server_domain, &not_found)) { return 13; };
+    // An identity absent from the chain.
+    if (error_is(&first, &fs_domain, &denied)) { return 14; };
+
+    // Ad-hoc wrappers keep the chain searchable; an empty kind never matches.
+    let adhoc: Error = error_caused_by("تعذر تشغيل البرنامج", first);
+    if (!error_is(&adhoc, &fs_domain, &not_found)) { return 15; };
+    if (error_is(&adhoc, &empty, &empty)) { return 16; };
+    return 42;
+}

@@ -1,0 +1,58 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// std.error language versions and ownership: 10^5 chains whose errors carry
+// language versions (one replaced), resolved and rendered for locales from a
+// tag and from Accept-Language, copied both ways and dropped. The
+// allocator's live bytes after the loop equal those before it.
+// Counterpart: tests/ar/stdlib/error/language_rss_flat.sn. Like rss_flat.sn
+// it has no pair directive: the interpreter does not use the std allocator
+// whose counters this reads.
+import std.error.failure;
+import std.text.language;
+import std.text.number;
+import std.os.allocation;
+
+def make_chain(i: uint): Error {
+    let root: mutable Error = error_with_kind("config", "فارغ", "ملف الإعدادات فارغ");
+    error_add_language_version(&mutable root, "en", "the configuration file is empty");
+    error_add_language_version(&mutable root, "en", "configuration file is empty");
+    error_add_note(&mutable root, uint_to_text(i));
+    let top: mutable Error = error_caused_by("أثناء بدء الخادم", root);
+    error_add_language_version(&mutable top, "en-GB", "while starting the server");
+    error_add_language_version(&mutable top, "fr", "au démarrage du serveur");
+    return top;
+}
+
+def use_chain(failure: &Error): bool {
+    let tag: string = "en-GB-oxendict";
+    let from_tag: Locale = locale_from_tag(&tag);
+    let header: string = "de;q=0.9, fr-CH, en;q=0.5";
+    let from_header: Locale = locale_from_accept_language(&header);
+    let locale_copied: Locale = locale_copy(&from_header);
+    let tags: vector string = locale_tags(&locale_copied);
+    let text: string = error_text_in(failure, &from_tag);
+    let description: string = error_describe_in(failure, &from_header);
+    let tag_description: string = error_describe_in(failure, &from_tag);
+    let copy: Error = error_copy(failure);
+    let generated_copy: Error = clone(failure);
+    let copy_text_in: string = error_text_in(&generated_copy, &from_header);
+    return (length(text) as uint) == 25 && (length(copy_text_in) as uint) == 24 && error_has_cause(&copy);
+}
+
+def main(): int {
+    // Warm up once so lazily created allocator state is not counted.
+    let warmup: Error = make_chain(0);
+    if (!use_chain(&warmup)) { return 1; };
+
+    let before: u64 = بايتات_حية_مخصص_النظام();
+    let i: mutable uint = 0;
+    while (i < 100000) {
+        let chain: Error = make_chain(i);
+        if (!use_chain(&chain)) { return 2; };
+        i := i + 1;
+    }
+    let after: u64 = بايتات_حية_مخصص_النظام();
+    if (after != before) { return 3; };
+    return 42;
+}

@@ -1,0 +1,25 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// بيئة: SULTANC_LANG=en_GB.UTF-8
+// نظير: tests/ar/stdlib/error/system_language.sn
+// std.text.system_language (docs/ERRORS.md): the program's locale from its
+// environment. SULTANC_LANG comes first; a POSIX value loses its encoding
+// and its «_» becomes «-». Native and interpreter agree.
+import std.text.language;
+import std.text.system_language;
+import std.text.compare;
+
+def main(): int {
+    let locale: Locale = locale_from_environment();
+    let tag: string = locale_tag(&locale);
+    let expected: string = "en-GB";
+    if (!texts_equal(&tag, &expected)) { return 1; };
+    let base: string = locale_language(&locale);
+    let english: string = "en";
+    if (!texts_equal(&base, &english)) { return 2; };
+    let tags: vector string = locale_tags(&locale);
+    if ((length(tags) as uint) != 1) { return 3; };
+    return 42;
+}

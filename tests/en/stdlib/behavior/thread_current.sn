@@ -1,0 +1,32 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/stdlib/behavior/thread_current.sn
+// std.thread without a spawn: sleep (Rust's thread::sleep), yield_now, the
+// current thread's id and available_parallelism. The program sleeps one
+// millisecond and checks on the monotonic clock that the time passed, that
+// the id is stable and not zero, and that there is at least one CPU.
+import std.thread.thread;
+import std.time.time;
+
+def main(): i32 {
+    let id: u64 = current_id();
+    if (id == 0) { return 1; };
+    if (current_id() != id) { return 2; };
+    match available_parallelism() with
+    | result.ok(count) -> { if (count < 1) { return 3; }; }
+    | result.err(_) -> { return 4; };
+    yield_now();
+    let start: int;
+    match monotonic_time_ns() with
+    | result.ok(n) -> { start := n; }
+    | result.err(_) -> { return 5; };
+    sleep(0, 1000000);
+    let end: int;
+    match monotonic_time_ns() with
+    | result.ok(n) -> { end := n; }
+    | result.err(_) -> { return 6; };
+    if (end - start < 1000000) { return 7; };
+    return 42;
+}

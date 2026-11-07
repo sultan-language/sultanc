@@ -1,0 +1,56 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/en/language/surface/field_place_reads.sn
+// قراءة حقل من تخزين له موضع (محلي مالك، معامل، متجه عام، فك مرجع، عنصر
+// متجه) تحمّل ذلك الحقل وحده عبر الإسقاطات المتداخلة؛ القيم المقروءة هي نفسها
+// قبل الكتابة وبعدها، وحين تنقل قراءة الحقل المالك.
+نوع Point = { x: عدد, y: عدد };
+نوع Shape = { name: نص, corner: Point, points: متجه Point, tags: متجه نص };
+
+دع origin: متغير متجه عدد = [3, 4];
+
+عرف make(n: عدد): Shape {
+    دع points: متغير متجه Point = [];
+    دع p0: Point = { x: n, y: n + 1 };
+    دع p1: Point = { x: n + 2, y: n + 3 };
+    ألحق(points, p0);
+    ألحق(points, p1);
+    دع tags: متغير متجه نص = [];
+    ألحق(tags, "a");
+    ألحق(tags, "bc");
+    دع corner: Point = { x: n, y: 2 * n };
+    دع s: Shape = { name: "shape", corner: corner, points: points, tags: tags };
+    أرجع s;
+}
+
+عرف through_ref(s: &Shape): عدد {
+    أرجع (*s).corner.y + (*s).points[1].x + (الطول((*s).tags[1]) مثل عدد);
+}
+
+عرف by_value(s: Shape): عدد {
+    أرجع s.corner.x + s.points[0].y + (الطول(s.name) مثل عدد);
+}
+
+عرف take_name(s: Shape): نص {
+    أرجع s.name;
+}
+
+عرف الرئيسية(): عدد {
+    دع s: متغير Shape = make(1);
+    دع total: متغير عدد = s.corner.x + s.corner.y + s.points[1].y;
+    s.corner.y := 10;
+    s.points[0].x := 7;
+    total := total + s.corner.y + s.points[0].x;
+    total := total + through_ref(&s);
+    دع i: متغير طبيعي = 0;
+    طالما (i < (الطول(s.points) مثل طبيعي)) { total := total + s.points[i].x; i := i + 1; }
+    غير_آمن { origin[1] := 5; total := total + origin[0] + origin[1]; }
+    دع copy: Shape = make(2);
+    total := total + by_value(copy);
+    دع n: نص = take_name(make(0));
+    total := total + (الطول(n) مثل عدد);
+    لو (total != 72) { أرجع total; };
+    أرجع 42;
+}

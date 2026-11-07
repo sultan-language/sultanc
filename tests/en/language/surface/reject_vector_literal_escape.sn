@@ -1,0 +1,11 @@
+// اختبار: رفض
+// خروج: 1
+// تشخيص: SULTANC-BORROW-REFERENCE-ESCAPE
+// نظير: tests/ar/language/surface/reject_vector_literal_escape.sn
+// A vector literal carries the borrows of its elements: returning one that
+// holds a reference to a local is an escape.
+def leak(): vector &int {
+    let x: int = 3;
+    return [&x];
+}
+def main(): int { return 0; }

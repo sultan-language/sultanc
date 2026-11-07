@@ -1,0 +1,44 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// An early return through `؟` releases each owned local exactly once
+// (docs/ERRORS.md): a function holding three owned locals (text, vector,
+// box) and the owned error leaves through the expansion's return 10^5 times,
+// and as often through its ok path. A missed drop grows the allocator's live
+// bytes; a second drop traps in the allocator. Valgrind sees the same
+// program clean. Counterpart: tests/en/language/propagation/drops.sn; no pair
+// directive: the interpreter does not use the std allocator whose counters
+// this reads.
+استورد std.os.allocation;
+
+عرف افحص(س: طبيعي): نتيجة طبيعي, نص {
+    لو ((س % 2) == 0) { أرجع نتيجة.خطأ(«عدد زوجي مرفوض»); };
+    أرجع نتيجة.نجح(س);
+}
+
+عرف بثلاثة_مملوكات(س: طبيعي): نتيجة طبيعي, نص {
+    دع الاسم: نص = «قيمة مملوكة أولى»;
+    دع القائمة: متغير متجه نص = [];
+    ألحق(القائمة, «عنصر»);
+    ألحق(القائمة, «عنصر آخر»);
+    دع العلبة: صندوق نص = صندوق «قيمة في صندوق»;
+    دع المفحوص: طبيعي = افحص(س)؟;
+    أرجع نتيجة.نجح(المفحوص + (الطول(الاسم) مثل طبيعي) + (الطول(القائمة) مثل طبيعي) + (الطول(*العلبة) مثل طبيعي));
+}
+
+عرف الرئيسية(): عدد {
+    دع تمهيد: نتيجة طبيعي, نص = بثلاثة_مملوكات(0);
+    دع قبل: ط64 = بايتات_حية_مخصص_النظام();
+    دع أخطاء: متغير طبيعي = 0;
+    دع ف: متغير طبيعي = 0;
+    طالما (ف < 200000) {
+        طابق بثلاثة_مملوكات(ف) مع
+        | نتيجة.نجح(_) -> { }
+        | نتيجة.خطأ(_) -> { أخطاء := أخطاء + 1; };
+        ف := ف + 1;
+    }
+    دع بعد: ط64 = بايتات_حية_مخصص_النظام();
+    لو (أخطاء != 100000) { أرجع 1; };
+    لو (بعد != قبل) { أرجع 2; };
+    أرجع 42;
+}

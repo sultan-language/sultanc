@@ -1,0 +1,91 @@
+// اختبار: تشغيل
+// أهداف: x86_64-linux
+// خروج: 0
+// Atomics reached through closures and call chains while many values are
+// live: each thread runs a closure that calls down three functions, each
+// holding several locals across the atomic read-modify-writes, so the
+// register allocator must spill around them (the pattern docs/CONCURRENCY.md
+// once listed as miscompiled). 4 threads x 5 000 rounds of fetch_add,
+// compare_exchange and swap must leave exact totals. Counterpart:
+// tests/ar/stdlib/behavior/sync_atomic_register_pressure.sn. No pair
+// directive: the interpreter runs one thread.
+import std.sync.arc;
+import std.sync.atomic;
+import std.thread.thread;
+
+type cells = { sum: atomic_u64, cas: atomic_u64, swaps: atomic_u64, mixed: atomic_u32 };
+
+def deepest(c: &cells, a: u64, b: u64, d: u64, e: u64, f: u64): u64 {
+    let g: u64 = a + b;
+    let h: u64 = d + e;
+    let k: u64 = f + g;
+    let old: u64 = atomic_u64_fetch_add(&(*c).sum, 1 as u64, memory_ordering.seq_cst());
+    // A compare-exchange loop: increment by one with CAS.
+    let done: mutable bool = false;
+    while (!done) {
+        let seen: u64 = atomic_u64_load(&(*c).cas, memory_ordering.acquire());
+        if (atomic_u64_compare_exchange(&(*c).cas, seen, seen + (1 as u64), memory_ordering.acq_rel()) == seen) {
+            done := true;
+        };
+    }
+    let before: u64 = atomic_u64_swap(&(*c).swaps, a, memory_ordering.seq_cst());
+    let small: u32 = atomic_u32_fetch_add(&(*c).mixed, 2 as u32, memory_ordering.relaxed());
+    return g + h + k + old * (0 as u64) + before * (0 as u64) + ((small as u64) * (0 as u64));
+}
+
+def middle(c: &cells, x: u64, y: u64): u64 {
+    let p: u64 = x * (3 as u64);
+    let q: u64 = y + (7 as u64);
+    let r: u64 = p + q;
+    let s: u64 = deepest(c, x, y, p, q, r);
+    return s + p + q + r;
+}
+
+def top(shared: &arc<cells>, round: u64): u64 {
+    let c: &cells = arc_get(shared);
+    let a: u64 = middle(c, round, round + (1 as u64));
+    let b: u64 = middle(c, round + (2 as u64), round);
+    return a + b;
+}
+
+def work(shared: arc<cells>): void {
+    let i: mutable u64 = 0;
+    let checksum: mutable u64 = 0;
+    while (i < (5000 as u64)) {
+        let step: fn(u64): u64 = fn(n: u64): u64 -> top(&shared, n);
+        checksum := checksum + step(i);
+        i := i + 1;
+    }
+}
+
+def start(shared: &arc<cells>): option join_handle {
+    let mine: arc<cells> = arc_clone(shared);
+    match spawn(fn(): void -> work(mine)) with
+    | result.ok(h) -> { return option.some(h); }
+    | result.err(_) -> { return option.none(); };
+}
+
+def main(): i32 {
+    let value: cells = {
+        sum: atomic_u64_new(0 as u64), cas: atomic_u64_new(0 as u64),
+        swaps: atomic_u64_new(0 as u64), mixed: atomic_u32_new(0 as u32)
+    };
+    let shared: arc<cells> = arc_new(value);
+    let handles: mutable vector join_handle = [];
+    let t: mutable i32 = 0;
+    while (t < 4) {
+        match start(&shared) with
+        | option.some(h) -> { append(handles, h); }
+        | option.none -> { return 1; };
+        t := t + 1;
+    }
+    let j: mutable uint = 0;
+    while (j < (length(handles) as uint)) { join(&mutable handles[j]); j := j + 1; }
+    let c: &cells = arc_get(&shared);
+    // 4 threads x 5 000 rounds x 2 calls of deepest.
+    if (atomic_u64_load(&(*c).sum, memory_ordering.seq_cst()) != (40000 as u64)) { return 2; };
+    if (atomic_u64_load(&(*c).cas, memory_ordering.seq_cst()) != (40000 as u64)) { return 3; };
+    if (atomic_u32_load(&(*c).mixed, memory_ordering.seq_cst()) != (80000 as u32)) { return 4; };
+    if (atomic_u64_load(&(*c).swaps, memory_ordering.seq_cst()) > (5001 as u64)) { return 5; };
+    return 0;
+}

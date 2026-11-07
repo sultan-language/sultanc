@@ -1,0 +1,48 @@
+تحذير[SULTANC-SYNTAX-DEPRECATED-SPELLING]: التهجئة ⁨`اختيار`⁩ مهجورة؛ استخدم ⁨`اختياري`⁩
+  --> tests/ar/diagnostics/deprecated/option_old_spelling.sn:10:18..10:24
+    |
+ 10 | عرف أول(س: عدد): اختيار عدد {
+    |                  ^^^^^^
+    |
+
+تحذير[SULTANC-SYNTAX-DEPRECATED-SPELLING]: التهجئة ⁨`اختيار`⁩ مهجورة؛ استخدم ⁨`اختياري`⁩
+  --> tests/ar/diagnostics/deprecated/option_old_spelling.sn:11:23..11:29
+    |
+ 11 |     لو (س > 0) { أرجع اختيار.بعض(س); };
+    |                       ^^^^^^
+    |
+
+تحذير[SULTANC-SYNTAX-DEPRECATED-SPELLING]: التهجئة ⁨`بعض`⁩ مهجورة؛ استخدم ⁨`موجود`⁩
+  --> tests/ar/diagnostics/deprecated/option_old_spelling.sn:11:30..11:33
+    |
+ 11 |     لو (س > 0) { أرجع اختيار.بعض(س); };
+    |                              ^^^
+    |
+
+تحذير[SULTANC-SYNTAX-DEPRECATED-SPELLING]: التهجئة ⁨`اختيار`⁩ مهجورة؛ استخدم ⁨`اختياري`⁩
+  --> tests/ar/diagnostics/deprecated/option_old_spelling.sn:12:10..12:16
+    |
+ 12 |     أرجع اختيار.لا_شيء();
+    |          ^^^^^^
+    |
+
+تحذير[SULTANC-SYNTAX-DEPRECATED-SPELLING]: التهجئة ⁨`اختيار`⁩ مهجورة؛ استخدم ⁨`اختياري`⁩
+  --> tests/ar/diagnostics/deprecated/option_old_spelling.sn:18:7..18:13
+    |
+ 18 |     | اختيار.بعض(ن) -> { أرجع ن - 3; }
+    |       ^^^^^^
+    |
+
+تحذير[SULTANC-SYNTAX-DEPRECATED-SPELLING]: التهجئة ⁨`بعض`⁩ مهجورة؛ استخدم ⁨`موجود`⁩
+  --> tests/ar/diagnostics/deprecated/option_old_spelling.sn:18:14..18:17
+    |
+ 18 |     | اختيار.بعض(ن) -> { أرجع ن - 3; }
+    |              ^^^
+    |
+
+تحذير[SULTANC-SYNTAX-DEPRECATED-SPELLING]: التهجئة ⁨`اختيار`⁩ مهجورة؛ استخدم ⁨`اختياري`⁩
+  --> tests/ar/diagnostics/deprecated/option_old_spelling.sn:19:7..19:13
+    |
+ 19 |     | اختيار.لا_شيء -> { أرجع 1; };
+    |       ^^^^^^
+    |

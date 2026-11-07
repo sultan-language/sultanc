@@ -1,0 +1,28 @@
+// اختبار: رفض
+// تشخيص: SULTANC-OWNERSHIP-MOVE-OUT-OF-REFERENCE
+// نظير: tests/en/diagnostics/safety/deferred_local_borrowed_or_owned.sn
+// `المختار` may hold a view of `*المصدر`: moving it out would give the callee
+// a second owner. Stage0 rejects it too (SULTANC-OWNERSHIP-PARTIAL-MOVE).
+عرف خذ(القيمة: نص): عدد {
+    أرجع الطول(القيمة);
+}
+
+عرف اصنع(): نص {
+    دع الأساس: نص = «مملوك»;
+    أرجع الأساس;
+}
+
+عرف اختر(المصدر: &نص, مستعار: منطقي): عدد {
+    دع المختار: نص;
+    لو (مستعار) {
+        المختار := *المصدر;
+    } وإلا {
+        المختار := اصنع();
+    };
+    أرجع خذ(المختار);
+}
+
+عرف الرئيسية(): عدد {
+    دع الأول: نص = اصنع();
+    أرجع اختر(&الأول, صواب) + الطول(الأول);
+}

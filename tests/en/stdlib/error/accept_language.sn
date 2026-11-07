@@ -1,0 +1,99 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/stdlib/error/accept_language.sn
+// std.text.language (docs/ERRORS.md): BCP 47 tags (well-formedness,
+// canonical case, primary language, RFC 4647 truncation), locales built from
+// a tag, and HTTP Accept-Language with q-values: ranges ordered by weight,
+// equal weights in the order written; weight 0, «*», ill-formed ranges and
+// malformed weights left out.
+import std.text.language;
+import std.text.compare;
+import std.text.transform;
+
+def valid(tag: string): bool {
+    return is_language_tag(&tag);
+}
+
+def equals(actual: string, expected: string): bool {
+    return texts_equal(&actual, &expected);
+}
+
+def normalized(tag: string): string {
+    return normalize_language_tag(&tag);
+}
+
+// The tags of the locale of a header, joined by "|".
+def header_tags(header: string): string {
+    let locale: Locale = locale_from_accept_language(&header);
+    let tags: vector string = locale_tags(&locale);
+    let separator: string = "|";
+    return join(&tags, &separator);
+}
+
+def main(): int {
+    // Well-formed tags.
+    if (!valid("ar") || !valid("ar-SA") || !valid("zh-Hant-TW") || !valid("sr-Latn-RS")) { return 1; };
+    if (!valid("de-CH-1901") || !valid("es-419") || !valid("zh-yue-HK") || !valid("ar_SA")) { return 2; };
+    if (!valid("en-US-x-twain") || !valid("x-private") || !valid("en-a-bbb-x-a-ccc")) { return 3; };
+    // Ill-formed tags.
+    if (valid("") || valid("a") || valid("ar-") || valid("-ar") || valid("123")) { return 4; };
+    if (valid("toolongtag") || valid("x") || valid("en-a") || valid("*") || valid("ar SA")) { return 5; };
+    if (valid("en-US-Latn") || valid("en-x")) { return 6; };
+
+    // Canonical case and separators.
+    if (!equals(normalized("EN-us"), "en-US")) { return 7; };
+    if (!equals(normalized("sr_latn_rs"), "sr-Latn-RS")) { return 8; };
+    if (!equals(normalized("ZH-HANT"), "zh-Hant")) { return 9; };
+    if (!equals(normalized("de-ch-1901"), "de-CH-1901")) { return 10; };
+    if (!equals(normalized("en-a-BB-x-AB"), "en-a-bb-x-ab")) { return 11; };
+
+    // Primary language and one RFC 4647 truncation step.
+    let tag: string = "AR-SA";
+    if (!equals(language_tag_base(&tag), "ar")) { return 12; };
+    let long_tag: string = "zh-Hant-CN-x-private1";
+    let shorter: string = truncate_language_tag(&long_tag);
+    let expected_shorter: string = "zh-Hant-CN";
+    if (!texts_equal(&shorter, &expected_shorter)) { return 13; };
+    if (!equals(truncate_language_tag(&shorter), "zh-Hant")) { return 14; };
+    let base_tag: string = "ar";
+    if (!equals(truncate_language_tag(&base_tag), "")) { return 15; };
+
+    // A locale from a tag: spaces dropped, canonical case; none when
+    // ill-formed.
+    let written: string = "  ar_sa  ";
+    let from_tag: Locale = locale_from_tag(&written);
+    if (!equals(locale_tag(&from_tag), "ar-SA")) { return 16; };
+    if (!equals(locale_language(&from_tag), "ar")) { return 17; };
+    let bad: string = "ar-";
+    let untagged: Locale = locale_from_tag(&bad);
+    let untagged_tags: vector string = locale_tags(&untagged);
+    if ((length(untagged_tags) as uint) != 0) { return 18; };
+    if (!equals(locale_tag(&untagged), "") || !equals(locale_language(&untagged), "")) { return 19; };
+
+    // Accept-Language: by weight, highest first.
+    if (!equals(header_tags("fr-CH, fr;q=0.9, en;q=0.8, de;q=0.7, *;q=0.5"), "fr-CH|fr|en|de")) { return 20; };
+    if (!equals(header_tags("en;q=0.5, ar, fr;q=0.8"), "ar|fr|en")) { return 21; };
+    // Equal weights keep the order written.
+    if (!equals(header_tags("de;q=0.8, ar;q=0.8, en"), "en|de|ar")) { return 22; };
+    // Weight 0 is «not acceptable»; "Q" and spaces; canonical case.
+    if (!equals(header_tags("ar ; Q=0 , en-us;q=1.000,fr;q=0.001"), "en-US|fr")) { return 23; };
+    // Malformed weights and ranges are left out.
+    if (!equals(header_tags("en;q=1.5, de;q=abc, fr;q=0.5555, ar;q=0.25, es;q=.5, it;q=1., ja"), "it|ja|ar")) { return 24; };
+    if (!equals(header_tags("en-US-, ar"), "ar")) { return 25; };
+    // No range at all.
+    if (!equals(header_tags(""), "")) { return 26; };
+    if (!equals(header_tags("*"), "")) { return 27; };
+    if (!equals(header_tags(" , ,"), "")) { return 28; };
+
+    // The most preferred tag, and a copy.
+    let header: string = "en-GB;q=0.9, ar-EG";
+    let from_header: Locale = locale_from_accept_language(&header);
+    if (!equals(locale_tag(&from_header), "ar-EG") || !equals(locale_language(&from_header), "ar")) { return 29; };
+    let copy: Locale = locale_copy(&from_header);
+    let copy_tags: vector string = locale_tags(&copy);
+    let separator: string = "|";
+    if (!equals(join(&copy_tags, &separator), "ar-EG|en-GB")) { return 30; };
+    return 42;
+}

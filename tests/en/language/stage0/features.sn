@@ -1,0 +1,104 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// مرحلة0: نعم
+// نظير: tests/ar/language/stage0/features.sn
+// The language the C Stage0 compiles since it learned the self-hosted
+// frontend's later features (docs/OWNERSHIP_AND_DESTRUCTION.md, "Bootstrap
+// constraints"): module constants and variables, break/continue/for, calls in
+// vector literals, literal/range/alternative patterns (also nested), floats
+// and float casts, wrapping arithmetic, pop/truncate/capacity/reserve,
+// members of call results, `?`, and panic ending its path. Native, the
+// interpreter and Stage0 agree.
+import std.math.wrapping;
+import std.process.panic;
+
+let LIMIT: int = 6 * 7;
+let DIGITS: vector u32 = [3, 1, 4];
+let GREETING: string = "hello";
+let counter: mutable int = 0;
+
+type Pair = { label: string, value: int, step: fn(int): int };
+
+def bump(x: int): int { return x + 1; }
+def pair(v: int): Pair { let p: Pair = { label: "pair", value: v, step: bump }; return p; }
+def square(x: int): int { return x * x; }
+
+def classify(code: option int): int {
+    match code with
+    | option.some(0) -> { return 1; }
+    | option.some(range 1 to 9) -> { return 2; }
+    | option.some(-1 | 100) -> { return 3; }
+    | option.some(_) -> { return 4; }
+    | option.none -> { return 5; };
+}
+
+def positive(x: int): result int, string {
+    if (x > 0) { return result.ok(x); };
+    return result.err("not positive");
+}
+
+def twice_positive(x: int): result int, string {
+    let v: int = positive(x)?;
+    return result.ok(v * 2);
+}
+
+def checked(x: int): int {
+    if (x >= 0) { return x; };
+    panic("negative");
+}
+
+def main(): int {
+    let failures: mutable int = 0;
+    // Module constants and variables.
+    if (LIMIT != 42 || length(DIGITS) != 3 || DIGITS[2] != 4 || length(GREETING) != 5) { failures := failures + 1; };
+    counter := counter + 5;
+    if (counter != 5) { failures := failures + 1; };
+    // break, continue and for.
+    let sum: mutable int = 0;
+    for (let i: mutable int = 0; i < 10; i := i + 1) {
+        if (i == 3) { continue; };
+        if (i == 8) { break; };
+        sum := sum + i;
+    }
+    if (sum != 25) { failures := failures + 1; };
+    // Calls inside a vector literal.
+    let squares: vector int = [square(2), square(3), LIMIT - 40];
+    if (squares[0] + squares[1] + squares[2] != 15) { failures := failures + 1; };
+    // Literal patterns, nested, ranges and alternatives.
+    if (classify(option.some(0)) + classify(option.some(7)) + classify(option.some(100))
+        + classify(option.some(55)) + classify(option.none()) != 15) { failures := failures + 1; };
+    // Floats and float casts (saturating, NaN gives 0).
+    let half: f64 = 2.5 * 3.0;
+    if ((half as int) != 7 || ((1.0e30) as i32) != 2147483647 || ((0.0 / 0.0) as int) != 0) {
+        failures := failures + 1;
+    };
+    if (((300 as f32) as u8) != 255 || (((7 as f64) as f32) as i64) != 7) { failures := failures + 1; };
+    // Wrapping arithmetic.
+    if (wrapping_add_i8(127, 1) != -128 || wrapping_mul_u8(16, 16) != 0) { failures := failures + 1; };
+    // pop, truncate, capacity, reserve_exact.
+    let items: mutable vector string = [];
+    reserve_exact(items, 4);
+    if (capacity(items) < 4) { failures := failures + 1; };
+    append(items, "a");
+    append(items, "b");
+    append(items, "c");
+    match pop(items) with
+    | option.some(last) -> { if (length(last) != 1) { failures := failures + 1; }; }
+    | option.none -> { failures := failures + 1; };
+    truncate(items, 1);
+    if (length(items) != 1) { failures := failures + 1; };
+    // Members, elements and calls of call results.
+    if (pair(9).value + pair(1).step(2) + (length(pair(3).label) as int) != 16) { failures := failures + 1; };
+    // Propagation and panic.
+    match twice_positive(4) with
+    | result.ok(8) -> { }
+    | _ -> { failures := failures + 1; };
+    match twice_positive(-4) with
+    | result.err(_) -> { }
+    | _ -> { failures := failures + 1; };
+    if (checked(2) != 2) { failures := failures + 1; };
+    if (failures != 0) { return failures; };
+    return 42;
+}

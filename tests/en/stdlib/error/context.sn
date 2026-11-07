@@ -1,0 +1,80 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/stdlib/error/context.sn
+// std.error.context (docs/ERRORS.md): with_context wraps an error as the
+// cause of a new one, to_error converts a typed error with a converter
+// function value, with_note adds a note; on success each moves an owning
+// value (text, a vector) through unchanged. The exact error_describe text of
+// the chain is checked.
+import std.error.failure;
+import std.error.context;
+import std.error.from_number;
+import std.text.number;
+import std.text.compare;
+import std.io.println;
+
+def name_or_error(valid: bool): result string, Error {
+    if (valid) { return result.ok("خادم"); };
+    return result.err(error_with_kind("config", "فارغ", "ملف الإعدادات فارغ"));
+}
+
+def list_or_error(valid: bool): result vector string, Error {
+    let items: mutable vector string = [];
+    append(items, "أ");
+    append(items, "ب");
+    if (valid) { return result.ok(items); };
+    return result.err(error_new("لا قائمة"));
+}
+
+def port(text: string): result int, Error {
+    let value: int = to_error(parse_int(&text), error_from_integer_parse_error)?;
+    return result.ok(value);
+}
+
+def settings(valid: bool): result string, Error {
+    let name: string = with_note(with_context(name_or_error(valid), "تعذر قراءة الإعدادات"), "المسار من SULTANC_CONFIG")?;
+    return result.ok(name);
+}
+
+def main(): int {
+    match settings(true) with
+    | result.ok(name) -> {
+        let expected: string = "خادم";
+        if (!texts_equal(&name, &expected)) { return 1; };
+    }
+    | result.err(_) -> { return 2; };
+    match with_context(list_or_error(true), "سياق لا يستعمل") with
+    | result.ok(items) -> { if ((length(items) as uint) != 2) { return 3; }; }
+    | result.err(_) -> { return 4; };
+    match with_note(list_or_error(false), "ملاحظة") with
+    | result.ok(_) -> { return 5; }
+    | result.err(failure) -> {
+        let description: string = error_describe(&failure);
+        let expected: string = "لا قائمة\nملاحظة: ملاحظة";
+        if (!texts_equal(&description, &expected)) { return 6; };
+    };
+    match settings(false) with
+    | result.ok(_) -> { return 7; }
+    | result.err(failure) -> {
+        let description: string = error_describe(&failure);
+        let expected: string = "تعذر قراءة الإعدادات\nملاحظة: المسار من SULTANC_CONFIG\nبسبب: ملف الإعدادات فارغ";
+        if (!texts_equal(&description, &expected)) { return 8; };
+        let domain: string = "config";
+        let kind: string = "فارغ";
+        if (!error_is(&failure, &domain, &kind)) { return 9; };
+        let ignored: result int, int = println(description);
+    };
+    match port("8x") with
+    | result.ok(_) -> { return 10; }
+    | result.err(failure) -> {
+        let domain: string = "std.text.number";
+        let kind: string = "رقم_غير_صالح";
+        if (!error_is(&failure, &domain, &kind)) { return 11; };
+    };
+    match port("8080") with
+    | result.ok(value) -> { if (value != 8080) { return 12; }; }
+    | result.err(_) -> { return 13; };
+    return 42;
+}

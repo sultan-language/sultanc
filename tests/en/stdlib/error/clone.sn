@@ -1,0 +1,46 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/stdlib/error/clone.sn
+// std.error: clone and error_copy give independent deep copies, causes and
+// notes included.
+import std.error.failure;
+import std.text.compare;
+
+def main(): int {
+    let root: Error = error_with_kind("std.fs", "غير_موجود", "الملف غير موجود");
+    let original: mutable Error = error_caused_by("تعذر القراءة", root);
+    error_add_note(&mutable original, "ملاحظة");
+    let original_text: string = error_describe(&original);
+    let domain: string = "std.fs";
+    let kind: string = "غير_موجود";
+
+    let copy: mutable Error = clone(&original);
+    let copy_text: string = error_describe(&copy);
+    if (!texts_equal(&original_text, &copy_text)) { return 1; };
+    if (!error_is(&copy, &domain, &kind)) { return 2; };
+
+    let manual_copy: mutable Error = error_copy(&original);
+    let manual_text: string = error_describe(&manual_copy);
+    if (!texts_equal(&original_text, &manual_text)) { return 3; };
+    if (!error_is(&manual_copy, &domain, &kind)) { return 4; };
+
+    // Changing a copy leaves the original unchanged.
+    error_add_note(&mutable copy, "في النسخة فقط");
+    error_add_note(&mutable manual_copy, "في اليدوية فقط");
+    let text_after: string = error_describe(&original);
+    if (!texts_equal(&original_text, &text_after)) { return 5; };
+    let original_notes: vector string = error_notes(&original);
+    if ((length(original_notes) as uint) != 1) { return 6; };
+    let copy_notes: vector string = error_notes(&copy);
+    if ((length(copy_notes) as uint) != 2) { return 7; };
+
+    // A copy outlives its original.
+    let survivor: Error = error_copy(&copy);
+    let moved: Error = copy;
+    let survivor_text: string = error_describe(&survivor);
+    let moved_text: string = error_describe(&moved);
+    if (!texts_equal(&survivor_text, &moved_text)) { return 8; };
+    return 42;
+}

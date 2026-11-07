@@ -1,0 +1,27 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 0
+// نظير: tests/ar/ispeak/check_runtime_failures.sn
+import std.text.compare;
+import compiler.runtime.failure_identity;
+import compiler.diagnostics.schema;
+import compiler.ispeak.ispeak;
+
+def same_text(actual: string, expected: string): bool {
+    return texts_equal(&actual, &expected);
+}
+
+// Exact runtime-failure wording in both languages.
+def main(): int {
+    if (!same_text(عنوان_فشل_تشغيل(لغة_تشخيص.الإنجليزية()), "runtime error")) { return 1; };
+    if (!same_text(عنوان_فشل_تشغيل(لغة_تشخيص.العربية()), "خطأ وقت التشغيل")) { return 2; };
+    if (!same_text(نص_فشل_تشغيل(لغة_تشخيص.الإنجليزية(), هوية_فشل_تشغيل.تجاوز_حدود()), "index out of bounds")) { return 3; };
+    if (!same_text(نص_فشل_تشغيل(لغة_تشخيص.العربية(), هوية_فشل_تشغيل.تجاوز_حدود()), "الفهرس خارج الحدود")) { return 4; };
+    if (!same_text(نص_فشل_تشغيل(لغة_تشخيص.الإنجليزية(), هوية_فشل_تشغيل.وسيط_خارج_المدى()), "argument out of range")) { return 5; };
+    if (!same_text(نص_فشل_تشغيل(لغة_تشخيص.العربية(), هوية_فشل_تشغيل.وسيط_خارج_المدى()), "الوسيط خارج المدى المسموح")) { return 6; };
+    if (!same_text(نص_فشل_تشغيل(لغة_تشخيص.الإنجليزية(), هوية_فشل_تشغيل.عملية_غير_صالحة()), "invalid operation")) { return 7; };
+    if (!same_text(نص_فشل_تشغيل(لغة_تشخيص.العربية(), هوية_فشل_تشغيل.عملية_غير_صالحة()), "عملية غير صالحة")) { return 8; };
+    if (!same_text(نص_فشل_تشغيل(لغة_تشخيص.الإنجليزية(), هوية_فشل_تشغيل.إدخال_إخراج()), "input/output failure")) { return 9; };
+    if (!same_text(نص_فشل_تشغيل(لغة_تشخيص.العربية(), هوية_فشل_تشغيل.إدخال_إخراج()), "فشل في الإدخال أو الإخراج")) { return 10; };
+    return 0;
+}

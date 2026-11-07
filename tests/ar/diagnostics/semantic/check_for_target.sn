@@ -1,0 +1,12 @@
+// اختبار: رفض
+// تشخيص: SULTANC-TARGET-FEATURE-UNSUPPORTED
+// خروج: 3
+// نظير: tests/en/diagnostics/semantic/check_for_target.sn
+// مصرح بها لـ wasm32 فقط: يرفض `check` على المضيف استعمالها، ويقبلها
+// `check --target=wasm32-wasi` (tests/runner/suites/cli.sn).
+لو (الهدف.المعمارية == «wasm32») {
+    عرف قيمة_واسم(): ص32 { أرجع 0; }
+}
+عرف الرئيسية(): ص32 {
+    أرجع قيمة_واسم();
+}

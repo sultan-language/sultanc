@@ -1,0 +1,17 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 9
+// نظير: tests/ar/language/safety/global_match_view.sn
+// A match on an immutable global binds a view: the global keeps its payload.
+let numbers: vector int = [1, 2, 3];
+
+def main(): int {
+    let total: mutable int = 0;
+    let round: mutable int = 0;
+    while (round < 3) {
+        match numbers with
+        | view -> { total := total + length(view); };
+        round := round + 1;
+    }
+    return total;
+}

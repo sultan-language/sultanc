@@ -1,0 +1,133 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/stdlib/fmt/errors.sn
+// std.fmt errors: malformed format strings (Rust rejects each at compile
+// time; std.fmt reports it at run time with the byte offset), arguments
+// that are missing, unused or of the wrong type, bad width and precision
+// arguments, a failing custom formatter, and the formatter left unchanged by
+// an error. std.error converts the error to an Error with its identity, an
+// English language version and a note.
+import std.fmt.fmt;
+import std.error.failure;
+import std.error.from_fmt;
+import std.text.compare;
+import std.math.float;
+import std.text.language;
+
+// The error as "<variant> <payload>", or "ok".
+def describe(template: string, args: vector fmt_arg): string {
+    match format(template, args) with
+    | result.ok(_) -> { return "ok"; }
+    | result.err(e) -> {
+        match e with
+        | خطأ_تنسيق.قوس_غير_مغلق(p) -> { return pair("unclosed", p); }
+        | خطأ_تنسيق.قوس_إغلاق_منفرد(p) -> { return pair("unmatched", p); }
+        | خطأ_تنسيق.مواصفة_غير_صالحة(p) -> { return pair("spec", p); }
+        | خطأ_تنسيق.نوع_غير_معروف(p) -> { return pair("type", p); }
+        | خطأ_تنسيق.وسيط_مسمى(p) -> { return pair("named", p); }
+        | خطأ_تنسيق.وسيط_مفقود(i) -> { return pair("missing", i); }
+        | خطأ_تنسيق.وسيط_غير_مستخدم(i) -> { return pair("unused", i); }
+        | خطأ_تنسيق.نوع_غير_مناسب(i) -> { return pair("mismatch", i); }
+        | خطأ_تنسيق.عدد_غير_صالح(i) -> { return pair("count", i); }
+        | خطأ_تنسيق.فشل_الكتابة(_) -> { return "write"; }
+        | خطأ_تنسيق.فشل_مخصص -> { return "custom"; };
+    };
+}
+
+def pair(name: string, n: uint): string {
+    match format("{} {}", [fmt_arg.text(&name), fmt_arg.uint(n)]) with
+    | result.ok(t) -> { return t; }
+    | result.err(_) -> { return "?"; };
+}
+
+def expect(template: string, args: vector fmt_arg, wanted: string): int {
+    let got: string = describe(template, args);
+    if (texts_equal(&got, &wanted)) { return 0; };
+    return 1;
+}
+
+def fail_custom(f: &mutable formatter): result uint, fmt_error {
+    let t: string = "partial";
+    let r: result uint, fmt_error = write_str(f, &t);
+    return result.err(خطأ_تنسيق.فشل_مخصص());
+}
+
+def main(): int {
+    let failures: mutable int = 0;
+    let word: string = "w";
+    let nums: vector int = [1, 2];
+
+    failures := failures + expect("{", [], "unclosed 0");
+    failures := failures + expect("abc{", [], "unclosed 3");
+    failures := failures + expect("{:>8", [fmt_arg.int(1)], "unclosed 0");
+    failures := failures + expect("x{0", [fmt_arg.int(1)], "unclosed 1");
+    failures := failures + expect("}", [], "unmatched 0");
+    failures := failures + expect("a}b", [], "unmatched 1");
+    failures := failures + expect("{}}", [fmt_arg.int(1)], "unmatched 2");
+    failures := failures + expect("{0x}", [fmt_arg.int(1)], "spec 2");
+    failures := failures + expect("{:q}", [fmt_arg.int(1)], "type 2");
+    failures := failures + expect("{:xx}", [fmt_arg.int(1)], "type 3");
+    failures := failures + expect("{:p}", [fmt_arg.int(1)], "type 2");
+    failures := failures + expect("{name}", [], "named 1");
+    failures := failures + expect("{:width$}", [fmt_arg.int(1)], "named 2");
+    failures := failures + expect("{:.p$}", [fmt_arg.int(1)], "named 3");
+    failures := failures + expect("{:.}", [fmt_arg.int(1)], "spec 3");
+    failures := failures + expect("{:.x}", [fmt_arg.int(1)], "spec 3");
+    failures := failures + expect("{:70000}", [fmt_arg.int(1)], "spec 6");
+    failures := failures + expect("{:<<<}", [fmt_arg.int(1)], "spec 4");
+    failures := failures + expect("{} {}", [fmt_arg.int(1)], "missing 1");
+    failures := failures + expect("{2}", [fmt_arg.int(1)], "missing 2");
+    failures := failures + expect("{}", [fmt_arg.int(1), fmt_arg.int(2)], "unused 1");
+    failures := failures + expect("{1}", [fmt_arg.int(1), fmt_arg.int(2)], "unused 0");
+    failures := failures + expect("{:x}", [fmt_arg.text(&word)], "mismatch 0");
+    failures := failures + expect("{:e}", [fmt_arg.bool(true)], "mismatch 0");
+    failures := failures + expect("{}", [fmt_arg.ints(&nums)], "mismatch 0");
+    failures := failures + expect("{:b}", [fmt_arg.f64(f64_from_bits(4607182418800017408))], "mismatch 0");
+    failures := failures + expect("{:1$}", [fmt_arg.text(&word), fmt_arg.text(&word)], "count 1");
+    failures := failures + expect("{:.*}", [fmt_arg.int(-1), fmt_arg.f64(f64_from_bits(4607182418800017408))], "count 0");
+    failures := failures + expect("{:1$}", [fmt_arg.int(1), fmt_arg.uint(70000)], "count 1");
+    failures := failures + expect("{:1$}", [fmt_arg.text(&word)], "missing 1");
+    failures := failures + expect("{:.*}", [], "missing 0");
+    failures := failures + expect("{{}}", [], "ok");
+
+    // A custom formatter's error propagates, and what it wrote is dropped.
+    let custom: fmt_arg = fmt_arg.custom(fn(f: &mutable formatter): result uint, fmt_error -> fail_custom(f));
+    failures := failures + expect("[{}]", [custom], "custom");
+    let out: mutable formatter = new_formatter();
+    let start: string = "abc";
+    let w: result uint, fmt_error = write_str(&mutable out, &start);
+    match format_into(&mutable out, "x{}y", [custom]) with
+    | result.ok(_) -> { failures := failures + 1; }
+    | result.err(_) -> { };
+    // A format string that is not a literal is checked at run time.
+    let broken: string = "x{}y{";
+    match format_into(&mutable out, broken, [fmt_arg.int(1)]) with
+    | result.ok(_) -> { failures := failures + 1; }
+    | result.err(_) -> { };
+    let kept: string = formatter_text(&out);
+    if (!texts_equal(&kept, &start)) { failures := failures + 1; };
+
+    // The std.error conversion.
+    let e: fmt_error = خطأ_تنسيق.قوس_غير_مغلق(3);
+    let err: Error = error_from_fmt_error(&e);
+    let domain: string = error_domain(&err);
+    let kind: string = error_kind(&err);
+    let wanted_domain: string = "std.fmt";
+    let wanted_kind: string = "قوس_غير_مغلق";
+    if (!texts_equal(&domain, &wanted_domain)) { failures := failures + 1; };
+    if (!texts_equal(&kind, &wanted_kind)) { failures := failures + 1; };
+    let notes: vector string = error_notes(&err);
+    let wanted_note: string = "موضع البايت: 3";
+    if (length(notes) != 1) { failures := failures + 1; }
+    else if (!texts_equal(&notes[0], &wanted_note)) { failures := failures + 1; };
+    let tag: string = "en";
+    let english: Locale = locale_from_tag(&tag);
+    let in_english: string = error_text_in(&err, &english);
+    let wanted_english: string = "the format string has a { that is not closed";
+    if (!texts_equal(&in_english, &wanted_english)) { failures := failures + 1; };
+
+    if (failures != 0) { return 1; };
+    return 42;
+}

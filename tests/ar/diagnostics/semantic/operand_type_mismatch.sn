@@ -1,0 +1,9 @@
+// اختبار: رفض
+// تشخيص: SULTANC-TYPE-MISMATCH
+// نظير: tests/en/diagnostics/semantic/operand_type_mismatch.sn
+عرف الرئيسية(): ص32 {
+    دع العدد: ص32 = 1;
+    دع جاهز: منطقي = صواب;
+    لو (العدد == جاهز) { أرجع 1; };
+    أرجع 0;
+}

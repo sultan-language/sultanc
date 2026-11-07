@@ -1,0 +1,25 @@
+// اختبار: قبول
+// تشخيص: SULTANC-PATTERN-UNREACHABLE
+// نظير: tests/ar/diagnostics/semantic/unreachable_literal_arms.sn
+// A literal inside an earlier range, a repeated text literal, and a tuple
+// row every earlier row together covers never run.
+type light = | red | green;
+def score(level: u8, word: string, pair: (light, bool)): i32 {
+    match level with
+    | range 0 to 100 -> { return 1; }
+    | 50 -> { return 2; }
+    | _ -> { };
+    match word with
+    | "a" -> { return 3; }
+    | "a" -> { return 4; }
+    | _ -> { };
+    match pair with
+    | (light.red(), true) -> { return 5; }
+    | (_, false) -> { return 6; }
+    | (light.green(), _) -> { return 7; }
+    | (light.red(), false) -> { return 8; }
+}
+def main(): i32 {
+    let pair: (light, bool) = (light.green(), true);
+    return score(200, "b", pair) - 7;
+}

@@ -1,0 +1,7 @@
+// اختبار: رفض
+// تشخيص: SULTANC-TYPE-MISMATCH
+// نظير: tests/en/diagnostics/semantic/integer_literal_range.sn
+عرف الرئيسية(): ص32 {
+    دع الصغير: ط8 = 300;
+    أرجع 0;
+}

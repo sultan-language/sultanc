@@ -1,0 +1,20 @@
+warning[SULTANC-SYNTAX-DEPRECATED-SPELLING]: the spelling `بينما` is deprecated; use `طالما`
+  --> tests/ar/diagnostics/deprecated/while_old_spelling.sn:11:5..11:10
+    |
+ 11 |     بينما (س < 3) { س := س + 1; }
+    |     ^^^^^
+    |
+
+warning[SULTANC-SYNTAX-DEPRECATED-SPELLING]: the spelling `بينما` is deprecated; use `طالما`
+  --> tests/ar/diagnostics/deprecated/while_old_spelling.sn:12:5..12:11
+    |
+ 12 |     بيـنما (س < 5) { س := س + 1; }
+    |     ^^^^^^
+    |
+
+warning[SULTANC-SYNTAX-DEPRECATED-SPELLING]: the spelling `بينما` is deprecated; use `طالما`
+  --> tests/ar/diagnostics/deprecated/while_old_spelling.sn:15:5..15:10
+    |
+ 15 |     بينما (ص < س) { ص := ص + 1; }
+    |     ^^^^^
+    |

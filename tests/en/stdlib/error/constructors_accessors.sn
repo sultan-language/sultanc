@@ -1,0 +1,72 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/stdlib/error/constructors_accessors.sn
+// std.error: every constructor and accessor.
+import std.error.failure;
+import std.text.compare;
+
+def main(): int {
+    let empty: string = "";
+
+    let adhoc: Error = error_new("تعذر الاتصال");
+    let adhoc_message: string = error_message(&adhoc);
+    let expected_adhoc: string = "تعذر الاتصال";
+    if (!texts_equal(&adhoc_message, &expected_adhoc)) { return 1; };
+    let adhoc_domain: string = error_domain(&adhoc);
+    if (!texts_equal(&adhoc_domain, &empty)) { return 2; };
+    let adhoc_kind: string = error_kind(&adhoc);
+    if (!texts_equal(&adhoc_kind, &empty)) { return 3; };
+    if (error_has_cause(&adhoc)) { return 4; };
+    let adhoc_notes: vector string = error_notes(&adhoc);
+    if ((length(adhoc_notes) as uint) != 0) { return 5; };
+
+    let kinded: Error = error_with_kind("payments", "رصيد_غير_كاف", "الرصيد غير كاف");
+    let kinded_domain: string = error_domain(&kinded);
+    let expected_domain: string = "payments";
+    if (!texts_equal(&kinded_domain, &expected_domain)) { return 6; };
+    let kinded_kind: string = error_kind(&kinded);
+    let expected_kind: string = "رصيد_غير_كاف";
+    if (!texts_equal(&kinded_kind, &expected_kind)) { return 7; };
+    let kinded_message: string = error_message(&kinded);
+    let expected_kinded_message: string = "الرصيد غير كاف";
+    if (!texts_equal(&kinded_message, &expected_kinded_message)) { return 8; };
+    if (error_has_cause(&kinded)) { return 9; };
+
+    let wrapped: Error = error_caused_by("تعذر إتمام الدفع", kinded);
+    if (!error_has_cause(&wrapped)) { return 10; };
+    let wrapped_domain: string = error_domain(&wrapped);
+    if (!texts_equal(&wrapped_domain, &empty)) { return 11; };
+    let wrapped_message: string = error_message(&wrapped);
+    let expected_wrapped_message: string = "تعذر إتمام الدفع";
+    if (!texts_equal(&wrapped_message, &expected_wrapped_message)) { return 12; };
+    match error_cause(&wrapped) with
+    | option.none -> { return 13; }
+    | option.some(cause) -> {
+        let cause_kind: string = error_kind(&cause);
+        if (!texts_equal(&cause_kind, &expected_kind)) { return 14; };
+        let cause_message: string = error_message(&cause);
+        if (!texts_equal(&cause_message, &expected_kinded_message)) { return 15; };
+        if (error_has_cause(&cause)) { return 16; };
+    };
+    match error_cause(&adhoc) with
+    | option.some(_) -> { return 17; }
+    | option.none -> { };
+
+    let origin: Error = error_new("انقطع الاتصال");
+    let kinded_wrapped: Error = error_with_kind_caused_by("payments", "بوابة_معطلة", "بوابة الدفع لا تستجيب", origin);
+    let kinded_wrapped_kind: string = error_kind(&kinded_wrapped);
+    let expected_gateway: string = "بوابة_معطلة";
+    if (!texts_equal(&kinded_wrapped_kind, &expected_gateway)) { return 18; };
+    let kinded_wrapped_domain: string = error_domain(&kinded_wrapped);
+    if (!texts_equal(&kinded_wrapped_domain, &expected_domain)) { return 19; };
+    match error_cause(&kinded_wrapped) with
+    | option.none -> { return 20; }
+    | option.some(cause) -> {
+        let origin_message: string = error_message(&cause);
+        let expected_origin: string = "انقطع الاتصال";
+        if (!texts_equal(&origin_message, &expected_origin)) { return 21; };
+    };
+    return 42;
+}

@@ -1,0 +1,87 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/stdlib/behavior/socket_names.sn
+// std.net.socket_names: an unconnected UDP socket sends to and receives from
+// an address, local and peer addresses of UDP and TCP sockets bound to port
+// 0.
+import std.net.socket_address;
+import std.net.socket_names;
+import std.net.udp;
+import std.net.tcp;
+import std.net.options;
+import std.text.compare;
+
+def exchange(a: &udp_socket, b: &udp_socket): int {
+    match udp_local_addr(a) with
+    | result.err(_) -> { return 5; }
+    | result.ok(a_addr) -> {
+        if (socket_addr_port(&a_addr) == 0) { return 6; };
+        match udp_local_addr(b) with
+        | result.err(_) -> { return 7; }
+        | result.ok(b_addr) -> {
+            let message: vector u8 = [83, 117, 108];
+            match udp_send_to(a, &message, 0, 3, &b_addr) with
+            | result.err(_) -> { return 8; }
+            | result.ok(sent) -> { if (sent != 3) { return 9; }; };
+            let buffer: mutable vector u8 = [0, 0, 0, 0, 0, 0, 0, 0];
+            match udp_recv_from(b, &mutable buffer, 0, 8) with
+            | result.err(_) -> { return 10; }
+            | result.ok(datagram) -> {
+                if (datagram.العدد != 3 || buffer[0] != 83 || buffer[2] != 108) { return 11; };
+                let sender: string = socket_addr_to_text(&datagram.المرسل);
+                let expected: string = socket_addr_to_text(&a_addr);
+                if (!texts_equal(&sender, &expected)) { return 12; };
+            };
+        };
+    };
+    match udp_peer_addr(b) with
+    | result.err(_) -> {}
+    | result.ok(_) -> { return 13; };
+    return 0;
+}
+
+def main(): int {
+    let loopback: string = "127.0.0.1:0";
+    match parse_socket_addr(&loopback) with
+    | result.err(_) -> { return 1; }
+    | result.ok(address) -> {
+        match udp_bind(&address) with
+        | result.err(_) -> { return 2; }
+        | result.ok(a) -> {
+            match udp_bind(&address) with
+            | result.err(_) -> { return 3; }
+            | result.ok(b) -> {
+                match udp_set_option(&b, خيار_مقبس.مهلة_استقبال(2000)) with
+                | result.err(_) -> { return 4; }
+                | result.ok(_) -> {};
+                let status: int = exchange(&a, &b);
+                if (status != 0) { return status; };
+                let closed_b: result int, int = udp_close(b);
+            };
+            let closed_a: result int, int = udp_close(a);
+        };
+        match tcp_bind(&address, 16) with
+        | result.err(_) -> { return 14; }
+        | result.ok(listener) -> {
+            match tcp_listener_local_addr(&listener) with
+            | result.err(_) -> { return 15; }
+            | result.ok(listening) -> {
+                match tcp_connect(&listening) with
+                | result.err(_) -> { return 16; }
+                | result.ok(stream) -> {
+                    match tcp_peer_addr(&stream) with
+                    | result.err(_) -> { return 17; }
+                    | result.ok(peer) -> { if (socket_addr_port(&peer) != socket_addr_port(&listening)) { return 18; }; };
+                    match tcp_local_addr(&stream) with
+                    | result.err(_) -> { return 19; }
+                    | result.ok(local) -> { if (socket_addr_port(&local) == 0) { return 20; }; };
+                    let closed_stream: result int, int = tcp_stream_close(stream);
+                };
+            };
+            let closed_listener: result int, int = tcp_listener_close(listener);
+        };
+    };
+    return 42;
+}

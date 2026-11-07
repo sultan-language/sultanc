@@ -1,0 +1,35 @@
+// اختبار: تشغيل
+// أهداف: x86_64-linux
+// خروج: 0
+// std.os.wait_address on one thread: a wait whose cell does not hold the
+// expected value returns at once; a timed wait on an unchanged cell reports
+// the timeout after at least the timeout; wakes with nobody waiting are
+// harmless; the bare-cell forms behave the same. Built for Windows it runs
+// under Wine (WaitOnAddress). Counterpart:
+// tests/ar/stdlib/behavior/wait_address_single.sn. No pair directive: the
+// interpreter refuses waits on its copies of the cell.
+import std.os.wait_address;
+import std.os.clock;
+import std.sync.atomic;
+
+def now(): i64 {
+    match اقرأ_وقت_رتيب_النظام() with
+    | result.ok(t) -> { return t.النانوثواني; }
+    | result.err(_) -> { return 0; };
+}
+
+def main(): i32 {
+    let cell: atomic_u32 = atomic_u32_new(5 as u32);
+    if (!wait_on_address_supported()) { return 0; };
+    if (!wait_on_address(&cell, 4 as u32, option.none())) { return 1; };
+    let start: i64 = now();
+    if (wait_on_address(&cell, 5 as u32, option.some(30000000))) { return 2; };
+    if (now() - start < 25000000) { return 3; };
+    wake_by_address_single(&cell);
+    wake_by_address_all(&cell);
+    let word: u32 = 9 as u32;
+    if (!wait_on_cell(&word, 8 as u32, option.none())) { return 4; };
+    if (wait_on_cell(&word, 9 as u32, option.some(1000000))) { return 5; };
+    wake_one_on_cell(&word);
+    return 0;
+}

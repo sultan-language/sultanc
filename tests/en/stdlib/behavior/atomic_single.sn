@@ -1,0 +1,38 @@
+// اختبار: تشغيل
+// أهداف: x86_64-linux
+// خروج: 0
+// نظير: tests/ar/stdlib/behavior/atomic_single.sn
+// std.sync.atomic: load, store, swap, compare-exchange, fetch_add and the
+// bitwise atomics on atomic_u64, lowered to native atomic instructions
+// (docs/CONCURRENCY.md).
+import std.sync.atomic;
+
+def main(): i32 {
+    let a: mutable atomic_u64 = atomic_u64_new(0 as u64);
+    let i: mutable i64 = 0;
+    while (i < 1000) {
+        let old: u64 = atomic_u64_fetch_add(&a, 1 as u64, memory_ordering.seq_cst());
+        i := i + 1;
+    }
+    if (atomic_u64_load(&a, memory_ordering.seq_cst()) != (1000 as u64)) { return 1; };
+
+    let m: mutable atomic_u64 = atomic_u64_new(5 as u64);
+    atomic_u64_store(&m, 10 as u64, memory_ordering.seq_cst());
+    if (atomic_u64_load(&m, memory_ordering.seq_cst()) != (10 as u64)) { return 2; };
+    let prev: u64 = atomic_u64_swap(&m, 20 as u64, memory_ordering.seq_cst());
+    if (prev != (10 as u64)) { return 3; };
+    let on_ok: u64 = atomic_u64_compare_exchange(&m, 20 as u64, 30 as u64, memory_ordering.seq_cst());
+    if (on_ok != (20 as u64)) { return 4; };
+    if (atomic_u64_load(&m, memory_ordering.seq_cst()) != (30 as u64)) { return 5; };
+    let on_fail: u64 = atomic_u64_compare_exchange(&m, 99 as u64, 40 as u64, memory_ordering.seq_cst());
+    if (on_fail != (30 as u64)) { return 6; };
+    if (atomic_u64_load(&m, memory_ordering.seq_cst()) != (30 as u64)) { return 7; };
+
+    let b: mutable atomic_u64 = atomic_u64_new(12 as u64);
+    let andv: u64 = atomic_u64_fetch_and(&b, 10 as u64, memory_ordering.seq_cst());
+    if (atomic_u64_load(&b, memory_ordering.seq_cst()) != (8 as u64)) { return 8; };
+    let orv: u64 = atomic_u64_fetch_or(&b, 1 as u64, memory_ordering.seq_cst());
+    if (atomic_u64_load(&b, memory_ordering.seq_cst()) != (9 as u64)) { return 9; };
+    atomic_fence(memory_ordering.seq_cst());
+    return 0;
+}

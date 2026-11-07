@@ -1,0 +1,200 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/stdlib/fmt/arabic.sn
+// std.fmt and Arabic text: width and precision count extended grapheme
+// clusters (UAX #29), so a letter with its harakat is one character and a
+// precision never separates a letter from its marks; Rust counts Unicode
+// scalar values and would give these texts less padding. Debug keeps the
+// harakat (Rust escapes them) and escapes direction marks. No direction
+// marks are inserted. Bytes format as text (ill-formed UTF-8 as U+FFFD) or
+// as hex digits.
+import std.fmt.fmt;
+import std.text.compare;
+import std.io.print;
+
+def check(template: string, args: vector fmt_arg, expected: string): bool {
+    match format(template, args) with
+    | result.ok(got) -> {
+        if (texts_equal(&got, &expected)) { return true; };
+        let r: result int, int = eprint(got);
+        return false;
+    }
+    | result.err(_) -> { return false; };
+}
+
+
+def case_0(): bool {
+    let v0: string = "مُحَمَّد";
+    let args: vector fmt_arg = [fmt_arg.text(&v0)];
+    return check("[{:>6}]", args, "[  مُحَمَّد]");
+}
+
+def case_1(): bool {
+    let v0: string = "مُحَمَّد";
+    let args: vector fmt_arg = [fmt_arg.text(&v0)];
+    return check("[{:<6}]", args, "[مُحَمَّد  ]");
+}
+
+def case_2(): bool {
+    let v0: string = "سَلَام";
+    let args: vector fmt_arg = [fmt_arg.text(&v0)];
+    return check("[{:^8}]", args, "[  سَلَام  ]");
+}
+
+def case_3(): bool {
+    let v0: string = "مُحَمَّد";
+    let args: vector fmt_arg = [fmt_arg.text(&v0)];
+    return check("[{:.2}]", args, "[مُحَ]");
+}
+
+def case_4(): bool {
+    let v0: string = "مُحَمَّد";
+    let args: vector fmt_arg = [fmt_arg.text(&v0)];
+    return check("[{:5.3}]", args, "[مُحَمَّ  ]");
+}
+
+def case_5(): bool {
+    let v0: string = "عَلِيّ";
+    let args: vector fmt_arg = [fmt_arg.text(&v0)];
+    return check("[{:ـ>7}]", args, "[ــــعَلِيّ]");
+}
+
+def case_6(): bool {
+    let v0: string = "👨\u200d👩\u200d👧";
+    let args: vector fmt_arg = [fmt_arg.text(&v0)];
+    return check("[{:>3}]", args, "[  👨\u200d👩\u200d👧]");
+}
+
+def case_7(): bool {
+    let v0: string = "a\r\nb";
+    let args: vector fmt_arg = [fmt_arg.text(&v0)];
+    return check("[{:>4}]", args, "[ a\r\nb]");
+}
+
+def case_8(): bool {
+    let v0: string = "لا";
+    let args: vector fmt_arg = [fmt_arg.text(&v0)];
+    return check("[{:>4}]", args, "[  لا]");
+}
+
+def case_9(): bool {
+    let v0: string = "١٢٣";
+    let args: vector fmt_arg = [fmt_arg.text(&v0)];
+    return check("[{:>5}]", args, "[  ١٢٣]");
+}
+
+def case_10(): bool {
+    let v0: string = "مُحَمَّد";
+    let args: vector fmt_arg = [fmt_arg.text(&v0)];
+    return check("{:?}", args, "\"مُحَمَّد\"");
+}
+
+def case_11(): bool {
+    let v0: string = "مرحبا\u200f";
+    let args: vector fmt_arg = [fmt_arg.text(&v0)];
+    return check("{:?}", args, "\"مرحبا\\u{200f}\"");
+}
+
+def case_12(): bool {
+    let v0: string = "سلام";
+    let v1: string = "world";
+    let args: vector fmt_arg = [fmt_arg.text(&v0), fmt_arg.text(&v1)];
+    return check("{} {}", args, "سلام world");
+}
+
+def case_13(): bool {
+    let v0: string = "أحمد";
+    let args: vector fmt_arg = [fmt_arg.text(&v0), fmt_arg.int(42)];
+    return check("{:<8}|{:>5}", args, "أحمد    |   42");
+}
+
+def case_14(): bool {
+    let v0: string = "فَاطِمَة";
+    let args: vector fmt_arg = [fmt_arg.text(&v0), fmt_arg.int(7)];
+    return check("{:<8}|{:>5}", args, "فَاطِمَة   |    7");
+}
+
+def case_15(): bool {
+    let v0: vector u8 = [216, 179, 217, 132, 216, 167, 217, 133];
+    let args: vector fmt_arg = [fmt_arg.bytes(&v0)];
+    return check("{}", args, "سلام");
+}
+
+def case_16(): bool {
+    let v0: vector u8 = [216, 179, 217, 132, 216, 167, 217, 133];
+    let args: vector fmt_arg = [fmt_arg.bytes(&v0)];
+    return check("[{:>6}]", args, "[  سلام]");
+}
+
+def case_17(): bool {
+    let v0: vector u8 = [97, 255, 98];
+    let args: vector fmt_arg = [fmt_arg.bytes(&v0)];
+    return check("{}", args, "a�b");
+}
+
+def case_18(): bool {
+    let v0: vector u8 = [216];
+    let args: vector fmt_arg = [fmt_arg.bytes(&v0)];
+    return check("{}", args, "�");
+}
+
+def case_19(): bool {
+    let v0: vector u8 = [222, 173, 1];
+    let args: vector fmt_arg = [fmt_arg.bytes(&v0)];
+    return check("{:x}", args, "dead01");
+}
+
+def case_20(): bool {
+    let v0: vector u8 = [222, 173];
+    let args: vector fmt_arg = [fmt_arg.bytes(&v0)];
+    return check("{:#X}", args, "0xDEAD");
+}
+
+def case_21(): bool {
+    let v0: vector u8 = [171];
+    let args: vector fmt_arg = [fmt_arg.bytes(&v0)];
+    return check("[{:>8x}]", args, "[      ab]");
+}
+
+def case_22(): bool {
+    let args: vector fmt_arg = [fmt_arg.char('\u0628')];
+    return check("[{:>4}]", args, "[   ب]");
+}
+
+def case_23(): bool {
+    let v0: string = "نَصّ";
+    let args: vector fmt_arg = [fmt_arg.text(&v0)];
+    return check("[{:-^9}]", args, "[---نَصّ----]");
+}
+
+def main(): int {
+    let failures: mutable int = 0;
+    if (!case_0()) { failures := failures + 1; };
+    if (!case_1()) { failures := failures + 1; };
+    if (!case_2()) { failures := failures + 1; };
+    if (!case_3()) { failures := failures + 1; };
+    if (!case_4()) { failures := failures + 1; };
+    if (!case_5()) { failures := failures + 1; };
+    if (!case_6()) { failures := failures + 1; };
+    if (!case_7()) { failures := failures + 1; };
+    if (!case_8()) { failures := failures + 1; };
+    if (!case_9()) { failures := failures + 1; };
+    if (!case_10()) { failures := failures + 1; };
+    if (!case_11()) { failures := failures + 1; };
+    if (!case_12()) { failures := failures + 1; };
+    if (!case_13()) { failures := failures + 1; };
+    if (!case_14()) { failures := failures + 1; };
+    if (!case_15()) { failures := failures + 1; };
+    if (!case_16()) { failures := failures + 1; };
+    if (!case_17()) { failures := failures + 1; };
+    if (!case_18()) { failures := failures + 1; };
+    if (!case_19()) { failures := failures + 1; };
+    if (!case_20()) { failures := failures + 1; };
+    if (!case_21()) { failures := failures + 1; };
+    if (!case_22()) { failures := failures + 1; };
+    if (!case_23()) { failures := failures + 1; };
+    if (failures != 0) { return 1; };
+    return 42;
+}

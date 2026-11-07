@@ -1,0 +1,103 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/stdlib/error/language_chain.sn
+// std.error (docs/ERRORS.md): error_describe_in resolves every error of a
+// cause chain with the same locale, writes the connector words in the
+// locale's language (fixed std text) and isolates a message or note whose
+// direction differs from the connectors'. For Arabic, or a locale without a
+// tag, it is error_describe when no version applies.
+import std.error.failure;
+import std.text.language;
+import std.text.compare;
+import std.text.from_bytes;
+import std.io.println;
+
+// U+2068, the text, U+2069, written out byte by byte.
+def isolated(text: string): string {
+    let bytes: mutable vector u8 = [];
+    append(bytes, 0xE2 as u8);
+    append(bytes, 0x81 as u8);
+    append(bytes, 0xA8 as u8);
+    append_text_bytes(&mutable bytes, text);
+    append(bytes, 0xE2 as u8);
+    append(bytes, 0x81 as u8);
+    append(bytes, 0xA9 as u8);
+    return bytes as string;
+}
+
+def concat(parts: &vector string): string {
+    let bytes: mutable vector u8 = [];
+    let count: uint = length(*parts) as uint;
+    let i: mutable uint = 0;
+    while (i < count) {
+        append_text_bytes(&mutable bytes, copy_text(&(*parts)[i]));
+        i := i + 1;
+    }
+    return bytes as string;
+}
+
+def describe_for_tag(failure: &Error, tag: string): string {
+    let locale: Locale = locale_from_tag(&tag);
+    return error_describe_in(failure, &locale);
+}
+
+def main(): int {
+    let root: mutable Error = error_with_kind("config", "فارغ", "ملف الإعدادات فارغ");
+    error_add_language_version(&mutable root, "en", "the configuration file is empty");
+    error_add_language_version(&mutable root, "fr", "le fichier de configuration est vide");
+    error_add_note(&mutable root, "الحجم 0 بايت");
+    let middle: mutable Error = error_caused_by("تعذر قراءة الإعدادات", root);
+    error_add_language_version(&mutable middle, "en", "could not read the configuration");
+    let top: mutable Error = error_caused_by("أثناء بدء الخادم", middle);
+    error_add_language_version(&mutable top, "en", "while starting the server");
+    error_add_language_version(&mutable top, "fr", "au démarrage du serveur");
+    error_add_note(&mutable top, "المنفذ 8080");
+
+    // English: every message resolved in English, English connectors, the
+    // Arabic notes isolated.
+    let english: mutable vector string = [];
+    append(english, "while starting the server\nnote: ");
+    append(english, isolated("المنفذ 8080"));
+    append(english, "\ncaused by: could not read the configuration\ncaused by: the configuration file is empty\nnote: ");
+    append(english, isolated("الحجم 0 بايت"));
+    let expected_english: string = concat(&english);
+    let in_english: string = describe_for_tag(&top, "en-US");
+    if (!texts_equal(&in_english, &expected_english)) { return 1; };
+
+    // The same through an Accept-Language priority list whose first match is
+    // English.
+    let header: string = "de, en;q=0.9, fr;q=0.8";
+    let from_header: Locale = locale_from_accept_language(&header);
+    let by_header: string = error_describe_in(&top, &from_header);
+    if (!texts_equal(&by_header, &expected_english)) { return 2; };
+
+    // French: the middle error has no French version, so its author's
+    // Arabic message is used, isolated after the English connector.
+    let french: mutable vector string = [];
+    append(french, "au démarrage du serveur\nnote: ");
+    append(french, isolated("المنفذ 8080"));
+    append(french, "\ncaused by: ");
+    append(french, isolated("تعذر قراءة الإعدادات"));
+    append(french, "\ncaused by: le fichier de configuration est vide\nnote: ");
+    append(french, isolated("الحجم 0 بايت"));
+    let expected_french: string = concat(&french);
+    let in_french: string = describe_for_tag(&top, "fr-CH");
+    if (!texts_equal(&in_french, &expected_french)) { return 3; };
+
+    // Arabic: no Arabic version, so the authors' messages; the same text as
+    // error_describe. A locale without a tag gives it too.
+    let expected_arabic: string = "أثناء بدء الخادم\nملاحظة: المنفذ 8080\nبسبب: تعذر قراءة الإعدادات\nبسبب: ملف الإعدادات فارغ\nملاحظة: الحجم 0 بايت";
+    let in_arabic: string = describe_for_tag(&top, "ar-SA");
+    if (!texts_equal(&in_arabic, &expected_arabic)) { return 4; };
+    let description: string = error_describe(&top);
+    if (!texts_equal(&description, &expected_arabic)) { return 5; };
+    let untagged: string = describe_for_tag(&top, "");
+    if (!texts_equal(&untagged, &expected_arabic)) { return 6; };
+
+    // The same texts on standard output; native and interpreter must agree.
+    let ignored: result int, int = println(describe_for_tag(&top, "en"));
+    let ignored_second: result int, int = println(describe_for_tag(&top, "ar"));
+    return 42;
+}

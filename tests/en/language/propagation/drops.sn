@@ -1,0 +1,44 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// An early return through `?` releases each owned local exactly once
+// (docs/ERRORS.md): a function holding three owned locals (text, vector,
+// box) and the owned error leaves through the expansion's return 10^5 times,
+// and as often through its ok path. A missed drop grows the allocator's live
+// bytes; a second drop traps in the allocator. Valgrind sees the same
+// program clean. Counterpart: tests/ar/language/propagation/drops.sn; no pair
+// directive: the interpreter does not use the std allocator whose counters
+// this reads.
+import std.os.allocation;
+
+def check(x: uint): result uint, string {
+    if ((x % 2) == 0) { return result.err("عدد زوجي مرفوض"); };
+    return result.ok(x);
+}
+
+def with_three_owned(x: uint): result uint, string {
+    let name: string = "قيمة مملوكة أولى";
+    let items: mutable vector string = [];
+    append(items, "عنصر");
+    append(items, "عنصر آخر");
+    let boxed: box string = box "قيمة في صندوق";
+    let checked: uint = check(x)?;
+    return result.ok(checked + (length(name) as uint) + (length(items) as uint) + (length(*boxed) as uint));
+}
+
+def main(): int {
+    let warm_up: result uint, string = with_three_owned(0);
+    let before: u64 = بايتات_حية_مخصص_النظام();
+    let errors: mutable uint = 0;
+    let i: mutable uint = 0;
+    while (i < 200000) {
+        match with_three_owned(i) with
+        | result.ok(_) -> { }
+        | result.err(_) -> { errors := errors + 1; };
+        i := i + 1;
+    }
+    let after: u64 = بايتات_حية_مخصص_النظام();
+    if (errors != 100000) { return 1; };
+    if (after != before) { return 2; };
+    return 42;
+}

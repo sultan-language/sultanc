@@ -1,0 +1,28 @@
+// اختبار: رفض
+// تشخيص: SULTANC-OWNERSHIP-MOVE-OUT-OF-REFERENCE
+// نظير: tests/ar/diagnostics/safety/deferred_local_borrowed_or_owned.sn
+// `chosen` may hold a view of `*source`: moving it out would give the callee
+// a second owner. Stage0 rejects it too (SULTANC-OWNERSHIP-PARTIAL-MOVE).
+def take(value: string): int {
+    return length(value);
+}
+
+def make(): string {
+    let base: string = "owned";
+    return base;
+}
+
+def pick(source: &string, borrowed: bool): int {
+    let chosen: string;
+    if (borrowed) {
+        chosen := *source;
+    } else {
+        chosen := make();
+    };
+    return take(chosen);
+}
+
+def main(): int {
+    let first: string = make();
+    return pick(&first, true) + length(first);
+}

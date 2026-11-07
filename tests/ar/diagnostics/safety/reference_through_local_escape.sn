@@ -1,0 +1,18 @@
+// اختبار: رفض
+// تشخيص: SULTANC-BORROW-REFERENCE-ESCAPE
+// نظير: tests/en/diagnostics/safety/reference_through_local_escape.sn
+// The returned reference reads through `العرض`, which borrows a local.
+نوع جدول = {
+    العناصر: متجه عدد
+};
+
+عرف اهرب(): &عدد {
+    دع البداية: متجه عدد = [1, 2, 3];
+    دع القيمة: جدول = { العناصر: البداية };
+    دع العرض: &جدول = &القيمة;
+    أرجع &(*العرض).العناصر[0];
+}
+
+عرف الرئيسية(): عدد {
+    أرجع *اهرب();
+}

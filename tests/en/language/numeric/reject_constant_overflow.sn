@@ -1,0 +1,11 @@
+// اختبار: رفض
+// تشخيص: SULTANC-COMPTIME-EVALUATION-FAILED
+// نظير: tests/ar/language/numeric/reject_constant_overflow.sn
+// A module constant that overflows its type traps when it is evaluated at
+// compile time, as it would at run time: a diagnostic, not an internal
+// compiler error.
+let K: u8 = (255 as u8) + (1 as u8);
+
+def main(): int {
+    return K as int;
+}

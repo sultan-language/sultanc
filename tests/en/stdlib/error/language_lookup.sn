@@ -1,0 +1,104 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/stdlib/error/language_lookup.sn
+// std.error language versions (docs/ERRORS.md): error_text_in chooses by the
+// RFC 4647 lookup, for each tag of the locale the exact tag, then its
+// shorter forms down to the primary language (ar-SA → ar); then the author's
+// message (an unknown tag); then, when that is empty, the first version.
+// Versions change neither the identity nor error_describe, and copies keep
+// them.
+import std.error.failure;
+import std.text.language;
+import std.text.compare;
+
+def text_for_tag(error: &Error, tag: string): string {
+    let locale: Locale = locale_from_tag(&tag);
+    return error_text_in(error, &locale);
+}
+
+def text_for_header(error: &Error, header: string): string {
+    let locale: Locale = locale_from_accept_language(&header);
+    return error_text_in(error, &locale);
+}
+
+def equals(actual: string, expected: string): bool {
+    return texts_equal(&actual, &expected);
+}
+
+def main(): int {
+    // The author writes in English; Arabic, British English and Traditional
+    // Chinese versions are added («_» and the case of a tag do not matter).
+    let failure: mutable Error = error_with_kind("config", "فارغ", "config file is empty");
+    error_add_language_version(&mutable failure, "ar", "ملف الإعدادات فارغ");
+    error_add_language_version(&mutable failure, "en_gb", "configuration file is empty");
+    error_add_language_version(&mutable failure, "ZH-hant", "設定檔是空的");
+
+    // 1. The exact tag, whatever its case and separator.
+    if (!equals(text_for_tag(&failure, "ar"), "ملف الإعدادات فارغ")) { return 1; };
+    if (!equals(text_for_tag(&failure, "en-GB"), "configuration file is empty")) { return 2; };
+    if (!equals(text_for_tag(&failure, "EN_gb"), "configuration file is empty")) { return 3; };
+    if (!equals(text_for_tag(&failure, "zh-Hant"), "設定檔是空的")) { return 4; };
+
+    // 2. Shorter forms down to the primary language: ar-SA → ar.
+    if (!equals(text_for_tag(&failure, "ar-SA"), "ملف الإعدادات فارغ")) { return 5; };
+    if (!equals(text_for_tag(&failure, "AR_sa"), "ملف الإعدادات فارغ")) { return 6; };
+    if (!equals(text_for_tag(&failure, "en-GB-oxendict"), "configuration file is empty")) { return 7; };
+    if (!equals(text_for_tag(&failure, "zh-Hant-TW"), "設定檔是空的")) { return 8; };
+
+    // 3. The author's message: an unknown tag, a more general tag than any
+    // version (en, zh), a tag that is not well formed, no tag.
+    if (!equals(text_for_tag(&failure, "fr"), "config file is empty")) { return 9; };
+    if (!equals(text_for_tag(&failure, "en"), "config file is empty")) { return 10; };
+    if (!equals(text_for_tag(&failure, "en-US"), "config file is empty")) { return 11; };
+    if (!equals(text_for_tag(&failure, "zh"), "config file is empty")) { return 12; };
+    if (!equals(text_for_tag(&failure, "ar SA"), "config file is empty")) { return 13; };
+    if (!equals(text_for_tag(&failure, ""), "config file is empty")) { return 14; };
+
+    // A priority list from Accept-Language: each range in turn, by weight.
+    if (!equals(text_for_header(&failure, "fr, en-GB;q=0.8, ar;q=0.9"), "ملف الإعدادات فارغ")) { return 15; };
+    if (!equals(text_for_header(&failure, "fr-CA, en-GB-x-test;q=0.7"), "configuration file is empty")) { return 16; };
+    if (!equals(text_for_header(&failure, "fr, de;q=0.5"), "config file is empty")) { return 17; };
+
+    // A second version under the same tag replaces the first.
+    error_add_language_version(&mutable failure, "AR", "ملف الإعدادات خال");
+    if (!equals(text_for_tag(&failure, "ar-EG"), "ملف الإعدادات خال")) { return 18; };
+
+    // 4. An empty author's message: the first version given.
+    let without_message: mutable Error = error_new("");
+    error_add_language_version(&mutable without_message, "de", "Konfigurationsdatei ist leer");
+    error_add_language_version(&mutable without_message, "ar", "ملف الإعدادات فارغ");
+    if (!equals(text_for_tag(&without_message, "fr"), "Konfigurationsdatei ist leer")) { return 19; };
+    if (!equals(text_for_tag(&without_message, ""), "Konfigurationsdatei ist leer")) { return 20; };
+    if (!equals(text_for_tag(&without_message, "ar-EG"), "ملف الإعدادات فارغ")) { return 21; };
+    let empty_error: Error = error_new("");
+    if (!equals(text_for_tag(&empty_error, "ar"), "")) { return 22; };
+
+    // Versions change neither the identity, the message nor error_describe.
+    let domain: string = "config";
+    let kind: string = "فارغ";
+    if (!error_is(&failure, &domain, &kind)) { return 23; };
+    if (!equals(error_message(&failure), "config file is empty")) { return 24; };
+    if (!equals(error_describe(&failure), "config file is empty")) { return 25; };
+
+    // Copies keep the versions and are independent of the original.
+    let copy: mutable Error = clone(&failure);
+    let manual_copy: mutable Error = error_copy(&failure);
+    if (!equals(text_for_tag(&copy, "ar"), "ملف الإعدادات خال")) { return 26; };
+    if (!equals(text_for_tag(&manual_copy, "zh-Hant"), "設定檔是空的")) { return 27; };
+    error_add_language_version(&mutable copy, "ar", "في النسخة فقط");
+    error_add_language_version(&mutable manual_copy, "fr", "dans la copie seulement");
+    if (!equals(text_for_tag(&failure, "ar"), "ملف الإعدادات خال")) { return 28; };
+    if (!equals(text_for_tag(&failure, "fr"), "config file is empty")) { return 29; };
+    if (!equals(text_for_tag(&manual_copy, "fr"), "dans la copie seulement")) { return 30; };
+
+    // A cause keeps its versions through error_cause.
+    let top: Error = error_caused_by("while starting the server", manual_copy);
+    match error_cause(&top) with
+    | option.some(cause) -> {
+        if (!equals(text_for_tag(&cause, "ar-SA"), "ملف الإعدادات خال")) { return 31; };
+    }
+    | option.none -> { return 32; };
+    return 42;
+}

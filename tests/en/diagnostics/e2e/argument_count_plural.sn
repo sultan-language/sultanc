@@ -1,0 +1,7 @@
+// اختبار: رفض
+// تشخيص: SULTANC-CALL-ARGUMENT-COUNT-MISMATCH
+// نظير: tests/ar/diagnostics/e2e/argument_count_plural.sn
+// خرج-تشخيص-عربي: argument_count_plural.ar.stderr
+// خرج-تشخيص-إنجليزي: argument_count_plural.en.stderr
+def double(a: i32): i32 { return a * 2; }
+def main(): i32 { return double(1, 2, 3); }

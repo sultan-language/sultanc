@@ -1,0 +1,47 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// Counterpart: tests/ar/stdlib/behavior/thread_join_value.sn
+// (no pair directive: the interpreter runs one OS thread and stops at a spawn).
+// std.thread: a thread returns a value through join (Rust's
+// JoinHandle<T>::join). The program spawns two threads with spawn_value: the
+// first sums 1 to 1000 and returns a u64, the second builds a text (7 x
+// 1001) and returns it. The first join answers the value, a second join none.
+import std.thread.thread;
+import std.text.compare;
+import std.text.number;
+
+def sum_to(limit: u64): u64 {
+    let total: mutable u64 = 0;
+    let i: mutable u64 = 1;
+    while (i <= limit) { total := total + i; i := i + 1; }
+    return total;
+}
+
+def build_text(count: uint): string { return uint_to_text(count * 1001); }
+
+def main(): i32 {
+    let limit: u64 = 1000;
+    let summing: mutable value_join_handle<u64>;
+    match spawn_value(fn(): u64 -> sum_to(limit)) with
+    | result.ok(h) -> { summing := h; }
+    | result.err(_) -> { return 1; };
+    let building: mutable value_join_handle<string>;
+    match spawn_value(fn(): string -> build_text(7)) with
+    | result.ok(h) -> { building := h; }
+    | result.err(_) -> { return 2; };
+
+    match join_value(&mutable summing) with
+    | option.some(total) -> { if (total != 500500) { return 3; }; }
+    | option.none -> { return 4; };
+    match join_value(&mutable building) with
+    | option.some(text) -> {
+        let expected: string = "7007";
+        if (!texts_equal(&text, &expected)) { return 5; };
+    }
+    | option.none -> { return 6; };
+    match join_value(&mutable summing) with
+    | option.some(_) -> { return 7; }
+    | option.none -> { };
+    return 42;
+}

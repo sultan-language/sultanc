@@ -1,0 +1,25 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 1
+// تفاضلي: نعم
+// بيئة: SULTANC_LANG=en
+// خرج-قياسي: قبل الإيقاف
+// خطأ-قياسي-ملف: panic_en.stderr
+// نظير: tests/en/runtime/failure/panic_en.sn
+// The stop primitive إنهيار (docs/ERRORS.md): the iSpeak frame "the program
+// stopped" in the program's language with the message under it, exit status
+// 1. It never returns, so `قسم` needs no return after it; the owned text
+// still alive is not dropped (abort semantics).
+استورد المكتبة.دخ.print;
+استورد std.process.panic;
+
+عرف قسم(أ: عدد, ب: عدد): عدد {
+    لو (ب != 0) { أرجع أ / ب; };
+    إنهيار(«القسمة على صفر»);
+}
+
+عرف الرئيسية(): عدد {
+    دع مملوك: نص = «قبل الإيقاف»;
+    دع تجاهل: نتيجة عدد, عدد = اطبع(«قبل الإيقاف»);
+    أرجع قسم(10, 0);
+}

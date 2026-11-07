@@ -1,0 +1,63 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 0
+// نظير: tests/ar/ispeak/check_messages.sn
+import std.text.compare;
+import compiler.diagnostics.identity;
+import compiler.diagnostics.reason;
+import compiler.diagnostics.schema;
+import compiler.ispeak.ispeak;
+import compiler.ispeak.keys.surface;
+
+def non_empty(text: &string): bool {
+    let empty_value: string = "";
+    return !texts_equal(text, &empty_value);
+}
+
+def main(): int {
+    let all_keys: vector مفتاح_نص_مترجم = كل_مفاتيح_النص_المترجم();
+    let i: mutable uint = 0;
+    while (i < (length(all_keys) as uint)) {
+        let english_text: string = نص_المترجم(لغة_تشخيص.الإنجليزية(), all_keys[i]);
+        let arabic_text: string = نص_المترجم(لغة_تشخيص.العربية(), all_keys[i]);
+        if (!non_empty(&english_text) || !non_empty(&arabic_text)) { return 1; };
+        i := i + 1;
+    }
+    // Exercise all declared secondary wording keys in both locales.
+    let all_details: vector مفتاح_صياغة = كل_مفاتيح_الصياغة();
+    let d: mutable uint = 0;
+    while (d < (length(all_details) as uint)) {
+        let in_english: string = نص_تفصيل_ثابت(لغة_تشخيص.الإنجليزية(), all_details[d]);
+        let in_arabic: string = نص_تفصيل_ثابت(لغة_تشخيص.العربية(), all_details[d]);
+        if (!non_empty(&in_english) || !non_empty(&in_arabic)) { return 7; };
+        d := d + 1;
+    }
+    let title: string = نص_المترجم(لغة_تشخيص.الإنجليزية(), مفتاح_نص_مترجم.عنوان_المساعدة());
+    let expected: string = "SultanC compiler\n\n";
+    if (!texts_equal(&title, &expected)) { return 2; };
+    let reason_text: string = نص_المترجم(لغة_تشخيص.الإنجليزية(), مفتاح_نص_مترجم.حقل_بيان_مطلوب_مفقود());
+    let expected_reason: string = "required manifest field is missing";
+    if (!texts_equal(&reason_text, &expected_reason)) { return 3; };
+    let label: string = نص_المترجم(لغة_تشخيص.العربية(), مفتاح_نص_مترجم.وصف_نهاية_الملف());
+    let expected_label: string = "نهاية الملف";
+    if (!texts_equal(&label, &expected_label)) { return 4; };
+    let message_keys: vector مفتاح_رسالة_تشخيص = كل_مفاتيح_رسائل_التشخيص();
+    let number_value: mutable uint = 0;
+    let explanation_count: mutable int = 0;
+    while (number_value < (length(message_keys) as uint)) {
+        let key: مفتاح_رسالة_تشخيص = message_keys[number_value];
+        match key with
+        | مفتاح_رسالة_تشخيص.تشخيص(identity) -> {
+            let english_text: string = شرح_تشخيص(لغة_تشخيص.الإنجليزية(), identity);
+            let arabic_text: string = شرح_تشخيص(لغة_تشخيص.العربية(), identity);
+            if (!non_empty(&english_text) || !non_empty(&arabic_text)) { return 5; };
+            // Keep explanations compact in either locale (UTF-8 byte bound).
+            if ((length(english_text) as uint) > 220 || (length(arabic_text) as uint) > 220) { return 8; };
+            explanation_count := explanation_count + 1;
+        }
+        | _ -> { };
+        number_value := number_value + 1;
+    }
+    if (explanation_count != 142) { return 6; };
+    return 0;
+}

@@ -1,0 +1,64 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 0
+// نظير: tests/ar/ispeak/bench/bench_dynamic_reused.sn
+import compiler.diagnostics.identity;
+import std.text.from_bytes;
+import compiler.diagnostics.reason;
+import compiler.ispeak.format.facts;
+import compiler.diagnostics.schema;
+import compiler.ispeak.ispeak;
+import std.text.compare;
+import std.text.builder;
+
+// Same source, target, locale and 200,000 operations for each backend.
+// Check every returned length; do not benchmark a result discarded by the caller.
+def name_context(): حقائق_سياق_رسالة {
+    let name: string = "identifier_name_0123456789_abcdefghijklmnopqrstuvwxyz";
+    let context: حقائق_سياق_رسالة = {
+        القيمة: option.none(),
+        المتوقع: option.none(),
+        الاستبدال: option.none(),
+        الموجود: option.none(),
+        الفهرس: option.none(),
+        الطول: option.none(),
+        المجال: option.none(),
+        النمط: option.none(),
+        المسار: option.none(),
+        الرمز: option.some(قيمة_حجة_رسالة.نصية(انسخ_نص(&name))),
+        النوع: option.none(),
+        السياق: option.none(),
+        المرحلة: option.none(),
+        الهدف: option.none(),
+        الدالة: option.none(),
+        الكتلة: option.none(),
+        التعليمة: option.none(),
+        العملية: option.none(),
+        البدائي: option.none(),
+        المصدر: option.none(),
+        الوجهة: option.none(),
+        السبب: option.none()
+    };
+    return context;
+}
+
+def main(): int {
+    let key: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.مسير_غير_صالح());
+    let expected: string = "invalid MSIR — The symbol is `identifier_name_0123456789_abcdefghijklmnopqrstuvwxyz`.";
+    let message_length: uint = length(expected) as uint;
+    let builder: mutable text_builder = new_text_builder_with_capacity(256 as uint);
+    let total: mutable uint = 0;
+    let i: mutable uint = 0;
+    while (i < 200000) {
+        text_builder_clear(&mutable builder);
+        if (!ألحق_تشخيص_بسياق(&mutable builder, لغة_تشخيص.الإنجليزية(), key, name_context())) { return 2; };
+        total := total + text_builder_length(&builder);
+        if (i == 0 || i == 199999) {
+            let output: string = text_builder_text(&builder);
+            if (!texts_equal(&output, &expected)) { return 1; };
+        };
+        i := i + 1;
+    }
+    if (total != message_length * 200000) { return 3; };
+    return 0;
+}

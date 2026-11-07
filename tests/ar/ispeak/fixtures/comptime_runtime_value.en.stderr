@@ -1,0 +1,6 @@
+error[SULTANC-COMPTIME-NON-CONSTANT]: comptime expression must be a pure compile-time constant
+  --> tests/ar/ispeak/fixtures/comptime_runtime_value.sn:8:10..8:23
+   |
+ 8 |     أرجع وقت_الترجمة س;
+   |          ^^^^^^^^^^^^^
+   |

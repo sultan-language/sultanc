@@ -1,0 +1,57 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/stdlib/behavior/vector_capacity.sn
+// Vector capacity as Rust's Vec keeps it: capacity, reserve_exact,
+// with_capacity, reserve and shrink_to_fit; truncate(0), pop to empty and
+// clear_vector keep the buffer, which the next appends reuse; on integers
+// and on owned text. Native code and the interpreter report the same
+// capacities.
+import std.collections.vector;
+import std.text.number;
+
+def main(): int {
+    let empty: vector int = [];
+    if (capacity(empty) != 0) { return 1; };
+    let v: mutable vector int = with_capacity(10);
+    if (capacity(v) != 10 || length(v) != 0) { return 2; };
+    let i: mutable int = 0;
+    while (i < 10) { append(v, i); i := i + 1; }
+    if (capacity(v) != 10) { return 3; };
+    append(v, 10);
+    if (capacity(v) < 11) { return 4; };
+    truncate(v, 0);
+    if (length(v) != 0 || capacity(v) < 11) { return 5; };
+    append(v, 7);
+    if (v[0] != 7 || capacity(v) < 11) { return 6; };
+    shrink_to_fit(&mutable v);
+    if (capacity(v) != 1 || v[0] != 7) { return 7; };
+    reserve_exact(v, 4);
+    if (capacity(v) != 5) { return 8; };
+    reserve(&mutable v, 20);
+    if (capacity(v) < 21) { return 9; };
+    let before: int = capacity(v);
+    reserve(&mutable v, 2);
+    if (capacity(v) != before) { return 10; };
+    pop(v);
+    if (length(v) != 0 || capacity(v) != before) { return 11; };
+    shrink_to_fit(&mutable v);
+    if (capacity(v) != 0) { return 12; };
+
+    let words: mutable vector string = [];
+    reserve_exact(words, 3);
+    append(words, int_to_text(123));
+    append(words, int_to_text(45));
+    append(words, int_to_text(6));
+    if (capacity(words) != 3) { return 13; };
+    clear_vector(&mutable words);
+    if (length(words) != 0 || capacity(words) != 3) { return 14; };
+    append(words, int_to_text(78));
+    append(words, int_to_text(9));
+    shrink_to_fit(&mutable words);
+    if (capacity(words) != 2 || length(words[0]) != 2 || length(words[1]) != 1) { return 15; };
+    let literal: mutable vector int = [1, 2, 3];
+    if (capacity(literal) < 3) { return 16; };
+    return 42;
+}

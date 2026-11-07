@@ -1,0 +1,358 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 0
+// نظير: tests/ar/ispeak/check_specialized_contracts.sn
+import compiler.ispeak.keys.surface;
+import std.text.from_bytes;
+import compiler.diagnostics.schema;
+import compiler.ispeak.ispeak;
+import compiler.diagnostics.identity;
+import compiler.diagnostics.reason;
+import compiler.ispeak.format.facts;
+
+// Owned facts are consumed per call, so each locale receives its own payload.
+def check(key: مفتاح_رسالة_تشخيص, payload: حقائق_رسالة, arabic_payload: حقائق_رسالة, correct: bool): bool {
+    match رسالة_تشخيص_بحجج(لغة_تشخيص.الإنجليزية(), key, payload) with
+    | option.some(_) -> { if (!correct) { return false; }; }
+    | option.none -> { if (correct) { return false; }; };
+    match رسالة_تشخيص_بحجج(لغة_تشخيص.العربية(), key, arabic_payload) with
+    | option.some(_) -> { return correct; }
+    | option.none -> { return !correct; };
+}
+
+def name_values(): حقائق_اسم_غير_معروف {
+    let values: حقائق_اسم_غير_معروف = { الاسم: "demo" };
+    return values;
+}
+
+def type_values(): حقائق_نوعان_غير_متوافقين {
+    let values: حقائق_نوعان_غير_متوافقين = { المتوقع: "i32", الموجود: "f32" };
+    return values;
+}
+
+def count_values(): حقائق_عدد_حجج_غير_مطابق {
+    let values: حقائق_عدد_حجج_غير_مطابق = { المتوقع: 2 as uint, الموجود: 3 as uint };
+    return values;
+}
+
+def text_values(): حقائق_نص_محدد {
+    let values: حقائق_نص_محدد = { القيمة: "demo" };
+    return values;
+}
+
+def link_values(): حقائق_ربط_إل_إل_في_إم {
+    let values: حقائق_ربط_إل_إل_في_إم = { الهدف: "arm64-darwin", الرمز: "LLVMGetVersion" };
+    return values;
+}
+
+def failure_values(): حقائق_فشل_وقت_الترجمة {
+    let values: حقائق_فشل_وقت_الترجمة = { الرسالة: "compiler_error() called" };
+    return values;
+}
+
+def manifest_values(): حقائق_بيان_حزمة {
+    let values: حقائق_بيان_حزمة = { المسار: "./project.toml", البايت: option.some(8 as uint), السبب: option.some(مفتاح_نص_مترجم.حقل_بيان_مطلوب_مفقود()) };
+    return values;
+}
+
+def suggestion_values(): حقائق_اقتراح_كلمة {
+    let values: حقائق_اقتراح_كلمة = { الاستبدال: "return" };
+    return values;
+}
+
+def syntax_values(): حقائق_توقع_نحوي {
+    let values: حقائق_توقع_نحوي = { المتوقع: "i32", الموجود: option.some("f32") };
+    return values;
+}
+
+def primitive_values(): حقائق_بدائي_تفسير {
+    let values: حقائق_بدائي_تفسير = { البدائي: "host.read", الفهرس: option.some(1 as uint), المتوقع: option.some(2 as uint), الموجود: option.some(3 as uint) };
+    return values;
+}
+
+def unknown_name_payload(): حقائق_رسالة {
+    return حقائق_رسالة.اسم_غير_معروف(name_values());
+}
+
+def incompatible_types_payload(): حقائق_رسالة {
+    return حقائق_رسالة.نوعان_غير_متوافقين(type_values());
+}
+
+def argument_count_mismatch_payload(): حقائق_رسالة {
+    return حقائق_رسالة.عدد_حجج_غير_مطابق(count_values());
+}
+
+def specific_text_payload(): حقائق_رسالة {
+    return حقائق_رسالة.نص_محدد(text_values());
+}
+
+def llvm_link_payload(): حقائق_رسالة {
+    return حقائق_رسالة.ربط_إل_إل_في_إم(link_values());
+}
+
+def comptime_failure_payload(): حقائق_رسالة {
+    return حقائق_رسالة.فشل_وقت_الترجمة(failure_values());
+}
+
+def package_manifest_payload(): حقائق_رسالة {
+    return حقائق_رسالة.بيان_حزمة(manifest_values());
+}
+
+def keyword_suggestion_payload(): حقائق_رسالة {
+    return حقائق_رسالة.اقتراح_كلمة(suggestion_values());
+}
+
+def syntax_expectation_payload(): حقائق_رسالة {
+    return حقائق_رسالة.توقع_نحوي(syntax_values());
+}
+
+def interpreter_primitive_payload(): حقائق_رسالة {
+    return حقائق_رسالة.بدائي_تفسير(primitive_values());
+}
+
+def main(): int {
+    let key_1: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.اسم_غير_معروف());
+    if (!check(key_1, unknown_name_payload(), unknown_name_payload(), true)) { return 31; };
+    if (!check(key_1, incompatible_types_payload(), incompatible_types_payload(), false)) { return 31; };
+    if (!check(key_1, argument_count_mismatch_payload(), argument_count_mismatch_payload(), false)) { return 31; };
+    if (!check(key_1, specific_text_payload(), specific_text_payload(), false)) { return 31; };
+    if (!check(key_1, llvm_link_payload(), llvm_link_payload(), false)) { return 31; };
+    if (!check(key_1, comptime_failure_payload(), comptime_failure_payload(), false)) { return 31; };
+    if (!check(key_1, package_manifest_payload(), package_manifest_payload(), false)) { return 31; };
+    if (!check(key_1, keyword_suggestion_payload(), keyword_suggestion_payload(), false)) { return 31; };
+    if (!check(key_1, syntax_expectation_payload(), syntax_expectation_payload(), false)) { return 31; };
+    if (!check(key_1, interpreter_primitive_payload(), interpreter_primitive_payload(), false)) { return 31; };
+    let key_2: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.نوعان_غير_متوافقين());
+    if (!check(key_2, unknown_name_payload(), unknown_name_payload(), false)) { return 32; };
+    if (!check(key_2, incompatible_types_payload(), incompatible_types_payload(), true)) { return 32; };
+    if (!check(key_2, argument_count_mismatch_payload(), argument_count_mismatch_payload(), false)) { return 32; };
+    if (!check(key_2, specific_text_payload(), specific_text_payload(), false)) { return 32; };
+    if (!check(key_2, llvm_link_payload(), llvm_link_payload(), false)) { return 32; };
+    if (!check(key_2, comptime_failure_payload(), comptime_failure_payload(), false)) { return 32; };
+    if (!check(key_2, package_manifest_payload(), package_manifest_payload(), false)) { return 32; };
+    if (!check(key_2, keyword_suggestion_payload(), keyword_suggestion_payload(), false)) { return 32; };
+    if (!check(key_2, syntax_expectation_payload(), syntax_expectation_payload(), false)) { return 32; };
+    if (!check(key_2, interpreter_primitive_payload(), interpreter_primitive_payload(), false)) { return 32; };
+    let key_3: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.عدد_حجج_غير_مطابق());
+    if (!check(key_3, unknown_name_payload(), unknown_name_payload(), false)) { return 33; };
+    if (!check(key_3, incompatible_types_payload(), incompatible_types_payload(), false)) { return 33; };
+    if (!check(key_3, argument_count_mismatch_payload(), argument_count_mismatch_payload(), true)) { return 33; };
+    if (!check(key_3, specific_text_payload(), specific_text_payload(), false)) { return 33; };
+    if (!check(key_3, llvm_link_payload(), llvm_link_payload(), false)) { return 33; };
+    if (!check(key_3, comptime_failure_payload(), comptime_failure_payload(), false)) { return 33; };
+    if (!check(key_3, package_manifest_payload(), package_manifest_payload(), false)) { return 33; };
+    if (!check(key_3, keyword_suggestion_payload(), keyword_suggestion_payload(), false)) { return 33; };
+    if (!check(key_3, syntax_expectation_payload(), syntax_expectation_payload(), false)) { return 33; };
+    if (!check(key_3, interpreter_primitive_payload(), interpreter_primitive_payload(), false)) { return 33; };
+    let key_4: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.خيار_مترجم_غير_معروف());
+    if (!check(key_4, unknown_name_payload(), unknown_name_payload(), false)) { return 34; };
+    if (!check(key_4, incompatible_types_payload(), incompatible_types_payload(), false)) { return 34; };
+    if (!check(key_4, argument_count_mismatch_payload(), argument_count_mismatch_payload(), false)) { return 34; };
+    if (!check(key_4, specific_text_payload(), specific_text_payload(), true)) { return 34; };
+    if (!check(key_4, llvm_link_payload(), llvm_link_payload(), false)) { return 34; };
+    if (!check(key_4, comptime_failure_payload(), comptime_failure_payload(), false)) { return 34; };
+    if (!check(key_4, package_manifest_payload(), package_manifest_payload(), false)) { return 34; };
+    if (!check(key_4, keyword_suggestion_payload(), keyword_suggestion_payload(), false)) { return 34; };
+    if (!check(key_4, syntax_expectation_payload(), syntax_expectation_payload(), false)) { return 34; };
+    if (!check(key_4, interpreter_primitive_payload(), interpreter_primitive_payload(), false)) { return 34; };
+    let key_5: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.قيمة_خيار_مترجم_مفقودة());
+    if (!check(key_5, unknown_name_payload(), unknown_name_payload(), false)) { return 35; };
+    if (!check(key_5, incompatible_types_payload(), incompatible_types_payload(), false)) { return 35; };
+    if (!check(key_5, argument_count_mismatch_payload(), argument_count_mismatch_payload(), false)) { return 35; };
+    if (!check(key_5, specific_text_payload(), specific_text_payload(), true)) { return 35; };
+    if (!check(key_5, llvm_link_payload(), llvm_link_payload(), false)) { return 35; };
+    if (!check(key_5, comptime_failure_payload(), comptime_failure_payload(), false)) { return 35; };
+    if (!check(key_5, package_manifest_payload(), package_manifest_payload(), false)) { return 35; };
+    if (!check(key_5, keyword_suggestion_payload(), keyword_suggestion_payload(), false)) { return 35; };
+    if (!check(key_5, syntax_expectation_payload(), syntax_expectation_payload(), false)) { return 35; };
+    if (!check(key_5, interpreter_primitive_payload(), interpreter_primitive_payload(), false)) { return 35; };
+    let key_6: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.لغة_تشخيص_مترجم_غير_صالحة());
+    if (!check(key_6, unknown_name_payload(), unknown_name_payload(), false)) { return 36; };
+    if (!check(key_6, incompatible_types_payload(), incompatible_types_payload(), false)) { return 36; };
+    if (!check(key_6, argument_count_mismatch_payload(), argument_count_mismatch_payload(), false)) { return 36; };
+    if (!check(key_6, specific_text_payload(), specific_text_payload(), true)) { return 36; };
+    if (!check(key_6, llvm_link_payload(), llvm_link_payload(), false)) { return 36; };
+    if (!check(key_6, comptime_failure_payload(), comptime_failure_payload(), false)) { return 36; };
+    if (!check(key_6, package_manifest_payload(), package_manifest_payload(), false)) { return 36; };
+    if (!check(key_6, keyword_suggestion_payload(), keyword_suggestion_payload(), false)) { return 36; };
+    if (!check(key_6, syntax_expectation_payload(), syntax_expectation_payload(), false)) { return 36; };
+    if (!check(key_6, interpreter_primitive_payload(), interpreter_primitive_payload(), false)) { return 36; };
+    let key_7: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.صيغة_تشخيص_مترجم_غير_صالحة());
+    if (!check(key_7, unknown_name_payload(), unknown_name_payload(), false)) { return 37; };
+    if (!check(key_7, incompatible_types_payload(), incompatible_types_payload(), false)) { return 37; };
+    if (!check(key_7, argument_count_mismatch_payload(), argument_count_mismatch_payload(), false)) { return 37; };
+    if (!check(key_7, specific_text_payload(), specific_text_payload(), true)) { return 37; };
+    if (!check(key_7, llvm_link_payload(), llvm_link_payload(), false)) { return 37; };
+    if (!check(key_7, comptime_failure_payload(), comptime_failure_payload(), false)) { return 37; };
+    if (!check(key_7, package_manifest_payload(), package_manifest_payload(), false)) { return 37; };
+    if (!check(key_7, keyword_suggestion_payload(), keyword_suggestion_payload(), false)) { return 37; };
+    if (!check(key_7, syntax_expectation_payload(), syntax_expectation_payload(), false)) { return 37; };
+    if (!check(key_7, interpreter_primitive_payload(), interpreter_primitive_payload(), false)) { return 37; };
+    let key_8: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.لون_تشخيص_مترجم_غير_صالح());
+    if (!check(key_8, unknown_name_payload(), unknown_name_payload(), false)) { return 38; };
+    if (!check(key_8, incompatible_types_payload(), incompatible_types_payload(), false)) { return 38; };
+    if (!check(key_8, argument_count_mismatch_payload(), argument_count_mismatch_payload(), false)) { return 38; };
+    if (!check(key_8, specific_text_payload(), specific_text_payload(), true)) { return 38; };
+    if (!check(key_8, llvm_link_payload(), llvm_link_payload(), false)) { return 38; };
+    if (!check(key_8, comptime_failure_payload(), comptime_failure_payload(), false)) { return 38; };
+    if (!check(key_8, package_manifest_payload(), package_manifest_payload(), false)) { return 38; };
+    if (!check(key_8, keyword_suggestion_payload(), keyword_suggestion_payload(), false)) { return 38; };
+    if (!check(key_8, syntax_expectation_payload(), syntax_expectation_payload(), false)) { return 38; };
+    if (!check(key_8, interpreter_primitive_payload(), interpreter_primitive_payload(), false)) { return 38; };
+    let key_9: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.معامل_موضعي_غير_متوقع());
+    if (!check(key_9, unknown_name_payload(), unknown_name_payload(), false)) { return 39; };
+    if (!check(key_9, incompatible_types_payload(), incompatible_types_payload(), false)) { return 39; };
+    if (!check(key_9, argument_count_mismatch_payload(), argument_count_mismatch_payload(), false)) { return 39; };
+    if (!check(key_9, specific_text_payload(), specific_text_payload(), true)) { return 39; };
+    if (!check(key_9, llvm_link_payload(), llvm_link_payload(), false)) { return 39; };
+    if (!check(key_9, comptime_failure_payload(), comptime_failure_payload(), false)) { return 39; };
+    if (!check(key_9, package_manifest_payload(), package_manifest_payload(), false)) { return 39; };
+    if (!check(key_9, keyword_suggestion_payload(), keyword_suggestion_payload(), false)) { return 39; };
+    if (!check(key_9, syntax_expectation_payload(), syntax_expectation_payload(), false)) { return 39; };
+    if (!check(key_9, interpreter_primitive_payload(), interpreter_primitive_payload(), false)) { return 39; };
+    let key_10: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.مصدر_رئيسي_متعدد());
+    if (!check(key_10, unknown_name_payload(), unknown_name_payload(), false)) { return 40; };
+    if (!check(key_10, incompatible_types_payload(), incompatible_types_payload(), false)) { return 40; };
+    if (!check(key_10, argument_count_mismatch_payload(), argument_count_mismatch_payload(), false)) { return 40; };
+    if (!check(key_10, specific_text_payload(), specific_text_payload(), true)) { return 40; };
+    if (!check(key_10, llvm_link_payload(), llvm_link_payload(), false)) { return 40; };
+    if (!check(key_10, comptime_failure_payload(), comptime_failure_payload(), false)) { return 40; };
+    if (!check(key_10, package_manifest_payload(), package_manifest_payload(), false)) { return 40; };
+    if (!check(key_10, keyword_suggestion_payload(), keyword_suggestion_payload(), false)) { return 40; };
+    if (!check(key_10, syntax_expectation_payload(), syntax_expectation_payload(), false)) { return 40; };
+    if (!check(key_10, interpreter_primitive_payload(), interpreter_primitive_payload(), false)) { return 40; };
+    let key_11: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.هدف_مترجم_غير_معروف());
+    if (!check(key_11, unknown_name_payload(), unknown_name_payload(), false)) { return 41; };
+    if (!check(key_11, incompatible_types_payload(), incompatible_types_payload(), false)) { return 41; };
+    if (!check(key_11, argument_count_mismatch_payload(), argument_count_mismatch_payload(), false)) { return 41; };
+    if (!check(key_11, specific_text_payload(), specific_text_payload(), true)) { return 41; };
+    if (!check(key_11, llvm_link_payload(), llvm_link_payload(), false)) { return 41; };
+    if (!check(key_11, comptime_failure_payload(), comptime_failure_payload(), false)) { return 41; };
+    if (!check(key_11, package_manifest_payload(), package_manifest_payload(), false)) { return 41; };
+    if (!check(key_11, keyword_suggestion_payload(), keyword_suggestion_payload(), false)) { return 41; };
+    if (!check(key_11, syntax_expectation_payload(), syntax_expectation_payload(), false)) { return 41; };
+    if (!check(key_11, interpreter_primitive_payload(), interpreter_primitive_payload(), false)) { return 41; };
+    let key_12: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.مكتبة_إل_إل_في_إم_للهدف_مفقودة());
+    if (!check(key_12, unknown_name_payload(), unknown_name_payload(), false)) { return 42; };
+    if (!check(key_12, incompatible_types_payload(), incompatible_types_payload(), false)) { return 42; };
+    if (!check(key_12, argument_count_mismatch_payload(), argument_count_mismatch_payload(), false)) { return 42; };
+    if (!check(key_12, specific_text_payload(), specific_text_payload(), false)) { return 42; };
+    if (!check(key_12, llvm_link_payload(), llvm_link_payload(), true)) { return 42; };
+    if (!check(key_12, comptime_failure_payload(), comptime_failure_payload(), false)) { return 42; };
+    if (!check(key_12, package_manifest_payload(), package_manifest_payload(), false)) { return 42; };
+    if (!check(key_12, keyword_suggestion_payload(), keyword_suggestion_payload(), false)) { return 42; };
+    if (!check(key_12, syntax_expectation_payload(), syntax_expectation_payload(), false)) { return 42; };
+    if (!check(key_12, interpreter_primitive_payload(), interpreter_primitive_payload(), false)) { return 42; };
+    let key_13: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.رمز_إل_إل_في_إم_غير_محلول());
+    if (!check(key_13, unknown_name_payload(), unknown_name_payload(), false)) { return 43; };
+    if (!check(key_13, incompatible_types_payload(), incompatible_types_payload(), false)) { return 43; };
+    if (!check(key_13, argument_count_mismatch_payload(), argument_count_mismatch_payload(), false)) { return 43; };
+    if (!check(key_13, specific_text_payload(), specific_text_payload(), false)) { return 43; };
+    if (!check(key_13, llvm_link_payload(), llvm_link_payload(), true)) { return 43; };
+    if (!check(key_13, comptime_failure_payload(), comptime_failure_payload(), false)) { return 43; };
+    if (!check(key_13, package_manifest_payload(), package_manifest_payload(), false)) { return 43; };
+    if (!check(key_13, keyword_suggestion_payload(), keyword_suggestion_payload(), false)) { return 43; };
+    if (!check(key_13, syntax_expectation_payload(), syntax_expectation_payload(), false)) { return 43; };
+    if (!check(key_13, interpreter_primitive_payload(), interpreter_primitive_payload(), false)) { return 43; };
+    let key_14: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.فشل_وقت_الترجمة_مطلوب());
+    if (!check(key_14, unknown_name_payload(), unknown_name_payload(), false)) { return 44; };
+    if (!check(key_14, incompatible_types_payload(), incompatible_types_payload(), false)) { return 44; };
+    if (!check(key_14, argument_count_mismatch_payload(), argument_count_mismatch_payload(), false)) { return 44; };
+    if (!check(key_14, specific_text_payload(), specific_text_payload(), false)) { return 44; };
+    if (!check(key_14, llvm_link_payload(), llvm_link_payload(), false)) { return 44; };
+    if (!check(key_14, comptime_failure_payload(), comptime_failure_payload(), true)) { return 44; };
+    if (!check(key_14, package_manifest_payload(), package_manifest_payload(), false)) { return 44; };
+    if (!check(key_14, keyword_suggestion_payload(), keyword_suggestion_payload(), false)) { return 44; };
+    if (!check(key_14, syntax_expectation_payload(), syntax_expectation_payload(), false)) { return 44; };
+    if (!check(key_14, interpreter_primitive_payload(), interpreter_primitive_payload(), false)) { return 44; };
+    let key_15: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.بيان_حزمة_غير_صالح());
+    if (!check(key_15, unknown_name_payload(), unknown_name_payload(), false)) { return 45; };
+    if (!check(key_15, incompatible_types_payload(), incompatible_types_payload(), false)) { return 45; };
+    if (!check(key_15, argument_count_mismatch_payload(), argument_count_mismatch_payload(), false)) { return 45; };
+    if (!check(key_15, specific_text_payload(), specific_text_payload(), false)) { return 45; };
+    if (!check(key_15, llvm_link_payload(), llvm_link_payload(), false)) { return 45; };
+    if (!check(key_15, comptime_failure_payload(), comptime_failure_payload(), false)) { return 45; };
+    if (!check(key_15, package_manifest_payload(), package_manifest_payload(), true)) { return 45; };
+    if (!check(key_15, keyword_suggestion_payload(), keyword_suggestion_payload(), false)) { return 45; };
+    if (!check(key_15, syntax_expectation_payload(), syntax_expectation_payload(), false)) { return 45; };
+    if (!check(key_15, interpreter_primitive_payload(), interpreter_primitive_payload(), false)) { return 45; };
+    let key_16: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.تهجئة_كلمة_محجوزة_غير_معروفة());
+    if (!check(key_16, unknown_name_payload(), unknown_name_payload(), false)) { return 46; };
+    if (!check(key_16, incompatible_types_payload(), incompatible_types_payload(), false)) { return 46; };
+    if (!check(key_16, argument_count_mismatch_payload(), argument_count_mismatch_payload(), false)) { return 46; };
+    if (!check(key_16, specific_text_payload(), specific_text_payload(), false)) { return 46; };
+    if (!check(key_16, llvm_link_payload(), llvm_link_payload(), false)) { return 46; };
+    if (!check(key_16, comptime_failure_payload(), comptime_failure_payload(), false)) { return 46; };
+    if (!check(key_16, package_manifest_payload(), package_manifest_payload(), false)) { return 46; };
+    if (!check(key_16, keyword_suggestion_payload(), keyword_suggestion_payload(), true)) { return 46; };
+    if (!check(key_16, syntax_expectation_payload(), syntax_expectation_payload(), false)) { return 46; };
+    if (!check(key_16, interpreter_primitive_payload(), interpreter_primitive_payload(), false)) { return 46; };
+    let key_17: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.خطأ_نحوي());
+    if (!check(key_17, unknown_name_payload(), unknown_name_payload(), false)) { return 47; };
+    if (!check(key_17, incompatible_types_payload(), incompatible_types_payload(), false)) { return 47; };
+    if (!check(key_17, argument_count_mismatch_payload(), argument_count_mismatch_payload(), false)) { return 47; };
+    if (!check(key_17, specific_text_payload(), specific_text_payload(), false)) { return 47; };
+    if (!check(key_17, llvm_link_payload(), llvm_link_payload(), false)) { return 47; };
+    if (!check(key_17, comptime_failure_payload(), comptime_failure_payload(), false)) { return 47; };
+    if (!check(key_17, package_manifest_payload(), package_manifest_payload(), false)) { return 47; };
+    if (!check(key_17, keyword_suggestion_payload(), keyword_suggestion_payload(), false)) { return 47; };
+    if (!check(key_17, syntax_expectation_payload(), syntax_expectation_payload(), true)) { return 47; };
+    if (!check(key_17, interpreter_primitive_payload(), interpreter_primitive_payload(), false)) { return 47; };
+    let key_18: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.بدائي_مضيف_تفسير_غير_مدعوم());
+    if (!check(key_18, unknown_name_payload(), unknown_name_payload(), false)) { return 48; };
+    if (!check(key_18, incompatible_types_payload(), incompatible_types_payload(), false)) { return 48; };
+    if (!check(key_18, argument_count_mismatch_payload(), argument_count_mismatch_payload(), false)) { return 48; };
+    if (!check(key_18, specific_text_payload(), specific_text_payload(), false)) { return 48; };
+    if (!check(key_18, llvm_link_payload(), llvm_link_payload(), false)) { return 48; };
+    if (!check(key_18, comptime_failure_payload(), comptime_failure_payload(), false)) { return 48; };
+    if (!check(key_18, package_manifest_payload(), package_manifest_payload(), false)) { return 48; };
+    if (!check(key_18, keyword_suggestion_payload(), keyword_suggestion_payload(), false)) { return 48; };
+    if (!check(key_18, syntax_expectation_payload(), syntax_expectation_payload(), false)) { return 48; };
+    if (!check(key_18, interpreter_primitive_payload(), interpreter_primitive_payload(), true)) { return 48; };
+    let key_19: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.جسر_نص_مضيف_تفسير_غير_متاح());
+    if (!check(key_19, unknown_name_payload(), unknown_name_payload(), false)) { return 49; };
+    if (!check(key_19, incompatible_types_payload(), incompatible_types_payload(), false)) { return 49; };
+    if (!check(key_19, argument_count_mismatch_payload(), argument_count_mismatch_payload(), false)) { return 49; };
+    if (!check(key_19, specific_text_payload(), specific_text_payload(), false)) { return 49; };
+    if (!check(key_19, llvm_link_payload(), llvm_link_payload(), false)) { return 49; };
+    if (!check(key_19, comptime_failure_payload(), comptime_failure_payload(), false)) { return 49; };
+    if (!check(key_19, package_manifest_payload(), package_manifest_payload(), false)) { return 49; };
+    if (!check(key_19, keyword_suggestion_payload(), keyword_suggestion_payload(), false)) { return 49; };
+    if (!check(key_19, syntax_expectation_payload(), syntax_expectation_payload(), false)) { return 49; };
+    if (!check(key_19, interpreter_primitive_payload(), interpreter_primitive_payload(), true)) { return 49; };
+    let key_20: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.حجة_بدائي_تفسير_غير_صالحة());
+    if (!check(key_20, unknown_name_payload(), unknown_name_payload(), false)) { return 50; };
+    if (!check(key_20, incompatible_types_payload(), incompatible_types_payload(), false)) { return 50; };
+    if (!check(key_20, argument_count_mismatch_payload(), argument_count_mismatch_payload(), false)) { return 50; };
+    if (!check(key_20, specific_text_payload(), specific_text_payload(), false)) { return 50; };
+    if (!check(key_20, llvm_link_payload(), llvm_link_payload(), false)) { return 50; };
+    if (!check(key_20, comptime_failure_payload(), comptime_failure_payload(), false)) { return 50; };
+    if (!check(key_20, package_manifest_payload(), package_manifest_payload(), false)) { return 50; };
+    if (!check(key_20, keyword_suggestion_payload(), keyword_suggestion_payload(), false)) { return 50; };
+    if (!check(key_20, syntax_expectation_payload(), syntax_expectation_payload(), false)) { return 50; };
+    if (!check(key_20, interpreter_primitive_payload(), interpreter_primitive_payload(), true)) { return 50; };
+    let key_21: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.عدد_حجج_بدائي_تفسير_غير_مطابق());
+    if (!check(key_21, unknown_name_payload(), unknown_name_payload(), false)) { return 51; };
+    if (!check(key_21, incompatible_types_payload(), incompatible_types_payload(), false)) { return 51; };
+    if (!check(key_21, argument_count_mismatch_payload(), argument_count_mismatch_payload(), false)) { return 51; };
+    if (!check(key_21, specific_text_payload(), specific_text_payload(), false)) { return 51; };
+    if (!check(key_21, llvm_link_payload(), llvm_link_payload(), false)) { return 51; };
+    if (!check(key_21, comptime_failure_payload(), comptime_failure_payload(), false)) { return 51; };
+    if (!check(key_21, package_manifest_payload(), package_manifest_payload(), false)) { return 51; };
+    if (!check(key_21, keyword_suggestion_payload(), keyword_suggestion_payload(), false)) { return 51; };
+    if (!check(key_21, syntax_expectation_payload(), syntax_expectation_payload(), false)) { return 51; };
+    if (!check(key_21, interpreter_primitive_payload(), interpreter_primitive_payload(), true)) { return 51; };
+    let reason_text: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.سبب(سبب_تشخيص.سبب_مسير_وسم_حالة_مكرر());
+    if (!check(reason_text, حقائق_رسالة.بلا_حجج(), حقائق_رسالة.بلا_حجج(), true)) { return 90; };
+    if (!check(reason_text, unknown_name_payload(), unknown_name_payload(), false)) { return 91; };
+    if (!check(reason_text, incompatible_types_payload(), incompatible_types_payload(), false)) { return 91; };
+    if (!check(reason_text, argument_count_mismatch_payload(), argument_count_mismatch_payload(), false)) { return 91; };
+    if (!check(reason_text, specific_text_payload(), specific_text_payload(), false)) { return 91; };
+    if (!check(reason_text, llvm_link_payload(), llvm_link_payload(), false)) { return 91; };
+    if (!check(reason_text, comptime_failure_payload(), comptime_failure_payload(), false)) { return 91; };
+    if (!check(reason_text, package_manifest_payload(), package_manifest_payload(), false)) { return 91; };
+    if (!check(reason_text, keyword_suggestion_payload(), keyword_suggestion_payload(), false)) { return 91; };
+    if (!check(reason_text, syntax_expectation_payload(), syntax_expectation_payload(), false)) { return 91; };
+    if (!check(reason_text, interpreter_primitive_payload(), interpreter_primitive_payload(), false)) { return 91; };
+    return 0;
+}

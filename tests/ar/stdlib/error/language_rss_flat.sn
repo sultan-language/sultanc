@@ -1,0 +1,58 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// std.error language versions and ownership: 10^5 chains whose errors carry
+// language versions (one replaced), resolved and rendered for locales from a
+// tag and from Accept-Language, copied both ways and dropped. The
+// allocator's live bytes after the loop equal those before it.
+// Counterpart: tests/en/stdlib/error/language_rss_flat.sn. Like rss_flat.sn
+// it has no pair directive: the interpreter does not use the std allocator
+// whose counters this reads.
+استورد المكتبة.أخطاء.failure;
+استورد المكتبة.نصوص.language;
+استورد المكتبة.نصوص.number;
+استورد std.os.allocation;
+
+عرف اصنع_سلسلة(ف: طبيعي): فشل {
+    دع الجذر: متغير فشل = فشل_بهوية(«config», «فارغ», «ملف الإعدادات فارغ»);
+    أضف_نسخة_لغة(&متغير الجذر, «en», «the configuration file is empty»);
+    أضف_نسخة_لغة(&متغير الجذر, «en», «configuration file is empty»);
+    أضف_ملاحظة(&متغير الجذر, طبيعي_إلى_نص(ف));
+    دع الأعلى: متغير فشل = فشل_بسبب(«أثناء بدء الخادم», الجذر);
+    أضف_نسخة_لغة(&متغير الأعلى, «en-GB», «while starting the server»);
+    أضف_نسخة_لغة(&متغير الأعلى, «fr», «au démarrage du serveur»);
+    أرجع الأعلى;
+}
+
+عرف استعمل_سلسلة(الفشل: &فشل): منطقي {
+    دع الوسم: نص = «en-GB-oxendict»;
+    دع من_وسم: لغة = لغة_من_وسم(&الوسم);
+    دع الترويسة: نص = «de;q=0.9, fr-CH, en;q=0.5»;
+    دع من_ترويسة: لغة = لغة_من_قبول_اللغة(&الترويسة);
+    دع نسخة_اللغة: لغة = انسخ_لغة(&من_ترويسة);
+    دع الوسوم: متجه نص = وسوم_لغة(&نسخة_اللغة);
+    دع النص: نص = نص_فشل_بلغة(الفشل, &من_وسم);
+    دع الوصف: نص = صف_فشل_بلغة(الفشل, &من_ترويسة);
+    دع وصف_بالوسم: نص = صف_فشل_بلغة(الفشل, &من_وسم);
+    دع نسخة: فشل = انسخ_فشل(الفشل);
+    دع نسخة_مولدة: فشل = استنسخ(الفشل);
+    دع نص_النسخة: نص = نص_فشل_بلغة(&نسخة_مولدة, &من_ترويسة);
+    أرجع (الطول(النص) مثل طبيعي) == 25 && (الطول(نص_النسخة) مثل طبيعي) == 24 && له_سبب(&نسخة);
+}
+
+عرف الرئيسية(): عدد {
+    // Warm up once so lazily created allocator state is not counted.
+    دع تمهيد: فشل = اصنع_سلسلة(0);
+    لو (!استعمل_سلسلة(&تمهيد)) { أرجع 1; };
+
+    دع قبل: ط64 = بايتات_حية_مخصص_النظام();
+    دع ف: متغير طبيعي = 0;
+    طالما (ف < 100000) {
+        دع السلسلة: فشل = اصنع_سلسلة(ف);
+        لو (!استعمل_سلسلة(&السلسلة)) { أرجع 2; };
+        ف := ف + 1;
+    }
+    دع بعد: ط64 = بايتات_حية_مخصص_النظام();
+    لو (بعد != قبل) { أرجع 3; };
+    أرجع 42;
+}

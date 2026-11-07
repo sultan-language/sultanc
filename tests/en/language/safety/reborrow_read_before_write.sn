@@ -1,0 +1,29 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 4
+// نظير: tests/ar/language/safety/reborrow_read_before_write.sn
+// A reference read through a parameter is used up before the parameter's
+// storage is written; a shared-reference call does not end it.
+type table = {
+    items: vector int,
+    count: int
+};
+
+def size(target: &table): int {
+    return length((*target).items);
+}
+
+def probe(source: &mutable table): int {
+    let first: &int = &(*source).items[0];
+    let n: int = size(source);
+    let value: int = *first;
+    append((*source).items, 9);
+    (*source).count := value + n;
+    return (*source).count;
+}
+
+def main(): int {
+    let start: vector int = [1, 2, 3];
+    let value: mutable table = { items: start, count: 0 };
+    return probe(&mutable value);
+}

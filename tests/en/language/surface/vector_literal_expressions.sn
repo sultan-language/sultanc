@@ -1,0 +1,78 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/language/surface/vector_literal_expressions.sn
+// A vector literal is an expression: an argument, a returned value, a record
+// field, an element of another literal, an indexed temporary and an operand
+// of a reader primitive. Its element type comes from the context (`[]` in a
+// `vector int` position) or, without one, from its first element. Elements
+// are evaluated left to right and moved in, as in `let v: T = [..];`.
+import std.text.number;
+
+type Bag = { items: vector int, label: string };
+
+def total(v: &vector int): int {
+    let s: mutable int = 0;
+    let i: mutable int = 0;
+    while (i < length(*v)) { s := s + (*v)[i]; i := i + 1; }
+    return s;
+}
+
+def sum_owned(v: vector int): int { return total(&v); }
+
+def lengths(v: vector string): int {
+    let s: mutable int = 0;
+    let i: mutable int = 0;
+    while (i < length(v)) { s := s + (length(v[i]) as int); i := i + 1; }
+    return s;
+}
+
+def count_of<T>(v: vector T): int { return length(v) as int; }
+
+def first(v: vector int, fallback: int): int {
+    if (length(v) == 0) { return fallback; };
+    return v[0];
+}
+
+def make(n: int): vector int { return [n, n + 1, n + 2]; }
+
+def empty(): vector int { return []; }
+
+def trace(log: &mutable vector int, x: int): int {
+    append(*log, x);
+    return x;
+}
+
+def main(): int {
+    let failures: mutable int = 0;
+    let a: int = 4;
+    if (sum_owned([a, 5, 6]) != 15) { failures := failures + 1; };
+    if (sum_owned(make(10)) != 33) { failures := failures + 1; };
+    if (sum_owned(empty()) != 0) { failures := failures + 1; };
+
+    // Owned elements are moved into the literal.
+    let s: string = int_to_text(1234);
+    if (lengths([s, "ab", int_to_text(7)]) != 7) { failures := failures + 1; };
+
+    let bag: Bag = { items: [1, 2, 3], label: "b" };
+    if (total(&bag.items) != 6) { failures := failures + 1; };
+
+    let grid: vector vector int = [[1], [2, 3], []];
+    if (length(grid) != 3 || length(grid[1]) != 2 || length(grid[2]) != 0) { failures := failures + 1; };
+
+    if ([10, 20, 30][1] != 20) { failures := failures + 1; };
+    if (length([1, 2, 3, 4]) != 4) { failures := failures + 1; };
+    if (first([7, 8], 0) != 7) { failures := failures + 1; };
+    if (count_of(["x", "y", "z"]) != 3 || count_of([[1], [2]]) != 2) { failures := failures + 1; };
+    let none: vector int = [];
+    if (first(none, 9) != 9) { failures := failures + 1; };
+
+    // Left-to-right evaluation, before the call.
+    let log: mutable vector int = [];
+    let r: int = sum_owned([trace(&mutable log, 1), trace(&mutable log, 2)]) + trace(&mutable log, 3);
+    if (r != 6 || length(log) != 3 || log[0] != 1 || log[1] != 2 || log[2] != 3) { failures := failures + 1; };
+
+    if (failures != 0) { return failures; };
+    return 42;
+}

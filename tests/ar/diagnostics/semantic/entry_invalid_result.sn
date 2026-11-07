@@ -1,0 +1,7 @@
+// اختبار: رفض
+// تشخيص: SULTANC-ENTRYPOINT-INVALID-SIGNATURE
+// نظير: tests/en/diagnostics/semantic/entry_invalid_result.sn
+// نقطة دخول البرنامج لا ترجع شيئا أو ترجع حالة خروج عددية.
+عرف الرئيسية(): منطقي {
+    أرجع صواب;
+}

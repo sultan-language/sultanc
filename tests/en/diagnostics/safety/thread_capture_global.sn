@@ -1,0 +1,19 @@
+// اختبار: رفض
+// تشخيص: SULTANC-THREAD-CAPTURE-NON-ATOMIC-SHARED
+// نظير: tests/ar/diagnostics/safety/thread_capture_global.sn
+// The spawn capture check (docs/TYPE_SYSTEM.md, "Thread capture rules"): a
+// writable module variable is shared by every thread and is not atomic, so
+// a closure handed to another thread may not use it outside an unsafe block
+// (Rust's static mut). Use an atomic, a Mutex or an Arc.
+import std.thread.thread;
+
+let hits: mutable i64 = 0;
+
+def keep(x: i64): void { }
+
+def main(): i32 {
+    match spawn(fn(): void -> keep(hits + 1)) with
+    | result.ok(_) -> { }
+    | result.err(_) -> { };
+    return 0;
+}

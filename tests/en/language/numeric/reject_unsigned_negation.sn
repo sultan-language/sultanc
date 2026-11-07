@@ -1,0 +1,13 @@
+// اختبار: رفض
+// تشخيص: SULTANC-TYPE-MISMATCH
+// نظير: tests/ar/language/numeric/reject_unsigned_negation.sn
+// An unsigned value has no negation (Rust's E0600), in a function as in a
+// module constant; a literal keeps its value check (`-0` fits any integer
+// type).
+let K: u8 = -(3 as u8);
+
+def main(): int {
+    let x: u8 = 3;
+    let y: u8 = -x;
+    return (y + K) as int;
+}

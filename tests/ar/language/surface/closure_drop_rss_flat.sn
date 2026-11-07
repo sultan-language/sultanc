@@ -1,0 +1,51 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// لجسم الإغلاق إطار إسقاط كالدالة: المعاملات المملوكة التي لا يستهلكها (نص،
+// سجل، متجه، قيمة دالة) تُسقط عند عودته، والمعامل الذي يُرجعه لا يُسقط.
+// 10^5 جولة تترك البايتات الحية في المخصص كما كانت.
+// النظير: tests/en/language/surface/closure_drop_rss_flat.sn. لا توجيه نظير
+// له: المفسر لا يستعمل مخصص std الذي تقرأ هذه الشفرة عداداته.
+استورد std.os.allocation;
+استورد std.text.number;
+
+نوع Named = { name: نص, id: عدد };
+
+عرف size_of(s: نص): عدد { أرجع الطول(s) مثل عدد; }
+
+عرف round(i: طبيعي): عدد {
+    // A closure whose owned parameters are text, a record and a vector.
+    دع measure: دالة(نص): عدد = دالة(s: نص): عدد -> size_of(s);
+    دع ident: دالة(Named): عدد = دالة(n: Named): عدد -> n.id + (الطول(n.name) مثل عدد);
+    دع count: دالة(متجه عدد): عدد = دالة(v: متجه عدد): عدد -> الطول(v) مثل عدد;
+    // A parameter the body moves out is not dropped by the closure.
+    دع pass: دالة(نص): نص = دالة(s: نص): نص -> s;
+    // A function-value parameter holds one reference.
+    دع call: دالة(دالة(عدد): عدد, عدد): عدد = دالة(f: دالة(عدد): عدد, x: عدد): عدد -> f(x);
+    دع total: متغير عدد = 0;
+    total := total + measure(طبيعي_إلى_نص(i));
+    دع n: Named = { name: طبيعي_إلى_نص(i), id: 2 };
+    total := total + ident(n);
+    دع v: متغير متجه عدد = [];
+    ألحق(v, 1);
+    ألحق(v, 2);
+    total := total + count(v);
+    دع kept: نص = pass(طبيعي_إلى_نص(i + 1));
+    total := total + (الطول(kept) مثل عدد);
+    total := total + call(دالة(x: عدد): عدد -> x + 1, 1);
+    أرجع total;
+}
+
+عرف الرئيسية(): عدد {
+    دع warm_up: عدد = round(0);
+    لو (warm_up < 0) { أرجع 1; };
+    دع before: ط64 = بايتات_حية_مخصص_النظام();
+    دع i: متغير طبيعي = 0;
+    طالما (i < 100000) {
+        لو (round(i) < 0) { أرجع 2; };
+        i := i + 1;
+    }
+    دع after: ط64 = بايتات_حية_مخصص_النظام();
+    لو (after != before) { أرجع 3; };
+    أرجع 42;
+}

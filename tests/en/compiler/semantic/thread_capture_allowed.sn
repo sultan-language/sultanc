@@ -1,0 +1,33 @@
+// اختبار: قبول
+// Counterpart: tests/ar/compiler/semantic/thread_capture_allowed.sn (no pair
+// directive: interpreting it would spawn, which the interpreter refuses).
+// The spawn capture check accepts what may cross threads: an Arc (its count
+// is atomic), an owned value moved into the closure, plain numbers, and a
+// raw pointer when the spawn sits inside an unsafe block, where the
+// programmer vouches for the pointee (docs/TYPE_SYSTEM.md).
+import std.thread.thread;
+import std.sync.arc;
+import std.sync.atomic;
+
+type cell = { value: u64 };
+
+def bump(c: &arc<atomic_u64>, by: u64): void {
+    let old: u64 = atomic_u64_fetch_add(arc_get(c), by, memory_ordering.seq_cst());
+}
+def total(v: &vector i64): i64 { return (*v)[0] + (*v)[1]; }
+def keep(x: i64): void { }
+def write_mark(p: *mutable cell): void { unsafe { (*p).value := 7 as u64; } }
+
+def main(): i32 {
+    let counter: arc<atomic_u64> = arc_new(atomic_u64_new(0 as u64));
+    let by: u64 = 3 as u64;
+    let owned: vector i64 = [1 as i64, 2 as i64];
+    let c: mutable cell = { value: 0 as u64 };
+    let p: *mutable cell = &mutable c;
+    match spawn(fn(): void -> bump(&counter, by)) with | result.ok(_) -> { } | result.err(_) -> { };
+    match spawn(fn(): void -> keep(total(&owned))) with | result.ok(_) -> { } | result.err(_) -> { };
+    unsafe {
+        match spawn(fn(): void -> write_mark(p)) with | result.ok(_) -> { } | result.err(_) -> { };
+    }
+    return 0;
+}

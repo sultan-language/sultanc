@@ -1,0 +1,40 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// خرج-قياسي: 1 + 2 = 3 |  سلام
+// خطأ-قياسي-ملف: print.stderr
+// نظير: tests/ar/stdlib/fmt/print.sn
+// std.fmt's print_fmt, eprint_fmt and eprintln_fmt (Rust's print!, eprint!,
+// eprintln!): each call formats into one buffer and writes it once; the
+// result is the number of bytes written, the line forms adding "\n". A
+// format error prints nothing.
+import std.fmt.fmt;
+
+def main(): int {
+    let failures: mutable int = 0;
+    match print_fmt("{} + {} = {}", [fmt_arg.int(1), fmt_arg.int(2), fmt_arg.int(3)]) with
+    | result.ok(n) -> { if (n != 9) { failures := failures + 1; }; }
+    | result.err(_) -> { failures := failures + 1; };
+    let word: string = "سلام";
+    match print_fmt(" | {:>5}", [fmt_arg.text(&word)]) with
+    | result.ok(n) -> { if (n != 12) { failures := failures + 1; }; }
+    | result.err(_) -> { failures := failures + 1; };
+    let disk: string = "القرص";
+    match eprintln_fmt("تحذير: {} ({:.1}%)", [fmt_arg.text(&disk), fmt_arg.f64(93.25)]) with
+    | result.ok(n) -> { if (n != 31) { failures := failures + 1; }; }
+    | result.err(_) -> { failures := failures + 1; };
+    match eprint_fmt("done={}", [fmt_arg.bool(true)]) with
+    | result.ok(n) -> { if (n != 9) { failures := failures + 1; }; }
+    | result.err(_) -> { failures := failures + 1; };
+    match eprintln_fmt("", []) with
+    | result.ok(n) -> { if (n != 1) { failures := failures + 1; }; }
+    | result.err(_) -> { failures := failures + 1; };
+    // A format string that is not a literal is checked at run time.
+    let missing: string = "{}";
+    match print_fmt(missing, []) with
+    | result.ok(_) -> { failures := failures + 1; }
+    | result.err(_) -> { };
+    if (failures != 0) { return 1; };
+    return 42;
+}

@@ -1,0 +1,20 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 1
+// تفاضلي: نعم
+// بيئة: SULTANC_LANG=ar
+// خرج-قياسي: <فارغ>
+// خطأ-قياسي-ملف: assert_ar.stderr
+// نظير: tests/en/runtime/failure/assert_ar.sn
+// A failed assertion (std.debug.assert, docs/ERRORS.md) stops the program
+// through the same path as إنهيار: the iSpeak frame "the program stopped"
+// with the reason "an assertion failed", then the optional message, exit
+// status 1. A passing assertion prints nothing.
+استورد std.debug.assert;
+
+عرف الرئيسية(): عدد {
+    تأكد(1 + 1 == 2);
+    دع الرسالة: نص = «يجب أن يكون الحجم موجبا»;
+    تأكد_برسالة(0 > 1, &الرسالة);
+    أرجع 0;
+}

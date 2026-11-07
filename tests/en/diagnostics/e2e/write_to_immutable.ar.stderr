@@ -1,0 +1,11 @@
+خطأ[SULTANC-MUTABILITY-WRITE-TO-IMMUTABLE]: لا يمكن الكتابة إلى قيمة غير متغيرة — القيمة غير المتغيرة التي جرت محاولة الكتابة إليها هي ⁨`count`⁩. جرت محاولة إسناد قيمة إلى متغير غير قابل للتعديل.
+  --> tests/en/diagnostics/e2e/write_to_immutable.sn:8:5..8:10
+   |
+ 8 |     count := 2;
+   |     ^^^^^ الاستخدام غير الصالح
+   |
+  ::: tests/en/diagnostics/e2e/write_to_immutable.sn:7:5..7:24
+   |
+ 7 |     let count: i32 = 1;
+   |     ^^^^^^^^^^^^^^^^^^^ صُرّح به هنا دون `متغير`
+   |

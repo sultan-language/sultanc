@@ -1,0 +1,10 @@
+// اختبار: رفض
+// تشخيص: SULTANC-MUTABILITY-WRITE-TO-IMMUTABLE
+// نظير: tests/en/diagnostics/semantic/deferred_local_assigned_twice.sn
+عرف الرئيسية(): ص32 {
+    دع جاهز: منطقي = صواب;
+    دع القيمة: عدد;
+    القيمة := 1;
+    لو (جاهز) { القيمة := 2; };
+    أرجع 0;
+}

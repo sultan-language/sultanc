@@ -1,0 +1,16 @@
+// اختبار: رفض
+// تشخيص: SULTANC-OWNERSHIP-USE-AFTER-MOVE
+// نظير: tests/ar/diagnostics/safety/vector_truncate_view_expiry.sn
+// `w` views the first element through `words`; truncate writes the vector
+// through the same reference and drops that element, which ends the view.
+def shorten(words: &mutable vector string): int {
+    let w: string = (*words)[0];
+    truncate(*words, 0);
+    return length(w);
+}
+
+def main(): int {
+    let words: mutable vector string = [];
+    append(words, "a");
+    return shorten(&mutable words);
+}

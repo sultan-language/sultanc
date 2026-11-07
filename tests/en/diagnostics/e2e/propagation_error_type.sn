@@ -1,0 +1,17 @@
+// اختبار: رفض
+// تشخيص: SULTANC-CALL-ARGUMENT-TYPE-MISMATCH
+// نظير: tests/ar/diagnostics/e2e/propagation_error_type.sn
+// خرج-تشخيص-عربي: propagation_error_type.ar.stderr
+// خرج-تشخيص-إنجليزي: propagation_error_type.en.stderr
+// `?` converts no error: a different error type is reported at the `?`,
+// naming the function's error type and the expression's.
+def parse(x: int): result int, string {
+    return result.ok(x);
+}
+
+def convert(x: int): result int, u8 {
+    let v: int = parse(x)?;
+    return result.ok(v);
+}
+
+def main(): int { return 0; }

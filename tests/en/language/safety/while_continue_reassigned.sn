@@ -1,0 +1,26 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 5
+// نظير: tests/ar/language/safety/while_continue_reassigned.sn
+// Every path back to the condition gives the moved text a new value.
+def keep(value: string, count: int): bool {
+    return length(value) > 0 && count < 5;
+}
+
+def fresh(): string {
+    return "again";
+}
+
+def main(): int {
+    let text: mutable string = "start";
+    let count: mutable int = 0;
+    while (keep(text, count)) {
+        count := count + 1;
+        if (count > 3) {
+            text := fresh();
+            continue;
+        };
+        text := fresh();
+    }
+    return count;
+}

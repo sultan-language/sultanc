@@ -1,0 +1,12 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/language/surface/unicode_separators.sn
+// Non-ASCII separators between tokens: NBSP, BOM/ZWNBSP, LRM, RLM, ALM,
+// ideographic space. Explicit bidi overrides stay rejected (not tested here).
+def main(): int {﻿
+    let‏x: int = 40;‎
+    let؜y: int = 2;　
+    return x + y;
+}

@@ -1,0 +1,8 @@
+// An external declaration may name the library that exports it and the exact
+// linker symbol it binds (docs/PLATFORM_DEPENDENCIES.md).
+extern "kernel32.dll" def GetTickCount64(): u64;
+extern "/usr/lib/libSystem.B.dylib" def stat_inode64(path: *u8, info: *mutable u8): i32 = "stat$INODE64";
+extern def labs_alias(value: i64): i64 = "labs";
+public extern "wasi_snapshot_preview1" def proc_exit(code: u32): void;
+
+def main(): int { return 0; }

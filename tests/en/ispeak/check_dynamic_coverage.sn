@@ -1,0 +1,62 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 0
+// نظير: tests/ar/ispeak/check_dynamic_coverage.sn
+import compiler.diagnostics.identity;
+import std.text.from_bytes;
+import compiler.diagnostics.reason;
+import compiler.ispeak.format.facts;
+import compiler.diagnostics.schema;
+import compiler.ispeak.ispeak;
+
+// Every active public diagnostic and contextual reason accepts source-backed
+// typed context, while its language-specific fixed message remains the basis.
+def check_context_wording(language: لغة_تشخيص, key: مفتاح_رسالة_تشخيص): bool {
+    let symbol: string = "demo_symbol";
+    let facts: حقائق_سياق_رسالة = {
+        القيمة: option.none(),
+        المتوقع: option.none(),
+        الاستبدال: option.none(),
+        الموجود: option.none(),
+        الفهرس: option.none(),
+        الطول: option.none(),
+        المجال: option.none(),
+        النمط: option.none(),
+        المسار: option.none(),
+        الرمز: option.some(قيمة_حجة_رسالة.نصية(انسخ_نص(&symbol))),
+        النوع: option.none(),
+        السياق: option.none(),
+        المرحلة: option.none(),
+        الهدف: option.none(),
+        الدالة: option.none(),
+        الكتلة: option.none(),
+        التعليمة: option.none(),
+        العملية: option.none(),
+        البدائي: option.none(),
+        المصدر: option.none(),
+        الوجهة: option.none(),
+        السبب: option.none()
+    };
+    let fixed_text: string = رسالة_تشخيص(language, key);
+    let payload: حقائق_رسالة = حقائق_رسالة.سياق_تشخيص(facts);
+    match رسالة_تشخيص_بحجج(language, key, payload) with
+    | option.some(text) -> {
+        return (length(text) as uint) > (length(fixed_text) as uint);
+    }
+    | option.none -> { return false; };
+}
+
+def main(): int {
+    let all_keys: vector مفتاح_رسالة_تشخيص = كل_مفاتيح_رسائل_التشخيص();
+    let number: mutable uint = 0;
+    let count: mutable int = 0;
+    while (number < (length(all_keys) as uint)) {
+        let key: مفتاح_رسالة_تشخيص = all_keys[number];
+        if (!check_context_wording(لغة_تشخيص.الإنجليزية(), key)) { return 1; };
+        if (!check_context_wording(لغة_تشخيص.العربية(), key)) { return 2; };
+        count := count + 1;
+        number := number + 1;
+    }
+    if (count != 645) { return 3; };
+    return 0;
+}

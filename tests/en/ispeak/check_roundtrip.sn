@@ -1,0 +1,205 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 0
+// نظير: tests/ar/ispeak/check_roundtrip.sn
+import std.text.compare;
+import std.text.from_bytes;
+import compiler.diagnostics.identity;
+import compiler.diagnostics.reason;
+import compiler.diagnostics.registry;
+import compiler.ispeak.format.facts;
+import compiler.diagnostics.schema;
+import compiler.ispeak.ispeak;
+
+// Localization is a direct typed lookup: it must yield nonempty messages.
+def existing_message(language: لغة_تشخيص, key: مفتاح_رسالة_تشخيص): bool {
+    let message: string = رسالة_تشخيص(language, key);
+    let empty_value: string = "";
+    return !texts_equal(&message, &empty_value);
+}
+
+// Exact semantic assertions: a round trip alone cannot detect permuted messages.
+def check_specific_message(identity: معرف_تشخيص, expected_english: string, expected_arabic: string): bool {
+    let key: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(identity);
+    let actual_english: string = رسالة_تشخيص(لغة_تشخيص.الإنجليزية(), key);
+    let actual_arabic: string = رسالة_تشخيص(لغة_تشخيص.العربية(), key);
+    if (!texts_equal(&actual_english, &expected_english)) { return false; };
+    if (!texts_equal(&actual_arabic, &expected_arabic)) { return false; };
+    return true;
+}
+
+def name_values(): حقائق_اسم_غير_معروف {
+    let values: حقائق_اسم_غير_معروف = { الاسم: "المثال" };
+    return values;
+}
+
+def type_values(): حقائق_نوعان_غير_متوافقين {
+    let values: حقائق_نوعان_غير_متوافقين = { المتوقع: "غ8", الموجود: "نص" };
+    return values;
+}
+
+def count_values(): حقائق_عدد_حجج_غير_مطابق {
+    let values: حقائق_عدد_حجج_غير_مطابق = { المتوقع: 2, الموجود: 3 };
+    return values;
+}
+
+def suggestion_values(): حقائق_اقتراح_كلمة {
+    let values: حقائق_اقتراح_كلمة = { الاستبدال: "if" };
+    return values;
+}
+
+def main(): int {
+    // Every key in the typed enumeration (all public diagnostics, then all
+    // reasons) yields a nonempty message in both locales, and every public
+    // code round-trips to the same identity through the registry.
+    let all_keys: vector مفتاح_رسالة_تشخيص = كل_مفاتيح_رسائل_التشخيص();
+    let number: mutable uint = 0;
+    let public_count: mutable uint = 0;
+    while (number < (length(all_keys) as uint)) {
+        let key: مفتاح_رسالة_تشخيص = all_keys[number];
+        if (!existing_message(لغة_تشخيص.الإنجليزية(), key)) { return 4; };
+        if (!existing_message(لغة_تشخيص.العربية(), key)) { return 5; };
+        match key with
+        | مفتاح_رسالة_تشخيص.تشخيص(identity) -> {
+            let definition: تعريف_تشخيص = تعريف_التشخيص(identity);
+            match معرف_تشخيص_من_كود(&definition.الكود) with
+            | option.some(recovered) -> {
+                if (recovered != identity) { return 2; };
+            }
+            | _ -> { return 3; };
+            public_count := public_count + 1;
+        }
+        | _ -> { };
+        number := number + 1;
+    }
+    if (public_count != 142 || (length(all_keys) as uint) != 645) { return 6; };
+    let unknown_code: string = "SULTANC-E0001";
+    match معرف_تشخيص_من_كود(&unknown_code) with
+    | option.none -> { }
+    | _ -> { return 7; };
+    // Fixed messages are never reverse-parsed to discover identity.
+    if (!check_specific_message(معرف_تشخيص.مورد_محرر(), "resource was already released", "المورد محرر مسبقا")) { return 11; };
+    if (!check_specific_message(معرف_تشخيص.تعارض_استعارة(), "borrow conflict", "تعارض استعارة")) { return 12; };
+    if (!check_specific_message(معرف_تشخيص.هروب_مرجع(), "reference escapes its valid scope", "المرجع يهرب من نطاق صلاحيته")) { return 13; };
+    if (!check_specific_message(معرف_تشخيص.عملية_غير_آمنة(), "operation requires an explicit unsafe scope", "العملية تتطلب نطاق غير آمن صريحا")) { return 14; };
+    if (!check_specific_message(معرف_تشخيص.فهرس_خارج_الحدود(), "index is outside the valid bounds", "الفهرس خارج الحدود الصالحة")) { return 15; };
+    if (!check_specific_message(معرف_تشخيص.نمط_غير_شامل(), "non-exhaustive pattern", "نمط غير شامل")) { return 16; };
+    if (!check_specific_message(معرف_تشخيص.نمط_غير_قابل_للوصول(), "unreachable pattern", "نمط غير قابل للوصول")) { return 17; };
+    if (!check_specific_message(معرف_تشخيص.إرجاع_مفقود(), "not all execution paths return a value", "ليست كل مسارات التنفيذ ترجع قيمة")) { return 18; };
+    // Typed, named facts avoid all catalog and argument-vector scans.
+    let name_facts: حقائق_رسالة = حقائق_رسالة.اسم_غير_معروف(name_values());
+    let name_key: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.اسم_غير_معروف());
+    match رسالة_تشخيص_بحجج(لغة_تشخيص.الإنجليزية(), name_key, name_facts) with
+    | option.some(text) -> {
+        let expected: string = "unknown name: `المثال`";
+        if (!texts_equal(&text, &expected)) { return 19; };
+    }
+    | _ -> { return 19; };
+    let name_facts_arabic: حقائق_رسالة = حقائق_رسالة.اسم_غير_معروف(name_values());
+    match رسالة_تشخيص_بحجج(لغة_تشخيص.العربية(), name_key, name_facts_arabic) with
+    | option.some(text) -> {
+        let expected: string = "الاسم `المثال` غير معروف";
+        if (!texts_equal(&text, &expected)) { return 20; };
+    }
+    | _ -> { return 20; };
+    let type_key: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.نوعان_غير_متوافقين());
+    let type_facts: حقائق_رسالة = حقائق_رسالة.نوعان_غير_متوافقين(type_values());
+    match رسالة_تشخيص_بحجج(لغة_تشخيص.الإنجليزية(), type_key, type_facts) with
+    | option.some(text) -> {
+        let expected: string = "expected `غ8`, found `نص`";
+        if (!texts_equal(&text, &expected)) { return 21; };
+    }
+    | _ -> { return 21; };
+    let type_facts_arabic: حقائق_رسالة = حقائق_رسالة.نوعان_غير_متوافقين(type_values());
+    match رسالة_تشخيص_بحجج(لغة_تشخيص.العربية(), type_key, type_facts_arabic) with
+    | option.some(text) -> {
+        let expected: string = "النوع الموجود `نص` لا يطابق النوع المتوقع `غ8`";
+        if (!texts_equal(&text, &expected)) { return 22; };
+    }
+    | _ -> { return 22; };
+    let count_key: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.عدد_حجج_غير_مطابق());
+    let count_facts: حقائق_رسالة = حقائق_رسالة.عدد_حجج_غير_مطابق(count_values());
+    match رسالة_تشخيص_بحجج(لغة_تشخيص.الإنجليزية(), count_key, count_facts) with
+    | option.some(text) -> {
+        let expected: string = "expected 2 arguments, found 3";
+        if (!texts_equal(&text, &expected)) { return 23; };
+    }
+    | _ -> { return 23; };
+    let count_facts_arabic: حقائق_رسالة = حقائق_رسالة.عدد_حجج_غير_مطابق(count_values());
+    match رسالة_تشخيص_بحجج(لغة_تشخيص.العربية(), count_key, count_facts_arabic) with
+    | option.some(text) -> {
+        let expected: string = "عدد الحجج المقدمة 3 لا يطابق العدد المتوقع 2";
+        if (!texts_equal(&text, &expected)) { return 24; };
+    }
+    | _ -> { return 24; };
+    let no_argument_facts: حقائق_رسالة = حقائق_رسالة.بلا_حجج();
+    match رسالة_تشخيص_بحجج(لغة_تشخيص.الإنجليزية(), name_key, no_argument_facts) with
+    | option.none -> { }
+    | _ -> { return 25; };
+    let type_error_facts: حقائق_رسالة = حقائق_رسالة.عدد_حجج_غير_مطابق(count_values());
+    match رسالة_تشخيص_بحجج(لغة_تشخيص.العربية(), name_key, type_error_facts) with
+    | option.none -> { }
+    | _ -> { return 26; };
+    let identity_error_facts: حقائق_رسالة = حقائق_رسالة.نوعان_غير_متوافقين(type_values());
+    match رسالة_تشخيص_بحجج(لغة_تشخيص.الإنجليزية(), name_key, identity_error_facts) with
+    | option.none -> { }
+    | _ -> { return 27; };
+    let syntax_key: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.خطأ_نحوي());
+    let no_arguments_for_syntax: حقائق_رسالة = حقائق_رسالة.بلا_حجج();
+    match رسالة_تشخيص_بحجج(لغة_تشخيص.الإنجليزية(), syntax_key, no_arguments_for_syntax) with
+    | option.some(text) -> {
+        let expected: string = "Syntax error in source code";
+        if (!texts_equal(&text, &expected)) { return 28; };
+    }
+    | _ -> { return 28; };
+    // Parser contextual reasons verified against frontend/semantic_pipeline.sn
+    // branches for فئة_خطأ_نحوي (statement and target conditions).
+    let reason_key_0: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.سبب(سبب_تشخيص.سبب_محلل_نحوي_عبارة_بلا_عملية());
+    let english_reason_message_0: string = رسالة_تشخيص(لغة_تشخيص.الإنجليزية(), reason_key_0);
+    let arabic_reason_message_0: string = رسالة_تشخيص(لغة_تشخيص.العربية(), reason_key_0);
+    let english_expected_0: string = "Expected a function call or assignment in this statement";
+    let arabic_expected_0: string = "تتطلب هذه العبارة استدعاء دالة أو عملية إسناد";
+    if (!texts_equal(&english_reason_message_0, &english_expected_0)) { return 29; };
+    if (!texts_equal(&arabic_reason_message_0, &arabic_expected_0)) { return 30; };
+    let reason_key_1: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.سبب(سبب_تشخيص.سبب_محلل_نحوي_هدف_شرط_غير_صحيح());
+    let english_reason_message_1: string = رسالة_تشخيص(لغة_تشخيص.الإنجليزية(), reason_key_1);
+    let arabic_reason_message_1: string = رسالة_تشخيص(لغة_تشخيص.العربية(), reason_key_1);
+    let english_expected_1: string = "Invalid target condition in a conditional declaration";
+    let arabic_expected_1: string = "شرط الهدف في التصريح الشرطي غير صحيح";
+    if (!texts_equal(&english_reason_message_1, &english_expected_1)) { return 31; };
+    if (!texts_equal(&arabic_reason_message_1, &arabic_expected_1)) { return 32; };
+    let reason_key_2: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.سبب(سبب_تشخيص.سبب_محلل_نحوي_هدف_شرط_بلا_هدف());
+    let english_reason_message_2: string = رسالة_تشخيص(لغة_تشخيص.الإنجليزية(), reason_key_2);
+    let arabic_reason_message_2: string = رسالة_تشخيص(لغة_تشخيص.العربية(), reason_key_2);
+    let english_expected_2: string = "Target condition is missing its target";
+    let arabic_expected_2: string = "شرط الهدف لا يحدد هدفا";
+    if (!texts_equal(&english_reason_message_2, &english_expected_2)) { return 33; };
+    if (!texts_equal(&arabic_reason_message_2, &arabic_expected_2)) { return 34; };
+    if (!check_specific_message(معرف_تشخيص.خلفية_مترجم_غير_متاحة(), "the selected code-generation backend is not available in this compiler", "خلفية توليد الشفرة المختارة غير متاحة في هذا المترجم")) { return 35; };
+    if (!check_specific_message(معرف_تشخيص.تعبير_وقت_الترجمة_غير_ثابت(), "comptime expression must be a pure compile-time constant", "تعبير وقت_الترجمة يجب أن يكون ثابتا نقيا وقت الترجمة")) { return 36; };
+    let comptime_explanation: string = شرح_تشخيص(لغة_تشخيص.الإنجليزية(), معرف_تشخيص.تعبير_وقت_الترجمة_غير_ثابت());
+    let expected_comptime_explanation: string = "This expression requires runtime evaluation, not compile-time computation.";
+    if (!texts_equal(&comptime_explanation, &expected_comptime_explanation)) { return 38; };
+    let backend_explanation: string = شرح_تشخيص(لغة_تشخيص.العربية(), معرف_تشخيص.خلفية_مترجم_غير_متاحة());
+    let expected_backend_explanation: string = "الخلفية المختارة لا تدعم إخراج هذا الهدف. تحقق من دعم LLVM أو اختر خلفية مدعومة.";
+    if (!texts_equal(&backend_explanation, &expected_backend_explanation)) { return 39; };
+    // The English locale must never inherit Arabic question punctuation.
+    // This validates the complete localized text, not only its typed ID.
+    let suggestion_key: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.تهجئة_كلمة_محجوزة_غير_معروفة());
+    let suggestion_facts: حقائق_رسالة = حقائق_رسالة.اقتراح_كلمة(suggestion_values());
+    match رسالة_تشخيص_بحجج(لغة_تشخيص.الإنجليزية(), suggestion_key, suggestion_facts) with
+    | option.some(message) -> {
+        let expected: string = "unknown keyword: did you mean `if`?";
+        if (!texts_equal(&message, &expected)) { return 40; };
+    }
+    | _ -> { return 40; };
+    let suggestion_facts_arabic: حقائق_رسالة = حقائق_رسالة.اقتراح_كلمة(suggestion_values());
+    match رسالة_تشخيص_بحجج(لغة_تشخيص.العربية(), suggestion_key, suggestion_facts_arabic) with
+    | option.some(message) -> {
+        let expected: string = "كلمة محجوزة غير معروفة: هل تقصد `if`؟";
+        if (!texts_equal(&message, &expected)) { return 41; };
+    }
+    | _ -> { return 41; };
+    if (!check_specific_message(معرف_تشخيص.نقل_من_مرجع(), "cannot move an owned value out of borrowed storage", "لا يجوز نقل قيمة مملوكة من تخزين مستعار")) { return 42; };
+    return 0;
+}

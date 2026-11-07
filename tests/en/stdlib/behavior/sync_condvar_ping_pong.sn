@@ -1,0 +1,66 @@
+// اختبار: تشغيل
+// أهداف: x86_64-linux
+// خروج: 0
+// std.sync.condvar: two threads take turns 1 000 times. A shared counter
+// behind a Mutex says whose turn it is (even: ping, odd: pong); each side
+// waits on the Condvar while it is not its turn (wait_while), bumps the
+// counter and notifies the other. wait_timeout reports a timeout when nobody
+// notifies. Counterpart: tests/ar/stdlib/behavior/sync_condvar_ping_pong.sn.
+// No pair directive: the interpreter runs one thread.
+import std.sync.arc;
+import std.sync.mutex;
+import std.sync.condvar;
+import std.thread.thread;
+import std.time.duration;
+
+type table = { turn: mutex<i64>, changed: condvar };
+
+def not_mine(parity: i64, v: &i64): bool { return (*v % 2) != parity; }
+
+def take_turn(t: &arc<table>, parity: i64, v: &mutable i64): void {
+    let shared: &table = arc_get(t);
+    condvar_wait_while(&(*shared).changed, &(*shared).turn, fn(c: &i64): bool -> not_mine(parity, c));
+    *v := *v + 1;
+    condvar_notify_all(&(*shared).changed);
+}
+
+def player(t: arc<table>, parity: i64): void {
+    let i: mutable i64 = 0;
+    while (i < 1000) {
+        let shared: &table = arc_get(&t);
+        with_lock(&(*shared).turn, fn(v: &mutable i64): void -> take_turn(&t, parity, v));
+        i := i + 1;
+    }
+}
+
+def start(t: &arc<table>, parity: i64): option join_handle {
+    let mine: arc<table> = arc_clone(t);
+    match spawn(fn(): void -> player(mine, parity)) with
+    | result.ok(h) -> { return option.some(h); }
+    | result.err(_) -> { return option.none(); };
+}
+
+def read(v: &mutable i64): i64 { return *v; }
+
+def timed_out(t: &arc<table>, v: &mutable i64): bool {
+    let shared: &table = arc_get(t);
+    match duration_from_milliseconds(20) with
+    | option.some(d) -> { return condvar_wait_timeout(&(*shared).changed, &(*shared).turn, d); }
+    | option.none -> { return false; };
+}
+
+def main(): i32 {
+    let value: table = { turn: mutex_new(0 as i64), changed: condvar_new() };
+    let t: arc<table> = arc_new(value);
+    let ping: mutable join_handle;
+    let pong: mutable join_handle;
+    match start(&t, 0 as i64) with | option.some(h) -> { ping := h; } | option.none -> { return 1; };
+    match start(&t, 1 as i64) with | option.some(h) -> { pong := h; } | option.none -> { return 2; };
+    join(&mutable ping);
+    join(&mutable pong);
+    let shared: &table = arc_get(&t);
+    if (with_lock(&(*shared).turn, fn(v: &mutable i64): i64 -> read(v)) != (2000 as i64)) { return 3; };
+    // Nobody notifies now: the timed wait returns after its timeout.
+    if (!with_lock(&(*shared).turn, fn(v: &mutable i64): bool -> timed_out(&t, v))) { return 4; };
+    return 0;
+}

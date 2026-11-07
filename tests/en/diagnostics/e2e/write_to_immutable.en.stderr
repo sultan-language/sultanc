@@ -1,0 +1,11 @@
+error[SULTANC-MUTABILITY-WRITE-TO-IMMUTABLE]: cannot write to an immutable value — The immutable value being written to is `count`. An assignment targets an immutable variable.
+  --> tests/en/diagnostics/e2e/write_to_immutable.sn:8:5..8:10
+   |
+ 8 |     count := 2;
+   |     ^^^^^ invalid use
+   |
+  ::: tests/en/diagnostics/e2e/write_to_immutable.sn:7:5..7:24
+   |
+ 7 |     let count: i32 = 1;
+   |     ^^^^^^^^^^^^^^^^^^^ declared here without `mutable`
+   |

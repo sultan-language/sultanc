@@ -1,0 +1,139 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/stdlib/behavior/xz_codec.sn
+// std.compression.xz and std.compression.lzma: .xz streams written by xz 5.4
+// with the CRC64, CRC32, SHA-256 and no check, the x86 BCJ and Delta filters,
+// two concatenated streams with padding, and a .lzma file; the encoders'
+// own .xz, .lzma and raw LZMA2 output round-trips; damaged streams (magic,
+// header CRC, data check, truncation, an output limit, bit flips) end with
+// errors.
+import std.encoding.hex;
+import std.fuzz.core;
+import std.checksum.checksum;
+import std.compression.xz;
+import std.compression.lzma;
+
+def unhex(text: string): vector u8 {
+    match hex_decode(&text) with
+    | result.ok(v) -> { return v; }
+    | result.err(_) -> { let empty: vector u8 = []; return empty; };
+}
+
+def same(a: &vector u8, b: &vector u8): bool {
+    if (length(*a) != length(*b)) { return false; };
+    let i: mutable uint = 0;
+    while (i < (length(*a) as uint)) { if ((*a)[i] != (*b)[i]) { return false; }; i := i + 1; }
+    return true;
+}
+
+def decodes_to(stream: &vector u8, expected: &vector u8): bool {
+    match xz_decompress(stream) with
+    | result.ok(v) -> { return same(&v, expected); }
+    | result.err(_) -> { return false; };
+}
+
+def repeated(unit: &vector u8, times: uint, tail: &vector u8): vector u8 {
+    let out: mutable vector u8 = [];
+    let k: mutable uint = 0;
+    while (k < times) {
+        let i: mutable uint = 0;
+        while (i < (length(*unit) as uint)) { append(out, (*unit)[i]); i := i + 1; }
+        k := k + 1;
+    }
+    let i: mutable uint = 0;
+    while (i < (length(*tail) as uint)) { append(out, (*tail)[i]); i := i + 1; }
+    return out;
+}
+
+def is_error(stream: &vector u8, limit: uint): bool {
+    match xz_decompress_limited(stream, limit) with
+    | result.ok(_) -> { return false; }
+    | result.err(_) -> { return true; };
+}
+
+def main(): int {
+    let sentence: vector u8 = unhex("53756c74616e4320787a20746573743a2074686520717569636b2062726f776e20666f78206a756d7073206f76657220746865206c617a7920646f672e20");
+    let digits: vector u8 = unhex("30313233343536373839");
+    let text: vector u8 = repeated(&sentence, 4, &digits);
+    let unit: vector u8 = unhex("554889e5e81000000090e820010000c3");
+    let nothing: vector u8 = [];
+    let code: vector u8 = repeated(&unit, 8, &nothing);
+    let t6: vector u8 = unhex("fd377a585a000004e6d6b4460200210116000000742fe5a3e00101004a5d00299d49877763edbf826504dda7d9392ece028fce2bd2247da8ca314babf96a66b75606b13512aa5497b89e2d8dfed6fbcb5890dbef607c80d6d9a77c8ddfa2fb2236181c2ec80c87c4d200000033424e314be9d46d0001668202000000e313d77cb1c467fb020000000004595a");
+    let t32: vector u8 = unhex("fd377a585a0000016922de360200210116000000742fe5a3e00101004a5d00299d49877763edbf826504dda7d9392ece028fce2bd2247da8ca314babf96a66b75606b13512aa5497b89e2d8dfed6fbcb5890dbef607c80d6d9a77c8ddfa2fb2236181c2ec80c87c4d200000058b59d430001628202000000f55146e73e300d8b020000000001595a");
+    let tsha: vector u8 = unhex("fd377a585a00000ae1fb0ca10200210116000000742fe5a3e00101004a5d00299d49877763edbf826504dda7d9392ece028fce2bd2247da8ca314babf96a66b75606b13512aa5497b89e2d8dfed6fbcb5890dbef607c80d6d9a77c8ddfa2fb2236181c2ec80c87c4d20000005f8a88503517e570ec34c81ba45d574bf1b66e404aad1ed36d5eb84583111a7600017e820200000015935293b6e9df1c02000000000a595a");
+    let tnone: vector u8 = unhex("fd377a585a000000ff12d941020021010c0000008f98419ce00101004b5d00299d49877763edbf826504dda7d9392ece028fce2bd2247da8ca312b5b80fab068d30b7aad27f5379ef168d9f16afdacd2632f1652d286c88511c80a9202052cc823cb1c56185fdb61a81e000000015f82020000008645a25fa8000afc020000000000595a");
+    let bx86: vector u8 = unhex("fd377a585a000004e6d6b44602010400210116000d86351fe0007f00315d002a920da4e4be93cfaf55ee34d6f9c3a799ecd1882b2fa81d82168081927ad6bdbd13babc96b8536ebf9b50726be66aa00000000000a8997338894fd15b00014d8001000000981ac979b1c467fb020000000004595a");
+    let bdelta: vector u8 = unhex("fd377a585a000004e6d6b446020103010f2101162f30a7b6e0007f00165d002a920da4e4be6fe1af55ee30bf6fc3a72c3a025f0000000000a8997338894fd15b00013280010000008ca5bd83b1c467fb020000000004595a");
+    let tlzma: vector u8 = unhex("5d00008000ffffffffffffffff00299d49877763edbf826504dda7d9392ece028fce2bd2247da8ca314babf96a66b75606b13512aa5497b89e2d8dfed6fbcb5890dbef607c80d6d9a77c8ddfa2fb2236181c2ec80d9af89dffffa0ff8000");
+    if (!decodes_to(&t6, &text)) { return 1; };
+    if (!decodes_to(&t32, &text)) { return 2; };
+    if (!decodes_to(&tsha, &text)) { return 3; };
+    if (!decodes_to(&tnone, &text)) { return 4; };
+    if (!decodes_to(&bx86, &code)) { return 5; };
+    if (!decodes_to(&bdelta, &code)) { return 6; };
+    match lzma_decompress(&tlzma) with
+    | result.ok(v) -> { if (!same(&v, &text)) { return 7; }; }
+    | result.err(_) -> { return 8; };
+
+    // Two streams with four bytes of stream padding between them.
+    let padding: vector u8 = [0, 0, 0, 0];
+    let joined: mutable vector u8 = repeated(&t6, 1, &padding);
+    let i: mutable uint = 0;
+    while (i < (length(t32) as uint)) { append(joined, t32[i]); i := i + 1; }
+    let twice: vector u8 = repeated(&text, 2, &nothing);
+    if (!decodes_to(&joined, &twice)) { return 9; };
+
+    // The encoders.
+    let packed: vector u8 = xz_compress(&text);
+    if ((length(packed) as uint) >= (length(text) as uint) || !decodes_to(&packed, &text)) { return 10; };
+    let packed_code: vector u8 = xz_compress(&code);
+    if (!decodes_to(&packed_code, &code)) { return 11; };
+    let packed_empty: vector u8 = xz_compress(&nothing);
+    if (!decodes_to(&packed_empty, &nothing)) { return 12; };
+    let alone: vector u8 = lzma_compress(&text);
+    match lzma_decompress(&alone) with
+    | result.ok(v) -> { if (!same(&v, &text)) { return 13; }; }
+    | result.err(_) -> { return 14; };
+    let raw: vector u8 = lzma2_compress(&text);
+    match lzma2_decompress(&raw, lzma2_compress_dictionary_size(length(text) as uint), 0) with
+    | result.ok(v) -> { if (!same(&v, &text)) { return 15; }; }
+    | result.err(_) -> { return 16; };
+
+    // Damaged streams.
+    let bad_magic: vector u8 = fuzz_replace_byte(&t6, 1, 0x38);
+    match xz_decompress(&bad_magic) with
+    | result.ok(_) -> { return 17; }
+    | result.err(xz_error.bad_header) -> { }
+    | result.err(_) -> { return 18; };
+    let bad_header_crc: vector u8 = fuzz_replace_byte(&t6, 8, 0);
+    match xz_decompress(&bad_header_crc) with
+    | result.ok(_) -> { return 19; }
+    | result.err(xz_error.bad_crc) -> { }
+    | result.err(_) -> { return 20; };
+    let bad_check: vector u8 = fuzz_replace_byte(&t6, 108, 0x34);
+    match xz_decompress(&bad_check) with
+    | result.ok(_) -> { return 21; }
+    | result.err(xz_error.check_mismatch) -> { }
+    | result.err(_) -> { return 22; };
+    let truncated: vector u8 = fuzz_delete_range(&t6, 70, 70);
+    if (!is_error(&truncated, 0)) { return 23; };
+    match xz_decompress_limited(&t6, 100) with
+    | result.ok(_) -> { return 24; }
+    | result.err(xz_error.output_limit_exceeded) -> { }
+    | result.err(_) -> { return 25; };
+    let flips: mutable uint = 0;
+    let bit: mutable uint = 3;
+    while (flips < 5) {
+        let flipped: vector u8 = fuzz_flip_bit(&t6, bit % ((length(t6) as uint) * 8));
+        if (!is_error(&flipped, 100000)) { return 26; };
+        bit := bit + 131;
+        flips := flips + 1;
+    }
+
+    // CRC-64/XZ check value.
+    let check: vector u8 = unhex("313233343536373839");
+    if (crc64(&check) != 0x995DC9BBDF1939FA) { return 27; };
+    return 42;
+}

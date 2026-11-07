@@ -1,0 +1,52 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/stdlib/fmt/compile_check.sn
+// A literal format string is checked against its arguments at compile time,
+// as Rust's format! does (docs/FMT.md, "Compile-time check"); the arguments
+// go in one call as a vector literal. Arguments that are not constructor
+// calls are counted but not type-checked, an argument vector bound with
+// `let` leaves only the format string's syntax to the compile-time check,
+// and a format string built at run time keeps the run-time check.
+import std.fmt.fmt;
+import std.text.compare;
+
+def same(r: result string, fmt_error, wanted: string): int {
+    match r with
+    | result.ok(got) -> { if (texts_equal(&got, &wanted)) { return 0; }; return 1; }
+    | result.err(_) -> { return 1; };
+}
+
+def is_error(r: result string, fmt_error): int {
+    match r with
+    | result.ok(_) -> { return 1; }
+    | result.err(_) -> { return 0; };
+}
+
+def main(): int {
+    let failures: mutable int = 0;
+    let name: string = "Sultan";
+    let nums: vector int = [1, 2];
+    failures := failures + same(format("{} {:>4}|{:x}", [fmt_arg.text(&name), fmt_arg.int(42), fmt_arg.u8(255)]), "Sultan   42|ff");
+    failures := failures + same(format("{1} {0} {{}}", [fmt_arg.int(1), fmt_arg.bool(true)]), "true 1 {}");
+    failures := failures + same(format("[{0:>1$}] {3:.2$}", [fmt_arg.text(&name), fmt_arg.uint(8), fmt_arg.uint(2), fmt_arg.f64(3.14159)]), "[  Sultan] 3.14");
+    failures := failures + same(format("{:?}", [fmt_arg.ints(&nums)]), "[1, 2]");
+    failures := failures + same(format("no arguments", []), "no arguments");
+
+    // An element that is not a constructor call: counted, not type-checked.
+    let a: fmt_arg = fmt_arg.int(7);
+    failures := failures + same(format("{:#x}", [a]), "0x7");
+
+    // Arguments bound with let: the format string's syntax is checked at
+    // compile time, the arguments at run time.
+    let two: vector fmt_arg = [fmt_arg.int(1), fmt_arg.int(2)];
+    failures := failures + is_error(format("{}", two));
+
+    // A format string built at run time is checked when it is used.
+    let template: string = "{:x}";
+    failures := failures + is_error(format(template, [fmt_arg.text(&name)]));
+
+    if (failures != 0) { return failures; };
+    return 42;
+}

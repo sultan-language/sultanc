@@ -1,4 +1,4 @@
-// تشخيص: SULTANC-NAME-UNKNOWN
+// تشخيص: SULTANC-NAME-PRIVATE
 // اختبار: رفض
 // خروج: 1
 from std.fs import افتح_للقراءة;

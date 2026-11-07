@@ -1,0 +1,106 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 0
+// نظير: tests/ar/ispeak/check_enumerations.sn
+import std.fs.read_file;
+import std.text.builder;
+import std.text.from_bytes;
+import std.text.search;
+import std.io.print;
+import compiler.diagnostics.identity;
+import compiler.diagnostics.reason;
+import compiler.diagnostics.registry;
+import compiler.diagnostics.schema;
+import compiler.ispeak.keys.surface;
+
+// The enumerations كل_أسباب_التشخيص, كل_معرفات_التشخيص, كل_مفاتيح_النص_المترجم
+// and كل_مفاتيح_الصياغة are written by hand. This test reads each type's
+// declaration from the compiler source and requires every variant to be listed
+// exactly once, so a missing entry fails here instead of silently shrinking
+// every table check that iterates the list. Run from the repository root.
+
+// Variant names of `عام نوع <name> =` up to the closing `;`.
+def متغيرات_نوع(المصدر: &string, الترويسة: &string): vector string {
+    let الناتج: mutable vector string = [];
+    let العدد: uint = length(*المصدر) as uint;
+    let ف: mutable uint = 0;
+    match ابحث_نصا(المصدر, الترويسة) with
+    | option.none -> { return الناتج; }
+    | option.some(الموضع) -> { ف := الموضع; };
+    // Skip the header line itself.
+    while (ف < العدد && (*المصدر)[ف] != 0x0A) { ف := ف + 1; }
+    let انتهى: mutable bool = false;
+    while (ف < العدد && !انتهى) {
+        ف := ف + 1;
+        while (ف < العدد && (*المصدر)[ف] == 0x20) { ف := ف + 1; }
+        if (ف < العدد && (*المصدر)[ف] == 0x3B) {
+            انتهى := true;
+        } else if ((ف + 1) < العدد && (*المصدر)[ف] == 0x7C && (*المصدر)[ف + 1] == 0x20) {
+            ف := ف + 2;
+            let الاسم: mutable vector u8 = [];
+            while (ف < العدد && (*المصدر)[ف] != 0x20 && (*المصدر)[ف] != 0x0A && (*المصدر)[ف] != 0x0D) {
+                append(الاسم, (*المصدر)[ف]);
+                ف := ف + 1;
+            }
+            append(الناتج, من_بايتات(&الاسم));
+        };
+        while (ف < العدد && (*المصدر)[ف] != 0x0A) { ف := ف + 1; }
+    }
+    return الناتج;
+}
+
+def علامة_إلحاق(النوع: &string, الاسم: &string): string {
+    let الباني: mutable باني_نص = أنشئ_باني_نص();
+    let البداية: string = "ألحق(الناتج, ";
+    let النقطة: string = ".";
+    let النهاية: string = "());";
+    let أ: bool = ألحق_نصا_بباني_النص(&mutable الباني, &البداية);
+    let ب: bool = ألحق_نصا_بباني_النص(&mutable الباني, النوع);
+    let ج: bool = ألحق_نصا_بباني_النص(&mutable الباني, &النقطة);
+    let د: bool = ألحق_نصا_بباني_النص(&mutable الباني, الاسم);
+    let هـ: bool = ألحق_نصا_بباني_النص(&mutable الباني, &النهاية);
+    return نص_باني_النص(&الباني);
+}
+
+def اقرأ_أو_فارغ(المسار: string): string {
+    match اقرأ_الملف(&المسار) with
+    | result.ok(النص) -> { return النص; }
+    | result.err(_) -> { return ""; };
+}
+
+// 0 when every variant of the type is listed in the enumeration file and the
+// list has exactly as many entries; otherwise how many are missing (at least 1).
+def تحقق_تعداد(
+    ملف_النوع: string, الترويسة: string, ملف_القائمة: string, النوع: string, طول_القائمة: uint
+): uint {
+    let المصدر: string = اقرأ_أو_فارغ(ملف_النوع);
+    let القائمة: string = اقرأ_أو_فارغ(ملف_القائمة);
+    let المتغيرات: vector string = متغيرات_نوع(&المصدر, &الترويسة);
+    if ((length(المتغيرات) as uint) == 0) {
+        let ت: result int, int = اطبع_خطأ("تعذر قراءة تصريح النوع ");
+        let ث: result int, int = اطبع_خطأ(النوع);
+        return 1;
+    };
+    let المفقود: mutable uint = 0;
+    let ف: mutable uint = 0;
+    while (ف < (length(المتغيرات) as uint)) {
+        let العلامة: string = علامة_إلحاق(&النوع, &المتغيرات[ف]);
+        if (!يحتوي_نصا(&القائمة, &العلامة)) {
+            let ت: result int, int = اطبع_خطأ("غير مدرج في التعداد: ");
+            let ث: result int, int = اطبع_خطأ(انسخ_نص(&العلامة));
+            let ج: result int, int = اطبع_خطأ("\n");
+            المفقود := المفقود + 1;
+        };
+        ف := ف + 1;
+    }
+    if (المفقود == 0 && طول_القائمة != (length(المتغيرات) as uint)) { return 1; };
+    return المفقود;
+}
+
+def main(): int {
+    if (تحقق_تعداد("compiler/diagnostics/reason.sn", "عام نوع سبب_تشخيص =", "compiler/diagnostics/reason.sn", "سبب_تشخيص", length(كل_أسباب_التشخيص()) as uint) != 0) { return 1; };
+    if (تحقق_تعداد("compiler/diagnostics/identity.sn", "عام نوع معرف_تشخيص =", "compiler/diagnostics/registry.sn", "معرف_تشخيص", length(كل_معرفات_التشخيص()) as uint) != 0) { return 2; };
+    if (تحقق_تعداد("compiler/ispeak/keys/surface.sn", "عام نوع مفتاح_نص_مترجم =", "compiler/ispeak/keys/surface.sn", "مفتاح_نص_مترجم", length(كل_مفاتيح_النص_المترجم()) as uint) != 0) { return 3; };
+    if (تحقق_تعداد("compiler/diagnostics/schema.sn", "عام نوع مفتاح_صياغة =", "compiler/diagnostics/schema.sn", "مفتاح_صياغة", length(كل_مفاتيح_الصياغة()) as uint) != 0) { return 4; };
+    return 0;
+}

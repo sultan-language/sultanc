@@ -1,0 +1,108 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/stdlib/error/bidi_isolation.sn
+// std.text.bidi (docs/ERRORS.md): the direction of a text's first strong
+// character, isolates U+2068 … U+2069, isolation only where the directions
+// differ; and error_describe_in isolating a Latin message inside Arabic
+// text. Patterns use the canonical Arabic variant names.
+import std.error.failure;
+import std.text.language;
+import std.text.bidi;
+import std.text.compare;
+import std.text.from_bytes;
+
+// U+2068, the text, U+2069, written out byte by byte.
+def isolated(text: string): string {
+    let bytes: mutable vector u8 = [];
+    append(bytes, 0xE2 as u8);
+    append(bytes, 0x81 as u8);
+    append(bytes, 0xA8 as u8);
+    append_text_bytes(&mutable bytes, text);
+    append(bytes, 0xE2 as u8);
+    append(bytes, 0x81 as u8);
+    append(bytes, 0xA9 as u8);
+    return bytes as string;
+}
+
+def concat(parts: &vector string): string {
+    let bytes: mutable vector u8 = [];
+    let count: uint = length(*parts) as uint;
+    let i: mutable uint = 0;
+    while (i < count) {
+        append_text_bytes(&mutable bytes, copy_text(&(*parts)[i]));
+        i := i + 1;
+    }
+    return bytes as string;
+}
+
+// 0 neutral, 1 left-to-right, 2 right-to-left.
+def direction(text: string): int {
+    match text_direction_of(&text) with
+    | اتجاه_نص.محايد -> { return 0; }
+    | اتجاه_نص.من_اليسار_إلى_اليمين -> { return 1; }
+    | اتجاه_نص.من_اليمين_إلى_اليسار -> { return 2; };
+}
+
+def equals(actual: string, expected: string): bool {
+    return texts_equal(&actual, &expected);
+}
+
+def in_arabic_context(text: string): string {
+    return bidi_isolate_in(&text, text_direction.right_to_left());
+}
+
+def in_english_context(text: string): string {
+    return bidi_isolate_in(&text, text_direction.left_to_right());
+}
+
+def main(): int {
+    // The first strong character decides.
+    if (direction("config.toml") != 1 || direction("مرحبا") != 2 || direction("123 !") != 0) { return 1; };
+    if (direction("  ملف config") != 2 || direction("config ملف") != 1 || direction("") != 0) { return 2; };
+    if (direction("Привет") != 1 || direction("שלום") != 2 || direction("٣٤٥ ۶") != 0) { return 3; };
+    // What lies inside an isolate does not count.
+    if (direction(isolated("config")) != 0) { return 4; };
+    let inside_isolate: mutable vector string = [];
+    append(inside_isolate, isolated("config"));
+    append(inside_isolate, " ملف");
+    if (direction(concat(&inside_isolate)) != 2) { return 5; };
+
+    // Isolation: always, or only where the directions differ.
+    let file_name: string = "config.toml";
+    let always_isolated: string = bidi_isolate(&file_name);
+    if ((length(always_isolated) as uint) != 17) { return 6; };
+    if (!equals(always_isolated, isolated("config.toml"))) { return 7; };
+    if (!equals(in_arabic_context("config.toml"), isolated("config.toml"))) { return 8; };
+    if (!equals(in_english_context("config.toml"), "config.toml")) { return 9; };
+    if (!equals(in_arabic_context("ملف الإعدادات"), "ملف الإعدادات")) { return 10; };
+    if (!equals(in_english_context("ملف الإعدادات"), isolated("ملف الإعدادات"))) { return 11; };
+    if (!equals(in_arabic_context("8080"), "8080")) { return 12; };
+    if (!equals(in_arabic_context("المسار /etc/app"), "المسار /etc/app")) { return 13; };
+    let neutral_context: string = bidi_isolate_in(&file_name, text_direction.neutral());
+    if (!equals(neutral_context, "config.toml")) { return 14; };
+
+    // A Latin message inside Arabic text: an English author's error with an
+    // Arabic version on the outer error only, rendered for Arabic.
+    let root: Error = error_new("file not found: settings.toml");
+    let top: mutable Error = error_caused_by("while reading the settings", root);
+    error_add_language_version(&mutable top, "ar", "أثناء قراءة الإعدادات");
+    error_add_note(&mutable top, "path: /etc/app/settings.toml");
+    error_add_note(&mutable top, "المسار من APP_SETTINGS");
+    let parts: mutable vector string = [];
+    append(parts, "أثناء قراءة الإعدادات\nملاحظة: ");
+    append(parts, isolated("path: /etc/app/settings.toml"));
+    append(parts, "\nملاحظة: المسار من APP_SETTINGS\nبسبب: ");
+    append(parts, isolated("file not found: settings.toml"));
+    let expected: string = concat(&parts);
+    let arabic: string = "ar-EG";
+    let locale: Locale = locale_from_tag(&arabic);
+    let actual: string = error_describe_in(&top, &locale);
+    if (!texts_equal(&actual, &expected)) { return 15; };
+    // error_describe never isolates.
+    let not_isolated: string = "while reading the settings\nملاحظة: path: /etc/app/settings.toml\nملاحظة: المسار من APP_SETTINGS\nبسبب: file not found: settings.toml";
+    let description: string = error_describe(&top);
+    if (!texts_equal(&description, &not_isolated)) { return 16; };
+    return 42;
+}

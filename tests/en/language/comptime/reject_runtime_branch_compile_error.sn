@@ -1,0 +1,21 @@
+// اختبار: رفض
+// خروج: 1
+// تشخيص: SULTANC-COMPTIME-FAILED
+// نظير: tests/ar/language/comptime/reject_runtime_branch_compile_error.sn
+// A compile_error left on a path run-time data decides is analyzed in the
+// specialized copy and fails the compilation: compile_error never
+// becomes a run-time trap in specialized code.
+import std.meta.reflect;
+
+def guarded(comptime n: int, x: int): int {
+    if (x > n) {
+        compile_error("x is only known at run time");
+    };
+    return x;
+}
+
+def main(): int {
+    let x: mutable int = 1;
+    x := x + 1;
+    return guarded(5, x);
+}

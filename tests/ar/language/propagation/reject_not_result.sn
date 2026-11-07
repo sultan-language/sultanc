@@ -1,0 +1,14 @@
+// اختبار: رفض
+// تشخيص: SULTANC-TYPE-RETURN-MISMATCH
+// نظير: tests/en/language/propagation/reject_not_result.sn
+// `؟` returns the error, so the function must return a result (or an option
+// for an option): in a function returning `عدد` it is a return type
+// mismatch at the `؟`, naming both types.
+عرف حلل(س: عدد): نتيجة عدد, نص {
+    أرجع نتيجة.نجح(س);
+}
+
+عرف الرئيسية(): عدد {
+    دع ق: عدد = حلل(1)؟;
+    أرجع ق;
+}

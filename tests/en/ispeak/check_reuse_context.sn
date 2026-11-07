@@ -1,0 +1,122 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 0
+// نظير: tests/ar/ispeak/check_reuse_context.sn
+import compiler.diagnostics.identity;
+import std.text.from_bytes;
+import compiler.diagnostics.reason;
+import compiler.ispeak.format.facts;
+import compiler.diagnostics.schema;
+import compiler.ispeak.ispeak;
+import std.text.builder;
+import std.text.compare;
+
+// Every active identity with all 22 fields must yield byte-identical output
+// through the allocation-sensitive sink and the owned-text API, EN and AR.
+// Both inputs are built from the same facts: a context for the sink and the
+// same context wrapped as a payload for the owned-text API.
+def check(builder: &mutable text_builder, language: لغة_تشخيص, key: مفتاح_رسالة_تشخيص, context: حقائق_سياق_رسالة, payload: حقائق_رسالة): bool {
+    text_builder_clear(builder);
+    if (!ألحق_تشخيص_بسياق(builder, language, key, context)) { return false; };
+    let appended: string = text_builder_text(builder);
+    match رسالة_تشخيص_بحجج(language, key, payload) with
+    | option.some(owned) -> { return texts_equal(&appended, &owned); }
+    | option.none -> { return false; };
+}
+
+def full_context(): حقائق_سياق_رسالة {
+    let fact_0: string = "FACT_00_UNIQUE_MARKER";
+    let fact_1: string = "FACT_01_UNIQUE_MARKER";
+    let fact_2: string = "FACT_02_UNIQUE_MARKER";
+    let fact_3: string = "FACT_03_UNIQUE_MARKER";
+    let fact_4: string = "FACT_04_UNIQUE_MARKER";
+    let fact_5: string = "FACT_05_UNIQUE_MARKER";
+    let fact_6: string = "FACT_06_UNIQUE_MARKER";
+    let fact_7: string = "FACT_07_UNIQUE_MARKER";
+    let fact_8: string = "FACT_08_UNIQUE_MARKER";
+    let fact_9: string = "FACT_09_UNIQUE_MARKER";
+    let fact_10: string = "FACT_10_UNIQUE_MARKER";
+    let fact_11: string = "FACT_11_UNIQUE_MARKER";
+    let fact_12: string = "FACT_12_UNIQUE_MARKER";
+    let fact_13: string = "FACT_13_UNIQUE_MARKER";
+    let fact_14: string = "FACT_14_UNIQUE_MARKER";
+    let fact_15: string = "FACT_15_UNIQUE_MARKER";
+    let fact_16: string = "FACT_16_UNIQUE_MARKER";
+    let fact_17: string = "FACT_17_UNIQUE_MARKER";
+    let fact_18: string = "FACT_18_UNIQUE_MARKER";
+    let fact_19: string = "FACT_19_UNIQUE_MARKER";
+    let fact_20: string = "FACT_20_UNIQUE_MARKER";
+    let fact_21: string = "FACT_21_UNIQUE_MARKER";
+    let context: حقائق_سياق_رسالة = {
+        القيمة: option.some(قيمة_حجة_رسالة.نصية(انسخ_نص(&fact_0))),
+        المتوقع: option.some(قيمة_حجة_رسالة.نصية(انسخ_نص(&fact_1))),
+        الاستبدال: option.some(قيمة_حجة_رسالة.نصية(انسخ_نص(&fact_2))),
+        الموجود: option.some(قيمة_حجة_رسالة.نصية(انسخ_نص(&fact_3))),
+        الفهرس: option.some(قيمة_حجة_رسالة.نصية(انسخ_نص(&fact_4))),
+        الطول: option.some(قيمة_حجة_رسالة.نصية(انسخ_نص(&fact_5))),
+        المجال: option.some(قيمة_حجة_رسالة.نصية(انسخ_نص(&fact_6))),
+        النمط: option.some(قيمة_حجة_رسالة.نصية(انسخ_نص(&fact_7))),
+        المسار: option.some(قيمة_حجة_رسالة.نصية(انسخ_نص(&fact_8))),
+        الرمز: option.some(قيمة_حجة_رسالة.نصية(انسخ_نص(&fact_9))),
+        النوع: option.some(قيمة_حجة_رسالة.نصية(انسخ_نص(&fact_10))),
+        السياق: option.some(قيمة_حجة_رسالة.نصية(انسخ_نص(&fact_11))),
+        المرحلة: option.some(قيمة_حجة_رسالة.نصية(انسخ_نص(&fact_12))),
+        الهدف: option.some(قيمة_حجة_رسالة.نصية(انسخ_نص(&fact_13))),
+        الدالة: option.some(قيمة_حجة_رسالة.نصية(انسخ_نص(&fact_14))),
+        الكتلة: option.some(قيمة_حجة_رسالة.نصية(انسخ_نص(&fact_15))),
+        التعليمة: option.some(قيمة_حجة_رسالة.نصية(انسخ_نص(&fact_16))),
+        العملية: option.some(قيمة_حجة_رسالة.نصية(انسخ_نص(&fact_17))),
+        البدائي: option.some(قيمة_حجة_رسالة.نصية(انسخ_نص(&fact_18))),
+        المصدر: option.some(قيمة_حجة_رسالة.نصية(انسخ_نص(&fact_19))),
+        الوجهة: option.some(قيمة_حجة_رسالة.نصية(انسخ_نص(&fact_20))),
+        السبب: option.some(قيمة_حجة_رسالة.نصية(انسخ_نص(&fact_21)))
+    };
+    return context;
+}
+
+def empty_full_context(): حقائق_سياق_رسالة {
+    let context_is_empty: حقائق_سياق_رسالة = {
+        القيمة: option.none(),
+        المتوقع: option.none(),
+        الاستبدال: option.none(),
+        الموجود: option.none(),
+        الفهرس: option.none(),
+        الطول: option.none(),
+        المجال: option.none(),
+        النمط: option.none(),
+        المسار: option.none(),
+        الرمز: option.none(),
+        النوع: option.none(),
+        السياق: option.none(),
+        المرحلة: option.none(),
+        الهدف: option.none(),
+        الدالة: option.none(),
+        الكتلة: option.none(),
+        التعليمة: option.none(),
+        العملية: option.none(),
+        البدائي: option.none(),
+        المصدر: option.none(),
+        الوجهة: option.none(),
+        السبب: option.none()
+    };
+    return context_is_empty;
+}
+
+def main(): int {
+    let builder: mutable text_builder = new_text_builder_with_capacity(1024 as uint);
+    let all_keys: vector مفتاح_رسالة_تشخيص = كل_مفاتيح_رسائل_التشخيص();
+    let number_value: mutable uint = 0;
+    let count: mutable uint = 0;
+    while (number_value < (length(all_keys) as uint)) {
+        let key: مفتاح_رسالة_تشخيص = all_keys[number_value];
+        if (!check(&mutable builder, لغة_تشخيص.الإنجليزية(), key, full_context(), حقائق_رسالة.سياق_تشخيص(full_context()))) { return 1; };
+        if (!check(&mutable builder, لغة_تشخيص.العربية(), key, full_context(), حقائق_رسالة.سياق_تشخيص(full_context()))) { return 2; };
+        count := count + 1;
+        number_value := number_value + 1;
+    }
+    if (count != (645 as uint)) { return 3; };
+    let empty_key: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.مسير_غير_صالح());
+    if (!check(&mutable builder, لغة_تشخيص.الإنجليزية(), empty_key, empty_full_context(), حقائق_رسالة.سياق_تشخيص(empty_full_context()))) { return 4; };
+    if (!check(&mutable builder, لغة_تشخيص.العربية(), empty_key, empty_full_context(), حقائق_رسالة.سياق_تشخيص(empty_full_context()))) { return 5; };
+    return 0;
+}

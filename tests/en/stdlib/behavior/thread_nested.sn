@@ -1,0 +1,55 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// Counterpart: tests/ar/stdlib/behavior/thread_nested.sn
+// (no pair directive: the interpreter runs one OS thread and stops at a spawn).
+// std.thread: nested threads. The main thread spawns four threads; each
+// spawns two inner threads, joins them, adds their values and returns the sum
+// through join. An inner thread returns the square of its number. The
+// program checks every outer thread's sum.
+import std.thread.thread;
+
+def square(n: u64): u64 { return n * n; }
+
+def run_inner(base: u64): u64 {
+    let total: mutable u64 = 0;
+    let handles: mutable vector value_join_handle<u64> = [];
+    let i: mutable u64 = 0;
+    while (i < 2) {
+        let number: u64 = (base * 2) + i;
+        match spawn_value(fn(): u64 -> square(number)) with
+        | result.ok(h) -> { append(handles, h); }
+        | result.err(_) -> { return 0; };
+        i := i + 1;
+    }
+    let j: mutable uint = 0;
+    while (j < (length(handles) as uint)) {
+        match join_value(&mutable handles[j]) with
+        | option.some(value) -> { total := total + value; }
+        | option.none -> { return 0; };
+        j := j + 1;
+    }
+    return total;
+}
+
+def main(): i32 {
+    let handles: mutable vector value_join_handle<u64> = [];
+    let i: mutable u64 = 0;
+    while (i < 4) {
+        let base: u64 = i;
+        match spawn_value(fn(): u64 -> run_inner(base)) with
+        | result.ok(h) -> { append(handles, h); }
+        | result.err(_) -> { return 1; };
+        i := i + 1;
+    }
+    let j: mutable uint = 0;
+    while (j < 4) {
+        let first: u64 = (j as u64) * 2;
+        let expected: u64 = (first * first) + ((first + 1) * (first + 1));
+        match join_value(&mutable handles[j]) with
+        | option.some(value) -> { if (value != expected) { return 2; }; }
+        | option.none -> { return 3; };
+        j := j + 1;
+    }
+    return 42;
+}

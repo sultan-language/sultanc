@@ -1,0 +1,12 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/en/language/surface/unicode_separators.sn
+// Non-ASCII separators between tokens: NBSP, BOM/ZWNBSP, LRM, RLM, ALM,
+// ideographic space. Explicit bidi overrides stay rejected (not tested here).
+عرف الرئيسية(): عدد {﻿
+    دع‏س: عدد = 40;‎
+    دع؜ص: عدد = 2;　
+    أرجع س + ص;
+}

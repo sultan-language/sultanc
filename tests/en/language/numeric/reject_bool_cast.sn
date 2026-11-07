@@ -1,0 +1,10 @@
+// اختبار: رفض
+// تشخيص: SULTANC-TYPE-MISMATCH
+// نظير: tests/ar/language/numeric/reject_bool_cast.sn
+// `as` does not convert a bool to an integer: no conversion joins the two
+// types, so the type checker rejects the cast itself (TYPE_SYSTEM.md,
+// "Numeric casts").
+def main(): int {
+    let b: bool = true;
+    return b as int;
+}

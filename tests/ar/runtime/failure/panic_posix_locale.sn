@@ -1,0 +1,16 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 1
+// تفاضلي: نعم
+// بيئة: SULTANC_LANG=en_US.UTF-8
+// خطأ-قياسي-ملف: panic_posix_locale.stderr
+// نظير: tests/en/runtime/failure/panic_posix_locale.sn
+// The program's language comes from std.text.system_language, the one
+// reading of the language variables (docs/ERRORS.md): a POSIX value
+// (en_US.UTF-8) names English, so the frame of إنهيار is English.
+استورد std.process.panic;
+
+عرف الرئيسية(): عدد {
+    إنهيار(«توقف عمدا»);
+    أرجع 0;
+}

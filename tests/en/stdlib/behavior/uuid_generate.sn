@@ -1,0 +1,40 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// New UUIDs: v4 and v7 carry their version and the RFC variant, two v4
+// values differ, and v7 values do not go backwards.
+import std.uuid.uuid;
+import std.uuid.generate;
+
+def main(): int {
+    match uuid_v4() with
+    | result.err(_) -> { return 1; }
+    | result.ok(first) -> {
+        if (uuid_version(&first) != 4) { return 2; };
+        match uuid_variant_of(&first) with
+        | بديل_معرّف_فريد.آي_إي_تي_إف -> { }
+        | _ -> { return 3; };
+        match uuid_v4() with
+        | result.err(_) -> { return 4; }
+        | result.ok(second) -> { if (uuid_equal(&first, &second)) { return 5; }; };
+    };
+    match uuid_v7() with
+    | result.err(_) -> { return 6; }
+    | result.ok(early) -> {
+        if (uuid_version(&early) != 7) { return 7; };
+        match uuid_v7() with
+        | result.err(_) -> { return 8; }
+        | result.ok(late) -> {
+            let a: vector u8 = uuid_bytes(&early);
+            let b: vector u8 = uuid_bytes(&late);
+            let i: mutable uint = 0;
+            let decided: mutable bool = false;
+            while (i < 6 && !decided) {
+                if (a[i] < b[i]) { decided := true; }
+                else if (a[i] > b[i]) { return 9; };
+                i := i + 1;
+            }
+        };
+    };
+    return 42;
+}

@@ -1,0 +1,72 @@
+// اختبار: تشغيل
+// أهداف: x86_64-linux
+// خروج: 0
+// نظير: tests/ar/stdlib/behavior/sync_single_thread.sn
+// std.sync on one thread, where native code and the interpreter agree: a
+// Mutex's with_lock and try_lock (none while it is held), an RwLock's
+// readers and writer, call_once running once, a OnceLock set once, a
+// notify with no waiter, and an Arc read through two handles.
+import std.sync.arc;
+import std.sync.mutex;
+import std.sync.rwlock;
+import std.sync.condvar;
+import std.sync.once;
+
+def add_ten(v: &mutable i64): i64 { *v := *v + 10; return *v; }
+def read(v: &mutable i64): i64 { return *v; }
+def read_shared(v: &i64): i64 { return *v; }
+def double(v: &mutable i64): void { *v := *v * 2; }
+
+def nested_try(m: &arc<mutex<i64>>, v: &mutable i64): bool {
+    // The lock is held here: try_lock reports none.
+    match try_lock(arc_get(m), fn(w: &mutable i64): i64 -> read(w)) with
+    | option.some(_) -> { return false; }
+    | option.none -> { return true; };
+}
+
+def count_run(c: &arc<mutex<i64>>): void { let n: i64 = with_lock(arc_get(c), fn(v: &mutable i64): i64 -> add_ten(v)); }
+def seven(): i64 { return 7; }
+
+type pair = { left: i64, right: string };
+
+def main(): i32 {
+    // A closure moves an owned capture, so code that needs the mutex inside
+    // its own closure shares it through an Arc, as in Rust.
+    let m: arc<mutex<i64>> = arc_new(mutex_new(5 as i64));
+    if (with_lock(arc_get(&m), fn(v: &mutable i64): i64 -> add_ten(v)) != (15 as i64)) { return 1; };
+    if (!with_lock(arc_get(&m), fn(v: &mutable i64): bool -> nested_try(&m, v))) { return 2; };
+    match try_lock(arc_get(&m), fn(v: &mutable i64): i64 -> read(v)) with
+    | option.some(n) -> { if (n != (15 as i64)) { return 3; }; }
+    | option.none -> { return 4; };
+    if (mutex_is_locked(arc_get(&m))) { return 5; };
+
+    let rw: rwlock<i64> = rwlock_new(21 as i64);
+    if (with_read(&rw, fn(v: &i64): i64 -> read_shared(v)) != (21 as i64)) { return 6; };
+    with_write(&rw, fn(v: &mutable i64): void -> double(v));
+    if (with_read(&rw, fn(v: &i64): i64 -> read_shared(v)) != (42 as i64)) { return 7; };
+
+    let counter: arc<mutex<i64>> = arc_new(mutex_new(0 as i64));
+    let o: once = once_new();
+    if (once_is_completed(&o)) { return 8; };
+    call_once(&o, fn(): void -> count_run(&counter));
+    call_once(&o, fn(): void -> count_run(&counter));
+    if (!once_is_completed(&o)) { return 9; };
+    if (with_lock(arc_get(&counter), fn(v: &mutable i64): i64 -> read(v)) != (10 as i64)) { return 10; };
+
+    let cell: once_lock<i64> = once_lock_new();
+    match once_lock_get(&cell) with | option.some(_) -> { return 11; } | option.none -> { };
+    if (*once_lock_get_or_init(&cell, fn(): i64 -> seven()) != (7 as i64)) { return 12; };
+    if (once_lock_set(&cell, 9 as i64)) { return 13; };
+    match once_lock_get(&cell) with | option.some(v) -> { if (*v != (7 as i64)) { return 14; }; } | option.none -> { return 15; };
+
+    let cv: condvar = condvar_new();
+    condvar_notify_one(&cv);
+    condvar_notify_all(&cv);
+
+    let value: pair = { left: 3, right: "four" };
+    let a: arc<pair> = arc_new(value);
+    let b: arc<pair> = arc_clone(&a);
+    let p: &pair = arc_get(&b);
+    if ((*p).left + (length((*p).right) as i64) != (7 as i64)) { return 16; };
+    return 0;
+}

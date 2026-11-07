@@ -1,0 +1,56 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// Allocator churn: vectors of small and large sizes are built, grown,
+// released out of order and rebuilt, so freed blocks are split, merged and
+// returned at the top. Every element is checked.
+def fill(count: uint, seed: uint): vector uint {
+    let items: mutable vector uint = [];
+    let i: mutable uint = 0;
+    while (i < count) {
+        append(items, seed + i);
+        i := i + 1;
+    }
+    return items;
+}
+
+def intact(items: &vector uint, count: uint, seed: uint): bool {
+    if ((length(*items) as uint) != count) { return false; };
+    let i: mutable uint = 0;
+    while (i < count) {
+        if ((*items)[i] != seed + i) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+
+def size_of(round: uint, slot: uint): uint {
+    let pick: uint = (round * 7 + slot * 13) % 6;
+    if (pick == 0) { return 3; };
+    if (pick == 1) { return 40; };
+    if (pick == 2) { return 700; };
+    if (pick == 3) { return 9000; };
+    if (pick == 4) { return 30000; };
+    return 120;
+}
+
+def main(): int {
+    let round: mutable uint = 0;
+    let kept: mutable vector vector uint = [];
+    while (round < 40) {
+        let a: vector uint = fill(size_of(round, 1), round);
+        let b: vector uint = fill(size_of(round, 2), round + 1);
+        let c: vector uint = fill(size_of(round, 3), round + 2);
+        if (!intact(&a, size_of(round, 1), round)) { return 1; };
+        if (!intact(&b, size_of(round, 2), round + 1)) { return 2; };
+        if (!intact(&c, size_of(round, 3), round + 2)) { return 3; };
+        if (round % 5 == 0) { append(kept, fill(size_of(round, 4), round * 3)); };
+        round := round + 1;
+    }
+    let k: mutable uint = 0;
+    while (k < (length(kept) as uint)) {
+        if (!intact(&kept[k], size_of(k * 5, 4), k * 15)) { return 4; };
+        k := k + 1;
+    }
+    return 42;
+}

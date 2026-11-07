@@ -1,0 +1,14 @@
+// اختبار: رفض
+// خروج: 1
+// تشخيص: SULTANC-FORMAT-STRING
+// نظير: tests/ar/stdlib/fmt/reject_format_let_bound_syntax.sn
+// With the arguments bound by let, the compile-time check still rejects a
+// format string whose syntax is wrong: a lone `}`.
+import std.fmt.fmt;
+
+def main(): int {
+    let one: vector fmt_arg = [fmt_arg.int(1)];
+    match format("a } {}", one) with
+    | result.ok(_) -> { return 0; }
+    | result.err(_) -> { return 1; };
+}

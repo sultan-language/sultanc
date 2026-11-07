@@ -1,0 +1,24 @@
+// اختبار: رفض
+// تشخيص: SULTANC-OWNERSHIP-USE-AFTER-MOVE
+// نظير: tests/en/diagnostics/safety/while_continue_condition_move.sn
+// The condition moves the text; a continue reaches it again without a new value.
+عرف استهلك(القيمة: نص): منطقي {
+    أرجع الطول(القيمة) > 0;
+}
+
+عرف جديد(): نص {
+    أرجع «مجددا»;
+}
+
+عرف الرئيسية(): عدد {
+    دع النص: متغير نص = «بداية»;
+    دع العداد: متغير عدد = 0;
+    طالما (استهلك(النص)) {
+        العداد := العداد + 1;
+        لو (العداد > 3) {
+            تابع_حلقة;
+        };
+        النص := جديد();
+    }
+    أرجع العداد;
+}

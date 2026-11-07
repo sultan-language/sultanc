@@ -1,0 +1,7 @@
+// اختبار: رفض
+// تشخيص: SULTANC-TYPE-ADDRESS-OF-NON-LVALUE
+// نظير: tests/ar/diagnostics/semantic/address_of_value.sn
+def main(): i32 {
+    let reference: & i32 = &5;
+    return 0;
+}

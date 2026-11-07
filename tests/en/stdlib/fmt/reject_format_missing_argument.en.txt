@@ -1,0 +1,6 @@
+error[SULTANC-FORMAT-STRING]: invalid format string — The format argument's zero-based position is 1. The format string refers to an argument the call does not pass.
+  --> tests/en/stdlib/fmt/reject_format_missing_argument.sn:11:22..11:23
+    |
+ 11 |     match format("{} {}", [fmt_arg.text(&name)]) with
+    |                      ^
+    |

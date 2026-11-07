@@ -23,12 +23,12 @@ def interface_for(path: string): int {
         match ابن_واجهة_وحدة(req) with
         | نتيجة_بناء_واجهة_وحدة.مرفوضة(_) -> { return 20; }
         | نتيجة_بناء_واجهة_وحدة.مكتملة(frontend) -> {
-            if ((length(frontend.علاقات_هرم_الأنواع) as غير_موقع) < 2) { return 21; }
+            if ((length(frontend.علاقات_هرم_الأنواع) as طبيعي) < 2) { return 21; }
             let first: علاقة_هرم_نوع = frontend.علاقات_هرم_الأنواع[0];
             let supers: vector معرف_رمز = أنواع_عليا_لرمز_واجهة(&frontend, first.النوع_الفرعي);
             let subs: vector معرف_رمز = أنواع_فرعية_لرمز_واجهة(&frontend, first.النوع_العلوي);
-            if ((length(supers) as غير_موقع) == 0) { return 22; }
-            if ((length(subs) as غير_موقع) == 0) { return 23; }
+            if ((length(supers) as طبيعي) == 0) { return 22; }
+            if ((length(subs) as طبيعي) == 0) { return 23; }
             return 42;
         };
     };
@@ -53,10 +53,10 @@ def recovery_for(path: string): int {
         | نتيجة_بناء_واجهة_وحدة.مكتملة(frontend) -> {
             if (frontend.كاملة_دلاليا) { return 32; }
             if (frontend.تشخيصات_الأدوات.عدد_الأخطاء == 0) { return 33; }
-            if ((length(frontend.الوحدات) as غير_موقع) == 0) { return 34; }
-            let source_id: غير_موقع = frontend.الوحدات[0].المصدر.المعرف;
+            if ((length(frontend.الوحدات) as طبيعي) == 0) { return 34; }
+            let source_id: طبيعي = frontend.الوحدات[0].المصدر.المعرف;
             let symbols: vector رمز_دلالي = رموز_واجهة_لمصدر(&frontend, source_id);
-            if ((length(symbols) as غير_موقع) < 2) { return 35; }
+            if ((length(symbols) as طبيعي) < 2) { return 35; }
             return 42;
         };
     };

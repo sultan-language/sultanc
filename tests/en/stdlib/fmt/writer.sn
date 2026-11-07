@@ -1,0 +1,71 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/stdlib/fmt/writer.sn
+// std.fmt into a std.io writer (Rust's write! on io::Write, Go's
+// fmt.Fprintf): lines written to a file handle through write_fmt and, with
+// one reused formatter, write_fmt_with, then read back; a writer's failure is
+// write_failed with the writer's status, and a format error writes nothing.
+import std.fmt.fmt;
+import std.fs.temporary;
+import std.fs.handle;
+import std.fs.read_file;
+import std.fs.mutation;
+import std.text.compare;
+import std.text.from_bytes;
+
+def refuse(target: &int, bytes: &vector u8, offset: int, count: int): result int, int {
+    return result.err(-5);
+}
+
+def main(): int {
+    let prefix: string = "sultanc-fmt-";
+    match create_temp_file(&prefix) with
+    | result.ok(file) -> { return run(file); }
+    | result.err(_) -> { return 2; };
+}
+
+def run(file: temp_file): int {
+    let failures: mutable int = 0;
+    let name: string = "سلمى";
+    match write_fmt(&file.المقبض, file_handle_write, "{:<6}|{:>3}\n", [fmt_arg.text(&name), fmt_arg.int(3)]) with
+    | result.ok(n) -> { if (n != 15) { failures := failures + 1; }; }
+    | result.err(_) -> { failures := failures + 1; };
+    let out: mutable formatter = new_formatter();
+    let i: mutable int = 1;
+    while (i <= 3) {
+        match write_fmt_with(&mutable out, &file.المقبض, file_handle_write, "{}:{:03}:{:.2}\n", [fmt_arg.int(i), fmt_arg.int(i * i), fmt_arg.f64((i as f64) / 4.0)]) with
+        | result.ok(n) -> { if (n != 11) { failures := failures + 1; }; }
+        | result.err(_) -> { failures := failures + 1; };
+        i := i + 1;
+    }
+    // A format error writes nothing. A format string that is not a literal
+    // is checked at run time.
+    let missing: string = "{}\n";
+    match write_fmt_with(&mutable out, &file.المقبض, file_handle_write, missing, []) with
+    | result.ok(_) -> { failures := failures + 1; }
+    | result.err(_) -> { };
+    let path: string = copy_text(&file.المسار);
+    let closed: result string, int = close_temp_file(file);
+    match read_file(&path) with
+    | result.ok(text) -> {
+        let wanted: string = "سلمى  |  3\n1:001:0.25\n2:004:0.50\n3:009:0.75\n";
+        if (!texts_equal(&text, &wanted)) { failures := failures + 1; };
+    }
+    | result.err(_) -> { failures := failures + 1; };
+    let removed: result int, int = أزل_ملفا(&path);
+
+    // A failing writer.
+    let target: int = 0;
+    match write_fmt(&target, refuse, "{}", [fmt_arg.int(1)]) with
+    | result.ok(_) -> { failures := failures + 1; }
+    | result.err(e) -> {
+        match e with
+        | خطأ_تنسيق.فشل_الكتابة(code) -> { if (code != -5) { failures := failures + 1; }; }
+        | _ -> { failures := failures + 1; };
+    };
+
+    if (failures != 0) { return 1; };
+    return 42;
+}

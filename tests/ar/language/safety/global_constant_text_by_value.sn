@@ -1,0 +1,15 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 15
+// نظير: tests/en/language/safety/global_constant_text_by_value.sn
+// An immutable text global is a constant: each read by value is a fresh copy.
+دع التحية: نص = «hello»;
+
+عرف خذ(القيمة: نص): عدد {
+    أرجع الطول(القيمة);
+}
+
+عرف الرئيسية(): عدد {
+    دع النسخة: نص = التحية;
+    أرجع الطول(النسخة) + خذ(التحية) + خذ(التحية);
+}

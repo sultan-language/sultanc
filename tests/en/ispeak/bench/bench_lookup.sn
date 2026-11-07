@@ -1,0 +1,30 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 0
+// نظير: tests/ar/ispeak/bench/bench_lookup.sn
+import compiler.diagnostics.identity;
+import compiler.diagnostics.reason;
+import compiler.diagnostics.schema;
+import compiler.ispeak.ispeak;
+
+// A mixed-ID benchmark: direct typed message lookup in both locales.
+// Deliberately does not decode numeric IDs or render JSON; the checksum
+// keeps every result observable to the compiled program.
+def main(): int {
+    let keys: vector مفتاح_رسالة_تشخيص = [
+        مفتاح_رسالة_تشخيص.سبب(سبب_تشخيص.سبب_واجهة_الاستدعاء_غير_صحيح_نوع_معرف()),
+        مفتاح_رسالة_تشخيص.سبب(سبب_تشخيص.سبب_مسير_غير_صحيح_موسوم_نوع()),
+        مفتاح_رسالة_تشخيص.سبب(سبب_تشخيص.سبب_نوع_غير_مدعوم_تعبير_نوع())
+    ];
+    let sum: mutable uint = 0;
+    let i: mutable uint = 0;
+    while (i < 240000) {
+        let key: مفتاح_رسالة_تشخيص = keys[i % 3];
+        let english_text: string = رسالة_تشخيص(لغة_تشخيص.الإنجليزية(), key);
+        let arabic_text: string = رسالة_تشخيص(لغة_تشخيص.العربية(), key);
+        sum := sum + (length(english_text) as uint) + (length(arabic_text) as uint);
+        i := i + 1;
+    }
+    if (sum != 35360000) { return 1; };
+    return 0;
+}

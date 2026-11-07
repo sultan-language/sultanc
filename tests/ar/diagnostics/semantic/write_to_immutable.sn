@@ -1,0 +1,8 @@
+// اختبار: رفض
+// تشخيص: SULTANC-MUTABILITY-WRITE-TO-IMMUTABLE
+// نظير: tests/en/diagnostics/semantic/write_to_immutable.sn
+عرف الرئيسية(): ص32 {
+    دع العدد: ص32 = 1;
+    العدد := 2;
+    أرجع العدد;
+}

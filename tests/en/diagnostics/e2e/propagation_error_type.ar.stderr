@@ -1,0 +1,6 @@
+خطأ[SULTANC-CALL-ARGUMENT-TYPE-MISMATCH]: نوع حجة النداء غير مطابق — نوع الحجة المتوقع هو ⁨`ط8`⁩، لكن نوع الحجة الفعلي هو ⁨`نص`⁩. موضع الحجة بدءا من الصفر هو 0. نوع إحدى حجج النداء يخالف نوع معامل الدالة.
+  --> tests/en/diagnostics/e2e/propagation_error_type.sn:13:26..13:27
+    |
+ 13 |     let v: int = parse(x)?;
+    |                          ^
+    |

@@ -1,0 +1,7 @@
+// اختبار: رفض
+// تشخيص: SULTANC-CALL-ARGUMENT-COUNT-MISMATCH
+// نظير: tests/ar/diagnostics/e2e/argument_count_none.sn
+// خرج-تشخيص-عربي: argument_count_none.ar.stderr
+// خرج-تشخيص-إنجليزي: argument_count_none.en.stderr
+def zero(): i32 { return 0; }
+def main(): i32 { return zero(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11); }

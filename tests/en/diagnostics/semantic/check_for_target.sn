@@ -1,0 +1,12 @@
+// اختبار: رفض
+// تشخيص: SULTANC-TARGET-FEATURE-UNSUPPORTED
+// خروج: 3
+// نظير: tests/ar/diagnostics/semantic/check_for_target.sn
+// Declared only for wasm32: `check` on the host rejects the use, and
+// `check --target=wasm32-wasi` accepts it (tests/runner/suites/cli.sn).
+if (target.architecture == "wasm32") {
+    def wasm_value(): i32 { return 0; }
+}
+def main(): i32 {
+    return wasm_value();
+}

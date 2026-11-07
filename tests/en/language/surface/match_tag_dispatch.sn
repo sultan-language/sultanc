@@ -1,0 +1,49 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/language/surface/match_tag_dispatch.sn
+// Tag dispatch with payload arms: arms of one tag are tried in source order
+// (P6(0) before P6(x)), a failing payload test falls through to the final
+// wildcard, and a match over a high subrange of tags (W12..W16) dispatches
+// through a table offset by the lowest tag.
+type Code =
+    | C0 | C1 | C2 | C3 | C4 | C5
+    | P6 of int | P7 of int | C8 | C9 | P10 of int | C11;
+
+type Wide =
+    | W0 | W1 | W2 | W3 | W4 | W5 | W6 | W7 | W8 | W9
+    | W10 | W11 | W12 | W13 | W14 | W15 | W16 | W17 | W18 | W19;
+
+def score(code: Code): int {
+    match code with
+    | Code.C0 -> { return 1; }
+    | Code.P6(0) -> { return 2; }
+    | Code.C1 -> { return 3; }
+    | Code.P6(x) -> { return x + 4; }
+    | Code.C2 -> { return 5; }
+    | Code.P7(x) -> { return x * 2; }
+    | Code.C3 -> { return 7; }
+    | Code.P10(9) -> { return 11; }
+    | Code.C11 -> { return 13; }
+    | _ -> { return 0; };
+}
+
+def tail(wide: Wide): int {
+    match wide with
+    | Wide.W12 -> { return 1; }
+    | Wide.W13 -> { return 2; }
+    | Wide.W14 -> { return 3; }
+    | Wide.W15 -> { return 4; }
+    | Wide.W16 -> { return 5; }
+    | _ -> { return 0; };
+}
+
+def main(): int {
+    let first: int = score(Code.C0()) + score(Code.P6(0)) + score(Code.C1())
+        + score(Code.P6(5)) + score(Code.C2()) + score(Code.P7(3))
+        + score(Code.C3()) + score(Code.P10(1)) + score(Code.C9());
+    let balance: int = score(Code.P10(9)) - score(Code.C11()) + 2;
+    let second: int = tail(Wide.W14()) + tail(Wide.W16()) + tail(Wide.W3()) + tail(Wide.W12());
+    return first + balance + second;
+}

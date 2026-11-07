@@ -1,0 +1,24 @@
+// اختبار: رفض
+// تشخيص: SULTANC-OWNERSHIP-USE-AFTER-MOVE
+// نظير: tests/ar/diagnostics/safety/while_continue_condition_move.sn
+// The condition moves the text; a continue reaches it again without a new value.
+def consume(value: string): bool {
+    return length(value) > 0;
+}
+
+def fresh(): string {
+    return "again";
+}
+
+def main(): int {
+    let text: mutable string = "start";
+    let count: mutable int = 0;
+    while (consume(text)) {
+        count := count + 1;
+        if (count > 3) {
+            continue;
+        };
+        text := fresh();
+    }
+    return count;
+}

@@ -1,0 +1,6 @@
+error[SULTANC-CALL-ARGUMENT-TYPE-MISMATCH]: call argument type does not match — The argument was expected to have type `u8` but has type `string`. The zero-based argument position is 0. A call argument has a different type than the function parameter.
+  --> tests/en/diagnostics/e2e/propagation_error_type.sn:13:26..13:27
+    |
+ 13 |     let v: int = parse(x)?;
+    |                          ^
+    |

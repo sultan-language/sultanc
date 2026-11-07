@@ -1,0 +1,52 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/stdlib/error/notes_order.sn
+// std.error: notes keep the order they were added in, and adding a note
+// changes neither the identity nor the message.
+import std.error.failure;
+import std.text.compare;
+
+def main(): int {
+    let config_error: mutable Error = error_with_kind("config", "فارغ", "ملف الإعدادات فارغ");
+    error_add_note(&mutable config_error, "الأولى");
+    error_add_note(&mutable config_error, "الثانية");
+    error_add_note(&mutable config_error, "الثالثة");
+
+    let notes: vector string = error_notes(&config_error);
+    if ((length(notes) as uint) != 3) { return 1; };
+    let first: string = "الأولى";
+    let second: string = "الثانية";
+    let third: string = "الثالثة";
+    if (!texts_equal(&notes[0], &first)) { return 2; };
+    if (!texts_equal(&notes[1], &second)) { return 3; };
+    if (!texts_equal(&notes[2], &third)) { return 4; };
+
+    let message: string = error_message(&config_error);
+    let expected_message: string = "ملف الإعدادات فارغ";
+    if (!texts_equal(&message, &expected_message)) { return 5; };
+    let domain: string = "config";
+    let kind: string = "فارغ";
+    if (!error_is(&config_error, &domain, &kind)) { return 6; };
+
+    // The notes accessor returns a copy: changing the error later does not
+    // change a copy taken before.
+    error_add_note(&mutable config_error, "الرابعة");
+    if ((length(notes) as uint) != 3) { return 7; };
+    let after_adding: vector string = error_notes(&config_error);
+    if ((length(after_adding) as uint) != 4) { return 8; };
+
+    // A wrapped error keeps its own notes.
+    let wrapper: mutable Error = error_caused_by("تعذر البدء", config_error);
+    error_add_note(&mutable wrapper, "ملاحظة الغلاف");
+    let wrapper_notes: vector string = error_notes(&wrapper);
+    if ((length(wrapper_notes) as uint) != 1) { return 9; };
+    match error_cause(&wrapper) with
+    | option.none -> { return 10; }
+    | option.some(cause) -> {
+        let cause_notes: vector string = error_notes(&cause);
+        if ((length(cause_notes) as uint) != 4) { return 11; };
+    };
+    return 42;
+}

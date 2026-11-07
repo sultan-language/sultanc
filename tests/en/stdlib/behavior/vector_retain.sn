@@ -1,0 +1,74 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/stdlib/behavior/vector_retain.sn
+// std.collections.vector removal helpers over pop and truncate: retain
+// (Rust Vec::retain), dedup_by (Vec::dedup_by), remove_at / swap_remove /
+// insert_at (Vec::remove/swap_remove/insert) and clear_vector, on integers
+// and on owned text.
+import std.collections.vector;
+import std.text.compare;
+
+def is_even(v: &int): bool { return *v % 2 == 0; }
+def same(a: &int, b: &int): bool { return *a == *b; }
+def long_word(w: &string): bool { return length(*w) > 3; }
+def same_text(a: &string, b: &string): bool { return texts_equal(a, b); }
+
+def sum(values: &vector int): int {
+    let total: mutable int = 0;
+    let i: mutable uint = 0;
+    while (i < (length(*values) as uint)) { total := total * 10 + (*values)[i]; i := i + 1; }
+    return total;
+}
+
+def main(): int {
+    let values: mutable vector int = [1, 2, 3, 4, 5, 6];
+    retain(&mutable values, is_even);
+    if (length(values) != 3 || sum(&values) != 246) { return 1; };
+    let runs: mutable vector int = [1, 1, 2, 2, 2, 3, 1, 1];
+    dedup_by(&mutable runs, same);
+    if (length(runs) != 4 || sum(&runs) != 1231) { return 2; };
+    let digits: mutable vector int = [1, 2, 3, 4];
+    match remove_at(&mutable digits, 1) with
+    | option.some(v) -> { if (v != 2) { return 3; }; }
+    | option.none -> { return 4; };
+    if (sum(&digits) != 134) { return 5; };
+    match remove_at(&mutable digits, 9) with
+    | option.some(_) -> { return 6; }
+    | option.none -> { };
+    insert_at(&mutable digits, 0, 9);
+    insert_at(&mutable digits, 2, 7);
+    insert_at(&mutable digits, 99, 8);
+    if (sum(&digits) != 917348) { return 7; };
+    match swap_remove(&mutable digits, 0) with
+    | option.some(v) -> { if (v != 9) { return 8; }; }
+    | option.none -> { return 9; };
+    if (sum(&digits) != 81734) { return 10; };
+    clear_vector(&mutable digits);
+    if (length(digits) != 0) { return 11; };
+
+    let words: mutable vector string = [];
+    append(words, "sun");
+    append(words, "moon");
+    append(words, "moon");
+    append(words, "star");
+    append(words, "sky");
+    append(words, "comet");
+    dedup_by(&mutable words, same_text);
+    if (length(words) != 5) { return 12; };
+    retain(&mutable words, long_word);
+    let comet: string = "comet";
+    let moon: string = "moon";
+    if (length(words) != 3 || !texts_equal(&words[2], &comet) || !texts_equal(&words[0], &moon)) { return 13; };
+    match remove_at(&mutable words, 0) with
+    | option.some(w) -> { if (!texts_equal(&w, &moon)) { return 14; }; }
+    | option.none -> { return 15; };
+    insert_at(&mutable words, 1, "planet");
+    let planet: string = "planet";
+    if (length(words) != 3 || !texts_equal(&words[1], &planet)) { return 16; };
+    clear_vector(&mutable words);
+    append(words, "again");
+    if (length(words) != 1) { return 17; };
+    return 42;
+}

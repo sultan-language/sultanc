@@ -1,0 +1,41 @@
+تحذير[SULTANC-SYNTAX-DEPRECATED-SPELLING]: التهجئة ⁨`غير_موقع`⁩ مهجورة؛ استخدم ⁨`طبيعي`⁩
+  --> tests/ar/diagnostics/deprecated/uint_old_spelling.sn:9:13..9:21
+   |
+ 9 | عرف اجمع(أ: غير_موقع, ب: طبيعي): غير_موقع {
+   |             ^^^^^^^^
+   |
+
+تحذير[SULTANC-SYNTAX-DEPRECATED-SPELLING]: التهجئة ⁨`غير_موقع`⁩ مهجورة؛ استخدم ⁨`طبيعي`⁩
+  --> tests/ar/diagnostics/deprecated/uint_old_spelling.sn:9:34..9:42
+   |
+ 9 | عرف اجمع(أ: غير_موقع, ب: طبيعي): غير_موقع {
+   |                                  ^^^^^^^^
+   |
+
+تحذير[SULTANC-SYNTAX-DEPRECATED-SPELLING]: التهجئة ⁨`غ8`⁩ مهجورة؛ استخدم ⁨`ط8`⁩
+  --> tests/ar/diagnostics/deprecated/uint_old_spelling.sn:14:11..14:13
+    |
+ 14 |     دع ث: غ8 = 1;
+    |           ^^
+    |
+
+تحذير[SULTANC-SYNTAX-DEPRECATED-SPELLING]: التهجئة ⁨`غ16`⁩ مهجورة؛ استخدم ⁨`ط16`⁩
+  --> tests/ar/diagnostics/deprecated/uint_old_spelling.sn:15:11..15:14
+    |
+ 15 |     دع س: غ16 = 2;
+    |           ^^^
+    |
+
+تحذير[SULTANC-SYNTAX-DEPRECATED-SPELLING]: التهجئة ⁨`غ32`⁩ مهجورة؛ استخدم ⁨`ط32`⁩
+  --> tests/ar/diagnostics/deprecated/uint_old_spelling.sn:16:11..16:14
+    |
+ 16 |     دع ع: غ32 = 3;
+    |           ^^^
+    |
+
+تحذير[SULTANC-SYNTAX-DEPRECATED-SPELLING]: التهجئة ⁨`غ64`⁩ مهجورة؛ استخدم ⁨`ط64`⁩
+  --> tests/ar/diagnostics/deprecated/uint_old_spelling.sn:17:11..17:14
+    |
+ 17 |     دع ف: غ64 = 4;
+    |           ^^^
+    |

@@ -1,0 +1,128 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/stdlib/behavior/http2_hpack.sn
+// std.http.http2.hpack (RFC 7541) against the RFC's Appendix C examples:
+// requests without and with Huffman coding (C.3, C.4), responses with a
+// 256-byte table and eviction (C.5, C.6); the encoder reproduces C.4 byte
+// for byte; malformed blocks (index 0 or past the table, a late or too
+// large size update, bad Huffman padding, an oversized integer, truncation)
+// and a header list over the limit are refused. Also the frame header layout.
+import std.encoding.hex;
+import std.text.from_bytes;
+import std.http.model;
+import std.http.http2.hpack;
+import std.http.http2.frame;
+
+def unhex(text: string): vector u8 {
+    match hex_decode(&text) with
+    | result.ok(v) -> { return v; }
+    | result.err(_) -> { let empty: vector u8 = []; return empty; };
+}
+
+def same_text(a: &string, b: string): bool {
+    if (length(*a) != length(b)) { return false; };
+    let i: mutable uint = 0;
+    while (i < (length(b) as uint)) { if ((*a)[i] != b[i]) { return false; }; i := i + 1; }
+    return true;
+}
+
+// Decodes a block and checks its field count and last field.
+def check_block(decoder: &mutable hpack_decoder, block: string, count: uint, name: string, value: string): bool {
+    let bytes: vector u8 = unhex(block);
+    match hpack_decode_block(decoder, &bytes, 0) with
+    | result.err(_) -> { return false; }
+    | result.ok(fields) -> {
+        if ((length(fields) as uint) != count) { return false; };
+        let last: uint = count - 1;
+        return same_text(&fields[last].الاسم, name) && same_text(&fields[last].القيمة, value);
+    };
+}
+
+def decode_error(block: string, table: uint, limit: uint): option hpack_error {
+    let decoder: mutable hpack_decoder = new_hpack_decoder(table);
+    let bytes: vector u8 = unhex(block);
+    match hpack_decode_block(&mutable decoder, &bytes, limit) with
+    | result.err(e) -> { return option.some(e); }
+    | result.ok(_) -> { return option.none(); };
+}
+
+def hex_is(bytes: &vector u8, expected: string): bool {
+    let text: string = hex_encode(bytes);
+    return same_text(&text, expected);
+}
+
+def field(name: string, value: string): http_header {
+    let h: http_header = { الاسم: name, القيمة: value };
+    return h;
+}
+
+def main(): int {
+    let requests: mutable hpack_decoder = new_hpack_decoder(4096);
+    if (!check_block(&mutable requests, "828684410f7777772e6578616d706c652e636f6d", 4, ":authority", "www.example.com")) { return 1; };
+    if (!check_block(&mutable requests, "828684be58086e6f2d6361636865", 5, "cache-control", "no-cache")) { return 2; };
+    if (!check_block(&mutable requests, "828785bf400a637573746f6d2d6b65790c637573746f6d2d76616c7565", 5, "custom-key", "custom-value")) { return 3; };
+    let huffman: mutable hpack_decoder = new_hpack_decoder(4096);
+    if (!check_block(&mutable huffman, "828684418cf1e3c2e5f23a6ba0ab90f4ff", 4, ":authority", "www.example.com")) { return 4; };
+    if (!check_block(&mutable huffman, "828684be5886a8eb10649cbf", 5, "cache-control", "no-cache")) { return 5; };
+    if (!check_block(&mutable huffman, "828785bf408825a849e95ba97d7f8925a849e95bb8e8b4bf", 5, "custom-key", "custom-value")) { return 6; };
+    let responses: mutable hpack_decoder = new_hpack_decoder(256);
+    if (!check_block(&mutable responses, "4803333032580770726976617465611d4d6f6e2c203231204f637420323031332032303a31333a323120474d546e1768747470733a2f2f7777772e6578616d706c652e636f6d", 4, "location", "https://www.example.com")) { return 7; };
+    if (!check_block(&mutable responses, "4803333037c1c0bf", 4, "location", "https://www.example.com")) { return 8; };
+    if (!check_block(&mutable responses, "88c1611d4d6f6e2c203231204f637420323031332032303a31333a323220474d54c05a04677a69707738666f6f3d4153444a4b48514b425a584f5157454f50495541585157454f49553b206d61782d6167653d333630303b2076657273696f6e3d31", 6, "set-cookie", "foo=ASDJKHQKBZXOQWEOPIUAXQWEOIU; max-age=3600; version=1")) { return 9; };
+    let coded: mutable hpack_decoder = new_hpack_decoder(256);
+    if (!check_block(&mutable coded, "488264025885aec3771a4b6196d07abe941054d444a8200595040b8166e082a62d1bff6e919d29ad171863c78f0b97c8e9ae82ae43d3", 4, "location", "https://www.example.com")) { return 10; };
+    if (!check_block(&mutable coded, "4883640effc1c0bf", 4, "location", "https://www.example.com")) { return 11; };
+
+    // The encoder writes C.4 exactly.
+    let encoder: mutable hpack_encoder = new_hpack_encoder();
+    let first: mutable vector http_header = [];
+    append(first, field(":method", "GET"));
+    append(first, field(":scheme", "http"));
+    append(first, field(":path", "/"));
+    append(first, field(":authority", "www.example.com"));
+    let block1: vector u8 = hpack_encode_headers(&mutable encoder, &first);
+    if (!hex_is(&block1, "828684418cf1e3c2e5f23a6ba0ab90f4ff")) { return 12; };
+    append(first, field("cache-control", "no-cache"));
+    let block2: vector u8 = hpack_encode_headers(&mutable encoder, &first);
+    if (!hex_is(&block2, "828684be5886a8eb10649cbf")) { return 13; };
+    let third: mutable vector http_header = [];
+    append(third, field(":method", "GET"));
+    append(third, field(":scheme", "https"));
+    append(third, field(":path", "/index.html"));
+    append(third, field(":authority", "www.example.com"));
+    append(third, field("custom-key", "custom-value"));
+    let block3: vector u8 = hpack_encode_headers(&mutable encoder, &third);
+    if (!hex_is(&block3, "828785bf408825a849e95ba97d7f8925a849e95bb8e8b4bf")) { return 14; };
+    // Sensitive fields are never indexed (6.2.3).
+    let secret: mutable vector http_header = [];
+    append(secret, field("authorization", "Basic c2VjcmV0"));
+    let block4: vector u8 = hpack_encode_headers(&mutable encoder, &secret);
+    if (block4[0] != 0x1F) { return 15; };
+
+    // Malformed blocks.
+    match decode_error("80", 4096, 0) with
+    | option.some(hpack_error.invalid_index) -> { } | _ -> { return 16; };
+    match decode_error("be", 4096, 0) with
+    | option.some(hpack_error.invalid_index) -> { } | _ -> { return 17; };
+    match decode_error("8220", 4096, 0) with
+    | option.some(hpack_error.invalid_table_size_update) -> { } | _ -> { return 18; };
+    match decode_error("3fe11f", 256, 0) with
+    | option.some(hpack_error.invalid_table_size_update) -> { } | _ -> { return 19; };
+    match decode_error("048100", 4096, 0) with
+    | option.some(hpack_error.invalid_huffman) -> { } | _ -> { return 20; };
+    match decode_error("ffffffffff7f", 4096, 0) with
+    | option.some(hpack_error.integer_too_large) -> { } | _ -> { return 21; };
+    match decode_error("410f77", 4096, 0) with
+    | option.some(hpack_error.unexpected_end) -> { } | _ -> { return 22; };
+    match decode_error("828684410f7777772e6578616d706c652e636f6d", 4096, 40) with
+    | option.some(hpack_error.header_list_too_large) -> { } | _ -> { return 23; };
+
+    // A frame header (RFC 9113 4.1): length, type, flags, stream.
+    let frame: mutable vector u8 = [];
+    let payload: vector u8 = [1, 2, 3];
+    http2_append_frame(&mutable frame, 1, 5, 3, &payload, 0, 3);
+    if (!hex_is(&frame, "000003010500000003010203")) { return 24; };
+    return 42;
+}

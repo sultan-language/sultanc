@@ -1,0 +1,73 @@
+// اختبار: قبول
+// خروج: 0
+// مرحلة0: نعم
+// نظير: tests/ar/stdlib/error/stage0_contract.sn
+// std.error stays within the C Stage0's language (docs/ERRORS.md): every
+// public function of std.error.failure, std.error.from_os,
+// std.error.from_number and std.error.context, and of the Phase 3 helpers
+// std.text.language, std.text.bidi and std.text.system_language, accepted by
+// Stage0 too. from_json and from_net are left out: std.json and
+// std.net.socket_address themselves are beyond Stage0.
+import std.error.failure;
+import std.error.from_os;
+import std.error.from_number;
+import std.error.context;
+import std.fs.error;
+import std.text.number;
+import std.text.language;
+import std.text.bidi;
+import std.text.system_language;
+
+def main(): int {
+    let root: Error = error_with_kind("std.fs", "غير_موجود", "الملف غير موجود");
+    let middle: Error = error_with_kind_caused_by("config", "غير_محمل", "تعذر تحميل الإعدادات", root);
+    let top: mutable Error = error_caused_by("أثناء بدء الخادم", middle);
+    error_add_note(&mutable top, "ملاحظة");
+    let adhoc: Error = error_new("عرضي");
+    let copy: Error = error_copy(&top);
+    let message: string = error_message(&copy);
+    let domain: string = error_domain(&adhoc);
+    let kind: string = error_kind(&copy);
+    let notes: vector string = error_notes(&top);
+    let cause: option Error = error_cause(&top);
+    let description: string = error_describe(&top);
+    let search_domain: string = "std.fs";
+    let search_kind: string = "غير_موجود";
+    if (!error_is(&top, &search_domain, &search_kind) || !error_has_cause(&top)) { error_print(&top); };
+
+    let class: os_error_class = os_error_class.not_found();
+    let e1: Error = error_from_os_error_class(&class);
+    let code: int = -2;
+    let e2: Error = error_from_fs_error(&code);
+    let e3: Error = error_from_io_error(&code);
+    let e4: Error = error_from_process_error(&code);
+    let number_error: integer_parse_error = integer_parse_error.overflow();
+    let e5: Error = error_from_integer_parse_error(&number_error);
+    let text: string = "12";
+    let converted: result int, Error = to_error(parse_int(&text), error_from_integer_parse_error);
+    let with_ctx: result int, Error = with_context(converted, "سياق");
+    let noted: result int, Error = with_note(with_ctx, "ملاحظة");
+
+    // Phase 3: language versions, locales, direction isolation.
+    error_add_language_version(&mutable top, "en", "while starting the server");
+    let tag: string = "ar-SA";
+    let from_tag: Locale = locale_from_tag(&tag);
+    let header: string = "en;q=0.8, ar";
+    let from_header: Locale = locale_from_accept_language(&header);
+    let from_environment: Locale = locale_from_environment();
+    let locale_copied: Locale = locale_copy(&from_header);
+    let tags: vector string = locale_tags(&locale_copied);
+    let first: string = locale_tag(&from_tag);
+    let base: string = locale_language(&from_environment);
+    let valid: bool = is_language_tag(&tag);
+    let normalized: string = normalize_language_tag(&tag);
+    let tag_base: string = language_tag_base(&tag);
+    let truncated: string = truncate_language_tag(&tag);
+    let in_locale: string = error_text_in(&top, &from_tag);
+    let described: string = error_describe_in(&top, &from_header);
+    if (!valid) { error_print_in(&top, &from_tag); };
+    let direction: text_direction = text_direction_of(&in_locale);
+    let isolated: string = bidi_isolate(&described);
+    let in_context: string = bidi_isolate_in(&normalized, direction);
+    return 0;
+}

@@ -1,0 +1,5 @@
+error[SULTANC-RUNTIME-PROGRAM-ERROR]: the program ended with an error
+أثناء بدء الخادم
+ملاحظة: المنفذ من PORT
+بسبب: في النص محرف ليس رقما عشريا
+ملاحظة: موضع البايت: 2

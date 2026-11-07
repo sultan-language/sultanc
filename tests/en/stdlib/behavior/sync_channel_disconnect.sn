@@ -1,0 +1,75 @@
+// اختبار: تشغيل
+// أهداف: x86_64-linux
+// خروج: 0
+// std.sync.channel disconnection, as Rust's mpsc reports it: try_recv on an
+// empty channel is empty while a sender lives and disconnected once none
+// does (after the queued messages are drained); recv_timeout times out;
+// send hands the value back once the receiver is gone; a receiver blocked in
+// recv wakes when the last sender, captured by a thread, drops at the end
+// of that thread. Counterpart:
+// tests/ar/stdlib/behavior/sync_channel_disconnect.sn. No pair directive:
+// the interpreter runs one thread.
+import std.sync.channel;
+import std.thread.thread;
+import std.time.duration;
+
+def send_one_then_finish(tx: &sender<i64>): void {
+    match send(tx, 99 as i64) with | result.ok(_) -> { } | result.err(_) -> { };
+}
+
+def start(tx: sender<i64>): option join_handle {
+    match spawn(fn(): void -> send_one_then_finish(&tx)) with
+    | result.ok(h) -> { return option.some(h); }
+    | result.err(_) -> { return option.none(); };
+}
+
+def main(): i32 {
+    let rx: receiver<i64> = channel_receiver();
+    let tx: sender<i64> = sender_for(&rx);
+    match try_recv(&rx) with
+    | result.err(try_recv_error.empty) -> { }
+    | _ -> { return 1; };
+    match duration_from_milliseconds(10) with
+    | option.some(d) -> {
+        match recv_timeout(&rx, d) with
+        | result.err(recv_timeout_error.timeout) -> { }
+        | _ -> { return 2; };
+    }
+    | option.none -> { return 3; };
+    match send(&tx, 5 as i64) with | result.ok(_) -> { } | result.err(_) -> { return 4; };
+    drop_sender(tx);
+    // The queued message is still delivered, then the disconnection.
+    match try_recv(&rx) with
+    | result.ok(v) -> { if (v != (5 as i64)) { return 5; }; }
+    | result.err(_) -> { return 6; };
+    match try_recv(&rx) with
+    | result.err(try_recv_error.disconnected) -> { }
+    | _ -> { return 7; };
+    match recv(&rx) with
+    | result.err(recv_error.disconnected) -> { }
+    | _ -> { return 8; };
+
+    // The receiver is gone: send hands the value back.
+    let rx2: receiver<i64> = channel_receiver();
+    let tx2: sender<i64> = sender_for(&rx2);
+    drop_receiver(rx2);
+    match send(&tx2, 7 as i64) with
+    | result.ok(_) -> { return 9; }
+    | result.err(v) -> { if (v != (7 as i64)) { return 10; }; };
+
+    // A sender captured by a thread drops when the thread finishes, which
+    // ends a blocked recv.
+    let rx3: receiver<i64> = channel_receiver();
+    let handle: mutable join_handle;
+    match start(sender_for(&rx3)) with
+    | option.some(h) -> { handle := h; }
+    | option.none -> { return 11; };
+    match recv(&rx3) with
+    | result.ok(v) -> { if (v != (99 as i64)) { return 12; }; }
+    | result.err(_) -> { return 13; };
+    match recv(&rx3) with
+    | result.err(recv_error.disconnected) -> { }
+    | _ -> { return 14; };
+    join(&mutable handle);
+    return 0;
+}

@@ -1,0 +1,74 @@
+// Fixture for the runner's live HTTP/2 check: http2_live_client <base-url>
+// [<trust-root.der>] sends three concurrent requests (two GETs, one POST
+// with a 70 000-byte body) over one HTTP/2 connection to
+// http2_live_server, then a second request on the same connection, and
+// exits 42 when every response is the expected one.
+import std.text.from_bytes;
+import std.text.compare;
+import std.fs.read_file;
+import std.process.argument;
+import std.http.model;
+import std.http.http2.client;
+import std.tls.config;
+
+def arg(i: uint): string {
+    match argument(i) with
+    | option.some(v) -> { return v; }
+    | option.none -> { return ""; };
+}
+
+def request(method: string, path: string, body: vector u8): buffered_http_request {
+    let headers: vector http_header = [];
+    let trailers: vector http_header = [];
+    let r: buffered_http_request = { الطريقة: method, الهدف: path, الإصدار: http_version.http_2(), الرؤوس: headers, الرؤوس_اللاحقة: trailers, الجسم: body };
+    return r;
+}
+
+def starts_with(body: &vector u8, prefix: string): bool {
+    let text: vector u8 = bytes_from_text(prefix);
+    if (length(*body) < length(text)) { return false; };
+    let i: mutable uint = 0;
+    while (i < (length(text) as uint)) { if ((*body)[i] != text[i]) { return false; }; i := i + 1; }
+    return true;
+}
+
+def main(): int {
+    let url: string = arg(1);
+    let ca: string = arg(2);
+    let tls: mutable tls_client_config = tls_client_config_without_server_name();
+    if (length(ca) > 0) {
+        match read_bytes(&ca) with
+        | result.ok(der) -> { tls_client_config_add_trust_root(&mutable tls, tls_certificate_der(der)); }
+        | result.err(_) -> { return 2; };
+        let host: string = "localhost";
+        tls_client_config_set_server_name(&mutable tls, &host);
+    };
+    match http2_connect_with_tls(&url, option.some(tls)) with
+    | result.err(_) -> { return 3; }
+    | result.ok(opened) -> {
+        let connection: mutable http2_client_connection = opened;
+        let empty: vector u8 = [];
+        let body: mutable vector u8 = [];
+        let i: mutable uint = 0;
+        while (i < 70000) { append(body, (i % 251) as u8); i := i + 1; }
+        let requests: mutable vector buffered_http_request = [];
+        append(requests, request("GET", "/a", copy_bytes(&empty)));
+        append(requests, request("GET", "/big", copy_bytes(&empty)));
+        append(requests, request("POST", "/p", body));
+        match http2_send_requests(&mutable connection, &requests) with
+        | result.err(_) -> { return 4; }
+        | result.ok(responses) -> {
+            if (length(responses) != 3) { return 5; };
+            if (responses[0].الحالة != 200 || !starts_with(&responses[0].الجسم, "h2 GET /a 0")) { return 6; };
+            if (!starts_with(&responses[1].الجسم, "h2 GET /big 0") || length(responses[1].الجسم) < 100000) { return 7; };
+            if (!starts_with(&responses[2].الجسم, "h2 POST /p 70000")) { return 8; };
+        };
+        let again: mutable vector buffered_http_request = [];
+        append(again, request("GET", "/again", copy_bytes(&empty)));
+        match http2_send_requests(&mutable connection, &again) with
+        | result.err(_) -> { return 9; }
+        | result.ok(responses) -> { if (!starts_with(&responses[0].الجسم, "h2 GET /again 0")) { return 10; }; };
+        let ignored: result int, int = http2_close_client(connection);
+    };
+    return 42;
+}

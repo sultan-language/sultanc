@@ -1,0 +1,32 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/stdlib/error/describe.sn
+// std.error: the exact text of error_describe: the message, its notes, then
+// one «بسبب: » line per cause followed by that cause's notes.
+import std.error.failure;
+import std.text.compare;
+import std.io.println;
+
+def main(): int {
+    let single: Error = error_new("رسالة وحيدة");
+    let single_text: string = error_describe(&single);
+    let expected_single: string = "رسالة وحيدة";
+    if (!texts_equal(&single_text, &expected_single)) { return 1; };
+
+    let root: mutable Error = error_with_kind("config", "فارغ", "ملف الإعدادات فارغ");
+    error_add_note(&mutable root, "الحجم 0 بايت");
+    let middle: Error = error_caused_by("تعذر قراءة الإعدادات", root);
+    let top: mutable Error = error_caused_by("أثناء بدء الخادم", middle);
+    error_add_note(&mutable top, "مسار الإعدادات من SULTANC_CONFIG");
+    error_add_note(&mutable top, "المنفذ 8080");
+
+    let description: string = error_describe(&top);
+    let expected: string = "أثناء بدء الخادم\nملاحظة: مسار الإعدادات من SULTANC_CONFIG\nملاحظة: المنفذ 8080\nبسبب: تعذر قراءة الإعدادات\nبسبب: ملف الإعدادات فارغ\nملاحظة: الحجم 0 بايت";
+    if (!texts_equal(&description, &expected)) { return 2; };
+
+    // The same text on standard output; native and interpreter must agree.
+    let ignored: result int, int = println(error_describe(&top));
+    return 42;
+}

@@ -1,0 +1,8 @@
+// اختبار: رفض
+// تشخيص: SULTANC-SAFETY-INDEX-OUT-OF-BOUNDS
+// نظير: tests/ar/diagnostics/semantic/known_vector_bounds.sn
+// An immutable vector initialized from a literal of three elements.
+def main(): i32 {
+    let values: vector i32 = [1, 2, 3];
+    return values[2] + values[3];
+}

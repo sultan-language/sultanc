@@ -1,0 +1,4 @@
+// اختبار: رفض
+// تشخيص: SULTANC-PARSE-SYNTAX
+def answer(): int = "answer" { return 42; }
+def main(): int { return answer(); }

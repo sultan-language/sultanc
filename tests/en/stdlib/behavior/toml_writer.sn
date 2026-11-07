@@ -1,0 +1,55 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/stdlib/behavior/toml_writer.sn
+// toml_to_text round trip: writing a parsed document and parsing the output
+// gives the same values, and writing that again gives the same text.
+import std.toml.parser;
+import std.toml.writer;
+import std.text.compare;
+
+def main(): int {
+    let source: string = "title = \"Sultan \\\"C\\\"\"\nversion = 3\nflags = [true, false]\n\"odd key\" = 1.5\n[owner]\nname = \"أحمد\"\nborn = 1979-05-27T07:32:00Z\n[owner.address]\ncity = \"Riyadh\"\n[[targets]]\nname = \"x86_64\"\n[[targets]]\nname = \"arm64\"\ninline = { a = 1, b = [2, 3] }\n";
+    match parse_toml(&source) with
+    | result.err(_) -> { return 1; }
+    | result.ok(document) -> {
+        let first: string = toml_to_text(&document);
+        match parse_toml(&first) with
+        | result.err(_) -> { return 2; }
+        | result.ok(again) -> {
+            let second: string = toml_to_text(&again);
+            if (!texts_equal(&first, &second)) { return 3; };
+            let key: string = "title";
+            match toml_value_at(&again, again.الجذر, &key) with
+            | option.some(قيمة_تومل.سلسلة(text)) -> {
+                let expected: string = "Sultan \"C\"";
+                if (!texts_equal(&text, &expected)) { return 4; };
+            }
+            | _ -> { return 5; };
+            let owner_key: string = "owner";
+            match toml_table_at(&again, again.الجذر, &owner_key) with
+            | option.none -> { return 6; }
+            | option.some(owner) -> {
+                let name_key: string = "name";
+                match toml_value_at(&again, owner, &name_key) with
+                | option.some(قيمة_تومل.سلسلة(name)) -> {
+                    let expected_name: string = "أحمد";
+                    if (!texts_equal(&name, &expected_name)) { return 7; };
+                }
+                | _ -> { return 8; };
+                let address_key: string = "address";
+                match toml_table_at(&again, owner, &address_key) with
+                | option.none -> { return 9; }
+                | option.some(_) -> { };
+            };
+            let targets_key: string = "targets";
+            match toml_value_at(&again, again.الجذر, &targets_key) with
+            | option.some(قيمة_تومل.مصفوفة(index)) -> {
+                if (length(toml_array_values(&again, index)) != 2) { return 10; };
+            }
+            | _ -> { return 11; };
+        };
+    };
+    return 42;
+}

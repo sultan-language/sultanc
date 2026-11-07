@@ -1,0 +1,7 @@
+// اختبار: رفض
+// تشخيص: SULTANC-TYPE-MISMATCH
+// نظير: tests/ar/diagnostics/semantic/integer_literal_range.sn
+def main(): i32 {
+    let small: u8 = 300;
+    return 0;
+}

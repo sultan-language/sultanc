@@ -1,3 +1,7 @@
+// اختبار: رفض
+// تشخيص: SULTANC-SAFETY-INDEX-OUT-OF-BOUNDS
+// نظير: tests/ar/diagnostics/semantic/known_bounds.sn
+// The text has one byte; a constant index past it is rejected at compile time.
 def main(): u8 {
     let text: string = "*";
     return text[1];

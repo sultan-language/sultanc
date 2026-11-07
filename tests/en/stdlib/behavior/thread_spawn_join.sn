@@ -1,0 +1,42 @@
+// اختبار: تشغيل
+// أهداف: x86_64-linux
+// خروج: 0
+// std.thread: spawn and join several threads. Each one stores the same mark
+// into one atomic cell shared through an Arc (std.sync), so there is no
+// race; after join the write is visible (CLONE_VM), and every thread has
+// dropped its clone of the Arc. This exercises the thread clone, running
+// the closure, the futex join (docs/CONCURRENCY.md) and the release of a
+// finished thread's closure. Counterpart:
+// tests/ar/stdlib/behavior/thread_spawn_join.sn. No pair directive: the
+// interpreter runs one thread.
+import std.thread.thread;
+import std.sync.arc;
+import std.sync.atomic;
+
+def write_mark(cell: &arc<atomic_u64>): void {
+    atomic_u64_store(arc_get(cell), 777 as u64, memory_ordering.seq_cst());
+}
+
+def start(cell: &arc<atomic_u64>): option join_handle {
+    let mine: arc<atomic_u64> = arc_clone(cell);
+    match spawn(fn(): void -> write_mark(&mine)) with
+    | result.ok(h) -> { return option.some(h); }
+    | result.err(_) -> { return option.none(); };
+}
+
+def main(): i32 {
+    let cell: arc<atomic_u64> = arc_new(atomic_u64_new(0 as u64));
+    let handles: mutable vector join_handle = [];
+    let i: mutable uint = 0;
+    while (i < 8) {
+        match start(&cell) with
+        | option.some(h) -> { append(handles, h); }
+        | option.none -> { return 1; };
+        i := i + 1;
+    }
+    let j: mutable uint = 0;
+    while (j < (length(handles) as uint)) { join(&mutable handles[j]); j := j + 1; }
+    if (atomic_u64_load(arc_get(&cell), memory_ordering.seq_cst()) != (777 as u64)) { return 2; };
+    if (arc_strong_count(&cell) != 1) { return 3; };
+    return 0;
+}

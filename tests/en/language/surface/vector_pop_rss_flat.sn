@@ -1,0 +1,64 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// pop / truncate release what they remove: 10^5 rounds of filling vectors
+// of text, nested vectors and closures, popping, truncating and emptying
+// them leave the allocator's live bytes where they were, so memory stays flat.
+// Counterpart: tests/ar/language/surface/vector_pop_rss_flat.sn. It has no
+// pair directive: the interpreter does not use the std allocator whose
+// counters this reads.
+import std.os.allocation;
+import std.text.number;
+
+def adder(k: int): fn(int): int { return fn(x: int): int -> x + k; }
+
+def round(i: uint): int {
+    let words: mutable vector string = [];
+    let grid: mutable vector vector int = [];
+    let fs: mutable vector fn(int): int = [];
+    let j: mutable uint = 0;
+    while (j < 6) {
+        append(words, uint_to_text(i + j));
+        let row: mutable vector int = [];
+        append(row, j as int);
+        append(row, i as int);
+        append(grid, row);
+        append(fs, adder(j as int));
+        j := j + 1;
+    }
+    let total: mutable int = 0;
+    match pop(words) with
+    | option.some(w) -> { total := total + (length(w) as int); }
+    | option.none -> { return -1; };
+    match pop(grid) with
+    | option.some(r) -> { total := total + r[0]; }
+    | option.none -> { return -1; };
+    match pop(fs) with
+    | option.some(f) -> { total := total + f(1); }
+    | option.none -> { return -1; };
+    pop(words);
+    truncate(words, 2);
+    truncate(grid, 1);
+    truncate(fs, 3);
+    // Emptied by pop, then by truncate, then reused.
+    pop(grid);
+    truncate(fs, 0);
+    append(fs, adder(2));
+    truncate(words, 0);
+    append(words, uint_to_text(i));
+    return total;
+}
+
+def main(): int {
+    let warm_up: int = round(0);
+    if (warm_up < 0) { return 1; };
+    let before: u64 = بايتات_حية_مخصص_النظام();
+    let i: mutable uint = 0;
+    while (i < 100000) {
+        if (round(i) < 0) { return 2; };
+        i := i + 1;
+    }
+    let after: u64 = بايتات_حية_مخصص_النظام();
+    if (after != before) { return 3; };
+    return 42;
+}

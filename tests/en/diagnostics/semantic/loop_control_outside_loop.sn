@@ -1,0 +1,8 @@
+// اختبار: رفض
+// تشخيص: SULTANC-FLOW-LOOP-CONTROL-OUTSIDE-LOOP
+// نظير: tests/ar/diagnostics/semantic/loop_control_outside_loop.sn
+def main(): i32 {
+    let count: i32 = 1;
+    if (count == 1) { break; };
+    return 0;
+}

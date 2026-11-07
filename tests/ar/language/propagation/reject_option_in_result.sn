@@ -1,0 +1,16 @@
+// اختبار: رفض
+// تشخيص: SULTANC-PATTERN-INVALID
+// نظير: tests/en/language/propagation/reject_option_in_result.sn
+// `؟` on an option inside a function returning a result: there is no error
+// to return, so the expansion's result arms do not fit the option, reported
+// at the `؟`.
+عرف اختر(س: عدد): اختياري عدد {
+    أرجع اختياري.موجود(س);
+}
+
+عرف حول(س: عدد): نتيجة عدد, نص {
+    دع ق: عدد = اختر(س)؟;
+    أرجع نتيجة.نجح(ق);
+}
+
+عرف الرئيسية(): عدد { أرجع 0; }

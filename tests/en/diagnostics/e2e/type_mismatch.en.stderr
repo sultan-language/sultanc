@@ -1,0 +1,6 @@
+error[SULTANC-TYPE-MISMATCH]: expected `i32`, found `string` — The value does not match the declared type of its destination.
+  --> tests/en/diagnostics/e2e/type_mismatch.sn:7:22..7:28
+   |
+ 7 |     let count: i32 = "text";
+   |                      ^^^^^^
+   |

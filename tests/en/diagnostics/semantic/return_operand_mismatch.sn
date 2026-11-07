@@ -1,0 +1,10 @@
+// اختبار: رفض
+// تشخيص: SULTANC-TYPE-MISMATCH
+// نظير: tests/ar/diagnostics/semantic/return_operand_mismatch.sn
+// The operands of `+` differ; the return Type is not the problem.
+def add(count: i32, ready: bool): i32 {
+    return count + ready;
+}
+def main(): i32 {
+    return add(1, true);
+}

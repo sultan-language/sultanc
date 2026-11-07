@@ -1,0 +1,7 @@
+// اختبار: رفض
+// تشخيص: SULTANC-ENTRYPOINT-INVALID-SIGNATURE
+// نظير: tests/ar/diagnostics/semantic/entry_invalid_result.sn
+// The program entry returns nothing or an integer exit status.
+def main(): bool {
+    return true;
+}

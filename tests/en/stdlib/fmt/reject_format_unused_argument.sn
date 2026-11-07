@@ -1,0 +1,14 @@
+// اختبار: رفض
+// خروج: 1
+// تشخيص: SULTANC-FORMAT-STRING
+// نظير: tests/ar/stdlib/fmt/reject_format_unused_argument.sn
+// The call passes an argument the format string never uses.
+// Rust: argument never used.
+import std.fmt.fmt;
+
+def main(): int {
+    let name: string = "Sultan";
+    match format("{}", [fmt_arg.text(&name), fmt_arg.int(1)]) with
+    | result.ok(_) -> { return 0; }
+    | result.err(_) -> { return 1; };
+}

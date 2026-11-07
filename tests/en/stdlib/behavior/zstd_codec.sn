@@ -1,0 +1,162 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/stdlib/behavior/zstd_codec.sn
+// std.compression.zstd (RFC 8878): frames written by the zstd 1.5 CLI at
+// levels 1, 3 and 19, with and without the XXH64 checksum, a raw-content
+// dictionary, concatenated and skippable frames; the compressor's own frames
+// round-trip; malformed frames (truncated, bad magic, wrong checksum, a
+// window over the limit, an output limit, bit flips) end with errors.
+import std.encoding.hex;
+import std.text.from_bytes;
+import std.text.number;
+import std.fuzz.core;
+import std.hash.xxh64;
+import std.compression.zstd;
+
+def unhex(text: string): vector u8 {
+    match hex_decode(&text) with
+    | result.ok(v) -> { return v; }
+    | result.err(_) -> { let empty: vector u8 = []; return empty; };
+}
+
+def same(a: &vector u8, b: &vector u8): bool {
+    if (length(*a) != length(*b)) { return false; };
+    let i: mutable uint = 0;
+    while (i < (length(*a) as uint)) { if ((*a)[i] != (*b)[i]) { return false; }; i := i + 1; }
+    return true;
+}
+
+def decodes_to(frame: &vector u8, expected: &vector u8): bool {
+    match zstd_decompress(frame) with
+    | result.ok(v) -> { return same(&v, expected); }
+    | result.err(_) -> { return false; };
+}
+
+def sample_a(): vector u8 {
+    let out: mutable vector u8 = [];
+    let unit: vector u8 = bytes_from_text("SultanC zstd test: the quick brown fox jumps over the lazy dog. ");
+    let k: mutable uint = 0;
+    while (k < 3) {
+        let i: mutable uint = 0;
+        while (i < (length(unit) as uint)) { append(out, unit[i]); i := i + 1; }
+        k := k + 1;
+    }
+    let digits: vector u8 = bytes_from_text("0123456789");
+    let i: mutable uint = 0;
+    while (i < (length(digits) as uint)) { append(out, digits[i]); i := i + 1; }
+    return out;
+}
+
+def append_text(out: &mutable vector u8, text: &string): void {
+    let i: mutable uint = 0;
+    while (i < (length(*text) as uint)) { append(*out, (*text)[i]); i := i + 1; }
+}
+
+def sample_b(): vector u8 {
+    let words: vector string = ["alpha", "beta", "gamma", "delta", "epsilon", "zeta", "eta", "theta", "iota", "kappa", "lambda", "mu"];
+    let out: mutable vector u8 = [];
+    let i: mutable uint = 0;
+    while ((length(out) as uint) < 1200) {
+        append_text(&mutable out, &words[(i * 7) % 12]);
+        append(out, 32);
+        let number: string = uint_to_text((i * 13) % 97);
+        append_text(&mutable out, &number);
+        append(out, 44);
+        append(out, 32);
+        i := i + 1;
+    }
+    while ((length(out) as uint) > 1200) { let dropped: option u8 = pop(out); }
+    return out;
+}
+
+def is_error(frame: &vector u8, limit: uint): bool {
+    match zstd_decompress_limited(frame, limit) with
+    | result.ok(_) -> { return false; }
+    | result.err(_) -> { return true; };
+}
+
+def main(): int {
+    let a: vector u8 = sample_a();
+    let b: vector u8 = sample_b();
+    let a1: vector u8 = unhex("28b52ffd04489d0200a40453756c74616e43207a73746420746573743a2074686520717569636b2062726f776e20666f78206a756d7073206f76657220746865206c617a7920646f672e20303132333435363738390100401fd210054c9e71a8");
+    let a19: vector u8 = unhex("28b52ffd0068850200540453756c74616e43207a73746420746573743a2074686520717569636b2062726f776e20666f78206a756d7073206f7665726c617a7920646f672e203031323334353637383902007d080985101414");
+    let b19: vector u8 = unhex("28b52ffd046835090086d5351780297964af180819f4a388b28c28ef922224fcb18599d234002d002c008711f8e83b39103ec4efc4007c56df89f1c1bc02f914de7038080984f1617b23105df864bd11a4051fa377620c924f790f104707b98756c5c665350f4fb78554b9a625f5cea8b6f8ac9986e5b48e08b794f193f74e8cc5c7ec1d00207d7c4abd935845c9b72daa7847b684bca99605d57e45845ccb9968574ce976515fc9976655e8987613b18e2b694cf79402fb4e8c8f6949bd33aa2d667da66139ad23c22d65cc332b354abc8a856c5946e59674f178654c5958f592702d72a81170e8eeff1da0af19102224f1388014eb37640780c972b381f6d931175b8805e49c411ba3002e17b641422ceaecd00f542613ab0709f4710f141e50e4a57da01d3084d4e9c1982ea90ad56540aa");
+    let b3: vector u8 = unhex("28b52ffd0058dd0900b613331a9025c9036b215eed47161a3f52fee2ee1a22a408492067ec4c0e30002b0028005d0e8613e277210627abef429c609ec03829bcc0a1300c1cc409dbfb383ae024eb6d180d7062f42e44a19cccbb70141d9a87745b48956b3aa97746b5c5ac9986735a47845bca7892f72e44c189d99b3030ba38997a9782209ce8038a77644bc89b6a39a87645845ccb996837a674a8957c695643bc9b88755c49b6a7947b68556c3c1bfb2ec489e9a41ed516731acee995729a4d29af6216b26519cd912e96710eab5e12ae611525db8e0672a831407eff3f03a073d406101a042dab03b007983b5ec8d4e0c181a09554e9912e4b101d9a895c86df99ca1ea0046cd5a913c307eb19b12f0f0c3fd47a3b5906b35263b89a038b3b477925102b1f1521afeeafcb384d86e57485bac7a5cb584d88474cb755dbfe98e6ad0a");
+    if (!decodes_to(&a1, &a)) { return 1; };
+    if (!decodes_to(&a19, &a)) { return 2; };
+    if (!decodes_to(&b19, &b)) { return 3; };
+    if (!decodes_to(&b3, &b)) { return 4; };
+
+    // A raw-content dictionary.
+    let dict: vector u8 = bytes_from_text("dictionary content: the quick brown fox jumps over the lazy dog dictionary content: the quick brown fox jumps over the lazy dog ");
+    let c: vector u8 = bytes_from_text("the quick brown fox jumps over the lazy dog, says the dictionary");
+    let cdict: vector u8 = unhex("28b52ffd0458950000302c20736179730300395b2084b678a60202cdf2c14a");
+    match zstd_decompress_with_dictionary(&cdict, &dict) with
+    | result.ok(v) -> { if (!same(&v, &c)) { return 5; }; }
+    | result.err(_) -> { return 6; };
+    if (decodes_to(&cdict, &c)) { return 7; };
+
+    // A skippable frame, then two frames.
+    let joined: mutable vector u8 = unhex("502a4d1803000000616263");
+    let i: mutable uint = 0;
+    while (i < (length(a1) as uint)) { append(joined, a1[i]); i := i + 1; }
+    i := 0;
+    while (i < (length(a19) as uint)) { append(joined, a19[i]); i := i + 1; }
+    let both: mutable vector u8 = sample_a();
+    i := 0;
+    while (i < (length(a) as uint)) { append(both, a[i]); i := i + 1; }
+    if (!decodes_to(&joined, &both)) { return 8; };
+
+    // The compressor: real compression, checksummed or not, and round trips.
+    let packed: vector u8 = zstd_compress(&b);
+    if ((length(packed) as uint) * 2 > (length(b) as uint)) { return 9; };
+    if (!decodes_to(&packed, &b)) { return 10; };
+    let plain: vector u8 = zstd_compress_with_options(&a, false);
+    if (!decodes_to(&plain, &a)) { return 11; };
+    let nothing: vector u8 = [];
+    let packed_empty: vector u8 = zstd_compress(&nothing);
+    if (!decodes_to(&packed_empty, &nothing)) { return 12; };
+    let run: mutable vector u8 = [];
+    i := 0;
+    while (i < 3000) { append(run, 7); i := i + 1; }
+    let packed_run: vector u8 = zstd_compress(&run);
+    if ((length(packed_run) as uint) > 32 || !decodes_to(&packed_run, &run)) { return 13; };
+
+    // Malformed input.
+    let truncated: vector u8 = fuzz_delete_range(&b19, 100, 207);
+    if (!is_error(&truncated, 0)) { return 14; };
+    let bad_magic: vector u8 = fuzz_replace_byte(&a1, 0, 0x29);
+    if (!is_error(&bad_magic, 0)) { return 15; };
+    let bad_sum: vector u8 = fuzz_replace_byte(&a1, 92, 0x00);
+    match zstd_decompress(&bad_sum) with
+    | result.ok(_) -> { return 16; }
+    | result.err(zstd_error.checksum_mismatch) -> { }
+    | result.err(_) -> { return 17; };
+    let huge_window: vector u8 = unhex("28b52ffd00f8010000");
+    match zstd_decompress(&huge_window) with
+    | result.ok(_) -> { return 18; }
+    | result.err(zstd_error.window_too_large) -> { }
+    | result.err(_) -> { return 19; };
+    match zstd_decompress_limited(&b19, 1000) with
+    | result.ok(_) -> { return 20; }
+    | result.err(zstd_error.output_limit_exceeded) -> { }
+    | result.err(_) -> { return 21; };
+    let empty_input: vector u8 = [];
+    if (!is_error(&empty_input, 0)) { return 22; };
+    let flips: mutable uint = 0;
+    let bit: mutable uint = 5;
+    while (flips < 8) {
+        let flipped: vector u8 = fuzz_flip_bit(&a1, bit % ((length(a1) as uint) * 8));
+        let ignored: bool = is_error(&flipped, 100000);
+        bit := bit + 977;
+        flips := flips + 1;
+    }
+
+    // XXH64 reference values (xxHash's test vectors).
+    if (xxh64(&nothing) != 0xEF46DB3751D8E999) { return 23; };
+    let abc: vector u8 = bytes_from_text("abc");
+    if (xxh64(&abc) != 0x44BC2CF5AD770999) { return 24; };
+    return 42;
+}

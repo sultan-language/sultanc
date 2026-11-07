@@ -1,0 +1,7 @@
+// اختبار: رفض
+// تشخيص: SULTANC-CALL-ARGUMENT-COUNT-MISMATCH
+// نظير: tests/en/diagnostics/e2e/argument_count_dual.sn
+// خرج-تشخيص-عربي: argument_count_dual.ar.stderr
+// خرج-تشخيص-إنجليزي: argument_count_dual.en.stderr
+عرف اجمع(أ: ص32, ب: ص32): ص32 { أرجع أ + ب; }
+عرف الرئيسية(): ص32 { أرجع اجمع(1); }

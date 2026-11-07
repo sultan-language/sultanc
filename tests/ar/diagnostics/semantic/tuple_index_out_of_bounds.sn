@@ -1,0 +1,7 @@
+// اختبار: رفض
+// تشخيص: SULTANC-SAFETY-INDEX-OUT-OF-BOUNDS
+// نظير: tests/en/diagnostics/semantic/tuple_index_out_of_bounds.sn
+عرف الرئيسية(): ص32 {
+    دع الزوج: (ص32, ص32) = (1, 2);
+    أرجع الزوج[2];
+}

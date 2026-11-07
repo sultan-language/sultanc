@@ -1,0 +1,20 @@
+// اختبار: قبول
+// خطأ-قياسي: <فارغ>
+// نظير: tests/ar/diagnostics/semantic/full_integer_range.sn
+// Ranges that together cover every value of the integer Type are exhaustive,
+// and no arm is reported.
+def byte_class(value: u8): i32 {
+    match value with
+    | range 0 to 127 -> { return 0; }
+    | 128 -> { return 1; }
+    | range 129 to 255 -> { return 2; }
+}
+def sign(value: i8): i32 {
+    match value with
+    | range -128 to -1 -> { return 1; }
+    | 0 -> { return 0; }
+    | range 1 to 127 -> { return 2; }
+}
+def main(): i32 {
+    return byte_class(7) + sign(0);
+}

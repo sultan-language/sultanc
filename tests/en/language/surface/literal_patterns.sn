@@ -26,8 +26,7 @@ def match_string(value: string): int {
 def match_boolean(value: bool): int {
     match value with
     | true -> { return 8; }
-    | false -> { return 9; }
-    | _ -> { return 0; };
+    | false -> { return 9; };
 }
 
 def main(): int {

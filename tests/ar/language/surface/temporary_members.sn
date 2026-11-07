@@ -1,0 +1,67 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/en/language/surface/temporary_members.sn
+// أعضاء ناتج نداء (قيمة مؤقتة) وعناصره ونداؤه: `make().name` ينقل الحقل،
+// و`make().id` ينسخه، و`make().inner.name` يبلغ عضوا متداخلا،
+// و`make().callback(3)` ينادي إغلاقا في حقل، و`words()[1]` يقرأ عنصرا،
+// و`adder(1)(2)` ينادي إغلاقا مُرجعا. تطبق قواعد Rust للقيم المؤقتة: يُتلف
+// باقي القيمة المؤقتة.
+استورد std.text.number;
+
+نوع Inner = { name: نص, n: عدد };
+نوع Rec = { name: نص, id: عدد, callback: دالة(عدد): عدد, inner: Inner, items: متجه نص };
+
+عرف adder(k: عدد): دالة(عدد): عدد { أرجع دالة(x: عدد): عدد -> x + k; }
+
+عرف make(i: عدد): Rec {
+    دع items: متغير متجه نص = [];
+    ألحق(items, عدد_إلى_نص(i));
+    ألحق(items, عدد_إلى_نص(i + 10));
+    دع inner: Inner = { name: عدد_إلى_نص(i * 2), n: i };
+    دع r: Rec = { name: عدد_إلى_نص(i), id: i, callback: adder(i), inner: inner, items: items };
+    أرجع r;
+}
+
+عرف words(i: عدد): متجه نص {
+    دع w: متغير متجه نص = [];
+    ألحق(w, عدد_إلى_نص(i));
+    ألحق(w, عدد_إلى_نص(i + 100));
+    أرجع w;
+}
+
+عرف numbers(i: عدد): متجه عدد {
+    دع w: متغير متجه عدد = [];
+    ألحق(w, i);
+    ألحق(w, i + 7);
+    أرجع w;
+}
+
+عرف size(s: نص): عدد { أرجع الطول(s) مثل عدد; }
+
+عرف الرئيسية(): عدد {
+    دع total: متغير عدد = 0;
+    total := total + make(4).id;
+    دع name: نص = make(25).name;
+    total := total + size(name);
+    total := total + make(5).callback(3);
+    دع f: دالة(عدد): عدد = make(6).callback;
+    total := total + f(1);
+    دع inner: نص = make(50).inner.name;
+    total := total + size(inner);
+    total := total + make(3).inner.n;
+    total := total + size(make(123).name);
+    total := total + (الطول(make(7).items) مثل عدد);
+    total := total + numbers(2)[1];
+    دع w: نص = words(5)[1];
+    total := total + size(w);
+    دع item: نص = make(8).items[1];
+    total := total + size(item);
+    total := total + adder(1)(2);
+    طابق make(9).inner.n مع
+    | 9 -> { total := total + 1; }
+    | _ -> { };
+    لو (total != 50) { أرجع total; };
+    أرجع 42;
+}

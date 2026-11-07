@@ -1,0 +1,9 @@
+// اختبار: رفض
+// تشخيص: SULTANC-SAFETY-UNSAFE-OPERATION
+// نظير: tests/ar/diagnostics/safety/raw_pointer_index.sn
+// Indexing a raw pointer reads memory it only claims: it needs an unsafe scope.
+def main(): int {
+    let value: mutable int = 40;
+    let pointer: *mutable int = & mutable value;
+    return pointer[0];
+}

@@ -1,0 +1,83 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// Counterpart: tests/ar/stdlib/behavior/thread_many_short.sn
+// (no pair directive: the interpreter runs one OS thread and stops at a spawn).
+// std.thread: a thousand short-lived threads, in 125 batches of eight. Each
+// thread adds its number to its slot (an atomic add in an Arc), and the
+// program joins the whole batch before the next. The program checks the sum,
+// and that the allocator's live bytes after the thousand are what they were
+// before: a thread drops its closure and its Arc clone when it finishes, and
+// join releases its entry and unmaps its stack where std maps it (left
+// mapped, the thousand 2 MiB stacks would exhaust a 32-bit target's address
+// space).
+import std.thread.thread;
+import std.sync.arc;
+import std.sync.atomic;
+import std.os.allocation;
+
+type slots = { values: vector atomic_u64 };
+
+def add_to_slot(shared: &arc<slots>, position: uint, number: u64): void {
+    let s: &slots = arc_get(shared);
+    let ignored: u64 = atomic_u64_fetch_add(&(*s).values[position], number, memory_ordering.seq_cst());
+}
+
+def start(shared: &arc<slots>, position: uint, number: u64): option join_handle {
+    let mine: arc<slots> = arc_clone(shared);
+    match spawn(fn(): void -> add_to_slot(&mine, position, number)) with
+    | result.ok(h) -> { return option.some(h); }
+    | result.err(_) -> { return option.none(); };
+}
+
+// One batch: eight threads, each adding its number to its slot, then joined.
+def run_batch(shared: &arc<slots>, batch: u64, handles: &mutable vector join_handle): bool {
+    let i: mutable uint = 0;
+    while (i < 8) {
+        match start(shared, i, (batch * 8) + (i as u64)) with
+        | option.some(h) -> { (*handles)[i] := h; }
+        | option.none -> { return false; };
+        i := i + 1;
+    }
+    i := 0;
+    while (i < 8) { join(&mutable (*handles)[i]); i := i + 1; }
+    return true;
+}
+
+def main(): i32 {
+    let values: mutable vector atomic_u64 = [];
+    let i: mutable uint = 0;
+    while (i < 8) { append(values, atomic_u64_new(0)); i := i + 1; }
+    let initial: slots = { values: values };
+    let shared: arc<slots> = arc_new(initial);
+
+    // The handles live in a vector of fixed capacity that every batch refills.
+    let handles: mutable vector join_handle = [];
+    i := 0;
+    while (i < 8) {
+        match start(&shared, 0, 0) with
+        | option.some(h) -> { append(handles, h); }
+        | option.none -> { return 1; };
+        i := i + 1;
+    }
+    i := 0;
+    while (i < 8) { join(&mutable handles[i]); i := i + 1; }
+
+    let before: u64 = بايتات_حية_مخصص_النظام();
+    let batch: mutable u64 = 0;
+    while (batch < 125) {
+        if (!run_batch(&shared, batch, &mutable handles)) { return 2; };
+        batch := batch + 1;
+    }
+    let after: u64 = بايتات_حية_مخصص_النظام();
+    if (after != before) { return 3; };
+
+    // The sum of 0 to 999.
+    let s: &slots = arc_get(&shared);
+    let total: mutable u64 = 0;
+    i := 0;
+    while (i < 8) { total := total + atomic_u64_load(&(*s).values[i], memory_ordering.seq_cst()); i := i + 1; }
+    if (total != 499500) { return 4; };
+    if (arc_strong_count(&shared) != 1) { return 5; };
+    return 42;
+}

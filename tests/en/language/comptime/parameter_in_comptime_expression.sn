@@ -1,0 +1,41 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/language/comptime/parameter_in_comptime_expression.sn
+// Inside a specialized copy a compile-time parameter is a constant, so
+// `comptime` expressions may use it: alone, in arithmetic, as a call
+// argument, in a block after run-time control flow, and through a value that
+// both branches of an `if` give the same constant.
+def double(v: int): int { return v * 2; }
+
+def scale(comptime factor: int, x: int): int {
+    let k: int = comptime factor;
+    let plus: int = comptime (factor + 1);
+    let twice: int = comptime double(factor);
+    let total: mutable int = x;
+    if (x > 100) { total := 0; };
+    // A later block: the parameter's definition is in the entry block.
+    let later: int = comptime (factor * factor);
+    return total + k + plus + twice + later;
+}
+
+def count_bytes(t: string): int { return length(t) as int; }
+
+def label(comptime text: string, x: int): int {
+    let n: int = comptime count_bytes(text);
+    return x + (n as int);
+}
+
+def main(): int {
+    let n: mutable int = 1;
+    n := n + 1;
+    // 2 + 3 + 4 + 6 + 9 = 24; 2 + 4 = 6; 24 + 6 = 30
+    let a: int = scale(3, n);
+    let b: int = label("abcd", n);
+    if (a != 24 || b != 6) { return 1; };
+    // A second copy for another constant; the first is shared.
+    if (scale(1, n) != 2 + 1 + 2 + 2 + 1) { return 2; };
+    if (scale(3, n) != 24) { return 3; };
+    return a + b + 12;
+}

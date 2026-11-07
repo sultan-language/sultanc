@@ -1,0 +1,29 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// نظير: tests/ar/language/surface/target_guards.sn
+// Target guards with the English names of `target` and its fields.
+if (target.platform_family == "unix" && target.pointer_width == "64") {
+    def family_score(): i32 { return 40; }
+} else {
+    def family_score(): i32 { return 1; }
+}
+if (target.platform == "plan9" || target.architecture == "avr") {
+    def other_score(): i32 { return 100; }
+} else {
+    def other_score(): i32 { return 2; }
+}
+if (!(target.byte_order == "big") && target.object_format != "none" && target.triple != "") {
+    def order_score(): i32 { return 0; }
+} else {
+    def order_score(): i32 { return 50; }
+}
+if (target.environment == "unknown-environment" || target.abi == "unknown-abi"
+    || target.support == "unknown-support" || target.runtime_provider == "unknown-runtime") {
+    def unknown_score(): i32 { return 7; }
+} else {
+    def unknown_score(): i32 { return 0; }
+}
+def main(): i32 {
+    return family_score() + other_score() + order_score() + unknown_score();
+}

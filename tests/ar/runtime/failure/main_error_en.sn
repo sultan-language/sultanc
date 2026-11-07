@@ -1,0 +1,26 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 1
+// تفاضلي: نعم
+// بيئة: SULTANC_LANG=en
+// خرج-قياسي: <فارغ>
+// خطأ-قياسي-ملف: main_error_en.stderr
+// نظير: tests/en/runtime/failure/main_error_en.sn
+// `main` returning `نتيجة عدد, فشل` (docs/ERRORS.md): its error goes through
+// the one runtime-failure path, the iSpeak frame "the program ended with an
+// error" in the program's language (SULTANC_LANG=en) and the error's صف_فشل
+// text, exit status 1; native and interpreter agree.
+استورد المكتبة.أخطاء.failure;
+استورد المكتبة.أخطاء.context;
+استورد المكتبة.أخطاء.from_number;
+استورد المكتبة.نصوص.number;
+
+عرف اقرأ_المنفذ(النص: نص): نتيجة عدد, فشل {
+    دع المنفذ: عدد = إلى_فشل(حلل_عدد(&النص), فشل_من_خطأ_تحليل_عدد)؟;
+    أرجع نتيجة.نجح(المنفذ);
+}
+
+عرف الرئيسية(): نتيجة عدد, فشل {
+    دع المنفذ: عدد = مع_ملاحظة(مع_سياق(اقرأ_المنفذ(«80x0»), «أثناء بدء الخادم»), «المنفذ من PORT»)؟;
+    أرجع نتيجة.نجح(المنفذ);
+}

@@ -14,13 +14,15 @@ def main(): i32 {
         let key: i32 = i;
         let value: i32 = i + 1;
         match map_insert(&mutable m, key, value) with
-        | option.none -> { }
-        | option.some(_) -> { return 10; };
+        | result.ok(option.none) -> { }
+        | result.ok(option.some(_)) -> { return 10; }
+        | result.err(_) -> { return 90; };
         i := i + 1;
     }
     match map_insert(&mutable m, 7, 99) with
-    | option.some(old) -> { if (old != 8) { return 11; }; }
-    | option.none -> { return 12; };
+    | result.ok(option.some(old)) -> { if (old != 8) { return 11; }; }
+    | result.ok(option.none) -> { return 12; }
+    | result.err(_) -> { return 90; };
     let k: i32 = 7;
     match map_get(&m, &k) with
     | option.some(v) -> { if (v != 99) { return 13; }; }
@@ -32,8 +34,13 @@ def main(): i32 {
     if (map_contains(&m, &k)) { return 18; };
 
     let s: mutable set<i32> = new_set(hash_i32, eq_i32);
-    if (!set_insert(&mutable s, 5)) { return 20; };
-    if (set_insert(&mutable s, 5)) { return 21; };
+    // set_insert returns result<bool, map_insert_error>: ok(true) when the value is new.
+    match set_insert(&mutable s, 5) with
+    | result.ok(added) -> { if (!added) { return 20; }; }
+    | result.err(_) -> { return 25; };
+    match set_insert(&mutable s, 5) with
+    | result.ok(added) -> { if (added) { return 21; }; }
+    | result.err(_) -> { return 26; };
     let five: i32 = 5;
     if (!set_contains(&s, &five)) { return 22; };
     if (!set_remove(&mutable s, &five)) { return 23; };

@@ -1,7 +1,7 @@
 // اختبار: قبول
 // خروج: 0
 // مرحلة0: نعم
-import tests.compiler.semantic.imports.helper;
+import tests.en.compiler.semantic.imports.helper;
 
 def main(): int {
     return helper();

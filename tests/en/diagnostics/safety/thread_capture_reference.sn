@@ -1,0 +1,23 @@
+// اختبار: رفض
+// تشخيص: SULTANC-THREAD-CAPTURE-REFERENCE
+// نظير: tests/ar/diagnostics/safety/thread_capture_reference.sn
+// The spawn capture check (docs/TYPE_SYSTEM.md, "Thread capture rules"): a
+// closure handed to another thread may not capture a borrowed reference,
+// because the thread may outlive the storage it borrows (Rust's 'static
+// bound on spawn). Move an owned value in, or share it through an Arc.
+import std.thread.thread;
+
+def first(r: &vector i64): i64 { return (*r)[0]; }
+def keep(x: i64): void { }
+
+def run(values: &vector i64): void {
+    match spawn(fn(): void -> keep(first(values))) with
+    | result.ok(_) -> { }
+    | result.err(_) -> { };
+}
+
+def main(): i32 {
+    let values: vector i64 = [1 as i64, 2 as i64];
+    run(&values);
+    return 0;
+}

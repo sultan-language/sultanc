@@ -14,11 +14,13 @@ def main(): i32 {
     let first: Item = { value: 40 };
     let second: Item = { value: 2 };
     match map_insert(&mutable values, 1, first) with
-    | option.none -> { }
-    | option.some(_) -> { return 1; };
+    | result.ok(option.none) -> { }
+    | result.ok(option.some(_)) -> { return 1; }
+    | result.err(_) -> { return 90; };
     match map_insert(&mutable values, 2, second) with
-    | option.none -> { }
-    | option.some(_) -> { return 2; };
+    | result.ok(option.none) -> { }
+    | result.ok(option.some(_)) -> { return 2; }
+    | result.err(_) -> { return 90; };
     let one: i32 = 1;
     let two: i32 = 2;
     match map_get(&values, &one) with

@@ -1,0 +1,25 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 1
+// تفاضلي: نعم
+// بيئة: SULTANC_LANG=ar
+// خرج-قياسي: قبل الإيقاف
+// خطأ-قياسي-ملف: panic_ar.stderr
+// نظير: tests/ar/runtime/failure/panic_ar.sn
+// The stop primitive panic (docs/ERRORS.md): the iSpeak frame "the program
+// stopped" in the program's language with the message under it, exit status
+// 1. It never returns, so `divide` needs no return after it; the owned text
+// still alive is not dropped (abort semantics).
+import std.io.print;
+import std.process.panic;
+
+def divide(a: int, b: int): int {
+    if (b != 0) { return a / b; };
+    panic("القسمة على صفر");
+}
+
+def main(): int {
+    let owned: string = "قبل الإيقاف";
+    let ignored: result int, int = print("قبل الإيقاف");
+    return divide(10, 0);
+}

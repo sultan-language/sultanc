@@ -1,0 +1,10 @@
+// اختبار: رفض
+// تشخيص: SULTANC-PARSE-EXPRESSION
+// نظير: tests/en/ispeak/fixtures/invalid_expression.sn
+// خرج-تشخيص-عربي: invalid_expression.ar.stderr
+// خرج-تشخيص-إنجليزي: invalid_expression.en.stderr
+// Intentionally invalid. Used only to compare the compiler's live output.
+عرف الرئيسية(): عدد {
+    دع س: عدد = ;
+    أرجع 0;
+}
