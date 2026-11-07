@@ -1,0 +1,102 @@
+# FreeBSD system calls behind std's kernel operations (the operation list of
+# library/std/os/platform/unix/linux/syscalls/operations.sn, which names OS
+# services, not one kernel): <operation> <SYS_ name> [fallback SYS_ name ...]
+# FreeBSD numbers its system calls once for every architecture
+# (sys/kern/syscalls.master -> sys/sys/syscall.h), so there is one table.
+# The FreeBSD call is the one that provides the service; where its
+# arguments differ from the Linux call of the same row, the std code that
+# issues it on FreeBSD says so (fstatat, getdirentries, __getcwd, wait4,
+# fork, getrlimit/setrlimit).
+# "-" marks an operation FreeBSD lacks. Its number is 0xFFFFFFFF, past the
+# system-call table: the kernel would answer with nosys, which raises
+# SIGSYS, so std never issues such an operation on FreeBSD.
+قراءة read
+كتابة write
+إغلاق close
+فتح_عند openat
+# statx is Linux only; std's FreeBSD metadata reads struct stat (fstatat).
+إحصاء_مسار -
+معلومات_ملف_عند fstatat
+# getdirentries(fd, buf, count, basep): basep may be NULL (vfs_syscalls.c).
+قراءة_مداخل_دليل getdirentries
+إنشاء_دليل_عند mkdirat
+حذف_عند unlinkat
+إعادة_تسمية_عند renameat
+موضع_ملف lseek
+مزامنة_ملف fsync
+أذونات_واصف fchmod
+تحكم_واصف fcntl
+مزامنة_بيانات fdatasync
+# __getcwd(buf, buflen) returns 0 and a NUL-terminated buffer, not a length.
+قراءة_دليل_العمل __getcwd
+# FreeBSD exit(2) ends the whole process; threads end with thr_exit.
+خروج exit
+خروج_جماعي exit
+# wait4(pid, &status, options, rusage): a wait(2) status word, not siginfo.
+انتظار_عملية wait4
+أغلق_مجال_واصفات close_range
+قناة_عملية pipe2
+انتظر_مقبسا ppoll
+أرسل_إشارة_عملية kill
+# fork(void): the child gets 0 in the result register (cpu_fork).
+نسخ_عملية fork
+تشغيل_برنامج execve
+ربط_ذاكرة mmap
+ربط_ذاكرة_بكتلة -
+إلغاء_ربط_ذاكرة munmap
+حماية_ذاكرة mprotect
+قفل_ذاكرة mlock
+إلغاء_قفل_ذاكرة munlock
+نصيحة_ذاكرة madvise
+مقبس socket
+اتصال connect
+ربط_مقبس bind
+استماع listen
+قبول accept
+قبول_بأعلام accept4
+إرسال_إلى sendto
+استقبال_من recvfrom
+إيقاف_مقبس shutdown
+ضبط_خيار_مقبس setsockopt
+قراءة_خيار_مقبس getsockopt
+ساعة_نظام clock_gettime
+نوم_نانو nanosleep
+نوم_الساعة clock_nanosleep
+قراءة_وصلة_عند readlinkat
+عشوائية_النواة getrandom
+# getrlimit(which, rlp) / setrlimit(which, rlp): no pid argument.
+قراءة_حد_مورد getrlimit
+ضبط_حد_مورد setrlimit
+# __sysctl(name, namelen, old, oldlenp, new, newlen): hw.pagesize.
+قراءة_متغير_نواة __sysctl
+# fchmodat(fd, path, mode, flag), linkat, symlinkat: the Linux arguments.
+وصلة_رمزية_عند symlinkat
+وصلة_صلبة_عند linkat
+أذونات_مسار_عند fchmodat
+اقتطاع_واصف ftruncate
+أوقات_مسار_عند utimensat
+تغيير_دليل_العمل chdir
+# dup2(old, new): the trailing 0 std passes for dup3's flags is ignored.
+مضاعفة_واصف dup2
+اسم_مقبس_محلي getsockname
+اسم_مقبس_نظير getpeername
+إرسال_إلى_عنوان sendto
+استقبال_من_عنوان recvfrom
+# flock(fd, how): the Linux arguments and LOCK_* values.
+قفل_ملف flock
+# sigprocmask(how, set, oset) and sigtimedwait(set, info, timeout): the
+# Linux calls without their trailing sigsetsize (ignored); FreeBSD's how
+# values and 128-bit sigset_t come from freebsd/uapi.sn.
+حجب_إشارات sigprocmask
+انتظر_إشارة sigtimedwait
+# Threads (std.thread, docs/CONCURRENCY.md): _umtx_op for wait/wake on an
+# address, thr_self(&id) for the current id, cpuset_getaffinity for the
+# available CPUs, thr_exit(&state) and thr_new(&param, size).
+مستقبل _umtx_op
+مستقبل_بمهلة -
+مستقبل_بمهلة_بي_إس_دي _umtx_op
+تنازل_جدولة sched_yield
+معرف_الخيط thr_self
+ألفة_المعالج cpuset_getaffinity
+إنهاء_خيط thr_exit
+إنشاء_خيط thr_new

@@ -1,0 +1,96 @@
+# Linux syscall operations used by std (operations.sn) and the kernel UAPI
+# name each maps to: <operation> <__NR_ name> [fallback __NR_ name ...]
+# A fallback is used when the architecture does not define the first name
+# and has identical semantics with the trailing arguments std passes as 0.
+# A final "-" lets an architecture lack the operation: its number is then
+# 0xFFFFFFFF, which every Linux kernel rejects with ENOSYS.
+# A name written ilp32:<name> applies to the 32-bit ABIs (i386, ARM EABI)
+# only and is tried first there: their time64 (64-bit timespec) and
+# large-file (_llseek, fcntl64, mmap2) entry points. std passes the 64-bit
+# record layouts to those, so the same std code serves both widths.
+قراءة read
+كتابة write
+إغلاق close
+فتح_عند openat
+إحصاء_مسار statx
+معلومات_ملف_عند ilp32:- newfstatat -
+قراءة_مداخل_دليل getdents64
+إنشاء_دليل_عند mkdirat
+حذف_عند unlinkat
+إعادة_تسمية_عند renameat renameat2
+موضع_ملف ilp32:_llseek lseek
+مزامنة_ملف fsync
+أذونات_واصف fchmod
+تحكم_واصف ilp32:fcntl64 fcntl
+مزامنة_بيانات fdatasync
+قراءة_دليل_العمل getcwd
+خروج exit
+خروج_جماعي exit_group
+انتظار_عملية waitid
+أغلق_مجال_واصفات close_range
+قناة_عملية pipe2
+انتظر_مقبسا ilp32:ppoll_time64 ppoll
+أرسل_إشارة_عملية kill
+نسخ_عملية clone
+تشغيل_برنامج execve
+ربط_ذاكرة ilp32:mmap2 mmap
+ربط_ذاكرة_بكتلة mmap -
+إلغاء_ربط_ذاكرة munmap
+حماية_ذاكرة mprotect
+قفل_ذاكرة mlock
+إلغاء_قفل_ذاكرة munlock
+نصيحة_ذاكرة madvise
+مقبس socket
+اتصال connect
+ربط_مقبس bind
+استماع listen
+قبول accept accept4
+قبول_بأعلام accept4
+إرسال_إلى sendto
+استقبال_من recvfrom
+إيقاف_مقبس shutdown
+ضبط_خيار_مقبس setsockopt
+قراءة_خيار_مقبس getsockopt
+ساعة_نظام ilp32:clock_gettime64 clock_gettime
+نوم_نانو ilp32:- nanosleep
+نوم_الساعة ilp32:clock_nanosleep_time64 clock_nanosleep
+قراءة_وصلة_عند readlinkat
+عشوائية_النواة getrandom
+قراءة_حد_مورد prlimit64
+ضبط_حد_مورد prlimit64
+قراءة_متغير_نواة -
+وصلة_رمزية_عند symlinkat
+وصلة_صلبة_عند linkat
+أذونات_مسار_عند fchmodat
+# ILP32: the 32-bit ftruncate takes a 32-bit length (std refuses larger).
+اقتطاع_واصف ftruncate
+أوقات_مسار_عند ilp32:utimensat_time64 utimensat
+تغيير_دليل_العمل chdir
+# dup3 exists on every architecture (dup2 is missing from asm-generic).
+مضاعفة_واصف dup3
+اسم_مقبس_محلي getsockname
+اسم_مقبس_نظير getpeername
+إرسال_إلى_عنوان sendto
+استقبال_من_عنوان recvfrom
+# flock(fd, LOCK_SH | LOCK_EX | LOCK_UN [| LOCK_NB]): std.fs.lock.
+قفل_ملف flock
+# A pipe write that cannot raise SIGPIPE (std.process child stdin):
+# rt_sigprocmask(how, set, oldset, sigsetsize) blocks SIGPIPE around the
+# write, rt_sigtimedwait(set, info, timeout, sigsetsize) takes the pending
+# SIGPIPE an EPIPE write raised (PostgreSQL libpq's pq_block_sigpipe).
+حجب_إشارات rt_sigprocmask
+انتظر_إشارة ilp32:rt_sigtimedwait_time64 rt_sigtimedwait
+# Thread join and Mutex/Condvar wait/wake (std.thread). A NULL timeout lets
+# the 32-bit ABIs use plain futex for the 64-bit record too.
+مستقبل futex
+# A timed wait (std.os.wait_address): the 64-bit timespec on every ABI.
+مستقبل_بمهلة ilp32:futex_time64 futex
+# FreeBSD only: _umtx_op with the timeout in uaddr2.
+مستقبل_بمهلة_بي_إس_دي -
+# std.thread: yield, the current thread's id, available parallelism.
+تنازل_جدولة sched_yield
+معرف_الخيط gettid
+ألفة_المعالج sched_getaffinity
+# The calling thread's exit (not exit_group); FreeBSD's thr_new has no Linux row.
+إنهاء_خيط exit
+إنشاء_خيط -
