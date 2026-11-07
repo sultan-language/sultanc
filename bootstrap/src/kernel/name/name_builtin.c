@@ -39,7 +39,8 @@ __Name_Builtin_Function__ __Name_Find_Builtin_Function__(__Text_Slice__ __Name__
     if (__Identifier_Identity_Equals__(__Name__, SULTANC__BUILTIN_NAME__("حرر")) ||
         __Identifier_Identity_Equals__(__Name__, SULTANC__BUILTIN_NAME__("release")))
         return __Name_Builtin_Release__;
-    if (__Identifier_Identity_Equals__(__Name__, SULTANC__BUILTIN_NAME__("بدائي_نداء_نواة_خام")))
+    if (__Identifier_Identity_Equals__(__Name__, SULTANC__BUILTIN_NAME__("بدائي_نداء_نواة_خام")) ||
+        __Identifier_Identity_Equals__(__Name__, SULTANC__BUILTIN_NAME__("raw_kernel_call")))
         return __Name_Builtin_Raw_Kernel_Call__;
     if (__Identifier_Identity_Equals__(__Name__, SULTANC__BUILTIN_NAME__("بدائي_بتات_ع64")))
         return __Name_Builtin_F64_Bits__;
@@ -49,6 +50,31 @@ __Name_Builtin_Function__ __Name_Find_Builtin_Function__(__Text_Slice__ __Name__
         return __Name_Builtin_F32_Bits__;
     if (__Identifier_Identity_Equals__(__Name__, SULTANC__BUILTIN_NAME__("بدائي_ع32_من_بتات")))
         return __Name_Builtin_F32_From_Bits__;
+    if (__Identifier_Identity_Equals__(__Name__, SULTANC__BUILTIN_NAME__("سعة")) ||
+        __Identifier_Identity_Equals__(__Name__, SULTANC__BUILTIN_NAME__("capacity")))
+        return __Name_Builtin_Capacity__;
+    if (__Identifier_Identity_Equals__(__Name__, SULTANC__BUILTIN_NAME__("احجز_سعة")) ||
+        __Identifier_Identity_Equals__(__Name__, SULTANC__BUILTIN_NAME__("reserve_exact")))
+        return __Name_Builtin_Reserve_Exact__;
+    if (__Identifier_Identity_Equals__(__Name__, SULTANC__BUILTIN_NAME__("أزل_الأخير")) ||
+        __Identifier_Identity_Equals__(__Name__, SULTANC__BUILTIN_NAME__("pop")))
+        return __Name_Builtin_Pop__;
+    if (__Identifier_Identity_Equals__(__Name__, SULTANC__BUILTIN_NAME__("اقتطع")) ||
+        __Identifier_Identity_Equals__(__Name__, SULTANC__BUILTIN_NAME__("truncate")))
+        return __Name_Builtin_Truncate__;
+    if (__Identifier_Identity_Equals__(__Name__, SULTANC__BUILTIN_NAME__("بدائي_جمع_ملتف")))
+        return __Name_Builtin_Wrapping_Add__;
+    if (__Identifier_Identity_Equals__(__Name__, SULTANC__BUILTIN_NAME__("بدائي_طرح_ملتف")))
+        return __Name_Builtin_Wrapping_Subtract__;
+    if (__Identifier_Identity_Equals__(__Name__, SULTANC__BUILTIN_NAME__("بدائي_ضرب_ملتف")))
+        return __Name_Builtin_Wrapping_Multiply__;
+    if (__Identifier_Identity_Equals__(__Name__, SULTANC__BUILTIN_NAME__("بدائي_إزاحة_يسرى_ملتفة")))
+        return __Name_Builtin_Wrapping_Shift_Left__;
+    if (__Identifier_Identity_Equals__(__Name__, SULTANC__BUILTIN_NAME__("بدائي_إزاحة_يمنى_ملتفة")))
+        return __Name_Builtin_Wrapping_Shift_Right__;
+    if (__Identifier_Identity_Equals__(__Name__, SULTANC__BUILTIN_NAME__("بدائي_نداء_عنوان_سي")) ||
+        __Identifier_Identity_Equals__(__Name__, SULTANC__BUILTIN_NAME__("raw_c_call")))
+        return __Name_Builtin_C_Address_Call__;
     return __Name_Builtin_None__;
 }
 
@@ -57,5 +83,7 @@ int __Name_Builtin_Is_Direct_Source__(__Name_Builtin_Function__ __Builtin__)
 {
     return __Builtin__ == __Name_Builtin_Length__ || __Builtin__ == __Name_Builtin_Append__ ||
            __Builtin__ == __Name_Builtin_Swap__ || __Builtin__ == __Name_Builtin_Release__ ||
-           __Builtin__ == __Name_Builtin_Raw_Kernel_Call__;
+           __Builtin__ == __Name_Builtin_Raw_Kernel_Call__ ||
+           __Builtin__ == __Name_Builtin_Capacity__ || __Builtin__ == __Name_Builtin_Reserve_Exact__ ||
+           __Builtin__ == __Name_Builtin_Pop__ || __Builtin__ == __Name_Builtin_Truncate__;
 }

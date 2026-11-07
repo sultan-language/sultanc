@@ -1,0 +1,49 @@
+// The runtime-failure path of a program (docs/ERRORS.md): the one place a
+// compiled or interpreted program prints why it ends. `main` returning an
+// error, the stop primitive إنهيار and a failed assertion all come here.
+//
+// The words are iSpeak's: process.failure_text holds the frame of each
+// runtime failure identity in both languages, and the compiler writes that
+// module afresh at every compilation from its iSpeak tables, with the
+// language the program was compiled with (--lang). This module only chooses
+// the language and writes the frame and the payload to standard error.
+//
+// The program's language is that of its environment's locale
+// (text.system_language, the one implementation of that order: SULTANC_LANG,
+// then LC_ALL, LC_MESSAGES and LANG, then the language the program was
+// compiled with, then Arabic): Arabic when the locale's language is `ar`,
+// English for any other language.
+استورد text.compare;
+استورد text.from_bytes;
+استورد text.language;
+استورد text.system_language;
+استورد io.println;
+استورد process.failure_text;
+استورد error.failure;
+
+// Whether the program speaks English (otherwise Arabic).
+عام عرف البرنامج_بالإنجليزية(): منطقي {
+    دع اللغة: لغة = لغة_من_البيئة();
+    دع الأساسية: نص = اللغة_الأساسية(&اللغة);
+    دع العربية: نص = «ar»;
+    أرجع !نصان_متساويان(&الأساسية, &العربية);
+}
+
+// Writes the frame of a runtime failure (هوية_فشل_برنامج in
+// process.failure_text) and, when it is not empty, the payload on the lines
+// after it, to standard error.
+عام عرف اطبع_فشل_تشغيل(المفتاح: عدد, الحمولة: &نص): فراغ {
+    دع الإطار: نص = إطار_فشل_تشغيل(المفتاح, البرنامج_بالإنجليزية());
+    دع تجاهل: نتيجة عدد, عدد = اطبع_سطر_خطأ(الإطار);
+    لو ((الطول(*الحمولة) مثل طبيعي) > 0) {
+        دع تجاهل_الحمولة: نتيجة عدد, عدد = اطبع_سطر_خطأ(انسخ_نص(الحمولة));
+    };
+}
+
+// `main` returned this error (frontend/desugar/entry_result.sn calls it from
+// the generated entry, which then ends the program with status 1): the frame
+// "the program ended with an error" and the error's صف_فشل text.
+عام عرف أبلغ_عن_خطأ_نقطة_الدخول(الفشل: &فشل): فراغ {
+    دع الوصف: نص = صف_فشل(الفشل);
+    اطبع_فشل_تشغيل(0, &الوصف);
+}

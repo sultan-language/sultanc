@@ -1,0 +1,255 @@
+استورد compiler.ispeak.keys.explanations;
+
+// Explanation text. Each entry is at most 220 UTF-8 bytes (checked by tests/check_messages.sn).
+// Immutable language resources: longer prose is stored once, outside match arms.
+عام عرف نص_شرح_خطأ_نحوي(): نص { أرجع «The source does not follow SultanC grammar here. Fix the first syntax error; later ones often follow from it.»; }
+عام عرف نص_شرح_تعبير_نحوي_غير_صالح(): نص { أرجع «An expression is written in a form the parser cannot read. Check operators, brackets and operand order.»; }
+عام عرف نص_شرح_نوع_نحوي_غير_صالح(): نص { أرجع «A type is written in a form the parser cannot read. Check the type name and its parameters.»; }
+عام عرف نص_شرح_نمط_نحوي_غير_صالح(): نص { أرجع «A pattern is written in a form the parser cannot read. Check the constructor name and its bindings.»; }
+عام عرف نص_شرح_عنصر_نحوي_غير_صالح(): نص { أرجع «A top-level declaration is malformed. Check the keyword, name and body of the declaration.»; }
+عام عرف نص_شرح_فاصلة_منقوطة_في_غير_موضعها(): نص { أرجع «A semicolon is placed where the grammar does not allow one. Move it to the end of the statement.»; }
+عام عرف نص_شرح_تهجئة_كلمة_محجوزة_غير_معروفة(): نص { أرجع «This word looks like a misspelled keyword. Use the suggested keyword spelling.»; }
+عام عرف نص_شرح_تهجئة_مهجورة(): نص { أرجع «This old spelling is still accepted for one release and will then be removed. Replace it with the new spelling the message names.»; }
+عام عرف نص_شرح_عبارة_بلا_عملية(): نص { أرجع «This statement does nothing. A statement must call a function or assign a value.»; }
+عام عرف نص_شرح_نوع_ناتج_دالة_مفقود(): نص { أرجع «Every function must declare its return type. Add the type after the parameter list.»; }
+عام عرف نص_شرح_خطأ_معجمي(): نص { أرجع «The source contains characters that do not form a valid token. Remove or correct them.»; }
+عام عرف نص_شرح_نص_مصدر_يوتيف8_غير_صالح(): نص { أرجع «The source file is not valid UTF-8. Save it with UTF-8 encoding.»; }
+عام عرف نص_شرح_استدعاء_مترجم_غير_صالح(): نص { أرجع «The command line is not a valid compiler invocation. Run sultanc help to see the accepted form.»; }
+عام عرف نص_شرح_هدف_مترجم_غير_معروف(): نص { أرجع «The requested target is not registered. Run sultanc targets to list supported targets.»; }
+عام عرف نص_شرح_مصدر_مترجم_مفقود(): نص { أرجع «No source file was given. Pass the path of the main source file.»; }
+عام عرف نص_شرح_خيار_مترجم_غير_معروف(): نص { أرجع «The compiler does not recognize this option. Check its spelling or run sultanc help.»; }
+عام عرف نص_شرح_رمز_تشخيص_مترجم_غير_معروف(): نص { أرجع «No diagnostic has this code. Check the code printed in the error header.»; }
+عام عرف نص_شرح_قيمة_خيار_مترجم_مفقودة(): نص { أرجع «This option needs a value. Write it after the option or after an equals sign.»; }
+عام عرف نص_شرح_لغة_تشخيص_مترجم_غير_صالحة(): نص { أرجع «The diagnostic language must be auto, ar or en.»; }
+عام عرف نص_شرح_صيغة_تشخيص_مترجم_غير_صالحة(): نص { أرجع «The diagnostic format must be human, short or json.»; }
+عام عرف نص_شرح_لون_تشخيص_مترجم_غير_صالح(): نص { أرجع «The color policy must be auto, always or never.»; }
+عام عرف نص_شرح_مصدر_رئيسي_متعدد(): نص { أرجع «Only one main source file is allowed. Remove the extra source path.»; }
+عام عرف نص_شرح_أوضاع_مترجم_متعارضة(): نص { أرجع «Two options request different compiler modes. Keep only one of them.»; }
+عام عرف نص_شرح_معامل_موضعي_غير_متوقع(): نص { أرجع «This command does not take another argument here. Remove it or pass it with its option.»; }
+عام عرف نص_شرح_هدف_مضيف_مترجم_غير_متاح(): نص { أرجع «The compiler cannot target the machine it runs on. Pass a target explicitly with --target.»; }
+عام عرف نص_شرح_فشل_كتابة_مخرج_مترجم(): نص { أرجع «The output file could not be written. Check the path, permissions and free disk space.»; }
+عام عرف نص_شرح_ملف_إدخال_مفقود(): نص { أرجع «An input file does not exist at the given path. Check the path.»; }
+عام عرف نص_شرح_بيان_حزمة_غير_صالح(): نص { أرجع «The package manifest could not be read. Fix the reported field, dependency or path.»; }
+عام عرف نص_شرح_نوع_ملف_إدخال_غير_معروف(): نص { أرجع «The compiler does not know this input file type. Check the file extension.»; }
+عام عرف نص_شرح_وحدة_مصدر_غير_موجودة(): نص { أرجع «Module not found under registered roots. Check the import path.»; }
+عام عرف نص_شرح_وحدة_مصدر_غير_مقروءة(): نص { أرجع «The module file exists but could not be read. Check its permissions and encoding.»; }
+عام عرف نص_شرح_مرجع_استيراد_غير_صالح(): نص { أرجع «The import is written in a form that does not name a module. Check the import path.»; }
+عام عرف نص_شرح_جذر_مكتبة_غير_مسجل(): نص { أرجع «The import uses a library root that is not registered. Add the root to the package or library path.»; }
+عام عرف نص_شرح_استيراد_يهرب_من_الجذر(): نص { أرجع «The import path leaves its library root. Import the module through its own root.»; }
+عام عرف نص_شرح_مسار_وحدة_منطقي_غير_صالح(): نص { أرجع «The logical module path is not valid. Use dot-separated module names.»; }
+عام عرف نص_شرح_تعارض_مسار_وحدة_عام(): نص { أرجع «Two modules claim the same public path. Rename one of them.»; }
+عام عرف نص_شرح_تعارض_مصدر_وحدة(): نص { أرجع «Two source files are given for the same module. Keep only one.»; }
+عام عرف نص_شرح_تصدير_انتقائي_غير_موجود(): نص { أرجع «The module does not export the name you import. Check the name or the module.»; }
+عام عرف نص_شرح_نقطة_دخول_مفقودة(): نص { أرجع «No valid entry point. Declare the required entry function.»; }
+عام عرف نص_شرح_نقطة_دخول_بتوقيع_غير_صالح(): نص { أرجع «Entry-point signature is invalid. Check parameters and return type.»; }
+عام عرف نص_شرح_تصريح_خاص_غير_متاح(): نص { أرجع «This declaration is private here. Access it from an allowed scope.»; }
+عام عرف نص_شرح_نوع_تكراري_لانهائي(): نص { أرجع «Recursive type has no finite layout. Introduce pointer indirection.»; }
+عام عرف نص_شرح_فك_مرجع_غير_مؤشر(): نص { أرجع «Dereference requires a pointer or reference value.»; }
+عام عرف نص_شرح_أخذ_عنوان_غير_قيمة_يسرى(): نص { أرجع «Taking an address requires addressable storage.»; }
+عام عرف نص_شرح_حقل_سجل_مفقود(): نص { أرجع «A record initializer is missing a required field.»; }
+عام عرف نص_شرح_حقل_سجل_مكرر(): نص { أرجع «A record initializer repeats a field.»; }
+عام عرف نص_شرح_كتابة_إلى_غير_متغير(): نص { أرجع «Cannot assign to immutable storage.»; }
+عام عرف نص_شرح_تصريح_مكرر(): نص { أرجع «The same name is declared twice in one scope. Rename or remove one declaration.»; }
+عام عرف نص_شرح_اسم_غير_معروف(): نص { أرجع «Name is not visible here. Check spelling, scope and imports.»; }
+عام عرف نص_شرح_اسم_غير_محلول(): نص { أرجع «The name could not be bound to a declaration. Check that it is declared and imported.»; }
+عام عرف نص_شرح_استيراد_غامض(): نص { أرجع «Two imports provide the same name. Import only one, or use a qualified name.»; }
+عام عرف نص_شرح_دورة_استيراد(): نص { أرجع «Modules import each other in a cycle. Move shared code to a module both can import.»; }
+عام عرف نص_شرح_نوعان_غير_متوافقين(): نص { أرجع «Types disagree. Compare expected and actual types in the diagnostic.»; }
+عام عرف نص_شرح_نوع_غير_محلول(): نص { أرجع «This type name does not refer to a known type. Check its spelling and imports.»; }
+عام عرف نص_شرح_تعريف_نوع_غير_صالح(): نص { أرجع «This type definition breaks a rule for type declarations. Check its fields and constructors.»; }
+عام عرف نص_شرح_تعبير_غير_قابل_للاستدعاء(): نص { أرجع «Only functions can be called. This expression is not a function.»; }
+عام عرف نص_شرح_حقل_سجل_غير_معروف(): نص { أرجع «The record type has no field with this name. Check the field name.»; }
+عام عرف نص_شرح_منشئ_نوع_غير_صالح(): نص { أرجع «This constructor does not belong to the expected type. Use a constructor of that type.»; }
+عام عرف نص_شرح_عدد_حمولات_نمط_غير_مطابق(): نص { أرجع «The pattern binds a different number of payloads than the constructor has.»; }
+عام عرف نص_شرح_نمط_غير_صالح(): نص { أرجع «This pattern cannot match the value's type. Use a pattern of that type.»; }
+عام عرف نص_شرح_عدد_حجج_غير_مطابق(): نص { أرجع «The call passes a different number of arguments than the function declares.»; }
+عام عرف نص_شرح_نوع_حجة_غير_مطابق(): نص { أرجع «An argument has a different type than its parameter. Convert it or pass a value of the right type.»; }
+عام عرف نص_شرح_نوع_إرجاع_غير_مطابق(): نص { أرجع «The returned value has a different type than the function declares.»; }
+عام عرف نص_شرح_استخدام_قبل_التهيئة(): نص { أرجع «The variable is read before it has a value. Assign it on every path before use.»; }
+عام عرف نص_شرح_استخدام_بعد_النقل(): نص { أرجع «Value used after move. Find the move in the related spans.»; }
+عام عرف نص_شرح_مورد_محرر(): نص { أرجع «The resource is used after it was released. Use it before the release, or do not release it yet.»; }
+عام عرف نص_شرح_تعارض_استعارة(): نص { أرجع «A borrow conflicts with another active borrow of the same value. End one borrow first.»; }
+عام عرف نص_شرح_هروب_مرجع(): نص { أرجع «A reference outlives the value it points to. Return or store the value instead.»; }
+عام عرف نص_شرح_عملية_غير_آمنة(): نص { أرجع «This operation is only allowed inside an explicit unsafe scope.»; }
+عام عرف نص_شرح_التقاط_خيط_مؤشر_خام(): نص { أرجع «Nothing synchronizes what a raw pointer points to. Share the value through an Arc with a Mutex or an atomic, or spawn inside unsafe.»; }
+عام عرف نص_شرح_التقاط_خيط_مرجع(): نص { أرجع «The thread may outlive the borrowed storage. Move an owned value into the closure, or share it through an Arc.»; }
+عام عرف نص_شرح_التقاط_خيط_مشترك_غير_ذري(): نص { أرجع «Every thread shares a writable module variable without atomicity. Use an atomic, a Mutex or an Arc instead.»; }
+عام عرف نص_شرح_فهرس_خارج_الحدود(): نص { أرجع «The index is outside the bounds of the collection. Check the index against the length.»; }
+عام عرف نص_شرح_نمط_غير_شامل(): نص { أرجع «Pattern match misses possible values. Cover the missing cases.»; }
+عام عرف نص_شرح_نمط_غير_قابل_للوصول(): نص { أرجع «An earlier pattern already covers this one, so it never runs. Remove or reorder it.»; }
+عام عرف نص_شرح_تحكم_حلقة_خارج_حلقة(): نص { أرجع «Leaving or continuing a loop is only possible inside a while or for loop of the same function.»; }
+عام عرف نص_شرح_انتهى_البرنامج_بخطأ(): نص { أرجع «The program entry returned an error. Its description follows: the message, its notes and its causes. The exit status is 1.»; }
+عام عرف نص_شرح_توقف_البرنامج(): نص { أرجع «The program called the stop primitive (panic) or an assertion failed. Owned values are not dropped. The exit status is 1.»; }
+عام عرف نص_شرح_إرجاع_مفقود(): نص { أرجع «Some path through the function ends without returning a value. Add the missing return.»; }
+عام عرف نص_شرح_نقل_جزئي_مملوك(): نص { أرجع «Moving one owned member out of an aggregate is not allowed. Move or copy the whole value.»; }
+عام عرف نص_شرح_خطأ_ذاكرة_نوع(): نص { أرجع «The compiler cannot decide how this type is stored and released. Check how the type owns its parts.»; }
+عام عرف نص_شرح_فهرس_تفسير_خارج_الحدود(): نص { أرجع «The running program used an index outside the bounds of a collection.»; }
+عام عرف نص_شرح_حالة_تفسير_غير_صالحة(): نص { أرجع «The running program read or wrote storage in a state that does not allow it.»; }
+عام عرف نص_شرح_نص_تفسير_غير_صالح(): نص { أرجع «The running program produced text that is not valid UTF-8.»; }
+عام عرف نص_شرح_جسر_نص_مضيف_تفسير_غير_متاح(): نص { أرجع «This host does not let the interpreter pass text to the operation. Run a native build instead.»; }
+عام عرف نص_شرح_بدائي_مضيف_تفسير_غير_مدعوم(): نص { أرجع «The interpreter cannot run this host operation. Build a native executable to run it.»; }
+عام عرف نص_شرح_فشل_تفسير_وقت_تشغيل(): نص { أرجع «The program failed while being interpreted. The reported reason names the failed operation.»; }
+عام عرف نص_شرح_فخ_تفسير(): نص { أرجع «The program reached a trap and stopped. Check the condition that leads to it.»; }
+عام عرف نص_شرح_تحذير_عام(): نص { أرجع «The compiler found code that is allowed but likely not intended. Review the highlighted code.»; }
+عام عرف نص_شرح_خلفية_مترجم_غير_متاحة(): نص { أرجع «Selected backend cannot emit this target. Check LLVM target support or use a supported backend.»; }
+عام عرف نص_شرح_تعبير_وقت_الترجمة_غير_ثابت(): نص { أرجع «This expression requires runtime evaluation, not compile-time computation.»; }
+عام عرف نص_شرح_مكتبة_إل_إل_في_إم_للهدف_مفقودة(): نص { أرجع «The output target needs its own libLLVM shared library. Supply a compatible target library.»; }
+عام عرف نص_شرح_رمز_إل_إل_في_إم_غير_محلول(): نص { أرجع «The selected libLLVM does not provide the required LLVM C API symbol.»; }
+عام عرف نص_شرح_فشل_وقت_الترجمة_مطلوب(): نص { أرجع «Compile-time code rejected its input. Correct the issue described by the diagnostic.»; }
+عام عرف نص_شرح_سمة_تصريح_غير_مدعومة(): نص { أرجع «This declaration attribute is not supported by the current annotation processor.»; }
+عام عرف نص_شرح_نقل_من_مرجع(): نص { أرجع «Owned value moved out of a reference. Borrow it with & or copy it with clone(&value).»; }
+عام عرف نص_شرح_هدف_لا_يدعم_الميزة(): نص { أرجع «The chosen target lacks a feature this program needs. Pick another target or avoid the feature.»; }
+عام عرف نص_شرح_بناء_غير_مدعوم_في_الخلفية(): نص { أرجع «This backend cannot compile this construct yet. Try the other backend or rewrite the code.»; }
+عام عرف نص_شرح_مدى_ترميز_متجاوز(): نص { أرجع «A jump, offset or constant is too far or too large for the machine instruction. Split large functions.»; }
+عام عرف نص_شرح_رمز_ربط_غير_معرف(): نص { أرجع «A used symbol is defined in no linked input. Link the library that defines it.»; }
+عام عرف نص_شرح_رمز_دخول_ربط_مفقود(): نص { أرجع «The output lacks the start symbol the target needs (such as `_start`); usually a startup object or runtime library is missing.»; }
+عام عرف نص_شرح_رمز_ربط_مكرر(): نص { أرجع «Two inputs define the same symbol. Remove one definition or make one private.»; }
+عام عرف نص_شرح_موفر_وقت_تشغيل_مفقود(): نص { أرجع «The target runtime lacks a service this program uses. Pick a target that provides it.»; }
+عام عرف نص_شرح_نفاد_ذاكرة_المترجم(): نص { أرجع «The compiler ran out of memory. Free memory or compile a smaller program.»; }
+عام عرف نص_شرح_رمز_ربط_بنوع_غير_متطابق(): نص { أرجع «A symbol is defined as one kind, such as data, and used as another, such as a function. Make both agree.»; }
+عام عرف نص_شرح_رمز_خارجي_غير_مدعوم(): نص { أرجع «The linker cannot bind this external symbol for the target. Provide it from a supported library.»; }
+عام عرف نص_شرح_إعادة_توطين_غير_مدعومة(): نص { أرجع «The output needs a relocation its object format cannot express. Try another backend or target.»; }
+عام عرف نص_شرح_صيغة_كائن_غير_مدعومة_للهدف(): نص { أرجع «Object files of this format cannot be written for this target. Pick a supported target or backend.»; }
+عام عرف نص_شرح_مخرج_ربط_غير_مدعوم(): نص { أرجع «The linker cannot produce this output for the target. Choose another output kind or target.»; }
+عام عرف نص_شرح_مكتبة_ربط_غير_موجودة(): نص { أرجع «A -l library was not found in the -L directories or the target's standard library directories. Add its directory with -L, or pass the library file itself.»; }
+عام عرف نص_شرح_واجهة_استدعاء_غير_متاحة_للهدف(): نص { أرجع «The target has no calling convention for this code. Pick a target that defines one.»; }
+عام عرف نص_شرح_حد_صيغة_كائن_متجاوز(): نص { أرجع «The output is larger than its file format allows. Reduce code or data size, or split the program.»; }
+عام عرف نص_شرح_حد_وقت_الترجمة_متجاوز(): نص { أرجع «Compile-time code ran too long, recursed too deeply or specialized too often. Simplify it.»; }
+عام عرف نص_شرح_سلسلة_تنسيق_غير_صالحة(): نص { أرجع «A literal format string is checked against its arguments at compile time, as Rust's format! does. Correct the placeholder or the arguments.»; }
+عام عرف نص_شرح_أثر_ممنوع_وقت_الترجمة(): نص { أرجع «Compile-time code may not do I/O or other outside effects. Move that work to runtime.»; }
+عام عرف نص_شرح_فشل_تنفيذ_وقت_الترجمة(): نص { أرجع «Compile-time code failed or trapped while running. Fix the failing operation it reports.»; }
+عام عرف نص_شرح_عملية_غير_مدعومة_وقت_الترجمة(): نص { أرجع «Only SultanC functions and supported operations can run at compile time. Move this to runtime.»; }
+عام عرف نص_شرح_ناتج_وقت_الترجمة_غير_ثابت(): نص { أرجع «Compile-time code must return a self-contained constant of the expected type.»; }
+عام عرف نص_شرح_تخطيط_غير_متاح_وقت_الترجمة(): نص { أرجع «Size and alignment queries need a type whose layout is already fixed for the target.»; }
+عام عرف نص_شرح_عدد_حجج_وقت_الترجمة_غير_مطابق(): نص { أرجع «Pass exactly one value for each compile-time parameter of the function.»; }
+عام عرف نص_شرح_نداء_خارجي_تفسير_غير_مدعوم(): نص { أرجع «The interpreter cannot call this external function. Build a native executable to run it.»; }
+عام عرف نص_شرح_بدائي_آلة_تفسير_غير_مدعوم(): نص { أرجع «The interpreter cannot run this machine-level operation. Build a native executable to run it.»; }
+عام عرف نص_شرح_خلل_ثابت_داخلي(): نص { أرجع «Internal compiler failure. This is a compiler bug; please report it with the diagnostic code.»; }
+
+عام عرف نص_شرح_إنجليزي(المفتاح: مفتاح_شرح): نص {
+    طابق المفتاح مع
+    | مفتاح_شرح.خطأ_نحوي -> { أرجع نص_شرح_خطأ_نحوي(); }
+    | مفتاح_شرح.تعبير_نحوي_غير_صالح -> { أرجع نص_شرح_تعبير_نحوي_غير_صالح(); }
+    | مفتاح_شرح.نوع_نحوي_غير_صالح -> { أرجع نص_شرح_نوع_نحوي_غير_صالح(); }
+    | مفتاح_شرح.نمط_نحوي_غير_صالح -> { أرجع نص_شرح_نمط_نحوي_غير_صالح(); }
+    | مفتاح_شرح.عنصر_نحوي_غير_صالح -> { أرجع نص_شرح_عنصر_نحوي_غير_صالح(); }
+    | مفتاح_شرح.فاصلة_منقوطة_في_غير_موضعها -> { أرجع نص_شرح_فاصلة_منقوطة_في_غير_موضعها(); }
+    | مفتاح_شرح.تهجئة_كلمة_محجوزة_غير_معروفة -> { أرجع نص_شرح_تهجئة_كلمة_محجوزة_غير_معروفة(); }
+    | مفتاح_شرح.تهجئة_مهجورة -> { أرجع نص_شرح_تهجئة_مهجورة(); }
+    | مفتاح_شرح.عبارة_بلا_عملية -> { أرجع نص_شرح_عبارة_بلا_عملية(); }
+    | مفتاح_شرح.نوع_ناتج_دالة_مفقود -> { أرجع نص_شرح_نوع_ناتج_دالة_مفقود(); }
+    | مفتاح_شرح.خطأ_معجمي -> { أرجع نص_شرح_خطأ_معجمي(); }
+    | مفتاح_شرح.نص_مصدر_يوتيف8_غير_صالح -> { أرجع نص_شرح_نص_مصدر_يوتيف8_غير_صالح(); }
+    | مفتاح_شرح.استدعاء_مترجم_غير_صالح -> { أرجع نص_شرح_استدعاء_مترجم_غير_صالح(); }
+    | مفتاح_شرح.هدف_مترجم_غير_معروف -> { أرجع نص_شرح_هدف_مترجم_غير_معروف(); }
+    | مفتاح_شرح.مصدر_مترجم_مفقود -> { أرجع نص_شرح_مصدر_مترجم_مفقود(); }
+    | مفتاح_شرح.خيار_مترجم_غير_معروف -> { أرجع نص_شرح_خيار_مترجم_غير_معروف(); }
+    | مفتاح_شرح.رمز_تشخيص_مترجم_غير_معروف -> { أرجع نص_شرح_رمز_تشخيص_مترجم_غير_معروف(); }
+    | مفتاح_شرح.قيمة_خيار_مترجم_مفقودة -> { أرجع نص_شرح_قيمة_خيار_مترجم_مفقودة(); }
+    | مفتاح_شرح.لغة_تشخيص_مترجم_غير_صالحة -> { أرجع نص_شرح_لغة_تشخيص_مترجم_غير_صالحة(); }
+    | مفتاح_شرح.صيغة_تشخيص_مترجم_غير_صالحة -> { أرجع نص_شرح_صيغة_تشخيص_مترجم_غير_صالحة(); }
+    | مفتاح_شرح.لون_تشخيص_مترجم_غير_صالح -> { أرجع نص_شرح_لون_تشخيص_مترجم_غير_صالح(); }
+    | مفتاح_شرح.مصدر_رئيسي_متعدد -> { أرجع نص_شرح_مصدر_رئيسي_متعدد(); }
+    | مفتاح_شرح.أوضاع_مترجم_متعارضة -> { أرجع نص_شرح_أوضاع_مترجم_متعارضة(); }
+    | مفتاح_شرح.معامل_موضعي_غير_متوقع -> { أرجع نص_شرح_معامل_موضعي_غير_متوقع(); }
+    | مفتاح_شرح.هدف_مضيف_مترجم_غير_متاح -> { أرجع نص_شرح_هدف_مضيف_مترجم_غير_متاح(); }
+    | مفتاح_شرح.فشل_كتابة_مخرج_مترجم -> { أرجع نص_شرح_فشل_كتابة_مخرج_مترجم(); }
+    | مفتاح_شرح.ملف_إدخال_مفقود -> { أرجع نص_شرح_ملف_إدخال_مفقود(); }
+    | مفتاح_شرح.بيان_حزمة_غير_صالح -> { أرجع نص_شرح_بيان_حزمة_غير_صالح(); }
+    | مفتاح_شرح.نوع_ملف_إدخال_غير_معروف -> { أرجع نص_شرح_نوع_ملف_إدخال_غير_معروف(); }
+    | مفتاح_شرح.وحدة_مصدر_غير_موجودة -> { أرجع نص_شرح_وحدة_مصدر_غير_موجودة(); }
+    | مفتاح_شرح.وحدة_مصدر_غير_مقروءة -> { أرجع نص_شرح_وحدة_مصدر_غير_مقروءة(); }
+    | مفتاح_شرح.مرجع_استيراد_غير_صالح -> { أرجع نص_شرح_مرجع_استيراد_غير_صالح(); }
+    | مفتاح_شرح.جذر_مكتبة_غير_مسجل -> { أرجع نص_شرح_جذر_مكتبة_غير_مسجل(); }
+    | مفتاح_شرح.استيراد_يهرب_من_الجذر -> { أرجع نص_شرح_استيراد_يهرب_من_الجذر(); }
+    | مفتاح_شرح.مسار_وحدة_منطقي_غير_صالح -> { أرجع نص_شرح_مسار_وحدة_منطقي_غير_صالح(); }
+    | مفتاح_شرح.تعارض_مسار_وحدة_عام -> { أرجع نص_شرح_تعارض_مسار_وحدة_عام(); }
+    | مفتاح_شرح.تعارض_مصدر_وحدة -> { أرجع نص_شرح_تعارض_مصدر_وحدة(); }
+    | مفتاح_شرح.تصدير_انتقائي_غير_موجود -> { أرجع نص_شرح_تصدير_انتقائي_غير_موجود(); }
+    | مفتاح_شرح.نقطة_دخول_مفقودة -> { أرجع نص_شرح_نقطة_دخول_مفقودة(); }
+    | مفتاح_شرح.نقطة_دخول_بتوقيع_غير_صالح -> { أرجع نص_شرح_نقطة_دخول_بتوقيع_غير_صالح(); }
+    | مفتاح_شرح.تصريح_خاص_غير_متاح -> { أرجع نص_شرح_تصريح_خاص_غير_متاح(); }
+    | مفتاح_شرح.نوع_تكراري_لانهائي -> { أرجع نص_شرح_نوع_تكراري_لانهائي(); }
+    | مفتاح_شرح.فك_مرجع_غير_مؤشر -> { أرجع نص_شرح_فك_مرجع_غير_مؤشر(); }
+    | مفتاح_شرح.أخذ_عنوان_غير_قيمة_يسرى -> { أرجع نص_شرح_أخذ_عنوان_غير_قيمة_يسرى(); }
+    | مفتاح_شرح.حقل_سجل_مفقود -> { أرجع نص_شرح_حقل_سجل_مفقود(); }
+    | مفتاح_شرح.حقل_سجل_مكرر -> { أرجع نص_شرح_حقل_سجل_مكرر(); }
+    | مفتاح_شرح.كتابة_إلى_غير_متغير -> { أرجع نص_شرح_كتابة_إلى_غير_متغير(); }
+    | مفتاح_شرح.تصريح_مكرر -> { أرجع نص_شرح_تصريح_مكرر(); }
+    | مفتاح_شرح.اسم_غير_معروف -> { أرجع نص_شرح_اسم_غير_معروف(); }
+    | مفتاح_شرح.اسم_غير_محلول -> { أرجع نص_شرح_اسم_غير_محلول(); }
+    | مفتاح_شرح.استيراد_غامض -> { أرجع نص_شرح_استيراد_غامض(); }
+    | مفتاح_شرح.دورة_استيراد -> { أرجع نص_شرح_دورة_استيراد(); }
+    | مفتاح_شرح.نوعان_غير_متوافقين -> { أرجع نص_شرح_نوعان_غير_متوافقين(); }
+    | مفتاح_شرح.نوع_غير_محلول -> { أرجع نص_شرح_نوع_غير_محلول(); }
+    | مفتاح_شرح.تعريف_نوع_غير_صالح -> { أرجع نص_شرح_تعريف_نوع_غير_صالح(); }
+    | مفتاح_شرح.تعبير_غير_قابل_للاستدعاء -> { أرجع نص_شرح_تعبير_غير_قابل_للاستدعاء(); }
+    | مفتاح_شرح.حقل_سجل_غير_معروف -> { أرجع نص_شرح_حقل_سجل_غير_معروف(); }
+    | مفتاح_شرح.منشئ_نوع_غير_صالح -> { أرجع نص_شرح_منشئ_نوع_غير_صالح(); }
+    | مفتاح_شرح.عدد_حمولات_نمط_غير_مطابق -> { أرجع نص_شرح_عدد_حمولات_نمط_غير_مطابق(); }
+    | مفتاح_شرح.نمط_غير_صالح -> { أرجع نص_شرح_نمط_غير_صالح(); }
+    | مفتاح_شرح.عدد_حجج_غير_مطابق -> { أرجع نص_شرح_عدد_حجج_غير_مطابق(); }
+    | مفتاح_شرح.نوع_حجة_غير_مطابق -> { أرجع نص_شرح_نوع_حجة_غير_مطابق(); }
+    | مفتاح_شرح.نوع_إرجاع_غير_مطابق -> { أرجع نص_شرح_نوع_إرجاع_غير_مطابق(); }
+    | مفتاح_شرح.استخدام_قبل_التهيئة -> { أرجع نص_شرح_استخدام_قبل_التهيئة(); }
+    | مفتاح_شرح.استخدام_بعد_النقل -> { أرجع نص_شرح_استخدام_بعد_النقل(); }
+    | مفتاح_شرح.مورد_محرر -> { أرجع نص_شرح_مورد_محرر(); }
+    | مفتاح_شرح.تعارض_استعارة -> { أرجع نص_شرح_تعارض_استعارة(); }
+    | مفتاح_شرح.هروب_مرجع -> { أرجع نص_شرح_هروب_مرجع(); }
+    | مفتاح_شرح.عملية_غير_آمنة -> { أرجع نص_شرح_عملية_غير_آمنة(); }
+    | مفتاح_شرح.التقاط_خيط_مؤشر_خام -> { أرجع نص_شرح_التقاط_خيط_مؤشر_خام(); }
+    | مفتاح_شرح.التقاط_خيط_مرجع -> { أرجع نص_شرح_التقاط_خيط_مرجع(); }
+    | مفتاح_شرح.التقاط_خيط_مشترك_غير_ذري -> { أرجع نص_شرح_التقاط_خيط_مشترك_غير_ذري(); }
+    | مفتاح_شرح.فهرس_خارج_الحدود -> { أرجع نص_شرح_فهرس_خارج_الحدود(); }
+    | مفتاح_شرح.نمط_غير_شامل -> { أرجع نص_شرح_نمط_غير_شامل(); }
+    | مفتاح_شرح.نمط_غير_قابل_للوصول -> { أرجع نص_شرح_نمط_غير_قابل_للوصول(); }
+    | مفتاح_شرح.إرجاع_مفقود -> { أرجع نص_شرح_إرجاع_مفقود(); }
+    | مفتاح_شرح.انتهى_البرنامج_بخطأ -> { أرجع نص_شرح_انتهى_البرنامج_بخطأ(); }
+    | مفتاح_شرح.توقف_البرنامج -> { أرجع نص_شرح_توقف_البرنامج(); }
+    | مفتاح_شرح.تحكم_حلقة_خارج_حلقة -> { أرجع نص_شرح_تحكم_حلقة_خارج_حلقة(); }
+    | مفتاح_شرح.نقل_جزئي_مملوك -> { أرجع نص_شرح_نقل_جزئي_مملوك(); }
+    | مفتاح_شرح.خطأ_ذاكرة_نوع -> { أرجع نص_شرح_خطأ_ذاكرة_نوع(); }
+    | مفتاح_شرح.فهرس_تفسير_خارج_الحدود -> { أرجع نص_شرح_فهرس_تفسير_خارج_الحدود(); }
+    | مفتاح_شرح.حالة_تفسير_غير_صالحة -> { أرجع نص_شرح_حالة_تفسير_غير_صالحة(); }
+    | مفتاح_شرح.نص_تفسير_غير_صالح -> { أرجع نص_شرح_نص_تفسير_غير_صالح(); }
+    | مفتاح_شرح.جسر_نص_مضيف_تفسير_غير_متاح -> { أرجع نص_شرح_جسر_نص_مضيف_تفسير_غير_متاح(); }
+    | مفتاح_شرح.بدائي_مضيف_تفسير_غير_مدعوم -> { أرجع نص_شرح_بدائي_مضيف_تفسير_غير_مدعوم(); }
+    | مفتاح_شرح.فشل_تفسير_وقت_تشغيل -> { أرجع نص_شرح_فشل_تفسير_وقت_تشغيل(); }
+    | مفتاح_شرح.فخ_تفسير -> { أرجع نص_شرح_فخ_تفسير(); }
+    | مفتاح_شرح.تحذير_عام -> { أرجع نص_شرح_تحذير_عام(); }
+    | مفتاح_شرح.خلفية_مترجم_غير_متاحة -> { أرجع نص_شرح_خلفية_مترجم_غير_متاحة(); }
+    | مفتاح_شرح.تعبير_وقت_الترجمة_غير_ثابت -> { أرجع نص_شرح_تعبير_وقت_الترجمة_غير_ثابت(); }
+    | مفتاح_شرح.مكتبة_إل_إل_في_إم_للهدف_مفقودة -> { أرجع نص_شرح_مكتبة_إل_إل_في_إم_للهدف_مفقودة(); }
+    | مفتاح_شرح.رمز_إل_إل_في_إم_غير_محلول -> { أرجع نص_شرح_رمز_إل_إل_في_إم_غير_محلول(); }
+    | مفتاح_شرح.فشل_وقت_الترجمة_مطلوب -> { أرجع نص_شرح_فشل_وقت_الترجمة_مطلوب(); }
+    | مفتاح_شرح.سمة_تصريح_غير_مدعومة -> { أرجع نص_شرح_سمة_تصريح_غير_مدعومة(); }
+    | مفتاح_شرح.نقل_من_مرجع -> { أرجع نص_شرح_نقل_من_مرجع(); }
+    | مفتاح_شرح.هدف_لا_يدعم_الميزة -> { أرجع نص_شرح_هدف_لا_يدعم_الميزة(); }
+    | مفتاح_شرح.بناء_غير_مدعوم_في_الخلفية -> { أرجع نص_شرح_بناء_غير_مدعوم_في_الخلفية(); }
+    | مفتاح_شرح.مدى_ترميز_متجاوز -> { أرجع نص_شرح_مدى_ترميز_متجاوز(); }
+    | مفتاح_شرح.رمز_ربط_غير_معرف -> { أرجع نص_شرح_رمز_ربط_غير_معرف(); }
+    | مفتاح_شرح.رمز_دخول_ربط_مفقود -> { أرجع نص_شرح_رمز_دخول_ربط_مفقود(); }
+    | مفتاح_شرح.رمز_ربط_مكرر -> { أرجع نص_شرح_رمز_ربط_مكرر(); }
+    | مفتاح_شرح.موفر_وقت_تشغيل_مفقود -> { أرجع نص_شرح_موفر_وقت_تشغيل_مفقود(); }
+    | مفتاح_شرح.نفاد_ذاكرة_المترجم -> { أرجع نص_شرح_نفاد_ذاكرة_المترجم(); }
+    | مفتاح_شرح.رمز_ربط_بنوع_غير_متطابق -> { أرجع نص_شرح_رمز_ربط_بنوع_غير_متطابق(); }
+    | مفتاح_شرح.رمز_خارجي_غير_مدعوم -> { أرجع نص_شرح_رمز_خارجي_غير_مدعوم(); }
+    | مفتاح_شرح.إعادة_توطين_غير_مدعومة -> { أرجع نص_شرح_إعادة_توطين_غير_مدعومة(); }
+    | مفتاح_شرح.صيغة_كائن_غير_مدعومة_للهدف -> { أرجع نص_شرح_صيغة_كائن_غير_مدعومة_للهدف(); }
+    | مفتاح_شرح.مخرج_ربط_غير_مدعوم -> { أرجع نص_شرح_مخرج_ربط_غير_مدعوم(); }
+    | مفتاح_شرح.مكتبة_ربط_غير_موجودة -> { أرجع نص_شرح_مكتبة_ربط_غير_موجودة(); }
+    | مفتاح_شرح.واجهة_استدعاء_غير_متاحة_للهدف -> { أرجع نص_شرح_واجهة_استدعاء_غير_متاحة_للهدف(); }
+    | مفتاح_شرح.حد_صيغة_كائن_متجاوز -> { أرجع نص_شرح_حد_صيغة_كائن_متجاوز(); }
+    | مفتاح_شرح.حد_وقت_الترجمة_متجاوز -> { أرجع نص_شرح_حد_وقت_الترجمة_متجاوز(); }
+    | مفتاح_شرح.سلسلة_تنسيق_غير_صالحة -> { أرجع نص_شرح_سلسلة_تنسيق_غير_صالحة(); }
+    | مفتاح_شرح.أثر_ممنوع_وقت_الترجمة -> { أرجع نص_شرح_أثر_ممنوع_وقت_الترجمة(); }
+    | مفتاح_شرح.فشل_تنفيذ_وقت_الترجمة -> { أرجع نص_شرح_فشل_تنفيذ_وقت_الترجمة(); }
+    | مفتاح_شرح.عملية_غير_مدعومة_وقت_الترجمة -> { أرجع نص_شرح_عملية_غير_مدعومة_وقت_الترجمة(); }
+    | مفتاح_شرح.ناتج_وقت_الترجمة_غير_ثابت -> { أرجع نص_شرح_ناتج_وقت_الترجمة_غير_ثابت(); }
+    | مفتاح_شرح.تخطيط_غير_متاح_وقت_الترجمة -> { أرجع نص_شرح_تخطيط_غير_متاح_وقت_الترجمة(); }
+    | مفتاح_شرح.عدد_حجج_وقت_الترجمة_غير_مطابق -> { أرجع نص_شرح_عدد_حجج_وقت_الترجمة_غير_مطابق(); }
+    | مفتاح_شرح.نداء_خارجي_تفسير_غير_مدعوم -> { أرجع نص_شرح_نداء_خارجي_تفسير_غير_مدعوم(); }
+    | مفتاح_شرح.بدائي_آلة_تفسير_غير_مدعوم -> { أرجع نص_شرح_بدائي_آلة_تفسير_غير_مدعوم(); }
+    | مفتاح_شرح.خلل_ثابت_داخلي -> { أرجع نص_شرح_خلل_ثابت_داخلي(); }
+    ;
+}

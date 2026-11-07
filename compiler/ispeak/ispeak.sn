@@ -1,0 +1,189 @@
+استورد std.text.builder;
+استورد compiler.diagnostics.identity;
+استورد compiler.diagnostics.reason;
+استورد compiler.diagnostics.registry;
+استورد compiler.runtime.failure_identity;
+استورد compiler.diagnostics.schema;
+استورد compiler.ispeak.format.facts;
+استورد compiler.ispeak.format.compose;
+استورد compiler.ispeak.keys.surface;
+استورد compiler.ispeak.keys.explanations;
+استورد compiler.ispeak.locales.en.templates;
+استورد compiler.ispeak.locales.ar.templates;
+استورد compiler.ispeak.locales.en.surface;
+استورد compiler.ispeak.locales.ar.surface;
+استورد compiler.ispeak.locales.en.details;
+استورد compiler.ispeak.locales.ar.details;
+استورد compiler.ispeak.locales.en.explanations;
+استورد compiler.ispeak.locales.ar.explanations;
+استورد compiler.ispeak.locales.en.runtime;
+استورد compiler.ispeak.locales.ar.runtime;
+
+// iSpeak public interface. Every function selects the language once and returns
+// finished text. Identities, wire IDs and public codes are compiler-owned
+// (compiler/ until integration); iSpeak only supplies the words.
+
+// For every valid typed identity, the fixed message lookup is total.
+عام عرف رسالة_تشخيص(اللغة: لغة_تشخيص, المفتاح: مفتاح_رسالة_تشخيص): نص {
+    أرجع نص_رسالة_ثابت(اللغة, المفتاح);
+}
+
+// Structured facts are statically typed and never used to discover identity.
+// A payload inconsistent with the identity returns no message.
+// The compiler retains ownership of source locations, notes and fix-its.
+عام عرف رسالة_تشخيص_بحجج(
+    اللغة: لغة_تشخيص, المفتاح: مفتاح_رسالة_تشخيص, الحقائق: حقائق_رسالة
+): اختياري نص {
+    طابق الحقائق مع
+    | حقائق_رسالة.سياق_تشخيص(القيم) -> {
+        دع الأساس: نص = نص_رسالة_ثابت(اللغة, المفتاح);
+        أرجع نسق_نص_بسياق_بمفتاح(اللغة, الأساس, القيم, اختياري.موجود(المفتاح));
+    }
+    | _ -> { };
+    طابق اللغة مع
+    | لغة_تشخيص.الإنجليزية -> { أرجع رسالة_إنجليزية_بحجج(المفتاح, الحقائق); }
+    | لغة_تشخيص.العربية -> { أرجع رسالة_عربية_بحجج(المفتاح, الحقائق); };
+}
+
+// A headline (fixed or templated) followed by one sentence per fact left in
+// the context. The compiler's diagnostic adapter uses this after a template
+// has taken the facts it words itself, so no fact is ever dropped.
+عام عرف رسالة_تشخيص_بعنوان_وسياق(
+    اللغة: لغة_تشخيص, المفتاح: مفتاح_رسالة_تشخيص, العنوان: نص, السياق: حقائق_سياق_رسالة
+): نص {
+    طابق نسق_نص_بسياق_بمفتاح(اللغة, العنوان, السياق, اختياري.موجود(المفتاح)) مع
+    | اختياري.موجود(النص) -> { أرجع النص; }
+    | اختياري.لا_شيء -> { أرجع نص_رسالة_ثابت(اللغة, المفتاح); };
+}
+
+// A templated message followed by the producer's typed reason, added as one
+// more sentence by the same composer. لا_شيء when the template does not apply.
+عام عرف رسالة_تشخيص_بحجج_وسبب(
+    اللغة: لغة_تشخيص, المفتاح: مفتاح_رسالة_تشخيص, الحقائق: حقائق_رسالة, السبب: سبب_تشخيص
+): اختياري نص {
+    طابق رسالة_تشخيص_بحجج(اللغة, المفتاح, الحقائق) مع
+    | اختياري.لا_شيء -> { أرجع اختياري.لا_شيء(); }
+    | اختياري.موجود(العنوان) -> {
+        دع السياق: حقائق_سياق_رسالة = {
+            القيمة: اختياري.لا_شيء(),
+            المتوقع: اختياري.لا_شيء(),
+            الاستبدال: اختياري.لا_شيء(),
+            الموجود: اختياري.لا_شيء(),
+            الفهرس: اختياري.لا_شيء(),
+            الطول: اختياري.لا_شيء(),
+            المجال: اختياري.لا_شيء(),
+            النمط: اختياري.لا_شيء(),
+            المسار: اختياري.لا_شيء(),
+            الرمز: اختياري.لا_شيء(),
+            النوع: اختياري.لا_شيء(),
+            السياق: اختياري.لا_شيء(),
+            المرحلة: اختياري.لا_شيء(),
+            الهدف: اختياري.لا_شيء(),
+            الدالة: اختياري.لا_شيء(),
+            الكتلة: اختياري.لا_شيء(),
+            التعليمة: اختياري.لا_شيء(),
+            العملية: اختياري.لا_شيء(),
+            البدائي: اختياري.لا_شيء(),
+            المصدر: اختياري.لا_شيء(),
+            الوجهة: اختياري.لا_شيء(),
+            السبب: اختياري.موجود(قيمة_حجة_رسالة.سبب_محدد(السبب))
+        };
+        أرجع نسق_نص_بسياق_بمفتاح(اللغة, العنوان, السياق, اختياري.موجود(المفتاح));
+    };
+}
+
+// Allocation-sensitive compiler consumers can reuse a single canonical
+// builder across diagnostics (clear it between calls). This uses exactly
+// the same locale/context contract as the owned-text API above. It does not
+// own diagnostic rendering, transport escaping or terminal layout.
+// A false result may leave a partially appended message; clear before reuse.
+عام عرف ألحق_تشخيص_بسياق(
+    الباني: &متغير باني_نص, اللغة: لغة_تشخيص,
+    المفتاح: مفتاح_رسالة_تشخيص, السياق: حقائق_سياق_رسالة
+): منطقي {
+    دع الأساس: نص = نص_رسالة_ثابت(اللغة, المفتاح);
+    أرجع ألحق_نص_بسياق_بمفتاح(الباني, اللغة, الأساس, السياق, اختياري.موجود(المفتاح));
+}
+
+// All auxiliary diagnostic wording is selected by the same language dispatcher.
+عام عرف نص_تفصيل_ثابت(اللغة: لغة_تشخيص, المفتاح: مفتاح_صياغة): نص {
+    طابق اللغة مع
+    | لغة_تشخيص.الإنجليزية -> { أرجع تفصيل_إنجليزي(المفتاح); }
+    | لغة_تشخيص.العربية -> { أرجع تفصيل_عربي(المفتاح); };
+}
+
+// Compiler-facing text beyond errors: command help, environment reasons, tokens.
+عام عرف نص_المترجم(اللغة: لغة_تشخيص, المفتاح: مفتاح_نص_مترجم): نص {
+    طابق اللغة مع
+    | لغة_تشخيص.الإنجليزية -> { أرجع نص_واجهة_إنجليزي(المفتاح); }
+    | لغة_تشخيص.العربية -> { أرجع نص_واجهة_عربي(المفتاح); };
+}
+
+// Long explanations are keyed by the existing typed diagnostic identity.
+عام عرف شرح_تشخيص(اللغة: لغة_تشخيص, المعرف: معرف_تشخيص): نص {
+    دع المجموعة: مفتاح_شرح = مجموعة_شرح_خطأ(المعرف);
+    طابق اللغة مع
+    | لغة_تشخيص.الإنجليزية -> { أرجع نص_شرح_إنجليزي(المجموعة); }
+    | لغة_تشخيص.العربية -> { أرجع نص_شرح_عربي(المجموعة); };
+}
+
+// Structured arguments are formatting facts, not presentation layout.
+// These interfaces reuse the same composer for notes/help, CLI text and
+// explanations. The compiler owns where the completed text is displayed.
+عام عرف نص_تفصيل_بحجج(
+    اللغة: لغة_تشخيص, المفتاح: مفتاح_صياغة, السياق: حقائق_سياق_رسالة
+): اختياري نص {
+    أرجع نسق_نص_بسياق_بمفتاح(اللغة, نص_تفصيل_ثابت(اللغة, المفتاح), السياق, اختياري.لا_شيء());
+}
+
+عام عرف نص_المترجم_بحجج(
+    اللغة: لغة_تشخيص, المفتاح: مفتاح_نص_مترجم, السياق: حقائق_سياق_رسالة
+): اختياري نص {
+    أرجع نسق_نص_بسياق_بمفتاح(اللغة, نص_المترجم(اللغة, المفتاح), السياق, اختياري.لا_شيء());
+}
+
+عام عرف شرح_تشخيص_بحجج(
+    اللغة: لغة_تشخيص, المعرف: معرف_تشخيص, السياق: حقائق_سياق_رسالة
+): اختياري نص {
+    أرجع نسق_نص_بسياق_بمفتاح(اللغة, شرح_تشخيص(اللغة, المعرف), السياق, اختياري.لا_شيء());
+}
+
+// Text printed by a compiled program when it fails at runtime: "<title>: <failure>".
+// The runtime owns detection and output; iSpeak only supplies the words.
+عام عرف عنوان_فشل_تشغيل(اللغة: لغة_تشخيص): نص {
+    طابق اللغة مع
+    | لغة_تشخيص.الإنجليزية -> { أرجع عنوان_فشل_تشغيل_إنجليزي(); }
+    | لغة_تشخيص.العربية -> { أرجع عنوان_فشل_تشغيل_عربي(); };
+}
+
+عام عرف نص_فشل_تشغيل(اللغة: لغة_تشخيص, المفتاح: هوية_فشل_تشغيل): نص {
+    طابق اللغة مع
+    | لغة_تشخيص.الإنجليزية -> { أرجع نص_فشل_تشغيل_إنجليزي(المفتاح); }
+    | لغة_تشخيص.العربية -> { أرجع نص_فشل_تشغيل_عربي(المفتاح); };
+}
+
+// `--explain <code>`: public code -> long explanation. لا_شيء for an unknown code.
+عام عرف شرح_كود_عام(اللغة: لغة_تشخيص, الكود: &نص): اختياري نص {
+    طابق معرف_تشخيص_من_كود(الكود) مع
+    | اختياري.موجود(المعرف) -> { أرجع اختياري.موجود(شرح_تشخيص(اللغة, المعرف)); }
+    | اختياري.لا_شيء -> { أرجع اختياري.لا_شيء(); };
+}
+
+// Every message key (public diagnostics, then contextual reasons), for tests
+// and tools that check every message. An enumeration, not a numbering.
+عام عرف كل_مفاتيح_رسائل_التشخيص(): متجه مفتاح_رسالة_تشخيص {
+    دع الناتج: متغير متجه مفتاح_رسالة_تشخيص = [];
+    دع المعرفات: متجه معرف_تشخيص = كل_معرفات_التشخيص();
+    دع ف: متغير طبيعي = 0;
+    طالما (ف < (الطول(المعرفات) مثل طبيعي)) {
+        ألحق(الناتج, مفتاح_رسالة_تشخيص.تشخيص(المعرفات[ف]));
+        ف := ف + 1;
+    }
+    دع الأسباب: متجه سبب_تشخيص = كل_أسباب_التشخيص();
+    ف := 0;
+    طالما (ف < (الطول(الأسباب) مثل طبيعي)) {
+        ألحق(الناتج, مفتاح_رسالة_تشخيص.سبب(الأسباب[ف]));
+        ف := ف + 1;
+    }
+    أرجع الناتج;
+}

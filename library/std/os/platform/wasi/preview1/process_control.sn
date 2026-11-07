@@ -3,8 +3,8 @@
 // module `wasi_snapshot_preview1` (compiler/backend/target/
 // runtime_symbol_query_context.sn). proc_exit terminates the instance and
 // reports the code to the host; it does not return.
-خارجي عرف proc_exit(الرمز: غ32): فراغ;
+خارجي «wasi_snapshot_preview1» عرف proc_exit(الرمز: ط32): فراغ;
 
-عام عرف اخرج_من_عملية_واسي(الرمز: غ32): فراغ {
+عام عرف اخرج_من_عملية_واسي(الرمز: ط32): فراغ {
     proc_exit(الرمز);
 }

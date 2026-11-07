@@ -4,17 +4,15 @@
 // used by mature runtimes (Go 1.22+, Rust std). It always fills the whole
 // buffer and is documented to return TRUE. Linking bcryptprimitives belongs
 // to the target's system-library linkage configuration, as for kernel32.
-خارجي عرف ProcessPrng(المخزن: *متغير غ8, الحجم: غ64): ص32;
+خارجي «bcryptprimitives.dll» عرف ProcessPrng(المخزن: *متغير ط8, الحجم: ط64): ص32;
 
-عام عرف املأ_عشوائية_ويندوز(المخزن: &متغير متجه غ8): نتيجة غير_موقع, خطأ_نظام_أصلي {
-    دع البايتات: متغير متجه غ8 = *المخزن;
-    دع الحجم: غير_موقع = الطول(البايتات) مثل غير_موقع;
+عام عرف املأ_عشوائية_ويندوز(المخزن: &متغير متجه ط8): نتيجة طبيعي, خطأ_نظام_أصلي {
+    دع الحجم: طبيعي = الطول(*المخزن) مثل طبيعي;
     لو (الحجم == 0) { أرجع نتيجة.نجح(0); };
-    دع الرمز: ص32 = ProcessPrng(&متغير البايتات[0], الحجم مثل غ64);
+    دع الرمز: ص32 = ProcessPrng(&متغير (*المخزن)[0], الحجم مثل ط64);
     لو (الرمز == 0) {
         // ERROR_GEN_FAILURE (31): ProcessPrng has no failure contract.
         أرجع نتيجة.خطأ(أنشئ_خطأ_نظام_أصلي(مصدر_خطأ_نظام.وين32(), 31));
     };
-    *المخزن := البايتات;
     أرجع نتيجة.نجح(الحجم);
 }

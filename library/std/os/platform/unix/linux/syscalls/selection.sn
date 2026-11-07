@@ -2,19 +2,100 @@
 
 // Source target guards are evaluated by the canonical frontend before import
 // resolution. No host probing or independent target table is introduced.
-// The current raw-kernel-call lowering covers only these two Linux ABIs.
-لو (الهدف.المنصة == «linux» && الهدف.المعمارية == «x86_64» && الهدف.عرض_المؤشر == «64») {
+// One generated number table per kernel ABI (Android included:
+// it is the Linux kernel ABI without libc).
+
+لو ((الهدف.المنصة == «linux» || الهدف.المنصة == «android») && الهدف.المعمارية == «x86_64» && الهدف.عرض_المؤشر == «64») {
     استورد os.platform.unix.linux.syscalls.numbers_x86_64;
 
-    عام عرف رقم_نداء_نواة_لينكس(العملية: عملية_نداء_نواة_لينكس): غ64 {
-        أرجع رقم_نداء_نواة_لينكس_اكس86_64(العملية) مثل غ64;
+    عام عرف رقم_نداء_نواة_لينكس(العملية: عملية_نداء_نواة_لينكس): ط64 {
+        أرجع رقم_نداء_نواة_لينكس_اكس86_64(العملية) مثل ط64;
     }
 }
 
-لو (الهدف.المنصة == «linux» && الهدف.المعمارية == «aarch64» && الهدف.عرض_المؤشر == «64») {
+لو ((الهدف.المنصة == «linux» || الهدف.المنصة == «android») && الهدف.المعمارية == «aarch64» && الهدف.عرض_المؤشر == «64») {
     استورد os.platform.unix.linux.syscalls.numbers_asm_generic_64;
 
-    عام عرف رقم_نداء_نواة_لينكس(العملية: عملية_نداء_نواة_لينكس): غ64 {
-        أرجع رقم_نداء_نواة_لينكس_اسم_غالب_64(العملية) مثل غ64;
+    عام عرف رقم_نداء_نواة_لينكس(العملية: عملية_نداء_نواة_لينكس): ط64 {
+        أرجع رقم_نداء_نواة_لينكس_اسم_غالب_64(العملية) مثل ط64;
+    }
+}
+
+لو ((الهدف.المنصة == «linux» || الهدف.المنصة == «android») && الهدف.المعمارية == «riscv64» && الهدف.عرض_المؤشر == «64») {
+    استورد os.platform.unix.linux.syscalls.numbers_riscv64;
+
+    عام عرف رقم_نداء_نواة_لينكس(العملية: عملية_نداء_نواة_لينكس): ط64 {
+        أرجع رقم_نداء_نواة_لينكس_رايسك_في_64(العملية) مثل ط64;
+    }
+}
+
+لو ((الهدف.المنصة == «linux» || الهدف.المنصة == «android») && الهدف.المعمارية == «loongarch64» && الهدف.عرض_المؤشر == «64») {
+    استورد os.platform.unix.linux.syscalls.numbers_loongarch64;
+
+    عام عرف رقم_نداء_نواة_لينكس(العملية: عملية_نداء_نواة_لينكس): ط64 {
+        أرجع رقم_نداء_نواة_لينكس_لونغ_آرتش_64(العملية) مثل ط64;
+    }
+}
+
+لو ((الهدف.المنصة == «linux» || الهدف.المنصة == «android») && الهدف.المعمارية == «powerpc64» && الهدف.عرض_المؤشر == «64») {
+    استورد os.platform.unix.linux.syscalls.numbers_powerpc64;
+
+    عام عرف رقم_نداء_نواة_لينكس(العملية: عملية_نداء_نواة_لينكس): ط64 {
+        أرجع رقم_نداء_نواة_لينكس_باور_بي_سي_64(العملية) مثل ط64;
+    }
+}
+
+لو ((الهدف.المنصة == «linux» || الهدف.المنصة == «android») && الهدف.المعمارية == «systemz» && الهدف.عرض_المؤشر == «64») {
+    استورد os.platform.unix.linux.syscalls.numbers_s390x;
+
+    عام عرف رقم_نداء_نواة_لينكس(العملية: عملية_نداء_نواة_لينكس): ط64 {
+        أرجع رقم_نداء_نواة_لينكس_إس390_إكس(العملية) مثل ط64;
+    }
+}
+
+لو ((الهدف.المنصة == «linux» || الهدف.المنصة == «android») && الهدف.المعمارية == «mips64» && الهدف.عرض_المؤشر == «64») {
+    استورد os.platform.unix.linux.syscalls.numbers_mips64;
+
+    عام عرف رقم_نداء_نواة_لينكس(العملية: عملية_نداء_نواة_لينكس): ط64 {
+        أرجع رقم_نداء_نواة_لينكس_ميبس_64(العملية) مثل ط64;
+    }
+}
+
+لو ((الهدف.المنصة == «linux» || الهدف.المنصة == «android») && الهدف.المعمارية == «sparcv9» && الهدف.عرض_المؤشر == «64») {
+    استورد os.platform.unix.linux.syscalls.numbers_sparc64;
+
+    عام عرف رقم_نداء_نواة_لينكس(العملية: عملية_نداء_نواة_لينكس): ط64 {
+        أرجع رقم_نداء_نواة_لينكس_سبارك_64(العملية) مثل ط64;
+    }
+}
+
+// 32-bit ABIs: their time64 and large-file entry points are selected in the
+// tables (tools/generate/registry/linux_syscalls.def, ilp32: rows).
+لو ((الهدف.المنصة == «linux» || الهدف.المنصة == «android») && الهدف.المعمارية == «x86» && الهدف.عرض_المؤشر == «32») {
+    استورد os.platform.unix.linux.syscalls.numbers_i386;
+
+    عام عرف رقم_نداء_نواة_لينكس(العملية: عملية_نداء_نواة_لينكس): ط64 {
+        أرجع رقم_نداء_نواة_لينكس_اكس86_32(العملية) مثل ط64;
+    }
+}
+
+لو ((الهدف.المنصة == «linux» || الهدف.المنصة == «android») && الهدف.المعمارية == «arm» && الهدف.عرض_المؤشر == «32») {
+    استورد os.platform.unix.linux.syscalls.numbers_arm_eabi;
+
+    عام عرف رقم_نداء_نواة_لينكس(العملية: عملية_نداء_نواة_لينكس): ط64 {
+        أرجع رقم_نداء_نواة_لينكس_ذراع_32(العملية) مثل ط64;
+    }
+}
+
+// FreeBSD: the same std operations, issued through FreeBSD's own system-call
+// numbers (one table for every architecture, generated from sys/sys/
+// syscall.h by tools/generate/generate_freebsd_syscalls.py). Where the
+// FreeBSD call differs from Linux's in its arguments or result, the std code
+// that issues it has a FreeBSD path (registry/freebsd_syscalls.def).
+لو (الهدف.المنصة == «freebsd» && (الهدف.المعمارية == «x86_64» || الهدف.المعمارية == «aarch64» || الهدف.المعمارية == «riscv64»)) {
+    استورد os.platform.unix.freebsd.syscalls.numbers;
+
+    عام عرف رقم_نداء_نواة_لينكس(العملية: عملية_نداء_نواة_لينكس): ط64 {
+        أرجع رقم_نداء_نواة_فري_بي_إس_دي(العملية) مثل ط64;
     }
 }

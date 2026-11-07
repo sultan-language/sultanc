@@ -1,0 +1,19 @@
+// The host process environment an interpreted program starts with. On Unix
+// hosts (Linux, Android, FreeBSD, macOS) it is the interpreter's own startup
+// envp, as an exec of the program would inherit it: every `NAME=value`
+// entry, in order. Other hosts give no startup envp (std reads the Windows
+// environment through its kernel32 externs, which the foreign-call bridge
+// runs), so this returns لا_شيء there.
+لو (((الهدف.المنصة == «linux» || الهدف.المنصة == «android» || الهدف.المنصة == «freebsd») && الهدف.المعمارية != «ve») || الهدف.المنصة == «macos») {
+    استورد std.os.platform.unix.process_startup;
+
+    عام عرف بيئة_المضيف_لمفسر(): اختياري متجه متجه ط8 {
+        أرجع اجمع_بيئة_إقلاع_يونكس();
+    }
+}
+
+لو (!(((الهدف.المنصة == «linux» || الهدف.المنصة == «android» || الهدف.المنصة == «freebsd») && الهدف.المعمارية != «ve») || الهدف.المنصة == «macos»)) {
+    عام عرف بيئة_المضيف_لمفسر(): اختياري متجه متجه ط8 {
+        أرجع اختياري.لا_شيء();
+    }
+}

@@ -3,50 +3,50 @@
 استورد compiler.runtime.primitive_identity;
 استورد std.text.from_bytes;
 
-عام عرف اسم_بدائي_تشغيل_أساسي(البدائي: هوية_بدائي_مترجم): متجه غ8 {
+عام عرف اسم_بدائي_تشغيل_أساسي(البدائي: هوية_بدائي_مترجم): متجه ط8 {
     طابق البدائي مع
-    | هوية_بدائي_مترجم.طول -> { دع ن: متجه غ8 = بايتات_من_نص(«تشغيل_طول»); أرجع ن; }
-    | هوية_بدائي_مترجم.إلحاق -> { دع ن: متجه غ8 = بايتات_من_نص(«تشغيل_إلحاق»); أرجع ن; }
-    | هوية_بدائي_مترجم.تحرير -> { دع ن: متجه غ8 = بايتات_من_نص(«تشغيل_تحرير»); أرجع ن; }
-    | _ -> { دع ن: متجه غ8 = []; أرجع ن; };
+    | هوية_بدائي_مترجم.طول -> { دع ن: متجه ط8 = بايتات_من_نص(«تشغيل_طول»); أرجع ن; }
+    | هوية_بدائي_مترجم.إلحاق -> { دع ن: متجه ط8 = بايتات_من_نص(«تشغيل_إلحاق»); أرجع ن; }
+    | هوية_بدائي_مترجم.تحرير -> { دع ن: متجه ط8 = بايتات_من_نص(«تشغيل_تحرير»); أرجع ن; }
+    | _ -> { دع ن: متجه ط8 = []; أرجع ن; };
 }
 
 // Canonical spelling of the source-defined std.os.process exit provider. MSIR
 // lowering binds the unique public definition with this name as the program's
 // process-exit fact; the native Linux entry calls that definition directly.
 // This is an ABI spelling, not OS code.
-عام عرف اسم_خروج_عملية_نظام_أساسي(): متجه غ8 {
-    دع الاسم: متجه غ8 = بايتات_من_نص(«اخرج_من_عملية_النظام»);
+عام عرف اسم_خروج_عملية_نظام_أساسي(): متجه ط8 {
+    دع الاسم: متجه ط8 = بايتات_من_نص(«اخرج_من_عملية_النظام»);
     أرجع الاسم;
 }
 
 // ELF startup boundaries are linker-defined addresses, not STD services.
-// The executable entry walks these linker-owned ranges before القلعة.
-عام عرف اسم_بداية_منشئات_إلف_أساسي(): متجه غ8 {
-    دع الاسم: متجه غ8 = بايتات_من_نص(«__init_array_start»);
+// The executable entry walks these linker-owned ranges before الرئيسية.
+عام عرف اسم_بداية_منشئات_إلف_أساسي(): متجه ط8 {
+    دع الاسم: متجه ط8 = بايتات_من_نص(«__init_array_start»);
     أرجع الاسم;
 }
 
-عام عرف اسم_نهاية_منشئات_إلف_أساسي(): متجه غ8 {
-    دع الاسم: متجه غ8 = بايتات_من_نص(«__init_array_end»);
+عام عرف اسم_نهاية_منشئات_إلف_أساسي(): متجه ط8 {
+    دع الاسم: متجه ط8 = بايتات_من_نص(«__init_array_end»);
     أرجع الاسم;
 }
 
 // One process-startup ABI for backend-produced executables. These are
 // process-lifetime data symbols (u64 argc, pointer argv, pointer envp), not
 // libc/OS service implementations. STD reads them through ordinary externs.
-عام عرف اسم_عدد_وسائط_إقلاع_أساسي(): متجه غ8 {
-    دع الاسم: متجه غ8 = بايتات_من_نص(«sultanc.bootstrap.argc»);
+عام عرف اسم_عدد_وسائط_إقلاع_أساسي(): متجه ط8 {
+    دع الاسم: متجه ط8 = بايتات_من_نص(«sultanc.bootstrap.argc»);
     أرجع الاسم;
 }
 
-عام عرف اسم_مؤشر_وسائط_إقلاع_أساسي(): متجه غ8 {
-    دع الاسم: متجه غ8 = بايتات_من_نص(«sultanc.bootstrap.argv»);
+عام عرف اسم_مؤشر_وسائط_إقلاع_أساسي(): متجه ط8 {
+    دع الاسم: متجه ط8 = بايتات_من_نص(«sultanc.bootstrap.argv»);
     أرجع الاسم;
 }
 
-عام عرف اسم_مؤشر_بيئة_إقلاع_أساسي(): متجه غ8 {
-    دع الاسم: متجه غ8 = بايتات_من_نص(«sultanc.bootstrap.envp»);
+عام عرف اسم_مؤشر_بيئة_إقلاع_أساسي(): متجه ط8 {
+    دع الاسم: متجه ط8 = بايتات_من_نص(«sultanc.bootstrap.envp»);
     أرجع الاسم;
 }
 
@@ -55,8 +55,8 @@
 // loader forms for `استورد os.process;` inside std. A program whose process
 // start SultanC emits itself needs that provider; the driver loads this
 // module as an additional root.
-عام عرف مسار_وحدة_خروج_عملية_نظام_أساسي(): متجه غ8 {
-    دع المسار: متجه غ8 = بايتات_من_نص(«os/process.sn»);
+عام عرف مسار_وحدة_خروج_عملية_نظام_أساسي(): متجه ط8 {
+    دع المسار: متجه ط8 = بايتات_من_نص(«os/process.sn»);
     أرجع المسار;
 }
 
@@ -66,24 +66,24 @@
 // backends then call those definitions for the compiler's storage services.
 // ABI spellings, not OS code. The operands and result are pointer-width
 // unsigned integers (linear-memory offsets); 0 means allocation failure.
-عام عرف اسم_مزود_تخصيص_ذاكرة_أساسي(): متجه غ8 {
-    دع الاسم: متجه غ8 = بايتات_من_نص(«خصص_ذاكرة_التشغيل»);
+عام عرف اسم_مزود_تخصيص_ذاكرة_أساسي(): متجه ط8 {
+    دع الاسم: متجه ط8 = بايتات_من_نص(«خصص_ذاكرة_التشغيل»);
     أرجع الاسم;
 }
 
-عام عرف اسم_مزود_إعادة_تخصيص_ذاكرة_أساسي(): متجه غ8 {
-    دع الاسم: متجه غ8 = بايتات_من_نص(«أعد_تخصيص_ذاكرة_التشغيل»);
+عام عرف اسم_مزود_إعادة_تخصيص_ذاكرة_أساسي(): متجه ط8 {
+    دع الاسم: متجه ط8 = بايتات_من_نص(«أعد_تخصيص_ذاكرة_التشغيل»);
     أرجع الاسم;
 }
 
-عام عرف اسم_مزود_تحرير_ذاكرة_أساسي(): متجه غ8 {
-    دع الاسم: متجه غ8 = بايتات_من_نص(«حرر_ذاكرة_التشغيل»);
+عام عرف اسم_مزود_تحرير_ذاكرة_أساسي(): متجه ط8 {
+    دع الاسم: متجه ط8 = بايتات_من_نص(«حرر_ذاكرة_التشغيل»);
     أرجع الاسم;
 }
 
 // Import reference, relative to the trusted std root, of the module defining
 // the allocation providers above: `os/allocation.sn`.
-عام عرف مسار_وحدة_مزودات_الذاكرة_أساسي(): متجه غ8 {
-    دع المسار: متجه غ8 = بايتات_من_نص(«os/allocation.sn»);
+عام عرف مسار_وحدة_مزودات_الذاكرة_أساسي(): متجه ط8 {
+    دع المسار: متجه ط8 = بايتات_من_نص(«os/allocation.sn»);
     أرجع المسار;
 }

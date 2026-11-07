@@ -1,6 +1,9 @@
 استورد compiler.backend.target.target_model;
 
 // Target owns which backend providers may consume each registered target.
+// Whether the running compiler contains a provider at all is a separate
+// compiler-build capability (LLVM: compiler.backend.provider.llvm.llvm_codegen
+// مزود_إل_إل_في_إم_مضمن); the Driver requires both before dispatching.
 // The native provider consumes the targets with an implemented machine path
 // (arm64 Mach-O, x86-64 Linux ELF, wasm32 WebAssembly modules);
 // LLVM may consume every registered target and delegates machine lowering to

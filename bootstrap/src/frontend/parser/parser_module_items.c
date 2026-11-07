@@ -34,6 +34,20 @@ static int __Parser_Parse_External_Module_Item__(__Parser__ *__Parser_State__,
     {
         return 0;
     }
+    /* `خارجي «library» عرف`: the platform library that exports the function
+     * (canonical: حلل_عنصر_دالة). Stage0 emits objects that its build links
+     * against the platform's import libraries and libSystem, so it checks the
+     * text and keeps no library identity. */
+    if (__Parser_State__->__Current__.__Kind__ == __Token_LIT_STR__)
+    {
+        /* Stores the declared library, which Stage0 does not use. */
+        __Text_Slice__ __Library__;
+
+        if (!__Parser_Parse_Native_Link_Text__(__Parser_State__, &__Library__))
+        {
+            return 0;
+        }
+    }
     if (__Parser_State__->__Current__.__Kind__ != __Token_FUNCTION_DEF__)
     {
         return __Parser_Fail__(__Parser_State__, __Diag_Word_Syntax_Expected_Module_Item__);
@@ -67,6 +81,10 @@ static int __Parser_Parse_Public_Module_Item__(__Parser__ *__Parser_State__, __V
     if (__Parser_State__->__Current__.__Kind__ == __Token_FUNCTION_DEF__)
     {
         return __Parser_Parse_Function_Item__(__Parser_State__, __Items__, 1, 0);
+    }
+    if (__Parser_State__->__Current__.__Kind__ == __Token_LET__)
+    {
+        return __Parser_Parse_Value_Global_Item__(__Parser_State__, __Items__, 1, __Public_Start__);
     }
     return __Parser_Fail__(__Parser_State__, __Diag_Word_Syntax_Expected_Module_Item__);
 }
@@ -184,6 +202,13 @@ static int __Parser_Parse_Module_Content__(__Parser__ *__Parser_State__,
                 break;
             case __Token_FUNCTION_DEF__:
                 __Ok__ = __Parser_Parse_Function_Item__(__Parser_State__, __Item_Target__, 0, 0);
+                break;
+            case __Token_LET__:
+                __Ok__ = __Parser_Parse_Value_Global_Item__(
+                    __Parser_State__,
+                    __Item_Target__,
+                    0,
+                    __Parser_State__->__Current__.__Span__.__Start__);
                 break;
             default:
                 __Ok__ =

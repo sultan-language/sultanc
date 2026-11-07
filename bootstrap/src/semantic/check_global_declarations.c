@@ -8,6 +8,7 @@
  * Types are rejected explicitly instead of being copied silently. */
 
 #include "semantic/check_global_declarations.h"
+#include "semantic/constant_fold.h"
 #include "semantic/check_type_reference.h"
 #include "semantic/diagnostic.h"
 #include "kernel/memory/memory.h"
@@ -57,13 +58,21 @@ int __Semantic_Check_Global_Declarations__(__Semantic_Context__ *__Context__)
                                      __E0400_Mismatched_Types__,
                                      __Entry__->__Declaration__->__Header__.__Span__);
         }
-        if (!__Entry__->__Declaration__->__External__ ||
+        if (__Entry__->__Declaration__->__External__ &&
             __Memory_Type_Is_Owned__(__Context__, __Entry__->__Declaration__->__Type__))
         {
             __Context__->__Active_Unit__ = __Saved_Unit__;
             return __Semantic_Fail__(__Context__,
                                      __E0404_Statement_Typecheck_Not_Implemented__,
                                      __Entry__->__Declaration__->__Header__.__Span__);
+        }
+        /* A module constant or variable: its initializer is evaluated now, as
+         * the canonical compile-time evaluation does. */
+        if (!__Entry__->__Declaration__->__External__ &&
+            !__Semantic_Fold_Global__(__Context__, __Entry__))
+        {
+            __Context__->__Active_Unit__ = __Saved_Unit__;
+            return 0;
         }
     }
     __Context__->__Active_Unit__ = __Saved_Unit__;

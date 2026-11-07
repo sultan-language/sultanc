@@ -61,6 +61,10 @@ int __Parser_Binary_Info__(__Token_Kind__ __Kind__,
             *__Out_Precedence__ = 8;
             *__Out_Operation__ = __Binary_Shift_Right_Logical__;
             return 1;
+        case __Token_ARITHMETIC_RIGHT_SHIFT_OPERATOR__:
+            *__Out_Precedence__ = 8;
+            *__Out_Operation__ = __Binary_Shift_Right_Arithmetic__;
+            return 1;
         case __Token_PLUS_OPERATOR__:
             *__Out_Precedence__ = 9;
             *__Out_Operation__ = __Binary_Add__;

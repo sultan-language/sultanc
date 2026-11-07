@@ -102,12 +102,6 @@
     LLVMInitializeRISCVTargetInfo(); LLVMInitializeRISCVTarget(); LLVMInitializeRISCVTargetMC();
         LLVMInitializeRISCVAsmPrinter(); LLVMInitializeRISCVAsmParser();
 }
-// LLVM installations without the SPIR-V target must report unavailability
-// through LLVMGetTargetFromTriple, never invent target-registration symbols.
-عام عرف هيئ_هدف_سبير_في_إل_إل_في_إم(): فراغ {
-    // LLVMGetTargetFromTriple rejects SPIR-V on installations without its backend.
-    دع لا_تشغيل: عدد = 0;
-}
 عام عرف هيئ_هدف_ويب_أسمبلي_إل_إل_في_إم(): فراغ {
     LLVMInitializeWebAssemblyTargetInfo(); LLVMInitializeWebAssemblyTarget();
         LLVMInitializeWebAssemblyTargetMC(); LLVMInitializeWebAssemblyAsmPrinter(); LLVMInitializeWebAssemblyAsmParser();
@@ -182,6 +176,16 @@
     عام خارجي عرف LLVMInitializeXCoreTargetMC(): فراغ;
     عام خارجي عرف LLVMInitializeXCoreAsmPrinter(): فراغ;
 
+    // SPIR-V is one of the 20 required LLVM families (every LLVM target the compiler can emit);
+    // it has no assembly parser.
+    عام خارجي عرف LLVMInitializeSPIRVTargetInfo(): فراغ;
+    عام خارجي عرف LLVMInitializeSPIRVTarget(): فراغ;
+    عام خارجي عرف LLVMInitializeSPIRVTargetMC(): فراغ;
+    عام خارجي عرف LLVMInitializeSPIRVAsmPrinter(): فراغ;
+    عام عرف هيئ_هدف_سبير_في_إل_إل_في_إم(): فراغ {
+        LLVMInitializeSPIRVTargetInfo(); LLVMInitializeSPIRVTarget(); LLVMInitializeSPIRVTargetMC();
+            LLVMInitializeSPIRVAsmPrinter();
+    }
     عام عرف هيئ_هدف_إيه_إم_دي_جي_بي_يو_إل_إل_في_إم(): فراغ {
         LLVMInitializeAMDGPUTargetInfo(); LLVMInitializeAMDGPUTarget(); LLVMInitializeAMDGPUTargetMC();
             LLVMInitializeAMDGPUAsmPrinter(); LLVMInitializeAMDGPUAsmParser();
@@ -245,6 +249,7 @@
 
 لو (الهدف.المنصة == «windows») {
     عام عرف هيئ_هدف_إيه_إم_دي_جي_بي_يو_إل_إل_في_إم(): فراغ { دع لا_تشغيل: عدد = 0; }
+    عام عرف هيئ_هدف_سبير_في_إل_إل_في_إم(): فراغ { دع لا_تشغيل: عدد = 0; }
     عام عرف هيئ_هدف_إيه_في_آر_إل_إل_في_إم(): فراغ { دع لا_تشغيل: عدد = 0; }
     عام عرف هيئ_هدف_هيكساغون_إل_إل_في_إم(): فراغ { دع لا_تشغيل: عدد = 0; }
     عام عرف هيئ_هدف_لاناي_إل_إل_في_إم(): فراغ { دع لا_تشغيل: عدد = 0; }

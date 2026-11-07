@@ -407,8 +407,28 @@ __Ast_Type__ *__LLVM_Expression_Integer_Type__(__LLVM_Emitter__ *emitter,
                 __LLVM_Resolve_Ordinary_Callee__(emitter, expression);
             if (callee != NULL)
                 return callee->__Function__->__Output__.__Type__;
+            {
+                /* A call through a value of function type (a local, a field). */
+                __Ast_Type__ *callee_type =
+                    __LLVM_Lvalue_Type__(emitter, expression->__As__.__Call__.__Function__);
+                __Resolved_Type__ callee_resolved;
+                if (callee_type != NULL &&
+                    __Type_Resolve__(emitter->semantic, callee_type, &callee_resolved) &&
+                    callee_resolved.__Kind__ == __Resolved_Type_Function__ &&
+                    callee_resolved.__Output__ != NULL)
+                    return callee_resolved.__Output__;
+            }
             switch (__LLVM_Builtin_Call_Identity__(emitter, expression))
             {
+                case __Name_Builtin_Wrapping_Add__:
+                case __Name_Builtin_Wrapping_Subtract__:
+                case __Name_Builtin_Wrapping_Multiply__:
+                case __Name_Builtin_Wrapping_Shift_Left__:
+                case __Name_Builtin_Wrapping_Shift_Right__:
+                case __Name_Builtin_Pop__:
+                case __Name_Builtin_C_Address_Call__:
+                    return expression->__Contextual_Type__;
+                case __Name_Builtin_Capacity__:
                 case __Name_Builtin_Length__:
                 case __Name_Builtin_Host_Architecture__:
                 case __Name_Builtin_Host_Platform__:
@@ -490,9 +510,29 @@ __Ast_Type__ *__LLVM_Expression_Type__(__LLVM_Emitter__ *emitter,
             __Name_Builtin_Function__ builtin;
             if (callee != NULL)
                 return callee->__Function__->__Output__.__Type__;
+            {
+                /* A call through a value of function type (a local, a field). */
+                __Ast_Type__ *callee_type =
+                    __LLVM_Lvalue_Type__(emitter, expression->__As__.__Call__.__Function__);
+                __Resolved_Type__ callee_resolved;
+                if (callee_type != NULL &&
+                    __Type_Resolve__(emitter->semantic, callee_type, &callee_resolved) &&
+                    callee_resolved.__Kind__ == __Resolved_Type_Function__ &&
+                    callee_resolved.__Output__ != NULL)
+                    return callee_resolved.__Output__;
+            }
             builtin = __LLVM_Builtin_Call_Identity__(emitter, expression);
             switch (builtin)
             {
+                case __Name_Builtin_Wrapping_Add__:
+                case __Name_Builtin_Wrapping_Subtract__:
+                case __Name_Builtin_Wrapping_Multiply__:
+                case __Name_Builtin_Wrapping_Shift_Left__:
+                case __Name_Builtin_Wrapping_Shift_Right__:
+                case __Name_Builtin_Pop__:
+                case __Name_Builtin_C_Address_Call__:
+                    return expression->__Contextual_Type__;
+                case __Name_Builtin_Capacity__:
                 case __Name_Builtin_Length__:
                 case __Name_Builtin_Host_Architecture__:
                 case __Name_Builtin_Host_Platform__:

@@ -13,12 +13,15 @@ static const __Token_Class__ __Token_Classes__[__Token_Kind_Count__] = {
 #define SULTANC__KEYWORD__(Name, English, Arabic)
 /* Expands the bool keyword macro. */
 #define SULTANC__BOOL_KEYWORD__(English, Arabic, Value)
+/* Expands the deprecated keyword spelling macro. */
+#define SULTANC__KEYWORD_DEPRECATED__(Name, Old, New)
 /* Expands the operator macro. */
 #define SULTANC__OPERATOR__(Name, Spelling)
 #include "frontend/lexer/token_registry.def"
 #undef SULTANC__TOKEN__
 #undef SULTANC__KEYWORD__
 #undef SULTANC__BOOL_KEYWORD__
+#undef SULTANC__KEYWORD_DEPRECATED__
 #undef SULTANC__OPERATOR__
 };
 
@@ -31,12 +34,15 @@ static const __Token_Lifecycle__ __Token_Lifecycles__[__Token_Kind_Count__] = {
 #define SULTANC__KEYWORD__(Name, English, Arabic)
 /* Expands the bool keyword macro. */
 #define SULTANC__BOOL_KEYWORD__(English, Arabic, Value)
+/* Expands the deprecated keyword spelling macro. */
+#define SULTANC__KEYWORD_DEPRECATED__(Name, Old, New)
 /* Expands the operator macro. */
 #define SULTANC__OPERATOR__(Name, Spelling)
 #include "frontend/lexer/token_registry.def"
 #undef SULTANC__TOKEN__
 #undef SULTANC__KEYWORD__
 #undef SULTANC__BOOL_KEYWORD__
+#undef SULTANC__KEYWORD_DEPRECATED__
 #undef SULTANC__OPERATOR__
 };
 
@@ -49,12 +55,15 @@ static const __Token_Payload_Kind__ __Token_Payload_Kinds__[__Token_Kind_Count__
 #define SULTANC__KEYWORD__(Name, English, Arabic)
 /* Expands the bool keyword macro. */
 #define SULTANC__BOOL_KEYWORD__(English, Arabic, Value)
+/* Expands the deprecated keyword spelling macro. */
+#define SULTANC__KEYWORD_DEPRECATED__(Name, Old, New)
 /* Expands the operator macro. */
 #define SULTANC__OPERATOR__(Name, Spelling)
 #include "frontend/lexer/token_registry.def"
 #undef SULTANC__TOKEN__
 #undef SULTANC__KEYWORD__
 #undef SULTANC__BOOL_KEYWORD__
+#undef SULTANC__KEYWORD_DEPRECATED__
 #undef SULTANC__OPERATOR__
 };
 

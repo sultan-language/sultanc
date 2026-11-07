@@ -1,0 +1,238 @@
+// Linux OS threads (docs/CONCURRENCY.md), on raw system calls with no libc,
+// the way Go's runtime and musl start a thread. A thread is a `clone` with a
+// shared address space, file table, signal handlers and thread group, onto a
+// stack std maps itself with a guard page; `join` is a futex wait on the tid
+// the kernel clears when the thread exits (CLONE_CHILD_CLEARTID). The clone
+// itself is the compiler's بدائي_استنسخ_خيط_نواة: its child runs the closure
+// whose environment is the seventh argument, on the new stack, and exits the
+// thread when the closure returns (musl src/thread/*/clone.s).
+//
+// The stack mapping (خصص_مكدس_خيط_لينكس) also serves FreeBSD's thr_new
+// (os.platform.unix.freebsd.threads): mmap, mprotect and munmap take the same
+// arguments there, and the flags come from the selected kernel's UAPI.
+استورد os.platform.unix.linux.syscalls.kernel_result;
+استورد os.platform.unix.linux.syscalls.operations;
+استورد os.platform.unix.linux.syscalls.selection;
+استورد os.platform.unix.linux.virtual_memory;
+استورد os.error;
+لو ((الهدف.المنصة == «linux» || الهدف.المنصة == «android») && الهدف.المعمارية != «ve») { استورد os.platform.unix.linux.uapi; }
+لو (الهدف.المنصة == «freebsd») { استورد os.platform.unix.freebsd.uapi; }
+
+// Compiler intrinsics bind only through private aliases.
+مرادف اقرأ_كلمة_آلة_خيط = بدائي_اقرأ_ذاكرة_الآلة;
+مرادف اكتب_كلمة_آلة_خيط = بدائي_اكتب_ذاكرة_الآلة;
+
+// A thread stack: 2 MiB of RW pages with a PROT_NONE guard page at the low
+// end, so an overflow faults instead of corrupting another thread's memory
+// (Rust's and glibc's default thread stack is 2 MiB, Go's g0 8 KiB grows).
+// The highest 64 bytes hold the thread's bookkeeping word (the tid cell the
+// kernel writes and clears, or FreeBSD's thr_exit state), below which the
+// stack starts; it lives as long as the mapping, which join unmaps after
+// the thread has exited, as musl and libthr keep the thread descriptor in
+// the thread's own mapping.
+عام نوع مكدس_خيط_لينكس = {
+    القاعدة: ط64,  // lowest mapped address (the guard page)
+    الحجم: ط64,
+    القمة: ط64     // highest address
+};
+
+عرف حجم_حارس_مكدس_خيط(): ط64 { أرجع 65536; }
+
+عام عرف خصص_مكدس_خيط_لينكس(): نتيجة مكدس_خيط_لينكس, خطأ_نظام_أصلي {
+    دع الحجم: ط64 = 2097152;
+    // PROT_READ|WRITE (3), MAP_PRIVATE|ANONYMOUS, fd -1.
+    دع الأعلام: ط64 = ربط_ذاكرة_خاص_لينكس() | ربط_ذاكرة_مجهول_لينكس();
+    دع بلا_واصف: ص64 = -1;
+    طابق اربط_ذاكرة_لينكس(
+        رقم_نداء_نواة_لينكس(عملية_نداء_نواة_لينكس.ربط_ذاكرة()),
+        الحجم, 3 مثل ط64, الأعلام, بلا_واصف, 0 مثل ط64
+    ) مع
+    | نتيجة.خطأ(_) -> { أرجع نتيجة.خطأ(أنشئ_خطأ_نظام_أصلي(مصدر_خطأ_نظام.يونكس(), 12)); }
+    | نتيجة.نجح(المنطقة) -> {
+        // Guard the lowest 64 KiB: a whole page on every page size std's
+        // targets use (4, 16 and 64 KiB).
+        دع منطقة_الحارس: منطقة_ذاكرة_لينكس = { العنوان: المنطقة.العنوان, الطول: حجم_حارس_مكدس_خيط(), نشطة: صواب };
+        دع تجاهل: نتيجة ط64, خطأ_ذاكرة_لينكس = نفذ_توجيه_ذاكرة_لينكس(
+            رقم_نداء_نواة_لينكس(عملية_نداء_نواة_لينكس.حماية_ذاكرة()), &منطقة_الحارس, 0 مثل ط64
+        );
+        دع المكدس: مكدس_خيط_لينكس = {
+            القاعدة: المنطقة.العنوان, الحجم: الحجم, القمة: المنطقة.العنوان + الحجم
+        };
+        غير_آمن { اكتب_كلمة_آلة_خيط(خلية_خيط_لينكس(&المكدس), 0 مثل ط64); }
+        أرجع نتيجة.نجح(المكدس);
+    };
+}
+
+عام عرف حرر_مكدس_خيط_لينكس(المكدس: &مكدس_خيط_لينكس): فراغ {
+    دع منطقة: متغير منطقة_ذاكرة_لينكس = { العنوان: (*المكدس).القاعدة, الطول: (*المكدس).الحجم, نشطة: صواب };
+    دع تجاهل: نتيجة ط64, خطأ_ذاكرة_لينكس = ألغ_ربط_ذاكرة_لينكس(
+        رقم_نداء_نواة_لينكس(عملية_نداء_نواة_لينكس.إلغاء_ربط_ذاكرة()), &متغير منطقة
+    );
+}
+
+// The bookkeeping word at the top of the mapping, and the stack top below it.
+عام عرف خلية_خيط_لينكس(المكدس: &مكدس_خيط_لينكس): ط64 { أرجع (*المكدس).القمة - 64; }
+عام عرف أعلى_المكدس_القابل_للاستعمال_لينكس(المكدس: &مكدس_خيط_لينكس): ط64 { أرجع (*المكدس).القمة - 64; }
+
+// The whole machine word of the bookkeeping cell.
+عام عرف اقرأ_خلية_خيط_لينكس(الخلية: ط64): ط64 {
+    دع القيمة: ط64;
+    غير_آمن { القيمة := اقرأ_كلمة_آلة_خيط(الخلية); }
+    أرجع القيمة;
+}
+
+// futex / _umtx_op(addr, op, val, NULL, NULL, 0): the same five words on
+// both kernels. Linux: WAIT sleeps while the u32 at addr == val, WAKE
+// wakes up to val waiters, the PRIVATE variants stay within one process.
+// FreeBSD: UMTX_OP_WAIT (2) compares a long, UMTX_OP_WAKE (3).
+عرف مستقبل_لينكس(العنوان: ط64, العملية: ط64, القيمة: ط64): ط64 {
+    دع الخام: ط64;
+    غير_آمن {
+        الخام := بدائي_نداء_نواة_خام(
+            رقم_نداء_نواة_لينكس(عملية_نداء_نواة_لينكس.مستقبل()),
+            العنوان, العملية, القيمة, 0 مثل ط64, 0 مثل ط64, 0 مثل ط64
+        );
+    }
+    أرجع الخام;
+}
+عام عرف نفذ_مستقبل_خيط(العنوان: ط64, العملية: ط64, القيمة: ط64): ط64 {
+    أرجع مستقبل_لينكس(العنوان, العملية, القيمة);
+}
+
+// sched_yield: the same call on Linux and FreeBSD (Rust's yield_now).
+عام عرف تنازل_لينكس(): فراغ {
+    دع تجاهل: ط64;
+    غير_آمن {
+        تجاهل := بدائي_نداء_نواة_خام(
+            رقم_نداء_نواة_لينكس(عملية_نداء_نواة_لينكس.تنازل_جدولة()),
+            0 مثل ط64, 0 مثل ط64, 0 مثل ط64, 0 مثل ط64, 0 مثل ط64, 0 مثل ط64
+        );
+    }
+}
+
+عام عرف نم_نانو_لينكس(ثوان: ط64, نانو: ط64): فراغ {
+    // nanosleep(&timespec, NULL): a 16-byte {tv_sec, tv_nsec} on 64-bit
+    // (std.thread sleeps through os.clock, which also covers the 32-bit ABIs).
+    دع المؤقت: متغير متجه ط64 = [ثوان, نانو];
+    دع تجاهل: ط64;
+    غير_آمن {
+        تجاهل := بدائي_نداء_نواة_خام(
+            رقم_نداء_نواة_لينكس(عملية_نداء_نواة_لينكس.نوم_نانو()),
+            &متغير المؤقت[0], 0 مثل ط64, 0 مثل ط64, 0 مثل ط64, 0 مثل ط64, 0 مثل ط64
+        );
+    }
+}
+
+// Linux only: the clone, the tid join, gettid and sched_getaffinity.
+لو ((الهدف.المنصة == «linux» || الهدف.المنصة == «android») && الهدف.المعمارية != «ve») {
+    مرادف استنسخ_خيط_نواة = بدائي_استنسخ_خيط_نواة;
+
+    // CLONE flags for a thread (linux/sched.h). Together they make the child
+    // a peer thread of the same process: one address space, descriptor
+    // table, signal handlers, thread group and System V semaphore set; the
+    // parent and child tid are written; the child tid is cleared and
+    // futex-woken on exit.
+    عرف أعلام_خيط_لينكس(): ط64 {
+        // VM|FS|FILES|SIGHAND|THREAD|SYSVSEM|PARENT_SETTID|CHILD_CLEARTID.
+        أرجع 0x00000100 | 0x00000200 | 0x00000400 | 0x00000800
+           | 0x00010000 | 0x00040000 | 0x00100000 | 0x00200000;
+    }
+
+    // The new thread's tid is written to the cell at the top of its stack
+    // mapping (PARENT_SETTID) and cleared there on exit (CHILD_CLEARTID);
+    // join futex-waits on it. The kernel takes the parent-tid, child-tid and
+    // TLS words in an order that differs between architectures
+    // (CLONE_BACKWARDS*, kernel/fork.c): x86-64 and s390x read the child tid
+    // from the fourth word, the others from the fifth. std passes the cell
+    // in all three; CLONE_SETTLS is not set, so the TLS word is ignored.
+    عام عرف ابدأ_خيط_لينكس(
+        المكدس: &مكدس_خيط_لينكس, عنوان_الإغلاق: ط64
+    ): نتيجة عدد, خطأ_نظام_أصلي {
+        دع رقم_النسخ: ط64 = رقم_نداء_نواة_لينكس(عملية_نداء_نواة_لينكس.نسخ_عملية());
+        دع الخلية: ط64 = خلية_خيط_لينكس(المكدس);
+        دع الخام: ط64;
+        غير_آمن {
+            الخام := استنسخ_خيط_نواة(
+                رقم_النسخ, أعلام_خيط_لينكس(), أعلى_المكدس_القابل_للاستعمال_لينكس(المكدس),
+                الخلية, الخلية, الخلية, عنوان_الإغلاق
+            );
+        }
+        طابق حلل_نتيجة_نداء_نواة_لينكس(الخام) مع
+        | نتيجة.خطأ(الخطأ) -> { أرجع نتيجة.خطأ(الخطأ); }
+        | نتيجة.نجح(المعرف) -> { أرجع نتيجة.نجح(المعرف مثل عدد); };
+    }
+
+    // Join: read the tid cell; while it still holds the tid, futex-wait for
+    // the kernel to clear and wake it on thread exit. The kernel's
+    // CLONE_CHILD_CLEARTID wake is a non-private FUTEX_WAKE, so join waits
+    // with the matching non-private FUTEX_WAIT (op 0).
+    عام عرف انضم_خيط_لينكس(الخلية: ط64, المعرف: عدد): فراغ {
+        دع المعرف_الخام: ط32 = المعرف مثل ط32;
+        طالما (معرف_خلية_لينكس(الخلية) != 0) {
+            دع تجاهل: ط64 = مستقبل_لينكس(الخلية, 0, المعرف_الخام مثل ط64);
+        }
+    }
+
+    عام عرف أيقظ_مستقبل_لينكس(العنوان: ط64, العدد: ط64): ط64 {
+        // FUTEX_WAKE_PRIVATE = 129.
+        أرجع مستقبل_لينكس(العنوان, 129, العدد);
+    }
+
+    عام عرف انتظر_مستقبل_لينكس(العنوان: ط64, القيمة_المتوقعة: ط64): ط64 {
+        أرجع مستقبل_لينكس(العنوان, 128, القيمة_المتوقعة);
+    }
+
+    // gettid(): the calling thread's kernel id (the main thread's is the pid).
+    عام عرف معرف_الخيط_الحالي_لينكس(): ط64 {
+        دع الخام: ط64;
+        غير_آمن {
+            الخام := بدائي_نداء_نواة_خام(
+                رقم_نداء_نواة_لينكس(عملية_نداء_نواة_لينكس.معرف_الخيط()),
+                0 مثل ط64, 0 مثل ط64, 0 مثل ط64, 0 مثل ط64, 0 مثل ط64, 0 مثل ط64
+            );
+        }
+        أرجع الخام & 0xFFFFFFFF;
+    }
+
+    // sched_getaffinity(0, 128, mask): the CPUs this thread may run on, as
+    // Rust's available_parallelism counts them (CPU_COUNT over a 1024-bit
+    // cpu_set_t). The kernel answers the number of mask bytes it wrote.
+    عام عرف عدد_المعالجات_لينكس(): نتيجة ط64, خطأ_نظام_أصلي {
+        دع القناع: متغير متجه ط64 = [];
+        دع ف: متغير طبيعي = 0;
+        طالما (ف < 16) { ألحق(القناع, 0 مثل ط64); ف := ف + 1; }
+        دع الخام: ط64;
+        غير_آمن {
+            الخام := بدائي_نداء_نواة_خام(
+                رقم_نداء_نواة_لينكس(عملية_نداء_نواة_لينكس.ألفة_المعالج()),
+                0 مثل ط64, 128 مثل ط64, &متغير القناع[0], 0 مثل ط64, 0 مثل ط64, 0 مثل ط64
+            );
+        }
+        طابق حلل_نتيجة_نداء_نواة_لينكس(الخام) مع
+        | نتيجة.خطأ(الخطأ) -> { أرجع نتيجة.خطأ(الخطأ); }
+        | نتيجة.نجح(_) -> {
+            دع العدد: متغير ط64 = 0;
+            دع ق: متغير طبيعي = 0;
+            طالما (ق < 16) {
+                دع الكلمة: متغير ط64 = القناع[ق];
+                طالما (الكلمة != 0) {
+                    العدد := العدد + (الكلمة & 1);
+                    الكلمة := الكلمة >> 1;
+                }
+                ق := ق + 1;
+            }
+            لو (العدد == 0) { أرجع نتيجة.خطأ(أنشئ_خطأ_نظام_أصلي(مصدر_خطأ_نظام.يونكس(), 22)); };
+            أرجع نتيجة.نجح(العدد);
+        };
+    }
+}
+
+// The kernel writes the 32-bit tid at the start of the cell: the low half of
+// the machine word on little-endian targets, the high half on big-endian
+// ones (s390x, SPARC V9).
+لو ((الهدف.المنصة == «linux» || الهدف.المنصة == «android») && الهدف.المعمارية != «ve» && الهدف.المعمارية != «systemz» && الهدف.المعمارية != «sparcv9») {
+    عرف معرف_خلية_لينكس(الخلية: ط64): ط64 { أرجع اقرأ_خلية_خيط_لينكس(الخلية) & 0xFFFFFFFF; }
+}
+لو ((الهدف.المنصة == «linux» || الهدف.المنصة == «android») && (الهدف.المعمارية == «systemz» || الهدف.المعمارية == «sparcv9»)) {
+    عرف معرف_خلية_لينكس(الخلية: ط64): ط64 { أرجع اقرأ_خلية_خيط_لينكس(الخلية) >> 32; }
+}

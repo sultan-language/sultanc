@@ -1,6 +1,6 @@
 استورد std.text.from_bytes;
-عام عرف اسم_مخرج_كوف_المشترك_الافتراضي(): متجه غ8 {
-    دع الاسم: متجه غ8 = بايتات_من_نص(«sultanc.dll»);
+عام عرف اسم_مخرج_كوف_المشترك_الافتراضي(): متجه ط8 {
+    دع الاسم: متجه ط8 = بايتات_من_نص(«sultanc.dll»);
     أرجع الاسم;
 }
 
@@ -9,7 +9,7 @@
 // entry and exits through kernel32's ExitProcess. It is the same spelling as
 // the ELF and WASI process starts. Previously the image entered through the
 // C runtime's mainCRTStartup/wmainCRTStartup, which called main or wmain.
-عام عرف اسم_رمز_بدء_عملية_كوف(): متجه غ8 {
-    دع الاسم: متجه غ8 = بايتات_من_نص(«_start»);
+عام عرف اسم_رمز_بدء_عملية_كوف(): متجه ط8 {
+    دع الاسم: متجه ط8 = بايتات_من_نص(«_start»);
     أرجع الاسم;
 }

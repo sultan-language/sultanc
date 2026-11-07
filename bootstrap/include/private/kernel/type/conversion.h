@@ -21,7 +21,7 @@ int __Type_Integer_Literal_Fits__(__Semantic_Context__ *__Context__,
                                   int64_t __Value__,
                                   __Ast_Type__ *__Target_Type__);
 
-/* Returns whether a cast moves an owned متجه غ8 into owned نص (canonical
+/* Returns whether a cast moves an owned متجه ط8 into owned نص (canonical
  * هل_نقل_متجه_بايتات_إلى_نص). */
 int __Type_Is_Byte_Vector_To_Text_Move__(__Semantic_Context__ *__Context__,
                                          __Ast_Type__ *__Source__,

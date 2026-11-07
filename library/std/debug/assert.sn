@@ -1,19 +1,25 @@
-استورد io.println;
+استورد text.from_bytes;
 استورد process.exit;
+استورد process.failure;
 
 // Assertions remain active in all build modes. The condition is evaluated once.
-// Failure writes to stderr and terminates with a nonzero status.
+// A failed assertion stops the program like إنهيار (std.process.panic): the
+// iSpeak frame "the program stopped" with the reason "an assertion failed",
+// in the program's language, on standard error, then status 1; owned values
+// are not dropped.
 عام عرف تأكد(الشرط: منطقي): فراغ {
     لو (!الشرط) {
-        دع تجاهل: نتيجة عدد, عدد = اطبع_سطر_خطأ(«assertion failed»);
+        دع بلا_رسالة: نص = «»;
+        اطبع_فشل_تشغيل(2, &بلا_رسالة);
         اخرج(1);
     };
 }
 
-// An optional diagnostic message, evaluated by the caller before the call.
+// An optional message, evaluated by the caller before the call, printed
+// under the frame.
 عام عرف تأكد_برسالة(الشرط: منطقي, الرسالة: &نص): فراغ {
     لو (!الشرط) {
-        دع تجاهل: نتيجة عدد, عدد = اطبع_سطر_خطأ(*الرسالة);
+        اطبع_فشل_تشغيل(2, الرسالة);
         اخرج(1);
     };
 }

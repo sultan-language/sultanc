@@ -1,0 +1,97 @@
+// Shared ownership across threads (docs/CONCURRENCY.md, "Arc"), after Rust's
+// std::sync::Arc: one heap value, any number of handles, an atomic reference
+// count, and the value dropped exactly once, when the last handle goes.
+//
+// SultanC has no user destructors, so the count and the drop are the ones the
+// language already runs for closures. A handle holds one closure whose
+// environment owns the boxed value (a move capture): the environment's
+// reference count is the Arc's strong count, copying the handle adds one
+// reference atomically (LOCK XADD, LDADDAL, LLVM atomicrmw), dropping it
+// removes one, and the environment's destructor drops the box with the last
+// reference. The closure answers the address of the boxed value, which every
+// handle reads through. The value is reached only through a shared reference
+// (Rust's Deref): mutation across threads goes through a Mutex, an RwLock or
+// an atomic stored inside.
+//
+// Copying a handle is Rust's Arc::clone (closures are copyable values in
+// SultanC); استنسخ_مشترك spells it out. A handle is safe to move to another
+// thread (its count is atomic), so a spawned closure may capture it
+// (docs/TYPE_SYSTEM.md, "Thread capture rules").
+//
+// The interpreter counts no closure references, so there a shared value is
+// never freed (docs/INTERPRETER.md); compiled programs free it.
+
+مرادف عنوان_إغلاق_مشترك = بدائي_عنوان_دالة;
+مرادف إغلاق_من_عنوان_مشترك = بدائي_دالة_من_عنوان;
+مرادف اقرأ_كلمة_مشترك = بدائي_اقرأ_ذاكرة_الآلة;
+
+عام نوع مشترك<ق> = { الحمولة: دالة(): *متغير ق };
+عام مرادف arc = مشترك;
+
+// The closure body: the environment keeps the box alive (it is captured by
+// move, so the environment owns it) and answers the boxed value's address.
+عرف عنوان_حمولة_مشترك<ق>(الصندوق: &صندوق متغير ق, المؤشر: *متغير ق): *متغير ق {
+    أرجع المؤشر;
+}
+
+// Rust's Arc::new.
+عام عرف أنشئ_مشترك<ق>(القيمة: ق): مشترك<ق> {
+    دع الصندوق: صندوق متغير ق = صندوق القيمة;
+    دع المؤشر: *متغير ق = &متغير (*الصندوق);
+    دع الحمولة: دالة(): *متغير ق = دالة(): *متغير ق -> عنوان_حمولة_مشترك(&الصندوق, المؤشر);
+    دع الناتج: مشترك<ق> = { الحمولة: الحمولة };
+    أرجع الناتج;
+}
+عام مرادف arc_new = أنشئ_مشترك;
+
+// Rust's Arc::clone: one more handle to the same value.
+عام عرف استنسخ_مشترك<ق>(المشترك: &مشترك<ق>): مشترك<ق> {
+    دع الناتج: مشترك<ق> = *المشترك;
+    أرجع الناتج;
+}
+عام مرادف arc_clone = استنسخ_مشترك;
+
+// The shared value (Rust's Deref). The reference lives as long as the handle
+// it was read through.
+عام عرف اقرأ_مشترك<ق>(المشترك: &مشترك<ق>): &ق {
+    دع المؤشر: *متغير ق = مؤشر_مشترك(المشترك);
+    غير_آمن { أرجع &(*المؤشر); }
+}
+عام مرادف arc_get = اقرأ_مشترك;
+
+// The address of the shared value, for std.sync's own types, which change
+// the value under their own synchronization (a lock, an atomic, a once).
+عام عرف مؤشر_مشترك<ق>(المشترك: &مشترك<ق>): *متغير ق {
+    دع الحمولة: دالة(): *متغير ق = (*المشترك).الحمولة;
+    أرجع الحمولة();
+}
+عام مرادف arc_as_ptr = مؤشر_مشترك;
+
+// Rust's Arc::ptr_eq: whether two handles share one value.
+عام عرف هل_المشترك_نفسه<ق>(الأول: &مشترك<ق>, الثاني: &مشترك<ق>): منطقي {
+    أرجع عدد_مراجع_حمولة_مشترك(الأول, صواب) == عدد_مراجع_حمولة_مشترك(الثاني, صواب);
+}
+عام مرادف arc_ptr_eq = هل_المشترك_نفسه;
+
+// Rust's Arc::strong_count: how many handles exist now. Another thread may
+// change it at any moment, so it is a snapshot (Rust documents the same).
+// The count is the environment's reference count, the 8-byte slot after the
+// code pointer (docs/OWNERSHIP_AND_DESTRUCTION.md, "Closure environments").
+عام عرف عدد_مراجع_مشترك<ق>(المشترك: &مشترك<ق>): طبيعي {
+    أرجع عدد_مراجع_حمولة_مشترك(المشترك, خطأ) مثل طبيعي;
+}
+عام مرادف arc_strong_count = عدد_مراجع_مشترك;
+
+// The environment's address (عنوان صواب), or its reference count.
+// عنوان_إغلاق takes one reference of its own, which the closure rebuilt from
+// the address gives back when it is dropped at the end of this function.
+عرف عدد_مراجع_حمولة_مشترك<ق>(المشترك: &مشترك<ق>, عنوان: منطقي): ط64 {
+    دع البيئة: ط64;
+    غير_آمن { البيئة := عنوان_إغلاق_مشترك((*المشترك).الحمولة); }
+    دع العدد: ط64;
+    غير_آمن { العدد := اقرأ_كلمة_مشترك(البيئة + 8); }
+    دع المؤقت: دالة(): فراغ;
+    غير_آمن { المؤقت := إغلاق_من_عنوان_مشترك(البيئة); }
+    لو (عنوان) { أرجع البيئة; };
+    أرجع العدد - 1;
+}

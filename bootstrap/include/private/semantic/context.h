@@ -139,6 +139,10 @@ typedef struct
     __Diagnostic__ __Diagnostic__;
     /* Tracks the failed state. */
     int __Failed__;
+    /* Canonical path of std's process/panic.sn (the never-returning stop
+     * primitive's module), computed on first use; NULL until then. */
+    char *__Never_Return_Module_Path__;
+    int __Never_Return_Module_Resolved__;
 } __Semantic_Context__;
 
 #endif

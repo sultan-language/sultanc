@@ -35,6 +35,9 @@ typedef struct
     const __Bootstrap_Target__ *__Target__;
     /* Tracks the failed state. */
     int __Failed__;
+    /* Tracks whether the function being parsed declares an option result
+     * (`اختيار …`); it selects the arms of a propagation expansion. */
+    int __Output_Is_Option__;
 } __Parser__;
 
 /* Defines the initializer kind values. */
@@ -67,6 +70,9 @@ typedef struct
         {
             /* References the values. */
             __Ast_Atom__ *__Values__;
+            /* References the elements that are not atoms (NULL where the
+             * atom is the element), or NULL when every element is an atom. */
+            __Ast_Expression__ **__Expressions__;
             /* Stores the count. */
             size_t __Count__;
         } __Aggregate__;
@@ -81,6 +87,8 @@ typedef struct
         /* Stores the box. */
         __Ast_Atom__ __Box__;
     } __As__;
+    /* The boxed value when it is not an atom (`صندوق (x مثل عدد)`), or NULL. */
+    __Ast_Expression__ *__Box_Expression__;
 } __Initializer__;
 
 /* Parses the parser type. */

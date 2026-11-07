@@ -1,0 +1,170 @@
+استورد compiler.diagnostics.identity;
+استورد compiler.diagnostics.reason;
+استورد compiler.ispeak.locales.en.reasons;
+
+// Compiler-independent iSpeak wording: one total typed lookup per category.
+// Dynamic diagnostic facts (names, paths, expected/actual types, etc.) are not identities.
+
+عام عرف نص_خطأ_مكتبة_إل_إل_في_إم_للهدف_مفقودة(): نص { أرجع «the output calls the LLVM C API and no libLLVM for its target was supplied»; }
+عام عرف نص_خطأ_رمز_إل_إل_في_إم_غير_محلول(): نص { أرجع «the supplied libLLVM does not define an LLVM C API symbol»; }
+عام عرف نص_خطأ_فشل_وقت_الترجمة_مطلوب(): نص { أرجع «compile-time evaluation failed»; }
+عام عرف نص_خطأ_سمة_تصريح_غير_مدعومة(): نص { أرجع «this annotation cannot be applied: declaration decorator processing is not yet supported»; }
+
+عام عرف رسالة_خطأ_إنجليزية(المفتاح: معرف_تشخيص): نص {
+    طابق المفتاح مع
+    | معرف_تشخيص.خطأ_نحوي -> { أرجع «Syntax error in source code»; }
+    | معرف_تشخيص.تعبير_نحوي_غير_صالح -> { أرجع «Cannot parse the expression syntax»; }
+    | معرف_تشخيص.نوع_نحوي_غير_صالح -> { أرجع «Cannot parse the type syntax»; }
+    | معرف_تشخيص.نمط_نحوي_غير_صالح -> { أرجع «Cannot parse the pattern syntax»; }
+    | معرف_تشخيص.عنصر_نحوي_غير_صالح -> { أرجع «Cannot parse the declaration or item syntax»; }
+    | معرف_تشخيص.خلل_محلل_داخلي -> { أرجع «Internal compiler failure while parsing source code»; }
+    | معرف_تشخيص.فاصلة_منقوطة_في_غير_موضعها -> { أرجع «semicolon is in the wrong place»; }
+    | معرف_تشخيص.تهجئة_كلمة_محجوزة_غير_معروفة -> { أرجع «unknown keyword»; }
+    | معرف_تشخيص.تهجئة_مهجورة -> { أرجع «deprecated spelling of a keyword or name»; }
+    | معرف_تشخيص.عبارة_بلا_عملية -> { أرجع «expected a function call or assignment»; }
+    | معرف_تشخيص.نوع_ناتج_دالة_مفقود -> { أرجع «missing function return type»; }
+    | معرف_تشخيص.خطأ_معجمي -> { أرجع «lexical error»; }
+    | معرف_تشخيص.نص_مصدر_يوتيف8_غير_صالح -> { أرجع «source contains invalid UTF-8»; }
+    | معرف_تشخيص.خلل_معجمي_داخلي -> { أرجع «Internal compiler failure during lexical analysis»; }
+    | معرف_تشخيص.لا_ناتج_تحليل -> { أرجع «parser produced no result»; }
+    | معرف_تشخيص.استدعاء_مترجم_غير_صالح -> { أرجع «invalid compiler invocation»; }
+    | معرف_تشخيص.هدف_مترجم_غير_معروف -> { أرجع «unknown target»; }
+    | معرف_تشخيص.مصدر_مترجم_مفقود -> { أرجع «no source file was specified»; }
+    | معرف_تشخيص.خيار_مترجم_غير_معروف -> { أرجع «unknown option»; }
+    | معرف_تشخيص.رمز_تشخيص_مترجم_غير_معروف -> { أرجع «unknown diagnostic code»; }
+    | معرف_تشخيص.قيمة_خيار_مترجم_مفقودة -> { أرجع «option requires a value»; }
+    | معرف_تشخيص.لغة_تشخيص_مترجم_غير_صالحة -> { أرجع «invalid diagnostic language»; }
+    | معرف_تشخيص.صيغة_تشخيص_مترجم_غير_صالحة -> { أرجع «invalid diagnostic format»; }
+    | معرف_تشخيص.لون_تشخيص_مترجم_غير_صالح -> { أرجع «invalid diagnostic color policy»; }
+    | معرف_تشخيص.مصدر_رئيسي_متعدد -> { أرجع «multiple primary source files are not supported»; }
+    | معرف_تشخيص.أوضاع_مترجم_متعارضة -> { أرجع «compiler modes conflict»; }
+    | معرف_تشخيص.معامل_موضعي_غير_متوقع -> { أرجع «unexpected positional argument»; }
+    | معرف_تشخيص.هدف_مضيف_مترجم_غير_متاح -> { أرجع «no native host target is available»; }
+    | معرف_تشخيص.فشل_كتابة_مخرج_مترجم -> { أرجع «could not write compiler output»; }
+    | معرف_تشخيص.فشل_مترجم_داخلي -> { أرجع «The compiler encountered an internal failure»; }
+    | معرف_تشخيص.ملف_إدخال_مفقود -> { أرجع «input file was not found»; }
+    | معرف_تشخيص.بيان_حزمة_غير_صالح -> { أرجع «package manifest is invalid»; }
+    | معرف_تشخيص.نوع_ملف_إدخال_غير_معروف -> { أرجع «unrecognized input file type»; }
+    | معرف_تشخيص.وحدة_مصدر_غير_موجودة -> { أرجع «source module was not found»; }
+    | معرف_تشخيص.وحدة_مصدر_غير_مقروءة -> { أرجع «source module could not be read»; }
+    | معرف_تشخيص.مرجع_استيراد_غير_صالح -> { أرجع «invalid import reference»; }
+    | معرف_تشخيص.جذر_مكتبة_غير_مسجل -> { أرجع «library root is not registered»; }
+    | معرف_تشخيص.استيراد_يهرب_من_الجذر -> { أرجع «import escapes its library root»; }
+    | معرف_تشخيص.مسار_وحدة_منطقي_غير_صالح -> { أرجع «invalid logical module path»; }
+    | معرف_تشخيص.تعارض_مسار_وحدة_عام -> { أرجع «public module path conflicts with another module»; }
+    | معرف_تشخيص.تعارض_مصدر_وحدة -> { أرجع «module source conflicts with another source»; }
+    | معرف_تشخيص.وحدة_مستوردة_غير_محملة -> { أرجع نص_خطأ_وحدة_مستوردة_غير_محملة(); }
+    | معرف_تشخيص.رسم_وحدات_مرفوض -> { أرجع نص_خطأ_رسم_وحدات_مرفوض(); }
+    | معرف_تشخيص.تصدير_انتقائي_غير_موجود -> { أرجع «selective import refers to an export that does not exist»; }
+    | معرف_تشخيص.نقطة_دخول_مفقودة -> { أرجع «entry point was not found»; }
+    | معرف_تشخيص.نقطة_دخول_بتوقيع_غير_صالح -> { أرجع «entry point has an invalid signature»; }
+    | معرف_تشخيص.تصريح_خاص_غير_متاح -> { أرجع «declaration is private in this context»; }
+    | معرف_تشخيص.نوع_تكراري_لانهائي -> { أرجع «type has infinite recursive layout»; }
+    | معرف_تشخيص.فك_مرجع_غير_مؤشر -> { أرجع «cannot dereference a non-pointer value»; }
+    | معرف_تشخيص.أخذ_عنوان_غير_قيمة_يسرى -> { أرجع «cannot take the address of a non-addressable value»; }
+    | معرف_تشخيص.حقل_سجل_مفقود -> { أرجع «required record field is missing»; }
+    | معرف_تشخيص.حقل_سجل_مكرر -> { أرجع «record field is specified more than once»; }
+    | معرف_تشخيص.كتابة_إلى_غير_متغير -> { أرجع «cannot write to an immutable value»; }
+    | معرف_تشخيص.تصريح_مكرر -> { أرجع «duplicate declaration»; }
+    | معرف_تشخيص.اسم_غير_معروف -> { أرجع «unknown name»; }
+    | معرف_تشخيص.اسم_غير_محلول -> { أرجع «unresolved name»; }
+    | معرف_تشخيص.استيراد_غامض -> { أرجع «ambiguous import»; }
+    | معرف_تشخيص.دورة_استيراد -> { أرجع «import cycle»; }
+    | معرف_تشخيص.نوعان_غير_متوافقين -> { أرجع «mismatched types»; }
+    | معرف_تشخيص.نوع_غير_محلول -> { أرجع «unresolved type»; }
+    | معرف_تشخيص.تعريف_نوع_غير_صالح -> { أرجع «invalid type definition»; }
+    | معرف_تشخيص.تعبير_نوعي_غير_مدعوم -> { أرجع «Internal type checker cannot handle this expression kind»; }
+    | معرف_تشخيص.تعبير_غير_قابل_للاستدعاء -> { أرجع «expression is not callable»; }
+    | معرف_تشخيص.حقل_سجل_غير_معروف -> { أرجع «unknown record field»; }
+    | معرف_تشخيص.منشئ_نوع_غير_صالح -> { أرجع «invalid tagged constructor»; }
+    | معرف_تشخيص.عدد_حمولات_نمط_غير_مطابق -> { أرجع «pattern constructor payload count does not match»; }
+    | معرف_تشخيص.نمط_غير_صالح -> { أرجع «invalid pattern»; }
+    | معرف_تشخيص.خفض_تعبير_غير_مدعوم -> { أرجع «expression is not supported by semantic lowering»; }
+    | معرف_تشخيص.خفض_عبارة_غير_مدعومة -> { أرجع «statement is not supported by semantic lowering»; }
+    | معرف_تشخيص.دالة_خفض_مفقودة -> { أرجع «canonical function semantic fact is missing»; }
+    | معرف_تشخيص.ربط_اسم_خفض_مفقود -> { أرجع «canonical name binding is missing»; }
+    | معرف_تشخيص.نوع_خفض_مفقود -> { أرجع «canonical type fact is missing»; }
+    | معرف_تشخيص.هوية_منشئ_خفض_مفقودة -> { أرجع «canonical constructor identity is missing»; }
+    | معرف_تشخيص.عدد_حجج_غير_مطابق -> { أرجع «call argument count does not match»; }
+    | معرف_تشخيص.نوع_حجة_غير_مطابق -> { أرجع «call argument type does not match»; }
+    | معرف_تشخيص.نوع_إرجاع_غير_مطابق -> { أرجع «return type does not match»; }
+    | معرف_تشخيص.استخدام_قبل_التهيئة -> { أرجع «use before initialization»; }
+    | معرف_تشخيص.استخدام_بعد_النقل -> { أرجع «use after move»; }
+    | معرف_تشخيص.مورد_محرر -> { أرجع «resource was already released»; }
+    | معرف_تشخيص.تعارض_استعارة -> { أرجع «borrow conflict»; }
+    | معرف_تشخيص.هروب_مرجع -> { أرجع «reference escapes its valid scope»; }
+    | معرف_تشخيص.التقاط_خيط_مؤشر_خام -> { أرجع «a closure sent to another thread captures a raw pointer»; }
+    | معرف_تشخيص.التقاط_خيط_مرجع -> { أرجع «a closure sent to another thread captures a borrowed reference»; }
+    | معرف_تشخيص.التقاط_خيط_مشترك_غير_ذري -> { أرجع «a closure sent to another thread shares a writable module variable without synchronization»; }
+    | معرف_تشخيص.عملية_غير_آمنة -> { أرجع «operation requires an explicit unsafe scope»; }
+    | معرف_تشخيص.فهرس_خارج_الحدود -> { أرجع «index is outside the valid bounds»; }
+    | معرف_تشخيص.نمط_غير_شامل -> { أرجع «non-exhaustive pattern»; }
+    | معرف_تشخيص.نمط_غير_قابل_للوصول -> { أرجع «unreachable pattern»; }
+    | معرف_تشخيص.تحكم_حلقة_خارج_حلقة -> { أرجع «loop control statement is outside of any loop»; }
+    | معرف_تشخيص.انتهى_البرنامج_بخطأ -> { أرجع «the program ended with an error»; }
+    | معرف_تشخيص.توقف_البرنامج -> { أرجع «the program stopped»; }
+    | معرف_تشخيص.إرجاع_مفقود -> { أرجع «not all execution paths return a value»; }
+    | معرف_تشخيص.نقل_جزئي_مملوك -> { أرجع «partial move of an owned aggregate member is not allowed»; }
+    | معرف_تشخيص.خطأ_ذاكرة_نوع -> { أرجع «invalid memory classification for type»; }
+    | معرف_تشخيص.مسير_غير_صالح -> { أرجع «invalid MSIR»; }
+    | معرف_تشخيص.خطأ_سياق_داخلي -> { أرجع «internal compiler error»; }
+    | معرف_تشخيص.حقيقة_دلالية_مفقودة -> { أرجع «required canonical semantic fact is missing»; }
+    | معرف_تشخيص.فهرس_تفسير_خارج_الحدود -> { أرجع «interpreter index is outside the valid bounds»; }
+    | معرف_تشخيص.حالة_تفسير_غير_صالحة -> { أرجع «interpreter encountered an invalid runtime state»; }
+    | معرف_تشخيص.ذاكرة_تفسير_تالفة -> { أرجع «interpreter detected corrupt runtime memory state»; }
+    | معرف_تشخيص.نوع_قيمة_تفسير_غير_متوقع -> { أرجع «interpreter encountered an unexpected runtime value kind»; }
+    | معرف_تشخيص.نص_تفسير_غير_صالح -> { أرجع «interpreter encountered invalid UTF-8 text»; }
+    | معرف_تشخيص.عدد_حجج_بدائي_تفسير_غير_مطابق -> { أرجع نص_خطأ_عدد_حجج_بدائي_تفسير_غير_مطابق(); }
+    | معرف_تشخيص.حجة_بدائي_تفسير_غير_صالحة -> { أرجع «interpreter primitive received an invalid argument»; }
+    | معرف_تشخيص.جسر_نص_مضيف_تفسير_غير_متاح -> { أرجع نص_خطأ_جسر_نص_مضيف_تفسير_غير_متاح(); }
+    | معرف_تشخيص.بدائي_مضيف_تفسير_غير_مدعوم -> { أرجع «interpreter does not support this host primitive»; }
+    | معرف_تشخيص.فشل_تفسير_وقت_تشغيل -> { أرجع «program failed during interpretation»; }
+    | معرف_تشخيص.فخ_تفسير -> { أرجع «program trapped during interpretation»; }
+    | معرف_تشخيص.تحذير_عام -> { أرجع «compiler warning»; }
+    | معرف_تشخيص.خلفية_مترجم_غير_متاحة -> { أرجع نص_خطأ_خلفية_مترجم_غير_متاحة(); }
+    | معرف_تشخيص.تعبير_وقت_الترجمة_غير_ثابت -> { أرجع «comptime expression must be a pure compile-time constant»; }
+    | معرف_تشخيص.مكتبة_إل_إل_في_إم_للهدف_مفقودة -> { أرجع نص_خطأ_مكتبة_إل_إل_في_إم_للهدف_مفقودة(); }
+    | معرف_تشخيص.رمز_إل_إل_في_إم_غير_محلول -> { أرجع نص_خطأ_رمز_إل_إل_في_إم_غير_محلول(); }
+    | معرف_تشخيص.فشل_وقت_الترجمة_مطلوب -> { أرجع نص_خطأ_فشل_وقت_الترجمة_مطلوب(); }
+    | معرف_تشخيص.سمة_تصريح_غير_مدعومة -> { أرجع نص_خطأ_سمة_تصريح_غير_مدعومة(); }
+    | معرف_تشخيص.نقل_من_مرجع -> { أرجع «cannot move an owned value out of borrowed storage»; }
+    | معرف_تشخيص.هدف_لا_يدعم_الميزة -> { أرجع «the selected target does not support a feature this program needs»; }
+    | معرف_تشخيص.بناء_غير_مدعوم_في_الخلفية -> { أرجع «the selected backend cannot generate code for this construct yet»; }
+    | معرف_تشخيص.مدى_ترميز_متجاوز -> { أرجع «the generated code exceeds a range the machine instruction encoding allows»; }
+    | معرف_تشخيص.رمز_ربط_غير_معرف -> { أرجع «a symbol used by the program is not defined in any linked input»; }
+    | معرف_تشخيص.رمز_دخول_ربط_مفقود -> { أرجع «the linker found no entry symbol for the target»; }
+    | معرف_تشخيص.رمز_ربط_مكرر -> { أرجع «the same symbol is defined more than once»; }
+    | معرف_تشخيص.موفر_وقت_تشغيل_مفقود -> { أرجع «the target runtime does not provide a service this program needs»; }
+    | معرف_تشخيص.نفاد_ذاكرة_المترجم -> { أرجع «the compiler ran out of memory»; }
+    | معرف_تشخيص.رمز_ربط_بنوع_غير_متطابق -> { أرجع «a symbol is defined with a different kind than its use expects»; }
+    | معرف_تشخيص.رمز_خارجي_غير_مدعوم -> { أرجع «the linker cannot use this external symbol for the target»; }
+    | معرف_تشخيص.إعادة_توطين_غير_مدعومة -> { أرجع «the object format cannot express a relocation this code needs»; }
+    | معرف_تشخيص.صيغة_كائن_غير_مدعومة_للهدف -> { أرجع «the compiler cannot write object files of this format for the target»; }
+    | معرف_تشخيص.مخرج_ربط_غير_مدعوم -> { أرجع «the linker cannot produce this output for the target»; }
+    | معرف_تشخيص.مكتبة_ربط_غير_موجودة -> { أرجع «library not found in any library search directory»; }
+    | معرف_تشخيص.واجهة_استدعاء_غير_متاحة_للهدف -> { أرجع «the target has no calling convention for this code»; }
+    | معرف_تشخيص.حد_صيغة_كائن_متجاوز -> { أرجع «the output exceeds a size limit of its file format»; }
+    | معرف_تشخيص.حد_وقت_الترجمة_متجاوز -> { أرجع «compile-time evaluation exceeded one of its limits»; }
+    | معرف_تشخيص.سلسلة_تنسيق_غير_صالحة -> { أرجع «invalid format string»; }
+    | معرف_تشخيص.أثر_ممنوع_وقت_الترجمة -> { أرجع «compile-time evaluation attempted an effect that is not allowed»; }
+    | معرف_تشخيص.فشل_تنفيذ_وقت_الترجمة -> { أرجع «compile-time code failed while running»; }
+    | معرف_تشخيص.عملية_غير_مدعومة_وقت_الترجمة -> { أرجع «this operation cannot run at compile time»; }
+    | معرف_تشخيص.ناتج_وقت_الترجمة_غير_ثابت -> { أرجع «compile-time evaluation did not produce a usable constant»; }
+    | معرف_تشخيص.تخطيط_غير_متاح_وقت_الترجمة -> { أرجع «a type's size or alignment is not available at compile time»; }
+    | معرف_تشخيص.عدد_حجج_وقت_الترجمة_غير_مطابق -> { أرجع «a compile-time call passes the wrong number of compile-time arguments»; }
+    | معرف_تشخيص.نداء_خارجي_تفسير_غير_مدعوم -> { أرجع «the interpreter cannot call this external function»; }
+    | معرف_تشخيص.بدائي_آلة_تفسير_غير_مدعوم -> { أرجع «the interpreter does not support this machine-level operation»; }
+}
+
+// Immutable language resources: longer prose is stored once, outside match arms.
+عرف نص_خطأ_وحدة_مستوردة_غير_محملة(): نص { أرجع «Imported module was not loaded into the compiler module graph»; }
+عام عرف نص_خطأ_رسم_وحدات_مرفوض(): نص { أرجع «Compiler rejected the module dependency graph after an internal consistency failure»; }
+عرف نص_خطأ_عدد_حجج_بدائي_تفسير_غير_مطابق(): نص { أرجع «interpreter primitive received the wrong number of arguments»; }
+عرف نص_خطأ_جسر_نص_مضيف_تفسير_غير_متاح(): نص { أرجع «interpreter host text bridge is unavailable for this primitive»; }
+عرف نص_خطأ_خلفية_مترجم_غير_متاحة(): نص { أرجع «the selected code-generation backend is not available in this compiler»; }
+
+عام عرف رسالة_إنجليزية(المفتاح: مفتاح_رسالة_تشخيص): نص {
+    طابق المفتاح مع
+    | مفتاح_رسالة_تشخيص.تشخيص(الخطأ) -> { أرجع رسالة_خطأ_إنجليزية(الخطأ); }
+    | مفتاح_رسالة_تشخيص.سبب(السبب) -> { أرجع رسالة_سبب_إنجليزية(السبب); };
+}

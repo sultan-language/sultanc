@@ -1,12 +1,14 @@
 /* Owns Stage0 LLVM locals, places, loads, stores, and coercions. */
 
 #include "llvm/llvm_values.h"
+#include "llvm/llvm_aggregates.h"
 #include "llvm/llvm_context.h"
 #include "llvm/llvm_expressions.h"
 #include "llvm/llvm_functions.h"
 #include "llvm/llvm_globals.h"
 #include "llvm/llvm_types.h"
 #include "kernel/layout/layout.h"
+#include "kernel/memory/memory.h"
 #include "kernel/name/name.h"
 #include "kernel/type/conversion.h"
 #include "kernel/type/type.h"
@@ -344,6 +346,31 @@ __LLVM_Local__ *__LLVM_Add_Local_Identity__(__LLVM_Emitter__ *emitter,
     if (resolved.__Kind__ != __Resolved_Type_Void__)
     {
         local->address = __LLVM_Allocate_Stack__(emitter, llvm_type, "local");
+        if (local->address == NULL)
+        {
+            return NULL;
+        }
+        if (__Memory_Type_Is_Owned__(emitter->semantic, type))
+        {
+            /* Reuses the existing memory-ownership classification (the exact
+             * C equivalent of the self-hosted checkpoint's owning-type
+             * query) rather than inventing a parallel one for drop
+             * elaboration. */
+            LLVMTypeRef bool_type = LLVMIntTypeInContext(emitter->context, 1U);
+            local->drop_flag = __LLVM_Allocate_Stack__(emitter, bool_type, "local.drop.flag");
+            if (local->drop_flag == NULL)
+            {
+                return NULL;
+            }
+            LLVMBuildStore(
+                emitter->allocation_builder, LLVMConstInt(bool_type, 0U, 0), local->drop_flag);
+            local->borrowed_flag =
+                __LLVM_Allocate_Stack__(emitter, bool_type, "local.borrowed.flag");
+            if (local->borrowed_flag == NULL)
+                return NULL;
+            LLVMBuildStore(emitter->allocation_builder,
+                           LLVMConstInt(bool_type, 0U, 0), local->borrowed_flag);
+        }
     }
     return local;
 }
@@ -387,7 +414,7 @@ __LLVM_Coerce__(__LLVM_Emitter__ *emitter, __LLVM_Value__ source, __Ast_Type__ *
     }
     if (__Type_Is_Byte_Vector_To_Text_Move__(emitter->semantic, source.type, target))
     {
-        /* {ptr, i64, i64} for both متجه غ8 and نص (checked by __LLVM_Type__). */
+        /* {ptr, i64, i64} for both متجه ط8 and نص (checked by __LLVM_Type__). */
         LLVMTypeRef text_type = __LLVM_Type__(emitter, target);
         if (text_type == NULL || LLVMTypeOf(source.value) != text_type)
         {
@@ -418,6 +445,64 @@ __LLVM_Coerce__(__LLVM_Emitter__ *emitter, __LLVM_Value__ source, __Ast_Type__ *
                 return __LLVM_Invalid_Value__();
             result.value = LLVMBuildPointerCast(
                 emitter->builder, source.value, target_pointer, "reference.coerce");
+            result.type = target;
+            return result;
+        }
+    }
+    {
+        /* Float casts, as Rust's `as`: float -> integer truncates toward
+         * zero and saturates, NaN gives 0 (llvm.fpto[su]i.sat); integer ->
+         * float rounds to nearest even; f32 <-> f64 extends or rounds. */
+        __Resolved_Type__ source_resolved;
+        __Resolved_Type__ target_resolved;
+        if (__Type_Resolve__(emitter->semantic, source.type, &source_resolved) &&
+            __Type_Resolve__(emitter->semantic, target, &target_resolved) &&
+            (source_resolved.__Kind__ == __Resolved_Type_Float__ ||
+             target_resolved.__Kind__ == __Resolved_Type_Float__))
+        {
+            LLVMTypeRef llvm_target = __LLVM_Type__(emitter, target);
+            if (llvm_target == NULL)
+                return __LLVM_Invalid_Value__();
+            if (source_resolved.__Kind__ == __Resolved_Type_Float__ &&
+                target_resolved.__Kind__ == __Resolved_Type_Float__)
+            {
+                result.value = source_resolved.__Bits__ < target_resolved.__Bits__
+                                   ? LLVMBuildFPExt(emitter->builder, source.value, llvm_target, "fpext")
+                                   : source_resolved.__Bits__ > target_resolved.__Bits__
+                                         ? LLVMBuildFPTrunc(emitter->builder, source.value, llvm_target,
+                                                            "fptrunc")
+                                         : source.value;
+            }
+            else if (source_resolved.__Kind__ == __Resolved_Type_Float__ &&
+                     (target_resolved.__Kind__ == __Resolved_Type_Signed_Integer__ ||
+                      target_resolved.__Kind__ == __Resolved_Type_Unsigned_Integer__))
+            {
+                const char *name = target_resolved.__Kind__ == __Resolved_Type_Signed_Integer__
+                                       ? "llvm.fptosi.sat"
+                                       : "llvm.fptoui.sat";
+                unsigned id = LLVMLookupIntrinsicID(name, strlen(name));
+                LLVMTypeRef overloads[2];
+                LLVMValueRef intrinsic;
+                overloads[0] = llvm_target;
+                overloads[1] = LLVMTypeOf(source.value);
+                intrinsic = LLVMGetIntrinsicDeclaration(emitter->module, id, overloads, 2U);
+                result.value = LLVMBuildCall2(emitter->builder,
+                                              LLVMIntrinsicGetType(emitter->context, id, overloads, 2U),
+                                              intrinsic, &source.value, 1U, "float.to.int");
+            }
+            else if (target_resolved.__Kind__ == __Resolved_Type_Float__ &&
+                     (source_resolved.__Kind__ == __Resolved_Type_Signed_Integer__ ||
+                      source_resolved.__Kind__ == __Resolved_Type_Unsigned_Integer__))
+            {
+                result.value = source_resolved.__Kind__ == __Resolved_Type_Signed_Integer__
+                                   ? LLVMBuildSIToFP(emitter->builder, source.value, llvm_target, "sitofp")
+                                   : LLVMBuildUIToFP(emitter->builder, source.value, llvm_target, "uitofp");
+            }
+            else
+            {
+                __LLVM_Fail__("float conversion is outside canonical representable conversions");
+                return __LLVM_Invalid_Value__();
+            }
             result.type = target;
             return result;
         }
@@ -456,6 +541,11 @@ __Ast_Type__ *__LLVM_Lvalue_Type__(__LLVM_Emitter__ *emitter, __Ast_Lvalue__ *lv
     if (lvalue == NULL)
     {
         return NULL;
+    }
+    if (lvalue->__Kind__ == __Ast_Lvalue_Base__ &&
+        lvalue->__As__.__Base__.__Kind__ == __Ast_Lvalue_Base_Call__)
+    {
+        return __LLVM_Expression_Type__(emitter, lvalue->__As__.__Base__.__As__.__Call__);
     }
     if (lvalue->__Kind__ == __Ast_Lvalue_Base__)
     {
@@ -552,6 +642,28 @@ __LLVM_Place__ __LLVM_Emit_Place__(__LLVM_Emitter__ *emitter, __Ast_Lvalue__ *lv
     if (lvalue == NULL)
     {
         __LLVM_Fail__("missing L2.4 aggregate place");
+        return place;
+    }
+    if (lvalue->__Kind__ == __Ast_Lvalue_Base__ &&
+        lvalue->__As__.__Base__.__Kind__ == __Ast_Lvalue_Base_Call__)
+    {
+        /* A call result: evaluated into fresh storage the read destroys. */
+        __Ast_Expression__ *call = lvalue->__As__.__Base__.__As__.__Call__;
+        __Ast_Type__ *type = __LLVM_Expression_Type__(emitter, call);
+        __LLVM_Value__ value;
+        if (type == NULL || (place.llvm_type = __LLVM_Type__(emitter, type)) == NULL)
+        {
+            __LLVM_Fail__("call result place has no canonical type");
+            return __LLVM_Invalid_Place__();
+        }
+        value = __LLVM_Emit_Expression__(emitter, call, type);
+        if (value.value == NULL)
+            return __LLVM_Invalid_Place__();
+        place.address = __LLVM_Allocate_Stack__(emitter, place.llvm_type, "call.temporary");
+        LLVMBuildStore(emitter->builder, value.value, place.address);
+        place.type = type;
+        emitter->call_temporary_address = place.address;
+        emitter->call_temporary_type = type;
         return place;
     }
     if (lvalue->__Kind__ == __Ast_Lvalue_Base__)
@@ -785,6 +897,8 @@ __LLVM_Value__ __LLVM_Emit_Lvalue__(__LLVM_Emitter__ *emitter, __Ast_Lvalue__ *l
             return result;
         }
     }
+    emitter->call_temporary_address = NULL;
+    emitter->call_temporary_type = NULL;
     place = __LLVM_Emit_Place__(emitter, lvalue);
     if (place.address == NULL || place.llvm_type == NULL || place.type == NULL)
     {
@@ -792,6 +906,74 @@ __LLVM_Value__ __LLVM_Emit_Lvalue__(__LLVM_Emitter__ *emitter, __Ast_Lvalue__ *l
     }
     result.value = LLVMBuildLoad2(emitter->builder, place.llvm_type, place.address, "load");
     result.type = place.type;
+    if (emitter->call_temporary_address != NULL && lvalue->__Kind__ != __Ast_Lvalue_Base__ &&
+        __Memory_Type_Is_Owned__(emitter->semantic, emitter->call_temporary_type))
+    {
+        /* The temporary ends with this read (Rust destroys it at the end of
+         * the statement; nothing can name it after the read). A plain member
+         * or element is copied and the whole temporary destroyed; an owned
+         * member of a record moves out and the other members are destroyed. */
+        LLVMValueRef temporary = emitter->call_temporary_address;
+        __Ast_Type__ *temporary_type = emitter->call_temporary_type;
+        emitter->call_temporary_address = NULL;
+        emitter->call_temporary_type = NULL;
+        if (!__Memory_Type_Is_Owned__(emitter->semantic, place.type))
+        {
+            if (!__LLVM_Drop_Owned_At__(emitter, temporary, temporary_type))
+                return __LLVM_Invalid_Value__();
+        }
+        else if (lvalue->__Kind__ == __Ast_Lvalue_Field__ &&
+                 lvalue->__As__.__Field__.__Parent__->__Kind__ == __Ast_Lvalue_Base__)
+        {
+            __Resolved_Type__ resolved;
+            __Ast_Type_Declaration__ *declaration;
+            LLVMTypeRef temporary_llvm_type = __LLVM_Type__(emitter, temporary_type);
+            size_t field;
+            if (temporary_llvm_type != NULL &&
+                __Type_Resolve__(emitter->semantic, temporary_type, &resolved) &&
+                resolved.__Kind__ == __Resolved_Type_Struct__ && resolved.__Named__ != NULL &&
+                (declaration = resolved.__Named__->__Declaration__) != NULL &&
+                declaration->__Kind__ == __Ast_Type_Decl_Struct__)
+            {
+                for (field = 0U; field < declaration->__As__.__Struct__.__Count__; ++field)
+                {
+                    size_t field_index = 0U, field_offset = 0U;
+                    __Ast_Type__ *field_type = NULL;
+                    __Text_Slice__ name = declaration->__As__.__Struct__.__Fields__[field].__Name__;
+                    if (__LLVM_Text_Equals__(name, lvalue->__As__.__Field__.__Field__) ||
+                        !__LLVM_Resolve_Struct_Field__(emitter, temporary_type, name, &field_index,
+                                                       &field_offset, &field_type) ||
+                        !__Memory_Type_Is_Owned__(emitter->semantic, field_type))
+                        continue;
+                    if (!__LLVM_Drop_Owned_At__(
+                            emitter,
+                            LLVMBuildStructGEP2(emitter->builder, temporary_llvm_type, temporary,
+                                                (unsigned)field_index, "temporary.rest"),
+                            field_type))
+                        return __LLVM_Invalid_Value__();
+                }
+            }
+        }
+    }
+    if (lvalue->__Drop_Elaboration_Moved__)
+    {
+        /* This exact lvalue read was identified by semantic analysis's
+         * __Body_Safety_Move_Atom__ choke point as moving the value out.
+         * The source local no longer holds a live value this function must
+         * release, so stop tracking it before any later overwrite or
+         * function-exit drop sequence can see it. */
+        __LLVM_Local__ *moved_local = __LLVM_Find_Local_Base__(emitter, lvalue);
+        if (moved_local != NULL)
+        {
+            LLVMValueRef owner_flag = moved_local->drop_flag != NULL
+                                          ? moved_local->drop_flag
+                                          : moved_local->match_owner_flag;
+            if (owner_flag != NULL)
+                LLVMBuildStore(emitter->builder,
+                               LLVMConstInt(LLVMIntTypeInContext(emitter->context, 1U), 0U, 0),
+                               owner_flag);
+        }
+    }
     return result;
 }
 
@@ -819,4 +1001,347 @@ __LLVM_Value__ __LLVM_Make_Text_Value__(__LLVM_Emitter__ *emitter,
     result.value = value;
     result.type = type;
     return result;
+}
+
+/* Emits a runtime-flag-gated drop of one local's current value: if its
+ * drop flag is true, releases it (via __LLVM_Drop_Owned_At__) and leaves
+ * the flag however the caller sets it afterward. A no-op when the local
+ * has no drop flag. */
+static int __LLVM_Emit_Conditional_Drop__(__LLVM_Emitter__ *emitter,
+                                             __LLVM_Local__ *local,
+                                             LLVMValueRef address,
+                                             __Ast_Type__ *type)
+{
+    /* Stores the current/function. */
+    LLVMBasicBlockRef current;
+    LLVMValueRef function;
+    LLVMBasicBlockRef drop_block;
+    LLVMBasicBlockRef merge_block;
+    LLVMValueRef flag_value;
+    if (local == NULL || local->drop_flag == NULL)
+    {
+        return 1;
+    }
+    current = LLVMGetInsertBlock(emitter->builder);
+    if (current == NULL || (function = LLVMGetBasicBlockParent(current)) == NULL)
+    {
+        return __LLVM_Fail__("cannot locate function for L2 conditional drop elaboration");
+    }
+    flag_value =
+        LLVMBuildLoad2(emitter->builder,
+                      LLVMIntTypeInContext(emitter->context, 1U),
+                      local->drop_flag,
+                      "drop.flag.load");
+    drop_block = LLVMAppendBasicBlockInContext(emitter->context, function, "drop.if.live");
+    merge_block = LLVMAppendBasicBlockInContext(emitter->context, function, "drop.if.end");
+    if (drop_block == NULL || merge_block == NULL)
+    {
+        return __LLVM_Fail__("L2 conditional drop elaboration block creation failed");
+    }
+    LLVMBuildCondBr(emitter->builder, flag_value, drop_block, merge_block);
+    LLVMPositionBuilderAtEnd(emitter->builder, drop_block);
+    if (!__LLVM_Drop_Owned_At__(emitter, address, type))
+    {
+        return 0;
+    }
+    LLVMBuildBr(emitter->builder, merge_block);
+    LLVMPositionBuilderAtEnd(emitter->builder, merge_block);
+    return 1;
+}
+
+/* Returns whether reading `lvalue` passes through a Reference
+ * indirection -- directly (`*قيمة_مرجع`,
+ * an explicit Ast_Lvalue_Dereference of a Reference-typed parent) or
+ * implicitly (`مرجع.حقل` / `مرجع[ف]`, a Field/Index access whose parent is
+ * itself Reference-typed, auto-dereferenced). A value reached this way is
+ * a shallow bit-copy of storage some OTHER owner still holds (the
+ * reference never owned it to begin with), never a fresh, independently
+ * owned value -- the destination of such a read must not be marked
+ * owning, matching the project's "do not silently convert borrowed
+ * values into owned allocations" rule. Recurses up the whole chain, so a
+ * reference crossed at any depth (e.g. `(*مرجع).حقل1.حقل2`) is caught. */
+static int __LLVM_Lvalue_Reads_Through_Reference__(__LLVM_Emitter__ *emitter, __Ast_Lvalue__ *lvalue)
+{
+    /* References the parent lvalue this step reads through. */
+    __Ast_Lvalue__ *parent;
+    /* References the parent's static type. */
+    __Ast_Type__ *parent_type;
+    /* Stores the parent's resolved Type. */
+    __Resolved_Type__ resolved;
+    if (lvalue == NULL)
+    {
+        return 0;
+    }
+    switch (lvalue->__Kind__)
+    {
+        case __Ast_Lvalue_Base__:
+        {
+            /* This is structural reference detection only. Local values
+             * carry separate dynamic borrowed provenance, which cannot be
+             * inferred from the existence of a drop flag. A module variable
+             * keeps owning its value, so a read of it is a view. */
+            __Semantic_Global_Entry__ *global = NULL;
+            return __LLVM_Find_Local_Base__(emitter, lvalue) == NULL &&
+                   lvalue->__As__.__Base__.__Kind__ == __Ast_Lvalue_Base_Identifier__ &&
+                   emitter->current_function != NULL &&
+                   __Name_Resolve_Global__(emitter->semantic, emitter->current_function->__Unit__,
+                                           lvalue->__As__.__Base__.__As__.__Identifier__,
+                                           &global) == __Name_Lookup_Found__ &&
+                   global != NULL && global->__Declaration__ != NULL &&
+                   !global->__Declaration__->__External__ &&
+                   global->__Declaration__->__Type__ != NULL &&
+                   global->__Declaration__->__Type__->__Kind__ == __Ast_Type_Mutable__;
+        }
+        case __Ast_Lvalue_Field__:
+            parent = lvalue->__As__.__Field__.__Parent__;
+            break;
+        case __Ast_Lvalue_Index__:
+            parent = lvalue->__As__.__Index__.__Parent__;
+            break;
+        case __Ast_Lvalue_Dereference__:
+            parent = lvalue->__As__.__Dereference_Parent__;
+            break;
+        default:
+            return 0;
+    }
+    parent_type = __LLVM_Lvalue_Type__(emitter, parent);
+    if (parent_type != NULL && __Type_Resolve__(emitter->semantic, parent_type, &resolved) &&
+        resolved.__Kind__ == __Resolved_Type_Reference__)
+    {
+        return 1;
+    }
+    return __LLVM_Lvalue_Reads_Through_Reference__(emitter, parent);
+}
+
+/* Returns whether evaluating `expression` yields a borrowed value
+ * (see above). Two expression shapes can produce a borrowed value:
+ *   - a plain Lvalue read (`مرجع.حقل`, `مرجع[ف]`, or an explicit
+ *     Lvalue-kind dereference reached through an Lvalue parent chain --
+ *     see __LLVM_Lvalue_Reads_Through_Reference__);
+ *   - a `*عملية_وحدوية` Unary-Dereference EXPRESSION (`*مرجع`), which is
+ *     how a bare `دع ق: نص = *الحجة;` dereference of a Reference-typed
+ *     operand is actually represented at the expression level (not as an
+ *     Atom-Lvalue) -- confirmed against __LLVM_Expression_Type__'s own
+ *     __Unary_Dereference__ handling, which this mirrors. Missing this
+ *     shape was the root cause of a confirmed double-free: such a read
+ *     was being marked owning despite aliasing the referenced owner's
+ *     storage. False for anything else (a call result, a literal, a
+ *     record/vector/box construction -- all genuinely fresh values this
+ *     file's callers are correct to mark owning). */
+static int __LLVM_Expression_Reads_Borrowed_Value__(__LLVM_Emitter__ *emitter,
+                                                __Ast_Expression__ *expression)
+{
+    if (expression == NULL)
+    {
+        return 0;
+    }
+    if (expression->__Kind__ == __Ast_Expression_Atom__)
+    {
+        if (expression->__As__.__Atom__.__Kind__ != __Ast_Atom_Lvalue__)
+        {
+            return 0;
+        }
+        return __LLVM_Lvalue_Reads_Through_Reference__(
+            emitter, expression->__As__.__Atom__.__As__.__Lvalue__);
+    }
+    if (expression->__Kind__ == __Ast_Expression_Unary__ &&
+        expression->__As__.__Unary__.__Operation__ == __Unary_Dereference__)
+    {
+        /* References the dereferenced operand. */
+        __Ast_Expression__ *operand = expression->__As__.__Unary__.__Operand__;
+        __Ast_Type__ *operand_type = __LLVM_Expression_Type__(emitter, operand);
+        __Resolved_Type__ resolved;
+        if (operand_type != NULL && __Type_Resolve__(emitter->semantic, operand_type, &resolved) &&
+            resolved.__Kind__ == __Resolved_Type_Reference__)
+        {
+            return 1;
+        }
+        /* Dereferencing a Box or a raw Pointer is not itself a borrow --
+         * a Box owns its payload (moving it out is a genuine transfer)
+         * and a raw Pointer carries no borrow-checked ownership facts at
+         * all -- but the OPERAND expression that produced that Box or
+         * Pointer might itself have been read through a reference
+         * (`*(*مرجع_لصندوق)`), so keep looking up that chain too. */
+        return __LLVM_Expression_Reads_Borrowed_Value__(emitter, operand);
+    }
+    return 0;
+}
+
+/* Reads the current provenance of the owning root of a place. For an
+ * explicit reference dereference the answer is constant true. For a local
+ * that once owned but was later initialized with borrowed bits, use the
+ * runtime flag -- the existence of a drop flag is not proof of ownership. */
+LLVMValueRef __LLVM_Expression_Borrowed_Flag__(__LLVM_Emitter__ *emitter,
+                                              __Ast_Expression__ *expression)
+{
+    LLVMTypeRef bool_type = LLVMIntTypeInContext(emitter->context, 1U);
+    __Ast_Lvalue__ *lvalue = NULL;
+    __LLVM_Local__ *local;
+    if (__LLVM_Expression_Reads_Borrowed_Value__(emitter, expression))
+        return LLVMConstInt(bool_type, 1U, 0);
+    if (expression == NULL)
+        return LLVMConstInt(bool_type, 0U, 0);
+    if (expression->__Kind__ == __Ast_Expression_Unary__ &&
+        expression->__As__.__Unary__.__Operation__ == __Unary_Dereference__)
+        return __LLVM_Expression_Borrowed_Flag__(
+            emitter, expression->__As__.__Unary__.__Operand__);
+    if (expression->__Kind__ != __Ast_Expression_Atom__ ||
+        expression->__As__.__Atom__.__Kind__ != __Ast_Atom_Lvalue__)
+        return LLVMConstInt(bool_type, 0U, 0);
+    lvalue = expression->__As__.__Atom__.__As__.__Lvalue__;
+    while (lvalue != NULL && lvalue->__Kind__ != __Ast_Lvalue_Base__)
+    {
+        if (lvalue->__Kind__ == __Ast_Lvalue_Field__)
+            lvalue = lvalue->__As__.__Field__.__Parent__;
+        else if (lvalue->__Kind__ == __Ast_Lvalue_Index__)
+            lvalue = lvalue->__As__.__Index__.__Parent__;
+        else if (lvalue->__Kind__ == __Ast_Lvalue_Dereference__)
+            lvalue = lvalue->__As__.__Dereference_Parent__;
+        else
+            return LLVMConstInt(bool_type, 0U, 0);
+    }
+    local = __LLVM_Find_Local_Base__(emitter, lvalue);
+    if (local == NULL || local->borrowed_flag == NULL)
+        return LLVMConstInt(bool_type, 0U, 0);
+    return LLVMBuildLoad2(emitter->builder, bool_type, local->borrowed_flag,
+                          "borrowed.source.flag");
+}
+
+int __LLVM_Mark_Copy_Ownership__(__LLVM_Emitter__ *emitter,
+                                  __Ast_Lvalue__ *destination,
+                                  LLVMValueRef borrowed_flag)
+{
+    __LLVM_Local__ *local = __LLVM_Find_Local_Base__(emitter, destination);
+    if (local == NULL)
+        return 1;
+    if (borrowed_flag == NULL)
+        return __LLVM_Fail__("copy provenance requires an LLVM predicate");
+    if (local->borrowed_flag != NULL)
+        LLVMBuildStore(emitter->builder, borrowed_flag, local->borrowed_flag);
+    if (local->drop_flag != NULL)
+        LLVMBuildStore(emitter->builder,
+                       LLVMBuildNot(emitter->builder, borrowed_flag, "copy.is.owning"),
+                       local->drop_flag);
+    return 1;
+}
+
+/* The match operand's owning root is the source local, not the pattern
+ * binding. A binding that is subsequently moved disowns this root exactly
+ * once, including when another match destructures the binding again. */
+LLVMValueRef __LLVM_Match_Source_Owner_Flag__(__LLVM_Emitter__ *emitter,
+                                             __Ast_Expression__ *expression)
+{
+    __LLVM_Local__ *local;
+    __Ast_Lvalue__ *lvalue;
+    if (expression == NULL || expression->__Kind__ != __Ast_Expression_Atom__ ||
+        expression->__As__.__Atom__.__Kind__ != __Ast_Atom_Lvalue__)
+        return NULL;
+    lvalue = expression->__As__.__Atom__.__As__.__Lvalue__;
+    local = __LLVM_Find_Local_Base__(emitter, lvalue);
+    if (local == NULL)
+        return NULL;
+    return local->drop_flag != NULL ? local->drop_flag : local->match_owner_flag;
+}
+
+/* Releases the previous value of exactly the place being overwritten.
+ * Projected fields/elements have no independent local drop flag: their
+ * containing record/vector retains ownership, so a replacement must release
+ * the previous projected value before installing the new one. */
+int __LLVM_Drop_Before_Overwrite__(__LLVM_Emitter__ *emitter,
+                                   __Ast_Lvalue__ *destination,
+                                   __LLVM_Place__ place)
+{
+    __LLVM_Local__ *local = __LLVM_Find_Local_Base__(emitter, destination);
+    __Ast_Lvalue__ *root = destination;
+    if (place.address == NULL || place.type == NULL)
+        return __LLVM_Fail__("missing destination place for LLVM overwrite drop");
+    if (local != NULL)
+        return __LLVM_Emit_Conditional_Drop__(emitter, local, local->address, local->type);
+    if (!__Memory_Type_Is_Owned__(emitter->semantic, place.type))
+        return 1;
+    /* A projected field of a tracked local cannot be dropped before the
+     * containing local has been initialized. Reuse its existing runtime
+     * ownership flag, rather than reading potentially uninitialized
+     * projected storage on a first assignment. Through a reference or
+     * a global there is no tracked local owner: the place is already live. */
+    while (root != NULL && root->__Kind__ != __Ast_Lvalue_Base__)
+    {
+        if (root->__Kind__ == __Ast_Lvalue_Field__)
+            root = root->__As__.__Field__.__Parent__;
+        else if (root->__Kind__ == __Ast_Lvalue_Index__)
+            root = root->__As__.__Index__.__Parent__;
+        else if (root->__Kind__ == __Ast_Lvalue_Dereference__)
+            root = root->__As__.__Dereference_Parent__;
+        else
+            return __LLVM_Fail__("unknown projected overwrite destination");
+    }
+    local = __LLVM_Find_Local_Base__(emitter, root);
+    if (local != NULL && local->drop_flag != NULL)
+        return __LLVM_Emit_Conditional_Drop__(emitter, local, place.address, place.type);
+    return __LLVM_Drop_Owned_At__(emitter, place.address, place.type);
+}
+
+/* Returns the LLVM mark local owning. */
+int __LLVM_Mark_Local_Owning__(__LLVM_Emitter__ *emitter, __Ast_Lvalue__ *destination)
+{
+    __LLVM_Local__ *local = __LLVM_Find_Local_Base__(emitter, destination);
+    return __LLVM_Mark_Parameter_Owning__(emitter, local);
+}
+
+/* Returns the LLVM mark parameter owning. */
+int __LLVM_Mark_Parameter_Owning__(__LLVM_Emitter__ *emitter, __LLVM_Local__ *local)
+{
+    LLVMTypeRef bool_type = LLVMIntTypeInContext(emitter->context, 1U);
+    if (local == NULL)
+        return 1;
+    if (local->borrowed_flag != NULL)
+        LLVMBuildStore(emitter->builder, LLVMConstInt(bool_type, 0U, 0),
+                       local->borrowed_flag);
+    if (local->drop_flag != NULL)
+        LLVMBuildStore(emitter->builder, LLVMConstInt(bool_type, 1U, 0),
+                       local->drop_flag);
+    return 1;
+}
+
+/* Scope exit: releases, in reverse declaration order, every still-owning
+ * local declared at or after `first`, then clears each flag. Clearing is
+ * required because the same IR may run again (a loop around the scope);
+ * the next initialization's overwrite drop must then see no live value. */
+int __LLVM_Drop_Locals_From__(__LLVM_Emitter__ *emitter, size_t first)
+{
+    size_t index;
+    LLVMTypeRef bool_type;
+    if (emitter == NULL)
+        return __LLVM_Fail__("L2 drop elaboration is missing the canonical emitter");
+    bool_type = LLVMIntTypeInContext(emitter->context, 1U);
+    for (index = emitter->local_count; index > first; --index)
+    {
+        __LLVM_Local__ *local = &emitter->locals[index - 1U];
+        if (local->drop_flag == NULL)
+            continue;
+        if (!__LLVM_Emit_Conditional_Drop__(emitter, local, local->address, local->type))
+            return 0;
+        LLVMBuildStore(emitter->builder, LLVMConstInt(bool_type, 0U, 0), local->drop_flag);
+    }
+    return 1;
+}
+
+/* Returns the LLVM drop all locals. */
+int __LLVM_Drop_All_Locals__(__LLVM_Emitter__ *emitter)
+{
+    size_t index;
+    if (emitter == NULL)
+    {
+        return __LLVM_Fail__("L2 drop elaboration is missing the canonical emitter");
+    }
+    for (index = emitter->local_count; index > 0U; --index)
+    {
+        if (!__LLVM_Emit_Conditional_Drop__(emitter, &emitter->locals[index - 1U],
+                                          emitter->locals[index - 1U].address,
+                                          emitter->locals[index - 1U].type))
+        {
+            return 0;
+        }
+    }
+    return 1;
 }

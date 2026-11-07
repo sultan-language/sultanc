@@ -1,0 +1,165 @@
+// FreeBSD OS threads (docs/CONCURRENCY.md), on raw system calls with no
+// libc, the way FreeBSD's libthr starts and joins a thread
+// (lib/libthr/thread/thr_create.c, thr_join.c, thr_exit.c):
+//
+// - thr_new(&param, sizeof param) starts the thread at start_func(arg) on a
+//   stack std maps itself (os.platform.unix.linux.threads: 2 MiB with a
+//   guard). The kernel writes the new thread's id to child_tid and
+//   parent_tid before the thread runs (kern_thr.c thread_create): child_tid
+//   is the state word thr_exit later sets, parent_tid the word next to it,
+//   which keeps the id after the thread ended;
+// - the thread ends with thr_exit(&state), which stores 1 in the long at
+//   state and wakes every waiter on it (kern_umtx_wake);
+// - join waits with _umtx_op(&state, UMTX_OP_WAIT, seen, NULL, NULL) while
+//   the word is not 1 (libthr's TID_TERMINATED), then unmaps the stack.
+//
+// start_func is the C entry of a closure (بدائي_مدخل_سي_لدالة): the kernel
+// passes arg (the closure's environment) in the first argument register, as
+// a C caller would. A closure that returns would return to no caller, so the
+// thread runs a std wrapper that calls the user closure and then thr_exit.
+استورد os.platform.unix.linux.syscalls.kernel_result;
+استورد os.platform.unix.linux.syscalls.operations;
+استورد os.platform.unix.linux.syscalls.selection;
+استورد os.platform.unix.linux.threads;
+استورد os.platform.unix.freebsd.system_parameters;
+استورد os.error;
+
+مرادف إغلاق_من_عنوان_فري = بدائي_دالة_من_عنوان;
+مرادف عنوان_إغلاق_فري = بدائي_عنوان_دالة;
+مرادف مدخل_سي_فري = بدائي_مدخل_سي_لدالة;
+
+// _umtx_op operations (sys/umtx.h).
+عرف عملية_انتظار_مفتاح_فري(): ط64 { أرجع 2; }  // UMTX_OP_WAIT: compare a long
+
+// thr_exit(&state): never returns.
+عرف أنه_خيط_فري_بي_إس_دي(تم: منطقي, الخلية: ط64): فراغ {
+    دع تجاهل: ط64;
+    غير_آمن {
+        تجاهل := بدائي_نداء_نواة_خام(
+            رقم_نداء_نواة_لينكس(عملية_نداء_نواة_لينكس.إنهاء_خيط()),
+            الخلية, 0 مثل ط64, 0 مثل ط64, 0 مثل ط64, 0 مثل ط64, 0 مثل ط64
+        );
+    }
+    طالما (صواب) { }
+}
+
+// Runs the user closure and answers once it returned, so the wrapper's
+// thr_exit comes after the closure's own reference is dropped.
+عرف نفذ_عمل_خيط_فري(العمل: دالة(): فراغ): منطقي {
+    العمل();
+    أرجع صواب;
+}
+
+// struct thr_param (sys/thr.h) on the 64-bit ABIs: start_func, arg,
+// stack_base, stack_size, tls_base, tls_size, child_tid, parent_tid, flags
+// (an int, padded to 8), rtp, spare[3]: 13 words, 104 bytes.
+//
+// Answers the thread id and the address of the wrapper closure, whose
+// environment reference the caller keeps until join.
+عام نوع خيط_فري_بي_إس_دي = { المعرف: ط64, عنوان_الغلاف: ط64 };
+
+عام عرف ابدأ_خيط_فري_بي_إس_دي(
+    المكدس: &مكدس_خيط_لينكس, العمل: دالة(): فراغ
+): نتيجة خيط_فري_بي_إس_دي, خطأ_نظام_أصلي {
+    دع الخلية: ط64 = خلية_خيط_لينكس(المكدس);
+    دع الغلاف: دالة(): فراغ = دالة(): فراغ -> أنه_خيط_فري_بي_إس_دي(نفذ_عمل_خيط_فري(العمل), الخلية);
+    دع العنوان: ط64;
+    دع المدخل: ط64;
+    غير_آمن {
+        العنوان := عنوان_إغلاق_فري(الغلاف);
+        المدخل := مدخل_سي_فري(العنوان);
+    }
+    // The stack starts above the 64 KiB guard and ends below the cell.
+    دع القاعدة: ط64 = (*المكدس).القاعدة + 65536;
+    دع المعاملات: متغير متجه ط64 = [];
+    ألحق(المعاملات, المدخل);
+    ألحق(المعاملات, العنوان);
+    ألحق(المعاملات, القاعدة);
+    ألحق(المعاملات, أعلى_المكدس_القابل_للاستعمال_لينكس(المكدس) - القاعدة);
+    ألحق(المعاملات, 0 مثل ط64);
+    ألحق(المعاملات, 0 مثل ط64);
+    ألحق(المعاملات, الخلية);
+    ألحق(المعاملات, الخلية + 8);
+    ألحق(المعاملات, 0 مثل ط64);
+    ألحق(المعاملات, 0 مثل ط64);
+    ألحق(المعاملات, 0 مثل ط64);
+    ألحق(المعاملات, 0 مثل ط64);
+    ألحق(المعاملات, 0 مثل ط64);
+    دع الخام: ط64;
+    غير_آمن {
+        الخام := بدائي_نداء_نواة_خام(
+            رقم_نداء_نواة_لينكس(عملية_نداء_نواة_لينكس.إنشاء_خيط()),
+            &متغير المعاملات[0], 104 مثل ط64, 0 مثل ط64, 0 مثل ط64, 0 مثل ط64, 0 مثل ط64
+        );
+    }
+    طابق حلل_نتيجة_نداء_نواة_لينكس(الخام) مع
+    | نتيجة.خطأ(الخطأ) -> {
+        حرر_غلاف_خيط_فري(العنوان);
+        أرجع نتيجة.خطأ(الخطأ);
+    }
+    | نتيجة.نجح(_) -> {
+        دع الخيط: خيط_فري_بي_إس_دي = { المعرف: اقرأ_خلية_خيط_لينكس(الخلية + 8), عنوان_الغلاف: العنوان };
+        أرجع نتيجة.نجح(الخيط);
+    };
+}
+
+// Drops the wrapper's environment (and with it the user closure).
+عام عرف حرر_غلاف_خيط_فري(العنوان: ط64): فراغ {
+    دع الغلاف: دالة(): فراغ;
+    غير_آمن { الغلاف := إغلاق_من_عنوان_فري(العنوان); }
+}
+
+// Join: wait until thr_exit stored 1 in the cell.
+عام عرف انضم_خيط_فري_بي_إس_دي(الخلية: ط64): فراغ {
+    دع الحالي: متغير ط64 = اقرأ_خلية_خيط_لينكس(الخلية);
+    طالما (الحالي != 1) {
+        دع تجاهل: ط64 = نفذ_مستقبل_خيط(الخلية, عملية_انتظار_مفتاح_فري(), الحالي);
+        الحالي := اقرأ_خلية_خيط_لينكس(الخلية);
+    }
+}
+
+// thr_self(&id): the calling thread's id.
+عام عرف معرف_الخيط_الحالي_فري_بي_إس_دي(): ط64 {
+    دع المعرف: متغير متجه ط64 = [0];
+    دع تجاهل: ط64;
+    غير_آمن {
+        تجاهل := بدائي_نداء_نواة_خام(
+            رقم_نداء_نواة_لينكس(عملية_نداء_نواة_لينكس.معرف_الخيط()),
+            &متغير المعرف[0], 0 مثل ط64, 0 مثل ط64, 0 مثل ط64, 0 مثل ط64, 0 مثل ط64
+        );
+    }
+    أرجع المعرف[0];
+}
+
+// The CPUs this process may run on, as Rust counts them on FreeBSD:
+// cpuset_getaffinity(CPU_LEVEL_WHICH 3, CPU_WHICH_PID 2, -1, 128, mask)
+// over a 1024-bit cpuset_t, then sysctl hw.ncpu when that fails.
+عام عرف عدد_المعالجات_فري_بي_إس_دي(): نتيجة ط64, خطأ_نظام_أصلي {
+    دع القناع: متغير متجه ط64 = [];
+    دع ف: متغير طبيعي = 0;
+    طالما (ف < 16) { ألحق(القناع, 0 مثل ط64); ف := ف + 1; }
+    دع الخام: ط64;
+    دع كل_العمليات: ط64 = 0xFFFFFFFFFFFFFFFF;
+    غير_آمن {
+        الخام := بدائي_نداء_نواة_خام(
+            رقم_نداء_نواة_لينكس(عملية_نداء_نواة_لينكس.ألفة_المعالج()),
+            3 مثل ط64, 2 مثل ط64, كل_العمليات, 128 مثل ط64, &متغير القناع[0], 0 مثل ط64
+        );
+    }
+    طابق حلل_نتيجة_نداء_نواة_لينكس(الخام) مع
+    | نتيجة.خطأ(_) -> { }
+    | نتيجة.نجح(_) -> {
+        دع العدد: متغير ط64 = 0;
+        دع ق: متغير طبيعي = 0;
+        طالما (ق < 16) {
+            دع الكلمة: متغير ط64 = القناع[ق];
+            طالما (الكلمة != 0) {
+                العدد := العدد + (الكلمة & 1);
+                الكلمة := الكلمة >> 1;
+            }
+            ق := ق + 1;
+        }
+        لو (العدد > 0) { أرجع نتيجة.نجح(العدد); };
+    };
+    أرجع اقرأ_عدد_المعالجات_فري_بي_إس_دي();
+}

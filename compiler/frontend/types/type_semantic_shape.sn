@@ -28,13 +28,13 @@
 // Canonical aggregate member facts for lowering and other semantic consumers.
 // `الترتيب` is declaration/member order only; it is never a physical offset or backend tag.
 عام نوع وصف_حقل_سجل_دلالي = {
-    الترتيب: غير_موقع,
+    الترتيب: طبيعي,
     النوع: معرف_نوع
 };
 
 // Constructor ordinal is the canonical semantic constructor order. Payload Types
 // remain ordered exactly as declared (or as defined by builtin Option/Result semantics).
 عام نوع وصف_منشئ_نوع_دلالي = {
-    الترتيب: غير_موقع,
-    عدد_الحمولات: غير_موقع
+    الترتيب: طبيعي,
+    عدد_الحمولات: طبيعي
 };

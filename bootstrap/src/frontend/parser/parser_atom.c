@@ -1,5 +1,6 @@
 /* Parses atomic expressions. */
 
+#include "frontend/ast/storage.h"
 #include "frontend/parser/cursor.h"
 #include "frontend/parser/diagnostic.h"
 #include "frontend/parser/expression_internal.h"
@@ -132,6 +133,38 @@ __Ast_Atom__ __Parser_Parse_Atom__(__Parser__ *__Parser_State__, int *__Ok__)
             {
                 return __Atom__;
             }
+            break;
+        }
+        case __Token_LIT_FLO__:
+        {
+            /* Stores the spelling without digit separators. */
+            __Text_Slice__ __Spelling__ = __Parser_State__->__Current__.__Lexeme__;
+            char *__Digits__;
+            size_t __Index__;
+            size_t __Length__ = 0U;
+            __Literal__ = __Parser_New_Literal__(
+                __Parser_State__, __Ast_Literal_Float__, __Parser_State__->__Current__.__Span__);
+            if (__Literal__ == NULL)
+            {
+                return __Atom__;
+            }
+            __Digits__ = (char *)__Ast_Allocate__(__Parser_State__->__Ast__,
+                                                  __Spelling__.__Length__ + 1U, 1U);
+            if (__Digits__ == NULL)
+            {
+                (void)__Parser_Fail_Internal__(__Parser_State__, __Diag_Word_Syntax_Internal_Oom__);
+                return __Atom__;
+            }
+            for (__Index__ = 0U; __Index__ < __Spelling__.__Length__; ++__Index__)
+            {
+                if (__Spelling__.__Data__[__Index__] != '_')
+                {
+                    __Digits__[__Length__++] = __Spelling__.__Data__[__Index__];
+                }
+            }
+            __Digits__[__Length__] = '\0';
+            __Literal__->__As__.__String__.__Data__ = __Digits__;
+            __Literal__->__As__.__String__.__Length__ = __Length__;
             break;
         }
         case __Token_LIT_UNDEF__:

@@ -1,0 +1,75 @@
+// std.text.system_language: the locale of a program's environment
+// (docs/ERRORS.md, "Language versions"). This is the one place std reads the
+// language variables; the runtime-failure path (process.failure) uses it to
+// choose the language of its frames.
+//
+// The first of:
+//   1. SULTANC_LANG;
+//   2. LC_ALL, LC_MESSAGES, LANG;
+//   3. the language the program was compiled with (--lang; the compiler
+//      writes it into process.failure_text at every compilation);
+//   4. Arabic.
+// A value may be a BCP 47 tag («en-US») or a POSIX locale («ar_SA.UTF-8»,
+// «de_DE@euro»): the encoding and the modifier are dropped. An empty value,
+// «C», «C.…», «POSIX» and a value that is not a language tag carry no
+// language, and the next source is read.
+استورد text.language;
+استورد text.compare;
+استورد env.environment;
+استورد process.failure_text;
+
+// The language part of a POSIX locale value: the text before «.» or «@»,
+// or empty for «C» and «POSIX».
+عرف وسم_من_قيمة_بيئة(القيمة: &نص): نص {
+    دع الناتج: متغير متجه ط8 = [];
+    دع العدد: طبيعي = الطول(*القيمة) مثل طبيعي;
+    دع ف: متغير طبيعي = 0;
+    طالما (ف < العدد && (*القيمة)[ف] != 0x2E && (*القيمة)[ف] != 0x40) {
+        ألحق(الناتج, (*القيمة)[ف]);
+        ف := ف + 1;
+    }
+    دع الوسم: نص = الناتج مثل نص;
+    دع ج: نص = «C»;
+    دع بوزكس: نص = «POSIX»;
+    لو (نصان_متساويان(&الوسم, &ج) || نصان_متساويان(&الوسم, &بوزكس)) { أرجع «»; };
+    أرجع الوسم;
+}
+
+// The locale of one environment variable; without a tag when the variable
+// is absent or carries no language.
+عرف لغة_من_متغير_بيئة(الاسم: نص): لغة {
+    طابق متغير_بيئة(&الاسم) مع
+    | نتيجة.نجح(الموجود) -> {
+        طابق الموجود مع
+        | اختياري.موجود(القيمة) -> {
+            دع الوسم: نص = وسم_من_قيمة_بيئة(&القيمة);
+            أرجع لغة_من_وسم(&الوسم);
+        }
+        | اختياري.لا_شيء -> { };
+    }
+    | نتيجة.خطأ(_) -> { };
+    دع فارغ: نص = «»;
+    أرجع لغة_من_وسم(&فارغ);
+}
+
+عرف لغة_لها_وسم(اللغة: &لغة): منطقي {
+    دع الوسم: نص = وسم_لغة(اللغة);
+    أرجع (الطول(الوسم) مثل طبيعي) > 0;
+}
+
+// The program's locale, from its environment: always one tag.
+عام عرف لغة_من_البيئة(): لغة {
+    دع من_سلطانك: لغة = لغة_من_متغير_بيئة(«SULTANC_LANG»);
+    لو (لغة_لها_وسم(&من_سلطانك)) { أرجع من_سلطانك; };
+    دع من_الكل: لغة = لغة_من_متغير_بيئة(«LC_ALL»);
+    لو (لغة_لها_وسم(&من_الكل)) { أرجع من_الكل; };
+    دع من_الرسائل: لغة = لغة_من_متغير_بيئة(«LC_MESSAGES»);
+    لو (لغة_لها_وسم(&من_الرسائل)) { أرجع من_الرسائل; };
+    دع من_اللغة: لغة = لغة_من_متغير_بيئة(«LANG»);
+    لو (لغة_لها_وسم(&من_اللغة)) { أرجع من_اللغة; };
+    دع المترجمة: متغير نص = «ar»;
+    لو (لغة_البرنامج_المترجمة_إنجليزية()) { المترجمة := «en»; };
+    أرجع لغة_من_وسم(&المترجمة);
+}
+
+عام مرادف locale_from_environment = لغة_من_البيئة;

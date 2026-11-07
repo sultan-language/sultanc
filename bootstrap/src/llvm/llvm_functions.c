@@ -175,10 +175,14 @@ static int __LLVM_Declare_One_Function__(__LLVM_Emitter__ *emitter,
         return __LLVM_Fail__("LLVM function Type creation failed for L2.3");
     if (function->__External__)
     {
-        size_t copy_count = function->__Name__.__Length__ < sizeof(symbol) - 1U
-                                ? function->__Name__.__Length__
+        /* The declared link name (`= «stat$INODE64»`), else the source name. */
+        __Text_Slice__ link_name = function->__Link_Name__.__Data__ != NULL
+                                       ? function->__Link_Name__
+                                       : function->__Name__;
+        size_t copy_count = link_name.__Length__ < sizeof(symbol) - 1U
+                                ? link_name.__Length__
                                 : sizeof(symbol) - 1U;
-        memcpy(symbol, function->__Name__.__Data__, copy_count);
+        memcpy(symbol, link_name.__Data__, copy_count);
         symbol[copy_count] = '\0';
     }
     else
@@ -352,6 +356,14 @@ int __LLVM_Emit_Function_Body__(__LLVM_Emitter__ *emitter, __LLVM_Function__ *ll
             return __LLVM_Fail__("LLVM incoming parameter missing for L2.3 function");
         }
         LLVMBuildStore(emitter->builder, incoming, local->address);
+        /* An owned-type parameter is moved into the callee by value (see
+         * src/semantic/body_call.c's argument-move check), so the callee
+         * owns it from entry and is responsible for releasing it, exactly
+         * like any other local. */
+        if (!__LLVM_Mark_Parameter_Owning__(emitter, local))
+        {
+            return 0;
+        }
     }
 
     if (!__LLVM_Emit_Statement_List__(
@@ -373,6 +385,10 @@ int __LLVM_Emit_Function_Body__(__LLVM_Emitter__ *emitter, __LLVM_Function__ *ll
                     emitter->semantic, function->__Output__.__Type__, &output_resolved) ||
                 output_resolved.__Kind__ != __Resolved_Type_Void__)
                 return __LLVM_Fail__("non-void SultanC function has a reachable unterminated exit");
+            if (!__LLVM_Drop_All_Locals__(emitter))
+            {
+                return 0;
+            }
             LLVMBuildRetVoid(emitter->builder);
         }
     }

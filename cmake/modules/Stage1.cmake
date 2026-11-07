@@ -8,23 +8,7 @@ endif()
 # The first SultanC compiler is produced by Stage0, not by compiling C again.
 # CMake's configured host C linker driver links the resulting machine object.
 # No C source or Stage0 object participates in this link.
-file(GLOB_RECURSE SULTANC_COMPILER_SOURCES CONFIGURE_DEPENDS
-    "${SULTANC_SOURCE_ROOT}/compiler/*.sn"
-    "${SULTANC_SOURCE_ROOT}/library/std/*.sn")
-# The canonical manifest name is case-sensitive: Supax.toml. The repository
-# may have a legacy lowercase supax.toml, which is not a package manifest.
-# Track the optional root manifest only when its directory entry has the exact
-# canonical spelling. CONFIGURE_DEPENDS notices creation/removal as well.
-list(APPEND SULTANC_COMPILER_SOURCES
-    "${SULTANC_SOURCE_ROOT}/library/Supax.toml")
-file(GLOB _sultanc_root_toml CONFIGURE_DEPENDS
-    "${SULTANC_SOURCE_ROOT}/*.toml")
-foreach(_sultanc_root_toml IN LISTS _sultanc_root_toml)
-    get_filename_component(_sultanc_root_name "${_sultanc_root_toml}" NAME)
-    if(_sultanc_root_name STREQUAL "Supax.toml")
-        list(APPEND SULTANC_COMPILER_SOURCES "${_sultanc_root_toml}")
-    endif()
-endforeach()
+include(CompilerSources)
 file(CONFIGURE
     OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/sultanc-stage1-target.txt"
     CONTENT "${SULTANC_STAGE1_TARGET}\n")
@@ -88,6 +72,11 @@ else()
 endif()
 # SultanC's LLVM backend is part of the Stage1 compiler: its C API symbols
 # must be resolved at link time, using the same selected LLVM SDK as Stage0.
+# Stage0 has no compiler-build capability input; it compiles the default
+# source of the LLVM inclusion boundary (compiler/backend/provider/llvm/
+# llvm_codegen.sn), so Stage1 always contains LLVM references and always
+# needs this library. SULTANC_COMPILER_LLVM selects the capability of the
+# self-hosted stages only (Stage2.cmake, Verify.cmake).
 target_link_libraries(sultanc-stage1-executable PRIVATE SultanC::LLVM)
 
 if(_sultanc_stage1_export)

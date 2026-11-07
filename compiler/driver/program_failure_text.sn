@@ -1,0 +1,117 @@
+استورد std.text.from_bytes;
+استورد compiler.diagnostics.identity;
+استورد compiler.diagnostics.reason;
+استورد compiler.diagnostics.record;
+استورد compiler.diagnostics.registry;
+استورد compiler.diagnostics.builder;
+استورد compiler.diagnostics.localization;
+استورد compiler.diagnostics.message;
+استورد compiler.diagnostics.schema;
+
+// The words of a program's runtime failures (docs/ERRORS.md). A compiled or
+// interpreted program prints them itself (library/std/process/failure.sn),
+// so the compiler hands them over as the text of the std module
+// process.failure_text, written afresh for every compilation: the frame of
+// each runtime failure identity rendered by iSpeak in both languages, and
+// the language the program is compiled with (--lang). iSpeak stays the only
+// owner of the words; std holds no table of its own.
+//
+// A frame is the headline a diagnostic of that identity has on a terminal:
+// `<severity>[<code>]: <message>`. The failure keys: 0 the program ended with
+// an error, 1 the program stopped, 2 the program stopped because an
+// assertion failed (the reason سبب_تشغيل_فشل_تأكيد).
+
+عرف كلمة_شدة_فشل_برنامج(اللغة: لغة_تشخيص, الشدة: شدة_تشخيص): نص {
+    طابق الشدة مع
+    | شدة_تشخيص.خطأ -> { أرجع صياغة_تشخيص(اللغة, مفتاح_صياغة.تسمية_خطأ()); }
+    | شدة_تشخيص.تحذير -> { أرجع صياغة_تشخيص(اللغة, مفتاح_صياغة.تسمية_تحذير()); }
+    | شدة_تشخيص.ملاحظة -> { أرجع صياغة_تشخيص(اللغة, مفتاح_صياغة.تسمية_ملاحظة()); };
+}
+
+// The frame of one runtime failure identity, with an optional reason.
+عام عرف إطار_فشل_برنامج(
+    اللغة: لغة_تشخيص,
+    المعرف: معرف_تشخيص,
+    السبب: اختياري سبب_تشخيص
+): نص {
+    دع التشخيص: متغير تشخيص = ابدأ_تشخيصا(المعرف, اختياري.لا_شيء());
+    طابق السبب مع
+    | اختياري.موجود(القيمة) -> { دع أضيف: منطقي = أضف_سبب_تشخيص(&متغير التشخيص, القيمة); }
+    | اختياري.لا_شيء -> { };
+    دع التعريف: تعريف_تشخيص = تعريف_التشخيص(المعرف);
+    دع الناتج: متغير متجه ط8 = [];
+    ألحق_بايتات_نص(&متغير الناتج, كلمة_شدة_فشل_برنامج(اللغة, التعريف.الشدة));
+    ألحق_بايتات_نص(&متغير الناتج, «[»);
+    ألحق_بايتات_نص(&متغير الناتج, انسخ_نص(&التعريف.الكود));
+    ألحق_بايتات_نص(&متغير الناتج, «]: »);
+    ألحق_بايتات_نص(&متغير الناتج, نص_رسالة_تشخيص(&التشخيص, اللغة));
+    أرجع من_بايتات(&الناتج);
+}
+
+عرف إطار_فشل_برنامج_بمفتاح(اللغة: لغة_تشخيص, المفتاح: طبيعي): نص {
+    لو (المفتاح == 1) {
+        أرجع إطار_فشل_برنامج(اللغة, معرف_تشخيص.توقف_البرنامج(), اختياري.لا_شيء());
+    };
+    لو (المفتاح == 2) {
+        أرجع إطار_فشل_برنامج(
+            اللغة, معرف_تشخيص.توقف_البرنامج(), اختياري.موجود(سبب_تشخيص.سبب_تشغيل_فشل_تأكيد())
+        );
+    };
+    أرجع إطار_فشل_برنامج(اللغة, معرف_تشخيص.انتهى_البرنامج_بخطأ(), اختياري.لا_شيء());
+}
+
+// A SultanC text literal: «…» holds any text without `»`.
+عرف ألحق_حرفيا_لفشل_برنامج(الناتج: &متغير متجه ط8, القيمة: نص): فراغ {
+    ألحق_بايتات_نص(الناتج, "«");
+    ألحق_بايتات_نص(الناتج, القيمة);
+    ألحق_بايتات_نص(الناتج, "»");
+}
+
+عرف ألحق_فرع_إطار_فشل_برنامج(
+    الناتج: &متغير متجه ط8,
+    المفتاح: طبيعي,
+    المسافة: نص
+): فراغ {
+    ألحق_بايتات_نص(الناتج, انسخ_نص(&المسافة));
+    ألحق_بايتات_نص(الناتج, «لو (الإنجليزية) { أرجع »);
+    ألحق_حرفيا_لفشل_برنامج(الناتج, إطار_فشل_برنامج_بمفتاح(لغة_تشخيص.الإنجليزية(), المفتاح));
+    ألحق_بايتات_نص(الناتج, "; };\n");
+    ألحق_بايتات_نص(الناتج, المسافة);
+    ألحق_بايتات_نص(الناتج, «أرجع »);
+    ألحق_حرفيا_لفشل_برنامج(الناتج, إطار_فشل_برنامج_بمفتاح(لغة_تشخيص.العربية(), المفتاح));
+    ألحق_بايتات_نص(الناتج, ";\n");
+}
+
+// The whole text of library/std/process/failure_text.sn for a program
+// compiled in one language.
+عام عرف نص_وحدة_كلمات_فشل_البرنامج(اللغة_المترجمة: لغة_تشخيص): نص {
+    دع الناتج: متغير متجه ط8 = [];
+    ألحق_بايتات_نص(&متغير الناتج, "// The words of a program's runtime failures (docs/ERRORS.md), rendered by\n");
+    ألحق_بايتات_نص(&متغير الناتج, "// iSpeak: the compiler replaces this module's text at every compilation\n");
+    ألحق_بايتات_نص(&متغير الناتج, "// (compiler/driver/program_failure_text.sn) with the same two functions,\n");
+    ألحق_بايتات_نص(&متغير الناتج, "// rendered from its iSpeak tables, and the language of that compilation's\n");
+    ألحق_بايتات_نص(&متغير الناتج, "// --lang. The text below is that rendering for Arabic; the C Stage0 and\n");
+    ألحق_بايتات_نص(&متغير الناتج, "// tools read it as written. Do not edit it by hand: the iSpeak suite checks\n");
+    ألحق_بايتات_نص(&متغير الناتج, "// it against the compiler's rendering.\n");
+    ألحق_بايتات_نص(&متغير الناتج, "//\n");
+    ألحق_بايتات_نص(&متغير الناتج, "// The failure keys: 0 the program ended with an error (`main` returned\n");
+    ألحق_بايتات_نص(&متغير الناتج, "// one), 1 the program stopped (إنهيار), 2 the program stopped because an\n");
+    ألحق_بايتات_نص(&متغير الناتج, "// assertion failed.\n\n");
+    ألحق_بايتات_نص(&متغير الناتج, "// The frame of one runtime failure, in English or in Arabic.\n");
+    ألحق_بايتات_نص(&متغير الناتج, "عام عرف إطار_فشل_تشغيل(المفتاح: عدد, الإنجليزية: منطقي): نص {\n");
+    ألحق_بايتات_نص(&متغير الناتج, "    لو (المفتاح == 1) {\n");
+    ألحق_فرع_إطار_فشل_برنامج(&متغير الناتج, 1, «        »);
+    ألحق_بايتات_نص(&متغير الناتج, "    };\n");
+    ألحق_بايتات_نص(&متغير الناتج, "    لو (المفتاح == 2) {\n");
+    ألحق_فرع_إطار_فشل_برنامج(&متغير الناتج, 2, «        »);
+    ألحق_بايتات_نص(&متغير الناتج, "    };\n");
+    ألحق_فرع_إطار_فشل_برنامج(&متغير الناتج, 0, «    »);
+    ألحق_بايتات_نص(&متغير الناتج, "}\n\n");
+    ألحق_بايتات_نص(&متغير الناتج, "// Whether the program was compiled with English as its language.\n");
+    ألحق_بايتات_نص(&متغير الناتج, "عام عرف لغة_البرنامج_المترجمة_إنجليزية(): منطقي {\n");
+    طابق اللغة_المترجمة مع
+    | لغة_تشخيص.الإنجليزية -> { ألحق_بايتات_نص(&متغير الناتج, "    أرجع صواب;\n"); }
+    | لغة_تشخيص.العربية -> { ألحق_بايتات_نص(&متغير الناتج, "    أرجع خطأ;\n"); };
+    ألحق_بايتات_نص(&متغير الناتج, "}\n");
+    أرجع من_بايتات(&الناتج);
+}

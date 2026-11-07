@@ -24,7 +24,13 @@ typedef enum
     /* Represents the AST pattern enum value. */
     __Ast_Pattern_Enum__,
     /* Represents the AST pattern struct value. */
-    __Ast_Pattern_Struct__
+    __Ast_Pattern_Struct__,
+    /* A literal (integer, possibly negated, character, text, boolean). */
+    __Ast_Pattern_Literal__,
+    /* `مدى a إلى b` / `range a to b`: integers or characters, inclusive. */
+    __Ast_Pattern_Range__,
+    /* `p | q`: any of the alternatives (they bind nothing). */
+    __Ast_Pattern_Alternatives__
 } __Ast_Pattern_Kind__;
 
 /* Defines the AST struct pattern field structure. */
@@ -68,6 +74,17 @@ struct __Ast_Pattern__
             /* Stores the field count. */
             size_t __Field_Count__;
         } __Struct__;
+        __Ast_Expression__ *__Literal__;
+        struct
+        {
+            __Ast_Expression__ *__Low__;
+            __Ast_Expression__ *__High__;
+        } __Range__;
+        struct
+        {
+            __Ast_Pattern__ **__Items__;
+            size_t __Count__;
+        } __Alternatives__;
     } __As__;
 };
 
@@ -102,7 +119,12 @@ typedef enum
     /* Represents the AST statement unsafe block value. */
     __Ast_Statement_Unsafe__,
     /* Represents the AST statement return value. */
-    __Ast_Statement_Return__
+    __Ast_Statement_Return__,
+    /* `اخرج_من_حلقة;` / `break;` and `تابع_حلقة;` / `continue;`. */
+    __Ast_Statement_Break__,
+    __Ast_Statement_Continue__,
+    /* A nested scope (the expansion of a `لكل` loop keeps its variable in it). */
+    __Ast_Statement_Block__
 } __Ast_Statement_Kind__;
 
 /* Defines the AST variable declaration structure. */
@@ -162,6 +184,10 @@ struct __Ast_Statement__
             __Ast_Lvalue__ *__Destination__;
             /* References the values. */
             __Ast_Atom__ *__Values__;
+            /* References the elements that are not atoms (calls, casts,
+             * arithmetic); NULL where the atom is the element, or NULL when
+             * every element is an atom. */
+            __Ast_Expression__ **__Expressions__;
             /* Stores the value count. */
             size_t __Value_Count__;
         } __Aggregate__;
@@ -172,6 +198,8 @@ struct __Ast_Statement__
             __Ast_Lvalue__ *__Destination__;
             /* Stores the value. */
             __Ast_Atom__ __Value__;
+            /* The boxed value when it is not an atom, or NULL. */
+            __Ast_Expression__ *__Expression__;
         } __Box__;
         /* Defines the struct structure. */
         struct
@@ -188,6 +216,9 @@ struct __Ast_Statement__
             __Ast_Expression__ *__Condition__;
             /* References the body. */
             __Ast_Block__ *__Body__;
+            /* The step of a `لكل` loop, run after the body and on continue;
+             * NULL for `طالما`. */
+            __Ast_Block__ *__Step__;
         } __While__;
         /* Defines the struct structure. */
         struct
@@ -211,6 +242,8 @@ struct __Ast_Statement__
         } __Match__;
         /* References the unsafe body. */
         __Ast_Block__ *__Unsafe__;
+        /* References a nested scope's body. */
+        __Ast_Block__ *__Block__;
         /* References the return. */
         __Ast_Expression__ *__Return__;
     } __As__;
@@ -236,6 +269,9 @@ struct __Ast_Function__
     int __Public__;
     /* Tracks whether the function is an external declaration. */
     int __External__;
+    /* Stores an external declaration's explicit linker symbol (`= «name»`);
+     * empty (NULL data) means the source name. */
+    __Text_Slice__ __Link_Name__;
     /* References generic type parameter names. */
     __Text_Slice__ *__Type_Parameters__;
     /* Stores generic type parameter count. */

@@ -1,0 +1,85 @@
+// Waiting on an address (std.os.wait_address) on Linux and Android: the
+// private futex, as Rust's std/src/sys/pal/unix/futex.rs and Go's
+// runtime/os_linux.go (futexsleep/futexwakeup) use it. FUTEX_WAIT_PRIVATE
+// sleeps while the 32-bit cell still holds the expected value; the check and
+// the sleep are one atomic step in the kernel, so a wake between the
+// caller's load and the wait is never lost. FUTEX_WAKE_PRIVATE wakes up to N
+// sleepers. PRIVATE keys the wait by (address space, address), which is what
+// threads of one process share.
+//
+// A timed wait passes a relative timespec {i64 seconds, i64 nanoseconds}:
+// futex_time64 on the 32-bit ABIs (i686, armv7), so the record has 64-bit
+// fields on every ABI (the `مستقبل_بمهلة` operation).
+استورد os.platform.unix.linux.syscalls.operations;
+استورد os.platform.unix.linux.syscalls.selection;
+استورد os.platform.unix.linux.syscalls.kernel_result;
+
+// FUTEX_WAIT_PRIVATE = FUTEX_WAIT | FUTEX_PRIVATE_FLAG, FUTEX_WAKE_PRIVATE.
+عرف انتظار_مستقبل_خاص_لينكس(): ط64 { أرجع 128; }
+عرف إيقاظ_مستقبل_خاص_لينكس(): ط64 { أرجع 129; }
+
+// ETIMEDOUT is 110 on every Linux architecture except mips (145) and
+// sparc (60, with the BSD numbering), whose errno tables differ.
+لو (الهدف.المعمارية == «mips64el» || الهدف.المعمارية == «mips64») {
+    عرف رمز_انتهاء_المهلة_لينكس(): عدد { أرجع 145; }
+}
+لو (الهدف.المعمارية == «sparcv9» || الهدف.المعمارية == «sparc64») {
+    عرف رمز_انتهاء_المهلة_لينكس(): عدد { أرجع 60; }
+}
+لو (!(الهدف.المعمارية == «mips64el» || الهدف.المعمارية == «mips64» || الهدف.المعمارية == «sparcv9» || الهدف.المعمارية == «sparc64»)) {
+    عرف رمز_انتهاء_المهلة_لينكس(): عدد { أرجع 110; }
+}
+
+// Each kernel call sits at the top level of its own function: its memory
+// contract (the cell, the timespec) is proven on the function's own values.
+عرف انتظر_بلا_مهلة_لينكس(الخلية: &ط32, المتوقعة: ط32): ط64 {
+    دع الخام: ط64;
+    غير_آمن {
+        الخام := بدائي_نداء_نواة_خام(
+            رقم_نداء_نواة_لينكس(عملية_نداء_نواة_لينكس.مستقبل()),
+            الخلية, انتظار_مستقبل_خاص_لينكس(), المتوقعة مثل ط64, 0 مثل ط64, 0 مثل ط64, 0 مثل ط64
+        );
+    }
+    أرجع الخام;
+}
+
+عرف انتظر_بمهلة_لينكس(الخلية: &ط32, المتوقعة: ط32, النانو: عدد): ط64 {
+    دع المؤقت: متغير متجه ص64 = [(النانو / 1000000000) مثل ص64, (النانو % 1000000000) مثل ص64];
+    دع الخام: ط64;
+    غير_آمن {
+        الخام := بدائي_نداء_نواة_خام(
+            رقم_نداء_نواة_لينكس(عملية_نداء_نواة_لينكس.مستقبل_بمهلة()),
+            الخلية, انتظار_مستقبل_خاص_لينكس(), المتوقعة مثل ط64, &متغير المؤقت[0], 0 مثل ط64, 0 مثل ط64
+        );
+    }
+    أرجع الخام;
+}
+
+// The raw result: 0 when woken (or spuriously), -EAGAIN when the cell did
+// not hold the expected value, -EINTR on a signal, -ETIMEDOUT at the
+// deadline. Only the timeout answers خطأ: every other outcome lets the caller
+// re-check its condition, as Rust's futex_wait does.
+عام عرف انتظر_عند_عنوان_لينكس(الخلية: &ط32, المتوقعة: ط32, المهلة_بالنانو: اختياري عدد): منطقي {
+    دع الخام: متغير ط64 = 0;
+    طابق المهلة_بالنانو مع
+    | اختياري.لا_شيء -> { الخام := انتظر_بلا_مهلة_لينكس(الخلية, المتوقعة); }
+    | اختياري.موجود(النانو) -> {
+        // A negative timeout has already passed: wait for zero.
+        دع الموجبة: متغير عدد = النانو;
+        لو (الموجبة < 0) { الموجبة := 0; };
+        الخام := انتظر_بمهلة_لينكس(الخلية, المتوقعة, الموجبة);
+    };
+    طابق حلل_نتيجة_نداء_نواة_لينكس(الخام) مع
+    | نتيجة.نجح(_) -> { أرجع صواب; }
+    | نتيجة.خطأ(الأصلي) -> { أرجع الأصلي.الرمز != رمز_انتهاء_المهلة_لينكس(); };
+}
+
+عام عرف أيقظ_عند_عنوان_لينكس(الخلية: &ط32, العدد: ط64): فراغ {
+    دع تجاهل: ط64;
+    غير_آمن {
+        تجاهل := بدائي_نداء_نواة_خام(
+            رقم_نداء_نواة_لينكس(عملية_نداء_نواة_لينكس.مستقبل()),
+            الخلية, إيقاظ_مستقبل_خاص_لينكس(), العدد, 0 مثل ط64, 0 مثل ط64, 0 مثل ط64
+        );
+    }
+}

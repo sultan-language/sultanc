@@ -1,6 +1,8 @@
 /* Analyzes patterns, bindings, and coverage. */
 
 #include "kernel/pattern/pattern.h"
+#include "semantic/literal.h"
+#include "kernel/type/conversion.h"
 #include "kernel/layout/layout.h"
 #include "kernel/name/name.h"
 #include "kernel/type/type.h"
@@ -114,6 +116,98 @@ static int __Pattern_Analyze_Node__(__Semantic_Context__ *__Context__,
         case __Ast_Pattern_Wildcard__:
             __Out_Info__->__Irrefutable__ = 1;
             return 1;
+
+        case __Ast_Pattern_Literal__:
+        case __Ast_Pattern_Range__:
+        {
+            /* A literal or range is refutable and binds nothing; its values
+             * must fit the scrutinee's Type. */
+            __Ast_Expression__ *__Ends__[2];
+            size_t __End_Count__ = 1U;
+            size_t __End__;
+            __Ends__[0] = __Pattern__->__Kind__ == __Ast_Pattern_Literal__
+                              ? __Pattern__->__As__.__Literal__
+                              : __Pattern__->__As__.__Range__.__Low__;
+            if (__Pattern__->__Kind__ == __Ast_Pattern_Range__)
+            {
+                __Ends__[1] = __Pattern__->__As__.__Range__.__High__;
+                __End_Count__ = 2U;
+            }
+            for (__End__ = 0U; __End__ < __End_Count__; ++__End__)
+            {
+                __Ast_Expression__ *__Value__ = __Ends__[__End__];
+                int64_t __Integer__ = 0;
+                const __Ast_Literal__ *__Literal__ =
+                    (__Value__ != NULL && __Value__->__Kind__ == __Ast_Expression_Atom__ &&
+                     __Value__->__As__.__Atom__.__Kind__ == __Ast_Atom_Literal__)
+                        ? __Value__->__As__.__Atom__.__As__.__Literal__
+                        : NULL;
+                int __Fits__ = 0;
+                if (__Resolved__.__Kind__ == __Resolved_Type_Signed_Integer__ ||
+                    __Resolved__.__Kind__ == __Resolved_Type_Unsigned_Integer__)
+                {
+                    __Fits__ = (__Semantic_Integer_Literal_Expression_Value__(__Value__, &__Integer__) &&
+                                __Type_Integer_Literal_Fits__(__Context__, __Integer__, __Expected_Type__)) ||
+                               (__Semantic_Integer_Literal_Expression_Is_Unsigned_Wide__(__Value__) &&
+                                __Type_Unsigned_Wide_Literal_Fits__(__Context__, __Expected_Type__));
+                }
+                else if (__Literal__ != NULL)
+                {
+                    __Fits__ = (__Resolved__.__Kind__ == __Resolved_Type_Character__ &&
+                                __Literal__->__Kind__ == __Ast_Literal_Character__) ||
+                               (__Pattern__->__Kind__ == __Ast_Pattern_Literal__ &&
+                                ((__Resolved__.__Kind__ == __Resolved_Type_Boolean__ &&
+                                  __Literal__->__Kind__ == __Ast_Literal_Boolean__) ||
+                                 (__Resolved__.__Kind__ == __Resolved_Type_String__ &&
+                                  __Literal__->__Kind__ == __Ast_Literal_String__)));
+                }
+                if (!__Fits__)
+                {
+                    return __Pattern_Fail__(
+                        __Error__, __E0400_Mismatched_Types__, __Pattern__->__Header__.__Span__);
+                }
+            }
+            return 1;
+        }
+
+        case __Ast_Pattern_Alternatives__:
+        {
+            size_t __Bindings_Before__ = __Analysis__->__Bindings__.__Count__;
+            int __All_Constructors__ = 1;
+            __Analysis__->__Alternative_Constructor_Count__ = 0U;
+            for (__Index__ = 0U; __Index__ < __Pattern__->__As__.__Alternatives__.__Count__; ++__Index__)
+            {
+                __Pattern_Node_Info__ __Child__;
+                if (!__Pattern_Analyze_Node__(__Context__, __Expected_Type__,
+                                              __Pattern__->__As__.__Alternatives__.__Items__[__Index__],
+                                              __Analysis__, &__Child__, __Error__))
+                {
+                    return 0;
+                }
+                if (__Analysis__->__Bindings__.__Count__ != __Bindings_Before__)
+                {
+                    /* Alternatives that bind names are outside Stage0. */
+                    return __Pattern_Fail__(
+                        __Error__, __E0400_Mismatched_Types__, __Pattern__->__Header__.__Span__);
+                }
+                __Out_Info__->__Irrefutable__ = __Out_Info__->__Irrefutable__ || __Child__.__Irrefutable__;
+                if (__Child__.__Has_Enum_Constructor__ && __Child__.__Enum_Constructor_Fully_Covered__ &&
+                    __Analysis__->__Alternative_Constructor_Count__ < 32U)
+                {
+                    __Analysis__->__Alternative_Constructors__[__Analysis__->__Alternative_Constructor_Count__++] =
+                        __Child__.__Enum_Constructor_Index__;
+                }
+                else
+                {
+                    __All_Constructors__ = 0;
+                }
+            }
+            if (!__All_Constructors__)
+            {
+                __Analysis__->__Alternative_Constructor_Count__ = 0U;
+            }
+            return 1;
+        }
 
         case __Ast_Pattern_Binding__:
             if (!__Pattern_Add_Binding__(__Analysis__,
@@ -364,6 +458,11 @@ int __Pattern_Analyze__(__Semantic_Context__ *__Context__,
         return 0;
     }
 
+    if (__Pattern__->__Kind__ != __Ast_Pattern_Alternatives__)
+    {
+        /* Only top-level alternatives cover constructors of the scrutinee. */
+        __Out_Analysis__->__Alternative_Constructor_Count__ = 0U;
+    }
     __Out_Analysis__->__Irrefutable__ = __Info__.__Irrefutable__;
     __Out_Analysis__->__Has_Top_Enum_Constructor__ = __Info__.__Has_Enum_Constructor__;
     __Out_Analysis__->__Top_Enum_Constructor_Index__ = __Info__.__Enum_Constructor_Index__;

@@ -5,6 +5,7 @@
 #include "support/path/source_import_path.h"
 
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -151,6 +152,94 @@ static char *__Relative_Import_Root__(const char *__Importer_Path__, const char 
     free(__Std_Base__);
     return __Source_Path_Canonical__(__Project_Root__);
 }
+/* Reads the std package's localized names (canonical: library/Supax.toml,
+ * [package.names] and [imports-alias]): the package's Arabic name and, for
+ * each top-level std package, its Arabic spelling. Returns a malloc'd copy of
+ * IMPORT with `<ar package>/<ar alias>` rewritten to `std/<en alias>`, or
+ * NULL when IMPORT does not start with the package's Arabic name. */
+static char *__Localized_Std_Import__(const char *__Project_Root__, __Text_Slice__ __Import__)
+{
+    static const char __Manifest_Name__[] = "library/Supax.toml";
+    __Text_Slice__ __Manifest_Text__ = {__Manifest_Name__, sizeof(__Manifest_Name__) - 1U};
+    char *__Manifest_Path__ = __Path_Join_Text__(__Project_Root__, __Manifest_Text__);
+    FILE *__File__ = NULL;
+    char __Line__[512];
+    char __Package__[128] = "";
+    char *__Result__ = NULL;
+    size_t __First_End__ = 0U;
+    size_t __Second_End__;
+    int __In_Names__ = 0;
+    int __In_Aliases__ = 0;
+    if (__Manifest_Path__ == NULL)
+        return NULL;
+    __File__ = fopen(__Manifest_Path__, "rb");
+    free(__Manifest_Path__);
+    if (__File__ == NULL)
+        return NULL;
+    while (__First_End__ < __Import__.__Length__ && __Import__.__Data__[__First_End__] != '/')
+        ++__First_End__;
+    __Second_End__ = __First_End__ < __Import__.__Length__ ? __First_End__ + 1U : __First_End__;
+    while (__Second_End__ < __Import__.__Length__ && __Import__.__Data__[__Second_End__] != '/')
+        ++__Second_End__;
+    while (fgets(__Line__, (int)sizeof(__Line__), __File__) != NULL)
+    {
+        char *__Ar__;
+        char *__En__;
+        char *__End__;
+        if (__Line__[0] == '[')
+        {
+            __In_Names__ = strncmp(__Line__, "[package.names]", 15) == 0;
+            __In_Aliases__ = strncmp(__Line__, "[imports-alias]", 15) == 0;
+            continue;
+        }
+        __Ar__ = strstr(__Line__, "ar = \"");
+        if (__Ar__ == NULL)
+            continue;
+        __Ar__ += 6;
+        __End__ = strchr(__Ar__, '"');
+        if (__End__ == NULL)
+            continue;
+        *__End__ = '\0';
+        if (__In_Names__ && strncmp(__Line__, "ar", 2) == 0 && strlen(__Ar__) < sizeof(__Package__))
+        {
+            strcpy(__Package__, __Ar__);
+            if (strlen(__Package__) != __First_End__ ||
+                memcmp(__Package__, __Import__.__Data__, __First_End__) != 0)
+                break;
+            continue;
+        }
+        if (!__In_Aliases__ || __Package__[0] == '\0')
+            continue;
+        if (strlen(__Ar__) != __Second_End__ - __First_End__ - 1U ||
+            memcmp(__Ar__, __Import__.__Data__ + __First_End__ + 1U, __Second_End__ - __First_End__ - 1U) != 0)
+            continue;
+        __En__ = strstr(__Line__, "en = \"");
+        if (__En__ == NULL)
+            continue;
+        __En__ += 6;
+        __End__ = strchr(__En__, '"');
+        if (__End__ == NULL)
+            continue;
+        *__End__ = '\0';
+        __Result__ = (char *)malloc(4U + strlen(__En__) + (__Import__.__Length__ - __Second_End__) + 1U);
+        if (__Result__ != NULL)
+        {
+            size_t __Length__ = 0U;
+            memcpy(__Result__, "std/", 4U);
+            __Length__ = 4U;
+            memcpy(__Result__ + __Length__, __En__, strlen(__En__));
+            __Length__ += strlen(__En__);
+            memcpy(__Result__ + __Length__, __Import__.__Data__ + __Second_End__,
+                   __Import__.__Length__ - __Second_End__);
+            __Length__ += __Import__.__Length__ - __Second_End__;
+            __Result__[__Length__] = '\0';
+        }
+        break;
+    }
+    fclose(__File__);
+    return __Result__;
+}
+
 /* Resolves the logical import. */
 static char *__Resolve_Logical_Import__(const char *__Importer_Path__,
                                         const char *__Project_Root__,
@@ -170,6 +259,19 @@ static char *__Resolve_Logical_Import__(const char *__Importer_Path__,
     if (__Project_Root__ == NULL)
     {
         return NULL;
+    }
+
+    {
+        /* `المكتبة.أخطاء.failure`: the std package by its Arabic names. */
+        char *__Localized__ = __Localized_Std_Import__(__Project_Root__, __Import__);
+        if (__Localized__ != NULL)
+        {
+            __Text_Slice__ __Localized_Text__ = {__Localized__, strlen(__Localized__)};
+            char *__Resolved__ = __Resolve_Logical_Import__(__Importer_Path__, __Project_Root__,
+                                                            __Localized_Text__);
+            free(__Localized__);
+            return __Resolved__;
+        }
     }
 
     {

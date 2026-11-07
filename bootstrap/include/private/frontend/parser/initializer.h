@@ -11,6 +11,7 @@ int __Parser_Parse_Aggregate_Elements__(__Parser__ *__Parser_State__,
                                         __Token_Kind__ __Closing_Token__,
                                         const __Ast_Atom__ *__First_Atom__,
                                         __Ast_Atom__ **__Out_Values__,
+                                        __Ast_Expression__ ***__Out_Expressions__,
                                         size_t *__Out_Count__);
 
 /* Parses the parser record initializer. */

@@ -189,6 +189,24 @@ __Type_Conversion_Class__ __Type_Conversion_Classify__(__Semantic_Context__ *__C
     {
         return __Type_Conversion_Explicit_Safe__;
     }
+    /* Float casts (docs/TYPE_SYSTEM.md, "Numeric casts"): float <-> integer
+     * and f32 <-> f64, as Rust's `as`. */
+    if ((__Source_Type__.__Kind__ == __Resolved_Type_Float__ &&
+         (__Target_Type__.__Kind__ == __Resolved_Type_Float__ ||
+          __Target_Type__.__Kind__ == __Resolved_Type_Signed_Integer__ ||
+          __Target_Type__.__Kind__ == __Resolved_Type_Unsigned_Integer__)) ||
+        (__Target_Type__.__Kind__ == __Resolved_Type_Float__ &&
+         (__Source_Type__.__Kind__ == __Resolved_Type_Signed_Integer__ ||
+          __Source_Type__.__Kind__ == __Resolved_Type_Unsigned_Integer__)))
+    {
+        return __Type_Conversion_Explicit_Safe__;
+    }
+    /* ط8 -> حرف: the code point. */
+    if (__Source_Type__.__Kind__ == __Resolved_Type_Unsigned_Integer__ &&
+        __Source_Type__.__Bits__ == 8U && __Target_Type__.__Kind__ == __Resolved_Type_Character__)
+    {
+        return __Type_Conversion_Explicit_Safe__;
+    }
     if (__Source_Type__.__Kind__ == __Resolved_Type_Character__ &&
         __Target_Type__.__Kind__ == __Resolved_Type_Unsigned_Integer__)
     {

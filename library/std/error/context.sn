@@ -1,0 +1,42 @@
+// std.error.context: helpers for a result in passing (docs/ERRORS.md), made
+// to be used with the propagation operator `؟`, which converts no error:
+//
+//   دع البايتات: متجه ط8 = إلى_فشل(اقرأ_الملف(&المسار), فشل_من_خطأ_ملف)؟;
+//   دع الإعداد: إعداد = مع_سياق(حلل_الإعداد(&البايتات), «أثناء قراءة إعداد الخادم»)؟;
+//
+// Each takes the result by value and moves the success value through
+// untouched; nothing is copied out of borrowed storage, so an owning T
+// (text, a vector) needs no plain bound.
+استورد error.failure;
+
+// On an error, a new ad-hoc فشل with this message whose cause is the error
+// (moved in); on success, the value unchanged.
+عام عرف مع_سياق<T>(النتيجة: نتيجة T, فشل, الرسالة: نص): نتيجة T, فشل {
+    طابق النتيجة مع
+    | نتيجة.نجح(القيمة) -> { أرجع نتيجة.نجح(القيمة); }
+    | نتيجة.خطأ(السبب) -> { أرجع نتيجة.خطأ(فشل_بسبب(الرسالة, السبب)); };
+}
+
+// A typed error turned into a فشل by a converter function value, such as
+// فشل_من_خطأ_ملف or فشل_من_خطأ_تحليل_عدد; on success, the value unchanged.
+عام عرف إلى_فشل<T, E>(النتيجة: نتيجة T, E, حول: دالة(&E): فشل): نتيجة T, فشل {
+    طابق النتيجة مع
+    | نتيجة.نجح(القيمة) -> { أرجع نتيجة.نجح(القيمة); }
+    | نتيجة.خطأ(الخطأ) -> { أرجع نتيجة.خطأ(حول(&الخطأ)); };
+}
+
+// On an error, the same error with one more note (أضف_ملاحظة); on success,
+// the value unchanged.
+عام عرف مع_ملاحظة<T>(النتيجة: نتيجة T, فشل, الملاحظة: نص): نتيجة T, فشل {
+    طابق النتيجة مع
+    | نتيجة.نجح(القيمة) -> { أرجع نتيجة.نجح(القيمة); }
+    | نتيجة.خطأ(الخطأ) -> {
+        دع الملاحظ: متغير فشل = الخطأ;
+        أضف_ملاحظة(&متغير الملاحظ, الملاحظة);
+        أرجع نتيجة.خطأ(الملاحظ);
+    };
+}
+
+عام مرادف with_context = مع_سياق;
+عام مرادف to_error = إلى_فشل;
+عام مرادف with_note = مع_ملاحظة;

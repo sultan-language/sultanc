@@ -81,6 +81,55 @@ int __Body_Infer_Binary__(__Semantic_Body_Context__ *__Context__,
         *__Out_Type__ = &__Body_Builtin_Bool_Type__;
         return 1;
     }
+    {
+        /* Float arithmetic and comparison; a float literal takes the other
+         * operand's float Type. */
+        __Resolved_Type__ __Left_Resolved__;
+        __Resolved_Type__ __Right_Resolved__;
+        int __Left_Float__ = __Type_Resolve__(__Context__->__Semantic__, __Left__, &__Left_Resolved__) &&
+                             __Left_Resolved__.__Kind__ == __Resolved_Type_Float__;
+        int __Right_Float__ = __Type_Resolve__(__Context__->__Semantic__, __Right__, &__Right_Resolved__) &&
+                              __Right_Resolved__.__Kind__ == __Resolved_Type_Float__;
+        if (__Left_Float__ && __Right_Float__)
+        {
+            if (!__Type_Compatible__(__Context__->__Semantic__, __Left__, __Right__))
+            {
+                if (__Semantic_Float_Literal_Expression__(__Expression__->__As__.__Binary__.__Right__))
+                {
+                    __Expression__->__As__.__Binary__.__Right__->__Contextual_Type__ =
+                        __Semantic_Generic_Substitute_Type__(__Context__->__Semantic__, __Left__, NULL,
+                                                             NULL, 0U, NULL);
+                    __Right__ = __Left__;
+                }
+                else if (__Semantic_Float_Literal_Expression__(__Expression__->__As__.__Binary__.__Left__))
+                {
+                    __Expression__->__As__.__Binary__.__Left__->__Contextual_Type__ =
+                        __Semantic_Generic_Substitute_Type__(__Context__->__Semantic__, __Right__, NULL,
+                                                             NULL, 0U, NULL);
+                    __Left__ = __Right__;
+                }
+                else
+                {
+                    return __Body_Fail__(__Context__, __E0400_Mismatched_Types__,
+                                         __Expression__->__Header__.__Span__);
+                }
+            }
+            if (__Compare__)
+            {
+                *__Out_Type__ = &__Body_Builtin_Bool_Type__;
+                return 1;
+            }
+            if (__Operation__ != __Binary_Add__ && __Operation__ != __Binary_Subtract__ &&
+                __Operation__ != __Binary_Multiply__ && __Operation__ != __Binary_Divide__ &&
+                __Operation__ != __Binary_Modulo__)
+            {
+                return __Body_Fail__(__Context__, __E0602_Unsupported_Binary_Expression__,
+                                     __Expression__->__Header__.__Span__);
+            }
+            *__Out_Type__ = __Left__;
+            return 1;
+        }
+    }
     if (!__Type_Compatible__(__Context__->__Semantic__, __Left__, __Right__))
     {
         /* Stores the literal value. */

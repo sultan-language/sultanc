@@ -527,6 +527,33 @@ int __Body_Infer_Call__(__Semantic_Body_Context__ *__Context__,
         return 1;
     }
 
+    if (__Local__ == NULL && __Callee__ == NULL &&
+        !(__Function_Lvalue__->__Kind__ == __Ast_Lvalue_Base__ &&
+          __Function_Lvalue__->__As__.__Base__.__Kind__ == __Ast_Lvalue_Base_Identifier__))
+    {
+        /* A call through a function value held in a field, an element or a
+         * call result (`h.callback(21)`, `make().callback(3)`, `adder(1)(2)`). */
+        __Ast_Type__ *__Callable_Type__ = NULL;
+        __Resolved_Type__ __Resolved__;
+        if (!__Body_Infer_Lvalue__(__Context__, __Function_Lvalue__, &__Callable_Type__, NULL))
+        {
+            return 0;
+        }
+        if (__Type_Resolve__(__Context__->__Semantic__, __Callable_Type__, &__Resolved__) &&
+            __Resolved__.__Kind__ == __Resolved_Type_Function__)
+        {
+            if (!__Body_Check_Call_Arguments__(
+                    __Context__, __Resolved__.__Parameters__, __Resolved__.__Parameter_Count__,
+                    __Expression__->__As__.__Call__.__Arguments__,
+                    __Expression__->__As__.__Call__.__Argument_Count__,
+                    !__Expression__->__Semantic_Effects_Applied__))
+                return 0;
+            *__Out_Type__ = __Resolved__.__Output__;
+            __Expression__->__Semantic_Effects_Applied__ = 1;
+            return 1;
+        }
+    }
+
     if (__Local__ != NULL)
     {
         __Resolved_Type__ __Resolved__;

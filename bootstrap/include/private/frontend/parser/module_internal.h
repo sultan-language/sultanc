@@ -36,10 +36,22 @@ int __Parser_Parse_Function_Item__(__Parser__ *__Parser_State__,
                                    int __External__);
 
 /* Parses one external data item (current token "دع", "خارجي" already consumed). */
+/* Parses one module constant or module variable: `["عام"] "دع" name ":" type
+ * "=" (expression | "[" expressions "]") ";"`. The current token is "دع". */
+int __Parser_Parse_Value_Global_Item__(__Parser__ *__Parser_State__,
+                                       __Vector__ *__Items__,
+                                       int __Public__,
+                                       __Source_Position__ __Start__);
+
 int __Parser_Parse_Global_Item__(__Parser__ *__Parser_State__,
                                  __Vector__ *__Items__,
                                  int __Public__,
                                  __Source_Position__ __Start__);
+
+/* Parses a native linker text literal at the current token (an external
+ * symbol name, link name or library): nonempty, no embedded NUL. On success
+ * the parser has advanced past it and *__Out_Text__ is an AST-owned copy. */
+int __Parser_Parse_Native_Link_Text__(__Parser__ *__Parser_State__, __Text_Slice__ *__Out_Text__);
 
 /* Parses one top-level target predicate against the parser's selected target. */
 int __Parser_Parse_Target_Condition__(__Parser__ *__Parser_State__, int *__Out_Value__);

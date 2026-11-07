@@ -16,6 +16,26 @@ int __Parser_Parse_One_Statement__(__Parser__ *__Parser_State__, __Vector__ *__S
             return __Parser_Parse_Variable__(__Parser_State__, __Statements__);
         case __Token_WHILE__:
             return __Parser_Parse_While__(__Parser_State__, __Statements__);
+        case __Token_FOR__:
+            return __Parser_Parse_For__(__Parser_State__, __Statements__);
+        case __Token_BREAK__:
+        case __Token_CONTINUE__:
+        {
+            __Source_Position__ __Start__ = __Parser_State__->__Current__.__Span__.__Start__;
+            __Ast_Statement_Kind__ __Kind__ = __Parser_State__->__Current__.__Kind__ == __Token_BREAK__
+                                                  ? __Ast_Statement_Break__
+                                                  : __Ast_Statement_Continue__;
+            __Ast_Statement__ *__Statement__ = NULL;
+            if (!__Parser_Advance__(__Parser_State__) ||
+                !__Parser_Expect__(__Parser_State__, __Token_SEMICOLON_OPERATOR__))
+                return 0;
+            __Statement__ = __Parser_New_Statement__(
+                __Parser_State__, __Kind__,
+                __Parser_Span__(__Start__, __Parser_State__->__Previous__.__Span__.__End__));
+            if (__Statement__ == NULL)
+                return 0;
+            return __Parser_Push_Statement__(__Parser_State__, __Statements__, __Statement__);
+        }
         case __Token_MATCH__:
             return __Parser_Parse_Match__(__Parser_State__, __Statements__);
         case __Token_UNSAFE__:

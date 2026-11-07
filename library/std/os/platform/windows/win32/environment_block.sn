@@ -1,0 +1,51 @@
+استورد os.error;
+استورد encoding.utf16;
+استورد text.from_bytes;
+استورد os.platform.windows.win32.error;
+
+// The whole environment block (MSDN): GetEnvironmentStringsW returns
+// "NAME=VALUE\0" UTF-16 strings ended by an empty string; the block is
+// freed with FreeEnvironmentStringsW.
+خارجي «kernel32.dll» عرف GetEnvironmentStringsW(): *ط16;
+خارجي «kernel32.dll» عرف FreeEnvironmentStringsW(الكتلة: *ط16): ص32;
+
+عام نوع خطأ_كتلة_بيئة_ويندوز =
+    | ترميز_غير_صالح
+    | نظام بنوع خطأ_نظام_أصلي
+;
+
+// Every entry as UTF-8 "NAME=VALUE" bytes. The per-drive working-directory
+// entries Windows keeps under names starting with '=' ("=C:=C:\x") are not
+// variables and are skipped, as .NET does. At most 1 MiB units are read.
+عام عرف اقرأ_كتلة_بيئة_ويندوز(): نتيجة متجه متجه ط8, خطأ_كتلة_بيئة_ويندوز {
+    دع الكتلة: *ط16 = GetEnvironmentStringsW();
+    لو (الكتلة == الفارغ) { أرجع نتيجة.خطأ(خطأ_كتلة_بيئة_ويندوز.نظام(التقط_خطأ_وين32())); };
+    دع المداخل: متغير متجه متجه ط8 = [];
+    دع الحالي: متغير متجه ط16 = [];
+    دع الموضع: متغير طبيعي = 0;
+    دع خطأ_الترميز: متغير منطقي = خطأ;
+    دع منته: متغير منطقي = خطأ;
+    طالما (!منته && الموضع < 1048576) {
+        دع الوحدة: متغير ط16 = 0;
+        غير_آمن { الوحدة := الكتلة[الموضع]; }
+        لو (الوحدة == 0) {
+            لو ((الطول(الحالي) مثل طبيعي) == 0) {
+                منته := صواب;
+            } وإلا {
+                لو (الحالي[0] != 0x3D) {
+                    طابق يوتيف16_إلى_نص(&الحالي) مع
+                    | نتيجة.خطأ(_) -> { خطأ_الترميز := صواب; }
+                    | نتيجة.نجح(النص) -> { ألحق(المداخل, بايتات_من_نص(النص)); };
+                };
+                دع فارغ: متجه ط16 = [];
+                الحالي := فارغ;
+            };
+        } وإلا {
+            ألحق(الحالي, الوحدة);
+        };
+        الموضع := الموضع + 1;
+    }
+    دع التحرير: ص32 = FreeEnvironmentStringsW(الكتلة);
+    لو (خطأ_الترميز || !منته) { أرجع نتيجة.خطأ(خطأ_كتلة_بيئة_ويندوز.ترميز_غير_صالح()); };
+    أرجع نتيجة.نجح(المداخل);
+}

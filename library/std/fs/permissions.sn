@@ -1,0 +1,35 @@
+استورد fs.error;
+استورد fs.attributes;
+استورد os.error;
+استورد os.file_attributes;
+
+// Permission bits: the low twelve bits of a Unix mode (0o7777: set-user-ID,
+// set-group-ID, sticky, and rwx for owner, group and others). On Windows the
+// only permission is read-only: reading gives 0o444 or 0o666 (plus 0o111 for
+// a directory), and setting a mode without the owner-write bit 0o200 makes
+// the file read-only, as Go and Rust do. WASI has no permission bits: both
+// functions report غير_مدعوم there.
+
+// The permission bits of المسار (a final symlink is followed).
+عام عرف اقرأ_أذونات(المسار: &نص): نتيجة طبيعي, فئة_خطأ_نظام {
+    طابق اقرأ_أذونات_مسار_نظام(المسار) مع
+    | نتيجة.خطأ(الخطأ) -> { أرجع نتيجة.خطأ(فئة_خطأ_حد_نظام(الخطأ)); }
+    | نتيجة.نجح(الوضع) -> { أرجع نتيجة.نجح(الوضع); };
+}
+
+// Sets the permission bits of المسار (chmod). الوضع must be at most 0o7777.
+عام عرف اضبط_أذونات(المسار: &نص, الوضع: طبيعي): نتيجة عدد, فئة_خطأ_نظام {
+    لو (الوضع > 0xfff) { أرجع نتيجة.خطأ(فئة_خطأ_نظام.إدخال_غير_صالح()); };
+    طابق اضبط_أذونات_مسار_نظام(المسار, الوضع) مع
+    | نتيجة.خطأ(الخطأ) -> { أرجع نتيجة.خطأ(فئة_خطأ_حد_نظام(الخطأ)); }
+    | نتيجة.نجح(القيمة) -> { أرجع نتيجة.نجح(القيمة); };
+}
+
+// Whether a mode grants nobody write access (Rust Permissions::readonly).
+عام عرف هل_للقراءة_فقط(الوضع: طبيعي): منطقي {
+    أرجع (الوضع & 0x92) == 0;
+}
+
+عام مرادف permissions = اقرأ_أذونات;
+عام مرادف set_permissions = اضبط_أذونات;
+عام مرادف is_readonly = هل_للقراءة_فقط;

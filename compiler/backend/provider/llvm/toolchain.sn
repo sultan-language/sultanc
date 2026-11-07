@@ -10,17 +10,16 @@
 //   host target, by ingesting that very file as a dynamic-library input; an
 //   output for any other target needs the target's own libLLVM as an explicit
 //   link input, as with Clang/LLD and a target sysroot.
-// - A compiler built for a WASI host links no libLLVM and has no host LLVM:
-//   no location. It never carries facts of the compiler that built it. Previously the toolchain primitives recorded the builder's
-//   libLLVM path and version into the WASI compiler, which then wrote that
-//   builder library (for example a macOS `libLLVM.23.1.dylib`) into the
-//   dynamic section of executables it linked for Linux.
-// The non-WASI hosts bind the LLVM C API (Darwin's discovery below asks the
-// loader which image holds LLVM's global context).
-لو (الهدف.المنصة != «wasi») {
-    استورد compiler.backend.provider.llvm.ffi.core;
-    استورد compiler.backend.provider.llvm.ffi.types;
-}
+// - Only a compiler that includes the LLVM provider reaches this module: it
+//   is imported by the included LLVM boundary (llvm_codegen.sn) alone. A
+//   compiler built without LLVM binds that boundary to unavailable.sn, which
+//   reports no host libLLVM, so this discovery (and the LLVM C API call the
+//   Darwin branch makes) is absent from it. Previously this module was
+//   imported by the Driver directly and guarded its LLVM C API imports with
+//   the output platform (`الهدف.المنصة != «wasi»`), so inclusion followed the
+//   target instead of the compiler-build capability.
+// - The branches below select the host's loader interface; they are host
+//   platform facts, not capability decisions.
 
 // Linux: the kernel's own map of this process (/proc/self/maps) names the
 // loaded monolithic libLLVM; no C library call is involved.
@@ -29,26 +28,26 @@
 
     // libLLVM followed by '-' (libLLVM-20.so) or '.' (libLLVM.so.20.1), as a
     // shared object: component libraries (libLLVMCore.so) never match.
-    عرف اسم_مكتبة_إل_إل_في_إم_أحادية(الاسم: &متجه غ8): منطقي {
+    عرف اسم_مكتبة_إل_إل_في_إم_أحادية(الاسم: &متجه ط8): منطقي {
         دع البادئة: نص = «libLLVM»;
         دع اللاحقة: نص = «.so»;
-        دع طول_البادئة: غير_موقع = الطول(البادئة) مثل غير_موقع;
-        دع الطول_الكلي: غير_موقع = الطول(*الاسم) مثل غير_موقع;
+        دع طول_البادئة: طبيعي = الطول(البادئة) مثل طبيعي;
+        دع الطول_الكلي: طبيعي = الطول(*الاسم) مثل طبيعي;
         لو (الطول_الكلي <= طول_البادئة) { أرجع خطأ; };
-        دع ف: متغير غير_موقع = 0;
-        بينما (ف < طول_البادئة) {
+        دع ف: متغير طبيعي = 0;
+        طالما (ف < طول_البادئة) {
             لو ((*الاسم)[ف] != البادئة[ف]) { أرجع خطأ; };
             ف := ف + 1;
         }
         دع الفاصلان: نص = «-.»;
-        دع التالي: غ8 = (*الاسم)[طول_البادئة];
+        دع التالي: ط8 = (*الاسم)[طول_البادئة];
         لو (التالي != الفاصلان[0] && التالي != الفاصلان[1]) { أرجع خطأ; };
-        دع طول_اللاحقة: غير_موقع = الطول(اللاحقة) مثل غير_موقع;
-        دع م: متغير غير_موقع = طول_البادئة;
-        بينما (م + طول_اللاحقة <= الطول_الكلي) {
+        دع طول_اللاحقة: طبيعي = الطول(اللاحقة) مثل طبيعي;
+        دع م: متغير طبيعي = طول_البادئة;
+        طالما (م + طول_اللاحقة <= الطول_الكلي) {
             دع يطابق: متغير منطقي = صواب;
-            دع ح: متغير غير_موقع = 0;
-            بينما (ح < طول_اللاحقة) {
+            دع ح: متغير طبيعي = 0;
+            طالما (ح < طول_اللاحقة) {
                 لو ((*الاسم)[م + ح] != اللاحقة[ح]) { يطابق := خطأ; };
                 ح := ح + 1;
             }
@@ -58,45 +57,45 @@
         أرجع خطأ;
     }
 
-    عام عرف مسار_مكتبة_إل_إل_في_إم_الحالي(): اختيار متجه غ8 {
+    عام عرف مسار_مكتبة_إل_إل_في_إم_الحالي(): اختياري متجه ط8 {
         دع مسار_الخريطة: نص = «/proc/self/maps»;
-        دع الفاصل: غ8 = مسار_الخريطة[0];
-        دع الخريطة: متجه غ8;
+        دع الفاصل: ط8 = مسار_الخريطة[0];
+        دع الخريطة: متجه ط8;
         طابق اقرأ_بايتات_ملف(&مسار_الخريطة) مع
-        | نتيجة.خطأ(_) -> { أرجع اختيار.لا_شيء(); }
+        | نتيجة.خطأ(_) -> { أرجع اختياري.لا_شيء(); }
         | نتيجة.نجح(البايتات) -> { الخريطة := البايتات; };
-        دع الطول_الكلي: غير_موقع = الطول(الخريطة) مثل غير_موقع;
-        دع بداية_السطر: متغير غير_موقع = 0;
-        بينما (بداية_السطر < الطول_الكلي) {
-            دع نهاية_السطر: متغير غير_موقع = بداية_السطر;
-            بينما (نهاية_السطر < الطول_الكلي && الخريطة[نهاية_السطر] != 0x0A) {
+        دع الطول_الكلي: طبيعي = الطول(الخريطة) مثل طبيعي;
+        دع بداية_السطر: متغير طبيعي = 0;
+        طالما (بداية_السطر < الطول_الكلي) {
+            دع نهاية_السطر: متغير طبيعي = بداية_السطر;
+            طالما (نهاية_السطر < الطول_الكلي && الخريطة[نهاية_السطر] != 0x0A) {
                 نهاية_السطر := نهاية_السطر + 1;
             }
             // The path field is the rest of the line from its first '/'.
-            دع بداية_المسار: متغير غير_موقع = بداية_السطر;
-            بينما (بداية_المسار < نهاية_السطر && الخريطة[بداية_المسار] != الفاصل) {
+            دع بداية_المسار: متغير طبيعي = بداية_السطر;
+            طالما (بداية_المسار < نهاية_السطر && الخريطة[بداية_المسار] != الفاصل) {
                 بداية_المسار := بداية_المسار + 1;
             }
             لو (بداية_المسار < نهاية_السطر) {
-                دع آخر_فاصل: متغير غير_موقع = بداية_المسار;
-                دع ف: متغير غير_موقع = بداية_المسار;
-                بينما (ف < نهاية_السطر) {
+                دع آخر_فاصل: متغير طبيعي = بداية_المسار;
+                دع ف: متغير طبيعي = بداية_المسار;
+                طالما (ف < نهاية_السطر) {
                     لو (الخريطة[ف] == الفاصل) { آخر_فاصل := ف; };
                     ف := ف + 1;
                 }
-                دع الاسم: متغير متجه غ8 = [];
+                دع الاسم: متغير متجه ط8 = [];
                 ف := آخر_فاصل + 1;
-                بينما (ف < نهاية_السطر) { ألحق(الاسم, الخريطة[ف]); ف := ف + 1; }
+                طالما (ف < نهاية_السطر) { ألحق(الاسم, الخريطة[ف]); ف := ف + 1; }
                 لو (اسم_مكتبة_إل_إل_في_إم_أحادية(&الاسم)) {
-                    دع المسار: متغير متجه غ8 = [];
+                    دع المسار: متغير متجه ط8 = [];
                     ف := بداية_المسار;
-                    بينما (ف < نهاية_السطر) { ألحق(المسار, الخريطة[ف]); ف := ف + 1; }
-                    أرجع اختيار.بعض(المسار);
+                    طالما (ف < نهاية_السطر) { ألحق(المسار, الخريطة[ف]); ف := ف + 1; }
+                    أرجع اختياري.موجود(المسار);
                 };
             };
             بداية_السطر := نهاية_السطر + 1;
         }
-        أرجع اختيار.لا_شيء();
+        أرجع اختياري.لا_شيء();
     }
 }
 
@@ -106,18 +105,20 @@
 // Previously Windows fell into the Darwin block below and referenced dladdr,
 // which no Windows DLL exports.
 لو (الهدف.المنصة == «windows») {
-    عام عرف مسار_مكتبة_إل_إل_في_إم_الحالي(): اختيار متجه غ8 {
-        أرجع اختيار.لا_شيء();
+    عام عرف مسار_مكتبة_إل_إل_في_إم_الحالي(): اختياري متجه ط8 {
+        أرجع اختياري.لا_شيء();
     }
 }
 
 // Other hosts: the dynamic loader of the system interface (Darwin's dyld in
 // libSystem) reports the image that holds LLVM's global context.
 لو (الهدف.المنصة != «wasi» && الهدف.المنصة != «linux» && الهدف.المنصة != «windows») {
+    استورد compiler.backend.provider.llvm.ffi.core;
+    استورد compiler.backend.provider.llvm.ffi.types;
     استورد std.os.platform.unix.apple.darwin.dynamic_loader;
 
-    عام عرف مسار_مكتبة_إل_إل_في_إم_الحالي(): اختيار متجه غ8 {
-        دع حارس_مؤشر: متغير غ8 = 0;
+    عام عرف مسار_مكتبة_إل_إل_في_إم_الحالي(): اختياري متجه ط8 {
+        دع حارس_مؤشر: متغير ط8 = 0;
         دع المعلومات: متغير معلومات_عنوان_محمل_ديناميكي = {
             اسم_الملف: &متغير حارس_مؤشر,
             قاعدة: &متغير حارس_مؤشر,
@@ -129,19 +130,20 @@
             السياق_العالمي,
             &متغير المعلومات
         ) == 0) {
-            أرجع اختيار.لا_شيء();
+            أرجع اختياري.لا_شيء();
         };
 
-        دع المسار: متجه غ8 = انسخ_نص_سي_من_محمل_ديناميكي(
+        دع المسار: متجه ط8 = انسخ_نص_سي_من_محمل_ديناميكي(
             المعلومات.اسم_الملف
         );
-        أرجع اختيار.بعض(المسار);
+        أرجع اختياري.موجود(المسار);
     }
 }
 
 لو (الهدف.المنصة == «wasi») {
-    // A WASI host has no libLLVM (see above).
-    عام عرف مسار_مكتبة_إل_إل_في_إم_الحالي(): اختيار متجه غ8 {
-        أرجع اختيار.لا_شيء();
+    // WASI has no dynamic loader that maps a libLLVM image into the process:
+    // there is no host library file to record.
+    عام عرف مسار_مكتبة_إل_إل_في_إم_الحالي(): اختياري متجه ط8 {
+        أرجع اختياري.لا_شيء();
     }
 }

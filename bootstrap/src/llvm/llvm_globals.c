@@ -12,6 +12,7 @@
 #include "kernel/name/name.h"
 #include "kernel/type/type.h"
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -84,6 +85,238 @@ LLVMValueRef __LLVM_Declare_External_Global__(__LLVM_Emitter__ *emitter,
     return global;
 }
 
+/* Builds the LLVM constant of a folded module constant of TYPE. */
+static LLVMValueRef __LLVM_Constant_Value__(__LLVM_Emitter__ *emitter,
+                                           const __Ast_Constant__ *constant,
+                                           __Ast_Type__ *type,
+                                           int writable_data);
+
+/* Builds a {data, length, capacity} header whose data is a private array of
+ * ELEMENT_TYPE values; capacity 0 marks storage no drop releases and that an
+ * append copies before growing (the text-literal convention). */
+static LLVMValueRef __LLVM_Constant_Sequence__(__LLVM_Emitter__ *emitter,
+                                              LLVMTypeRef header_type,
+                                              LLVMTypeRef element_type,
+                                              LLVMValueRef *elements,
+                                              size_t count,
+                                              int writable_data)
+{
+    LLVMTypeRef i64 = LLVMIntTypeInContext(emitter->context, 64U);
+    LLVMValueRef fields[3];
+    if (count == 0U)
+    {
+        fields[0] = LLVMConstNull(LLVMPointerTypeInContext(emitter->context, 0U));
+    }
+    else
+    {
+        LLVMTypeRef array_type = LLVMArrayType2(element_type, (uint64_t)count);
+        LLVMValueRef data = LLVMAddGlobal(emitter->module, array_type, "sultanc.global.data");
+        if (data == NULL)
+        {
+            __LLVM_Fail__("could not materialize module constant data");
+            return NULL;
+        }
+        LLVMSetInitializer(data, LLVMConstArray2(element_type, elements, (uint64_t)count));
+        LLVMSetLinkage(data, LLVMPrivateLinkage);
+        LLVMSetGlobalConstant(data, writable_data ? 0 : 1);
+        fields[0] = data;
+    }
+    fields[1] = LLVMConstInt(i64, (unsigned long long)count, 0);
+    fields[2] = LLVMConstInt(i64, 0U, 0);
+    if (LLVMGetTypeKind(header_type) != LLVMStructTypeKind ||
+        LLVMCountStructElementTypes(header_type) != 3U)
+    {
+        __LLVM_Fail__("module constant sequence disagrees with the canonical header layout");
+        return NULL;
+    }
+    if (LLVMIsLiteralStruct(header_type))
+        return LLVMConstStructInContext(emitter->context, fields, 3U, 0);
+    return LLVMConstNamedStruct(header_type, fields, 3U);
+}
+
+static LLVMValueRef __LLVM_Constant_Value__(__LLVM_Emitter__ *emitter,
+                                           const __Ast_Constant__ *constant,
+                                           __Ast_Type__ *type,
+                                           int writable_data)
+{
+    __Resolved_Type__ resolved;
+    LLVMTypeRef llvm_type;
+    if (constant == NULL || type == NULL || !__Type_Resolve__(emitter->semantic, type, &resolved) ||
+        (llvm_type = __LLVM_Type__(emitter, type)) == NULL)
+    {
+        __LLVM_Fail__("module constant has no canonical LLVM type");
+        return NULL;
+    }
+    switch (constant->__Kind__)
+    {
+        case __Ast_Constant_Integer__:
+        case __Ast_Constant_Boolean__:
+        case __Ast_Constant_Character__:
+        {
+            unsigned bits;
+            unsigned long long raw = (unsigned long long)constant->__Integer__;
+            if (LLVMGetTypeKind(llvm_type) != LLVMIntegerTypeKind)
+            {
+                __LLVM_Fail__("module constant integer has a non-integer LLVM type");
+                return NULL;
+            }
+            bits = LLVMGetIntTypeWidth(llvm_type);
+            if (bits < 64U)
+                raw &= (1ULL << bits) - 1ULL;
+            return LLVMConstInt(llvm_type, raw, 0);
+        }
+        case __Ast_Constant_Float__:
+        {
+            char *spelling = (char *)malloc(constant->__Text__.__Length__ + 2U);
+            LLVMValueRef value;
+            size_t offset = 0U;
+            if (spelling == NULL)
+            {
+                __LLVM_Fail__("out of memory while lowering a float constant");
+                return NULL;
+            }
+            if (constant->__Negative_Float__)
+                spelling[offset++] = '-';
+            memcpy(spelling + offset, constant->__Text__.__Data__, constant->__Text__.__Length__);
+            offset += constant->__Text__.__Length__;
+            spelling[offset] = '\0';
+            if (constant->__Float_Step_Count__ == 0U)
+            {
+                value = LLVMConstRealOfStringAndSize(llvm_type, spelling, (unsigned)offset);
+            }
+            else
+            {
+                /* Parsed at the first width, then converted through the
+                 * others (constant-folded by the builder). */
+                size_t step;
+                LLVMTypeRef step_type = constant->__Float_Steps__[0] == 32U
+                                            ? LLVMFloatTypeInContext(emitter->context)
+                                            : LLVMDoubleTypeInContext(emitter->context);
+                value = LLVMConstRealOfStringAndSize(step_type, spelling, (unsigned)offset);
+                for (step = 1U; step < constant->__Float_Step_Count__; ++step)
+                {
+                    LLVMTypeRef next = constant->__Float_Steps__[step] == 32U
+                                           ? LLVMFloatTypeInContext(emitter->context)
+                                           : LLVMDoubleTypeInContext(emitter->context);
+                    value = constant->__Float_Steps__[step] < constant->__Float_Steps__[step - 1U]
+                                ? LLVMBuildFPTrunc(emitter->builder, value, next, "constant.fptrunc")
+                                : LLVMBuildFPExt(emitter->builder, value, next, "constant.fpext");
+                }
+                if (!LLVMIsConstant(value))
+                {
+                    free(spelling);
+                    __LLVM_Fail__("float constant conversion did not fold");
+                    return NULL;
+                }
+            }
+            free(spelling);
+            return value;
+        }
+        case __Ast_Constant_Text__:
+        {
+            LLVMTypeRef byte = LLVMIntTypeInContext(emitter->context, 8U);
+            LLVMValueRef *bytes = NULL;
+            LLVMValueRef header;
+            size_t index;
+            if (constant->__Text__.__Length__ != 0U)
+            {
+                bytes = (LLVMValueRef *)malloc(constant->__Text__.__Length__ * sizeof(*bytes));
+                if (bytes == NULL)
+                {
+                    __LLVM_Fail__("out of memory while lowering a text constant");
+                    return NULL;
+                }
+                for (index = 0U; index < constant->__Text__.__Length__; ++index)
+                    bytes[index] = LLVMConstInt(
+                        byte, (unsigned char)constant->__Text__.__Data__[index], 0);
+            }
+            header = __LLVM_Constant_Sequence__(emitter, llvm_type, byte, bytes,
+                                                constant->__Text__.__Length__, writable_data);
+            free(bytes);
+            return header;
+        }
+        case __Ast_Constant_Vector__:
+        {
+            LLVMTypeRef element_type;
+            LLVMValueRef *elements = NULL;
+            LLVMValueRef header;
+            size_t index;
+            if (resolved.__Kind__ != __Resolved_Type_Vector__ || resolved.__Inner__ == NULL ||
+                (element_type = __LLVM_Type__(emitter, resolved.__Inner__)) == NULL)
+            {
+                __LLVM_Fail__("module vector constant has no canonical element type");
+                return NULL;
+            }
+            if (constant->__Element_Count__ != 0U)
+            {
+                elements = (LLVMValueRef *)malloc(constant->__Element_Count__ * sizeof(*elements));
+                if (elements == NULL)
+                {
+                    __LLVM_Fail__("out of memory while lowering a vector constant");
+                    return NULL;
+                }
+                for (index = 0U; index < constant->__Element_Count__; ++index)
+                {
+                    elements[index] = __LLVM_Constant_Value__(
+                        emitter, &constant->__Elements__[index], resolved.__Inner__, 0);
+                    if (elements[index] == NULL)
+                    {
+                        free(elements);
+                        return NULL;
+                    }
+                }
+            }
+            header = __LLVM_Constant_Sequence__(emitter, llvm_type, element_type, elements,
+                                                constant->__Element_Count__, writable_data);
+            free(elements);
+            return header;
+        }
+    }
+    __LLVM_Fail__("module constant kind is outside Stage0 lowering");
+    return NULL;
+}
+
+/* Defines (once) the LLVM storage of a module constant or variable. */
+static LLVMValueRef __LLVM_Define_Value_Global__(__LLVM_Emitter__ *emitter,
+                                                __Semantic_Global_Entry__ *global,
+                                                __Ast_Type__ *value_type,
+                                                LLVMTypeRef llvm_type)
+{
+    char name[64];
+    size_t index = 0U;
+    __Semantic_Global_Entry__ *first =
+        (__Semantic_Global_Entry__ *)__Vector_At__(&emitter->semantic->__Globals__, 0U);
+    LLVMValueRef symbol;
+    LLVMValueRef initializer;
+    int mutable_global = global->__Declaration__->__Type__ != NULL &&
+                         global->__Declaration__->__Type__->__Kind__ == __Ast_Type_Mutable__;
+    if (first != NULL && global >= first)
+        index = (size_t)(global - first);
+    snprintf(name, sizeof(name), "sultanc.global.%zu", index);
+    symbol = LLVMGetNamedGlobal(emitter->module, name);
+    if (symbol != NULL)
+        return symbol;
+    if (global->__Declaration__->__Constant__ == NULL)
+    {
+        __LLVM_Fail__("module value was not folded by the semantic pass");
+        return NULL;
+    }
+    initializer = __LLVM_Constant_Value__(emitter, global->__Declaration__->__Constant__,
+                                          value_type, 1);
+    if (initializer == NULL)
+        return NULL;
+    symbol = LLVMAddGlobal(emitter->module, llvm_type, name);
+    if (symbol == NULL)
+    {
+        __LLVM_Fail__("could not define module value storage");
+        return NULL;
+    }
+    LLVMSetInitializer(symbol, initializer);
+    LLVMSetLinkage(symbol, LLVMInternalLinkage);
+    LLVMSetGlobalConstant(symbol, mutable_global ? 0 : 1);
+    return symbol;
+}
+
 int __LLVM_Resolve_Global_Place__(__LLVM_Emitter__ *emitter,
                                   __Ast_Lvalue__ *lvalue,
                                   __LLVM_Place__ *out_place)
@@ -110,20 +343,18 @@ int __LLVM_Resolve_Global_Place__(__LLVM_Emitter__ *emitter,
                                 &global) != __Name_Lookup_Found__ ||
         global == NULL || global->__Declaration__ == NULL)
         return 0;
-    if (!global->__Declaration__->__External__)
-    {
-        __LLVM_Fail__("Stage0 lowers only external module-level data");
-        return 1;
-    }
     value_type = __Type_Unwrap_Mutable__(global->__Declaration__->__Type__);
     llvm_type = value_type == NULL ? NULL : __LLVM_Type__(emitter, value_type);
     if (value_type == NULL || llvm_type == NULL)
     {
-        __LLVM_Fail__("external data has no canonical LLVM value type");
+        __LLVM_Fail__("module-level data has no canonical LLVM value type");
         return 1;
     }
-    symbol = __LLVM_Declare_External_Global__(
-        emitter, global->__Declaration__->__Link_Name__, llvm_type);
+    if (global->__Declaration__->__External__)
+        symbol = __LLVM_Declare_External_Global__(
+            emitter, global->__Declaration__->__Link_Name__, llvm_type);
+    else
+        symbol = __LLVM_Define_Value_Global__(emitter, global, value_type, llvm_type);
     if (symbol == NULL)
         return 1;
     out_place->address = symbol;

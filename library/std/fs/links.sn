@@ -1,0 +1,35 @@
+استورد fs.error;
+استورد fs.attributes;
+استورد os.error;
+استورد os.file_attributes;
+
+// Symbolic and hard links (Rust std::os::unix::fs::symlink, fs::read_link,
+// fs::hard_link; Go os.Symlink, os.Readlink, os.Link). On Windows a symbolic
+// link to a directory is created as a directory link, and creating one may
+// need Developer Mode or the SeCreateSymbolicLinkPrivilege.
+
+// Creates المسار as a symbolic link whose content is الهدف, stored as given
+// (a relative target is resolved against the link's directory when used).
+عام عرف أنشئ_وصلة_رمزية(الهدف: &نص, المسار: &نص): نتيجة عدد, فئة_خطأ_نظام {
+    طابق أنشئ_وصلة_رمزية_نظام(الهدف, المسار) مع
+    | نتيجة.خطأ(الخطأ) -> { أرجع نتيجة.خطأ(فئة_خطأ_حد_نظام(الخطأ)); }
+    | نتيجة.نجح(القيمة) -> { أرجع نتيجة.نجح(القيمة); };
+}
+
+// The content of the symbolic link المسار, not resolved further.
+عام عرف اقرأ_وصلة_رمزية(المسار: &نص): نتيجة نص, فئة_خطأ_نظام {
+    طابق اقرأ_وصلة_رمزية_نظام(المسار) مع
+    | نتيجة.خطأ(الخطأ) -> { أرجع نتيجة.خطأ(فئة_خطأ_حد_نظام(الخطأ)); }
+    | نتيجة.نجح(النص) -> { أرجع نتيجة.نجح(النص); };
+}
+
+// Creates المسار as a new name for the existing file الأصل.
+عام عرف أنشئ_وصلة_صلبة(الأصل: &نص, المسار: &نص): نتيجة عدد, فئة_خطأ_نظام {
+    طابق أنشئ_وصلة_صلبة_نظام(الأصل, المسار) مع
+    | نتيجة.خطأ(الخطأ) -> { أرجع نتيجة.خطأ(فئة_خطأ_حد_نظام(الخطأ)); }
+    | نتيجة.نجح(القيمة) -> { أرجع نتيجة.نجح(القيمة); };
+}
+
+عام مرادف symlink = أنشئ_وصلة_رمزية;
+عام مرادف read_link = اقرأ_وصلة_رمزية;
+عام مرادف hard_link = أنشئ_وصلة_صلبة;

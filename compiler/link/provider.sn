@@ -48,20 +48,39 @@
     | هوية_مزود_ربط.كوف -> {
         أرجع يدعم_كوف_للهدف(الهدف);
     }
+    // The SultanC WebAssembly linker (wasm/linker.sn): wasm32 commands and
+    // browser modules.
+    | هوية_مزود_ربط.ويب_أسمبلي -> {
+        أرجع (*الهدف).نموذج_البيانات.عرض_المؤشر == 32;
+    }
     | _ -> { أرجع خطأ; };
 }
 
 عرف يدعم_إلف_وحدة_هدف(الهدف: &واصف_هدف): منطقي {
     لو (!هدف_إلف_ليس_تنفيذيا_نظاميا(الهدف)) { أرجع خطأ; };
     طابق سياسة_إلف_للهدف(الهدف) مع
-    | اختيار.بعض(_) -> { أرجع صواب; }
-    | اختيار.لا_شيء -> { أرجع خطأ; };
+    | اختياري.موجود(_) -> { أرجع صواب; }
+    | اختياري.لا_شيء -> { أرجع خطأ; };
 }
 
 عرف يدعم_كوف_للهدف(الهدف: &واصف_هدف): منطقي {
     طابق سياسة_كوف_للهدف(الهدف) مع
-    | اختيار.بعض(_) -> { أرجع صواب; }
-    | اختيار.لا_شيء -> { أرجع خطأ; };
+    | اختياري.موجود(_) -> { أرجع صواب; }
+    | اختياري.لا_شيء -> { أرجع خطأ; };
+}
+
+// WebAssembly shared modules (`dylink.0`, tool conventions DynamicLinking.md;
+// wasm/linker.sn): position-independent wasm32 code whose memory, table,
+// stack pointer and bases are imported from the dynamic loader. The
+// convention is Emscripten's dynamic-linking ABI, which WASI uses as well:
+// wasi-sdk (21 and later) ships shared libraries in this format, and WASI
+// loaders of it exist (wasm-tools component linking, toywasm libdyld). The
+// browser target has no system interface or loader contract in SultanC
+// (no runtime provider), so shared modules stay unsupported there, as does
+// wasm64 (no 64-bit PIC relocations are linked).
+عرف يدعم_ويب_أسمبلي_مكتبة_مشتركة(الهدف: &واصف_هدف): منطقي {
+    أرجع (*الهدف).نموذج_البيانات.عرض_المؤشر == 32
+        && (*الهدف).مزود_التشغيل == مزود_تشغيل_هدف.واسي();
 }
 
 // Report only concrete serializers that exist in source. Adding a Target to
@@ -88,6 +107,9 @@
         | هوية_مزود_ربط.كوف -> {
             أرجع يدعم_كوف_للهدف(الهدف);
         }
+        | هوية_مزود_ربط.ويب_أسمبلي -> {
+            أرجع يدعم_ويب_أسمبلي_مكتبة_مشتركة(الهدف);
+        }
         | _ -> { أرجع خطأ; };
     }
     | نوع_خرج_ربط.كائن_مترابط -> {
@@ -110,6 +132,9 @@
         }
         | هوية_مزود_ربط.كوف -> {
             أرجع يدعم_كوف_للهدف(الهدف);
+        }
+        | هوية_مزود_ربط.ويب_أسمبلي -> {
+            أرجع (*الهدف).نموذج_البيانات.عرض_المؤشر == 32;
         }
         | _ -> { أرجع خطأ; };
     }

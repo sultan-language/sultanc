@@ -1,0 +1,10 @@
+# Scripts and sources keep LF on every checkout (Windows runners included).
+*.sh   text eol=lf
+*.sn   text eol=lf
+*.json text eol=lf
+*.yml  text eol=lf
+*.cmake text eol=lf
+*.c    text eol=lf
+*.h    text eol=lf
+*.ps1  text eol=crlf
+*.zst  binary

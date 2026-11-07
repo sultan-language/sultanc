@@ -1,0 +1,20 @@
+// The stop primitive إنهيار / panic (docs/ERRORS.md, layer 1c): a program
+// that cannot go on prints why and ends. It writes the iSpeak frame "the
+// program stopped" in the program's language with the message under it to
+// standard error (std.process.failure, the one runtime-failure path), then
+// ends the process with status 1.
+//
+// It never returns: the compiler ends the caller's path after the call
+// (msir/lowering/statements.sn), so a function returning a value needs no
+// return after it. The process ends at once (abort semantics, Rust's
+// panic=abort): owned values that are still alive are not dropped, and the
+// operating system reclaims the process's memory.
+استورد process.exit;
+استورد process.failure;
+
+عام عرف إنهيار(الرسالة: نص): فراغ {
+    اطبع_فشل_تشغيل(1, &الرسالة);
+    اخرج(1);
+}
+
+عام مرادف panic = إنهيار;

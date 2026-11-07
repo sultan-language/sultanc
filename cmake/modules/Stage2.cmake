@@ -13,23 +13,39 @@ get_filename_component(SULTANC_STAGE2_OUTPUT_DIRECTORY
 
 file(CONFIGURE
     OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/sultanc-stage2-target.txt"
-    CONTENT "${SULTANC_STAGE2_TARGET}\n${SULTANC_STAGE2_BACKEND}\n")
+    CONTENT "${SULTANC_STAGE2_TARGET}\n${SULTANC_STAGE2_BACKEND}\n${SULTANC_COMPILER_CAPABILITY}\n")
 
+# SULTANC_STAGE1_LINK_INPUTS: extra link inputs Stage1 needs (wasm route: the
+# LLVM library for an LLVM-enabled Stage2, see Stage1Wasm.cmake; C route: none).
 # Only Stage1 generates Stage2. Backend selection is explicit; Windows native
 # is not currently supported, and LLVM is never selected as a fallback.
+# The producer backend (SULTANC_STAGE2_BACKEND) and the produced compiler's
+# capability (SULTANC_COMPILER_LLVM, passed as SULTANC_COMPILER_CAPABILITY_ARGS)
+# are independent: Stage1 can generate a Native-only or a full Stage2 with
+# either backend.
 set(_sultanc_stage2_runtime_copy "")
 set(_sultanc_stage2_runtime_prepare "")
 set(_sultanc_stage2_runtime_dep "")
-if(WIN32)
+# (The wasm route's Stage1 has no LLVM and needs no LLVM-C.dll.)
+if(WIN32 AND SULTANC_BOOTSTRAP STREQUAL "c")
     set(_sultanc_stage2_runtime_dep "${SULTANC_LLVM_DLL}")
     # The DLL may have changed without relinking Stage1. Refresh it before
-    # executing Stage1, then deploy it alongside the generated Stage2 image.
+    # executing Stage1 (which always includes LLVM).
     list(APPEND _sultanc_stage2_runtime_prepare
         COMMAND "${CMAKE_COMMAND}" -E copy_if_different
             "${SULTANC_LLVM_DLL}" "$<TARGET_FILE_DIR:sultanc-stage1-executable>/LLVM-C.dll")
-    list(APPEND _sultanc_stage2_runtime_copy
-        COMMAND "${CMAKE_COMMAND}" -E copy_if_different
-            "${SULTANC_LLVM_DLL}" "${SULTANC_STAGE2_OUTPUT_DIRECTORY}/LLVM-C.dll")
+    # Only an LLVM-enabled Stage2 imports LLVM-C.dll; deploy it beside that image.
+    if(SULTANC_COMPILER_LLVM)
+        list(APPEND _sultanc_stage2_runtime_copy
+            COMMAND "${CMAKE_COMMAND}" -E copy_if_different
+                "${SULTANC_LLVM_DLL}" "${SULTANC_STAGE2_OUTPUT_DIRECTORY}/LLVM-C.dll")
+    endif()
+endif()
+# The wasm route's Stage1 writes through WASI Preview 1, which cannot set
+# permission bits: make Stage2 executable before anything runs or copies it.
+set(_sultanc_stage2_make_executable "")
+if(SULTANC_BOOTSTRAP STREQUAL "wasm" AND NOT WIN32)
+    set(_sultanc_stage2_make_executable COMMAND chmod 0755 "${SULTANC_STAGE2_OUTPUT}")
 endif()
 add_custom_command(
     OUTPUT "${SULTANC_STAGE2_OUTPUT}"
@@ -39,8 +55,11 @@ add_custom_command(
         "--backend=${SULTANC_STAGE2_BACKEND}"
         "--target=${SULTANC_STAGE2_TARGET}"
         --emit=exe
+        ${SULTANC_COMPILER_CAPABILITY_ARGS}
         -o "${SULTANC_STAGE2_OUTPUT}"
         compiler/main.sn
+        ${SULTANC_STAGE1_LINK_INPUTS}
+    ${_sultanc_stage2_make_executable}
     ${_sultanc_stage2_runtime_copy}
     DEPENDS sultanc-stage1-executable ${SULTANC_COMPILER_SOURCES}
         "${CMAKE_CURRENT_BINARY_DIR}/sultanc-stage2-target.txt"
@@ -60,8 +79,12 @@ if(SULTANC_EXPORT_DIRECTORY AND NOT SULTANC_STAGE2_OUTPUT_EXPLICIT)
     cmake_path(ABSOLUTE_PATH SULTANC_STAGE2_OUTPUT BASE_DIRECTORY "${CMAKE_BINARY_DIR}"
         NORMALIZE OUTPUT_VARIABLE _sultanc_stage2_output_normal)
     if(NOT _sultanc_stage2_export_normal STREQUAL _sultanc_stage2_output_normal)
+        set(_sultanc_stage2_export_kind "")
+        if(NOT SULTANC_COMPILER_LLVM)
+            set(_sultanc_stage2_export_kind NATIVE_ONLY)
+        endif()
         sultanc_export_executable("${SULTANC_STAGE2_OUTPUT}" "${SULTANC_STAGE2_EXPORT}"
-            "Exporting Stage2 to ${SULTANC_STAGE2_EXPORT}")
+            "Exporting Stage2 to ${SULTANC_STAGE2_EXPORT}" ${_sultanc_stage2_export_kind})
         list(APPEND _sultanc_stage2_products "${SULTANC_STAGE2_EXPORT}")
     endif()
 endif()

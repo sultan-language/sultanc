@@ -13,6 +13,14 @@
     | ع64_من_بتات
     | بتات_ع32
     | ع32_من_بتات
+    // Wrapping integer arithmetic on two operands of one integer Type (the
+    // shift amount is taken modulo the width). MSIR lowering replaces each
+    // call with the non-trapping arithmetic operation, so no backend sees it.
+    | جمع_ملتف
+    | طرح_ملتف
+    | ضرب_ملتف
+    | إزاحة_يسرى_ملتفة
+    | إزاحة_يمنى_ملتفة
     // WebAssembly linear-memory machine operations (wasm targets only). They
     // address the module's single linear memory by u32 offset, which is the
     // WebAssembly memory model itself; std's wasm allocation provider is
@@ -39,7 +47,137 @@
     // message. Lowering ends its block with a trap; the driver removes the call
     // after compile-time evaluation, so at run time the block only traps.
     | فشل_وقت_الترجمة
+    // Explicit deep copy of the value a reference argument refers to. MSIR
+    // lowering replaces every call with a call of the Type's clone glue
+    // (compiler/msir/lowering/ownership_glue.sn), so no backend sees it.
+    | استنساخ
+    // Closure environments are reference counted (OWNERSHIP_AND_DESTRUCTION.md,
+    // "Closure environments"). None of these has a source name: MSIR lowering
+    // and ownership glue emit them.
+    // A copy of a value that holds closures, of the argument's own Type: the
+    // ownership-glue pass replaces every call with the Type's copy glue, so no
+    // backend sees it.
+    | احتفاظ_بقيمة
+    // Machine operations on a closure environment, used only by the drop and
+    // copy glue of function Types: count one more reference; count one fewer
+    // and answer whether none is left; and, for an environment with no
+    // reference left, the same environment as a `() -> ()` closure running
+    // its destructor.
+    | زيادة_مراجع_إغلاق
+    | إنقاص_مراجع_إغلاق
+    | مدمر_بيئة_إغلاق
+    // Vector pop and truncate (Rust's Vec::pop and Vec::truncate). Lowering
+    // passes a mutable reference to the vector; the ownership-glue pass
+    // replaces every call with a call of the vector Type's pop or truncate
+    // glue (compiler/msir/lowering/ownership_glue.sn), which moves, drops and
+    // releases with ordinary MSIR, so no backend sees them.
+    | إزالة_الأخير
+    | اقتطاع_متجه
+    // The length of the vector at the mutated place becomes the second
+    // argument, which is below the current length (zero empties it; its
+    // buffer stays). Only the
+    // pop and truncate glue emit it; every backend and the interpreter store
+    // it into the vector header, as append stores the grown header.
+    | ضبط_طول_متجه
+    // The capacity of a vector (Rust's Vec::capacity, Go's cap): how many
+    // elements its buffer holds before an append reallocates it.
+    | سعة_متجه
+    // Grows the buffer of the vector at the mutated place so that it holds at
+    // least `length + additional` elements, allocating exactly that many when
+    // it grows (Rust's Vec::reserve_exact). Every backend and the
+    // interpreter reallocate the buffer as append does when it is full.
+    | حجز_سعة_متجه
+    // IEEE 754 operations on the float Type of the first argument (f32 or
+    // f64): every operand and the result have that Type. They lower to the
+    // target's instruction (x86-64 SQRTSD, AArch64 FSQRT/FRINT*/FMIN/FMADD,
+    // WebAssembly f64.sqrt/f64.floor/f64.min, LLVM llvm.sqrt.* ...), as rustc
+    // lowers f64::sqrt and friends to LLVM intrinsics.
+    | عملية_عائمة بنوع عملية_عائمة_بدائية
+    // Thread support (docs/CONCURRENCY.md). Atomic operations on the
+    // integer a mutable reference refers to (32 or 64 bits); the last
+    // argument(s) are memory orderings (0 Relaxed, 1 Release, 2 Acquire,
+    // 3 AcqRel, 4 SeqCst). Every backend lowers them; the interpreter runs
+    // one thread and performs them as plain operations.
+    | ذري_حمل
+    | ذري_خزن
+    | ذري_تبديل
+    | ذري_قارن_وبدل
+    | ذري_جلب_جمع
+    | ذري_جلب_و
+    | ذري_جلب_أو
+    | ذري_جلب_أو_حصري
+    | سياج_ذاكرة
+    // A box whose cell is never freed, as a raw pointer to its payload
+    // (Rust's Box::leak / Box::into_raw): the same machine word.
+    | سرب_قيمة
+    // A closure environment's address (the value keeps its reference),
+    // the closure `() -> ()` at an address, and the address of a C-callable
+    // entry that runs the closure whose environment is its one argument.
+    | عنوان_دالة
+    | دالة_من_عنوان
+    | مدخل_سي_لدالة
+    // Linux clone of a thread onto a new stack: the arguments of a raw
+    // kernel call whose last word is a closure environment; the child
+    // runs that closure and exits the thread when it returns.
+    | استنساخ_خيط_نواة
+    // A call of the C function at an address, with the platform C calling
+    // convention (Rust's address-to-`extern "C" fn` call; libffi's ffi_call
+    // with a fixed register image). Arguments: a result witness (ط64 for the
+    // integer return register, ع64 for the floating-point one; its value is
+    // unused and its Type is the result Type), the address, eight integer
+    // words and eight floating-point words. System V and AAPCS64 pass the
+    // integer words in the integer argument registers (x86-64: six, then the
+    // stack) and the float words in the vector registers; Windows x64 passes
+    // positional word k in its slot (rcx, rdx, r8, r9, then the stack) and,
+    // for k < 4, the same bits in xmm k. Only the interpreter's foreign-call
+    // bridge uses it; it needs غير_آمن. wasm32 rejects it.
+    | نداء_عنوان_سي
 ;
+
+// The float operations of `هوية_بدائي_مترجم.عملية_عائمة`. Every result is
+// the exactly rounded IEEE 754-2019 result (sqrt and fma round once, to
+// nearest, ties to even; the others are exact):
+// - sqrt, abs (clears the sign, also of a NaN), floor, ceil, trunc,
+//   round-to-nearest-even (roundToIntegralTiesToEven);
+// - minimum and maximum (IEEE 754-2019 minimum/maximum, LLVM's
+//   llvm.minimum/llvm.maximum, WebAssembly f64.min/max, AArch64 FMIN/FMAX):
+//   a NaN operand gives a NaN, and -0 is below +0;
+// - copysign: the first operand with the sign of the second;
+// - fused multiply-add a * b + c, rounded once (only where the target has
+//   the instruction; runtime_primitive_query_context.sn).
+// A NaN result is a quiet NaN whose payload is not specified, as in Rust.
+عام نوع عملية_عائمة_بدائية =
+    | جذر_تربيعي
+    | قيمة_مطلقة
+    | أرضية
+    | سقف
+    | بتر
+    | تقريب_زوجي
+    | أدنى
+    | أقصى
+    | نسخ_إشارة
+    | ضرب_جمع_مدمج
+;
+
+// The number of operands of a float operation.
+عام عرف عدد_معاملات_عملية_عائمة(العملية: عملية_عائمة_بدائية): طبيعي {
+    طابق العملية مع
+    | عملية_عائمة_بدائية.أدنى -> { أرجع 2; }
+    | عملية_عائمة_بدائية.أقصى -> { أرجع 2; }
+    | عملية_عائمة_بدائية.نسخ_إشارة -> { أرجع 2; }
+    | عملية_عائمة_بدائية.ضرب_جمع_مدمج -> { أرجع 3; }
+    | _ -> { أرجع 1; };
+}
+
+// Whether the operation rounds a value to an integral value.
+عام عرف عملية_عائمة_تقريب_صحيح(العملية: عملية_عائمة_بدائية): منطقي {
+    طابق العملية مع
+    | عملية_عائمة_بدائية.أرضية -> { أرجع صواب; }
+    | عملية_عائمة_بدائية.سقف -> { أرجع صواب; }
+    | عملية_عائمة_بدائية.بتر -> { أرجع صواب; }
+    | عملية_عائمة_بدائية.تقريب_زوجي -> { أرجع صواب; }
+    | _ -> { أرجع خطأ; };
+}
 
 عام عرف انسخ_هوية_بدائي_مترجم(الهوية: هوية_بدائي_مترجم): هوية_بدائي_مترجم {
     طابق الهوية مع
@@ -55,6 +193,11 @@
     | هوية_بدائي_مترجم.ع64_من_بتات -> { أرجع هوية_بدائي_مترجم.ع64_من_بتات(); }
     | هوية_بدائي_مترجم.بتات_ع32 -> { أرجع هوية_بدائي_مترجم.بتات_ع32(); }
     | هوية_بدائي_مترجم.ع32_من_بتات -> { أرجع هوية_بدائي_مترجم.ع32_من_بتات(); }
+    | هوية_بدائي_مترجم.جمع_ملتف -> { أرجع هوية_بدائي_مترجم.جمع_ملتف(); }
+    | هوية_بدائي_مترجم.طرح_ملتف -> { أرجع هوية_بدائي_مترجم.طرح_ملتف(); }
+    | هوية_بدائي_مترجم.ضرب_ملتف -> { أرجع هوية_بدائي_مترجم.ضرب_ملتف(); }
+    | هوية_بدائي_مترجم.إزاحة_يسرى_ملتفة -> { أرجع هوية_بدائي_مترجم.إزاحة_يسرى_ملتفة(); }
+    | هوية_بدائي_مترجم.إزاحة_يمنى_ملتفة -> { أرجع هوية_بدائي_مترجم.إزاحة_يمنى_ملتفة(); }
     | هوية_بدائي_مترجم.نمو_ذاكرة_خطية -> { أرجع هوية_بدائي_مترجم.نمو_ذاكرة_خطية(); }
     | هوية_بدائي_مترجم.قراءة_ذاكرة_خطية -> { أرجع هوية_بدائي_مترجم.قراءة_ذاكرة_خطية(); }
     | هوية_بدائي_مترجم.كتابة_ذاكرة_خطية -> { أرجع هوية_بدائي_مترجم.كتابة_ذاكرة_خطية(); }
@@ -67,6 +210,32 @@
     | هوية_بدائي_مترجم.عدد_حقول_النوع -> { أرجع هوية_بدائي_مترجم.عدد_حقول_النوع(); }
     | هوية_بدائي_مترجم.عدد_منشئات_النوع -> { أرجع هوية_بدائي_مترجم.عدد_منشئات_النوع(); }
     | هوية_بدائي_مترجم.فشل_وقت_الترجمة -> { أرجع هوية_بدائي_مترجم.فشل_وقت_الترجمة(); }
+    | هوية_بدائي_مترجم.استنساخ -> { أرجع هوية_بدائي_مترجم.استنساخ(); }
+    | هوية_بدائي_مترجم.احتفاظ_بقيمة -> { أرجع هوية_بدائي_مترجم.احتفاظ_بقيمة(); }
+    | هوية_بدائي_مترجم.زيادة_مراجع_إغلاق -> { أرجع هوية_بدائي_مترجم.زيادة_مراجع_إغلاق(); }
+    | هوية_بدائي_مترجم.إنقاص_مراجع_إغلاق -> { أرجع هوية_بدائي_مترجم.إنقاص_مراجع_إغلاق(); }
+    | هوية_بدائي_مترجم.مدمر_بيئة_إغلاق -> { أرجع هوية_بدائي_مترجم.مدمر_بيئة_إغلاق(); }
+    | هوية_بدائي_مترجم.إزالة_الأخير -> { أرجع هوية_بدائي_مترجم.إزالة_الأخير(); }
+    | هوية_بدائي_مترجم.اقتطاع_متجه -> { أرجع هوية_بدائي_مترجم.اقتطاع_متجه(); }
+    | هوية_بدائي_مترجم.ضبط_طول_متجه -> { أرجع هوية_بدائي_مترجم.ضبط_طول_متجه(); }
+    | هوية_بدائي_مترجم.سعة_متجه -> { أرجع هوية_بدائي_مترجم.سعة_متجه(); }
+    | هوية_بدائي_مترجم.حجز_سعة_متجه -> { أرجع هوية_بدائي_مترجم.حجز_سعة_متجه(); }
+    | هوية_بدائي_مترجم.عملية_عائمة(العملية) -> { أرجع هوية_بدائي_مترجم.عملية_عائمة(العملية); }
+    | هوية_بدائي_مترجم.ذري_حمل -> { أرجع هوية_بدائي_مترجم.ذري_حمل(); }
+    | هوية_بدائي_مترجم.ذري_خزن -> { أرجع هوية_بدائي_مترجم.ذري_خزن(); }
+    | هوية_بدائي_مترجم.ذري_تبديل -> { أرجع هوية_بدائي_مترجم.ذري_تبديل(); }
+    | هوية_بدائي_مترجم.ذري_قارن_وبدل -> { أرجع هوية_بدائي_مترجم.ذري_قارن_وبدل(); }
+    | هوية_بدائي_مترجم.ذري_جلب_جمع -> { أرجع هوية_بدائي_مترجم.ذري_جلب_جمع(); }
+    | هوية_بدائي_مترجم.ذري_جلب_و -> { أرجع هوية_بدائي_مترجم.ذري_جلب_و(); }
+    | هوية_بدائي_مترجم.ذري_جلب_أو -> { أرجع هوية_بدائي_مترجم.ذري_جلب_أو(); }
+    | هوية_بدائي_مترجم.ذري_جلب_أو_حصري -> { أرجع هوية_بدائي_مترجم.ذري_جلب_أو_حصري(); }
+    | هوية_بدائي_مترجم.سياج_ذاكرة -> { أرجع هوية_بدائي_مترجم.سياج_ذاكرة(); }
+    | هوية_بدائي_مترجم.سرب_قيمة -> { أرجع هوية_بدائي_مترجم.سرب_قيمة(); }
+    | هوية_بدائي_مترجم.عنوان_دالة -> { أرجع هوية_بدائي_مترجم.عنوان_دالة(); }
+    | هوية_بدائي_مترجم.دالة_من_عنوان -> { أرجع هوية_بدائي_مترجم.دالة_من_عنوان(); }
+    | هوية_بدائي_مترجم.مدخل_سي_لدالة -> { أرجع هوية_بدائي_مترجم.مدخل_سي_لدالة(); }
+    | هوية_بدائي_مترجم.استنساخ_خيط_نواة -> { أرجع هوية_بدائي_مترجم.استنساخ_خيط_نواة(); }
+    | هوية_بدائي_مترجم.نداء_عنوان_سي -> { أرجع هوية_بدائي_مترجم.نداء_عنوان_سي(); }
     ;
 }
 
@@ -84,6 +253,11 @@
     | هوية_بدائي_مترجم.ع64_من_بتات -> { طابق ب مع | هوية_بدائي_مترجم.ع64_من_بتات -> { أرجع صواب; } | _ -> { أرجع خطأ; }; }
     | هوية_بدائي_مترجم.بتات_ع32 -> { طابق ب مع | هوية_بدائي_مترجم.بتات_ع32 -> { أرجع صواب; } | _ -> { أرجع خطأ; }; }
     | هوية_بدائي_مترجم.ع32_من_بتات -> { طابق ب مع | هوية_بدائي_مترجم.ع32_من_بتات -> { أرجع صواب; } | _ -> { أرجع خطأ; }; }
+    | هوية_بدائي_مترجم.جمع_ملتف -> { طابق ب مع | هوية_بدائي_مترجم.جمع_ملتف -> { أرجع صواب; } | _ -> { أرجع خطأ; }; }
+    | هوية_بدائي_مترجم.طرح_ملتف -> { طابق ب مع | هوية_بدائي_مترجم.طرح_ملتف -> { أرجع صواب; } | _ -> { أرجع خطأ; }; }
+    | هوية_بدائي_مترجم.ضرب_ملتف -> { طابق ب مع | هوية_بدائي_مترجم.ضرب_ملتف -> { أرجع صواب; } | _ -> { أرجع خطأ; }; }
+    | هوية_بدائي_مترجم.إزاحة_يسرى_ملتفة -> { طابق ب مع | هوية_بدائي_مترجم.إزاحة_يسرى_ملتفة -> { أرجع صواب; } | _ -> { أرجع خطأ; }; }
+    | هوية_بدائي_مترجم.إزاحة_يمنى_ملتفة -> { طابق ب مع | هوية_بدائي_مترجم.إزاحة_يمنى_ملتفة -> { أرجع صواب; } | _ -> { أرجع خطأ; }; }
     | هوية_بدائي_مترجم.نمو_ذاكرة_خطية -> { طابق ب مع | هوية_بدائي_مترجم.نمو_ذاكرة_خطية -> { أرجع صواب; } | _ -> { أرجع خطأ; }; }
     | هوية_بدائي_مترجم.قراءة_ذاكرة_خطية -> { طابق ب مع | هوية_بدائي_مترجم.قراءة_ذاكرة_خطية -> { أرجع صواب; } | _ -> { أرجع خطأ; }; }
     | هوية_بدائي_مترجم.كتابة_ذاكرة_خطية -> { طابق ب مع | هوية_بدائي_مترجم.كتابة_ذاكرة_خطية -> { أرجع صواب; } | _ -> { أرجع خطأ; }; }
@@ -96,5 +270,31 @@
     | هوية_بدائي_مترجم.عدد_حقول_النوع -> { طابق ب مع | هوية_بدائي_مترجم.عدد_حقول_النوع -> { أرجع صواب; } | _ -> { أرجع خطأ; }; }
     | هوية_بدائي_مترجم.عدد_منشئات_النوع -> { طابق ب مع | هوية_بدائي_مترجم.عدد_منشئات_النوع -> { أرجع صواب; } | _ -> { أرجع خطأ; }; }
     | هوية_بدائي_مترجم.فشل_وقت_الترجمة -> { طابق ب مع | هوية_بدائي_مترجم.فشل_وقت_الترجمة -> { أرجع صواب; } | _ -> { أرجع خطأ; }; }
+    | هوية_بدائي_مترجم.استنساخ -> { طابق ب مع | هوية_بدائي_مترجم.استنساخ -> { أرجع صواب; } | _ -> { أرجع خطأ; }; }
+    | هوية_بدائي_مترجم.احتفاظ_بقيمة -> { طابق ب مع | هوية_بدائي_مترجم.احتفاظ_بقيمة -> { أرجع صواب; } | _ -> { أرجع خطأ; }; }
+    | هوية_بدائي_مترجم.زيادة_مراجع_إغلاق -> { طابق ب مع | هوية_بدائي_مترجم.زيادة_مراجع_إغلاق -> { أرجع صواب; } | _ -> { أرجع خطأ; }; }
+    | هوية_بدائي_مترجم.إنقاص_مراجع_إغلاق -> { طابق ب مع | هوية_بدائي_مترجم.إنقاص_مراجع_إغلاق -> { أرجع صواب; } | _ -> { أرجع خطأ; }; }
+    | هوية_بدائي_مترجم.مدمر_بيئة_إغلاق -> { طابق ب مع | هوية_بدائي_مترجم.مدمر_بيئة_إغلاق -> { أرجع صواب; } | _ -> { أرجع خطأ; }; }
+    | هوية_بدائي_مترجم.إزالة_الأخير -> { طابق ب مع | هوية_بدائي_مترجم.إزالة_الأخير -> { أرجع صواب; } | _ -> { أرجع خطأ; }; }
+    | هوية_بدائي_مترجم.اقتطاع_متجه -> { طابق ب مع | هوية_بدائي_مترجم.اقتطاع_متجه -> { أرجع صواب; } | _ -> { أرجع خطأ; }; }
+    | هوية_بدائي_مترجم.ضبط_طول_متجه -> { طابق ب مع | هوية_بدائي_مترجم.ضبط_طول_متجه -> { أرجع صواب; } | _ -> { أرجع خطأ; }; }
+    | هوية_بدائي_مترجم.سعة_متجه -> { طابق ب مع | هوية_بدائي_مترجم.سعة_متجه -> { أرجع صواب; } | _ -> { أرجع خطأ; }; }
+    | هوية_بدائي_مترجم.حجز_سعة_متجه -> { طابق ب مع | هوية_بدائي_مترجم.حجز_سعة_متجه -> { أرجع صواب; } | _ -> { أرجع خطأ; }; }
+    | هوية_بدائي_مترجم.عملية_عائمة(الأولى) -> { طابق ب مع | هوية_بدائي_مترجم.عملية_عائمة(الثانية) -> { أرجع الأولى == الثانية; } | _ -> { أرجع خطأ; }; }
+    | هوية_بدائي_مترجم.ذري_حمل -> { طابق ب مع | هوية_بدائي_مترجم.ذري_حمل -> { أرجع صواب; } | _ -> { أرجع خطأ; }; }
+    | هوية_بدائي_مترجم.ذري_خزن -> { طابق ب مع | هوية_بدائي_مترجم.ذري_خزن -> { أرجع صواب; } | _ -> { أرجع خطأ; }; }
+    | هوية_بدائي_مترجم.ذري_تبديل -> { طابق ب مع | هوية_بدائي_مترجم.ذري_تبديل -> { أرجع صواب; } | _ -> { أرجع خطأ; }; }
+    | هوية_بدائي_مترجم.ذري_قارن_وبدل -> { طابق ب مع | هوية_بدائي_مترجم.ذري_قارن_وبدل -> { أرجع صواب; } | _ -> { أرجع خطأ; }; }
+    | هوية_بدائي_مترجم.ذري_جلب_جمع -> { طابق ب مع | هوية_بدائي_مترجم.ذري_جلب_جمع -> { أرجع صواب; } | _ -> { أرجع خطأ; }; }
+    | هوية_بدائي_مترجم.ذري_جلب_و -> { طابق ب مع | هوية_بدائي_مترجم.ذري_جلب_و -> { أرجع صواب; } | _ -> { أرجع خطأ; }; }
+    | هوية_بدائي_مترجم.ذري_جلب_أو -> { طابق ب مع | هوية_بدائي_مترجم.ذري_جلب_أو -> { أرجع صواب; } | _ -> { أرجع خطأ; }; }
+    | هوية_بدائي_مترجم.ذري_جلب_أو_حصري -> { طابق ب مع | هوية_بدائي_مترجم.ذري_جلب_أو_حصري -> { أرجع صواب; } | _ -> { أرجع خطأ; }; }
+    | هوية_بدائي_مترجم.سياج_ذاكرة -> { طابق ب مع | هوية_بدائي_مترجم.سياج_ذاكرة -> { أرجع صواب; } | _ -> { أرجع خطأ; }; }
+    | هوية_بدائي_مترجم.سرب_قيمة -> { طابق ب مع | هوية_بدائي_مترجم.سرب_قيمة -> { أرجع صواب; } | _ -> { أرجع خطأ; }; }
+    | هوية_بدائي_مترجم.عنوان_دالة -> { طابق ب مع | هوية_بدائي_مترجم.عنوان_دالة -> { أرجع صواب; } | _ -> { أرجع خطأ; }; }
+    | هوية_بدائي_مترجم.دالة_من_عنوان -> { طابق ب مع | هوية_بدائي_مترجم.دالة_من_عنوان -> { أرجع صواب; } | _ -> { أرجع خطأ; }; }
+    | هوية_بدائي_مترجم.مدخل_سي_لدالة -> { طابق ب مع | هوية_بدائي_مترجم.مدخل_سي_لدالة -> { أرجع صواب; } | _ -> { أرجع خطأ; }; }
+    | هوية_بدائي_مترجم.استنساخ_خيط_نواة -> { طابق ب مع | هوية_بدائي_مترجم.استنساخ_خيط_نواة -> { أرجع صواب; } | _ -> { أرجع خطأ; }; }
+    | هوية_بدائي_مترجم.نداء_عنوان_سي -> { طابق ب مع | هوية_بدائي_مترجم.نداء_عنوان_سي -> { أرجع صواب; } | _ -> { أرجع خطأ; }; }
     ;
 }

@@ -10,11 +10,41 @@
 #include "kernel/layout/layout.h"
 #include "kernel/memory/memory.h"
 #include "kernel/type/type.h"
+#include "semantic/never_return.h"
+
+#include <stdlib.h>
 
 static int __LLVM_Emit_Statement__(__LLVM_Emitter__ *emitter,
                                    __Ast_Statement__ *statement,
                                    __Ast_Type__ *return_type,
                                    int *path_terminated);
+
+/* Enters a loop: `continue` branches to CONTINUE_BLOCK, `break` to BREAK_BLOCK. */
+static int __LLVM_Push_Loop__(__LLVM_Emitter__ *emitter,
+                              LLVMBasicBlockRef continue_block,
+                              LLVMBasicBlockRef break_block)
+{
+    if (emitter->loop_depth == emitter->loop_capacity)
+    {
+        size_t capacity = emitter->loop_capacity == 0U ? 8U : emitter->loop_capacity * 2U;
+        LLVMBasicBlockRef *continues = (LLVMBasicBlockRef *)realloc(
+            emitter->loop_continue_blocks, capacity * sizeof(*continues));
+        LLVMBasicBlockRef *breaks;
+        if (continues == NULL)
+            return __LLVM_Fail__("out of memory while lowering a loop");
+        emitter->loop_continue_blocks = continues;
+        breaks = (LLVMBasicBlockRef *)realloc(emitter->loop_break_blocks,
+                                              capacity * sizeof(*breaks));
+        if (breaks == NULL)
+            return __LLVM_Fail__("out of memory while lowering a loop");
+        emitter->loop_break_blocks = breaks;
+        emitter->loop_capacity = capacity;
+    }
+    emitter->loop_continue_blocks[emitter->loop_depth] = continue_block;
+    emitter->loop_break_blocks[emitter->loop_depth] = break_block;
+    ++emitter->loop_depth;
+    return 1;
+}
 
 /* Emits the LLVM statement list. */
 int __LLVM_Emit_Statement_List__(__LLVM_Emitter__ *emitter,
@@ -113,7 +143,31 @@ static int __LLVM_Emit_Statement__(__LLVM_Emitter__ *emitter,
             {
                 value = __LLVM_Emit_Expression__(
                     emitter, statement->__As__.__Copy__.__Expression__, destination_type);
-                return value.value != NULL;
+                if (value.value == NULL)
+                    return 0;
+                /* The stop primitive never returns: the path ends here, with
+                 * nothing dropped (abort semantics, docs/ERRORS.md). */
+                if (destination_lvalue->__Kind__ == __Ast_Lvalue_Base__ &&
+                    destination_lvalue->__As__.__Base__.__Kind__ == __Ast_Lvalue_Base_Temporary__ &&
+                    statement->__As__.__Copy__.__Expression__->__Kind__ == __Ast_Expression_Call__ &&
+                    emitter->current_function != NULL &&
+                    statement->__As__.__Copy__.__Expression__->__As__.__Call__.__Function__ != NULL &&
+                    statement->__As__.__Copy__.__Expression__->__As__.__Call__.__Function__->__Kind__ ==
+                        __Ast_Lvalue_Base__ &&
+                    statement->__As__.__Copy__.__Expression__->__As__.__Call__.__Function__->__As__
+                            .__Base__.__Kind__ == __Ast_Lvalue_Base_Identifier__ &&
+                    __LLVM_Find_Local__(emitter,
+                                        statement->__As__.__Copy__.__Expression__->__As__.__Call__
+                                            .__Function__->__As__.__Base__.__As__.__Identifier__) ==
+                        NULL &&
+                    __Semantic_Call_Never_Returns__(emitter->semantic,
+                                                    emitter->current_function->__Unit__,
+                                                    statement->__As__.__Copy__.__Expression__))
+                {
+                    LLVMBuildUnreachable(emitter->builder);
+                    *path_terminated = 1;
+                }
+                return 1;
             }
             {
                 /* Stores the destination. */
@@ -133,7 +187,19 @@ static int __LLVM_Emit_Statement__(__LLVM_Emitter__ *emitter,
                 {
                     return 0;
                 }
+                if (!__LLVM_Drop_Before_Overwrite__(emitter, destination_lvalue, destination))
+                {
+                    return 0;
+                }
                 LLVMBuildStore(emitter->builder, value.value, destination.address);
+                /* Borrowed status is a value fact, not a static local-type
+                 * fact. A previously owned local may now hold a borrowed
+                 * alias, and its next transfer must preserve that status. */
+                if (!__LLVM_Mark_Copy_Ownership__(
+                        emitter, destination_lvalue,
+                        __LLVM_Expression_Borrowed_Flag__(
+                            emitter, statement->__As__.__Copy__.__Expression__)))
+                    return 0;
                 return 1;
             }
         }
@@ -148,6 +214,10 @@ static int __LLVM_Emit_Statement__(__LLVM_Emitter__ *emitter,
                     resolved_return.__Kind__ != __Resolved_Type_Void__)
                     return __LLVM_Fail__(
                         "Direct LLVM value-return function is missing a return value");
+                if (!__LLVM_Drop_All_Locals__(emitter))
+                {
+                    return 0;
+                }
                 LLVMBuildRetVoid(emitter->builder);
                 *path_terminated = 1;
                 return 1;
@@ -159,6 +229,17 @@ static int __LLVM_Emit_Statement__(__LLVM_Emitter__ *emitter,
             }
             value = __LLVM_Coerce__(emitter, value, return_type);
             if (value.value == NULL)
+            {
+                return 0;
+            }
+            /* The return value is already evaluated (any moved-out local's
+             * drop flag was already cleared by __LLVM_Emit_Lvalue__ while
+             * evaluating it, and __LLVM_Value__ carries the loaded bits,
+             * independent of what happens to their source storage next),
+             * so dropping every still-flagged local now and only then
+             * building the terminator preserves the value being returned
+             * while releasing everything else exactly once. */
+            if (!__LLVM_Drop_All_Locals__(emitter))
             {
                 return 0;
             }
@@ -263,6 +344,23 @@ static int __LLVM_Emit_Statement__(__LLVM_Emitter__ *emitter,
             return __LLVM_Emit_Statement_List__(
                 emitter, statement->__As__.__Unsafe__, return_type, path_terminated);
 
+        case __Ast_Statement_Block__:
+            return __LLVM_Emit_Statement_List__(
+                emitter, statement->__As__.__Block__, return_type, path_terminated);
+
+        case __Ast_Statement_Break__:
+        case __Ast_Statement_Continue__:
+            /* Locals of the loop body keep their drop flags: the next
+             * initialization or the function's exit releases them. */
+            if (emitter->loop_depth == 0U)
+                return __LLVM_Fail__("break or continue outside a loop");
+            LLVMBuildBr(emitter->builder,
+                        statement->__Kind__ == __Ast_Statement_Break__
+                            ? emitter->loop_break_blocks[emitter->loop_depth - 1U]
+                            : emitter->loop_continue_blocks[emitter->loop_depth - 1U]);
+            *path_terminated = 1;
+            return 1;
+
         case __Ast_Statement_While__:
         {
             /* Stores the current. */
@@ -283,6 +381,8 @@ static int __LLVM_Emit_Statement__(__LLVM_Emitter__ *emitter,
             __Resolved_Type__ condition_type;
             /* Stores the body terminated. */
             int body_terminated = 0;
+            /* Stores the step block of a `لكل` loop. */
+            LLVMBasicBlockRef step_block = NULL;
 
             if (current == NULL || (function = LLVMGetBasicBlockParent(current)) == NULL)
             {
@@ -291,6 +391,8 @@ static int __LLVM_Emit_Statement__(__LLVM_Emitter__ *emitter,
             condition_block =
                 LLVMAppendBasicBlockInContext(emitter->context, function, "while.condition");
             body_block = LLVMAppendBasicBlockInContext(emitter->context, function, "while.body");
+            if (statement->__As__.__While__.__Step__ != NULL)
+                step_block = LLVMAppendBasicBlockInContext(emitter->context, function, "for.step");
             exit_block = LLVMAppendBasicBlockInContext(emitter->context, function, "while.exit");
             LLVMBuildBr(emitter->builder, condition_block);
 
@@ -306,11 +408,16 @@ static int __LLVM_Emit_Statement__(__LLVM_Emitter__ *emitter,
             LLVMBuildCondBr(emitter->builder, condition.value, body_block, exit_block);
 
             LLVMPositionBuilderAtEnd(emitter->builder, body_block);
+            if (!__LLVM_Push_Loop__(emitter, step_block != NULL ? step_block : condition_block,
+                                    exit_block))
+                return 0;
             if (!__LLVM_Emit_Statement_List__(
                     emitter, statement->__As__.__While__.__Body__, return_type, &body_terminated))
             {
+                --emitter->loop_depth;
                 return 0;
             }
+            --emitter->loop_depth;
             body_exit = LLVMGetInsertBlock(emitter->builder);
             if (body_exit == NULL)
             {
@@ -319,6 +426,17 @@ static int __LLVM_Emit_Statement__(__LLVM_Emitter__ *emitter,
             if ((LLVMGetBasicBlockTerminator(body_exit) != NULL) != (body_terminated != 0))
             {
                 return __LLVM_Fail__("inconsistent while-body CFG termination state");
+            }
+            if (step_block != NULL)
+            {
+                int step_terminated = 0;
+                if (!body_terminated)
+                    LLVMBuildBr(emitter->builder, step_block);
+                LLVMPositionBuilderAtEnd(emitter->builder, step_block);
+                if (!__LLVM_Emit_Statement_List__(
+                        emitter, statement->__As__.__While__.__Step__, return_type, &step_terminated))
+                    return 0;
+                body_terminated = step_terminated;
             }
             if (!body_terminated)
             {
@@ -352,6 +470,15 @@ static int __LLVM_Emit_Statement__(__LLVM_Emitter__ *emitter,
                 declaration->__As__.__Struct__.__Count__)
             {
                 return __LLVM_Fail__("L2.4 record initializer disagrees with semantic field count");
+            }
+            /* Replaces the destination's entire previous value (this may
+             * be re-running inside a loop body), so drop it as a whole
+             * before any field is overwritten. */
+            if (!__LLVM_Drop_Before_Overwrite__(emitter,
+                                                statement->__As__.__Record__.__Destination__,
+                                                destination))
+            {
+                return 0;
             }
             for (input_index = 0U; input_index < statement->__As__.__Record__.__Field_Count__;
                  ++input_index)
@@ -402,6 +529,10 @@ static int __LLVM_Emit_Statement__(__LLVM_Emitter__ *emitter,
                 }
                 LLVMBuildStore(emitter->builder, field_value.value, field_address);
             }
+            if (!__LLVM_Mark_Local_Owning__(emitter, statement->__As__.__Record__.__Destination__))
+            {
+                return 0;
+            }
             return 1;
         }
 
@@ -444,6 +575,12 @@ static int __LLVM_Emit_Statement__(__LLVM_Emitter__ *emitter,
                 return __LLVM_Fail__(
                     "L2.7 vector initialization requires canonical vector storage");
             }
+            if (!__LLVM_Drop_Before_Overwrite__(emitter,
+                                                statement->__As__.__Aggregate__.__Destination__,
+                                                destination))
+            {
+                return 0;
+            }
             (void)element_alignment;
             capacity = __Memory_Vector_Initial_Capacity__(length);
             if (!__Memory_Element_Bytes__(element_size, capacity, &backing_size))
@@ -472,9 +609,14 @@ static int __LLVM_Emit_Statement__(__LLVM_Emitter__ *emitter,
                                                            "vector.element.init");
                 /* Stores the element. */
                 __LLVM_Value__ element =
-                    __LLVM_Emit_Atom__(emitter,
-                                       &statement->__As__.__Aggregate__.__Values__[index],
-                                       resolved.__Inner__);
+                    (statement->__As__.__Aggregate__.__Expressions__ != NULL &&
+                     statement->__As__.__Aggregate__.__Expressions__[index] != NULL)
+                        ? __LLVM_Emit_Expression__(emitter,
+                                                   statement->__As__.__Aggregate__.__Expressions__[index],
+                                                   resolved.__Inner__)
+                        : __LLVM_Emit_Atom__(emitter,
+                                             &statement->__As__.__Aggregate__.__Values__[index],
+                                             resolved.__Inner__);
                 if (element.value == NULL)
                     return 0;
                 element = __LLVM_Coerce__(emitter, element, resolved.__Inner__);
@@ -500,6 +642,10 @@ static int __LLVM_Emit_Statement__(__LLVM_Emitter__ *emitter,
                 2U,
                 "vector.with.capacity");
             LLVMBuildStore(emitter->builder, vector_value, destination.address);
+            if (!__LLVM_Mark_Local_Owning__(emitter, statement->__As__.__Aggregate__.__Destination__))
+            {
+                return 0;
+            }
             return 1;
         }
 
@@ -531,6 +677,12 @@ static int __LLVM_Emit_Statement__(__LLVM_Emitter__ *emitter,
             {
                 return __LLVM_Fail__("L2.6 box construction requires canonical box inner layout");
             }
+            if (!__LLVM_Drop_Before_Overwrite__(emitter,
+                                                statement->__As__.__Box__.__Destination__,
+                                                destination))
+            {
+                return 0;
+            }
             (void)inner_alignment;
             inner_llvm_type = __LLVM_Type__(emitter, resolved.__Inner__);
             if (inner_llvm_type == NULL)
@@ -539,8 +691,11 @@ static int __LLVM_Emit_Statement__(__LLVM_Emitter__ *emitter,
             storage = __LLVM_Allocate_Bytes__(emitter, inner_size, pointer_type, "box.storage");
             if (storage == NULL)
                 return 0;
-            boxed = __LLVM_Emit_Atom__(
-                emitter, &statement->__As__.__Box__.__Value__, resolved.__Inner__);
+            boxed = statement->__As__.__Box__.__Expression__ != NULL
+                        ? __LLVM_Emit_Expression__(emitter, statement->__As__.__Box__.__Expression__,
+                                                   resolved.__Inner__)
+                        : __LLVM_Emit_Atom__(emitter, &statement->__As__.__Box__.__Value__,
+                                             resolved.__Inner__);
             if (boxed.value == NULL)
                 return 0;
             boxed = __LLVM_Coerce__(emitter, boxed, resolved.__Inner__);
@@ -548,6 +703,10 @@ static int __LLVM_Emit_Statement__(__LLVM_Emitter__ *emitter,
                 return 0;
             LLVMBuildStore(emitter->builder, boxed.value, storage);
             LLVMBuildStore(emitter->builder, storage, destination.address);
+            if (!__LLVM_Mark_Local_Owning__(emitter, statement->__As__.__Box__.__Destination__))
+            {
+                return 0;
+            }
             return 1;
         }
     }

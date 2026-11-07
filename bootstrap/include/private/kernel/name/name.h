@@ -44,7 +44,26 @@ typedef enum
     /* Canonical بدائي_نداء_نواة_خام: one Linux 64-bit kernel entry instruction
      * (compiler/frontend/names/primitive_registry.sn). Stage0 only emits it;
      * the syscall number and operand meaning are owned by the STD source. */
-    __Name_Builtin_Raw_Kernel_Call__
+    __Name_Builtin_Raw_Kernel_Call__,
+    /* Vector primitives (docs/OWNERSHIP_AND_DESTRUCTION.md): capacity,
+     * reserve_exact, pop and truncate. */
+    __Name_Builtin_Capacity__,
+    __Name_Builtin_Reserve_Exact__,
+    __Name_Builtin_Pop__,
+    __Name_Builtin_Truncate__,
+    /* Wrapping arithmetic (docs/TYPE_SYSTEM.md): reached through private
+     * aliases of their بدائي_ spellings, as std.math.wrapping does. */
+    __Name_Builtin_Wrapping_Add__,
+    __Name_Builtin_Wrapping_Subtract__,
+    __Name_Builtin_Wrapping_Multiply__,
+    __Name_Builtin_Wrapping_Shift_Left__,
+    __Name_Builtin_Wrapping_Shift_Right__,
+    /* Canonical بدائي_نداء_عنوان_سي (compiler/runtime/primitive_identity.sn):
+     * a call of the C function at an address with the target's C calling
+     * convention. Arguments: the result witness (u64 or f64, the result
+     * Type), the address, eight u64 words and eight f64 words. Only the
+     * interpreter's foreign-call bridge uses it. */
+    __Name_Builtin_C_Address_Call__
 } __Name_Builtin_Function__;
 
 /* Finds the name builtin function. */

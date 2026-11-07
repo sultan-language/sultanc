@@ -1,0 +1,583 @@
+استورد compiler.diagnostics.identity;
+استورد compiler.diagnostics.reason;
+
+// English contextual reason texts: one total typed lookup.
+// Immutable language resources: longer prose is stored once, outside match arms.
+عرف نص_سبب_سبب_واجهة_الاستدعاء_مفقود_مسير_معامل(): نص { أرجع «An MSIR function parameter required for ABI classification is missing»; }
+عرف نص_سبب_سبب_واجهة_الاستدعاء_مفقود_مسير_قيمة_نوع(): نص { أرجع «The MSIR value type required for ABI classification is missing»; }
+عرف نص_سبب_سبب_واجهة_الاستدعاء_هدف_قدرة_غير_متاح(): نص { أرجع «The target lacks a capability required by this calling convention»; }
+عرف نص_سبب_سبب_واجهة_الاستدعاء_غير_مدعوم_نوع_حجم(): نص { أرجع «The calling convention does not support the size of this type»; }
+عرف نص_سبب_سبب_تخصيص_قيد_إخفاق(): نص { أرجع «Register allocation failed to satisfy an allocation constraint»; }
+عرف نص_سبب_سبب_تخصيص_إطار_سياسة_غير_متاح(): نص { أرجع «Register allocation requires an unavailable stack-frame policy»; }
+عرف نص_سبب_سبب_ترميز_واجهة_الاستدعاء_مسجل_عدم_تطابق(): نص { أرجع «The selected machine register does not satisfy the calling convention»; }
+عرف نص_سبب_سبب_ترميز_تفرع_خارج_من_نطاق(): نص { أرجع «The branch target is outside the encodable displacement range»; }
+عرف نص_سبب_سبب_ترميز_غير_كاف_عمل_مسجلات(): نص { أرجع «Insufficient working registers are available to encode the instruction»; }
+عرف نص_سبب_سبب_ترميز_ذاكرة_تخصيص_غير_متاح(): نص { أرجع «Memory allocation failed while encoding machine instructions»; }
+عرف نص_سبب_سبب_ترميز_عملية_خروج_موفر_مفقود(): نص { أرجع «The process-exit provider is missing during machine-code encoding»; }
+عرف نص_سبب_سبب_ترميز_سكب_إزاحة_خارج_من_نطاق(): نص { أرجع «The spill-slot offset is outside the supported encoding range»; }
+عرف نص_سبب_سبب_ترميز_غير_محاذى_تفرع(): نص { أرجع «The encoded branch target does not meet alignment requirements»; }
+عرف نص_سبب_سبب_ترميز_غير_قابل_للترميز_حافة_نقل_ملكية(): نص { أرجع «The edge value transfer cannot be represented by the machine encoding»; }
+عرف نص_سبب_سبب_ترميز_غير_مدعوم_واجهة_الاستدعاء_موقع(): نص { أرجع «The ABI argument or return location is not supported by the encoder»; }
+عرف نص_سبب_سبب_مفسر_داخلي_مفقود_تفعيل(): نص { أرجع «The current function activation is missing from interpreter state»; }
+عرف نص_سبب_سبب_تخطيط_مرفوض_غير_صحيح_هدف_بيانات_نموذج(): نص { أرجع «The target data model is incompatible with the requested type layout»; }
+عرف نص_سبب_سبب_تخطيط_غير_مدعوم_قيمة_عرض(): نص { أرجع «The value width cannot be represented by the target type layout»; }
+عرف نص_سبب_سبب_تخطيط_قيمة_نوع_مفقود(): نص { أرجع «The value type required to compute storage layout is missing»; }
+عرف نص_سبب_سبب_محلل_معجمي_إنشاء(): نص { أرجع «The lexer attempted to construct a token with an invalid shape»; }
+عرف نص_سبب_سبب_ربط_ماك_أو_إعادة_توطين_خارج_من_نطاق(): نص { أرجع «The Mach-O relocation displacement exceeds its encoding range»; }
+عرف نص_سبب_سبب_إل_إل_في_إم_خلفية_غير_متاح_ل_هدف(): نص { أرجع «No LLVM code-generation backend is available for the selected target»; }
+عرف نص_سبب_سبب_مسير_بناء_منته_كتلة(): نص { أرجع «Cannot append an instruction to an already terminated MSIR block»; }
+عرف نص_سبب_سبب_مسير_خفض_استدعاء_حجة_نوع_عدم_تطابق(): نص { أرجع «A call argument type disagrees with its parameter type during MSIR lowering»; }
+عرف نص_سبب_سبب_مسير_خفض_مكرر_محلي(): نص { أرجع «The same local binding was introduced twice during MSIR lowering»; }
+عرف نص_سبب_سبب_مسير_خفض_غير_متسق_رمز_نوع(): نص { أرجع «An MSIR symbol type is inconsistent with its declaration during lowering»; }
+عرف نص_سبب_سبب_مسير_خفض_مفقود_تعبير_نوع(): نص { أرجع «The semantic type of an expression is missing during MSIR lowering»; }
+عرف نص_سبب_سبب_مسير_استدعاء_تعديل_موضع_ليس_قابل_للكتابة(): نص { أرجع «The mutation destination passed to an MSIR call is not writable»; }
+عرف نص_سبب_سبب_مسير_استدعاء_تعديل_موضع_نوع_عدم_تطابق(): نص { أرجع «The mutation destination type does not match the MSIR call contract»; }
+عرف نص_سبب_سبب_مسير_معتمد_قيمة_جدول_عدم_تطابق(): نص { أرجع «The canonical MSIR value table is inconsistent with its references»; }
+عرف نص_سبب_سبب_مسير_دالة_تال_قيمة_عدم_تطابق(): نص { أرجع «The next-value index of the function is inconsistent with MSIR values»; }
+عرف نص_سبب_سبب_مسير_مفقود_استدعاء_تعديل_موضع(): نص { أرجع «The required mutation destination is absent from the MSIR call»; }
+عرف نص_سبب_سبب_مسير_بدائي_نوع_عقد_غير_متاح(): نص { أرجع «The primitive type contract is unavailable to MSIR verification»; }
+عرف نص_سبب_سبب_مسير_غير_آمن_قبل_رئيسي_وحدة_مهيئ(): نص { أرجع «A module initializer performs an unsafe operation before the main entry point»; }
+عرف نص_سبب_سبب_اسم_تصريح_جمع_ربط_اسم_تعارض(): نص { أرجع «Conflicting name bindings were found while collecting declarations»; }
+عرف نص_سبب_سبب_اسم_تصريح_جمع_خاص_اسم(): نص { أرجع «Declaration collection encountered a name that is private to another scope»; }
+عرف نص_سبب_سبب_اسم_حل_مكرر_تصريح(): نص { أرجع «Name resolution found multiple declarations for the same name»; }
+عرف نص_سبب_سبب_اسم_جذر_وحدة_حقيقة_مفقود(): نص { أرجع «The root module identity needed by name resolution is missing»; }
+عرف نص_سبب_سبب_كائن_إلف_صيغة_حد_متجاوز(): نص { أرجع «The ELF object exceeds a structural limit of the file format»; }
+عرف نص_سبب_سبب_كائن_إلف_غير_مدعوم_معمارية(): نص { أرجع «The target architecture is unsupported by the ELF object writer»; }
+عرف نص_سبب_سبب_كائن_إلف_غير_مدعوم_بيانات_نموذج(): نص { أرجع «The target data model is unsupported by the ELF object writer»; }
+عرف نص_سبب_سبب_كائن_ماك_أو_صيغة_حد_متجاوز(): نص { أرجع «The Mach-O object exceeds a structural limit of the file format»; }
+عرف نص_سبب_سبب_كائن_ماك_أو_هدف_عدم_تطابق(): نص { أرجع «The Mach-O object's target is inconsistent with the selected target»; }
+عرف نص_سبب_سبب_كائن_ماك_أو_غير_مدعوم_إعادة_توطين_صنف(): نص { أرجع «The Mach-O writer does not support the requested relocation kind»; }
+عرف نص_سبب_سبب_نمط_مفقود_مميز_نوع(): نص { أرجع «The distinguished type needed for pattern checking is missing»; }
+عرف نص_سبب_سبب_نمط_مصدر_عدم_تطابق(): نص { أرجع «The pattern node references a different source than its semantic declaration»; }
+عرف نص_سبب_سبب_انتقاء_أصلي_منتقي_قدرة_غير_متاح(): نص { أرجع «The native instruction selector for this target lacks a required capability»; }
+عرف نص_سبب_سبب_انتقاء_نص_ثابت_يحتاج_بيانات_قسم(): نص { أرجع «Instruction selection needs a data section to emit a text constant»; }
+عرف نص_سبب_سبب_انتقاء_واسم32_مفقود_خروج_موفر(): نص { أرجع «The WASM32 instruction selector lacks a process-exit provider»; }
+عرف نص_سبب_سبب_تدفق_سلامة_مكرر_محلي(): نص { أرجع «A local variable was declared more than once during safety checking»; }
+عرف نص_سبب_سبب_نوع_استدعاء_حجة_عدد_عدم_تطابق(): نص { أرجع «The call supplies a different number of arguments than the function accepts»; }
+عرف نص_سبب_سبب_نوع_بدائي_دلالات_غير_متاح(): نص { أرجع «The primitive operation's semantics are unavailable to type checking»; }
+عرف نص_سبب_سبب_نوع_إرجاع_نوع_عدم_تطابق(): نص { أرجع «The returned expression type does not match the function return type»; }
+عرف نص_سبب_سبب_نوع_غير_محلول_نوع(): نص { أرجع «The referenced type could not be resolved during type checking»; }
+عام عرف نص_سبب_سبب_وقت_الترجمة_عدد_حجج_غير_مطابق(): نص { أرجع «The call passes a different number of arguments than the function's compile-time parameters»; }
+عام عرف نص_سبب_سبب_وقت_الترجمة_خلل_المفسر(): نص { أرجع «The interpreter failed internally during compile-time evaluation»; }
+عام عرف نص_سبب_سبب_وقت_الترجمة_مسير_غير_صالح(): نص { أرجع «The MSIR prepared for compile-time evaluation failed verification»; }
+عام عرف نص_سبب_سبب_وقت_الترجمة_تخطيط_غير_مثبت(): نص { أرجع «The type's size or alignment is not fixed yet at compile time»; }
+عام عرف نص_سبب_سبب_وقت_الترجمة_قيمة_غير_ثابتة_أو_أثر_ممنوع(): نص { أرجع «A value depends on runtime data or on an effect that is not allowed at compile time»; }
+عام عرف نص_سبب_سبب_وقت_الترجمة_تجاوز_حد_التخصيصات(): نص { أرجع «The number of compile-time specializations exceeded its limit»; }
+عام عرف نص_سبب_سبب_تنسيق_قوس_غير_مغلق(): نص { أرجع «A `{` in the format string is not closed by a `}`»; }
+عام عرف نص_سبب_سبب_تنسيق_قوس_إغلاق_منفرد(): نص { أرجع «A `}` in the format string closes no `{`; write `}}` for a literal brace»; }
+عام عرف نص_سبب_سبب_تنسيق_مواصفة_غير_صالحة(): نص { أرجع «The placeholder's format spec is not valid»; }
+عام عرف نص_سبب_سبب_تنسيق_نوع_غير_معروف(): نص { أرجع «The placeholder names an unknown format type»; }
+عام عرف نص_سبب_سبب_تنسيق_وسيط_مسمى(): نص { أرجع «Named arguments are not supported; refer to the argument by its position»; }
+عام عرف نص_سبب_سبب_تنسيق_وسيط_مفقود(): نص { أرجع «The format string refers to an argument the call does not pass»; }
+عام عرف نص_سبب_سبب_تنسيق_وسيط_غير_مستخدم(): نص { أرجع «The call passes an argument the format string never uses»; }
+عام عرف نص_سبب_سبب_تنسيق_نوع_غير_مناسب(): نص { أرجع «The placeholder's format type does not apply to the argument it formats»; }
+عام عرف نص_سبب_سبب_تنسيق_عدد_غير_صالح(): نص { أرجع «A width or precision taken from an argument needs an integer argument»; }
+عام عرف نص_سبب_سبب_وقت_الترجمة_هدف_غير_معروف(): نص { أرجع «Compile-time evaluation does not recognize the selected target»; }
+عام عرف نص_سبب_سبب_وقت_الترجمة_ناتج_غير_قابل_للتمثيل(): نص { أرجع «The compile-time result cannot be represented as a constant of the expected type»; }
+
+عام عرف رسالة_سبب_إنجليزية(المفتاح: سبب_تشخيص): نص {
+    طابق المفتاح مع
+    | سبب_تشخيص.سبب_واجهة_الاستدعاء_غير_صحيح_نوع_معرف -> { أرجع «The type ID supplied to ABI classification is not valid»; }
+    | سبب_تشخيص.سبب_واجهة_الاستدعاء_مفقود_مسير_معامل -> { أرجع نص_سبب_سبب_واجهة_الاستدعاء_مفقود_مسير_معامل(); }
+    | سبب_تشخيص.سبب_واجهة_الاستدعاء_مفقود_مسير_قيمة_نوع -> { أرجع نص_سبب_سبب_واجهة_الاستدعاء_مفقود_مسير_قيمة_نوع(); }
+    | سبب_تشخيص.سبب_واجهة_الاستدعاء_هدف_قدرة_غير_متاح -> { أرجع نص_سبب_سبب_واجهة_الاستدعاء_هدف_قدرة_غير_متاح(); }
+    | سبب_تشخيص.سبب_واجهة_الاستدعاء_غير_مدعوم_نوع -> { أرجع «The calling convention does not support this type»; }
+    | سبب_تشخيص.سبب_واجهة_الاستدعاء_غير_مدعوم_نوع_حجم -> { أرجع نص_سبب_سبب_واجهة_الاستدعاء_غير_مدعوم_نوع_حجم(); }
+    | سبب_تشخيص.سبب_تخصيص_قيد_إخفاق -> { أرجع نص_سبب_سبب_تخصيص_قيد_إخفاق(); }
+    | سبب_تشخيص.سبب_تخصيص_إطار_سياسة_غير_متاح -> { أرجع نص_سبب_سبب_تخصيص_إطار_سياسة_غير_متاح(); }
+    | سبب_تشخيص.سبب_تخصيص_غير_صحيح_هدف -> { أرجع «The register allocator received an unrecognized target»; }
+    | سبب_تشخيص.سبب_تخصيص_يحتاج_سكب -> { أرجع «Register allocation requires spilling a value to memory»; }
+    | سبب_تشخيص.سبب_تخصيص_غير_مدعوم_سكب_حالة -> { أرجع «The requested register-spill state is not supported»; }
+    | سبب_تشخيص.سبب_ترميز_واجهة_الاستدعاء_مسجل_عدم_تطابق -> { أرجع نص_سبب_سبب_ترميز_واجهة_الاستدعاء_مسجل_عدم_تطابق(); }
+    | سبب_تشخيص.سبب_ترميز_حسابي_فوري_خارج_من_نطاق -> { أرجع «The arithmetic immediate exceeds the machine encoding range»; }
+    | سبب_تشخيص.سبب_ترميز_تفرع_خارج_من_نطاق -> { أرجع نص_سبب_سبب_ترميز_تفرع_خارج_من_نطاق(); }
+    | سبب_تشخيص.سبب_ترميز_مكرر_كتلة -> { أرجع «The same block was encoded twice while emitting machine code»; }
+    | سبب_تشخيص.سبب_ترميز_مكرر_دالة -> { أرجع «The same function was encoded twice while emitting machine code»; }
+    | سبب_تشخيص.سبب_ترميز_غير_كاف_عمل_مسجلات -> { أرجع نص_سبب_سبب_ترميز_غير_كاف_عمل_مسجلات(); }
+    | سبب_تشخيص.سبب_ترميز_غير_صحيح_فيزيائي_مسجل -> { أرجع «The instruction refers to an invalid physical register»; }
+    | سبب_تشخيص.سبب_ترميز_غير_صحيح_هدف -> { أرجع «The machine-code encoder received an unrecognized target»; }
+    | سبب_تشخيص.سبب_ترميز_ذاكرة_تخصيص_غير_متاح -> { أرجع نص_سبب_سبب_ترميز_ذاكرة_تخصيص_غير_متاح(); }
+    | سبب_تشخيص.سبب_ترميز_ذاكرة_إزاحة_خارج_من_نطاق -> { أرجع «A memory offset is too large for the machine instruction encoding»; }
+    | سبب_تشخيص.سبب_ترميز_مفقود_كتلة_هدف -> { أرجع «A branch targets a block that has no encoded address»; }
+    | سبب_تشخيص.سبب_ترميز_مفقود_إطار_خانة -> { أرجع «The machine-code encoder could not find a stack-frame slot»; }
+    | سبب_تشخيص.سبب_ترميز_مفقود_محلي_خانة -> { أرجع «The machine-code encoder could not find the slot of a local variable»; }
+    | سبب_تشخيص.سبب_ترميز_عملية_خروج_موفر_مفقود -> { أرجع نص_سبب_سبب_ترميز_عملية_خروج_موفر_مفقود(); }
+    | سبب_تشخيص.سبب_ترميز_إزاحة32_تفرع_خارج_من_نطاق -> { أرجع «A branch target is farther than a 32-bit relative jump can reach»; }
+    | سبب_تشخيص.سبب_ترميز_وقت_تشغيل_استدعاء_خارج_من_نطاق -> { أرجع «A call to a runtime function is farther than the instruction can reach»; }
+    | سبب_تشخيص.سبب_ترميز_سكب_إزاحة_خارج_من_نطاق -> { أرجع نص_سبب_سبب_ترميز_سكب_إزاحة_خارج_من_نطاق(); }
+    | سبب_تشخيص.سبب_ترميز_غير_محاذى_تفرع -> { أرجع نص_سبب_سبب_ترميز_غير_محاذى_تفرع(); }
+    | سبب_تشخيص.سبب_ترميز_غير_قابل_للترميز_حافة_نقل_ملكية -> { أرجع نص_سبب_سبب_ترميز_غير_قابل_للترميز_حافة_نقل_ملكية(); }
+    | سبب_تشخيص.سبب_ترميز_غير_مدعوم_واجهة_الاستدعاء_موقع -> { أرجع نص_سبب_سبب_ترميز_غير_مدعوم_واجهة_الاستدعاء_موقع(); }
+    | سبب_تشخيص.سبب_ترميز_غير_مدعوم_واجهة_الاستدعاء_مسجل -> { أرجع «The calling convention requires a register that the encoder does not support»; }
+    | سبب_تشخيص.سبب_ترميز_غير_مدعوم_صحيح_عرض -> { أرجع «The machine-code encoder does not support this integer width»; }
+    | سبب_تشخيص.سبب_ترميز_غير_مدعوم_ذاكرة_عنوان -> { أرجع «The requested memory addressing mode cannot be encoded»; }
+    | سبب_تشخيص.سبب_ترميز_غير_مدعوم_ذاكرة_عرض -> { أرجع «The machine-code encoder does not support this memory access width»; }
+    | سبب_تشخيص.سبب_دخول_موائم_مطلوب -> { أرجع «The entry point requires an adapter before code generation»; }
+    | سبب_تشخيص.سبب_دخول_مفقود_مسير_دالة -> { أرجع «The program entry function is missing from MSIR»; }
+    | سبب_تشخيص.سبب_دخول_هدف_قدرة_غير_متاح -> { أرجع «The target cannot provide the program entry point that this output needs»; }
+    | سبب_تشخيص.سبب_واجهة_أمامية_ملغى -> { أرجع «Frontend processing was cancelled»; }
+    | سبب_تشخيص.سبب_واجهة_أمامية_مشروع_بلا_جذور -> { أرجع «The project has no source roots to analyze»; }
+    | سبب_تشخيص.سبب_واجهة_أمامية_جذر_صياغة_شجرة_مفقود -> { أرجع «The root syntax tree is missing from the frontend result»; }
+    | سبب_تشخيص.سبب_عام_ناقص_تخطيط -> { أرجع «A global value has a type whose layout is incomplete»; }
+    | سبب_تشخيص.سبب_عام_غير_مدعوم_مهيئ -> { أرجع «This global value initializer is not supported yet»; }
+    | سبب_تشخيص.سبب_مفسر_داخلي_حجة_عدد_عدم_تطابق -> { أرجع «The interpreter received a different number of arguments than the function declares»; }
+    | سبب_تشخيص.سبب_مفسر_داخلي_فارغ_استدعاء_مكدس -> { أرجع «The interpreter call stack is unexpectedly empty»; }
+    | سبب_تشخيص.سبب_مفسر_داخلي_فهرس_نوع_عدم_تطابق -> { أرجع «The interpreter found an index whose type is not an integer»; }
+    | سبب_تشخيص.سبب_مفسر_داخلي_مفقود_تفعيل -> { أرجع نص_سبب_سبب_مفسر_داخلي_مفقود_تفعيل(); }
+    | سبب_تشخيص.سبب_مفسر_داخلي_مفقود_كتلة -> { أرجع «The interpreter could not find the block it was asked to run»; }
+    | سبب_تشخيص.سبب_مفسر_داخلي_مفقود_كتلة_معامل -> { أرجع «The interpreter could not find a block parameter»; }
+    | سبب_تشخيص.سبب_مفسر_داخلي_مفقود_عائم_نوع -> { أرجع «The interpreter has no floating-point type information for a value»; }
+    | سبب_تشخيص.سبب_مفسر_داخلي_مفقود_دالة -> { أرجع «The interpreter could not find the function it was asked to call»; }
+    | سبب_تشخيص.سبب_مفسر_داخلي_مفقود_دالة_دخول -> { أرجع «The function the interpreter was asked to run has no entry block»; }
+    | سبب_تشخيص.سبب_مفسر_داخلي_مفقود_دالة_معامل -> { أرجع «The interpreter could not find a function parameter»; }
+    | سبب_تشخيص.سبب_مفسر_داخلي_مفقود_تعليمة -> { أرجع «The interpreter could not find the next instruction to run»; }
+    | سبب_تشخيص.سبب_مفسر_داخلي_مفقود_تعليمة_نتيجة -> { أرجع «An instruction run by the interpreter produced no result although one is required»; }
+    | سبب_تشخيص.سبب_مفسر_داخلي_مفقود_صحيح_نوع -> { أرجع «The interpreter has no integer type information for a value»; }
+    | سبب_تشخيص.سبب_مفسر_داخلي_مفقود_مسير_قيمة -> { أرجع «The interpreter could not find an MSIR value it needs»; }
+    | سبب_تشخيص.سبب_مفسر_داخلي_مفقود_منه -> { أرجع «A block run by the interpreter has no terminator instruction»; }
+    | سبب_تشخيص.سبب_مفسر_داخلي_مرجع_نوع_عدم_تطابق -> { أرجع «The interpreter found a reference whose type does not match its target»; }
+    | سبب_تشخيص.سبب_مفسر_داخلي_إرجاع_بنية_عدم_تطابق -> { أرجع «A function run by the interpreter returned a value where none was expected, or the reverse»; }
+    | سبب_تشخيص.سبب_مفسر_داخلي_خانة_من_آخر_دالة -> { أرجع «The interpreter used a storage slot that belongs to a different function»; }
+    | سبب_تشخيص.سبب_مفسر_داخلي_خانة_معرف_خارج_من_نطاق -> { أرجع «The interpreter used a storage slot ID outside the function's range»; }
+    | سبب_تشخيص.سبب_مفسر_داخلي_غير_متوقع_تعليمة_نتيجة -> { أرجع «An instruction run by the interpreter produced a result although it must not»; }
+    | سبب_تشخيص.سبب_مفسر_وقت_تشغيل_تالف_صندوق -> { أرجع «The program read a box whose storage is no longer valid»; }
+    | سبب_تشخيص.سبب_مفسر_وقت_تشغيل_تالف_موضع_إسقاط -> { أرجع «The program accessed a field or element of storage that is no longer valid»; }
+    | سبب_تشخيص.سبب_مفسر_وقت_تشغيل_تالف_موضع_جذر -> { أرجع «The program accessed storage whose root location is no longer valid»; }
+    | سبب_تشخيص.سبب_مفسر_وقت_تشغيل_تالف_مرجع -> { أرجع «The program followed a reference that no longer points to valid storage»; }
+    | سبب_تشخيص.سبب_مفسر_وقت_تشغيل_متوقع_مركب_قيمة -> { أرجع «The program used a value as a record or tuple, but it is not one»; }
+    | سبب_تشخيص.سبب_مفسر_وقت_تشغيل_متوقع_منطقي_قيمة -> { أرجع «The interpreter expected a boolean value at runtime»; }
+    | سبب_تشخيص.سبب_مفسر_وقت_تشغيل_متوقع_صندوق_قيمة -> { أرجع «The program used a value as a box, but it is not one»; }
+    | سبب_تشخيص.سبب_مفسر_وقت_تشغيل_متوقع_صحيح_قيمة -> { أرجع «The program used a value as an integer, but it is not one»; }
+    | سبب_تشخيص.سبب_مفسر_وقت_تشغيل_متوقع_موسوم_قيمة -> { أرجع «The program matched on a value that is not a tagged union»; }
+    | سبب_تشخيص.سبب_مفسر_وقت_تشغيل_متوقع_نص_قيمة -> { أرجع «The program used a value as text, but it is not text»; }
+    | سبب_تشخيص.سبب_مفسر_وقت_تشغيل_فهرس_خارج_من_نطاق -> { أرجع «The program used an index that is past the end of the collection»; }
+    | سبب_تشخيص.سبب_مفسر_وقت_تشغيل_غير_صحيح_إزاحة -> { أرجع «The program used a byte offset outside the valid range»; }
+    | سبب_تشخيص.سبب_مفسر_وقت_تشغيل_غير_صحيح_بدائي_حجة -> { أرجع «The program passed an invalid argument to a built-in operation»; }
+    | سبب_تشخيص.سبب_مفسر_وقت_تشغيل_غير_صحيح_يوتيف8 -> { أرجع «The program produced text that is not valid UTF-8»; }
+    | سبب_تشخيص.سبب_مفسر_وقت_تشغيل_سالب_فهرس -> { أرجع «The program used a negative index»; }
+    | سبب_تشخيص.سبب_مفسر_وقت_تشغيل_بدائي_حجة_عدد_عدم_تطابق -> { أرجع «The program called a built-in operation with the wrong number of arguments»; }
+    | سبب_تشخيص.سبب_مفسر_وقت_تشغيل_قراءة_فقط_موضع -> { أرجع «The program needs to modify a place that is read-only»; }
+    | سبب_تشخيص.سبب_مفسر_وقت_تشغيل_خانة_ليس_موضع -> { أرجع «The program used a storage slot as a place, but it holds a plain value»; }
+    | سبب_تشخيص.سبب_مفسر_وقت_تشغيل_خانة_ليس_قيمة -> { أرجع «The program read a storage slot as a value, but it holds a place»; }
+    | سبب_تشخيص.سبب_مفسر_وقت_تشغيل_موسوم_منشئ_عدم_تطابق -> { أرجع «The program read a payload of a different constructor than the value holds»; }
+    | سبب_تشخيص.سبب_مفسر_وقت_تشغيل_موسوم_حمولة_خارج_من_نطاق -> { أرجع «The program read a payload index that the constructor does not have»; }
+    | سبب_تشخيص.سبب_مفسر_وقت_تشغيل_غير_مهيأ_خانة -> { أرجع «The program read a storage slot before it was initialized»; }
+    | سبب_تشخيص.سبب_مفسر_وقت_تشغيل_غير_مدعوم_خارجي_استدعاء -> { أرجع «The interpreter cannot call this external function»; }
+    | سبب_تشخيص.سبب_مفسر_وقت_تشغيل_غير_مدعوم_آلة_بدائي -> { أرجع «The interpreter does not support this machine-level operation»; }
+    | سبب_تشخيص.سبب_مفسر_وقت_تشغيل_كتابة_قراءة_فقط_موضع -> { أرجع «The program wrote to a place that is read-only»; }
+    | سبب_تشخيص.سبب_مفسر_فخ -> { أرجع «The program stopped at a trap instruction»; }
+    | سبب_تشخيص.سبب_تخطيط_مؤجل_ديناميكي_نوع -> { أرجع «The layout of a dynamic type is only known at runtime»; }
+    | سبب_تشخيص.سبب_تخطيط_مؤجل_بلا_قيمة_تمثيل -> { أرجع «The deferred layout has no value representation yet»; }
+    | سبب_تشخيص.سبب_تخطيط_مؤجل_وقت_تشغيل_مدار_نص -> { أرجع «Layout of runtime-managed text is not frozen yet»; }
+    | سبب_تشخيص.سبب_تخطيط_مؤجل_غير_مثبت_دالة -> { أرجع «The layout depends on a function type that is not fixed yet»; }
+    | سبب_تشخيص.سبب_تخطيط_مؤجل_غير_مثبت_شريحة -> { أرجع «The layout depends on a slice type that is not fixed yet»; }
+    | سبب_تشخيص.سبب_تخطيط_مؤجل_غير_مثبت_متجه -> { أرجع «The layout depends on a vector type that is not fixed yet»; }
+    | سبب_تشخيص.سبب_تخطيط_غير_متوافق_هيكل -> { أرجع «The type structure does not match the layout requested for it»; }
+    | سبب_تشخيص.سبب_تخطيط_مفقود_منشئ_حمولة -> { أرجع «The layout of a constructor payload is missing»; }
+    | سبب_تشخيص.سبب_تخطيط_مفقود_جزء -> { أرجع «A required type-layout component is missing»; }
+    | سبب_تشخيص.سبب_تخطيط_مرفوض_مباشر_فيزيائي_دورة -> { أرجع «The type contains itself directly, so it has no finite size»; }
+    | سبب_تشخيص.سبب_تخطيط_مرفوض_ناقص_نوع_هيكل -> { أرجع «The type structure is incomplete, so its layout cannot be computed»; }
+    | سبب_تشخيص.سبب_تخطيط_مرفوض_غير_صحيح_هدف_بيانات_نموذج -> { أرجع نص_سبب_سبب_تخطيط_مرفوض_غير_صحيح_هدف_بيانات_نموذج(); }
+    | سبب_تشخيص.سبب_تخطيط_مرفوض_غير_صحيح_نوع_معرف -> { أرجع «The type layout calculator rejected an invalid type ID»; }
+    | سبب_تشخيص.سبب_تخطيط_غير_مدعوم_قيمة_عرض -> { أرجع نص_سبب_سبب_تخطيط_غير_مدعوم_قيمة_عرض(); }
+    | سبب_تشخيص.سبب_تخطيط_قيمة_نوع_مفقود -> { أرجع نص_سبب_سبب_تخطيط_قيمة_نوع_مفقود(); }
+    | سبب_تشخيص.سبب_محلل_معجمي_إنشاء -> { أرجع نص_سبب_سبب_محلل_معجمي_إنشاء(); }
+    | سبب_تشخيص.سبب_محلل_معجمي_داخلي -> { أرجع «The lexer failed internally»; }
+    | سبب_تشخيص.سبب_محلل_معجمي_يوتيف8 -> { أرجع «The source contains a byte sequence that is not valid UTF-8»; }
+    | سبب_تشخيص.سبب_ربط_كوف_غير_صحيح_كائن -> { أرجع «The COFF input object has an invalid structure»; }
+    | سبب_تشخيص.سبب_ربط_كوف_غير_صحيح_تخطيط_صورة -> { أرجع «The layout of the COFF output image is inconsistent»; }
+    | سبب_تشخيص.سبب_ربط_كوف_غير_قابل_للترميز_ستب_استيراد -> { أرجع «The import thunk of a function cannot address its import address table slot»; }
+    | سبب_تشخيص.سبب_ربط_كوف_مفقود_دخول_رمز -> { أرجع «The COFF input is missing the required entry symbol»; }
+    | سبب_تشخيص.سبب_ربط_كوف_إعادة_توطين_خارج_من_نطاق -> { أرجع «A COFF relocation target is out of range for its relocation type»; }
+    | سبب_تشخيص.سبب_ربط_كوف_غير_محلول_خارجي_رمز -> { أرجع «The COFF link refers to an external symbol that no input defines»; }
+    | سبب_تشخيص.سبب_ربط_كوف_غير_مدعوم_إعادة_توطين -> { أرجع «The COFF linker does not support this relocation type»; }
+    | سبب_تشخيص.سبب_ربط_إلف_غير_صحيح_كائن -> { أرجع «An ELF input to the linker is not a valid object file»; }
+    | سبب_تشخيص.سبب_ربط_إلف_مفقود_دخول_رمز -> { أرجع «The ELF link has no entry-point symbol»; }
+    | سبب_تشخيص.سبب_ربط_إلف_مجهول_خارجي_رمز -> { أرجع «The ELF link refers to an external symbol that no input defines»; }
+    | سبب_تشخيص.سبب_ربط_مدخل_قراءة_فشل -> { أرجع «The linker could not read one of its input files»; }
+    | سبب_تشخيص.سبب_ربط_ماك_أو_غير_صحيح_كائن -> { أرجع «The Mach-O linker rejected the object file»; }
+    | سبب_تشخيص.سبب_ربط_ماك_أو_مفقود_دخول_رمز -> { أرجع «The Mach-O entry-point symbol is missing»; }
+    | سبب_تشخيص.سبب_ربط_ماك_أو_إعادة_توطين_خارج_من_نطاق -> { أرجع نص_سبب_سبب_ربط_ماك_أو_إعادة_توطين_خارج_من_نطاق(); }
+    | سبب_تشخيص.سبب_ربط_ماك_أو_توقيع_إخفاق -> { أرجع «Signing the Mach-O linked output failed»; }
+    | سبب_تشخيص.سبب_ربط_ماك_أو_غير_مدعوم_خارجي_رمز -> { أرجع «An external symbol is unsupported by the Mach-O linker»; }
+    | سبب_تشخيص.سبب_ربط_ماك_أو_غير_مدعوم_إعادة_توطين -> { أرجع «The Mach-O linker does not support this relocation kind»; }
+    | سبب_تشخيص.سبب_ربط_موفر_غير_متاح -> { أرجع «The linker needed for this output is not available»; }
+    | سبب_تشخيص.سبب_ربط_سبيرفي_غير_صحيح_وحدة -> { أرجع «A SPIR-V input to the linker is not a valid module»; }
+    | سبب_تشخيص.سبب_ربط_رمز_خريطة_سعة_فيض -> { أرجع «The linker's symbol map has exceeded its capacity»; }
+    | سبب_تشخيص.سبب_ربط_هدف_إخراج_غير_مدعوم -> { أرجع «The linker cannot produce this kind of output for the target»; }
+    | سبب_تشخيص.سبب_ربط_غير_مسجل_هدف -> { أرجع «The link was requested for a target that is not registered»; }
+    | سبب_تشخيص.سبب_ربط_غير_مدعوم_خطة -> { أرجع «The requested linker plan is unsupported»; }
+    | سبب_تشخيص.سبب_ربط_واسم_غير_صحيح_وحدة -> { أرجع «A WebAssembly input to the linker is not a valid module»; }
+    | سبب_تشخيص.سبب_ربط_واسم_مفقود_دخول_رمز -> { أرجع «The WebAssembly link has no entry-point symbol»; }
+    | سبب_تشخيص.سبب_إل_إل_في_إم_واجهة_الاستدعاء_غير_متاح -> { أرجع «The LLVM backend has no calling convention for this target»; }
+    | سبب_تشخيص.سبب_إل_إل_في_إم_خلفية_غير_متاح_ل_هدف -> { أرجع نص_سبب_سبب_إل_إل_في_إم_خلفية_غير_متاح_ل_هدف(); }
+    | سبب_تشخيص.سبب_إل_إل_في_إم_تصحيح_معلومات_فشل -> { أرجع «LLVM failed to emit debug information»; }
+    | سبب_تشخيص.سبب_إل_إل_في_إم_مؤجل_تخطيط -> { أرجع «The LLVM backend reached a type whose layout is not decided yet»; }
+    | سبب_تشخيص.سبب_إل_إل_في_إم_إصدار_فشل -> { أرجع «LLVM code emission failed»; }
+    | سبب_تشخيص.سبب_إل_إل_في_إم_متوقع_موضع -> { أرجع «The LLVM backend expected a memory place but received a plain value»; }
+    | سبب_تشخيص.سبب_إل_إل_في_إم_متوقع_قيمة -> { أرجع «The LLVM backend expected a value but received a memory place»; }
+    | سبب_تشخيص.سبب_إل_إل_في_إم_غير_صحيح_مسير_حافة -> { أرجع «The LLVM backend found an invalid control-flow edge in MSIR»; }
+    | سبب_تشخيص.سبب_إل_إل_في_إم_مفقود_كتلة -> { أرجع «The LLVM backend could not find a block it needs»; }
+    | سبب_تشخيص.سبب_إل_إل_في_إم_مفقود_خارجي_دالة -> { أرجع «The LLVM backend could not find a declaration for an external function»; }
+    | سبب_تشخيص.سبب_إل_إل_في_إم_مفقود_دالة -> { أرجع «The LLVM backend could not find a function it needs»; }
+    | سبب_تشخيص.سبب_إل_إل_في_إم_مفقود_عام -> { أرجع «The LLVM backend could not find a global value it needs»; }
+    | سبب_تشخيص.سبب_إل_إل_في_إم_مفقود_نوع -> { أرجع «The LLVM backend has no LLVM type for a SultanC type»; }
+    | سبب_تشخيص.سبب_إل_إل_في_إم_مفقود_قيمة -> { أرجع «The LLVM backend could not find a value it needs»; }
+    | سبب_تشخيص.سبب_إل_إل_في_إم_كائن_إخراج_غير_مدعوم -> { أرجع «The LLVM backend cannot write an object file for this target»; }
+    | سبب_تشخيص.سبب_إل_إل_في_إم_تحسين_فشل -> { أرجع «LLVM optimization failed»; }
+    | سبب_تشخيص.سبب_إل_إل_في_إم_مؤشر_حجم_عدم_تطابق -> { أرجع «The target pointer size does not match what the LLVM backend expects»; }
+    | سبب_تشخيص.سبب_إل_إل_في_إم_مرفوض_تخطيط -> { أرجع «The LLVM backend received a type whose layout was rejected for this target»; }
+    | سبب_تشخيص.سبب_إل_إل_في_إم_هدف_خلفية_غير_متاح -> { أرجع «LLVM does not provide the required target backend»; }
+    | سبب_تشخيص.سبب_إل_إل_في_إم_غير_مدعوم_مسير_عملية -> { أرجع «The LLVM backend does not support this MSIR operation yet»; }
+    | سبب_تشخيص.سبب_إل_إل_في_إم_غير_مدعوم_بدائي -> { أرجع «The LLVM backend does not support this built-in operation yet»; }
+    | سبب_تشخيص.سبب_إل_إل_في_إم_غير_مدعوم_هدف -> { أرجع «The LLVM backend does not support this target»; }
+    | سبب_تشخيص.سبب_إل_إل_في_إم_غير_مدعوم_نوع -> { أرجع «The LLVM backend does not support this type yet»; }
+    | سبب_تشخيص.سبب_إل_إل_في_إم_تحقق_فشل -> { أرجع «The LLVM module generated by the compiler failed LLVM verification»; }
+    | سبب_تشخيص.سبب_ذاكرة_منشئ_حمولة_غير_متاح -> { أرجع «The memory layout of a constructor payload is not available»; }
+    | سبب_تشخيص.سبب_ذاكرة_منشئ_غير_متاح -> { أرجع «The memory information for a constructor is not available»; }
+    | سبب_تشخيص.سبب_ذاكرة_غير_صحيح_نوع_معرف -> { أرجع «Memory classification received a type ID that is not valid»; }
+    | سبب_تشخيص.سبب_ذاكرة_ملكية_دورة -> { أرجع «Types own each other in a cycle, so their memory cannot be managed»; }
+    | سبب_تشخيص.سبب_ذاكرة_سجل_حقل_غير_متاح -> { أرجع «The memory information for a record field is not available»; }
+    | سبب_تشخيص.سبب_ذاكرة_سجل_بنية_غير_متاح -> { أرجع «The memory shape of a record is not available»; }
+    | سبب_تشخيص.سبب_ذاكرة_موسوم_بنية_غير_متاح -> { أرجع «The memory shape of a tagged union is not available»; }
+    | سبب_تشخيص.سبب_ذاكرة_غير_متوقع_نوع_بنية -> { أرجع «Memory classification found a type with an unexpected shape»; }
+    | سبب_تشخيص.سبب_وحدة_رسم_بياني_مرفوض -> { أرجع «The module dependency graph was rejected»; }
+    | سبب_تشخيص.سبب_وحدة_استيراد_دورة -> { أرجع «Modules import each other in a cycle»; }
+    | سبب_تشخيص.سبب_وحدة_استيراد_يتجاوز_جذر -> { أرجع «The import path leaves the allowed module root»; }
+    | سبب_تشخيص.سبب_وحدة_استيراد_ليس_محمل -> { أرجع «A referenced imported module was not loaded»; }
+    | سبب_تشخيص.سبب_وحدة_غير_صحيح_استيراد_مرجع -> { أرجع «The import refers to a module in a form that is not valid»; }
+    | سبب_تشخيص.سبب_وحدة_غير_صحيح_منطقي_مسار -> { أرجع «The logical module path is not valid»; }
+    | سبب_تشخيص.سبب_وحدة_مكتبة_جذر_غير_مسجل -> { أرجع «The library root is not registered with the module system»; }
+    | سبب_تشخيص.سبب_وحدة_عام_مسار_تعارض -> { أرجع «Two modules claim the same public module path»; }
+    | سبب_تشخيص.سبب_وحدة_انتقائي_تصدير_ليس_موجود -> { أرجع «The module does not export the name requested by the selective import»; }
+    | سبب_تشخيص.سبب_وحدة_مصدر_تعارض -> { أرجع «Two source files are registered for the same module»; }
+    | سبب_تشخيص.سبب_وحدة_مصدر_ليس_موجود -> { أرجع «The source file of the requested module does not exist»; }
+    | سبب_تشخيص.سبب_وحدة_مصدر_غير_مقروء -> { أرجع «The module source file could not be read»; }
+    | سبب_تشخيص.سبب_مسير_بناء_عابر_دالة_كتلة -> { أرجع «The MSIR builder was given a block that belongs to another function»; }
+    | سبب_تشخيص.سبب_مسير_بناء_عابر_دالة_قيمة -> { أرجع «The MSIR builder was given a value that belongs to another function»; }
+    | سبب_تشخيص.سبب_مسير_بناء_مفقود_كتلة -> { أرجع «The MSIR builder could not find the requested block»; }
+    | سبب_تشخيص.سبب_مسير_بناء_مفقود_خارجي_دالة -> { أرجع «The MSIR builder could not find the requested external function»; }
+    | سبب_تشخيص.سبب_مسير_بناء_مفقود_دالة -> { أرجع «The MSIR builder could not find the requested function»; }
+    | سبب_تشخيص.سبب_مسير_بناء_مفقود_قيمة -> { أرجع «The MSIR builder could not find the requested value»; }
+    | سبب_تشخيص.سبب_مسير_بناء_منته_كتلة -> { أرجع نص_سبب_سبب_مسير_بناء_منته_كتلة(); }
+    | سبب_تشخيص.سبب_مسير_خفض_استدعاء_حجة_عدد_عدم_تطابق -> { أرجع «A call passes a different number of arguments than the function declares»; }
+    | سبب_تشخيص.سبب_مسير_خفض_استدعاء_حجة_نوع_عدم_تطابق -> { أرجع نص_سبب_سبب_مسير_خفض_استدعاء_حجة_نوع_عدم_تطابق(); }
+    | سبب_تشخيص.سبب_مسير_خفض_مكرر_محلي -> { أرجع نص_سبب_سبب_مسير_خفض_مكرر_محلي(); }
+    | سبب_تشخيص.سبب_مسير_خفض_مكرر_مصدر_فهرس -> { أرجع «A source index was registered twice during MSIR lowering»; }
+    | سبب_تشخيص.سبب_مسير_خفض_غير_متسق_رمز_نوع -> { أرجع نص_سبب_سبب_مسير_خفض_غير_متسق_رمز_نوع(); }
+    | سبب_تشخيص.سبب_مسير_خفض_خريطة_سعة_فيض -> { أرجع «The MSIR lowering map exceeded its capacity»; }
+    | سبب_تشخيص.سبب_مسير_خفض_مفقود_منشئ_هوية -> { أرجع «A constructor identity required by MSIR lowering is missing»; }
+    | سبب_تشخيص.سبب_مسير_خفض_مفقود_تعبير_نوع -> { أرجع نص_سبب_سبب_مسير_خفض_مفقود_تعبير_نوع(); }
+    | سبب_تشخيص.سبب_مسير_خفض_مفقود_دالة_توقيع -> { أرجع «The function signature required by MSIR lowering is missing»; }
+    | سبب_تشخيص.سبب_مسير_خفض_مفقود_محلي_رمز -> { أرجع «A local symbol required by MSIR lowering is missing»; }
+    | سبب_تشخيص.سبب_مسير_خفض_مفقود_اسم_ربط_اسم -> { أرجع «A required name binding is missing during MSIR lowering»; }
+    | سبب_تشخيص.سبب_تشغيل_فشل_تأكيد -> { أرجع «An assertion failed»; }
+    | سبب_تشخيص.سبب_مسير_خفض_مفقود_إرجاع_مسار -> { أرجع «A path through the function ends without returning a value»; }
+    | سبب_تشخيص.سبب_مسير_خفض_مفقود_دلالي_دالة -> { أرجع «Lowering to MSIR could not find the analyzed form of a function»; }
+    | سبب_تشخيص.سبب_مسير_خفض_مفقود_رمز_نوع -> { أرجع «Lowering to MSIR could not find the type of a symbol»; }
+    | سبب_تشخيص.سبب_مسير_خفض_إرجاع_نوع_عدم_تطابق -> { أرجع «The returned value has a different type than the function declares»; }
+    | سبب_تشخيص.سبب_مسير_خفض_غير_مهيأ_محلي -> { أرجع «A local variable is used before it is assigned»; }
+    | سبب_تشخيص.سبب_مسير_خفض_غير_محلول_نوع -> { أرجع «Lowering to MSIR reached a type that was not resolved»; }
+    | سبب_تشخيص.سبب_مسير_خفض_غير_مدعوم_تعبير -> { أرجع «This expression cannot be lowered to MSIR yet»; }
+    | سبب_تشخيص.سبب_مسير_خفض_غير_مدعوم_تعبير_نوع -> { أرجع «This expression's type cannot be lowered to MSIR yet»; }
+    | سبب_تشخيص.سبب_مسير_خفض_غير_مدعوم_خارجي_دالة -> { أرجع «This external function cannot be lowered to MSIR yet»; }
+    | سبب_تشخيص.سبب_مسير_خفض_غير_مدعوم_عبارة -> { أرجع «This statement cannot be lowered to MSIR yet»; }
+    | سبب_تشخيص.سبب_مسير_مركب_عضو_نوع_عدم_تطابق -> { أرجع «An MSIR aggregate member has a different type than its declaration»; }
+    | سبب_تشخيص.سبب_مسير_حسابي_معامل_نوع_عدم_تطابق -> { أرجع «An MSIR arithmetic operand has a type mismatch»; }
+    | سبب_تشخيص.سبب_مسير_حسابي_نتيجة_نوع_عدم_تطابق -> { أرجع «An MSIR arithmetic result has a different type than its operands»; }
+    | سبب_تشخيص.سبب_مسير_حسابي_إشارة_عدد_عدم_تطابق -> { أرجع «An MSIR arithmetic operation mixes signed and unsigned integers»; }
+    | سبب_تشخيص.سبب_مسير_كتلة_من_آخر_دالة -> { أرجع «An MSIR branch refers to a block of a different function»; }
+    | سبب_تشخيص.سبب_مسير_كتلة_بلا_منه -> { أرجع «An MSIR block does not end with a terminator instruction»; }
+    | سبب_تشخيص.سبب_مسير_تفرع_حجة_عدد_عدم_تطابق -> { أرجع «An MSIR branch passes a different number of arguments than its target block accepts»; }
+    | سبب_تشخيص.سبب_مسير_تفرع_حجة_نوع_عدم_تطابق -> { أرجع «An MSIR branch argument has a different type than the target block parameter»; }
+    | سبب_تشخيص.سبب_مسير_تفرع_شرط_ليس_منطقي -> { أرجع «An MSIR branch condition must be boolean»; }
+    | سبب_تشخيص.سبب_مسير_استدعاء_حجة_عدد_عدم_تطابق -> { أرجع «An MSIR call passes a different number of arguments than the callee accepts»; }
+    | سبب_تشخيص.سبب_مسير_استدعاء_حجة_نوع_عدم_تطابق -> { أرجع «An MSIR call argument has a different type than the callee parameter»; }
+    | سبب_تشخيص.سبب_مسير_استدعاء_تعديل_موضع_ليس_قابل_للكتابة -> { أرجع نص_سبب_سبب_مسير_استدعاء_تعديل_موضع_ليس_قابل_للكتابة(); }
+    | سبب_تشخيص.سبب_مسير_استدعاء_تعديل_موضع_نوع_عدم_تطابق -> { أرجع نص_سبب_سبب_مسير_استدعاء_تعديل_موضع_نوع_عدم_تطابق(); }
+    | سبب_تشخيص.سبب_مسير_استدعاء_نتيجة_بنية_عدم_تطابق -> { أرجع «An MSIR call expects a result but the callee returns none, or the reverse»; }
+    | سبب_تشخيص.سبب_مسير_استدعاء_نتيجة_نوع_عدم_تطابق -> { أرجع «An MSIR call result has a different type than the callee returns»; }
+    | سبب_تشخيص.سبب_مسير_معتمد_قيمة_جدول_عدم_تطابق -> { أرجع نص_سبب_سبب_مسير_معتمد_قيمة_جدول_عدم_تطابق(); }
+    | سبب_تشخيص.سبب_مسير_مقارنة_نتيجة_ليس_منطقي -> { أرجع «An MSIR comparison result must be boolean»; }
+    | سبب_تشخيص.سبب_مسير_ثابت_نوع_عدم_تطابق -> { أرجع «An MSIR constant has a different type than the value it defines»; }
+    | سبب_تشخيص.سبب_مسير_تعريف_لا_ليس_يهيمن -> { أرجع «An MSIR value definition does not dominate its use»; }
+    | سبب_تشخيص.سبب_مسير_مكرر_قيمة_معرف -> { أرجع «The same MSIR value ID is defined more than once»; }
+    | سبب_تشخيص.سبب_مسير_دخول_كتلة_يملك_معاملات -> { أرجع «The entry block of an MSIR function must not have parameters»; }
+    | سبب_تشخيص.سبب_مسير_حقل_نوع_عدم_تطابق -> { أرجع «An MSIR field access has a different type than the record field»; }
+    | سبب_تشخيص.سبب_مسير_دالة_تال_قيمة_عدم_تطابق -> { أرجع نص_سبب_سبب_مسير_دالة_تال_قيمة_عدم_تطابق(); }
+    | سبب_تشخيص.سبب_مسير_دالة_قيمة_عدد_عدم_تطابق -> { أرجع «An MSIR function's value table size does not match its defined values»; }
+    | سبب_تشخيص.سبب_مسير_دالة_بلا_دخول -> { أرجع «An MSIR function has no entry block»; }
+    | سبب_تشخيص.سبب_مسير_عام_مهيئ_نوع_عدم_تطابق -> { أرجع «An MSIR global initializer has a different type than the global»; }
+    | سبب_تشخيص.سبب_مسير_غير_متوافق_خزن -> { أرجع «An MSIR store writes a value whose type does not match the destination»; }
+    | سبب_تشخيص.سبب_مسير_فهرس_ليس_صحيح -> { أرجع «An MSIR index operand is not an integer»; }
+    | سبب_تشخيص.سبب_مسير_مفهرس_عنصر_نوع_عدم_تطابق -> { أرجع «The indexed element type does not match the MSIR contract»; }
+    | سبب_تشخيص.سبب_مسير_تعليمة_مفقود_نتيجة -> { أرجع «An MSIR instruction that must produce a result has none»; }
+    | سبب_تشخيص.سبب_مسير_غير_صحيح_مركب -> { أرجع «An MSIR aggregate does not match the shape of its type»; }
+    | سبب_تشخيص.سبب_مسير_غير_صحيح_صندوق -> { أرجع «An MSIR box operation is applied to a value that is not a box»; }
+    | سبب_تشخيص.سبب_مسير_غير_صحيح_تفرع_هدف -> { أرجع «An MSIR branch targets a block that does not exist»; }
+    | سبب_تشخيص.سبب_مسير_غير_صحيح_استدعاء_هدف -> { أرجع «An MSIR call targets a function that does not exist»; }
+    | سبب_تشخيص.سبب_مسير_غير_صحيح_خارجي_استدعاء_هدف -> { أرجع «An MSIR external call targets a function that is not declared as external»; }
+    | سبب_تشخيص.سبب_مسير_غير_صحيح_حقل -> { أرجع «An MSIR field access names a field that the record does not have»; }
+    | سبب_تشخيص.سبب_مسير_غير_صحيح_دالة_دخول -> { أرجع «The entry block of an MSIR function is not valid»; }
+    | سبب_تشخيص.سبب_مسير_غير_صحيح_دالة_نتيجة_نوع -> { أرجع «An MSIR function declares a result type that is not valid»; }
+    | سبب_تشخيص.سبب_مسير_غير_صحيح_فهرسة -> { أرجع «An MSIR indexing operation is applied to a value that cannot be indexed»; }
+    | سبب_تشخيص.سبب_مسير_غير_صحيح_صحيح_تحويل -> { أرجع «An MSIR integer conversion uses an unsupported source or target type»; }
+    | سبب_تشخيص.سبب_مسير_غير_صحيح_آلة_استدعاء_ذاكرة_عقد -> { أرجع «An MSIR machine call violates its memory access contract»; }
+    | سبب_تشخيص.سبب_مسير_غير_صحيح_مملوك_تسلسل_نقل -> { أرجع «An owned sequence transfer violates MSIR ownership rules»; }
+    | سبب_تشخيص.سبب_مسير_غير_صحيح_بدائي_حجة_نوع -> { أرجع «An MSIR primitive operation receives an argument of the wrong type»; }
+    | سبب_تشخيص.سبب_مسير_غير_صحيح_مرجع -> { أرجع «An MSIR reference is taken to something that is not a valid place»; }
+    | سبب_تشخيص.سبب_مسير_غير_صحيح_مرجع_إلى_مؤشر_تحويل -> { أرجع «An MSIR reference-to-pointer conversion has an invalid source or target type»; }
+    | سبب_تشخيص.سبب_مسير_غير_صحيح_موسوم_منشئ -> { أرجع «An MSIR tagged value uses a constructor that its type does not have»; }
+    | سبب_تشخيص.سبب_مسير_غير_صحيح_موسوم_حمولة -> { أرجع «An MSIR tagged value accesses a payload that its constructor does not have»; }
+    | سبب_تشخيص.سبب_مسير_غير_صحيح_موسوم_نوع -> { أرجع «An MSIR tagged operation is applied to a type that is not a tagged union»; }
+    | سبب_تشخيص.سبب_مسير_غير_صحيح_قيمة_نوع -> { أرجع «An MSIR value has a type that is not valid»; }
+    | سبب_تشخيص.سبب_مسير_مفقود_استدعاء_تعديل_موضع -> { أرجع نص_سبب_سبب_مسير_مفقود_استدعاء_تعديل_موضع(); }
+    | سبب_تشخيص.سبب_مسير_مفقود_برنامج_دخول_دالة -> { أرجع «The MSIR program has no entry function»; }
+    | سبب_تشخيص.سبب_مسير_مفقود_قيمة -> { أرجع «An MSIR instruction uses a value that is never defined»; }
+    | سبب_تشخيص.سبب_مسير_غير_صحيح_حسابي_معامل -> { أرجع «An arithmetic instruction has a non-integer operand in MSIR»; }
+    | سبب_تشخيص.سبب_مسير_غير_معتمد_كتلة_معرف -> { أرجع «An MSIR block ID is out of order or out of range»; }
+    | سبب_تشخيص.سبب_مسير_غير_معتمد_دالة_معرف -> { أرجع «An MSIR function ID is out of order or out of range»; }
+    | سبب_تشخيص.سبب_مسير_غير_معتمد_قيمة_معرف -> { أرجع «An MSIR value ID is out of order or out of range»; }
+    | سبب_تشخيص.سبب_مسير_حمولة_عدد_عدم_تطابق -> { أرجع «An MSIR constructor receives a different number of payloads than it declares»; }
+    | سبب_تشخيص.سبب_مسير_حمولة_نوع_عدم_تطابق -> { أرجع «An MSIR constructor payload has a different type than declared»; }
+    | سبب_تشخيص.سبب_مسير_موضع_نوع_عدم_تطابق -> { أرجع «An MSIR place has a different type than the operation expects»; }
+    | سبب_تشخيص.سبب_مسير_موضع_مستخدم_بوصفه_قيمة -> { أرجع «An MSIR storage place was used where a value is required»; }
+    | سبب_تشخيص.سبب_مسير_بدائي_نتيجة_نوع_عدم_تطابق -> { أرجع «An MSIR primitive operation result has the wrong type»; }
+    | سبب_تشخيص.سبب_مسير_بدائي_نوع_عقد_غير_متاح -> { أرجع نص_سبب_سبب_مسير_بدائي_نوع_عقد_غير_متاح(); }
+    | سبب_تشخيص.سبب_مسير_مرجع_نوع_عدم_تطابق -> { أرجع «An MSIR reference has a different type than the place it refers to»; }
+    | سبب_تشخيص.سبب_مسير_إرجاع_بنية_عدم_تطابق -> { أرجع «An MSIR return gives a value where none is expected, or none where one is expected»; }
+    | سبب_تشخيص.سبب_مسير_إرجاع_نوع_عدم_تطابق -> { أرجع «An MSIR return value has a different type than the function returns»; }
+    | سبب_تشخيص.سبب_مسير_وسم_نتيجة_ليس_ط32 -> { أرجع «The MSIR tag extraction result does not have type u32»; }
+    | سبب_تشخيص.سبب_مسير_غير_متوقع_استدعاء_تعديل_موضع -> { أرجع «An MSIR call provides an unexpected mutation destination»; }
+    | سبب_تشخيص.سبب_مسير_غير_متوقع_تعليمة_نتيجة -> { أرجع «An MSIR instruction produces a result although it must not»; }
+    | سبب_تشخيص.سبب_مسير_غير_آمن_قبل_رئيسي_وحدة_مهيئ -> { أرجع نص_سبب_سبب_مسير_غير_آمن_قبل_رئيسي_وحدة_مهيئ(); }
+    | سبب_تشخيص.سبب_مسير_استخدام_قبل_تعريف -> { أرجع «An MSIR value is used before its definition»; }
+    | سبب_تشخيص.سبب_مسير_قيمة_من_آخر_دالة -> { أرجع «An MSIR instruction uses a value defined in a different function»; }
+    | سبب_تشخيص.سبب_مسير_قيمة_مستخدم_بوصفه_موضع -> { أرجع «An MSIR value was used where a storage place is required»; }
+    | سبب_تشخيص.سبب_اسم_تصريح_جمع_ربط_اسم_تعارض -> { أرجع نص_سبب_سبب_اسم_تصريح_جمع_ربط_اسم_تعارض(); }
+    | سبب_تشخيص.سبب_اسم_تصريح_جمع_مفقود_اسم -> { أرجع «A declaration name is missing during declaration collection»; }
+    | سبب_تشخيص.سبب_اسم_تصريح_جمع_خاص_اسم -> { أرجع نص_سبب_سبب_اسم_تصريح_جمع_خاص_اسم(); }
+    | سبب_تشخيص.سبب_اسم_تصريح_جمع_مصدر_عدم_تطابق -> { أرجع «Declarations were collected from a different source than the module being resolved»; }
+    | سبب_تشخيص.سبب_اسم_تصريح_جمع_مجهول_وحدة -> { أرجع «Declarations were collected for a module that is not known»; }
+    | سبب_تشخيص.سبب_اسم_مكرر_تصريح -> { أرجع «The same name is declared more than once in this scope»; }
+    | سبب_تشخيص.سبب_اسم_بدائي_تسجيل_فشل -> { أرجع «The compiler could not register its built-in names»; }
+    | سبب_تشخيص.سبب_اسم_حل_ملتبس_اسم -> { أرجع «Name resolution found multiple possible declarations»; }
+    | سبب_تشخيص.سبب_اسم_حل_ربط_اسم_تعارض -> { أرجع «Name resolution found conflicting bindings»; }
+    | سبب_تشخيص.سبب_اسم_حل_مكرر_تصريح -> { أرجع نص_سبب_سبب_اسم_حل_مكرر_تصريح(); }
+    | سبب_تشخيص.سبب_اسم_حل_مفقود_اسم -> { أرجع «The required name was not found during resolution»; }
+    | سبب_تشخيص.سبب_اسم_حل_خاص_اسم -> { أرجع «Name resolution cannot access a private declaration»; }
+    | سبب_تشخيص.سبب_اسم_حل_مصدر_عدم_تطابق -> { أرجع «Name resolution found a source identity mismatch»; }
+    | سبب_تشخيص.سبب_اسم_حل_مجهول_وحدة -> { أرجع «Name resolution refers to an unknown module»; }
+    | سبب_تشخيص.سبب_اسم_جذر_وحدة_حقيقة_مفقود -> { أرجع نص_سبب_سبب_اسم_جذر_وحدة_حقيقة_مفقود(); }
+    | سبب_تشخيص.سبب_اسم_انتقائي_استيراد_ملتبس_اسم -> { أرجع «Selective import found an ambiguous name»; }
+    | سبب_تشخيص.سبب_اسم_انتقائي_استيراد_مفقود_اسم -> { أرجع «The selected import name was not found»; }
+    | سبب_تشخيص.سبب_اسم_انتقائي_استيراد_خاص_اسم -> { أرجع «The selected import name is private and cannot be imported»; }
+    | سبب_تشخيص.سبب_أصلي_إخراج_قدرة_غير_متاح -> { أرجع «The native output stage lacks a capability this target requires»; }
+    | سبب_تشخيص.سبب_أصلي_خلفية_غير_متاح_ل_هدف -> { أرجع «No native backend is available for the selected target»; }
+    | سبب_تشخيص.سبب_كائن_قدرة_غير_متاح -> { أرجع «The object file writer lacks a capability this target requires»; }
+    | سبب_تشخيص.سبب_كائن_إلف_استدعاء_إعادة_توطين_خارج_نص -> { أرجع «An ELF call relocation points outside the code section»; }
+    | سبب_تشخيص.سبب_كائن_إلف_مكرر_رمز -> { أرجع «The ELF object defines the same symbol twice»; }
+    | سبب_تشخيص.سبب_كائن_إلف_صيغة_حد_متجاوز -> { أرجع نص_سبب_سبب_كائن_إلف_صيغة_حد_متجاوز(); }
+    | سبب_تشخيص.سبب_كائن_إلف_مفقود_دخول_رمز -> { أرجع «The ELF object has no entry-point symbol»; }
+    | سبب_تشخيص.سبب_كائن_إلف_مفقود_إعادة_توطين_رمز -> { أرجع «An ELF relocation refers to a symbol that is not defined»; }
+    | سبب_تشخيص.سبب_كائن_إلف_هدف_عدم_تطابق -> { أرجع «The ELF object writer was given code for a different target»; }
+    | سبب_تشخيص.سبب_كائن_إلف_غير_مدعوم_معمارية -> { أرجع نص_سبب_سبب_كائن_إلف_غير_مدعوم_معمارية(); }
+    | سبب_تشخيص.سبب_كائن_إلف_غير_مدعوم_بيانات_نموذج -> { أرجع نص_سبب_سبب_كائن_إلف_غير_مدعوم_بيانات_نموذج(); }
+    | سبب_تشخيص.سبب_كائن_إلف_غير_مدعوم_كائن_صيغة -> { أرجع «The ELF object writer does not support this object format»; }
+    | سبب_تشخيص.سبب_كائن_إلف_غير_مدعوم_إعادة_توطين_مضاف -> { أرجع «The ELF object writer does not support this relocation addend»; }
+    | سبب_تشخيص.سبب_كائن_ماك_أو_مكرر_دالة -> { أرجع «A function definition is duplicated in the Mach-O object»; }
+    | سبب_تشخيص.سبب_كائن_ماك_أو_مكرر_ثابت_بيانات -> { أرجع «Static data is defined more than once in the Mach-O object»; }
+    | سبب_تشخيص.سبب_كائن_ماك_أو_مكرر_رمز -> { أرجع «A symbol is defined more than once in the Mach-O object»; }
+    | سبب_تشخيص.سبب_كائن_ماك_أو_صيغة_حد_متجاوز -> { أرجع نص_سبب_سبب_كائن_ماك_أو_صيغة_حد_متجاوز(); }
+    | سبب_تشخيص.سبب_كائن_ماك_أو_تعليمة_كلمة_خارج_من_نطاق -> { أرجع «An instruction word cannot fit the required Mach-O encoding»; }
+    | سبب_تشخيص.سبب_كائن_ماك_أو_غير_صحيح_تصحيح_ارتباط -> { أرجع «A Mach-O fixup is malformed»; }
+    | سبب_تشخيص.سبب_كائن_ماك_أو_غير_صحيح_إعادة_توطين_طلب -> { أرجع «A Mach-O relocation request is malformed»; }
+    | سبب_تشخيص.سبب_كائن_ماك_أو_مفقود_دخول_رمز -> { أرجع «The Mach-O object is missing its entry-point symbol»; }
+    | سبب_تشخيص.سبب_كائن_ماك_أو_مفقود_إعادة_توطين_رمز -> { أرجع «The Mach-O object is missing a relocation symbol»; }
+    | سبب_تشخيص.سبب_كائن_ماك_أو_مفقود_نص_قسم -> { أرجع «The Mach-O text section is missing»; }
+    | سبب_تشخيص.سبب_كائن_ماك_أو_وقت_تشغيل_رمز_غير_متاح -> { أرجع «The Mach-O writer cannot resolve a required runtime symbol»; }
+    | سبب_تشخيص.سبب_كائن_ماك_أو_هدف_عدم_تطابق -> { أرجع نص_سبب_سبب_كائن_ماك_أو_هدف_عدم_تطابق(); }
+    | سبب_تشخيص.سبب_كائن_ماك_أو_غير_مدعوم_تصحيح_ارتباط_مضاف -> { أرجع «The Mach-O writer does not support this fixup addend»; }
+    | سبب_تشخيص.سبب_كائن_ماك_أو_غير_مدعوم_إعادة_توطين_صنف -> { أرجع نص_سبب_سبب_كائن_ماك_أو_غير_مدعوم_إعادة_توطين_صنف(); }
+    | سبب_تشخيص.سبب_كائن_هدف_عدم_تطابق -> { أرجع «The object file writer was given code for a different target»; }
+    | سبب_تشخيص.سبب_كائن_واسم_غير_صحيح_بيانات_إعادة_توطين -> { أرجع «A WebAssembly data relocation is not valid»; }
+    | سبب_تشخيص.سبب_كائن_واسم_غير_صحيح_نوع_فهرس -> { أرجع «A WebAssembly type index is not valid»; }
+    | سبب_تشخيص.سبب_كائن_واسم_مفقود_إعادة_توطين_رمز -> { أرجع «A WebAssembly relocation refers to a symbol that is not defined»; }
+    | سبب_تشخيص.سبب_كائن_واسم_غير_مدعوم_إعادة_توطين_مضاف -> { أرجع «The WebAssembly object writer does not support this relocation addend»; }
+    | سبب_تشخيص.سبب_إخراج_كتابة_فشل -> { أرجع «The compiler could not write the output file»; }
+    | سبب_تشخيص.سبب_محلل_نحوي_متوقع_رمز_معجمي -> { أرجع «The parser expected a different token at this location»; }
+    | سبب_تشخيص.سبب_محلل_نحوي_تعبير -> { أرجع «The parser could not recognize the expression syntax»; }
+    | سبب_تشخيص.سبب_محلل_نحوي_داخلي -> { أرجع «An internal parser consistency failure occurred»; }
+    | سبب_تشخيص.سبب_محلل_نحوي_داخلي_بلا_نتيجة -> { أرجع «The parser produced no syntax tree result»; }
+    | سبب_تشخيص.سبب_محلل_نحوي_عنصر -> { أرجع «The parser could not recognize a declaration or item»; }
+    | سبب_تشخيص.سبب_محلل_نحوي_كلمة_محجوزة_خطأ_إملائي -> { أرجع «The parser encountered an unknown keyword spelling»; }
+    | سبب_تشخيص.سبب_محلل_نحوي_في_موضع_خاطئ_فاصلة_منقوطة -> { أرجع «A semicolon appears where the grammar does not allow it»; }
+    | سبب_تشخيص.سبب_محلل_نحوي_مفقود_دالة_إرجاع_نوع -> { أرجع «A function declaration is missing its return type»; }
+    | سبب_تشخيص.سبب_محلل_نحوي_نمط -> { أرجع «The parser could not recognize the pattern syntax»; }
+    | سبب_تشخيص.سبب_محلل_نحوي_عبارة_بلا_عملية -> { أرجع «Expected a function call or assignment in this statement»; }
+    | سبب_تشخيص.سبب_محلل_نحوي_هدف_شرط_غير_صحيح -> { أرجع «Invalid target condition in a conditional declaration»; }
+    | سبب_تشخيص.سبب_محلل_نحوي_هدف_شرط_بلا_هدف -> { أرجع «Target condition is missing its target»; }
+    | سبب_تشخيص.سبب_محلل_نحوي_نوع -> { أرجع «The parser could not recognize the type syntax»; }
+    | سبب_تشخيص.سبب_نمط_غير_صحيح_فرعي -> { أرجع «A child node in a match pattern is invalid»; }
+    | سبب_تشخيص.سبب_نمط_مفقود_منشئ_ربط_اسم -> { أرجع «A constructor binding required by the pattern is missing»; }
+    | سبب_تشخيص.سبب_نمط_مفقود_مميز_نوع -> { أرجع نص_سبب_سبب_نمط_مفقود_مميز_نوع(); }
+    | سبب_تشخيص.سبب_نمط_مفقود_اسم_هوية -> { أرجع «The name identity needed for pattern checking is missing»; }
+    | سبب_تشخيص.سبب_نمط_غير_دلالي_منشئ -> { أرجع «The pattern constructor is not a semantic constructor»; }
+    | سبب_تشخيص.سبب_نمط_مصدر_عدم_تطابق -> { أرجع نص_سبب_سبب_نمط_مصدر_عدم_تطابق(); }
+    | سبب_تشخيص.سبب_نمط_نطاق_مصدر_خارج_مصدر -> { أرجع «The pattern source span lies outside its source file»; }
+    | سبب_تشخيص.سبب_نمط_نوع_فحص_فشل -> { أرجع «Pattern type validation failed»; }
+    | سبب_تشخيص.سبب_نمط_غير_مدعوم_قيمة_حرفية -> { أرجع «This literal cannot be used in a pattern yet»; }
+    | سبب_تشخيص.سبب_انتقاء_مقارنة_ليس_منه_شرط -> { أرجع «A comparison result is used in a way the native backend can only handle as a branch condition»; }
+    | سبب_تشخيص.سبب_انتقاء_دالة_واجهة_الاستدعاء_غير_متاح -> { أرجع «Instruction selection has no calling convention for this function»; }
+    | سبب_تشخيص.سبب_انتقاء_غير_صحيح_حافة -> { أرجع «Instruction selection found an invalid control-flow edge»; }
+    | سبب_تشخيص.سبب_انتقاء_مفقود_تعليمة_نتيجة -> { أرجع «Instruction selection expected an instruction result that is missing»; }
+    | سبب_تشخيص.سبب_انتقاء_مفقود_مسير_كتلة -> { أرجع «Instruction selection could not find an MSIR block»; }
+    | سبب_تشخيص.سبب_انتقاء_مفقود_مسير_دالة -> { أرجع «Instruction selection could not find an MSIR function»; }
+    | سبب_تشخيص.سبب_انتقاء_مفقود_مسير_قيمة -> { أرجع «Instruction selection could not find an MSIR value»; }
+    | سبب_تشخيص.سبب_انتقاء_مفقود_قيمة_نوع -> { أرجع «Instruction selection could not find the type of a value»; }
+    | سبب_تشخيص.سبب_انتقاء_أصلي_منتقي_قدرة_غير_متاح -> { أرجع نص_سبب_سبب_انتقاء_أصلي_منتقي_قدرة_غير_متاح(); }
+    | سبب_تشخيص.سبب_انتقاء_غير_صحيح_نوع -> { أرجع «Instruction selection expected an integer type»; }
+    | سبب_تشخيص.سبب_انتقاء_هدف_عدم_تطابق -> { أرجع «The code being selected was prepared for a different target»; }
+    | سبب_تشخيص.سبب_انتقاء_هدف_نتيجة_عدم_تطابق -> { أرجع «Instruction selection produced output for a different target than requested»; }
+    | سبب_تشخيص.سبب_انتقاء_نص_ثابت_يحتاج_بيانات_قسم -> { أرجع نص_سبب_سبب_انتقاء_نص_ثابت_يحتاج_بيانات_قسم(); }
+    | سبب_تشخيص.سبب_انتقاء_لم_يخفض_بدائي -> { أرجع «An unlowered primitive reached native instruction selection»; }
+    | سبب_تشخيص.سبب_انتقاء_غير_مدعوم_حسابي -> { أرجع «The native backend does not support this arithmetic operation yet»; }
+    | سبب_تشخيص.سبب_انتقاء_غير_مدعوم_كتلة_معاملات -> { أرجع «The native backend does not support these block parameters yet»; }
+    | سبب_تشخيص.سبب_انتقاء_غير_مدعوم_استدعاء -> { أرجع «The native backend does not support this kind of call yet»; }
+    | سبب_تشخيص.سبب_انتقاء_غير_مدعوم_مقارنة -> { أرجع «The native backend does not support this comparison yet»; }
+    | سبب_تشخيص.سبب_انتقاء_غير_مدعوم_ثابت -> { أرجع «The native backend does not support this constant yet»; }
+    | سبب_تشخيص.سبب_انتقاء_غير_مدعوم_تحويل -> { أرجع «The native backend does not support this conversion yet»; }
+    | سبب_تشخيص.سبب_انتقاء_غير_مدعوم_عملية -> { أرجع «The native backend does not support this operation yet»; }
+    | سبب_تشخيص.سبب_انتقاء_غير_مدعوم_منه -> { أرجع «The native backend does not support this block terminator yet»; }
+    | سبب_تشخيص.سبب_انتقاء_غير_مدعوم_نوع -> { أرجع «The native backend does not support this type yet»; }
+    | سبب_تشخيص.سبب_انتقاء_واسم32_واجهة_الاستدعاء_غير_متاح -> { أرجع «The WebAssembly backend has no calling convention for this function»; }
+    | سبب_تشخيص.سبب_انتقاء_واسم32_ناقص_تخطيط -> { أرجع «The WebAssembly backend reached a type whose layout is incomplete»; }
+    | سبب_تشخيص.سبب_انتقاء_واسم32_غير_صحيح_حافة -> { أرجع «The WebAssembly backend found an invalid control-flow edge»; }
+    | سبب_تشخيص.سبب_انتقاء_واسم32_غير_قابل_للاختزال_تحكم_تدفق -> { أرجع «The WebAssembly backend cannot express this control flow as structured blocks»; }
+    | سبب_تشخيص.سبب_انتقاء_واسم32_مفقود_تخصيص_موفر -> { أرجع «The WebAssembly target has no memory allocation provider»; }
+    | سبب_تشخيص.سبب_انتقاء_واسم32_مفقود_كتلة -> { أرجع «The WebAssembly backend could not find a block it needs»; }
+    | سبب_تشخيص.سبب_انتقاء_واسم32_مفقود_خروج_موفر -> { أرجع نص_سبب_سبب_انتقاء_واسم32_مفقود_خروج_موفر(); }
+    | سبب_تشخيص.سبب_انتقاء_واسم32_مفقود_دالة -> { أرجع «The WebAssembly backend could not find a function it needs»; }
+    | سبب_تشخيص.سبب_انتقاء_واسم32_مفقود_قيمة -> { أرجع «The WebAssembly backend could not find a value it needs»; }
+    | سبب_تشخيص.سبب_انتقاء_واسم32_غير_مدعوم_عملية -> { أرجع «The WebAssembly backend does not support this operation yet»; }
+    | سبب_تشخيص.سبب_انتقاء_واسم32_غير_مدعوم_نوع -> { أرجع «The WebAssembly backend does not support this type yet»; }
+    | سبب_تشخيص.سبب_مصدر_بحث_مفقود_تصريح_مصدر -> { أرجع «The declaration source could not be located»; }
+    | سبب_تشخيص.سبب_مصدر_بحث_مفقود_اسم_مصدر -> { أرجع «The name's source location could not be resolved»; }
+    | سبب_تشخيص.سبب_تدفق_سلامة_إسناد_إلى_ثابت -> { أرجع «An assignment targets an immutable variable»; }
+    | سبب_تشخيص.سبب_تدفق_سلامة_استعارة_تعارض_حصري -> { أرجع «The value is already borrowed mutably, so it cannot be borrowed again»; }
+    | سبب_تشخيص.سبب_تدفق_سلامة_استعارة_تعارض_مشترك -> { أرجع «The value is borrowed for reading, so it cannot be borrowed mutably»; }
+    | سبب_تشخيص.سبب_تدفق_سلامة_مزدوج_تحرير -> { أرجع «The same resource was released twice»; }
+    | سبب_تشخيص.سبب_تدفق_سلامة_مكرر_محلي -> { أرجع نص_سبب_سبب_تدفق_سلامة_مكرر_محلي(); }
+    | سبب_تشخيص.سبب_تدفق_سلامة_غير_صحيح_استعارة_معرف -> { أرجع «Safety checking found a borrow ID that is not valid»; }
+    | سبب_تشخيص.سبب_تدفق_سلامة_غير_صحيح_تحكم_تدفق_دمج -> { أرجع «Ownership state conflicts prevent a control-flow merge»; }
+    | سبب_تشخيص.سبب_تدفق_سلامة_غير_صحيح_محلي_نوع -> { أرجع «Safety checking found a local variable with an invalid type»; }
+    | سبب_تشخيص.سبب_تدفق_سلامة_غير_صحيح_نقل_ملكية -> { أرجع «This value cannot be moved here»; }
+    | سبب_تشخيص.سبب_تدفق_سلامة_غير_صحيح_مرجع_تسرب -> { أرجع «A reference outlives the value it points to»; }
+    | سبب_تشخيص.سبب_تدفق_سلامة_مفقود_محلي -> { أرجع «Safety checking could not find a local variable»; }
+    | سبب_تشخيص.سبب_تدفق_سلامة_نمط_ربط_اسم_مفقود_رمز -> { أرجع «A pattern's name binding is missing from the symbol table»; }
+    | سبب_تشخيص.سبب_تدفق_سلامة_نمط_ربط_اسم_مفقود_نوع -> { أرجع «A pattern's binding type is missing during safety checking»; }
+    | سبب_تشخيص.سبب_تدفق_سلامة_تحرير_غير_مملوك -> { أرجع «The code releases a value that it does not own»; }
+    | سبب_تشخيص.سبب_تدفق_سلامة_دلالي_حقيقة_مفقود -> { أرجع «Safety checking is missing information from semantic analysis»; }
+    | سبب_تشخيص.سبب_تدفق_سلامة_استخدام_بعد_نقل_ملكية -> { أرجع «The value is used after its ownership was moved»; }
+    | سبب_تشخيص.سبب_تدفق_سلامة_استخدام_بعد_تحرير -> { أرجع «The value is used after it was released»; }
+    | سبب_تشخيص.سبب_تدفق_سلامة_استخدام_قبل_تهيئة -> { أرجع «The value is used before it is initialized»; }
+    | سبب_تشخيص.سبب_نوع_استدعاء_حجة_عدد_عدم_تطابق -> { أرجع نص_سبب_سبب_نوع_استدعاء_حجة_عدد_عدم_تطابق(); }
+    | سبب_تشخيص.سبب_نوع_استدعاء_حجة_نوع_عدم_تطابق -> { أرجع «A call argument has a different type than the function parameter»; }
+    | سبب_تشخيص.سبب_نوع_تعبير_ليس_قابل_للاستدعاء -> { أرجع «The expression is not a callable function or value»; }
+    | سبب_تشخيص.سبب_نوع_غير_صحيح_نمط -> { أرجع «The pattern does not fit the type of the value being matched»; }
+    | سبب_تشخيص.سبب_نوع_غير_صحيح_بدائي_حجة_نوع -> { أرجع «A built-in operation received an argument of a type it does not accept»; }
+    | سبب_تشخيص.سبب_نوع_غير_صحيح_نوع_تعريف -> { أرجع «The type definition violates type-declaration requirements»; }
+    | سبب_تشخيص.سبب_نوع_مفقود_اسم_ربط_اسم -> { أرجع «The required name binding is missing during type checking»; }
+    | سبب_تشخيص.سبب_نوع_مفقود_اسم_هوية -> { أرجع «The required name identity is missing during type checking»; }
+    | سبب_تشخيص.سبب_نوع_مفقود_رمز_نوع -> { أرجع «Type checking could not find the type of a symbol»; }
+    | سبب_تشخيص.سبب_نوع_بدائي_حجة_عدد_عدم_تطابق -> { أرجع «The primitive call supplies the wrong number of arguments»; }
+    | سبب_تشخيص.سبب_نوع_بدائي_حجة_نوع_عدم_تطابق -> { أرجع «A primitive call argument has the wrong type»; }
+    | سبب_تشخيص.سبب_نوع_بدائي_دلالات_غير_متاح -> { أرجع نص_سبب_سبب_نوع_بدائي_دلالات_غير_متاح(); }
+    | سبب_تشخيص.سبب_نوع_إرجاع_نوع_عدم_تطابق -> { أرجع نص_سبب_سبب_نوع_إرجاع_نوع_عدم_تطابق(); }
+    | سبب_تشخيص.سبب_نوع_مجهول_سجل_حقل -> { أرجع «The referenced field is not declared in the record type»; }
+    | سبب_تشخيص.سبب_نوع_غير_محلول_نوع -> { أرجع نص_سبب_سبب_نوع_غير_محلول_نوع(); }
+    | سبب_تشخيص.سبب_نوع_غير_مدعوم_تعبير_نوع -> { أرجع «The type checker does not support this expression form»; }
+    | سبب_تشخيص.سبب_نوع_طرفا_عامل_مختلفان -> { أرجع «The two operands of this operator have different types»; }
+    | سبب_تشخيص.سبب_نوع_عامل_يتطلب_منطقيا -> { أرجع «This operator requires a boolean operand»; }
+    | سبب_تشخيص.سبب_نوع_عامل_يتطلب_عددا -> { أرجع «This operator requires a numeric operand»; }
+    | سبب_تشخيص.سبب_نوع_عامل_يتطلب_عددا_صحيحا -> { أرجع «This operator requires integer operands»; }
+    | سبب_تشخيص.سبب_نوع_شرط_غير_منطقي -> { أرجع «A condition must be a boolean value»; }
+    | سبب_تشخيص.سبب_نوع_قيمة_لا_تطابق_الوجهة -> { أرجع «The value does not match the declared type of its destination»; }
+    | سبب_تشخيص.سبب_نوع_فهرس_ليس_عددا_صحيحا -> { أرجع «An index must be an integer»; }
+    | سبب_تشخيص.سبب_نوع_غير_قابل_للفهرسة -> { أرجع «Values of this type cannot be indexed»; }
+    | سبب_تشخيص.سبب_نوع_فهرس_صف_غير_ثابت -> { أرجع «A tuple element is selected by a non-negative integer literal»; }
+    | سبب_تشخيص.سبب_نوع_فهرس_صف_خارج_الحدود -> { أرجع «The tuple has no element at this index»; }
+    | سبب_تشخيص.سبب_نوع_صف_عدد_عناصر_غير_مطابق -> { أرجع «The tuple literal has a different number of elements than its type»; }
+    | سبب_تشخيص.سبب_نوع_فارغ_يتطلب_مؤشرا -> { أرجع «The null pointer needs a known raw pointer type»; }
+    | سبب_تشخيص.سبب_نوع_حرفي_لا_يناسب_الوجهة -> { أرجع «This kind of literal cannot initialize a value of the expected type»; }
+    | سبب_تشخيص.سبب_نوع_موضع_غير_قابل_للتغيير -> { أرجع «The value is not declared mutable»; }
+    | سبب_تشخيص.سبب_نوع_وجهة_إسناد_ليست_موضعا -> { أرجع «An assignment target must be a variable, a field or an element»; }
+    | سبب_تشخيص.سبب_نوع_عدد_حرفي_خارج_المدى -> { أرجع «The integer literal is outside the range of the expected type»; }
+    | سبب_تشخيص.سبب_نوع_تحويل_غير_صالح -> { أرجع «`as` does not convert a value of this type to the target type»; }
+    | سبب_تشخيص.سبب_نوع_سالب_عدد_طبيعي -> { أرجع «An unsigned integer value has no negation; subtract, or convert to a signed type first»; }
+    | سبب_تشخيص.سبب_نوع_ثابت_تسجيل_نوع_تعبير -> { أرجع «The type table did not record the expression type»; }
+    | سبب_تشخيص.سبب_نوع_ثابت_تسجيل_نوع_منشئ -> { أرجع «The type table did not record the constructor call type»; }
+    | سبب_تشخيص.سبب_نوع_ثابت_نوع_حمولة_منشئ -> { أرجع «The type table has no type for the constructor payload»; }
+    | سبب_تشخيص.سبب_نوع_ثابت_نوع_عنصر_صف -> { أرجع «The type table has no type for the tuple element»; }
+    | سبب_تشخيص.سبب_نوع_ثابت_حجة_بلا_نوع -> { أرجع «Type checking left a call argument without a type»; }
+    | سبب_تشخيص.سبب_هدف_تصريح_لأهداف_أخرى -> { أرجع «The name is declared only for other targets»; }
+    | سبب_تشخيص.سبب_واجهة_قيمة_خيار_غير_مقبولة -> { أرجع «The option does not accept this value»; }
+    | سبب_تشخيص.سبب_واجهة_خيار_مكرر -> { أرجع «The option is given more than once»; }
+    | سبب_تشخيص.سبب_واجهة_أمر_مكرر -> { أرجع «Only one command can be given at a time»; }
+    | سبب_تشخيص.سبب_واجهة_خيار_لا_يناسب_الأمر -> { أرجع «The option does not apply to the selected command»; }
+    | سبب_تشخيص.سبب_واجهة_نوع_مخرج_متعارض -> { أرجع «The option selects a different output kind than an earlier option»; }
+    | سبب_تشخيص.سبب_وحدة_مسار_ملف_ليس_اسم_وحدة -> { أرجع «A directory or file name on the source path is not a valid module name»; }
+    | سبب_تشخيص.سبب_ربط_واسم_رمز_غير_معرف -> { أرجع «WebAssembly link has an undefined symbol»; }
+    | سبب_تشخيص.سبب_ربط_واسم_نوع_رمز_غير_متطابق -> { أرجع «WebAssembly link has a symbol type mismatch»; }
+    | سبب_تشخيص.سبب_ربط_واسم_إزاحة_غير_مدعومة -> { أرجع «WebAssembly link does not support this relocation»; }
+    | سبب_تشخيص.سبب_ربط_واسم_ميزة_غير_مدعومة -> { أرجع «WebAssembly link does not support this feature»; }
+    | سبب_تشخيص.سبب_ربط_واسم_فيض_مساحة_العناوين -> { أرجع «WebAssembly link exceeds its address space»; }
+    | سبب_تشخيص.سبب_ربط_واسم_إزاحة_غير_مستقلة_عن_الموضع -> { أرجع «WebAssembly link contains a non-PIC relocation»; }
+    | سبب_تشخيص.سبب_كائن_واسم_إزاحة_تنقيح_غير_قابلة_للتمثيل -> { أرجع «WebAssembly debug relocation cannot be represented»; }
+    | سبب_تشخيص.سبب_كائن_واسم_عنوان_مستقل_غير_قابل_للتمثيل -> { أرجع «WebAssembly PIC address cannot be represented»; }
+    | سبب_تشخيص.سبب_خلفية_أصلية_غير_مضمنة -> { أرجع «Native backend is not included in this compiler»; }
+    | سبب_تشخيص.سبب_خلفية_إل_إل_في_إم_غير_مضمنة -> { أرجع «LLVM backend is not included in this compiler»; }
+    | سبب_تشخيص.سبب_وقت_الترجمة_نفاد_ميزانية_التعليمات -> { أرجع «Compile-time instruction budget was exhausted»; }
+    | سبب_تشخيص.سبب_وقت_الترجمة_أثر_ممنوع -> { أرجع «Compile-time evaluation attempted a prohibited effect»; }
+    | سبب_تشخيص.سبب_وقت_الترجمة_حجة_غير_ثابتة -> { أرجع «Compile-time argument is not constant»; }
+    | سبب_تشخيص.سبب_وقت_الترجمة_نتيجة_تهرب_من_المقيم -> { أرجع «Compile-time result escapes its evaluator»; }
+    | سبب_تشخيص.سبب_وقت_الترجمة_تجاوز_عمق_الاستدعاء -> { أرجع «Compile-time call depth limit was exceeded»; }
+    | سبب_تشخيص.سبب_وقت_الترجمة_فشل_مطلوب -> { أرجع «Compile-time code explicitly requested an error»; }
+    | سبب_تشخيص.سبب_مسير_مميز_فرع_متعدد_غير_صحيح -> { أرجع «MSIR switch selector is not an integer»; }
+    | سبب_تشخيص.سبب_مسير_وسم_حالة_مكرر -> { أرجع «MSIR switch contains duplicate case tags»; }
+    | سبب_تشخيص.سبب_وقت_الترجمة_عدد_حجج_غير_مطابق -> { أرجع نص_سبب_سبب_وقت_الترجمة_عدد_حجج_غير_مطابق(); }
+    | سبب_تشخيص.سبب_وقت_الترجمة_حجة_غير_مغلقة -> { أرجع «A compile-time argument is not a closed constant value»; }
+    | سبب_تشخيص.سبب_وقت_الترجمة_نفاد_عمق_الاستدعاء -> { أرجع «Compile-time evaluation reached the maximum call depth»; }
+    | سبب_تشخيص.سبب_وقت_الترجمة_فشل_التنفيذ -> { أرجع «Compile-time evaluation failed while running the code»; }
+    | سبب_تشخيص.سبب_وقت_الترجمة_فخ_التنفيذ -> { أرجع «The code trapped during compile-time evaluation»; }
+    | سبب_تشخيص.سبب_وقت_الترجمة_خلل_المفسر -> { أرجع نص_سبب_سبب_وقت_الترجمة_خلل_المفسر(); }
+    | سبب_تشخيص.سبب_وقت_الترجمة_مسير_غير_صالح -> { أرجع نص_سبب_سبب_وقت_الترجمة_مسير_غير_صالح(); }
+    | سبب_تشخيص.سبب_وقت_الترجمة_تخطيط_غير_مثبت -> { أرجع نص_سبب_سبب_وقت_الترجمة_تخطيط_غير_مثبت(); }
+    | سبب_تشخيص.سبب_وقت_الترجمة_تخطيط_غير_متاح -> { أرجع «The type's layout is not available for the selected target»; }
+    | سبب_تشخيص.سبب_وقت_الترجمة_ناتج_مفقود -> { أرجع «Compile-time evaluation finished without producing a value»; }
+    | سبب_تشخيص.سبب_وقت_الترجمة_حجة_نداء_غير_معروفة -> { أرجع «A call argument is not known at compile time»; }
+    | سبب_تشخيص.سبب_وقت_الترجمة_قيمة_غير_ثابتة_أو_أثر_ممنوع -> { أرجع نص_سبب_سبب_وقت_الترجمة_قيمة_غير_ثابتة_أو_أثر_ممنوع(); }
+    | سبب_تشخيص.سبب_وقت_الترجمة_نتيجة_غير_مغلقة -> { أرجع «The compile-time result is not a closed constant value»; }
+    | سبب_تشخيص.سبب_وقت_الترجمة_تجاوز_حد_التخصيصات -> { أرجع نص_سبب_سبب_وقت_الترجمة_تجاوز_حد_التخصيصات(); }
+    | سبب_تشخيص.سبب_تنسيق_قوس_غير_مغلق -> { أرجع نص_سبب_سبب_تنسيق_قوس_غير_مغلق(); }
+    | سبب_تشخيص.سبب_تنسيق_قوس_إغلاق_منفرد -> { أرجع نص_سبب_سبب_تنسيق_قوس_إغلاق_منفرد(); }
+    | سبب_تشخيص.سبب_تنسيق_مواصفة_غير_صالحة -> { أرجع نص_سبب_سبب_تنسيق_مواصفة_غير_صالحة(); }
+    | سبب_تشخيص.سبب_تنسيق_نوع_غير_معروف -> { أرجع نص_سبب_سبب_تنسيق_نوع_غير_معروف(); }
+    | سبب_تشخيص.سبب_تنسيق_وسيط_مسمى -> { أرجع نص_سبب_سبب_تنسيق_وسيط_مسمى(); }
+    | سبب_تشخيص.سبب_تنسيق_وسيط_مفقود -> { أرجع نص_سبب_سبب_تنسيق_وسيط_مفقود(); }
+    | سبب_تشخيص.سبب_تنسيق_وسيط_غير_مستخدم -> { أرجع نص_سبب_سبب_تنسيق_وسيط_غير_مستخدم(); }
+    | سبب_تشخيص.سبب_تنسيق_نوع_غير_مناسب -> { أرجع نص_سبب_سبب_تنسيق_نوع_غير_مناسب(); }
+    | سبب_تشخيص.سبب_تنسيق_عدد_غير_صالح -> { أرجع نص_سبب_سبب_تنسيق_عدد_غير_صالح(); }
+    | سبب_تشخيص.سبب_وقت_الترجمة_ناتج_غير_متوقع -> { أرجع «Compile-time evaluation returned an unexpected result»; }
+    | سبب_تشخيص.سبب_وقت_الترجمة_هدف_غير_معروف -> { أرجع نص_سبب_سبب_وقت_الترجمة_هدف_غير_معروف(); }
+    | سبب_تشخيص.سبب_وقت_الترجمة_ناتج_غير_قابل_للتمثيل -> { أرجع نص_سبب_سبب_وقت_الترجمة_ناتج_غير_قابل_للتمثيل(); }
+    | سبب_تشخيص.سبب_وقت_الترجمة_مستدعى_غير_مدعوم -> { أرجع «Only SultanC functions can be called at compile time»; }
+    | سبب_تشخيص.سبب_وقت_الترجمة_عملية_غير_مدعومة -> { أرجع «This operation is not supported at compile time»; }
+    | سبب_تشخيص.سبب_سمة_معالجة_غير_منفذة -> { أرجع «Declaration annotation processing is not implemented yet»; }
+    | سبب_تشخيص.سبب_تدفق_سلامة_نقل_من_مرجع -> { أرجع «An owned value is moved out of borrowed storage»; }
+    | سبب_تشخيص.سبب_مفسر_وقت_تشغيل_تجاوز_عمق_النداء -> { أرجع «The interpreted program exceeded the interpreter's call depth limit»; }
+    | سبب_تشخيص.سبب_مفسر_وقت_تشغيل_لا_محمل_ديناميكي -> { أرجع «This compiler has no dynamic loader to find a C function: it is a static executable. Build the program, or interpret it with a compiler linked against the C library (an LLVM-enabled build)»; }
+    | سبب_تشخيص.سبب_مفسر_وقت_تشغيل_مكتبة_خارجية_غير_محملة -> { أرجع «The library the external function names could not be loaded»; }
+    | سبب_تشخيص.سبب_مفسر_وقت_تشغيل_رمز_خارجي_غير_موجود -> { أرجع «The external function was not found in its library»; }
+    | سبب_تشخيص.سبب_مفسر_وقت_تشغيل_توقيع_خارجي_غير_مدعوم -> { أرجع «The interpreter cannot call a C function with this signature: a record passed or returned by value, or more than eight integer or eight floating-point arguments»; }
+}

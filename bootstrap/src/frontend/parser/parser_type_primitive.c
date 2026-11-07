@@ -93,7 +93,8 @@ int __Parser_Type_Contextual__(__Text_Slice__ __Name__, __Ast_Type_Kind__ *__Out
         return 0;
     }
     if (__Text_Equals_Cstr__(__Name__, "option") ||
-        __Text_Equals_Cstr__(__Name__, "اختيار"))
+        __Text_Equals_Cstr__(__Name__, "اختيار") ||
+        __Text_Equals_Cstr__(__Name__, "اختياري"))
     {
         *__Out_Kind__ = __Ast_Type_Option__;
         return 1;

@@ -38,6 +38,20 @@ int __Body_Check_Vector_Init__(__Semantic_Body_Context__ *__Context__,
     for (__Index__ = 0U; __Index__ < __Statement__->__As__.__Aggregate__.__Value_Count__;
          ++__Index__)
     {
+        if (__Statement__->__As__.__Aggregate__.__Expressions__ != NULL &&
+            __Statement__->__As__.__Aggregate__.__Expressions__[__Index__] != NULL)
+        {
+            /* An element that is not an atom: a call, cast or arithmetic. */
+            __Ast_Expression__ *__Element__ = __Statement__->__As__.__Aggregate__.__Expressions__[__Index__];
+            if (!__Body_Check_Expression_Compatible__(__Context__, __Resolved__.__Inner__, __Element__,
+                                                      __Element__->__Header__.__Span__) ||
+                (__Safety_Type_Is_Move_Only__(__Context__->__Semantic__, __Resolved__.__Inner__) &&
+                 !__Body_Safety_Move_Expression__(__Context__, __Element__, NULL)))
+            {
+                return 0;
+            }
+            continue;
+        }
         if (!__Body_Check_Atom_Compatible__(
                 __Context__,
                 __Resolved__.__Inner__,

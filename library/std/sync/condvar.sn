@@ -1,0 +1,87 @@
+// Condition variables (docs/CONCURRENCY.md, "Condvar"), after Rust's
+// std::sync::Condvar and its futex implementation (std/src/sys/sync/
+// condvar/futex.rs). The condition variable is one 32-bit sequence number:
+// a notify increments it and wakes sleepers; a waiter reads it before it
+// releases the mutex and sleeps only while it is unchanged, so a notify that
+// lands between the unlock and the sleep is never lost.
+//
+// A wait is called with the mutex held: inside the closure `نفذ_مع_القفل`
+// runs (Rust's `cv.wait(guard)`). It releases the mutex, sleeps, and takes
+// the mutex again before it returns; the closure's reference to the value
+// stays valid because the lock is held again. Waits may wake spuriously, so
+// callers loop on their condition, or use `انتظر_طالما` / wait_while, which
+// loops for them (Rust's Condvar::wait_while).
+استورد sync.atomic;
+استورد sync.mutex;
+استورد os.wait_address;
+استورد time.duration;
+
+عام نوع شرط_انتظار = {
+    التسلسل: ذرة_ط32,
+    // An owned, never-allocated marker: a condition variable moves, it is
+    // never copied (a copy would be notified apart from its original).
+    منع_النسخ: متجه ط8
+};
+عام مرادف condvar = شرط_انتظار;
+
+// Rust's Condvar::new.
+عام عرف أنشئ_شرط_انتظار(): شرط_انتظار {
+    دع العلامة: متجه ط8 = [];
+    دع الناتج: شرط_انتظار = { التسلسل: أنشئ_ذرة_ط32(0 مثل ط32), منع_النسخ: العلامة };
+    أرجع الناتج;
+}
+عام مرادف condvar_new = أنشئ_شرط_انتظار;
+
+// Release القفل, sleep until notified (or the timeout), take القفل again.
+// Answers خطأ when the timeout passed.
+عرف انتظر_مع_مهلة_داخلي<ق>(الشرط: &شرط_انتظار, القفل: &قفل<ق>, المهلة: اختياري عدد): منطقي {
+    دع التسلسل: ط32 = احمل_ط32(&(*الشرط).التسلسل, ترتيب_ذاكرة.مسترخ());
+    افتح_خام(القفل);
+    دع أوقظ: منطقي = انتظر_عند_العنوان(&(*الشرط).التسلسل, التسلسل, المهلة);
+    اقفل_خام(القفل);
+    أرجع أوقظ;
+}
+
+// Rust's Condvar::wait. Must be called with القفل held (inside the closure
+// of نفذ_مع_القفل on the same mutex).
+عام عرف انتظر_الشرط<ق>(الشرط: &شرط_انتظار, القفل: &قفل<ق>): فراغ {
+    دع تجاهل: منطقي = انتظر_مع_مهلة_داخلي(الشرط, القفل, اختياري.لا_شيء());
+}
+عام مرادف condvar_wait = انتظر_الشرط;
+
+// Rust's Condvar::wait_timeout: answers صواب when the wait timed out
+// (WaitTimeoutResult::timed_out).
+عام عرف انتظر_الشرط_بمهلة<ق>(الشرط: &شرط_انتظار, القفل: &قفل<ق>, المهلة: مدة): منطقي {
+    أرجع !انتظر_مع_مهلة_داخلي(الشرط, القفل, اختياري.موجود(المهلة.النانوثواني));
+}
+عام مرادف condvar_wait_timeout = انتظر_الشرط_بمهلة;
+
+// Rust's Condvar::wait_while: wait while الشرط_المنطقي holds for the value
+// the mutex guards. Called with القفل held.
+عام عرف انتظر_طالما<ق>(الشرط: &شرط_انتظار, القفل: &قفل<ق>, الشرط_المنطقي: دالة(&ق): منطقي): فراغ {
+    طالما (صواب) {
+        دع المؤشر: *متغير ق = مؤشر_قيمة_القفل(القفل);
+        دع يستمر: منطقي = اختبر_القيمة(المؤشر, الشرط_المنطقي);
+        لو (!يستمر) { أرجع; };
+        انتظر_الشرط(الشرط, القفل);
+    }
+}
+عام مرادف condvar_wait_while = انتظر_طالما;
+
+عرف اختبر_القيمة<ق>(المؤشر: *متغير ق, الشرط_المنطقي: دالة(&ق): منطقي): منطقي {
+    غير_آمن { أرجع الشرط_المنطقي(&(*المؤشر)); }
+}
+
+// Rust's Condvar::notify_one.
+عام عرف نبه_واحدا(الشرط: &شرط_انتظار): فراغ {
+    دع تجاهل: ط32 = اجمع_واجلب_ط32(&(*الشرط).التسلسل, 1 مثل ط32, ترتيب_ذاكرة.إطلاق());
+    أيقظ_واحدا_عند_العنوان(&(*الشرط).التسلسل);
+}
+عام مرادف condvar_notify_one = نبه_واحدا;
+
+// Rust's Condvar::notify_all.
+عام عرف نبه_الكل(الشرط: &شرط_انتظار): فراغ {
+    دع تجاهل: ط32 = اجمع_واجلب_ط32(&(*الشرط).التسلسل, 1 مثل ط32, ترتيب_ذاكرة.إطلاق());
+    أيقظ_الكل_عند_العنوان(&(*الشرط).التسلسل);
+}
+عام مرادف condvar_notify_all = نبه_الكل;

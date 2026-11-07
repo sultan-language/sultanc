@@ -1,0 +1,149 @@
+// Mutual exclusion (docs/CONCURRENCY.md, "Mutex"), after Rust's
+// std::sync::Mutex and its futex implementation (std/src/sys/sync/mutex/
+// futex.rs), which is Ulrich Drepper's three-state mutex ("Futexes Are
+// Tricky", mutex2):
+//
+//   0  unlocked
+//   1  locked, no thread waits
+//   2  locked, threads may be waiting (the unlock must wake one)
+//
+// An uncontended lock is one compare-exchange 0 -> 1 and an uncontended
+// unlock one swap to 0, with no system call. A contended lock spins briefly
+// (100 rounds, as Rust), then marks the state 2 and sleeps on it
+// (std.os.wait_address); an unlock that finds 2 wakes one sleeper.
+//
+// The protected value is reached only inside a closure that runs with the
+// lock held (`نفذ_مع_القفل` / with_lock), so the unlock cannot be forgotten
+// and no reference to the value outlives the lock: Rust's MutexGuard, scoped
+// to a call because SultanC runs no user destructor at scope exit.
+//
+// Poisoning: Rust marks a mutex poisoned when a thread panics while holding
+// it. A SultanC panic (`إنهيار`) ends the whole process (panic=abort,
+// docs/CONCURRENCY.md), so no thread can ever observe a mutex a panicking
+// thread held; there is nothing to poison and the lock returns the value
+// directly, not a Result.
+//
+// A mutex is shared between threads through an Arc (`مشترك<قفل<ق>>`), as in
+// Rust. It is not copyable: copying it would make two locks guard one value.
+استورد sync.atomic;
+استورد sync.arc;
+استورد os.wait_address;
+
+عام نوع قفل<ق> = {
+    الحالة: ذرة_ط32,
+    // The value, in a box the handle owns (its address never changes, and
+    // the lock hands it out as a mutable reference under the lock).
+    القيمة: مشترك<ق>,
+    // An owned, never-allocated marker: a mutex moves, it is never copied.
+    منع_النسخ: متجه ط8
+};
+عام مرادف mutex = قفل;
+
+// Rust's Mutex::new.
+عام عرف أنشئ_قفل<ق>(القيمة: ق): قفل<ق> {
+    دع العلامة: متجه ط8 = [];
+    دع الناتج: قفل<ق> = {
+        الحالة: أنشئ_ذرة_ط32(0 مثل ط32), القيمة: أنشئ_مشترك(القيمة), منع_النسخ: العلامة
+    };
+    أرجع الناتج;
+}
+عام مرادف mutex_new = أنشئ_قفل;
+
+// Take the lock (std-internal: Condvar releases and retakes it).
+عام عرف اقفل_خام<ق>(القفل: &قفل<ق>): فراغ {
+    دع الحالة: &ذرة_ط32 = &(*القفل).الحالة;
+    لو (قارن_وبدّل_ط32(الحالة, 0 مثل ط32, 1 مثل ط32, ترتيب_ذاكرة.اكتساب()) == (0 مثل ط32)) { أرجع; };
+    اقفل_بتنافس_ذري(الحالة);
+}
+عام مرادف mutex_lock_raw = اقفل_خام;
+
+// Release the lock (std-internal).
+عام عرف افتح_خام<ق>(القفل: &قفل<ق>): فراغ {
+    افتح_قفل_ذري(&(*القفل).الحالة);
+}
+عام مرادف mutex_unlock_raw = افتح_خام;
+
+// The three-state protocol on a bare cell, shared by Mutex and the channels.
+عام عرف اقفل_ذريا(الحالة: &ذرة_ط32): فراغ {
+    لو (قارن_وبدّل_ط32(الحالة, 0 مثل ط32, 1 مثل ط32, ترتيب_ذاكرة.اكتساب()) == (0 مثل ط32)) { أرجع; };
+    اقفل_بتنافس_ذري(الحالة);
+}
+
+عام عرف حاول_القفل_ذريا(الحالة: &ذرة_ط32): منطقي {
+    أرجع قارن_وبدّل_ط32(الحالة, 0 مثل ط32, 1 مثل ط32, ترتيب_ذاكرة.اكتساب()) == (0 مثل ط32);
+}
+
+عام عرف افتح_قفل_ذري(الحالة: &ذرة_ط32): فراغ {
+    لو (بدّل_ط32(الحالة, 0 مثل ط32, ترتيب_ذاكرة.إطلاق()) == (2 مثل ط32)) {
+        أيقظ_واحدا_عند_العنوان(الحالة);
+    };
+}
+
+// Spin while another thread holds the lock without waiters (it is likely to
+// release it soon), at most 100 rounds; answer the last state seen.
+عرف دوّر_قليلا_ذري(الحالة: &ذرة_ط32): ط32 {
+    دع المرات: متغير عدد = 100;
+    طالما (صواب) {
+        دع الحالية: ط32 = احمل_ط32(الحالة, ترتيب_ذاكرة.مسترخ());
+        لو (الحالية != (1 مثل ط32) || المرات == 0) { أرجع الحالية; };
+        المرات := المرات - 1;
+    }
+    أرجع 0 مثل ط32;
+}
+
+عرف اقفل_بتنافس_ذري(الحالة: &ذرة_ط32): فراغ {
+    دع الحالية: متغير ط32 = دوّر_قليلا_ذري(الحالة);
+    // Unlocked after spinning: take it without marking contention.
+    لو (الحالية == (0 مثل ط32)) {
+        لو (قارن_وبدّل_ط32(الحالة, 0 مثل ط32, 1 مثل ط32, ترتيب_ذاكرة.اكتساب()) == (0 مثل ط32)) { أرجع; };
+    };
+    طالما (صواب) {
+        // Mark the lock contended (2). If it was unlocked, it is now ours;
+        // holding it as 2 only costs one spurious wake at unlock.
+        لو (الحالية != (2 مثل ط32)) {
+            لو (بدّل_ط32(الحالة, 2 مثل ط32, ترتيب_ذاكرة.اكتساب()) == (0 مثل ط32)) { أرجع; };
+        };
+        دع تجاهل: منطقي = انتظر_عند_العنوان(الحالة, 2 مثل ط32, اختياري.لا_شيء());
+        الحالية := دوّر_قليلا_ذري(الحالة);
+    }
+}
+
+// The value behind the lock, lent to العمل (the caller holds the lock).
+عرف شغل_على_القيمة<ق, ن>(المؤشر: *متغير ق, العمل: دالة(&متغير ق): ن): ن {
+    غير_آمن { أرجع العمل(&متغير (*المؤشر)); }
+}
+
+// Run العمل with the lock held and the value mutably borrowed; answer what
+// it answers. Rust's `let mut g = m.lock(); f(&mut *g)`.
+عام عرف نفذ_مع_القفل<ق, ن>(القفل: &قفل<ق>, العمل: دالة(&متغير ق): ن): ن {
+    اقفل_خام(القفل);
+    دع المؤشر: *متغير ق = مؤشر_مشترك(&(*القفل).القيمة);
+    دع الناتج: ن = شغل_على_القيمة(المؤشر, العمل);
+    افتح_خام(القفل);
+    أرجع الناتج;
+}
+عام مرادف with_lock = نفذ_مع_القفل;
+
+// Rust's Mutex::try_lock: run العمل only if the lock is free now; none
+// (Rust's WouldBlock) when another thread holds it.
+عام عرف حاول_القفل<ق, ن>(القفل: &قفل<ق>, العمل: دالة(&متغير ق): ن): اختياري ن {
+    لو (!حاول_القفل_ذريا(&(*القفل).الحالة)) { أرجع اختياري.لا_شيء(); };
+    دع المؤشر: *متغير ق = مؤشر_مشترك(&(*القفل).القيمة);
+    دع الناتج: ن = شغل_على_القيمة(المؤشر, العمل);
+    افتح_خام(القفل);
+    أرجع اختياري.موجود(الناتج);
+}
+عام مرادف try_lock = حاول_القفل;
+
+// Whether some thread holds the lock now (a snapshot; Rust has no such
+// method, but its tests read the state the same way).
+عام عرف هل_القفل_مأخوذ<ق>(القفل: &قفل<ق>): منطقي {
+    أرجع احمل_ط32(&(*القفل).الحالة, ترتيب_ذاكرة.مسترخ()) != (0 مثل ط32);
+}
+عام مرادف mutex_is_locked = هل_القفل_مأخوذ;
+
+// The address of the protected value, for Condvar's closures, which run with
+// the lock held (std-internal).
+عام عرف مؤشر_قيمة_القفل<ق>(القفل: &قفل<ق>): *متغير ق {
+    أرجع مؤشر_مشترك(&(*القفل).القيمة);
+}

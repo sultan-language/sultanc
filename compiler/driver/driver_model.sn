@@ -1,3 +1,4 @@
+استورد std.env.system;
 استورد compiler.backend.target.target_model;
 استورد compiler.diagnostics.identity;
 استورد compiler.diagnostics.record;
@@ -29,9 +30,16 @@
     | مكتبة_مشتركة
     | كائن_مترابط
     | وحدة_هدف
+    // Target assembly text (--emit=asm), as llc -filetype=asm / rustc --emit=asm.
+    | نص_تجميع
+    // The optimized LLVM IR of the module (--emit=llvm-ir), as rustc --emit=llvm-ir.
+    | نص_وحدة_إل_إل_في_إم
 ;
 
 عام نوع اختيار_لغة_تشخيص_عملية =
+    // No --lang option: the historical Arabic default.
+    | غير_محدد
+    // --lang=auto: the host locale (LC_ALL, then LC_MESSAGES, then LANG).
     | تلقائي
     | العربية
     | الإنجليزية
@@ -56,7 +64,7 @@
 };
 
 عام عرف إعداد_عرض_عملية_افتراضي(): إعداد_عرض_عملية {
-    دع اللغة: اختيار_لغة_تشخيص_عملية = اختيار_لغة_تشخيص_عملية.تلقائي();
+    دع اللغة: اختيار_لغة_تشخيص_عملية = اختيار_لغة_تشخيص_عملية.غير_محدد();
     دع الصيغة: صيغة_تشخيص_عملية = صيغة_تشخيص_عملية.طرفي();
     دع اللون: سياسة_لون_تشخيص_عملية = سياسة_لون_تشخيص_عملية.تلقائي();
     دع الناتج: إعداد_عرض_عملية = {
@@ -67,12 +75,37 @@
     أرجع الناتج;
 }
 
-// Auto keeps the historical Arabic diagnostic default until a dedicated host
-// locale policy is introduced. The CLI request still preserves whether the
-// user selected auto, Arabic or English explicitly.
+// The first set locale variable in POSIX precedence decides: a value starting
+// with `ar` (ar, ar_SA.UTF-8, ar_EG, ...) selects Arabic, anything else English.
+// With no locale variable set, auto is English as well.
+عرف لغة_من_بيئة_المضيف(): لغة_تشخيص {
+    دع الأسماء: متغير متجه نص = [];
+    ألحق(الأسماء, «LC_ALL»);
+    ألحق(الأسماء, «LC_MESSAGES»);
+    ألحق(الأسماء, «LANG»);
+    دع ف: متغير طبيعي = 0;
+    طالما (ف < (الطول(الأسماء) مثل طبيعي)) {
+        طابق متغير_بيئة_النظام(&الأسماء[ف]) مع
+        | نتيجة.نجح(اختياري.موجود(القيمة)) -> {
+            لو ((الطول(القيمة) مثل طبيعي) > 0) {
+                لو ((الطول(القيمة) مثل طبيعي) >= 2 && القيمة[0] == 0x61 && القيمة[1] == 0x72) {
+                    أرجع لغة_تشخيص.العربية();
+                };
+                أرجع لغة_تشخيص.الإنجليزية();
+            };
+        }
+        | _ -> { };
+        ف := ف + 1;
+    }
+    أرجع لغة_تشخيص.الإنجليزية();
+}
+
+// Without --lang the compiler keeps its historical Arabic default; an explicit
+// --lang=auto follows the host locale.
 عام عرف حل_لغة_عرض_عملية(الاختيار: اختيار_لغة_تشخيص_عملية): لغة_تشخيص {
     طابق الاختيار مع
-    | اختيار_لغة_تشخيص_عملية.تلقائي -> { أرجع لغة_تشخيص.العربية(); }
+    | اختيار_لغة_تشخيص_عملية.غير_محدد -> { أرجع لغة_تشخيص.العربية(); }
+    | اختيار_لغة_تشخيص_عملية.تلقائي -> { أرجع لغة_من_بيئة_المضيف(); }
     | اختيار_لغة_تشخيص_عملية.العربية -> { أرجع لغة_تشخيص.العربية(); }
     | اختيار_لغة_تشخيص_عملية.الإنجليزية -> { أرجع لغة_تشخيص.الإنجليزية(); };
 }
@@ -86,16 +119,26 @@
     | وحدة_هدف
 ;
 
+// The form of an object request: a binary object, target assembly text
+// (--emit=asm) or the optimized LLVM IR (--emit=llvm-ir).
+عام نوع نص_مخرج_كائن_مترجم =
+    | ثنائي
+    | تجميع
+    | وحدة_إل_إل_في_إم
+;
+
 عام نوع طلب_تجميع_مترجم =
-    | تحقق
+    // `check` for a registered target: target guards select its declarations.
+    | تحقق بنوع معرف_هدف
     | تفسير بنوع معرف_هدف
-    | كائن بنوع (معرف_هدف, هوية_مزود_خلفية)
+    // The last field asks for target assembly text or LLVM IR instead of an object.
+    | كائن بنوع (معرف_هدف, هوية_مزود_خلفية, نص_مخرج_كائن_مترجم)
     | ربط بنوع (
         معرف_هدف,
         هوية_مزود_خلفية,
         نوع_خرج_ربط_مترجم,
         متجه نص,
-        اختيار نص
+        اختياري نص
     )
 ;
 
@@ -103,11 +146,11 @@
     | تحقق_مكتمل
     | نتيجة_تفسير بنوع نتيجة_تفسير_مسير
     | فشل_تفسير بنوع مجموعة_تشخيصات
-    | كائن_مكتمل بنوع متجه غ8
-    | تنفيذي_مكتمل بنوع متجه غ8
-    | مكتبة_مشتركة_مكتملة بنوع متجه غ8
-    | كائن_مترابط_مكتمل بنوع متجه غ8
-    | وحدة_هدف_مكتملة بنوع متجه غ8
+    | كائن_مكتمل بنوع متجه ط8
+    | تنفيذي_مكتمل بنوع متجه ط8
+    | مكتبة_مشتركة_مكتملة بنوع متجه ط8
+    | كائن_مترابط_مكتمل بنوع متجه ط8
+    | وحدة_هدف_مكتملة بنوع متجه ط8
     | ملغى
     | فشل_إعداد بنوع مجموعة_تشخيصات
     | فشل_واجهة بنوع مجموعة_تشخيصات
@@ -119,6 +162,20 @@
     | فشل_خلفية بنوع مجموعة_تشخيصات
 ;
 
+// One explicit source for a logical module (--module-source=<module>=<file>).
+// It is configuration input to the canonical logical environment, recorded as
+// that module's explicit source location (logical_environment.sn
+// أضف_موقع_مصدر_وحدة) before the Frontend loads anything: the option names
+// the file that is the source of that module. A build uses it to select
+// compiler-build capabilities of the program it compiles: a Native-only
+// SultanC compiler binds compiler.backend.provider.llvm.llvm_codegen to
+// compiler/backend/provider/llvm/unavailable.sn. It never selects a backend,
+// a target or a library of the current compilation.
+عام نوع ربط_مصدر_وحدة_عملية = {
+    الوحدة: نص,
+    المصدر: نص
+};
+
 // Process request owns normalized external orchestration facts. CLI spellings
 // such as -c and --emit=obj collapse into the same output kind here, while
 // backend selection remains auto or explicit until Target policy resolves it.
@@ -127,8 +184,8 @@
     | إصدار
     | أهداف
     | شرح بنوع نص
-    | تحقق بنوع (نص, متجه نص)
-    | تفسير بنوع (نص, متجه نص, متجه متجه غ8, اختيار_هدف_عملية)
+    | تحقق بنوع (نص, متجه نص, متجه ربط_مصدر_وحدة_عملية, اختيار_هدف_عملية)
+    | تفسير بنوع (نص, متجه نص, متجه متجه ط8, اختيار_هدف_عملية, متجه ربط_مصدر_وحدة_عملية)
     | تجميع بنوع (
         نص,
         متجه نص,
@@ -136,7 +193,12 @@
         نص,
         اختيار_هدف_عملية,
         اختيار_مزود_خلفية_عملية,
-        نوع_مخرج_تجميع_عملية
+        نوع_مخرج_تجميع_عملية,
+        متجه ربط_مصدر_وحدة_عملية,
+        // -l library names and -L search directories, resolved against the
+        // target once it is known.
+        متجه نص,
+        متجه نص
     )
 ;
 

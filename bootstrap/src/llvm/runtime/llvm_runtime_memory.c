@@ -132,3 +132,84 @@ LLVMValueRef __LLVM_Reallocate_Bytes__(__LLVM_Emitter__ *emitter,
         return NULL;
     return LLVMBuildPointerCast(emitter->builder, allocated, target_pointer_type, name);
 }
+
+/* Releases the LLVM heap bytes. The canonical release boundary symmetric
+ * with __LLVM_Allocate_Bytes__/__LLVM_Reallocate_Bytes__ above: it declares
+ * "free" lazily and caches it on the emitter exactly the way malloc/realloc
+ * are declared and cached, so drop elaboration reuses the existing heap
+ * boundary rather than inventing a second allocator surface. */
+int __LLVM_Free_Bytes__(__LLVM_Emitter__ *emitter, LLVMValueRef pointer)
+{
+    /* Stores the byte pointer type. */
+    LLVMTypeRef byte_pointer;
+    /* Stores the call arguments. */
+    LLVMValueRef arguments[1];
+
+    if (emitter == NULL || pointer == NULL)
+    {
+        return __LLVM_Fail__("L2 drop elaboration released a missing heap pointer");
+    }
+    byte_pointer = LLVMPointerType(LLVMIntTypeInContext(emitter->context, 8U), 0U);
+    if (emitter->free_function == NULL)
+    {
+        /* Stores the parameter values. */
+        LLVMTypeRef params[1];
+        params[0] = byte_pointer;
+        emitter->free_type =
+            LLVMFunctionType(LLVMVoidTypeInContext(emitter->context), params, 1U, 0);
+        emitter->free_function = LLVMGetNamedFunction(emitter->module, "free");
+        if (emitter->free_function == NULL)
+        {
+            emitter->free_function =
+                LLVMAddFunction(emitter->module, "free", emitter->free_type);
+        }
+        if (emitter->free_function == NULL)
+        {
+            return __LLVM_Fail__(
+                "L2 drop elaboration could not declare canonical heap release boundary");
+        }
+    }
+    arguments[0] =
+        LLVMBuildPointerCast(emitter->builder, pointer, byte_pointer, "drop.release.bytes");
+    if (LLVMBuildCall2(emitter->builder,
+                       emitter->free_type,
+                       emitter->free_function,
+                       arguments,
+                       1U,
+                       "") == NULL)
+    {
+        return __LLVM_Fail__("L2 drop elaboration heap release call failed");
+    }
+    return 1;
+}
+
+LLVMValueRef __LLVM_Grow_Sequence_Bytes__(__LLVM_Emitter__ *emitter,
+                                          LLVMValueRef data,
+                                          LLVMValueRef capacity,
+                                          LLVMValueRef live_bytes,
+                                          LLVMValueRef byte_count,
+                                          LLVMTypeRef target_pointer_type,
+                                          const char *name)
+{
+    LLVMTypeRef i64 = LLVMIntTypeInContext(emitter->context, 64U);
+    LLVMValueRef unowned;
+    LLVMValueRef source;
+    LLVMValueRef grown;
+    LLVMValueRef copy_bytes;
+    if (data == NULL || capacity == NULL || live_bytes == NULL || byte_count == NULL)
+    {
+        __LLVM_Fail__("sequence growth is missing canonical storage facts");
+        return NULL;
+    }
+    unowned = LLVMBuildICmp(emitter->builder, LLVMIntEQ, capacity, LLVMConstInt(i64, 0U, 0),
+                            "grow.unowned");
+    source = LLVMBuildSelect(emitter->builder, unowned, LLVMConstNull(LLVMTypeOf(data)), data,
+                             "grow.source");
+    grown = __LLVM_Reallocate_Bytes__(emitter, source, byte_count, target_pointer_type, name);
+    if (grown == NULL)
+        return NULL;
+    copy_bytes = LLVMBuildSelect(emitter->builder, unowned, live_bytes, LLVMConstInt(i64, 0U, 0),
+                                 "grow.copy.bytes");
+    LLVMBuildMemCpy(emitter->builder, grown, 1U, data, 1U, copy_bytes);
+    return grown;
+}

@@ -1,0 +1,38 @@
+استورد os.error;
+استورد os.platform.windows.win32.error;
+
+// Whole-file locks through kernel32 (std.os.file_lock). MSDN:
+// BOOL LockFileEx(HANDLE, DWORD dwFlags, DWORD dwReserved,
+// DWORD nNumberOfBytesToLockLow, DWORD nNumberOfBytesToLockHigh,
+// LPOVERLAPPED); BOOL UnlockFileEx(HANDLE, DWORD dwReserved, DWORD, DWORD,
+// LPOVERLAPPED). OVERLAPPED is 32 bytes on the 64-bit ABIs; its Offset and
+// OffsetHigh (bytes 16..23) are the start of the range: 0 here. The range
+// is the whole file, 2^64 - 1 bytes from 0, as Rust's File::lock takes it.
+خارجي «kernel32.dll» عرف LockFileEx(
+    المقبض: ط64, الأعلام: ط32, المحجوز: ط32, الطول_الأدنى: ط32, الطول_الأعلى: ط32,
+    التراكب: *متغير ط64
+): ص32;
+خارجي «kernel32.dll» عرف UnlockFileEx(
+    المقبض: ط64, المحجوز: ط32, الطول_الأدنى: ط32, الطول_الأعلى: ط32,
+    التراكب: *متغير ط64
+): ص32;
+
+// LOCKFILE_EXCLUSIVE_LOCK 2, LOCKFILE_FAIL_IMMEDIATELY 1.
+عام عرف اقفل_ملف_ويندوز(المقبض: ط64, حصري: منطقي, بلا_انتظار: منطقي): نتيجة عدد, خطأ_نظام_أصلي {
+    دع الأعلام: متغير ط32 = 0;
+    لو (حصري) { الأعلام := 2; };
+    لو (بلا_انتظار) { الأعلام := الأعلام | 1; };
+    دع التراكب: متغير متجه ط64 = [0, 0, 0, 0];
+    لو (LockFileEx(المقبض, الأعلام, 0, 0xFFFFFFFF, 0xFFFFFFFF, &متغير التراكب[0]) != 0) {
+        أرجع نتيجة.نجح(0);
+    };
+    أرجع نتيجة.خطأ(التقط_خطأ_وين32());
+}
+
+عام عرف افتح_قفل_ملف_ويندوز(المقبض: ط64): نتيجة عدد, خطأ_نظام_أصلي {
+    دع التراكب: متغير متجه ط64 = [0, 0, 0, 0];
+    لو (UnlockFileEx(المقبض, 0, 0xFFFFFFFF, 0xFFFFFFFF, &متغير التراكب[0]) != 0) {
+        أرجع نتيجة.نجح(0);
+    };
+    أرجع نتيجة.خطأ(التقط_خطأ_وين32());
+}

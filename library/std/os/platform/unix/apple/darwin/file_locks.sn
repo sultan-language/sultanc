@@ -1,0 +1,16 @@
+استورد os.error;
+استورد os.platform.unix.apple.darwin.file_descriptors;
+
+// Whole-file locks through libSystem (std.os.file_lock): int flock(int fd,
+// int operation) (<sys/file.h>), LOCK_SH 1, LOCK_EX 2, LOCK_NB 4, LOCK_UN 8.
+// Retried on EINTR (4), as a blocking lock is interruptible.
+خارجي «/usr/lib/libSystem.B.dylib» عرف flock(الواصف: ص32, العملية: ص32): ص32;
+
+عام عرف نفذ_قفل_ملف_داروين(المقبض: ط64, العملية: ص32): نتيجة عدد, خطأ_نظام_أصلي {
+    طالما (صواب) {
+        لو (flock(المقبض مثل ص32, العملية) == 0) { أرجع نتيجة.نجح(0); };
+        دع الأصلي: خطأ_نظام_أصلي = خطأ_داروين_الحالي();
+        لو (الأصلي.الرمز != 4) { أرجع نتيجة.خطأ(الأصلي); };
+    }
+    أرجع نتيجة.نجح(0);
+}

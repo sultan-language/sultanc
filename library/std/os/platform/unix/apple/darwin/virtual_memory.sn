@@ -2,21 +2,35 @@
 // libSystem's mmap/mprotect are the supported macOS kernel interface: Apple
 // does not support direct system calls, so this is the system boundary, not a
 // C-runtime allocator. Addresses cross it as u64 words (void * in the C ABI).
-// These calls never allocate; the allocator itself depends on them.
-خارجي عرف mmap(
-    العنوان: غ64, الطول: غ64, الحماية: ص32, الأعلام: ص32, الواصف: ص32, الإزاحة: ص64
-): غ64;
-خارجي عرف mprotect(العنوان: غ64, الطول: غ64, الحماية: ص32): ص32;
+// These calls never allocate; the allocator itself depends on them. They are
+// the only declarations of libSystem's memory-mapping functions in std:
+// os/virtual_memory.sn calls them from here (<sys/mman.h>: size_t len, int
+// prot/flags/fd, off_t offset; getpagesize from <unistd.h>).
+عام خارجي «/usr/lib/libSystem.B.dylib» عرف mmap(
+    العنوان: ط64, الطول: ط64, الحماية: ص32, الأعلام: ص32, الواصف: ص32, الإزاحة: ص64
+): ط64;
+عام خارجي «/usr/lib/libSystem.B.dylib» عرف mprotect(العنوان: ط64, الطول: ط64, الحماية: ص32): ص32;
+عام خارجي «/usr/lib/libSystem.B.dylib» عرف munmap(العنوان: ط64, الطول: ط64): ص32;
+عام خارجي «/usr/lib/libSystem.B.dylib» عرف mlock(العنوان: ط64, الطول: ط64): ص32;
+عام خارجي «/usr/lib/libSystem.B.dylib» عرف munlock(العنوان: ط64, الطول: ط64): ص32;
+عام خارجي «/usr/lib/libSystem.B.dylib» عرف getpagesize(): ص32;
 
 // PROT_NONE (0) with MAP_PRIVATE | MAP_ANON (0x0002 | 0x1000) reserves
 // addresses without committing memory. MAP_FAILED is the all-ones word.
-عام عرف احجز_عناوين_داروين(الطول: غ64): غ64 {
-    دع العنوان: غ64 = mmap(0 مثل غ64, الطول, 0 مثل ص32, 0x1002 مثل ص32, -1 مثل ص32, 0 مثل ص64);
-    لو (العنوان == ~(0 مثل غ64)) { أرجع 0; };
+عام عرف احجز_عناوين_داروين(الطول: ط64): ط64 {
+    دع العنوان: ط64 = mmap(0 مثل ط64, الطول, 0 مثل ص32, 0x1002 مثل ص32, -1 مثل ص32, 0 مثل ص64);
+    لو (العنوان == ~(0 مثل ط64)) { أرجع 0; };
     أرجع العنوان;
 }
 
 // PROT_READ | PROT_WRITE (3) commits a page range of the reservation.
-عام عرف ثبت_عناوين_داروين(العنوان: غ64, الطول: غ64): منطقي {
+عام عرف ثبت_عناوين_داروين(العنوان: ط64, الطول: ط64): منطقي {
     أرجع mprotect(العنوان, الطول, 3 مثل ص32) == 0;
+}
+
+// MADV_FREE (5) permits the kernel to discard pages when needed. The
+// mapping remains accessible, but contents must not be relied on after free.
+عام خارجي «/usr/lib/libSystem.B.dylib» عرف madvise(العنوان: ط64, الطول: ط64, النصيحة: ص32): ص32;
+عام عرف استرد_عناوين_داروين(العنوان: ط64, الطول: ط64): منطقي {
+    أرجع madvise(العنوان, الطول, 5 مثل ص32) == 0;
 }

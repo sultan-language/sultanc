@@ -2,7 +2,7 @@
 // Property IDs: 0 Alphabetic,1 Numeric_Type!=None,2 Uppercase,3 Lowercase,4 White_Space,5
 // Cased,6 Case_Ignorable,7 Grapheme_Extend,8 Default_Ignorable_Code_Point,9 XID_Start,10
 // XID_Continue.
-عام دع نطاقات_خواص_يونيكود: متجه غ32 = [
+عام دع نطاقات_خواص_يونيكود: متجه ط32 = [
     0, 65, 90, 0, 97, 122, 0, 170, 170, 0, 181, 181, 0, 186, 186,
     0, 192, 214, 0, 216, 246, 0, 248, 705, 0, 710, 721, 0, 736, 740,
     0, 748, 748, 0, 750, 750, 0, 837, 837, 0, 867, 884, 0, 886, 887,

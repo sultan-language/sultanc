@@ -1,0 +1,39 @@
+// Waiting on an address (std.os.wait_address) on Windows: WaitOnAddress,
+// WakeByAddressSingle and WakeByAddressAll (Windows 8+), from the
+// synchronization API set Rust's std links (sys/pal/windows/futex.rs,
+// `synchronization` = api-ms-win-core-synch-l1-2-0.dll). WaitOnAddress
+// sleeps while the AddressSize bytes at Address equal *CompareAddress; it
+// may return spuriously, and it fails with ERROR_TIMEOUT (1460) at the
+// deadline. The timeout is in milliseconds (INFINITE = 0xFFFFFFFF).
+//
+//   BOOL WaitOnAddress(volatile VOID *Address, PVOID CompareAddress,
+//                      SIZE_T AddressSize, DWORD dwMilliseconds);
+//   VOID WakeByAddressSingle(PVOID Address);
+//   VOID WakeByAddressAll(PVOID Address);
+استورد os.error;
+استورد os.platform.windows.win32.error;
+
+خارجي «api-ms-win-core-synch-l1-2-0.dll» عرف WaitOnAddress(العنوان: &ط32, المقارنة: &ط32, الحجم: ط64, المهلة: ط32): ص32;
+خارجي «api-ms-win-core-synch-l1-2-0.dll» عرف WakeByAddressSingle(العنوان: &ط32): فراغ;
+خارجي «api-ms-win-core-synch-l1-2-0.dll» عرف WakeByAddressAll(العنوان: &ط32): فراغ;
+
+عام عرف انتظر_عند_عنوان_ويندوز(الخلية: &ط32, المتوقعة: ط32, المهلة_بالنانو: اختياري عدد): منطقي {
+    دع المهلة: متغير ط32 = 4294967295;
+    طابق المهلة_بالنانو مع
+    | اختياري.لا_شيء -> { }
+    | اختياري.موجود(النانو) -> {
+        // Round up to whole milliseconds, below INFINITE.
+        دع الموجبة: متغير عدد = النانو;
+        لو (الموجبة < 0) { الموجبة := 0; };
+        دع الملي: متغير عدد = (الموجبة + 999999) / 1000000;
+        لو (الملي > 4294967294) { الملي := 4294967294; };
+        المهلة := الملي مثل ط32;
+    };
+    دع المقارنة: ط32 = المتوقعة;
+    لو (WaitOnAddress(الخلية, &المقارنة, 4 مثل ط64, المهلة) != 0) { أرجع صواب; };
+    أرجع التقط_خطأ_وين32().الرمز != 1460;
+}
+
+عام عرف أيقظ_عند_عنوان_ويندوز(الخلية: &ط32, الكل: منطقي): فراغ {
+    لو (الكل) { WakeByAddressAll(الخلية); } وإلا { WakeByAddressSingle(الخلية); };
+}

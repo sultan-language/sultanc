@@ -1,0 +1,83 @@
+استورد os.error;
+استورد os.platform.windows.win32.error;
+استورد os.platform.windows.win32.file_handles;
+
+// Windows OS threads (docs/CONCURRENCY.md) through kernel32, as Rust's std
+// does (library/std/src/sys/pal/windows/thread.rs): CreateThread with a
+// 2 MiB stack reservation (STACK_SIZE_PARAM_IS_A_RESERVATION), then
+// WaitForSingleObject(INFINITE) to join, GetExitCodeThread to confirm the
+// thread ended, and CloseHandle. The start routine is the C entry of a
+// closure (بدائي_مدخل_سي_لدالة) and lpParameter the closure's environment,
+// so the system calls the closure as a C caller would (RCX on x64, X0 on
+// ARM64); the DWORD it returns is ignored.
+//
+// MSDN: HANDLE CreateThread(LPSECURITY_ATTRIBUTES, SIZE_T dwStackSize,
+// LPTHREAD_START_ROUTINE, LPVOID, DWORD dwCreationFlags, LPDWORD lpThreadId);
+// DWORD WaitForSingleObject(HANDLE, DWORD); BOOL GetExitCodeThread(HANDLE,
+// LPDWORD); BOOL SwitchToThread(void); DWORD GetCurrentThreadId(void);
+// void GetSystemInfo(LPSYSTEM_INFO).
+خارجي «kernel32.dll» عرف CreateThread(
+    السمات: ط64, حجم_المكدس: ط64, المدخل: ط64, الوسيط: ط64, الأعلام: ط32, المعرف: *متغير ط32
+): ط64;
+خارجي «kernel32.dll» عرف WaitForSingleObject(المقبض: ط64, المهلة: ط32): ط32;
+خارجي «kernel32.dll» عرف GetExitCodeThread(المقبض: ط64, الرمز: *متغير ط32): ص32;
+خارجي «kernel32.dll» عرف SwitchToThread(): ص32;
+خارجي «kernel32.dll» عرف GetCurrentThreadId(): ط32;
+خارجي «kernel32.dll» عرف GetSystemInfo(المعلومات: *متغير ط64): فراغ;
+
+مرادف إغلاق_من_عنوان_ويندوز = بدائي_دالة_من_عنوان;
+مرادف مدخل_سي_ويندوز = بدائي_مدخل_سي_لدالة;
+مرادف عنوان_إغلاق_ويندوز = بدائي_عنوان_دالة;
+
+// Answers the thread HANDLE, its id and the address of the closure's
+// environment, whose reference the caller keeps until join.
+عام نوع خيط_ويندوز = { المقبض: ط64, المعرف: ط64, عنوان_الإغلاق: ط64 };
+
+عام عرف ابدأ_خيط_ويندوز(العمل: دالة(): فراغ): نتيجة خيط_ويندوز, خطأ_نظام_أصلي {
+    دع العنوان: ط64;
+    دع المدخل: ط64;
+    غير_آمن {
+        العنوان := عنوان_إغلاق_ويندوز(العمل);
+        المدخل := مدخل_سي_ويندوز(العنوان);
+    }
+    دع المعرف: متغير متجه ط32 = [0];
+    // STACK_SIZE_PARAM_IS_A_RESERVATION 0x10000.
+    دع المقبض: ط64 = CreateThread(0, 2097152, المدخل, العنوان, 0x10000, &متغير المعرف[0]);
+    لو (المقبض == 0) {
+        دع الخطأ: خطأ_نظام_أصلي = التقط_خطأ_وين32();
+        حرر_إغلاق_خيط_ويندوز(العنوان);
+        أرجع نتيجة.خطأ(الخطأ);
+    };
+    دع الخيط: خيط_ويندوز = { المقبض: المقبض, المعرف: المعرف[0] مثل ط64, عنوان_الإغلاق: العنوان };
+    أرجع نتيجة.نجح(الخيط);
+}
+
+// Drops the environment reference the thread ran with.
+عام عرف حرر_إغلاق_خيط_ويندوز(العنوان: ط64): فراغ {
+    دع العمل: دالة(): فراغ;
+    غير_آمن { العمل := إغلاق_من_عنوان_ويندوز(العنوان); }
+}
+
+// WAIT_OBJECT_0 is 0; STILL_ACTIVE (259) would mean the wait ended early.
+عام عرف انضم_خيط_ويندوز(المقبض: ط64): فراغ {
+    دع الرمز: متغير متجه ط32 = [259];
+    طالما (الرمز[0] == 259) {
+        دع تجاهل_الانتظار: ط32 = WaitForSingleObject(المقبض, 0xFFFFFFFF);
+        لو (GetExitCodeThread(المقبض, &متغير الرمز[0]) == 0) { الرمز[0] := 0; };
+    }
+    دع تجاهل: ص32 = CloseHandle(المقبض);
+}
+
+عام عرف معرف_الخيط_الحالي_ويندوز(): ط64 { أرجع GetCurrentThreadId() مثل ط64; }
+
+عام عرف تنازل_ويندوز(): فراغ { دع تجاهل: ص32 = SwitchToThread(); }
+
+// SYSTEM_INFO is 48 bytes on the 64-bit ABIs; dwNumberOfProcessors is the
+// DWORD at byte 32 (the low half of the fifth word).
+عام عرف عدد_المعالجات_ويندوز(): نتيجة ط64, خطأ_نظام_أصلي {
+    دع المعلومات: متغير متجه ط64 = [0, 0, 0, 0, 0, 0];
+    GetSystemInfo(&متغير المعلومات[0]);
+    دع العدد: ط64 = المعلومات[4] & 0xFFFFFFFF;
+    لو (العدد == 0) { أرجع نتيجة.خطأ(أنشئ_خطأ_نظام_أصلي(مصدر_خطأ_نظام.وين32(), 87)); };
+    أرجع نتيجة.نجح(العدد);
+}

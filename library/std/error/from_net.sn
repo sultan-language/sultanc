@@ -1,0 +1,40 @@
+// Converters to فشل for std.net parse errors.
+// Domain «std.net», kind = the variant name. Both enums name an invalid
+// syntax صيغة_غير_صالحة, so that identity covers either one. The message is
+// Arabic, with an English language version («en»).
+استورد error.failure;
+استورد net.ip;
+استورد net.socket_address;
+
+// An error with an identity in std.net and an English language version.
+عرف فشل_شبكة(النوع: نص, الرسالة: نص, الإنجليزية: نص): فشل {
+    دع الناتج: متغير فشل = فشل_بهوية(«std.net», النوع, الرسالة);
+    أضف_نسخة_لغة(&متغير الناتج, «en», الإنجليزية);
+    أرجع الناتج;
+}
+
+عام عرف فشل_من_خطأ_تحليل_آيبي(الخطأ: &خطأ_تحليل_آيبي): فشل {
+    طابق *الخطأ مع
+    | خطأ_تحليل_آيبي.صيغة_غير_صالحة -> {
+        أرجع فشل_شبكة(«صيغة_غير_صالحة», «صيغة عنوان IP غير صالحة», «invalid IP address syntax»);
+    }
+    | خطأ_تحليل_آيبي.جزء_خارج_المدى -> {
+        أرجع فشل_شبكة(«جزء_خارج_المدى», «جزء من عنوان IP خارج المدى», «a part of the IP address is out of range»);
+    };
+}
+
+عام عرف فشل_من_خطأ_تحليل_عنوان_مقبس(الخطأ: &خطأ_تحليل_عنوان_مقبس): فشل {
+    طابق *الخطأ مع
+    | خطأ_تحليل_عنوان_مقبس.صيغة_غير_صالحة -> {
+        أرجع فشل_شبكة(«صيغة_غير_صالحة», «صيغة عنوان المقبس غير صالحة», «invalid socket address syntax»);
+    }
+    | خطأ_تحليل_عنوان_مقبس.عنوان_غير_صالح -> {
+        أرجع فشل_شبكة(«عنوان_غير_صالح», «عنوان IP في عنوان المقبس غير صالح», «invalid IP address in the socket address»);
+    }
+    | خطأ_تحليل_عنوان_مقبس.منفذ_غير_صالح -> {
+        أرجع فشل_شبكة(«منفذ_غير_صالح», «منفذ عنوان المقبس غير صالح», «invalid socket address port»);
+    };
+}
+
+عام مرادف error_from_ip_parse_error = فشل_من_خطأ_تحليل_آيبي;
+عام مرادف error_from_socket_address_parse_error = فشل_من_خطأ_تحليل_عنوان_مقبس;

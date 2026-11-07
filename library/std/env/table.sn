@@ -1,0 +1,238 @@
+// The process environment std owns (Rust std::env::set_var/remove_var, Go
+// os.Setenv/Unsetenv). Like Go's runtime envs (syscall.Setenv), the table is
+// process-wide state initialised lazily from the environment the process
+// started with, the first time a variable is set or removed; until then
+// every read goes to the system as before. std.env.environment and
+// std.env.variables read through it, and std.process.command gives a child
+// started without an explicit environment the current table.
+//
+// - Linux, FreeBSD, Android, WASI: std holds the only copy (there is no libc
+//   environ to update).
+// - macOS: std keeps its own table and does not call libSystem's setenv, as
+//   Go does; the startup vector stays unchanged.
+// - Windows: the change is also made with SetEnvironmentVariableW, so the
+//   process environment block (which GetEnvironmentVariableW and a child's
+//   inherited environment read) agrees with the table. Names compare
+//   case-insensitively, as Windows compares them.
+//
+// Threads: once a thread has been spawned, every access to the table holds
+// one process-wide lock (Rust's ENV_LOCK, Go's envLock), the three-state
+// futex lock of std.sync.mutex. A program that never spawns a thread pays
+// one branch (std.os.allocation's thread flag) and takes no lock.
+
+استورد os.environment_list;
+استورد os.allocation;
+استورد os.wait_address;
+استورد text.from_bytes;
+
+عام نوع مدخل_جدول_بيئة = { الاسم: متجه ط8, القيمة: متجه ط8 };
+
+دع مداخل_بيئة_العملية: متغير متجه مدخل_جدول_بيئة = [];
+دع جدول_بيئة_العملية_مهيأ: متغير منطقي = خطأ;
+// The lock word: 0 free, 1 held, 2 held with waiters (std.sync.mutex's
+// protocol on a scalar module variable, changed only atomically).
+دع قفل_جدول_البيئة: متغير ط32 = 0;
+مرادف قارن_وبدّل_قفل_البيئة = بدائي_ذري_قارن_وبدل;
+مرادف بدّل_قفل_البيئة = بدائي_ذري_تبديل;
+
+// Take and release the table lock, once a thread exists.
+عرف اقفل_جدول_البيئة(): فراغ {
+    لو (!هل_بدأت_خيوط()) { أرجع; };
+    لو (قارن_وبدّل_قفل_البيئة(&قفل_جدول_البيئة, 0 مثل ط32, 1 مثل ط32, 2, 2) == (0 مثل ط32)) { أرجع; };
+    طالما (بدّل_قفل_البيئة(&قفل_جدول_البيئة, 2 مثل ط32, 2) != (0 مثل ط32)) {
+        دع تجاهل: منطقي = انتظر_عند_الخلية(&قفل_جدول_البيئة, 2 مثل ط32, اختياري.لا_شيء());
+    }
+}
+عرف افتح_جدول_البيئة(): فراغ {
+    لو (!هل_بدأت_خيوط()) { أرجع; };
+    لو (بدّل_قفل_البيئة(&قفل_جدول_البيئة, 0 مثل ط32, 1) == (2 مثل ط32)) {
+        أيقظ_واحدا_عند_الخلية(&قفل_جدول_البيئة);
+    };
+}
+
+لو (الهدف.المنصة == «windows») {
+    استورد os.platform.windows.win32.environment;
+    عرف بايت_بحالة_صغيرة_للبيئة(البايت: ط8): ط8 {
+        لو (البايت >= 0x41 && البايت <= 0x5A) { أرجع البايت + 32; };
+        أرجع البايت;
+    }
+    عرف اسمان_متساويان_للبيئة(أ: &متجه ط8, ب: &متجه ط8): منطقي {
+        لو ((الطول(*أ) مثل طبيعي) != (الطول(*ب) مثل طبيعي)) { أرجع خطأ; };
+        دع ف: متغير طبيعي = 0;
+        طالما (ف < (الطول(*أ) مثل طبيعي)) {
+            لو (بايت_بحالة_صغيرة_للبيئة((*أ)[ف]) != بايت_بحالة_صغيرة_للبيئة((*ب)[ف])) { أرجع خطأ; };
+            ف := ف + 1;
+        }
+        أرجع صواب;
+    }
+    عرف انشر_ضبط_بيئة_للنظام(الاسم: &متجه ط8, القيمة: &متجه ط8): فراغ {
+        دع الاسم_نصا: نص = من_بايتات(الاسم);
+        دع القيمة_نصا: نص = من_بايتات(القيمة);
+        دع الناتج: نتيجة عدد, خطأ_بيئة_ويندوز = ضع_متغير_بيئة_ويندوز(&الاسم_نصا, &القيمة_نصا);
+    }
+    عرف انشر_إزالة_بيئة_للنظام(الاسم: &متجه ط8): فراغ {
+        دع الاسم_نصا: نص = من_بايتات(الاسم);
+        دع الناتج: نتيجة عدد, خطأ_بيئة_ويندوز = احذف_متغير_بيئة_ويندوز(&الاسم_نصا);
+    }
+} وإلا {
+    عرف اسمان_متساويان_للبيئة(أ: &متجه ط8, ب: &متجه ط8): منطقي {
+        لو ((الطول(*أ) مثل طبيعي) != (الطول(*ب) مثل طبيعي)) { أرجع خطأ; };
+        دع ف: متغير طبيعي = 0;
+        طالما (ف < (الطول(*أ) مثل طبيعي)) {
+            لو ((*أ)[ف] != (*ب)[ف]) { أرجع خطأ; };
+            ف := ف + 1;
+        }
+        أرجع صواب;
+    }
+    عرف انشر_ضبط_بيئة_للنظام(الاسم: &متجه ط8, القيمة: &متجه ط8): فراغ { }
+    عرف انشر_إزالة_بيئة_للنظام(الاسم: &متجه ط8): فراغ { }
+}
+
+// Whether the table exists, i.e. whether a variable was ever set or removed.
+عام عرف هل_جدول_البيئة_مهيأ(): منطقي { أرجع جدول_بيئة_العملية_مهيأ; }
+
+// Fills the table from the startup environment (the first time only). An
+// entry without '=' or with an empty name is skipped, as std.env.variables
+// skips it.
+عرف هيئ_جدول_البيئة(): فراغ {
+    // The table is a writable global that is not a scalar: unsafe, as
+    // Rust's static mut (SULTAN_SAFETY_FLOW.md); no reference into it outlives a call.
+    غير_آمن {
+        لو (جدول_بيئة_العملية_مهيأ) { أرجع; };
+        جدول_بيئة_العملية_مهيأ := صواب;
+        طابق اقرأ_بيئة_النظام() مع
+        | نتيجة.خطأ(_) -> { }
+        | نتيجة.نجح(المداخل) -> {
+            دع ف: متغير طبيعي = 0;
+            طالما (ف < (الطول(المداخل) مثل طبيعي)) {
+                دع المدخل: &متجه ط8 = &المداخل[ف];
+                دع العدد: طبيعي = الطول(*المدخل) مثل طبيعي;
+                دع الفاصل: متغير طبيعي = 0;
+                طالما (الفاصل < العدد && (*المدخل)[الفاصل] != 0x3D) { الفاصل := الفاصل + 1; }
+                لو (الفاصل > 0 && الفاصل < العدد) {
+                    دع الاسم: متغير متجه ط8 = [];
+                    دع القيمة: متغير متجه ط8 = [];
+                    دع ح: متغير طبيعي = 0;
+                    طالما (ح < الفاصل) { ألحق(الاسم, (*المدخل)[ح]); ح := ح + 1; }
+                    ح := الفاصل + 1;
+                    طالما (ح < العدد) { ألحق(القيمة, (*المدخل)[ح]); ح := ح + 1; }
+                    دع الجديد: مدخل_جدول_بيئة = { الاسم: الاسم, القيمة: القيمة };
+                    ألحق(مداخل_بيئة_العملية, الجديد);
+                };
+                ف := ف + 1;
+            }
+        };
+    };
+}
+
+// The position of a variable in the table.
+عرف موضع_في_جدول_البيئة(الاسم: &متجه ط8): اختياري طبيعي {
+    // The table is a writable global that is not a scalar: unsafe, as
+    // Rust's static mut (SULTAN_SAFETY_FLOW.md); no reference into it outlives a call.
+    غير_آمن {
+        دع ف: متغير طبيعي = 0;
+        طالما (ف < (الطول(مداخل_بيئة_العملية) مثل طبيعي)) {
+            لو (اسمان_متساويان_للبيئة(&مداخل_بيئة_العملية[ف].الاسم, الاسم)) { أرجع اختياري.موجود(ف); };
+            ف := ف + 1;
+        }
+        أرجع اختياري.لا_شيء();
+    };
+}
+
+// A copy of a variable's value in the table (the table exists).
+عرف ابحث_في_جدول_البيئة_بلا_قفل(الاسم: &متجه ط8): اختياري متجه ط8 {
+    // The table is a writable global that is not a scalar: unsafe, as
+    // Rust's static mut (SULTAN_SAFETY_FLOW.md); no reference into it outlives a call.
+    غير_آمن {
+        هيئ_جدول_البيئة();
+        طابق موضع_في_جدول_البيئة(الاسم) مع
+        | اختياري.موجود(ف) -> { أرجع اختياري.موجود(انسخ_بايتات(&مداخل_بيئة_العملية[ف].القيمة)); }
+        | اختياري.لا_شيء -> { أرجع اختياري.لا_شيء(); };
+    };
+}
+
+عام عرف ابحث_في_جدول_البيئة(الاسم: &متجه ط8): اختياري متجه ط8 {
+    اقفل_جدول_البيئة();
+    دع الناتج: اختياري متجه ط8 = ابحث_في_جدول_البيئة_بلا_قفل(الاسم);
+    افتح_جدول_البيئة();
+    أرجع الناتج;
+}
+
+// Sets a variable (the name and value were validated by the caller).
+عرف اضبط_في_جدول_البيئة_بلا_قفل(الاسم: &متجه ط8, القيمة: &متجه ط8): فراغ {
+    // The table is a writable global that is not a scalar: unsafe, as
+    // Rust's static mut (SULTAN_SAFETY_FLOW.md); no reference into it outlives a call.
+    غير_آمن {
+        هيئ_جدول_البيئة();
+        طابق موضع_في_جدول_البيئة(الاسم) مع
+        | اختياري.موجود(ف) -> { مداخل_بيئة_العملية[ف].القيمة := انسخ_بايتات(القيمة); }
+        | اختياري.لا_شيء -> {
+            دع الجديد: مدخل_جدول_بيئة = { الاسم: انسخ_بايتات(الاسم), القيمة: انسخ_بايتات(القيمة) };
+            ألحق(مداخل_بيئة_العملية, الجديد);
+        };
+        انشر_ضبط_بيئة_للنظام(الاسم, القيمة);
+    };
+}
+
+عام عرف اضبط_في_جدول_البيئة(الاسم: &متجه ط8, القيمة: &متجه ط8): فراغ {
+    اقفل_جدول_البيئة();
+    اضبط_في_جدول_البيئة_بلا_قفل(الاسم, القيمة);
+    افتح_جدول_البيئة();
+}
+
+// Removes every entry of a variable; nothing when it is not set.
+عرف أزل_من_جدول_البيئة_بلا_قفل(الاسم: &متجه ط8): فراغ {
+    // The table is a writable global that is not a scalar: unsafe, as
+    // Rust's static mut (SULTAN_SAFETY_FLOW.md); no reference into it outlives a call.
+    غير_آمن {
+        هيئ_جدول_البيئة();
+        دع الباقية: متغير متجه مدخل_جدول_بيئة = [];
+        دع ف: متغير طبيعي = 0;
+        طالما (ف < (الطول(مداخل_بيئة_العملية) مثل طبيعي)) {
+            لو (!اسمان_متساويان_للبيئة(&مداخل_بيئة_العملية[ف].الاسم, الاسم)) {
+                دع المدخل: مدخل_جدول_بيئة = {
+                    الاسم: انسخ_بايتات(&مداخل_بيئة_العملية[ف].الاسم),
+                    القيمة: انسخ_بايتات(&مداخل_بيئة_العملية[ف].القيمة)
+                };
+                ألحق(الباقية, المدخل);
+            };
+            ف := ف + 1;
+        }
+        بدّل(مداخل_بيئة_العملية, الباقية);
+        انشر_إزالة_بيئة_للنظام(الاسم);
+    };
+}
+
+عام عرف أزل_من_جدول_البيئة(الاسم: &متجه ط8): فراغ {
+    اقفل_جدول_البيئة();
+    أزل_من_جدول_البيئة_بلا_قفل(الاسم);
+    افتح_جدول_البيئة();
+}
+
+// Every variable of the table as "NAME=VALUE" bytes, in the table's order.
+عرف مداخل_جدول_البيئة_بلا_قفل(): متجه متجه ط8 {
+    // The table is a writable global that is not a scalar: unsafe, as
+    // Rust's static mut (SULTAN_SAFETY_FLOW.md); no reference into it outlives a call.
+    غير_آمن {
+        هيئ_جدول_البيئة();
+        دع الناتج: متغير متجه متجه ط8 = [];
+        دع ف: متغير طبيعي = 0;
+        طالما (ف < (الطول(مداخل_بيئة_العملية) مثل طبيعي)) {
+            دع المدخل: متغير متجه ط8 = انسخ_بايتات(&مداخل_بيئة_العملية[ف].الاسم);
+            ألحق(المدخل, 0x3D);
+            دع ح: متغير طبيعي = 0;
+            دع القيمة: &متجه ط8 = &مداخل_بيئة_العملية[ف].القيمة;
+            طالما (ح < (الطول(*القيمة) مثل طبيعي)) { ألحق(المدخل, (*القيمة)[ح]); ح := ح + 1; }
+            ألحق(الناتج, المدخل);
+            ف := ف + 1;
+        }
+        أرجع الناتج;
+    };
+}
+
+عام عرف مداخل_جدول_البيئة(): متجه متجه ط8 {
+    اقفل_جدول_البيئة();
+    دع الناتج: متجه متجه ط8 = مداخل_جدول_البيئة_بلا_قفل();
+    افتح_جدول_البيئة();
+    أرجع الناتج;
+}

@@ -92,6 +92,38 @@ int __Parser_Parse_Variable__(__Parser__ *__Parser_State__, __Vector__ *__Statem
     }
 
     __Initializer_Value__ = __Parser_Parse_Initializer__(__Parser_State__, &__Initializer_Ok__);
+    if (__Initializer_Ok__ && __Initializer_Value__.__Kind__ == __Initializer_Expression__ &&
+        __Parser_State__->__Current__.__Kind__ == __Token_QUESTION_OPERATOR__)
+    {
+        /* Stores the propagation mark. */
+        __Source_Span__ __Mark__ = __Parser_State__->__Current__.__Span__;
+        if (!__Parser_Advance__(__Parser_State__) ||
+            !__Parser_Expect__(__Parser_State__, __Token_SEMICOLON_OPERATOR__))
+        {
+            return 0;
+        }
+        __Span__ = __Parser_Span__(__Start__, __Parser_State__->__Previous__.__Span__.__End__);
+        __Declaration__ =
+            __Parser_Create_Variable_Declaration__(__Parser_State__, __Name__, __Type__, __Span__);
+        if (__Declaration__ == NULL ||
+            !__Parser_Push_Statement__(__Parser_State__, __Statements__, __Declaration__))
+        {
+            return 0;
+        }
+        __Destination__ = __Parser_New_Base_Lvalue__(
+            __Parser_State__, __Ast_Lvalue_Base_Identifier__, __Name__, 0U, __Span__);
+        if (__Destination__ == NULL)
+        {
+            return 0;
+        }
+        return __Parser_Push_Propagation__(__Parser_State__,
+                                           __Statements__,
+                                           __Initializer_Value__.__As__.__Expression__,
+                                           __Parser_Propagation_Assign__,
+                                           __Destination__,
+                                           __Mark__,
+                                           __Span__);
+    }
     if (!__Initializer_Ok__ || !__Parser_Expect__(__Parser_State__, __Token_SEMICOLON_OPERATOR__))
     {
         return 0;
@@ -133,6 +165,8 @@ int __Parser_Parse_Variable__(__Parser__ *__Parser_State__, __Vector__ *__Statem
                 __Initialization__->__As__.__Aggregate__.__Destination__ = __Destination__;
                 __Initialization__->__As__.__Aggregate__.__Values__ =
                     __Initializer_Value__.__As__.__Aggregate__.__Values__;
+                __Initialization__->__As__.__Aggregate__.__Expressions__ =
+                    __Initializer_Value__.__As__.__Aggregate__.__Expressions__;
                 __Initialization__->__As__.__Aggregate__.__Value_Count__ =
                     __Initializer_Value__.__As__.__Aggregate__.__Count__;
             }
@@ -156,6 +190,7 @@ int __Parser_Parse_Variable__(__Parser__ *__Parser_State__, __Vector__ *__Statem
             {
                 __Initialization__->__As__.__Box__.__Destination__ = __Destination__;
                 __Initialization__->__As__.__Box__.__Value__ = __Initializer_Value__.__As__.__Box__;
+                __Initialization__->__As__.__Box__.__Expression__ = __Initializer_Value__.__Box_Expression__;
             }
             break;
     }

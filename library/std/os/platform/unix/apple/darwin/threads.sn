@@ -1,0 +1,94 @@
+استورد os.error;
+استورد os.platform.unix.apple.darwin.file_descriptors;
+
+// macOS OS threads (docs/CONCURRENCY.md) through libSystem's documented
+// POSIX thread API, as Rust's std (library/std/src/sys/pal/unix/thread.rs)
+// and Go's runtime (runtime/os_darwin.go, newosproc) start threads there:
+// pthread_create with a 2 MiB stack (pthread_attr_setstacksize; Darwin's own
+// default for secondary threads is 512 KiB), pthread_join to wait. The start
+// routine is the C entry of a closure (بدائي_مدخل_سي_لدالة) and its argument
+// the closure's environment, so libpthread calls the closure as a C caller
+// would; the closure's return value register is the ignored void *.
+//
+// <pthread.h>: int pthread_create(pthread_t *, const pthread_attr_t *,
+// void *(*)(void *), void *); int pthread_join(pthread_t, void **);
+// pthread_attr_t is 64 bytes (__PTHREAD_ATTR_SIZE__ 56 plus the signature
+// word) on both arm64 and x86_64.
+خارجي «/usr/lib/libSystem.B.dylib» عرف pthread_create(
+    المقبض: *متغير ط64, السمات: *متغير ط64, المدخل: ط64, الوسيط: ط64
+): ص32;
+خارجي «/usr/lib/libSystem.B.dylib» عرف pthread_join(المقبض: ط64, الناتج: ط64): ص32;
+خارجي «/usr/lib/libSystem.B.dylib» عرف pthread_attr_init(السمات: *متغير ط64): ص32;
+خارجي «/usr/lib/libSystem.B.dylib» عرف pthread_attr_setstacksize(السمات: *متغير ط64, الحجم: ط64): ص32;
+خارجي «/usr/lib/libSystem.B.dylib» عرف pthread_attr_destroy(السمات: *متغير ط64): ص32;
+// int pthread_threadid_np(pthread_t, uint64_t *): the system-wide unique
+// id of a thread (NULL: the calling thread), Rust's ThreadId source on Apple.
+خارجي «/usr/lib/libSystem.B.dylib» عرف pthread_threadid_np(المقبض: ط64, المعرف: *متغير ط64): ص32;
+// void pthread_yield_np(void): give up the processor (sched_yield's
+// Darwin spelling).
+خارجي «/usr/lib/libSystem.B.dylib» عرف pthread_yield_np(): فراغ;
+// int sysctlbyname(const char *, void *, size_t *, void *, size_t).
+خارجي «/usr/lib/libSystem.B.dylib» عرف sysctlbyname(
+    الاسم: *ط8, القيمة: *متغير ص32, الطول: *متغير ط64, الجديدة: ط64, طول_الجديدة: ط64
+): ص32;
+
+مرادف إغلاق_من_عنوان_داروين = بدائي_دالة_من_عنوان;
+مرادف مدخل_سي_داروين = بدائي_مدخل_سي_لدالة;
+مرادف عنوان_إغلاق_داروين = بدائي_عنوان_دالة;
+
+// Answers the pthread_t and the address of the closure's environment, whose
+// reference the caller keeps until join.
+عام نوع خيط_داروين = { المقبض: ط64, عنوان_الإغلاق: ط64 };
+
+عام عرف ابدأ_خيط_داروين(العمل: دالة(): فراغ): نتيجة خيط_داروين, خطأ_نظام_أصلي {
+    دع السمات: متغير متجه ط64 = [0, 0, 0, 0, 0, 0, 0, 0];
+    دع الرمز: متغير ص32 = pthread_attr_init(&متغير السمات[0]);
+    لو (الرمز != 0) { أرجع نتيجة.خطأ(أنشئ_خطأ_نظام_أصلي(مصدر_خطأ_نظام.يونكس(), الرمز مثل عدد)); };
+    دع تجاهل_الحجم: ص32 = pthread_attr_setstacksize(&متغير السمات[0], 2097152);
+    دع العنوان: ط64;
+    دع المدخل: ط64;
+    غير_آمن {
+        العنوان := عنوان_إغلاق_داروين(العمل);
+        المدخل := مدخل_سي_داروين(العنوان);
+    }
+    دع المقبض: متغير متجه ط64 = [0];
+    الرمز := pthread_create(&متغير المقبض[0], &متغير السمات[0], المدخل, العنوان);
+    دع تجاهل_الإتلاف: ص32 = pthread_attr_destroy(&متغير السمات[0]);
+    لو (الرمز != 0) {
+        حرر_إغلاق_خيط_داروين(العنوان);
+        أرجع نتيجة.خطأ(أنشئ_خطأ_نظام_أصلي(مصدر_خطأ_نظام.يونكس(), الرمز مثل عدد));
+    };
+    دع الخيط: خيط_داروين = { المقبض: المقبض[0], عنوان_الإغلاق: العنوان };
+    أرجع نتيجة.نجح(الخيط);
+}
+
+// Drops the environment reference the thread ran with.
+عام عرف حرر_إغلاق_خيط_داروين(العنوان: ط64): فراغ {
+    دع العمل: دالة(): فراغ;
+    غير_آمن { العمل := إغلاق_من_عنوان_داروين(العنوان); }
+}
+
+عام عرف انضم_خيط_داروين(المقبض: ط64): فراغ {
+    دع تجاهل: ص32 = pthread_join(المقبض, 0);
+}
+
+عام عرف معرف_خيط_داروين(المقبض: ط64): ط64 {
+    دع المعرف: متغير متجه ط64 = [0];
+    دع تجاهل: ص32 = pthread_threadid_np(المقبض, &متغير المعرف[0]);
+    أرجع المعرف[0];
+}
+
+عام عرف تنازل_داروين(): فراغ { pthread_yield_np(); }
+
+// hw.logicalcpu: the logical CPUs available to the current power state.
+عام عرف عدد_المعالجات_داروين(): نتيجة ط64, خطأ_نظام_أصلي {
+    // "hw.logicalcpu" and its NUL.
+    دع الاسم: متجه ط8 = [104, 119, 46, 108, 111, 103, 105, 99, 97, 108, 99, 112, 117, 0];
+    دع القيمة: متغير متجه ص32 = [0];
+    دع الطول: متغير متجه ط64 = [4];
+    لو (sysctlbyname(&الاسم[0], &متغير القيمة[0], &متغير الطول[0], 0, 0) != 0) {
+        أرجع نتيجة.خطأ(خطأ_داروين_الحالي());
+    };
+    لو (القيمة[0] <= 0) { أرجع نتيجة.خطأ(أنشئ_خطأ_نظام_أصلي(مصدر_خطأ_نظام.يونكس(), 22)); };
+    أرجع نتيجة.نجح(القيمة[0] مثل ط64);
+}

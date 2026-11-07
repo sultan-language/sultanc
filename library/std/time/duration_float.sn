@@ -1,0 +1,44 @@
+// Durations as float seconds (Rust Duration::as_secs_f64 / as_secs_f32 and
+// try_from_secs_f64; Go Duration.Seconds). Kept apart from std.time.duration,
+// which the compiler imports and the C Stage0 builds: these use the
+// language's float <-> integer conversions.
+استورد time.duration;
+
+// Whole seconds plus the remaining nanoseconds, each converted exactly
+// (|whole seconds| < 2^34, nanoseconds < 10^9), then one rounding.
+عام عرف ثواني_المدة_ع64(المدة: &مدة): ع64 {
+    دع النانو: عدد = نانوثواني_المدة(المدة);
+    دع الثواني: عدد = النانو / 1000000000;
+    دع الباقي: عدد = النانو % 1000000000;
+    أرجع (الثواني مثل ع64) + (الباقي مثل ع64) / 1000000000.0;
+}
+
+عام عرف ثواني_المدة_ع32(المدة: &مدة): ع32 {
+    أرجع ثواني_المدة_ع64(المدة) مثل ع32;
+}
+
+// The duration nearest a number of seconds (halves away from zero), or
+// none for NaN, an infinity or a value outside ±(2^63 - 1) nanoseconds
+// (about 292 years), as Rust's try_from_secs_f64 refuses them.
+عام عرف مدة_من_ثواني_ع64(الثواني: ع64): اختياري مدة {
+    لو (الثواني != الثواني) { أرجع اختياري.لا_شيء(); };
+    لو (الثواني >= 9223372036.0 || الثواني <= -9223372036.0) { أرجع اختياري.لا_شيء(); };
+    دع الكاملة: عدد = الثواني مثل عدد;
+    دع الكسر: ع64 = الثواني - (الكاملة مثل ع64);
+    دع النانو_عائم: ع64 = الكسر * 1000000000.0;
+    دع النانو: متغير عدد = النانو_عائم مثل عدد;
+    دع المتبقي: ع64 = النانو_عائم - (النانو مثل ع64);
+    لو (المتبقي >= 0.5) { النانو := النانو + 1; };
+    لو (المتبقي <= -0.5) { النانو := النانو - 1; };
+    دع الكلي: عدد = الكاملة * 1000000000 + النانو;
+    أرجع اختياري.موجود(مدة_من_نانوثواني(الكلي));
+}
+
+عام عرف مدة_من_ثواني_ع32(الثواني: ع32): اختياري مدة {
+    أرجع مدة_من_ثواني_ع64(الثواني مثل ع64);
+}
+
+عام مرادف duration_seconds_f64 = ثواني_المدة_ع64;
+عام مرادف duration_seconds_f32 = ثواني_المدة_ع32;
+عام مرادف duration_from_seconds_f64 = مدة_من_ثواني_ع64;
+عام مرادف duration_from_seconds_f32 = مدة_من_ثواني_ع32;

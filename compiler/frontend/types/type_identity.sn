@@ -1,14 +1,27 @@
 // Canonical Type identity is independently consumable by representation layers.
 // Aggregate Name/Symbol identities remain owned by Name and live outside this boundary.
 عام نوع معرف_نوع = {
-    القيمة: غير_موقع
+    القيمة: طبيعي
 };
 
-عام عرف معرف_نوع_من(القيمة: غير_موقع): معرف_نوع {
+عام عرف معرف_نوع_من(القيمة: طبيعي): معرف_نوع {
     دع المعرف: معرف_نوع = { القيمة: القيمة };
     أرجع المعرف;
 }
 
 عام عرف معرفا_نوع_متساويان(أ: معرف_نوع, ب: معرف_نوع): منطقي {
     أرجع أ.القيمة == ب.القيمة;
+}
+
+// Deep copies of owned values (one per Type; read the source through a
+// reference and allocate independent storage).
+
+عام عرف انسخ_مملوكا_متجه_معرف_نوع(القيمة: &متجه معرف_نوع): متجه معرف_نوع {
+    دع الناتج: متغير متجه معرف_نوع = [];
+    دع ف: متغير طبيعي = 0;
+    طالما (ف < (الطول(*القيمة) مثل طبيعي)) {
+        ألحق(الناتج, (*القيمة)[ف]);
+        ف := ف + 1;
+    }
+    أرجع الناتج;
 }

@@ -1,6 +1,6 @@
 // Generated from official Unicode 18.0.0 UCD; see SOURCE_SHA256.txt.
 // Unicode general categories; default Cn=29 includes unassigned and out-of-range.
-عام دع نطاقات_فئات_يونيكود: متجه غ32 = [
+عام دع نطاقات_فئات_يونيكود: متجه ط32 = [
     0, 31, 25, 32, 32, 22, 33, 35, 17, 36, 36, 19, 37, 39, 17,
     40, 40, 13, 41, 41, 14, 42, 42, 17, 43, 43, 18, 44, 44, 17,
     45, 45, 12, 46, 47, 17, 48, 57, 8, 58, 59, 17, 60, 62, 18,

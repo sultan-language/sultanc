@@ -1,0 +1,84 @@
+استورد std.collections.map;
+استورد compiler.source.span;
+استورد compiler.frontend.names.identifiers;
+
+// Ownership facts that SSF proves and MSIR drop elaboration consumes (see
+// docs/OWNERSHIP_AND_DESTRUCTION.md, "Destruction"). SSF is the only owner of
+// move and view semantics; lowering never re-derives them.
+//   النقول   the span of every local name use that moves the local's value
+//            out (a value transfer, or an explicit release). Lowering clears
+//            the local's drop flag there.
+//   العروض   every local that is a borrowed view. A view owns nothing and is
+//            never destroyed.
+//   العليا_الثابتة  module values whose every read is a fresh copy of a
+//            compile-time constant (an immutable text value): reading one by
+//            value aliases no storage.
+// Facts only accumulate. A function that SSF analyzes again (an inferred plain
+// bound) may leave facts from the rejected pass; an extra move fact only makes
+// lowering skip a drop (a leak), never add one.
+عام نوع حقائق_ملكية_تدفق = {
+    النقول: الخريطة<طبيعي, منطقي>,
+    العروض: الخريطة<طبيعي, منطقي>,
+    العليا_الثابتة: الخريطة<طبيعي, منطقي>
+};
+
+// A name use is identified by where it starts: its source and first byte
+// (sources stay below 2^24 and files below 2^40 bytes).
+عرف مفتاح_نطاق_ملكية(النطاق: &نطاق): طبيعي {
+    أرجع ((*النطاق).البداية.المصدر * 1099511627776) + (*النطاق).البداية.البايت;
+}
+
+عرف هاش_مفتاح_ملكية(المفتاح: &طبيعي): طبيعي {
+    أرجع (*المفتاح) ^ ((*المفتاح) / 1099511627776);
+}
+
+عرف مفتاحا_ملكية_متساويان(أ: &طبيعي, ب: &طبيعي): منطقي {
+    أرجع (*أ) == (*ب);
+}
+
+عام عرف حقائق_ملكية_تدفق_جديدة(): حقائق_ملكية_تدفق {
+    دع النقول: الخريطة<طبيعي, منطقي> = أنشئ_الخريطة(هاش_مفتاح_ملكية, مفتاحا_ملكية_متساويان);
+    دع العروض: الخريطة<طبيعي, منطقي> = أنشئ_الخريطة(هاش_مفتاح_ملكية, مفتاحا_ملكية_متساويان);
+    دع العليا_الثابتة: الخريطة<طبيعي, منطقي> = أنشئ_الخريطة(هاش_مفتاح_ملكية, مفتاحا_ملكية_متساويان);
+    دع الحقائق: حقائق_ملكية_تدفق = { النقول: النقول, العروض: العروض, العليا_الثابتة: العليا_الثابتة };
+    أرجع الحقائق;
+}
+
+// Records that the local name use at النطاق moves the local's value out.
+// A map insertion fails only when the live count exceeds the largest
+// representable bucket capacity, which no addressable fact set reaches
+// (allocation failure traps first), so neither recorder has a failure path.
+عام عرف سجل_نقل_ملكية(الحقائق: &متغير حقائق_ملكية_تدفق, النطاق: نطاق): فراغ {
+    طابق أدرج_في_الخريطة(&متغير (*الحقائق).النقول, مفتاح_نطاق_ملكية(&النطاق), صواب) مع
+    | نتيجة.نجح(_) -> { }
+    | نتيجة.خطأ(_) -> { };
+}
+
+// Records that the local الرمز is a borrowed view.
+عام عرف سجل_عرض_ملكية(الحقائق: &متغير حقائق_ملكية_تدفق, الرمز: معرف_رمز): فراغ {
+    طابق أدرج_في_الخريطة(&متغير (*الحقائق).العروض, الرمز.القيمة, صواب) مع
+    | نتيجة.نجح(_) -> { }
+    | نتيجة.خطأ(_) -> { };
+}
+
+// Records that the module value الرمز is a substituted compile-time constant.
+عام عرف سجل_عليا_ثابتة(الحقائق: &متغير حقائق_ملكية_تدفق, الرمز: معرف_رمز): فراغ {
+    طابق أدرج_في_الخريطة(&متغير (*الحقائق).العليا_الثابتة, الرمز.القيمة, صواب) مع
+    | نتيجة.نجح(_) -> { }
+    | نتيجة.خطأ(_) -> { };
+}
+
+عام عرف هل_عليا_ثابتة(الحقائق: &حقائق_ملكية_تدفق, الرمز: &معرف_رمز): منطقي {
+    دع المفتاح: طبيعي = (*الرمز).القيمة;
+    أرجع تحتوي_الخريطة(&(*الحقائق).العليا_الثابتة, &المفتاح);
+}
+
+عام عرف هل_نقل_ملكية(الحقائق: &حقائق_ملكية_تدفق, النطاق: &نطاق): منطقي {
+    دع المفتاح: طبيعي = مفتاح_نطاق_ملكية(النطاق);
+    أرجع تحتوي_الخريطة(&(*الحقائق).النقول, &المفتاح);
+}
+
+عام عرف هل_عرض_ملكية(الحقائق: &حقائق_ملكية_تدفق, الرمز: &معرف_رمز): منطقي {
+    دع المفتاح: طبيعي = (*الرمز).القيمة;
+    أرجع تحتوي_الخريطة(&(*الحقائق).العروض, &المفتاح);
+}

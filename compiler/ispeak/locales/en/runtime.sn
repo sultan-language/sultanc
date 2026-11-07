@@ -1,0 +1,14 @@
+استورد compiler.runtime.failure_identity;
+
+// English text printed by a compiled program when it fails at runtime.
+عام عرف عنوان_فشل_تشغيل_إنجليزي(): نص {
+    أرجع «runtime error»;
+}
+
+عام عرف نص_فشل_تشغيل_إنجليزي(المفتاح: هوية_فشل_تشغيل): نص {
+    طابق المفتاح مع
+    | هوية_فشل_تشغيل.تجاوز_حدود -> { أرجع «index out of bounds»; }
+    | هوية_فشل_تشغيل.وسيط_خارج_المدى -> { أرجع «argument out of range»; }
+    | هوية_فشل_تشغيل.عملية_غير_صالحة -> { أرجع «invalid operation»; }
+    | هوية_فشل_تشغيل.إدخال_إخراج -> { أرجع «input/output failure»; };
+}

@@ -1,6 +1,67 @@
 /* Checks statements and block flow. */
 
 #include "semantic/body_internal.h"
+#include "semantic/never_return.h"
+
+#include <string.h>
+
+/* Answers whether EXPRESSION calls the never-returning stop primitive. */
+static int __Body_Call_Never_Returns__(__Semantic_Body_Context__ *__Context__,
+                                       __Ast_Expression__ *__Expression__)
+{
+    if (__Expression__ == NULL || __Expression__->__Kind__ != __Ast_Expression_Call__ ||
+        __Body_Find_Local__(__Context__, __Expression__->__As__.__Call__.__Function__) != NULL)
+    {
+        return 0;
+    }
+    return __Semantic_Call_Never_Returns__(
+        __Context__->__Semantic__, __Context__->__Function__->__Unit__, __Expression__);
+}
+
+/* Records the state reaching the innermost loop's exit from a `break` or
+ * `continue`: the loop body's own locals end here, so their borrows are
+ * released in the recorded state (the current state is left unchanged; the
+ * rest of the block is unreachable). */
+static int __Body_Record_Loop_Exit__(__Semantic_Body_Context__ *__Context__, __Source_Span__ __Span__)
+{
+    __Body_Loop_Frame__ *__Frame__ = __Context__->__Loop__;
+    __Body_Safety_Snapshot__ __Current__ = {0};
+    __Body_Safety_Snapshot__ __Exit__ = {0};
+    if (__Frame__ == NULL)
+    {
+        return __Body_Fail__(__Context__, __E0400_Mismatched_Types__, __Span__);
+    }
+    if (!__Body_Safety_Capture__(__Context__, &__Current__))
+    {
+        return 0;
+    }
+    __Body_Safety_Release_Scope__(__Context__, __Frame__->__Locals_At_Entry__);
+    if (!__Body_Safety_Capture__(__Context__, &__Exit__))
+    {
+        __Body_Safety_Snapshot_Destroy__(&__Current__);
+        return 0;
+    }
+    if (__Frame__->__Has_Exits__)
+    {
+        __Body_Safety_Merge__(__Context__, &__Frame__->__Exits__, &__Exit__);
+        __Body_Safety_Snapshot_Destroy__(&__Frame__->__Exits__);
+        __Body_Safety_Snapshot_Destroy__(&__Exit__);
+        if (!__Body_Safety_Capture__(__Context__, &__Frame__->__Exits__))
+        {
+            __Body_Safety_Snapshot_Destroy__(&__Current__);
+            return 0;
+        }
+    }
+    else
+    {
+        __Frame__->__Exits__ = __Exit__;
+        __Frame__->__Has_Exits__ = 1;
+    }
+    __Body_Safety_Restore__(__Context__, &__Current__);
+    __Body_Safety_Snapshot_Destroy__(&__Current__);
+    __Context__->__Falls_Through__ = 0;
+    return 1;
+}
 
 /* Checks the body statement. */
 static int __Body_Check_Statement__(__Semantic_Body_Context__ *__Context__,
@@ -28,6 +89,11 @@ static int __Body_Check_Statement__(__Semantic_Body_Context__ *__Context__,
             __Semantic_Local__ *__Local__ = NULL;
             /* Stores the expression already inferred. */
             int __Expression_Already_Inferred__ = 0;
+            /* Stores who owns the assigned value (for a plain local destination). */
+            __Semantic_Ownership__ __Assigned_Ownership__ = __Semantic_Ownership_Owner__;
+            /* Tracks whether the destination is a plain local. */
+            int __Destination_Is_Local__ =
+                __Statement__->__As__.__Copy__.__Destination__->__Kind__ == __Ast_Lvalue_Base__;
 
             if (__Statement__->__As__.__Copy__.__Destination__->__Kind__ == __Ast_Lvalue_Base__)
             {
@@ -66,10 +132,44 @@ static int __Body_Check_Statement__(__Semantic_Body_Context__ *__Context__,
                 return 0;
             }
 
+            /* Classified before the transfer: a move marks its source moved. */
+            if (__Destination_Is_Local__ &&
+                !__Body_Expression_Ownership__(
+                    __Context__, __Statement__->__As__.__Copy__.__Expression__,
+                    &__Assigned_Ownership__))
+            {
+                return 0;
+            }
+            __Context__->__Transfer_Into_Plain_Local__ = __Destination_Is_Local__;
             if (!__Body_Safety_Transfer_Expression__(
                     __Context__, __Statement__->__As__.__Copy__.__Expression__, __Local__))
             {
+                __Context__->__Transfer_Into_Plain_Local__ = 0;
                 return 0;
+            }
+            __Context__->__Transfer_Into_Plain_Local__ = 0;
+            if (__Local__ != NULL && __Destination_Is_Local__)
+            {
+                /* Mirrors the drop lowering's per-copy borrowed provenance. An
+                 * immutable local that any copy assigns a borrowed value may
+                 * hold a borrowed view (a deferred-init local is assigned on
+                 * several branches), so it is classed as borrowed and cannot
+                 * be moved out; the per-copy drop flag still destroys an owned
+                 * copy. Only a local whose every copy is owned is an owner.
+                 * Mutable locals stay owners: a later reassignment (also in a
+                 * loop) could make them own. */
+                if (!__Local__->__Mutable__ &&
+                    (__Assigned_Ownership__ == __Semantic_Ownership_Borrowed__ ||
+                     (__Local__->__Ownership_Assigned__ &&
+                      __Local__->__Ownership__ == __Semantic_Ownership_Borrowed__)))
+                {
+                    __Local__->__Ownership__ = __Semantic_Ownership_Borrowed__;
+                }
+                else
+                {
+                    __Local__->__Ownership__ = __Semantic_Ownership_Owner__;
+                }
+                __Local__->__Ownership_Assigned__ = 1;
             }
             if (__Local__ != NULL)
             {
@@ -97,6 +197,16 @@ static int __Body_Check_Statement__(__Semantic_Body_Context__ *__Context__,
                 __Safety_Fact_Mark_Initialized_At__(&__Local__->__Safety__,
                                                     __Statement__->__Header__.__Span__);
             }
+            /* A call statement of the stop primitive ends the path: a function
+             * returning a value needs no return after it (docs/ERRORS.md). */
+            if (__Statement__->__As__.__Copy__.__Destination__->__Kind__ == __Ast_Lvalue_Base__ &&
+                __Statement__->__As__.__Copy__.__Destination__->__As__.__Base__.__Kind__ ==
+                    __Ast_Lvalue_Base_Temporary__ &&
+                __Body_Call_Never_Returns__(__Context__,
+                                            __Statement__->__As__.__Copy__.__Expression__))
+            {
+                __Context__->__Falls_Through__ = 0;
+            }
             return 1;
         }
 
@@ -117,6 +227,10 @@ static int __Body_Check_Statement__(__Semantic_Body_Context__ *__Context__,
             __Body_Safety_Snapshot__ __After_Body__ = {0};
             /* Tracks the body falls state. */
             int __Body_Falls__ = 1;
+            /* Stores the loop frame. */
+            __Body_Loop_Frame__ __Frame__;
+            /* Tracks the step falls state. */
+            int __Step_Falls__ = 1;
 
             if (!__Body_Infer_Expression__(__Context__,
                                            __Statement__->__As__.__While__.__Condition__,
@@ -127,13 +241,55 @@ static int __Body_Check_Statement__(__Semantic_Body_Context__ *__Context__,
                     __Context__, __E0400_Mismatched_Types__, __Statement__->__Header__.__Span__);
             }
 
+            {
+                /* A length known before the loop may change on a later
+                 * iteration (an append at the end of the body): no static
+                 * bound holds inside the loop. */
+                size_t __Local_Index__;
+                for (__Local_Index__ = 0U; __Local_Index__ < __Context__->__Locals__.__Count__;
+                     ++__Local_Index__)
+                {
+                    __Semantic_Local__ *__Known__ =
+                        (__Semantic_Local__ *)__Vector_At__(&__Context__->__Locals__, __Local_Index__);
+                    if (__Known__ != NULL)
+                        __Known__->__Has_Known_Length__ = 0;
+                }
+            }
+            memset(&__Frame__, 0, sizeof(__Frame__));
+            __Frame__.__Outer__ = __Context__->__Loop__;
+            __Frame__.__Locals_At_Entry__ = __Context__->__Locals__.__Count__;
+            __Context__->__Loop__ = &__Frame__;
             if (!__Body_Safety_Capture__(__Context__, &__Before__) ||
                 !__Body_Check_Block_Flow__(
-                    __Context__, __Statement__->__As__.__While__.__Body__, &__Body_Falls__) ||
-                !__Body_Safety_Capture__(__Context__, &__After_Body__))
+                    __Context__, __Statement__->__As__.__While__.__Body__, &__Body_Falls__))
             {
+                __Context__->__Loop__ = __Frame__.__Outer__;
+                __Body_Safety_Snapshot_Destroy__(&__Frame__.__Exits__);
                 __Body_Safety_Snapshot_Destroy__(&__Before__);
-                __Body_Safety_Snapshot_Destroy__(&__After_Body__);
+                return 0;
+            }
+            /* The step of a `لكل` loop runs after the body and after continue. */
+            if (__Statement__->__As__.__While__.__Step__ != NULL)
+            {
+                if (!__Body_Falls__ && __Frame__.__Has_Exits__)
+                {
+                    __Body_Safety_Restore__(__Context__, &__Frame__.__Exits__);
+                }
+                __Context__->__Loop__ = __Frame__.__Outer__;
+                if (!__Body_Check_Block_Flow__(
+                        __Context__, __Statement__->__As__.__While__.__Step__, &__Step_Falls__))
+                {
+                    __Body_Safety_Snapshot_Destroy__(&__Frame__.__Exits__);
+                    __Body_Safety_Snapshot_Destroy__(&__Before__);
+                    return 0;
+                }
+                __Body_Falls__ = 1;
+            }
+            __Context__->__Loop__ = __Frame__.__Outer__;
+            if (!__Body_Safety_Capture__(__Context__, &__After_Body__))
+            {
+                __Body_Safety_Snapshot_Destroy__(&__Frame__.__Exits__);
+                __Body_Safety_Snapshot_Destroy__(&__Before__);
                 return 0;
             }
 
@@ -142,6 +298,21 @@ static int __Body_Check_Statement__(__Semantic_Body_Context__ *__Context__,
             {
                 __Body_Safety_Merge__(__Context__, &__Before__, &__After_Body__);
             }
+            if (__Frame__.__Has_Exits__)
+            {
+                /* Stores the state merged so far. */
+                __Body_Safety_Snapshot__ __Merged__ = {0};
+                if (!__Body_Safety_Capture__(__Context__, &__Merged__))
+                {
+                    __Body_Safety_Snapshot_Destroy__(&__Frame__.__Exits__);
+                    __Body_Safety_Snapshot_Destroy__(&__Before__);
+                    __Body_Safety_Snapshot_Destroy__(&__After_Body__);
+                    return 0;
+                }
+                __Body_Safety_Merge__(__Context__, &__Merged__, &__Frame__.__Exits__);
+                __Body_Safety_Snapshot_Destroy__(&__Merged__);
+            }
+            __Body_Safety_Snapshot_Destroy__(&__Frame__.__Exits__);
             __Body_Safety_Snapshot_Destroy__(&__Before__);
             __Body_Safety_Snapshot_Destroy__(&__After_Body__);
 
@@ -236,6 +407,22 @@ static int __Body_Check_Statement__(__Semantic_Body_Context__ *__Context__,
                 return 0;
             }
             __Context__->__Falls_Through__ = __Match_Falls__;
+            return 1;
+        }
+
+        case __Ast_Statement_Break__:
+        case __Ast_Statement_Continue__:
+            return __Body_Record_Loop_Exit__(__Context__, __Statement__->__Header__.__Span__);
+
+        case __Ast_Statement_Block__:
+        {
+            int __Block_Falls__ = 1;
+            if (!__Body_Check_Block_Flow__(
+                    __Context__, __Statement__->__As__.__Block__, &__Block_Falls__))
+            {
+                return 0;
+            }
+            __Context__->__Falls_Through__ = __Block_Falls__;
             return 1;
         }
 

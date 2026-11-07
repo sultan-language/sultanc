@@ -5,8 +5,90 @@
 #include "frontend/parser/span.h"
 #include "frontend/parser/storage.h"
 #include "frontend/parser/expression_internal.h"
+#include "frontend/parser/statement_internal.h"
 
 #include <stdalign.h>
+
+/* Parses the suffixes after a call: members, elements and calls of its
+ * result (canonical: postfix suffixes apply to any primary). */
+static __Ast_Expression__ *__Parser_Call_Suffixes__(__Parser__ *__Parser_State__,
+                                                   __Ast_Expression__ *__Call__,
+                                                   __Source_Position__ __Start__)
+{
+    while (__Call__ != NULL && (__Parser_State__->__Current__.__Kind__ == __Token_DOT_OPERATOR__ ||
+                                __Parser_State__->__Current__.__Kind__ == __Token_LEFT_BRACKET_OPERATOR__ ||
+                                __Parser_State__->__Current__.__Kind__ == __Token_LEFT_PARENTHESIS_OPERATOR__))
+    {
+        __Ast_Lvalue__ *__Lvalue__ = __Parser_New_Lvalue__(__Parser_State__, __Ast_Lvalue_Base__,
+                                                            __Call__->__Header__.__Span__);
+        __Ast_Expression__ *__Atom__;
+        if (__Lvalue__ == NULL)
+        {
+            return NULL;
+        }
+        __Lvalue__->__As__.__Base__.__Kind__ = __Ast_Lvalue_Base_Call__;
+        __Lvalue__->__As__.__Base__.__As__.__Call__ = __Call__;
+        while (__Parser_State__->__Current__.__Kind__ == __Token_DOT_OPERATOR__ ||
+               __Parser_State__->__Current__.__Kind__ == __Token_LEFT_BRACKET_OPERATOR__)
+        {
+            __Ast_Lvalue__ *__Extended__;
+            if (__Parser_Accept__(__Parser_State__, __Token_DOT_OPERATOR__))
+            {
+                __Text_Slice__ __Field__;
+                if (!__Parser_Take_Contextual_Name__(__Parser_State__, &__Field__))
+                {
+                    return NULL;
+                }
+                __Extended__ = __Parser_New_Lvalue__(
+                    __Parser_State__, __Ast_Lvalue_Field__,
+                    __Parser_Span__(__Start__, __Parser_State__->__Previous__.__Span__.__End__));
+                if (__Extended__ == NULL)
+                {
+                    return NULL;
+                }
+                __Extended__->__As__.__Field__.__Parent__ = __Lvalue__;
+                __Extended__->__As__.__Field__.__Field__ = __Field__;
+            }
+            else
+            {
+                __Ast_Expression__ *__Index__;
+                (void)__Parser_Advance__(__Parser_State__);
+                __Index__ = __Parser_Parse_Expression__(__Parser_State__);
+                if (__Index__ == NULL ||
+                    !__Parser_Expect__(__Parser_State__, __Token_RIGHT_BRACKET_OPERATOR__))
+                {
+                    return NULL;
+                }
+                __Extended__ = __Parser_New_Lvalue__(
+                    __Parser_State__, __Ast_Lvalue_Index__,
+                    __Parser_Span__(__Start__, __Parser_State__->__Previous__.__Span__.__End__));
+                if (__Extended__ == NULL)
+                {
+                    return NULL;
+                }
+                __Extended__->__As__.__Index__.__Parent__ = __Lvalue__;
+                __Extended__->__As__.__Index__.__Index__ = __Index__;
+            }
+            __Lvalue__ = __Extended__;
+        }
+        if (__Parser_State__->__Current__.__Kind__ == __Token_LEFT_PARENTHESIS_OPERATOR__)
+        {
+            __Call__ = __Parser_Call_After_Lvalue__(__Parser_State__, __Lvalue__, __Start__);
+            continue;
+        }
+        __Atom__ = __Parser_New_Expression__(
+            __Parser_State__, __Ast_Expression_Atom__,
+            __Parser_Span__(__Start__, __Parser_State__->__Previous__.__Span__.__End__));
+        if (__Atom__ == NULL)
+        {
+            return NULL;
+        }
+        __Atom__->__As__.__Atom__.__Kind__ = __Ast_Atom_Lvalue__;
+        __Atom__->__As__.__Atom__.__As__.__Lvalue__ = __Lvalue__;
+        return __Atom__;
+    }
+    return __Call__;
+}
 
 /* Parses the parser primary. */
 __Ast_Expression__ *__Parser_Parse_Primary__(__Parser__ *__Parser_State__)
@@ -153,7 +235,7 @@ __Ast_Expression__ *__Parser_Parse_Primary__(__Parser__ *__Parser_State__)
                     __Parser_State__, &__Arguments__, alignof(__Ast_Expression__ *));
             __Expression__->__As__.__Call__.__Resolved_Generic_Function_Index__ = SIZE_MAX;
             __Vector_Destroy__(&__Arguments__);
-            return __Expression__;
+            return __Parser_Call_Suffixes__(__Parser_State__, __Expression__, __Start__);
         }
         __Expression__ = __Parser_New_Expression__(
             __Parser_State__, __Ast_Expression_Atom__, __Function_Or_Value__->__Header__.__Span__);

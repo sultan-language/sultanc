@@ -1,0 +1,70 @@
+// Waiting on an address (std.os.wait_address) on FreeBSD: _umtx_op, the
+// primitive FreeBSD's libthr builds its mutexes and condition variables on,
+// and the one Rust's std (sys/pal/unix/futex.rs) and Go's runtime
+// (os_freebsd.go, futexsleep1) use. UMTX_OP_WAIT_UINT_PRIVATE sleeps while
+// the 32-bit cell holds the expected value (the check and the sleep are one
+// kernel step); UMTX_OP_WAKE_PRIVATE wakes up to N sleepers. A timed wait
+// passes uaddr1 = 0 and uaddr2 = a relative struct timespec, which the kernel
+// reads as a relative CLOCK_REALTIME timeout (kern_umtx.c,
+// umtx_copyin_umtx_time). The system call is reached through the shared
+// operation table (os.platform.unix.freebsd.syscalls.numbers maps مستقبل to
+// SYS__umtx_op).
+استورد os.platform.unix.linux.syscalls.operations;
+استورد os.platform.unix.linux.syscalls.selection;
+استورد os.platform.unix.linux.syscalls.kernel_result;
+
+// sys/umtx.h: UMTX_OP_WAIT_UINT_PRIVATE 15, UMTX_OP_WAKE_PRIVATE 16.
+عرف انتظار_عنوان_خاص_فري_بي_إس_دي(): ط64 { أرجع 15; }
+عرف إيقاظ_عنوان_خاص_فري_بي_إس_دي(): ط64 { أرجع 16; }
+
+// Each kernel call sits at the top level of its own function: its memory
+// contract (the cell, the timespec) is proven on the function's own values.
+عرف انتظر_بلا_مهلة_فري_بي_إس_دي(الخلية: &ط32, المتوقعة: ط32): ط64 {
+    دع الخام: ط64;
+    غير_آمن {
+        الخام := بدائي_نداء_نواة_خام(
+            رقم_نداء_نواة_لينكس(عملية_نداء_نواة_لينكس.مستقبل()),
+            الخلية, انتظار_عنوان_خاص_فري_بي_إس_دي(), المتوقعة مثل ط64, 0 مثل ط64, 0 مثل ط64, 0 مثل ط64
+        );
+    }
+    أرجع الخام;
+}
+
+عرف انتظر_بمهلة_فري_بي_إس_دي(الخلية: &ط32, المتوقعة: ط32, النانو: عدد): ط64 {
+    دع المؤقت: متغير متجه ص64 = [(النانو / 1000000000) مثل ص64, (النانو % 1000000000) مثل ص64];
+    دع الخام: ط64;
+    غير_آمن {
+        الخام := بدائي_نداء_نواة_خام(
+            رقم_نداء_نواة_لينكس(عملية_نداء_نواة_لينكس.مستقبل_بمهلة_بي_إس_دي()),
+            الخلية, انتظار_عنوان_خاص_فري_بي_إس_دي(), المتوقعة مثل ط64, 0 مثل ط64, &متغير المؤقت[0], 0 مثل ط64
+        );
+    }
+    أرجع الخام;
+}
+
+// Only ETIMEDOUT (60) answers خطأ; a wake, a changed value (the call
+// returns at once) and EINTR all let the caller re-check its condition.
+عام عرف انتظر_عند_عنوان_فري_بي_إس_دي(الخلية: &ط32, المتوقعة: ط32, المهلة_بالنانو: اختياري عدد): منطقي {
+    دع الخام: متغير ط64 = 0;
+    طابق المهلة_بالنانو مع
+    | اختياري.لا_شيء -> { الخام := انتظر_بلا_مهلة_فري_بي_إس_دي(الخلية, المتوقعة); }
+    | اختياري.موجود(النانو) -> {
+        // A negative timeout has already passed: wait for zero.
+        دع الموجبة: متغير عدد = النانو;
+        لو (الموجبة < 0) { الموجبة := 0; };
+        الخام := انتظر_بمهلة_فري_بي_إس_دي(الخلية, المتوقعة, الموجبة);
+    };
+    طابق حلل_نتيجة_نداء_نواة_لينكس(الخام) مع
+    | نتيجة.نجح(_) -> { أرجع صواب; }
+    | نتيجة.خطأ(الأصلي) -> { أرجع الأصلي.الرمز != 60; };
+}
+
+عام عرف أيقظ_عند_عنوان_فري_بي_إس_دي(الخلية: &ط32, العدد: ط64): فراغ {
+    دع تجاهل: ط64;
+    غير_آمن {
+        تجاهل := بدائي_نداء_نواة_خام(
+            رقم_نداء_نواة_لينكس(عملية_نداء_نواة_لينكس.مستقبل()),
+            الخلية, إيقاظ_عنوان_خاص_فري_بي_إس_دي(), العدد, 0 مثل ط64, 0 مثل ط64, 0 مثل ط64
+        );
+    }
+}

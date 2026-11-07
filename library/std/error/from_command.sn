@@ -1,0 +1,29 @@
+// Converter to فشل for std.process.command's خطأ_أمر.
+// Domain «std.process», kind = the variant name; the cause is the
+// std.fs-classified system error (فشل_من_فئة_خطأ_نظام). The message is
+// Arabic, with an English language version («en»).
+استورد error.failure;
+استورد error.from_os;
+استورد fs.error;
+استورد process.command;
+
+عرف فشل_أمر(النوع: نص, الرسالة: نص, الإنجليزية: نص, الفئة: &فئة_خطأ_نظام): فشل {
+    دع الناتج: متغير فشل = فشل_بهوية_وسبب(«std.process», النوع, الرسالة, فشل_من_فئة_خطأ_نظام(الفئة));
+    أضف_نسخة_لغة(&متغير الناتج, «en», الإنجليزية);
+    أرجع الناتج;
+}
+
+عام عرف فشل_من_خطأ_أمر(الخطأ: &خطأ_أمر): فشل {
+    طابق *الخطأ مع
+    | خطأ_أمر.تشغيل(الفئة) -> {
+        أرجع فشل_أمر(«تشغيل», «تعذر تشغيل الأمر», «the command could not be started», &الفئة);
+    }
+    | خطأ_أمر.دخل_خرج(الفئة) -> {
+        أرجع فشل_أمر(«دخل_خرج», «تعذر تجهيز تيارات الأمر أو قراءتها», «the command's streams could not be set up or read», &الفئة);
+    }
+    | خطأ_أمر.انتظار(الفئة) -> {
+        أرجع فشل_أمر(«انتظار», «تعذر انتظار انتهاء الأمر», «waiting for the command failed», &الفئة);
+    };
+}
+
+عام مرادف error_from_command_error = فشل_من_خطأ_أمر;

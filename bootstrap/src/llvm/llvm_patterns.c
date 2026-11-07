@@ -7,6 +7,7 @@
 #include "llvm/llvm_statements.h"
 #include "llvm/llvm_types.h"
 #include "llvm/llvm_values.h"
+#include "kernel/memory/memory.h"
 #include "kernel/pattern/pattern.h"
 #include "kernel/type/type.h"
 #include <stdlib.h>
@@ -18,6 +19,8 @@ static int __LLVM_Bind_Pattern_Value__(__LLVM_Emitter__ *emitter,
                                        __Ast_Pattern__ *pattern,
                                        LLVMValueRef storage,
                                        LLVMTypeRef llvm_type,
+                                       LLVMValueRef scrutinee_owner_flag,
+                                       LLVMValueRef scrutinee_borrowed_flag,
                                        int tagged_discriminated,
                                        size_t constructor_index)
 {
@@ -30,6 +33,10 @@ static int __LLVM_Bind_Pattern_Value__(__LLVM_Emitter__ *emitter,
     switch (pattern->__Kind__)
     {
         case __Ast_Pattern_Wildcard__:
+        case __Ast_Pattern_Literal__:
+        case __Ast_Pattern_Range__:
+        case __Ast_Pattern_Alternatives__:
+            /* Bind nothing. */
             return 1;
 
         case __Ast_Pattern_Binding__:
@@ -43,6 +50,15 @@ static int __LLVM_Bind_Pattern_Value__(__LLVM_Emitter__ *emitter,
             {
                 return 0;
             }
+            /* A pattern binding is not an independent owner. It tracks the
+             * original scrutinee owner, transferring that drop responsibility
+             * on an owned move while preserving borrowed provenance for
+             * reference-derived payloads. */
+            local->drop_flag = NULL;
+            local->match_owner_flag = scrutinee_owner_flag;
+            if (local->borrowed_flag != NULL)
+                LLVMBuildStore(emitter->builder, scrutinee_borrowed_flag,
+                               local->borrowed_flag);
             loaded = LLVMBuildLoad2(emitter->builder, llvm_type, storage, "match.binding.load");
             LLVMBuildStore(emitter->builder, loaded, local->address);
             return 1;
@@ -81,6 +97,8 @@ static int __LLVM_Bind_Pattern_Value__(__LLVM_Emitter__ *emitter,
                                                  field->__Pattern__,
                                                  field_storage,
                                                  field_llvm_type,
+                                                 scrutinee_owner_flag,
+                                                 scrutinee_borrowed_flag,
                                                  field->__Pattern__ != NULL &&
                                                      field->__Pattern__->__Kind__ ==
                                                          __Ast_Pattern_Enum__,
@@ -138,6 +156,8 @@ static int __LLVM_Bind_Pattern_Value__(__LLVM_Emitter__ *emitter,
                         pattern->__As__.__Enum__.__Payloads__[index],
                         payload_storage,
                         payload_llvm_type,
+                        scrutinee_owner_flag,
+                        scrutinee_borrowed_flag,
                         pattern->__As__.__Enum__.__Payloads__[index] != NULL &&
                             pattern->__As__.__Enum__.__Payloads__[index]->__Kind__ ==
                                 __Ast_Pattern_Enum__,
@@ -172,6 +192,70 @@ static LLVMValueRef __LLVM_Emit_Pattern_Condition__(__LLVM_Emitter__ *emitter,
     if (pattern->__Kind__ == __Ast_Pattern_Wildcard__ ||
         pattern->__Kind__ == __Ast_Pattern_Binding__)
         return condition;
+
+    if (pattern->__Kind__ == __Ast_Pattern_Alternatives__)
+    {
+        LLVMValueRef any = LLVMConstInt(bool_type, 0U, 0);
+        for (index = 0U; index < pattern->__As__.__Alternatives__.__Count__; ++index)
+        {
+            LLVMValueRef item = __LLVM_Emit_Pattern_Condition__(
+                emitter, value_type, pattern->__As__.__Alternatives__.__Items__[index], storage, llvm_type);
+            if (item == NULL)
+                return NULL;
+            any = LLVMBuildOr(emitter->builder, any, item, "match.condition.alternative");
+        }
+        return any;
+    }
+
+    if (pattern->__Kind__ == __Ast_Pattern_Literal__ || pattern->__Kind__ == __Ast_Pattern_Range__)
+    {
+        /* The value compared with the literal (or with both inclusive ends). */
+        LLVMValueRef value = LLVMBuildLoad2(emitter->builder, llvm_type, storage, "match.literal.value");
+        __Resolved_Type__ resolved;
+        unsigned bits;
+        int is_signed;
+        if (!__Type_Resolve__(emitter->semantic, value_type, &resolved))
+            return NULL;
+        if (resolved.__Kind__ == __Resolved_Type_String__)
+        {
+            __LLVM_Value__ text = __LLVM_Emit_Expression__(emitter, pattern->__As__.__Literal__, value_type);
+            if (text.value == NULL)
+                return NULL;
+            return __LLVM_Compare_Text_Values__(emitter, value, text.value, __Binary_Equal__);
+        }
+        if (resolved.__Kind__ == __Resolved_Type_Boolean__)
+        {
+            __LLVM_Value__ truth = __LLVM_Emit_Expression__(emitter, pattern->__As__.__Literal__, value_type);
+            if (truth.value == NULL)
+                return NULL;
+            return LLVMBuildICmp(emitter->builder, LLVMIntEQ, value, truth.value, "match.literal.bool");
+        }
+        if (!__LLVM_Resolve_Integer__(emitter, value_type, &bits, &is_signed))
+        {
+            __LLVM_Fail__("literal pattern on a non-scalar value");
+            return NULL;
+        }
+        if (pattern->__Kind__ == __Ast_Pattern_Literal__)
+        {
+            __LLVM_Value__ literal = __LLVM_Emit_Expression__(emitter, pattern->__As__.__Literal__, value_type);
+            if (literal.value == NULL)
+                return NULL;
+            return LLVMBuildICmp(emitter->builder, LLVMIntEQ, value, literal.value, "match.literal.equal");
+        }
+        {
+            __LLVM_Value__ low = __LLVM_Emit_Expression__(emitter, pattern->__As__.__Range__.__Low__, value_type);
+            __LLVM_Value__ high = __LLVM_Emit_Expression__(emitter, pattern->__As__.__Range__.__High__, value_type);
+            if (low.value == NULL || high.value == NULL)
+                return NULL;
+            return LLVMBuildAnd(
+                emitter->builder,
+                LLVMBuildICmp(emitter->builder, is_signed ? LLVMIntSGE : LLVMIntUGE, value, low.value,
+                              "match.range.low"),
+                LLVMBuildICmp(emitter->builder, is_signed ? LLVMIntSLE : LLVMIntULE, value, high.value,
+                              "match.range.high"),
+                "match.range");
+        }
+    }
 
     if (pattern->__Kind__ == __Ast_Pattern_Struct__)
     {
@@ -384,6 +468,10 @@ int __LLVM_Emit_Match__(__LLVM_Emitter__ *emitter,
     size_t index;
     /* Stores the live count. */
     size_t live_count = 0U;
+    LLVMValueRef match_owner_flag = NULL;
+    LLVMValueRef match_borrowed_flag = NULL;
+    __LLVM_Local__ *scrutinee_owner = NULL;
+    size_t scrutinee_owner_index = 0U;
     if (statement == NULL || statement->__Kind__ != __Ast_Statement_Match__ ||
         path_terminated == NULL)
     {
@@ -415,8 +503,42 @@ int __LLVM_Emit_Match__(__LLVM_Emitter__ *emitter,
     {
         return 0;
     }
-    storage = __LLVM_Allocate_Stack__(emitter, llvm_type, "match.value.storage");
-    LLVMBuildStore(emitter->builder, value.value, storage);
+    match_owner_flag = __LLVM_Match_Source_Owner_Flag__(
+        emitter, statement->__As__.__Match__.__Value__);
+    match_borrowed_flag = __LLVM_Expression_Borrowed_Flag__(
+        emitter, statement->__As__.__Match__.__Value__);
+    if (statement->__As__.__Match__.__Value__ != NULL &&
+        !(statement->__As__.__Match__.__Value__->__Kind__ == __Ast_Expression_Atom__ &&
+          statement->__As__.__Match__.__Value__->__As__.__Atom__.__Kind__ == __Ast_Atom_Lvalue__) &&
+        __Memory_Type_Is_Owned__(emitter->semantic, value_type))
+    {
+        /* A scrutinee that is not a named place (a call result, a moved-out
+         * box payload, a constructed value) has no other owner: without one,
+         * whatever the arms do not move out is never released. Give it a
+         * hidden, unnamed local whose drop flag is the match owner: a payload
+         * move clears it, every arm that falls through releases the rest,
+         * and a return inside an arm releases it with the other locals. */
+        LLVMValueRef owning;
+        scrutinee_owner = __LLVM_Add_Local_Identity__(
+            emitter, __Ast_Lvalue_Base_Identifier__, (__Text_Slice__){NULL, 0U}, 0U, value_type);
+        if (scrutinee_owner == NULL || scrutinee_owner->drop_flag == NULL)
+            return __LLVM_Fail__("L2.5 cannot allocate an owner for a temporary match value");
+        scrutinee_owner_index = emitter->local_count - 1U;
+        storage = scrutinee_owner->address;
+        LLVMBuildStore(emitter->builder, value.value, storage);
+        owning = LLVMBuildNot(emitter->builder, match_borrowed_flag, "match.temporary.is.owning");
+        LLVMBuildStore(emitter->builder, owning, scrutinee_owner->drop_flag);
+        if (scrutinee_owner->borrowed_flag != NULL)
+            LLVMBuildStore(emitter->builder, match_borrowed_flag, scrutinee_owner->borrowed_flag);
+        match_owner_flag = scrutinee_owner->drop_flag;
+    }
+    else
+    {
+        storage = __LLVM_Allocate_Stack__(emitter, llvm_type, "match.value.storage");
+        if (storage == NULL)
+            return 0;
+        LLVMBuildStore(emitter->builder, value.value, storage);
+    }
     tag_address = NULL;
     tag_value = NULL;
     if (resolved.__Kind__ == __Resolved_Type_Enum__ ||
@@ -578,6 +700,8 @@ int __LLVM_Emit_Match__(__LLVM_Emitter__ *emitter,
                                          statement->__As__.__Match__.__Cases__[index].__Pattern__,
                                          storage,
                                          llvm_type,
+                                         match_owner_flag,
+                                         match_borrowed_flag,
                                          has_tag[index] != 0,
                                          tags[index]))
         {
@@ -589,6 +713,16 @@ int __LLVM_Emit_Match__(__LLVM_Emitter__ *emitter,
                                           statement->__As__.__Match__.__Cases__[index].__Body__,
                                           return_type,
                                           &terminated))
+        {
+            emitter->local_count = saved_local_count;
+            return __LLVM_Finish_Match__(
+                case_blocks, arm_exits, tags, has_tag, needs_full_test, arm_terminated, 0);
+        }
+        /* An arm that falls through leaves the scope of its own locals (and
+         * of a hidden temporary scrutinee): release what is still owned. */
+        if (!terminated &&
+            !__LLVM_Drop_Locals_From__(
+                emitter, scrutinee_owner != NULL ? scrutinee_owner_index : saved_local_count))
         {
             emitter->local_count = saved_local_count;
             return __LLVM_Finish_Match__(
@@ -610,6 +744,8 @@ int __LLVM_Emit_Match__(__LLVM_Emitter__ *emitter,
         }
         emitter->local_count = saved_local_count;
     }
+    if (scrutinee_owner != NULL)
+        emitter->local_count = scrutinee_owner_index;
 
     if (live_count == 0U)
     {

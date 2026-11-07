@@ -1,0 +1,62 @@
+استورد compiler.backend.provider.llvm.model;
+استورد compiler.backend.target.selection_query_context;
+استورد compiler.backend.target.target_model;
+استورد compiler.backend.layout.layout_model;
+استورد compiler.msir.msir_consumer;
+استورد compiler.msir.debug_contract;
+استورد compiler.msir.identifiers;
+استورد compiler.source.source_map;
+استورد compiler.source.provenance;
+استورد std.text.from_bytes;
+
+// LLVM provider inclusion boundary of a compiler built WITHOUT LLVM.
+//
+// This file is never imported by name. A build that produces a Native-only
+// compiler binds the logical module compiler.backend.provider.llvm.llvm_codegen
+// to this source:
+//
+//   sultanc --module-source=compiler.backend.provider.llvm.llvm_codegen=compiler/backend/provider/llvm/unavailable.sn ...
+//
+// It declares exactly the entry points of the included boundary
+// (llvm_codegen.sn) and imports no LLVM provider implementation, no LLVM C
+// API binding and no host-LLVM discovery, so the produced compiler references
+// no libLLVM symbol and needs no libLLVM to link or run. The model module is
+// shared data (types and failure kinds) with no C API call.
+//
+// The Driver asks مزود_إل_إل_في_إم_مضمن before it dispatches to LLVM and
+// reports SULTANC-BACKEND-UNAVAILABLE for an LLVM request; the entry below
+// answers the same failure if it is ever reached, so no request silently
+// falls back to the native backend.
+
+// The produced compiler does not contain the LLVM provider.
+عام عرف مزود_إل_إل_في_إم_مضمن(): منطقي {
+    أرجع خطأ;
+}
+
+// A compiler without the LLVM provider links no libLLVM, so its host has no
+// libLLVM location to record: a link that needs the LLVM C API must name the
+// target's libLLVM explicitly (link/dependency/llvm.sn).
+عام عرف موقع_مكتبة_إل_إل_في_إم_المضيف(): اختياري متجه ط8 {
+    أرجع اختياري.لا_شيء();
+}
+
+عام عرف ولد_مخرج_بمزود_إل_إل_في_إم(
+    المسير: &سياق_مستهلك_مسير,
+    حقائق_الخلفية: &سياق_استعلام_اختيار_خلفية,
+    المصادر: &متغير خريطة_مصادر,
+    الأصول: &سجل_أصول_مصدر,
+    التصحيح: &بيانات_تصحيح_مسير,
+    الهدف: &واصف_هدف,
+    سجل_التخطيط: &متغير سجل_تخطيط,
+    دالة_الدخول: &اختياري معرف_دالة_مسير,
+    المستوى: مستوى_تحسين_مزود_إل_إل_في_إم,
+    سياسة_التموضع: سياسة_تموضع_شفرة_إل_إل_في_إم,
+    احتفظ_بنص_الوحدة: منطقي,
+    بدء_عملية_ذاتي: منطقي,
+    مخرج_تنفيذي: منطقي,
+    // Target assembly text instead of an object (--emit=asm).
+    فرض_التجميع: منطقي
+): نتيجة_مزود_إل_إل_في_إم {
+    دع الرسالة: متجه ط8 = بايتات_من_نص(«the LLVM backend is not included in this compiler»);
+    أرجع نتيجة_مزود_إل_إل_في_إم.خطأ(فشل_مزود_إل_إل_في_إم.خلفية_هدف_غير_متاحة(الرسالة));
+}

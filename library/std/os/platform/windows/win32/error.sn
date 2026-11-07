@@ -1,8 +1,8 @@
 استورد os.error;
 
 // Windows thread-last-error is separate from Winsock's WSAGetLastError().
-خارجي عرف GetLastError(): غ32;
-عام خارجي عرف SetLastError(الرمز: غ32): فراغ;
+خارجي «kernel32.dll» عرف GetLastError(): ط32;
+عام خارجي «kernel32.dll» عرف SetLastError(الرمز: ط32): فراغ;
 
 عام عرف التقط_خطأ_وين32(): خطأ_نظام_أصلي {
     أرجع أنشئ_خطأ_نظام_أصلي(

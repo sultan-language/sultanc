@@ -25,4 +25,7 @@ int __Semantic_Integer_Literal_Expression_Is_Unsigned_Wide__(
 int __Type_Unsigned_Wide_Literal_Fits__(__Semantic_Context__ *__Context__,
                                         __Ast_Type__ *__Target_Type__);
 
+/* Answers whether EXPRESSION is a float literal, possibly negated. */
+int __Semantic_Float_Literal_Expression__(const __Ast_Expression__ *__Expression__);
+
 #endif

@@ -44,7 +44,10 @@ static int __Parser_Parse_Logical_Import__(__Parser__ *__Parser_State__, __Ast_I
     __Vector_Init__(&__Bytes__, sizeof(char));
     while (1)
     {
-        if (__Parser_State__->__Current__.__Kind__ != __Token_IDENTIFIER__ ||
+        /* A segment after the first may spell a keyword (std.math.float). */
+        if ((__Parser_State__->__Current__.__Kind__ != __Token_IDENTIFIER__ &&
+             (__Bytes__.__Count__ == 0U ||
+              !__Parser_Token_Is_Contextual_Name__(&__Parser_State__->__Current__))) ||
             !__Parser_Append_Import_Bytes__(&__Bytes__, __Parser_State__->__Current__.__Lexeme__))
         {
             __Vector_Destroy__(&__Bytes__);
@@ -65,7 +68,7 @@ static int __Parser_Parse_Logical_Import__(__Parser__ *__Parser_State__, __Ast_I
             __Vector_Destroy__(&__Bytes__);
             return 0;
         }
-        if (__Parser_State__->__Current__.__Kind__ != __Token_IDENTIFIER__)
+        if (!__Parser_Token_Is_Contextual_Name__(&__Parser_State__->__Current__))
         {
             __Vector_Destroy__(&__Bytes__);
             return __Parser_Fail__(__Parser_State__, __Diag_Word_Syntax_Expected_Source_Or_Module__);

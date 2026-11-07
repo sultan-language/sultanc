@@ -1,0 +1,51 @@
+// The CryptoAPI ROOT system store (crypt32): the trust anchors Windows
+// itself uses. CERT_CONTEXT (wincrypt.h) on the 64-bit Windows ABIs is
+// dwCertEncodingType (DWORD) at 0, pbCertEncoded (BYTE *) at 8,
+// cbCertEncoded (DWORD) at 16, pCertInfo at 24 and hCertStore at 32: 40
+// bytes with natural alignment, which this record reproduces.
+// CertEnumCertificatesInStore frees the previous context it is given and
+// returns NULL after the last one. The DER bytes are read in place through
+// the context's pointer; std needs no memory-copy routine from kernel32.
+نوع سياق_شهادة_ويندوز_أصلي = {
+    نوع_الترميز: ط32,
+    البيانات: *ط8,
+    الطول: ط32,
+    المعلومات: *ط8,
+    المخزن: ط64
+};
+
+خارجي «crypt32.dll» عرف CertOpenSystemStoreW(المزود: ط64, الاسم: *ط16): ط64;
+خارجي «crypt32.dll» عرف CertEnumCertificatesInStore(
+    المخزن: ط64, السابق: *سياق_شهادة_ويندوز_أصلي
+): *سياق_شهادة_ويندوز_أصلي;
+خارجي «crypt32.dll» عرف CertCloseStore(المخزن: ط64, الأعلام: ط32): ص32;
+
+عام عرف شهادات_مخزن_الجذور_ويندوز(): متجه متجه ط8 {
+    دع الكتل: متغير متجه متجه ط8 = [];
+    دع الاسم: متجه ط16 = [82, 79, 79, 84, 0]; // L"ROOT"
+    دع المخزن: ط64 = CertOpenSystemStoreW(0, &الاسم[0]);
+    لو (المخزن == 0) { أرجع الكتل; };
+    دع السياق: متغير *سياق_شهادة_ويندوز_أصلي = CertEnumCertificatesInStore(المخزن, الفارغ);
+    طالما (السياق != الفارغ) {
+        دع البيانات: متغير *ط8 = الفارغ;
+        دع الطول: متغير ط32 = 0;
+        غير_آمن {
+            البيانات := (*السياق).البيانات;
+            الطول := (*السياق).الطول;
+        }
+        لو (البيانات != الفارغ && الطول > 0 && الطول < 1048576) {
+            دع البايتات: متغير متجه ط8 = [];
+            دع ف: متغير ط32 = 0;
+            طالما (ف < الطول) {
+                دع البايت: متغير ط8 = 0;
+                غير_آمن { البايت := البيانات[ف مثل طبيعي]; }
+                ألحق(البايتات, البايت);
+                ف := ف + 1;
+            }
+            ألحق(الكتل, البايتات);
+        };
+        السياق := CertEnumCertificatesInStore(المخزن, السياق);
+    }
+    دع الإغلاق: ص32 = CertCloseStore(المخزن, 0);
+    أرجع الكتل;
+}

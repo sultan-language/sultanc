@@ -17,6 +17,9 @@ typedef enum
     __Ast_Literal_Character__,
     /* Represents the AST literal string value. */
     __Ast_Literal_String__,
+    /* A decimal float literal; __String__ holds its digits (separators
+     * removed), which LLVM parses exactly (no host float arithmetic). */
+    __Ast_Literal_Float__,
     /* Represents the AST literal undefined value. */
     __Ast_Literal_Undefined__
 } __Ast_Literal_Kind__;
@@ -56,7 +59,10 @@ typedef enum
     /* Represents the AST lvalue base identifier value. */
     __Ast_Lvalue_Base_Identifier__,
     /* Represents the AST lvalue base temporary value. */
-    __Ast_Lvalue_Base_Temporary__
+    __Ast_Lvalue_Base_Temporary__,
+    /* The result of a call, a temporary no local owns (`make().f`,
+     * `words()[1]`, `make().callback(3)`, `adder(1)(2)`). */
+    __Ast_Lvalue_Base_Call__
 } __Ast_Lvalue_Base_Kind__;
 
 /* Defines the AST lvalue kind values. */
@@ -103,6 +109,12 @@ struct __Ast_Lvalue__
     __Ast_Header__ __Header__;
     /* Stores the kind. */
     __Ast_Lvalue_Kind__ __Kind__;
+    /* Exports semantic analysis's move-fact choke point
+     * (__Body_Safety_Move_Atom__) to LLVM lowering: set true exactly when
+     * this specific lvalue read moved an owning value out of its source.
+     * Reused by drop elaboration instead of recomputing ownership flow;
+     * not part of the self-hosted ownership checkpoint, Stage0-only. */
+    int __Drop_Elaboration_Moved__;
     /* Defines the struct structure. */
     union
     {
@@ -118,6 +130,7 @@ struct __Ast_Lvalue__
                 __Text_Slice__ __Identifier__;
                 /* Stores the temporary. */
                 __Temporary_Id__ __Temporary__;
+                __Ast_Expression__ *__Call__;
             } __As__;
         } __Base__;
         /* Defines the struct structure. */
@@ -166,6 +179,8 @@ typedef enum
     __Binary_Shift_Left_Logical__,
     /* Represents the binary shift right logical value. */
     __Binary_Shift_Right_Logical__,
+    /* `>>>`: the sign bit fills (canonical إزاحة_حسابية_يمنى). */
+    __Binary_Shift_Right_Arithmetic__,
     /* Represents the binary add value. */
     __Binary_Add__,
     /* Represents the binary subtract value. */

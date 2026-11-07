@@ -10,7 +10,8 @@
 static inline int __Type_Contextual_Name_Is_OPTION__(__Text_Slice__ __Name__)
 {
     return __Text_Equals_Cstr__(__Name__, "option") ||
-           __Text_Equals_Cstr__(__Name__, "اختيار");
+           __Text_Equals_Cstr__(__Name__, "اختيار") ||
+           __Text_Equals_Cstr__(__Name__, "اختياري");
 }
 
 /* Checks whether the type contextual name is result. */

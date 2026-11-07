@@ -1,6 +1,7 @@
 /* Resolves lvalue types and access rules. */
 
 #include "semantic/body_internal.h"
+#include "semantic/generic.h"
 #include "kernel/name/name.h"
 
 #include <stdio.h>
@@ -107,6 +108,30 @@ static int __Body_Infer_Lvalue_Access__(__Semantic_Body_Context__ *__Context__,
     if (__Lvalue__ == NULL)
     {
         return __Body_Fail__(__Context__, __E0300_Unknown_Name__, (__Source_Span__){0});
+    }
+
+    if (__Lvalue__->__Kind__ == __Ast_Lvalue_Base__ &&
+        __Lvalue__->__As__.__Base__.__Kind__ == __Ast_Lvalue_Base_Call__)
+    {
+        /* A call result: a fresh temporary that can be read, never written. */
+        if (!__Require_Read__)
+        {
+            return __Body_Fail__(__Context__, __E0703_Write_To_Immutable__,
+                                 __Lvalue__->__Header__.__Span__);
+        }
+        if (!__Body_Infer_Expression__(__Context__, __Lvalue__->__As__.__Base__.__As__.__Call__,
+                                       __Out_Type__))
+        {
+            return 0;
+        }
+        if (*__Out_Type__ != NULL)
+        {
+            /* The emitter reads this Type after the body check. */
+            __Lvalue__->__As__.__Base__.__As__.__Call__->__Contextual_Type__ =
+                __Semantic_Generic_Substitute_Type__(__Context__->__Semantic__, *__Out_Type__, NULL,
+                                                     NULL, 0U, NULL);
+        }
+        return 1;
     }
 
     if (__Lvalue__->__Kind__ == __Ast_Lvalue_Base__)

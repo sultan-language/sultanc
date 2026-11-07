@@ -1,0 +1,17 @@
+// 64-bit word arithmetic for std crypto (SHA-512/384), on the compiler's
+// wrapping intrinsics (as std.math.wrapping): one machine add or shift each,
+// where std.crypto.words once split the words into 32-bit halves. Kept apart
+// from std.crypto.words, which the compiler itself imports through SHA-256
+// and the C Stage0 compiles. None of these helpers branches on its data.
+
+مرادف جمع_ملتف_بدائيا = بدائي_جمع_ملتف;
+مرادف إزاحة_يسرى_ملتفة_بدائيا = بدائي_إزاحة_يسرى_ملتفة;
+
+عام عرف جمع64_تشفير(أ: طبيعي, ب: طبيعي): طبيعي {
+    أرجع جمع_ملتف_بدائيا(أ, ب);
+}
+
+// The amount is 1..63.
+عام عرف دور_يمين64_تشفير(الكلمة: طبيعي, المقدار: طبيعي): طبيعي {
+    أرجع (الكلمة >> المقدار) | إزاحة_يسرى_ملتفة_بدائيا(الكلمة, 64 - المقدار);
+}

@@ -1,10 +1,10 @@
 // Library-root identity is logical. Filesystem paths, public spellings, languages,
 // and package versions are deliberately absent from this representation.
 عام نوع معرف_جذر_مكتبة = {
-    القيمة: غير_موقع
+    القيمة: طبيعي
 };
 
-عام عرف معرف_جذر_مكتبة_من(القيمة: غير_موقع): معرف_جذر_مكتبة {
+عام عرف معرف_جذر_مكتبة_من(القيمة: طبيعي): معرف_جذر_مكتبة {
     دع المعرف: معرف_جذر_مكتبة = { القيمة: القيمة };
     أرجع المعرف;
 }

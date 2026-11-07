@@ -12,6 +12,23 @@
 
 #include <stddef.h>
 
+/* Defines who owns the value that a semantic local (or an lvalue) names.
+ * Stage0's drop lowering gives a moved value's owner flag only to a plain
+ * local; these classes let the checker reject moves that would leave the
+ * real owner still holding the value. */
+typedef enum
+{
+    /* The local owns its value, or the value belongs to a plain local (a
+     * pattern binding of a match on that local), or to a temporary. */
+    __Semantic_Ownership_Owner__ = 0,
+    /* The value still belongs to an enclosing owned aggregate: a field,
+     * element or box payload of an owned place, or a pattern binding of a
+     * match on such a place. Moving it out is a partial move. */
+    __Semantic_Ownership_Projected__,
+    /* The value is read through a reference: a non-owning view. */
+    __Semantic_Ownership_Borrowed__
+} __Semantic_Ownership__;
+
 /* Defines the semantic local structure. */
 typedef struct
 {
@@ -39,6 +56,10 @@ typedef struct
     __Safety_Value_Fact__ __Safety__;
     /* Stores the declaration span. */
     __Source_Span__ __Declaration_Span__;
+    /* Stores who owns this local's value; zero-initialized locals own it. */
+    __Semantic_Ownership__ __Ownership__;
+    /* Tracks whether a copy into this local has set its ownership. */
+    int __Ownership_Assigned__;
 } __Semantic_Local__;
 
 /* Defines the body safety local state structure. */
@@ -61,6 +82,16 @@ typedef struct
     size_t __Count__;
 } __Body_Safety_Snapshot__;
 
+/* One enclosing loop: the safety state reaching its exit through `break`
+ * and `continue` (merged), and the locals visible at its entry. */
+typedef struct __Body_Loop_Frame__
+{
+    struct __Body_Loop_Frame__ *__Outer__;
+    size_t __Locals_At_Entry__;
+    __Body_Safety_Snapshot__ __Exits__;
+    int __Has_Exits__;
+} __Body_Loop_Frame__;
+
 /* Defines the semantic body context structure. */
 typedef struct
 {
@@ -78,10 +109,17 @@ typedef struct
     size_t __Unsafe_Depth__;
     /* Tracks the falls through state. */
     int __Falls_Through__;
+    /* Set only while a copy into a plain local transfers its value: the drop
+     * lowering then records the copied value's borrowed provenance, so a
+     * borrowed value may land there without becoming an owner. */
+    int __Transfer_Into_Plain_Local__;
+    /* References the innermost enclosing loop, or NULL. */
+    __Body_Loop_Frame__ *__Loop__;
 } __Semantic_Body_Context__;
 
 /* Stores the body builtin int type. */
 extern __Ast_Type__ __Body_Builtin_Int_Type__;
+extern __Ast_Type__ __Body_Builtin_Uint_Type__;
 /* Stores the body builtin bool type. */
 extern __Ast_Type__ __Body_Builtin_Bool_Type__;
 /* Stores the body builtin char type. */
@@ -224,6 +262,16 @@ int __Body_Safety_Move_Expression__(__Semantic_Body_Context__ *,
 
 /* Returns the body safety move atom. */
 int __Body_Safety_Move_Atom__(__Semantic_Body_Context__ *, const __Ast_Atom__ *, __Source_Span__);
+
+/* Classifies who owns the value an lvalue names. */
+int __Body_Lvalue_Ownership__(__Semantic_Body_Context__ *,
+                              __Ast_Lvalue__ *,
+                              __Semantic_Ownership__ *);
+
+/* Classifies who owns the value an expression yields. */
+int __Body_Expression_Ownership__(__Semantic_Body_Context__ *,
+                                  __Ast_Expression__ *,
+                                  __Semantic_Ownership__ *);
 
 /* Returns the body safety transfer expression. */
 int __Body_Safety_Transfer_Expression__(__Semantic_Body_Context__ *,

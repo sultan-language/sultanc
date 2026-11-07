@@ -1,5 +1,8 @@
 استورد std.text.from_bytes;
-عام عرف اسم_رمز_دخول_ويب_أسمبلي_واسي(): متجه غ8 {
-    دع الاسم: متجه غ8 = بايتات_من_نص(«_start»);
+// The default entry of a WebAssembly executable: `_start`, the WASI command
+// entry, which SultanC also uses as the language entry of browser modules
+// (backend/provider/llvm/functions.sn, backend/object/wasm/wasm_object.sn).
+عام عرف اسم_رمز_دخول_ويب_أسمبلي(): متجه ط8 {
+    دع الاسم: متجه ط8 = بايتات_من_نص(«_start»);
     أرجع الاسم;
 }

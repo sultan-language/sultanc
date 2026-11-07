@@ -1,0 +1,183 @@
+// OS threads (docs/CONCURRENCY.md), after Rust's std::thread. `أطلق` moves a
+// closure to a new thread and returns a join handle; `انضم` waits for the
+// thread and reclaims its stack. The closure may capture only values safe to
+// move to another thread: the spawn capture check rejects at compile time a
+// closure literal that captures a raw pointer (outside غير_آمن), a borrowed
+// reference, or uses a writable module variable (docs/TYPE_SYSTEM.md,
+// "Thread capture rules"). Shared state goes through std.sync (Arc, Mutex,
+// atomics) and the channels.
+//
+// The thread owns its closure and drops it when the closure returns, as
+// Rust's spawn consumes an FnOnce: what it captured (an Arc, a channel's
+// sender) is released when the thread finishes, not when (or if) it is
+// joined.
+//
+// `أطلق_بقيمة` / `انضم_بقيمة` are Rust's JoinHandle<T>: the closure's result
+// is handed back by join. A panic (`إنهيار`) in any thread ends the whole
+// process (panic=abort), as in Rust's panic=abort, so join never observes a
+// thread error.
+//
+// Threads start on Linux and Android (every architecture), FreeBSD, macOS
+// and Windows (os.threads). On WASI and every other target `أطلق` returns
+// `خطأ_خيط.غير_مدعوم` and the program stays single-threaded; atomics and the
+// std.sync types still work everywhere. The interpreter runs one OS thread
+// and stops at a spawn with SULTANC-INTERPRETER-UNSUPPORTED-MACHINE-PRIMITIVE.
+استورد os.error;
+استورد os.threads;
+استورد os.clock;
+استورد std.sync.arc;
+استورد std.sync.mutex;
+
+مرادف عنوان_إغلاق_خيط = بدائي_عنوان_دالة;
+
+عام نوع خطأ_خيط =
+    | غير_مدعوم
+    | نظام بنوع خطأ_نظام_أصلي
+;
+عام مرادف thread_error = خطأ_خيط;
+
+// A join handle: the OS thread's words (all scalars, so the handle is itself
+// safe to move between threads) and whether it was joined.
+عام نوع مقبض_خيط = {
+    الخيط: خيط_نظام,
+    منضم: منطقي
+};
+عام مرادف join_handle = مقبض_خيط;
+
+// The entry of a spawned thread: take the closure out of its cell (a no-op
+// closure stays behind), run it, and drop it on return.
+عرف لا_عمل_خيط(): فراغ { }
+عرف شغل_عمل_الخيط(الخلية: &صندوق متغير دالة(): فراغ, المؤشر: *متغير دالة(): فراغ): فراغ {
+    دع العمل: متغير دالة(): فراغ = لا_عمل_خيط;
+    غير_آمن { بدّل((*المؤشر), العمل); }
+    العمل();
+}
+
+// The thread owns its closure: it goes in a heap cell the entry closure owns;
+// the entry swaps it out, runs it, and lets it drop. The thread keeps one
+// reference of the entry and join gives it back, which frees the entry and
+// its cell.
+عرف مدخل_خيط_لعمل(العمل: دالة(): فراغ): دالة(): فراغ {
+    دع الخلية: صندوق متغير دالة(): فراغ = صندوق العمل;
+    دع مؤشر_العمل: *متغير دالة(): فراغ = &متغير (*الخلية);
+    دع المدخل: دالة(): فراغ = دالة(): فراغ -> شغل_عمل_الخيط(&الخلية, مؤشر_العمل);
+    أرجع المدخل;
+}
+
+// Starts the thread on the entry whose environment address (one reference)
+// the caller took; the OS layer owns that reference from here on.
+عرف ابدأ_خيط_بمدخل(العنوان: ط64): نتيجة مقبض_خيط, خطأ_خيط {
+    طابق ابدأ_خيط_نظام(العنوان) مع
+    | نتيجة.خطأ(الخطأ) -> { أرجع نتيجة.خطأ(خطأ_خيط.نظام(الخطأ)); }
+    | نتيجة.نجح(الخيط) -> {
+        دع المقبض: مقبض_خيط = { الخيط: الخيط, منضم: خطأ };
+        أرجع نتيجة.نجح(المقبض);
+    };
+}
+
+// Spawn takes the entry's address itself (بدائي_عنوان_دالة): that makes its
+// closure parameter "sending" for the spawn capture check
+// (compiler/frontend/types/thread_capture.sn). The interpreter, which runs
+// one OS thread, stops here.
+عام عرف أطلق(العمل: دالة(): فراغ): نتيجة مقبض_خيط, خطأ_خيط {
+    لو (!خيوط_النظام_مدعومة()) { أرجع نتيجة.خطأ(خطأ_خيط.غير_مدعوم()); };
+    دع المدخل: دالة(): فراغ = مدخل_خيط_لعمل(العمل);
+    دع العنوان: ط64;
+    غير_آمن { العنوان := عنوان_إغلاق_خيط(المدخل); }
+    أرجع ابدأ_خيط_بمدخل(العنوان);
+}
+عام مرادف spawn = أطلق;
+
+// Waits for the thread to end; a second join does nothing.
+عام عرف انضم(المقبض: &متغير مقبض_خيط): فراغ {
+    لو ((*المقبض).منضم) { أرجع; };
+    انضم_خيط_نظام(&(*المقبض).الخيط);
+    (*المقبض).منضم := صواب;
+}
+عام مرادف join = انضم;
+
+// The id of the thread a handle started (the id that thread's
+// `معرف_الخيط_الحالي` answers).
+عام عرف معرف_المقبض(المقبض: &مقبض_خيط): ط64 { أرجع (*المقبض).الخيط.المعرف; }
+عام مرادف join_handle_id = معرف_المقبض;
+
+// Rust's JoinHandle<T> (its Packet is an Arc the thread and the handle
+// share): the thread runs a wrapper that pushes the closure's result into a
+// Mutex-guarded vector both hold through an Arc (std.sync); join pops it
+// after the thread ended. The thread drops its Arc when it finishes, the
+// handle when it is dropped, and the cell is freed with the last one.
+عام نوع مقبض_خيط_بقيمة<ق> = {
+    المقبض: مقبض_خيط,
+    الخانة: مشترك<قفل<متجه ق>>
+};
+عام مرادف value_join_handle = مقبض_خيط_بقيمة;
+
+عرف نفذ_وخزن_ناتج_خيط<ق>(العمل: دالة(): ق, الخانة: مشترك<قفل<متجه ق>>): فراغ {
+    دع الناتج: ق = العمل();
+    دع القفل: &قفل<متجه ق> = اقرأ_مشترك(&الخانة);
+    اقفل_خام(القفل);
+    دع القيم: *متغير متجه ق = مؤشر_قيمة_القفل(القفل);
+    غير_آمن { ألحق((*القيم), الناتج); }
+    افتح_خام(القفل);
+}
+
+عام عرف أطلق_بقيمة<ق>(العمل: دالة(): ق): نتيجة مقبض_خيط_بقيمة<ق>, خطأ_خيط {
+    لو (!خيوط_النظام_مدعومة()) { أرجع نتيجة.خطأ(خطأ_خيط.غير_مدعوم()); };
+    دع الفارغة: متجه ق = [];
+    دع الخانة: مشترك<قفل<متجه ق>> = أنشئ_مشترك(أنشئ_قفل(الفارغة));
+    دع للخيط: مشترك<قفل<متجه ق>> = استنسخ_مشترك(&الخانة);
+    دع الغلاف: دالة(): فراغ = دالة(): فراغ -> نفذ_وخزن_ناتج_خيط(العمل, للخيط);
+    دع المدخل: دالة(): فراغ = مدخل_خيط_لعمل(الغلاف);
+    دع العنوان: ط64;
+    غير_آمن { العنوان := عنوان_إغلاق_خيط(المدخل); }
+    طابق ابدأ_خيط_بمدخل(العنوان) مع
+    | نتيجة.خطأ(الخطأ) -> { أرجع نتيجة.خطأ(الخطأ); }
+    | نتيجة.نجح(المقبض) -> {
+        دع مقبض_القيمة: مقبض_خيط_بقيمة<ق> = { المقبض: المقبض, الخانة: الخانة };
+        أرجع نتيجة.نجح(مقبض_القيمة);
+    };
+}
+عام مرادف spawn_value = أطلق_بقيمة;
+
+// Waits for the thread and answers its closure's result; a second join
+// answers لا_شيء.
+عام عرف انضم_بقيمة<ق>(المقبض: &متغير مقبض_خيط_بقيمة<ق>): اختياري ق {
+    انضم(&متغير (*المقبض).المقبض);
+    دع القفل: &قفل<متجه ق> = اقرأ_مشترك(&(*المقبض).الخانة);
+    اقفل_خام(القفل);
+    دع القيم: *متغير متجه ق = مؤشر_قيمة_القفل(القفل);
+    دع الناتج: اختياري ق;
+    غير_آمن { الناتج := أزل_الأخير((*القيم)); }
+    افتح_خام(القفل);
+    أرجع الناتج;
+}
+عام مرادف join_value = انضم_بقيمة;
+
+// Puts the calling thread to sleep for at least ثوان seconds and نانو
+// nanoseconds (Rust's thread::sleep, through os.clock on every target).
+عام عرف نم(ثوان: ط64, نانو: ط64): فراغ {
+    دع تجاهل: نتيجة عدد, خطأ_حد_نظام = نم_نانو_للنظام(((ثوان * 1000000000) + نانو) مثل عدد);
+}
+عام مرادف sleep = نم;
+
+// Gives up the processor (Rust's thread::yield_now): sched_yield on Linux
+// and FreeBSD, pthread_yield_np on macOS, SwitchToThread on Windows.
+عام عرف تنازل(): فراغ { تنازل_نظام(); }
+عام مرادف yield_now = تنازل;
+
+// The calling thread's OS id: gettid on Linux, thr_self on FreeBSD,
+// pthread_threadid_np on macOS, GetCurrentThreadId on Windows; 1 where a
+// program has one thread.
+عام عرف معرف_الخيط_الحالي(): ط64 { أرجع معرف_الخيط_الحالي_نظام(); }
+عام مرادف current_id = معرف_الخيط_الحالي;
+
+// How many threads can run at once (Rust's available_parallelism): the
+// CPUs in the affinity mask on Linux and FreeBSD, hw.logicalcpu on macOS,
+// dwNumberOfProcessors on Windows.
+عام عرف عدد_المعالجات_المتاحة(): نتيجة طبيعي, خطأ_خيط {
+    لو (!خيوط_النظام_مدعومة()) { أرجع نتيجة.خطأ(خطأ_خيط.غير_مدعوم()); };
+    طابق عدد_المعالجات_نظام() مع
+    | نتيجة.خطأ(الخطأ) -> { أرجع نتيجة.خطأ(خطأ_خيط.نظام(الخطأ)); }
+    | نتيجة.نجح(العدد) -> { أرجع نتيجة.نجح(العدد مثل طبيعي); };
+}
+عام مرادف available_parallelism = عدد_المعالجات_المتاحة;

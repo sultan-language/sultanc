@@ -1,0 +1,48 @@
+استورد fs.error;
+استورد fs.handle;
+استورد os.error;
+استورد os.file;
+استورد os.file_attributes;
+
+// File sizes and file times, and the conversion every newer std.fs function
+// uses for its typed error: the std.os boundary error, classified into
+// فئة_خطأ_نظام (std.fs.error) by the target's own error table.
+
+عام عرف فئة_خطأ_حد_نظام(الخطأ: خطأ_حد_نظام): فئة_خطأ_نظام {
+    دع الفئة: فئة_خطأ_نظام = صنف_خطأ_نظام(رمز_خطأ_حد_النظام(الخطأ));
+    طابق الفئة مع
+    | فئة_خطأ_نظام.لا_خطأ -> { أرجع فئة_خطأ_نظام.آخر(); }
+    | _ -> { أرجع الفئة; };
+}
+
+عرف نتيجة_سمة_ملف(النتيجة: نتيجة عدد, خطأ_حد_نظام): نتيجة عدد, فئة_خطأ_نظام {
+    طابق النتيجة مع
+    | نتيجة.خطأ(الخطأ) -> { أرجع نتيجة.خطأ(فئة_خطأ_حد_نظام(الخطأ)); }
+    | نتيجة.نجح(القيمة) -> { أرجع نتيجة.نجح(القيمة); };
+}
+
+// Sets the size of an existing file: bytes past الطول are discarded, and a
+// larger size reads as zero bytes (Rust File::set_len, Go os.Truncate).
+عام عرف اقتطع_الملف(المسار: &نص, الطول: طبيعي): نتيجة عدد, فئة_خطأ_نظام {
+    أرجع نتيجة_سمة_ملف(اقتطع_مسار_نظام(المسار, الطول));
+}
+
+// The same through an open handle (written to; the position is unchanged).
+عام عرف اقتطع_مقبض_ملف(المقبض: &مقبض_ملف, الطول: طبيعي): نتيجة عدد, فئة_خطأ_نظام {
+    دع الخام: عدد = **المقبض;
+    دع النظامي: مقبض_ملف_نظام = { القيمة: الخام مثل ط64, مفتوح: صواب };
+    أرجع نتيجة_سمة_ملف(اقتطع_مقبض_ملف_نظام(&النظامي, الطول));
+}
+
+// Sets the access and modification times, in nanoseconds since the Unix
+// epoch (Go os.Chtimes). A final symlink is followed.
+عام عرف اضبط_أوقات_الملف(
+    المسار: &نص, الوصول_نانو: عدد, التعديل_نانو: عدد
+): نتيجة عدد, فئة_خطأ_نظام {
+    أرجع نتيجة_سمة_ملف(اضبط_أوقات_مسار_نظام(المسار, الوصول_نانو, التعديل_نانو));
+}
+
+عام مرادف os_error_class_of = فئة_خطأ_حد_نظام;
+عام مرادف truncate_file = اقتطع_الملف;
+عام مرادف file_handle_set_len = اقتطع_مقبض_ملف;
+عام مرادف set_file_times = اضبط_أوقات_الملف;

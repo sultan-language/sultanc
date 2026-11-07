@@ -28,5 +28,9 @@ LLVMValueRef __LLVM_Copy_Tagged_Payload_To_Storage__(__LLVM_Emitter__ *emitter,
                                                      LLVMTypeRef *out_payload_llvm_type);
 int __LLVM_Predeclare_Aggregate_Types__(__LLVM_Emitter__ *emitter);
 int __LLVM_Define_Aggregate_Types__(__LLVM_Emitter__ *emitter);
+/* Recursively releases the owned value of static type `type` stored at
+ * `address`. Callers must only invoke this where __Memory_Type_Is_Owned__
+ * already held for `type`. */
+int __LLVM_Drop_Owned_At__(__LLVM_Emitter__ *emitter, LLVMValueRef address, __Ast_Type__ *type);
 
 #endif

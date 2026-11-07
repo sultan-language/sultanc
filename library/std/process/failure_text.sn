@@ -1,0 +1,30 @@
+// The words of a program's runtime failures (docs/ERRORS.md), rendered by
+// iSpeak: the compiler replaces this module's text at every compilation
+// (compiler/driver/program_failure_text.sn) with the same two functions,
+// rendered from its iSpeak tables, and the language of that compilation's
+// --lang. The text below is that rendering for Arabic; the C Stage0 and
+// tools read it as written. Do not edit it by hand: the iSpeak suite checks
+// it against the compiler's rendering.
+//
+// The failure keys: 0 the program ended with an error (`main` returned
+// one), 1 the program stopped (إنهيار), 2 the program stopped because an
+// assertion failed.
+
+// The frame of one runtime failure, in English or in Arabic.
+عام عرف إطار_فشل_تشغيل(المفتاح: عدد, الإنجليزية: منطقي): نص {
+    لو (المفتاح == 1) {
+        لو (الإنجليزية) { أرجع «error[SULTANC-RUNTIME-PROGRAM-STOPPED]: the program stopped»; };
+        أرجع «خطأ[SULTANC-RUNTIME-PROGRAM-STOPPED]: توقف البرنامج»;
+    };
+    لو (المفتاح == 2) {
+        لو (الإنجليزية) { أرجع «error[SULTANC-RUNTIME-PROGRAM-STOPPED]: the program stopped — An assertion failed.»; };
+        أرجع «خطأ[SULTANC-RUNTIME-PROGRAM-STOPPED]: توقف البرنامج — فشل تأكيد.»;
+    };
+    لو (الإنجليزية) { أرجع «error[SULTANC-RUNTIME-PROGRAM-ERROR]: the program ended with an error»; };
+    أرجع «خطأ[SULTANC-RUNTIME-PROGRAM-ERROR]: انتهى البرنامج بخطأ»;
+}
+
+// Whether the program was compiled with English as its language.
+عام عرف لغة_البرنامج_المترجمة_إنجليزية(): منطقي {
+    أرجع خطأ;
+}

@@ -1,0 +1,69 @@
+استورد fs.handle;
+استورد os.file_lock;
+استورد os.error;
+
+// Advisory whole-file locks through an open handle (Rust 1.89 File::lock,
+// lock_shared, try_lock, try_lock_shared, unlock). Many shared holders or
+// one exclusive holder; another process that asks waits (lock) or is told
+// it would have to wait (try_lock). Advisory: reads and writes are not
+// stopped, only other lock requests. A lock lasts until it is released or
+// the file is closed. Linux, Android and FreeBSD use flock(2), macOS flock
+// from libSystem, Windows LockFileEx; WASI has no locks (غير_مدعوم).
+
+// Why a try_lock did not take the lock (Rust TryLockError): another holder
+// would make it wait, or the system reported an error (a negative code).
+عام نوع خطأ_محاولة_قفل =
+    | ستحظر
+    | نظام بنوع عدد
+;
+
+عرف قفل_مقبض_ملف(المقبض: &مقبض_ملف, حصري: منطقي): نتيجة عدد, عدد {
+    طابق اقفل_ملف_نظام((**المقبض) مثل ط64, حصري, خطأ) مع
+    | نتيجة.خطأ(الخطأ) -> { أرجع نتيجة.خطأ(رمز_خطأ_حد_النظام(الخطأ)); }
+    | نتيجة.نجح(_) -> { أرجع نتيجة.نجح(0); };
+}
+
+عرف حاول_قفل_مقبض_ملف(المقبض: &مقبض_ملف, حصري: منطقي): نتيجة عدد, خطأ_محاولة_قفل {
+    طابق اقفل_ملف_نظام((**المقبض) مثل ط64, حصري, صواب) مع
+    | نتيجة.خطأ(الخطأ) -> { أرجع نتيجة.خطأ(خطأ_محاولة_قفل.نظام(رمز_خطأ_حد_النظام(الخطأ))); }
+    | نتيجة.نجح(المأخوذ) -> {
+        لو (!المأخوذ) { أرجع نتيجة.خطأ(خطأ_محاولة_قفل.ستحظر()); };
+        أرجع نتيجة.نجح(0);
+    };
+}
+
+// Takes an exclusive lock, waiting while anyone else holds a lock.
+عام عرف اقفل_الملف(المقبض: &مقبض_ملف): نتيجة عدد, عدد {
+    أرجع قفل_مقبض_ملف(المقبض, صواب);
+}
+
+// Takes a shared lock, waiting while someone holds an exclusive one.
+عام عرف اقفل_الملف_مشتركا(المقبض: &مقبض_ملف): نتيجة عدد, عدد {
+    أرجع قفل_مقبض_ملف(المقبض, خطأ);
+}
+
+// Takes an exclusive lock if no one else holds a lock; ستحظر otherwise.
+عام عرف حاول_قفل_الملف(المقبض: &مقبض_ملف): نتيجة عدد, خطأ_محاولة_قفل {
+    أرجع حاول_قفل_مقبض_ملف(المقبض, صواب);
+}
+
+// Takes a shared lock if no one holds an exclusive one; ستحظر otherwise.
+عام عرف حاول_قفل_الملف_مشتركا(المقبض: &مقبض_ملف): نتيجة عدد, خطأ_محاولة_قفل {
+    أرجع حاول_قفل_مقبض_ملف(المقبض, خطأ);
+}
+
+// Releases this handle's lock.
+عام عرف افتح_قفل_الملف(المقبض: &مقبض_ملف): نتيجة عدد, عدد {
+    طابق افتح_قفل_ملف_نظام((**المقبض) مثل ط64) مع
+    | نتيجة.خطأ(الخطأ) -> { أرجع نتيجة.خطأ(رمز_خطأ_حد_النظام(الخطأ)); }
+    | نتيجة.نجح(_) -> { أرجع نتيجة.نجح(0); };
+}
+
+عام مرادف try_lock_error = خطأ_محاولة_قفل;
+عام مرادف try_lock_error.would_block = خطأ_محاولة_قفل.ستحظر;
+عام مرادف try_lock_error.os = خطأ_محاولة_قفل.نظام;
+عام مرادف file_lock = اقفل_الملف;
+عام مرادف file_lock_shared = اقفل_الملف_مشتركا;
+عام مرادف file_try_lock = حاول_قفل_الملف;
+عام مرادف file_try_lock_shared = حاول_قفل_الملف_مشتركا;
+عام مرادف file_unlock = افتح_قفل_الملف;

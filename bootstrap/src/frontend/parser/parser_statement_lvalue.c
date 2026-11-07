@@ -55,6 +55,24 @@ int __Parser_Parse_Lvalue_Statement__(__Parser__ *__Parser_State__, __Vector__ *
         __Ast_Lvalue__ *__Temporary_Lvalue__ = NULL;
         /* Stores the empty. */
         __Text_Slice__ __Empty__ = {NULL, 0U};
+        if (__Call__ != NULL && __Parser_State__->__Current__.__Kind__ == __Token_QUESTION_OPERATOR__)
+        {
+            /* Stores the propagation mark. */
+            __Source_Span__ __Mark__ = __Parser_State__->__Current__.__Span__;
+            if (!__Parser_Advance__(__Parser_State__) ||
+                !__Parser_Expect__(__Parser_State__, __Token_SEMICOLON_OPERATOR__))
+            {
+                return 0;
+            }
+            return __Parser_Push_Propagation__(
+                __Parser_State__,
+                __Statements__,
+                __Call__,
+                __Parser_Propagation_Ignore__,
+                NULL,
+                __Mark__,
+                __Parser_Span__(__Start__, __Parser_State__->__Previous__.__Span__.__End__));
+        }
         if (__Call__ == NULL || !__Parser_Expect__(__Parser_State__, __Token_SEMICOLON_OPERATOR__))
         {
             return 0;
@@ -91,6 +109,30 @@ int __Parser_Parse_Lvalue_Statement__(__Parser__ *__Parser_State__, __Vector__ *
         return __Parser_Push_Statement__(__Parser_State__, __Statements__, __Copy__);
     }
 
+    if (__Parser_State__->__Current__.__Kind__ == __Token_QUESTION_OPERATOR__)
+    {
+        /* `place؟;` propagates the error or absence held in a place. */
+        /* Stores the propagation mark. */
+        __Source_Span__ __Mark__ = __Parser_State__->__Current__.__Span__;
+        /* References the place read. */
+        __Ast_Expression__ *__Read__ = __Parser_New_Expression__(
+            __Parser_State__, __Ast_Expression_Atom__, __Lvalue__->__Header__.__Span__);
+        if (__Read__ == NULL || !__Parser_Advance__(__Parser_State__) ||
+            !__Parser_Expect__(__Parser_State__, __Token_SEMICOLON_OPERATOR__))
+        {
+            return 0;
+        }
+        __Read__->__As__.__Atom__.__Kind__ = __Ast_Atom_Lvalue__;
+        __Read__->__As__.__Atom__.__As__.__Lvalue__ = __Lvalue__;
+        return __Parser_Push_Propagation__(
+            __Parser_State__,
+            __Statements__,
+            __Read__,
+            __Parser_Propagation_Ignore__,
+            NULL,
+            __Mark__,
+            __Parser_Span__(__Start__, __Parser_State__->__Previous__.__Span__.__End__));
+    }
     if (!__Parser_Expect__(__Parser_State__, __Token_OPERATOR_ASSIGNMENT_COLON__))
     {
         return 0;
@@ -100,6 +142,25 @@ int __Parser_Parse_Lvalue_Statement__(__Parser__ *__Parser_State__, __Vector__ *
         __Ast_Expression__ *__Expression__ = __Parser_Parse_Expression__(__Parser_State__);
         /* References the statement. */
         __Ast_Statement__ *__Statement__ = NULL;
+        if (__Expression__ != NULL &&
+            __Parser_State__->__Current__.__Kind__ == __Token_QUESTION_OPERATOR__)
+        {
+            /* Stores the propagation mark. */
+            __Source_Span__ __Mark__ = __Parser_State__->__Current__.__Span__;
+            if (!__Parser_Advance__(__Parser_State__) ||
+                !__Parser_Expect__(__Parser_State__, __Token_SEMICOLON_OPERATOR__))
+            {
+                return 0;
+            }
+            return __Parser_Push_Propagation__(
+                __Parser_State__,
+                __Statements__,
+                __Expression__,
+                __Parser_Propagation_Assign__,
+                __Lvalue__,
+                __Mark__,
+                __Parser_Span__(__Start__, __Parser_State__->__Previous__.__Span__.__End__));
+        }
         if (__Expression__ == NULL ||
             !__Parser_Expect__(__Parser_State__, __Token_SEMICOLON_OPERATOR__))
         {

@@ -1,0 +1,131 @@
+استورد compiler.ispeak.keys.surface;
+
+// Source-backed user-facing wording; no numeric/string lookup or initialization.
+
+// Immutable language resources: longer prose is stored once, outside match arms.
+عرف نص_واجهة_التباس_جذر_الاعتمادية(): نص { أرجع «dependency root spelling is ambiguous in the importing package»; }
+عرف نص_واجهة_تعارض_جذر_المكتبة_في_الاعتمادية(): نص { أرجع «standard-library root spelling conflicts in dependency scope»; }
+عرف نص_واجهة_مدخلات_مصدر_من_بيانات_مختلفة(): نص { أرجع «explicit source inputs do not belong to one package manifest»; }
+عام عرف نص_واجهة_مصدر_رئيسي_بلا_بيان_مع_مصدر_مقيد(): نص { أرجع «primary source is manifest-free but an additional input belongs to a package manifest»; }
+عرف نص_واجهة_مدخلات_من_حزم_مختلفة(): نص { أرجع «explicit source inputs belong to different package manifests»; }
+عرف نص_واجهة_إعداد_بيان_معروف_غير_مدعوم(): نص { أرجع «manifest setting is recognized but not supported by this compiler yet»; }
+عرف نص_واجهة_مرادف_يتعارض_مع_مسار_أصلي(): نص { أرجع «imports-alias spelling conflicts with a canonical source path»; }
+عرف نص_واجهة_بيان_حزمة_بالاسم_المطلوب_مفقود(): نص { أرجع «package manifest does not exist with the required exact filename»; }
+
+عام عرف نص_واجهة_إنجليزي(المفتاح: مفتاح_نص_مترجم): نص {
+    طابق المفتاح مع
+    | مفتاح_نص_مترجم.عنوان_المساعدة -> { أرجع "SultanC compiler\n\n"; }
+    | مفتاح_نص_مترجم.عنوان_الاستخدام -> { أرجع "Usage:\n"; }
+    | مفتاح_نص_مترجم.سطر_استخدام_المترجم -> { أرجع "    sultanc <source> [options]\n\n"; }
+    | مفتاح_نص_مترجم.عنوان_الأوامر -> { أرجع "Commands:\n"; }
+    | مفتاح_نص_مترجم.أمر_التشغيل -> { أرجع "    run <source> [args...] Run using the SultanC interpreter\n"; }
+    | مفتاح_نص_مترجم.توضيح_وسائط_التشغيل -> { أرجع "                           Arguments after <source> are passed unchanged\n"; }
+    | مفتاح_نص_مترجم.أمر_التحقق -> { أرجع "    check <source>         Check without normal executable output\n                           With --target <target>, check for that target (default: the host)\n"; }
+    | مفتاح_نص_مترجم.أمر_الأهداف -> { أرجع "    targets                List supported targets\n"; }
+    | مفتاح_نص_مترجم.أمر_الشرح -> { أرجع "    explain <code>         Explain a SultanC diagnostic\n"; }
+    | مفتاح_نص_مترجم.أمر_المساعدة -> { أرجع "    help                   Show help\n"; }
+    | مفتاح_نص_مترجم.أمر_الإصدار -> { أرجع "    version                Show version\n\n"; }
+    | مفتاح_نص_مترجم.عنوان_الخيارات_الشائعة -> { أرجع "Common options:\n"; }
+    | مفتاح_نص_مترجم.خيار_المخرج -> { أرجع "    -o <file>              Output path\n"; }
+    | مفتاح_نص_مترجم.خيار_الهدف -> { أرجع "    -t, --target <target>  Target platform\n"; }
+    | مفتاح_نص_مترجم.خيار_الكائن -> { أرجع "    -c                     Emit object file\n\n"; }
+    | مفتاح_نص_مترجم.عنوان_الخيارات_المتقدمة -> { أرجع "Advanced options:\n"; }
+    | مفتاح_نص_مترجم.خيار_الخلفية -> { أرجع "    -b, --backend <name>   native | llvm\n"; }
+    | مفتاح_نص_مترجم.خيار_نوع_الإخراج -> { أرجع "    --emit=<kind>          exe | obj | shared | reloc | module | asm | llvm-ir\n"; }
+    | مفتاح_نص_مترجم.خيار_اللغة -> { أرجع "    --lang=<lang>          auto | ar | en\n"; }
+    | مفتاح_نص_مترجم.خيار_التشخيص -> { أرجع "    --diagnostic-format=<format>  human | short | json\n"; }
+    | مفتاح_نص_مترجم.خيار_الألوان -> { أرجع "    --color=<policy>       auto | always | never\n"; }
+    | مفتاح_نص_مترجم.خيار_مصدر_الوحدة -> { أرجع "    --module-source=<module>=<file>\n"; }
+    | مفتاح_نص_مترجم.توضيح_مصدر_الوحدة -> { أرجع "                           Compile <file> as the source of logical <module>\n"; }
+    | مفتاح_نص_مترجم.خيار_مكتبة_الربط -> { أرجع "    -l <name>              Link the library lib<name> (for example -l c)\n"; }
+    | مفتاح_نص_مترجم.خيار_دليل_المكتبات -> { أرجع "    -L <dir>               Search <dir> for -l libraries first\n"; }
+    | مفتاح_نص_مترجم.تسمية_الخلفيات -> { أرجع «backends:»; }
+    | مفتاح_نص_مترجم.اعتماد_مسار_بلا_هدف_مكتبة -> { أرجع «path dependency does not declare an importable [lib] target»; }
+    | مفتاح_نص_مترجم.تعارض_جذر_مصدر_الحزمة -> { أرجع «package source root conflicts with an existing root»; }
+    | مفتاح_نص_مترجم.تعارض_تهجئة_جذر_الحزمة -> { أرجع «package root spelling conflicts with another binding»; }
+    | مفتاح_نص_مترجم.تعارض_مرادف_استيراد_الحزمة -> { أرجع «package import alias conflicts with another binding»; }
+    | مفتاح_نص_مترجم.دورة_اعتماديات_الحزمة -> { أرجع «package dependency cycle detected»; }
+    | مفتاح_نص_مترجم.التباس_جذر_الاعتمادية -> { أرجع نص_واجهة_التباس_جذر_الاعتمادية(); }
+    | مفتاح_نص_مترجم.تعارض_جذر_المكتبة_في_الاعتمادية -> { أرجع نص_واجهة_تعارض_جذر_المكتبة_في_الاعتمادية(); }
+    | مفتاح_نص_مترجم.بيان_المكتبة_بلا_جدول_مكتبة -> { أرجع «standard-library manifest requires [lib]»; }
+    | مفتاح_نص_مترجم.تعارض_جذر_مكتبة_موثوق -> { أرجع «conflicting trusted standard-library root»; }
+    | مفتاح_نص_مترجم.جذر_المكتبة_غير_مسجل -> { أرجع «standard-library root was not registered»; }
+    | مفتاح_نص_مترجم.تعارض_جذر_المكتبة_في_المشروع -> { أرجع «standard-library root spelling conflicts in project scope»; }
+    | مفتاح_نص_مترجم.تعارض_جذر_الحزمة_مع_نفسه -> { أرجع «package root spelling conflicts in its own scope»; }
+    | مفتاح_نص_مترجم.مدخلات_مصدر_من_بيانات_مختلفة -> { أرجع نص_واجهة_مدخلات_مصدر_من_بيانات_مختلفة(); }
+    | مفتاح_نص_مترجم.مصدر_رئيسي_بلا_بيان_مع_مصدر_مقيد -> { أرجع نص_واجهة_مصدر_رئيسي_بلا_بيان_مع_مصدر_مقيد(); }
+    | مفتاح_نص_مترجم.مدخلات_من_حزم_مختلفة -> { أرجع نص_واجهة_مدخلات_من_حزم_مختلفة(); }
+    | مفتاح_نص_مترجم.حقل_بيان_مطلوب_مفقود -> { أرجع «required manifest field is missing»; }
+    | مفتاح_نص_مترجم.حقل_بيان_ليس_نصا -> { أرجع «manifest field must be a string»; }
+    | مفتاح_نص_مترجم.حقل_بيان_ليس_مصفوفة_نصوص -> { أرجع «manifest field must be an array of strings»; }
+    | مفتاح_نص_مترجم.مصفوفة_بيان_بعنصر_غير_نصي -> { أرجع «manifest array contains a non-string value»; }
+    | مفتاح_نص_مترجم.إعداد_بيان_معروف_غير_مدعوم -> { أرجع نص_واجهة_إعداد_بيان_معروف_غير_مدعوم(); }
+    | مفتاح_نص_مترجم.حقل_بيان_غير_معروف -> { أرجع «unknown package manifest field»; }
+    | مفتاح_نص_مترجم.تسمية_لغة_حزمة_فارغة -> { أرجع «package.names language label cannot be empty»; }
+    | مفتاح_نص_مترجم.قيم_أسماء_حزمة_غير_نصية -> { أرجع «package.names values must be strings»; }
+    | مفتاح_نص_مترجم.تهجئة_جذر_حزمة_غير_صالحة -> { أرجع «package root spelling is not a valid source identifier»; }
+    | مفتاح_نص_مترجم.مفتاح_مرادف_استيراد_غير_صالح -> { أرجع «imports-alias key is not a valid dotted import path»; }
+    | مفتاح_نص_مترجم.قيمة_مرادف_استيراد_ليست_خريطة -> { أرجع «imports-alias value must be an inline language map»; }
+    | مفتاح_نص_مترجم.تسمية_لغة_مرادف_فارغة -> { أرجع «imports-alias language label cannot be empty»; }
+    | مفتاح_نص_مترجم.قيم_لغة_مرادف_غير_نصية -> { أرجع «imports-alias language values must be strings»; }
+    | مفتاح_نص_مترجم.تهجئة_مرادف_استيراد_غير_صالحة -> { أرجع «imports-alias spelling is not a valid dotted import path»; }
+    | مفتاح_نص_مترجم.مفتاح_اعتمادية_غير_صالح -> { أرجع «dependency key is not a valid import-root identifier»; }
+    | مفتاح_نص_مترجم.اعتمادية_غير_محلية -> { أرجع «only local path dependencies are supported»; }
+    | مفتاح_نص_مترجم.حقل_اعتمادية_غير_المسار -> { أرجع «dependency table supports only the path field»; }
+    | مفتاح_نص_مترجم.مسار_اعتمادية_غير_نصي -> { أرجع «dependency path must be a string»; }
+    | مفتاح_نص_مترجم.مسار_اعتمادية_غير_نسبي -> { أرجع «dependency path must be relative to its manifest»; }
+    | مفتاح_نص_مترجم.حقل_هدف_مكتبة_غير_معروف -> { أرجع «unknown lib target field»; }
+    | مفتاح_نص_مترجم.مسار_هدف_مكتبة_غير_نصي -> { أرجع «lib.path must be a string»; }
+    | مفتاح_نص_مترجم.مسار_هدف_مكتبة_غير_نسبي -> { أرجع «lib.path must be relative to its manifest»; }
+    | مفتاح_نص_مترجم.تعذر_فحص_مسار_هدف_مكتبة -> { أرجع «lib.path could not be inspected»; }
+    | مفتاح_نص_مترجم.مسار_هدف_مكتبة_مفقود -> { أرجع «lib.path does not exist»; }
+    | مفتاح_نص_مترجم.ملف_مكتبة_ليس_مصدر_سلطان -> { أرجع «lib.path source file is not a SultanC source file»; }
+    | مفتاح_نص_مترجم.هدف_مكتبة_بلا_دليل_مصدر -> { أرجع «lib.path has no source directory»; }
+    | مفتاح_نص_مترجم.هدف_مكتبة_ليس_دليلا_ولا_ملفا -> { أرجع «lib.path must name a directory or SultanC source file»; }
+    | مفتاح_نص_مترجم.ملف_مكتبة_بلا_اسم -> { أرجع «lib.path source file has no filename»; }
+    | مفتاح_نص_مترجم.اسم_ملف_مكتبة_غير_صالح -> { أرجع «lib.path source filename is invalid»; }
+    | مفتاح_نص_مترجم.اسم_وحدة_مكتبة_غير_صالح -> { أرجع «lib.path source filename is not a valid module identifier»; }
+    | مفتاح_نص_مترجم.تعذر_فحص_هدف_مرادف_استيراد -> { أرجع «canonical imports-alias target could not be inspected»; }
+    | مفتاح_نص_مترجم.هدف_مرادف_استيراد_مفقود -> { أرجع «canonical imports-alias target does not exist»; }
+    | مفتاح_نص_مترجم.تعذر_فحص_تصادم_مرادف -> { أرجع «imports-alias spelling could not be inspected for collision»; }
+    | مفتاح_نص_مترجم.مرادف_يتعارض_مع_مسار_أصلي -> { أرجع نص_واجهة_مرادف_يتعارض_مع_مسار_أصلي(); }
+    | مفتاح_نص_مترجم.مرادف_يشير_إلى_مسارين -> { أرجع «one imports-alias spelling names two canonical paths»; }
+    | مفتاح_نص_مترجم.إعداد_بيان_علوي_غير_مدعوم -> { أرجع «unsupported or unknown top-level manifest setting»; }
+    | مفتاح_نص_مترجم.اعتماديات_تطوير_غير_مدعومة -> { أرجع «dev-dependencies are not supported by this command»; }
+    | مفتاح_نص_مترجم.اعتماديات_تطوير_ليست_جدولا -> { أرجع «dev-dependencies must be a table»; }
+    | مفتاح_نص_مترجم.تعذر_فحص_بيان_حزمة -> { أرجع «package manifest could not be inspected»; }
+    | مفتاح_نص_مترجم.بيان_حزمة_بالاسم_المطلوب_مفقود -> { أرجع نص_واجهة_بيان_حزمة_بالاسم_المطلوب_مفقود(); }
+    | مفتاح_نص_مترجم.تعذر_قراءة_بيان_حزمة -> { أرجع «package manifest could not be read»; }
+    | مفتاح_نص_مترجم.صياغة_تومل_غير_صالحة -> { أرجع «invalid TOML syntax»; }
+    | مفتاح_نص_مترجم.جدول_حزمة_مطلوب -> { أرجع «[package] table is required»; }
+    | مفتاح_نص_مترجم.اسم_حزمة_غير_صالح -> { أرجع «package.name is not a valid import-root identifier»; }
+    | مفتاح_نص_مترجم.بيان_حزمة_بلا_دليل_أصل -> { أرجع «package manifest has no parent directory»; }
+    | مفتاح_نص_مترجم.تعذر_فحص_بيان_مرشح -> { أرجع «could not inspect candidate package manifest»; }
+    | مفتاح_نص_مترجم.وصف_عنصر_نائب_مرقم -> { أرجع «indexed placeholder»; }
+    | مفتاح_نص_مترجم.وصف_معرف -> { أرجع «identifier»; }
+    | مفتاح_نص_مترجم.وصف_عدد_صحيح -> { أرجع «integer literal»; }
+    | مفتاح_نص_مترجم.وصف_عدد_عشري -> { أرجع «floating-point literal»; }
+    | مفتاح_نص_مترجم.وصف_نص -> { أرجع «string literal»; }
+    | مفتاح_نص_مترجم.وصف_حرف -> { أرجع «character literal»; }
+    | مفتاح_نص_مترجم.وصف_منطقي -> { أرجع «boolean literal»; }
+    | مفتاح_نص_مترجم.وصف_نهاية_الملف -> { أرجع «end of file»; }
+    | مفتاح_نص_مترجم.غياب_موفر_لي_لي_في_واسي -> { أرجع «LLVM is not available in a WASI-hosted compiler»; }
+    | مفتاح_نص_مترجم.ترويسة_جدول_الأهداف -> { أرجع "Target          Architecture    OS       Object   Support\n"; }
+    | مفتاح_نص_مترجم.بادئة_الإصدار -> { أرجع «SultanC »; }
+    | مفتاح_نص_مترجم.حالة_إصدار_تطويري -> { أرجع «development»; }
+    | مفتاح_نص_مترجم.دعم_هدف_مضيف_ذاتي -> { أرجع «self-host»; }
+    | مفتاح_نص_مترجم.دعم_هدف_مخرج_متحقق -> { أرجع «verified-output»; }
+    | مفتاح_نص_مترجم.دعم_هدف_ترجمة_متقاطعة -> { أرجع «cross»; }
+    | مفتاح_نص_مترجم.دعم_هدف_تجريبي -> { أرجع «experimental»; }
+    | مفتاح_نص_مترجم.منصة_هدف_غير_محددة -> { أرجع «Unspecified»; }
+    | مفتاح_نص_مترجم.منصة_هدف_داروين -> { أرجع «Darwin»; }
+    | مفتاح_نص_مترجم.منصة_هدف_آي_أو_إس -> { أرجع «iOS»; }
+    | مفتاح_نص_مترجم.منصة_هدف_لينكس -> { أرجع «Linux»; }
+    | مفتاح_نص_مترجم.منصة_هدف_ويندوز -> { أرجع «Windows»; }
+    | مفتاح_نص_مترجم.منصة_هدف_أندرويد -> { أرجع «Android»; }
+    | مفتاح_نص_مترجم.منصة_هدف_فري_بي_إس_دي -> { أرجع «FreeBSD»; }
+    | مفتاح_نص_مترجم.منصة_هدف_واسي -> { أرجع «WASI»; }
+    | مفتاح_نص_مترجم.منصة_هدف_متصفح -> { أرجع «Browser»; }
+    | مفتاح_نص_مترجم.منصة_هدف_عتاد_مباشر -> { أرجع «BareMetal»; }
+    ;
+}

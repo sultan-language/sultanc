@@ -1,0 +1,30 @@
+استورد fs.error;
+استورد fs.attributes;
+استورد os.error;
+استورد os.executable;
+
+// The path of the running executable (Rust's std::env::current_exe; Go's
+// os.Executable). On macOS dyld may give the path the process was started
+// with, so it is canonicalized there, as Rust does; elsewhere the system
+// already reports the resolved path. When a program is interpreted
+// (`sultanc run`), the running executable is the interpreter: a program
+// that starts a copy of itself runs this path with `interpret`, its source
+// (its first argument) and `--` before its own arguments.
+
+لو (الهدف.المنصة == «macos») {
+    استورد fs.canonical;
+
+    عام عرف مسار_البرنامج_الحالي(): نتيجة نص, فئة_خطأ_نظام {
+        طابق مسار_البرنامج_الحالي_نظام() مع
+        | نتيجة.خطأ(الخطأ) -> { أرجع نتيجة.خطأ(فئة_خطأ_حد_نظام(الخطأ)); }
+        | نتيجة.نجح(المسار) -> { أرجع مسار_قانوني(&المسار); };
+    }
+} وإلا {
+    عام عرف مسار_البرنامج_الحالي(): نتيجة نص, فئة_خطأ_نظام {
+        طابق مسار_البرنامج_الحالي_نظام() مع
+        | نتيجة.خطأ(الخطأ) -> { أرجع نتيجة.خطأ(فئة_خطأ_حد_نظام(الخطأ)); }
+        | نتيجة.نجح(المسار) -> { أرجع نتيجة.نجح(المسار); };
+    }
+}
+
+عام مرادف current_executable = مسار_البرنامج_الحالي;

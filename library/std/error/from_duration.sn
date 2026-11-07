@@ -1,0 +1,20 @@
+// Converter to فشل for std.time.duration_text's خطأ_مدة.
+// Domain «std.time», kind = the variant name. The message is Arabic, with
+// an English language version («en»).
+استورد error.failure;
+استورد time.duration_text;
+
+عرف فشل_مدة(النوع: نص, الرسالة: نص, الإنجليزية: نص): فشل {
+    دع الناتج: متغير فشل = فشل_بهوية(«std.time», النوع, الرسالة);
+    أضف_نسخة_لغة(&متغير الناتج, «en», الإنجليزية);
+    أرجع الناتج;
+}
+
+عام عرف فشل_من_خطأ_مدة(الخطأ: &خطأ_مدة): فشل {
+    طابق *الخطأ مع
+    | خطأ_مدة.صيغة_غير_صالحة -> { أرجع فشل_مدة(«صيغة_غير_صالحة», «صيغة المدة غير صالحة», «invalid duration syntax»); }
+    | خطأ_مدة.وحدة_مجهولة -> { أرجع فشل_مدة(«وحدة_مجهولة», «وحدة المدة مجهولة», «unknown duration unit»); }
+    | خطأ_مدة.تجاوز -> { أرجع فشل_مدة(«تجاوز», «المدة خارج المدى», «the duration is out of range»); };
+}
+
+عام مرادف error_from_duration_error = فشل_من_خطأ_مدة;

@@ -167,6 +167,9 @@ void __LLVM_Dispose_Program_Module__(__LLVM_Emitter__ *emitter,
     free(emitter->function_worklist);
     free(emitter->functions);
     free(emitter->aggregate_types);
+    free(emitter->drop_functions);
+    free(emitter->loop_continue_blocks);
+    free(emitter->loop_break_blocks);
     if (emitter->allocation_builder != NULL)
         LLVMDisposeBuilder(emitter->allocation_builder);
     if (emitter->builder != NULL)

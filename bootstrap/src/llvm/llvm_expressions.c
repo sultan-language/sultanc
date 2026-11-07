@@ -1,12 +1,16 @@
 /* Owns Stage0 LLVM expression lowering. */
 
 #include "llvm/llvm_expressions.h"
+#include "semantic/literal.h"
+#include "semantic/body_internal.h"
 #include "llvm/llvm_aggregates.h"
 #include "llvm/llvm_builtins.h"
 #include "llvm/llvm_context.h"
 #include "llvm/llvm_functions.h"
 #include "llvm/llvm_types.h"
 #include "llvm/llvm_values.h"
+#include "llvm/runtime/llvm_runtime_memory.h"
+#include "kernel/memory/memory.h"
 #include "kernel/name/name.h"
 #include "kernel/type/tagged.h"
 #include "kernel/type/type.h"
@@ -234,10 +238,16 @@ static LLVMValueRef __LLVM_Emit_Shift__(__LLVM_Emitter__ *emitter,
     {
         return LLVMBuildShl(emitter->builder, left, right, "shift.left");
     }
+    /* `>>` is logical for every integer Type and `>>>` fills with the sign
+     * bit (canonical إزاحة_يمنى / إزاحة_حسابية_يمنى). */
+    (void)is_signed;
     if (operation == __Binary_Shift_Right_Logical__)
     {
-        return is_signed ? LLVMBuildAShr(emitter->builder, left, right, "shift.right.arithmetic")
-                         : LLVMBuildLShr(emitter->builder, left, right, "shift.right.logical");
+        return LLVMBuildLShr(emitter->builder, left, right, "shift.right.logical");
+    }
+    if (operation == __Binary_Shift_Right_Arithmetic__)
+    {
+        return LLVMBuildAShr(emitter->builder, left, right, "shift.right.arithmetic");
     }
     __LLVM_Fail__("unsupported L2 integer shift operation");
     return NULL;
@@ -295,6 +305,55 @@ static LLVMValueRef __LLVM_Emit_Division_Or_Remainder__(__LLVM_Emitter__ *emitte
                                           : LLVMBuildURem(emitter->builder, left, right, "urem");
 }
 
+/* Emits a float literal of EXPECTED's float Type (f64 without one). */
+static __LLVM_Value__ __LLVM_Emit_Float_Literal__(__LLVM_Emitter__ *emitter,
+                                                 __Text_Slice__ digits,
+                                                 int negative,
+                                                 __Ast_Type__ *expected)
+{
+    __LLVM_Value__ result = __LLVM_Invalid_Value__();
+    __Resolved_Type__ resolved;
+    __Ast_Type__ *type = &__Body_Builtin_F64_Type__;
+    LLVMTypeRef llvm_type;
+    char spelling[512];
+    if (expected != NULL && __Type_Resolve__(emitter->semantic, expected, &resolved) &&
+        resolved.__Kind__ == __Resolved_Type_Float__)
+        type = expected;
+    llvm_type = __LLVM_Type__(emitter, type);
+    if (llvm_type == NULL || digits.__Length__ + 2U > sizeof(spelling))
+    {
+        __LLVM_Fail__("float literal has no canonical float type");
+        return result;
+    }
+    spelling[0] = '-';
+    memcpy(spelling + 1, digits.__Data__, digits.__Length__);
+    spelling[digits.__Length__ + 1U] = '\0';
+    result.value = LLVMConstRealOfStringAndSize(llvm_type, negative ? spelling : spelling + 1,
+                                                (unsigned)(digits.__Length__ + (negative ? 1U : 0U)));
+    result.type = type;
+    return result;
+}
+
+/* Answers the float Type of an operand, or NULL. */
+static __Ast_Type__ *__LLVM_Float_Operand_Type__(__LLVM_Emitter__ *emitter, __Ast_Expression__ *expression)
+{
+    __Ast_Type__ *type;
+    __Resolved_Type__ resolved;
+    if (__Semantic_Float_Literal_Expression__(expression))
+        return expression->__Contextual_Type__ != NULL &&
+                       __Type_Resolve__(emitter->semantic, expression->__Contextual_Type__, &resolved) &&
+                       resolved.__Kind__ == __Resolved_Type_Float__
+                   ? expression->__Contextual_Type__
+                   : NULL;
+    type = __LLVM_Expression_Type__(emitter, expression);
+    if (type == NULL && expression != NULL && expression->__Kind__ == __Ast_Expression_Binary__)
+        type = __LLVM_Expression_Integer_Type__(emitter, expression);
+    return type != NULL && __Type_Resolve__(emitter->semantic, type, &resolved) &&
+                   resolved.__Kind__ == __Resolved_Type_Float__
+               ? type
+               : NULL;
+}
+
 /* Emits the LLVM atom. */
 __LLVM_Value__
 __LLVM_Emit_Atom__(__LLVM_Emitter__ *emitter, __Ast_Atom__ *atom, __Ast_Type__ *expected)
@@ -350,6 +409,27 @@ __LLVM_Emit_Atom__(__LLVM_Emitter__ *emitter, __Ast_Atom__ *atom, __Ast_Type__ *
     {
         return __LLVM_Emit_String_Literal__(
             emitter, atom->__As__.__Literal__->__As__.__String__, expected);
+    }
+    if (atom->__As__.__Literal__->__Kind__ == __Ast_Literal_Character__)
+    {
+        /* A character literal is its code point. */
+        __Ast_Type__ *type = expected != NULL && __LLVM_Resolve_Integer__(emitter, expected, &bits, &is_signed)
+                                 ? expected
+                                 : &__Body_Builtin_Char_Type__;
+        if (!__LLVM_Resolve_Integer__(emitter, type, &bits, &is_signed))
+        {
+            __LLVM_Fail__("character literal has no scalar type");
+            return result;
+        }
+        result.value = LLVMConstInt(LLVMIntTypeInContext(emitter->context, bits),
+                                    (unsigned long long)atom->__As__.__Literal__->__As__.__Character__, 0);
+        result.type = type;
+        return result;
+    }
+    if (atom->__As__.__Literal__->__Kind__ == __Ast_Literal_Float__)
+    {
+        return __LLVM_Emit_Float_Literal__(emitter, atom->__As__.__Literal__->__As__.__String__, 0,
+                                           expected);
     }
     if (atom->__As__.__Literal__->__Kind__ != __Ast_Literal_Integer__ || expected == NULL ||
         !__LLVM_Resolve_Integer__(emitter, expected, &bits, &is_signed))
@@ -409,15 +489,48 @@ __LLVM_Value__ __LLVM_Emit_Expression__(__LLVM_Emitter__ *emitter,
             /* An explicit conversion supplies the type context for an untyped literal.
              * Do not first lower that literal without context: doing so records a
              * permanent LLVM failure before the typed retry can succeed. */
+            {
+                int64_t literal_value = 0;
+                unsigned literal_bits;
+                int literal_signed;
+                if (__Semantic_Integer_Literal_Expression_Value__(
+                        expression->__As__.__Conversion__.__Operand__, &literal_value) &&
+                    expression->__As__.__Conversion__.__Operand__->__Kind__ != __Ast_Expression_Atom__)
+                {
+                    /* A negated literal: typed by the cast when it is an
+                     * integer cast, otherwise an عدد. */
+                    __Ast_Type__ *literal_type =
+                        __LLVM_Resolve_Integer__(emitter,
+                                                 expression->__As__.__Conversion__.__Target_Type__,
+                                                 &literal_bits, &literal_signed)
+                            ? expression->__As__.__Conversion__.__Target_Type__
+                            : &__LLVM_Integer_Type__;
+                    left = __LLVM_Emit_Expression__(
+                        emitter, expression->__As__.__Conversion__.__Operand__, literal_type);
+                    if (left.value == NULL)
+                        return result;
+                    return __LLVM_Coerce__(
+                        emitter, left, expression->__As__.__Conversion__.__Target_Type__);
+                }
+            }
             if (expression->__As__.__Conversion__.__Operand__->__Kind__ ==
                     __Ast_Expression_Atom__ &&
                 expression->__As__.__Conversion__.__Operand__->__As__.__Atom__.__Kind__ ==
                     __Ast_Atom_Literal__)
             {
+                /* An integer literal cast to a float is an عدد first. */
+                __Ast_Atom__ *literal_atom = &expression->__As__.__Conversion__.__Operand__->__As__.__Atom__;
+                unsigned target_bits;
+                int target_signed;
                 left = __LLVM_Emit_Atom__(
                     emitter,
-                    &expression->__As__.__Conversion__.__Operand__->__As__.__Atom__,
-                    expression->__As__.__Conversion__.__Target_Type__);
+                    literal_atom,
+                    (literal_atom->__As__.__Literal__ != NULL &&
+                     literal_atom->__As__.__Literal__->__Kind__ == __Ast_Literal_Integer__ &&
+                     !__LLVM_Resolve_Integer__(emitter, expression->__As__.__Conversion__.__Target_Type__,
+                                               &target_bits, &target_signed))
+                        ? &__LLVM_Integer_Type__
+                        : expression->__As__.__Conversion__.__Target_Type__);
             }
             else
             {
@@ -672,12 +785,86 @@ __LLVM_Value__ __LLVM_Emit_Expression__(__LLVM_Emitter__ *emitter,
                 return result.value != NULL ? result : __LLVM_Invalid_Value__();
             }
 
+            {
+                /* Float arithmetic and ordered comparisons (!= is unordered,
+                 * so a NaN differs from everything, as IEEE 754 says). */
+                __Ast_Type__ *float_type =
+                    __LLVM_Float_Operand_Type__(emitter, expression->__As__.__Binary__.__Left__);
+                if (float_type == NULL)
+                    float_type =
+                        __LLVM_Float_Operand_Type__(emitter, expression->__As__.__Binary__.__Right__);
+                if (float_type == NULL &&
+                    __Semantic_Float_Literal_Expression__(expression->__As__.__Binary__.__Left__) &&
+                    __Semantic_Float_Literal_Expression__(expression->__As__.__Binary__.__Right__))
+                {
+                    /* Float literals on both sides: the context's float Type, else f64. */
+                    __Resolved_Type__ expected_resolved;
+                    float_type = expected != NULL &&
+                                         __Type_Resolve__(emitter->semantic, expected, &expected_resolved) &&
+                                         expected_resolved.__Kind__ == __Resolved_Type_Float__
+                                     ? expected
+                                     : &__Body_Builtin_F64_Type__;
+                }
+                if (float_type != NULL)
+                {
+                    left = __LLVM_Emit_Expression__(emitter, expression->__As__.__Binary__.__Left__,
+                                                    float_type);
+                    if (left.value == NULL)
+                        return result;
+                    right = __LLVM_Emit_Expression__(emitter, expression->__As__.__Binary__.__Right__,
+                                                     float_type);
+                    if (right.value == NULL)
+                        return result;
+                    switch (operation)
+                    {
+                        case __Binary_Add__:
+                            result.value = LLVMBuildFAdd(emitter->builder, left.value, right.value, "fadd");
+                            break;
+                        case __Binary_Subtract__:
+                            result.value = LLVMBuildFSub(emitter->builder, left.value, right.value, "fsub");
+                            break;
+                        case __Binary_Multiply__:
+                            result.value = LLVMBuildFMul(emitter->builder, left.value, right.value, "fmul");
+                            break;
+                        case __Binary_Divide__:
+                            result.value = LLVMBuildFDiv(emitter->builder, left.value, right.value, "fdiv");
+                            break;
+                        case __Binary_Modulo__:
+                            result.value = LLVMBuildFRem(emitter->builder, left.value, right.value, "frem");
+                            break;
+                        case __Binary_Equal__:
+                        case __Binary_Not_Equal__:
+                        case __Binary_Less_Than__:
+                        case __Binary_Less_Or_Equal__:
+                        case __Binary_Greater_Than__:
+                        case __Binary_Greater_Or_Equal__:
+                        {
+                            LLVMRealPredicate predicate =
+                                operation == __Binary_Equal__ ? LLVMRealOEQ
+                                : operation == __Binary_Not_Equal__ ? LLVMRealUNE
+                                : operation == __Binary_Less_Than__ ? LLVMRealOLT
+                                : operation == __Binary_Less_Or_Equal__ ? LLVMRealOLE
+                                : operation == __Binary_Greater_Than__ ? LLVMRealOGT
+                                                                       : LLVMRealOGE;
+                            result.value =
+                                LLVMBuildFCmp(emitter->builder, predicate, left.value, right.value, "fcmp");
+                            result.type = &__LLVM_Boolean_Type__;
+                            return result;
+                        }
+                        default:
+                            __LLVM_Fail__("float operation is outside the canonical profile");
+                            return result;
+                    }
+                    result.type = float_type;
+                    return result;
+                }
+            }
             if (operation != __Binary_Add__ && operation != __Binary_Subtract__ &&
                 operation != __Binary_Multiply__ && operation != __Binary_Divide__ &&
                 operation != __Binary_Modulo__ && operation != __Binary_Or__ &&
                 operation != __Binary_Xor__ && operation != __Binary_And__ &&
                 !__LLVM_Is_Comparison__(operation) && operation != __Binary_Shift_Left_Logical__ &&
-                operation != __Binary_Shift_Right_Logical__)
+                operation != __Binary_Shift_Right_Logical__ && operation != __Binary_Shift_Right_Arithmetic__)
             {
                 __LLVM_Fail__("operation is outside the L2 integer proof profile");
                 return result;
@@ -696,6 +883,12 @@ __LLVM_Value__ __LLVM_Emit_Expression__(__LLVM_Emitter__ *emitter,
             if (operation_type == NULL)
             {
                 operation_type = __LLVM_Concrete_Integer_Type__(emitter, expected);
+            }
+            if (operation_type == NULL && __LLVM_Is_Comparison__(operation))
+            {
+                /* Two untyped integer literals compare as عدد, as the type
+                 * checker inferred them. */
+                operation_type = &__LLVM_Integer_Type__;
             }
             if (operation_type == NULL ||
                 !__LLVM_Resolve_Integer__(emitter, operation_type, &bits, &is_signed))
@@ -1048,6 +1241,63 @@ __LLVM_Value__ __LLVM_Emit_Expression__(__LLVM_Emitter__ *emitter,
         }
 
         case __Ast_Expression_Unary__:
+            if (expression->__As__.__Unary__.__Operation__ == __Unary_Negate__ &&
+                __Semantic_Float_Literal_Expression__(expression))
+            {
+                /* -1.5: one constant; an even number of signs cancels. */
+                __Ast_Expression__ *operand = expression;
+                int negative = 0;
+                while (operand->__Kind__ == __Ast_Expression_Unary__)
+                {
+                    negative = !negative;
+                    operand = operand->__As__.__Unary__.__Operand__;
+                }
+                return __LLVM_Emit_Float_Literal__(
+                    emitter, operand->__As__.__Atom__.__As__.__Literal__->__As__.__String__, negative,
+                    expected);
+            }
+            if (expression->__As__.__Unary__.__Operation__ == __Unary_Negate__)
+            {
+                __Ast_Type__ *float_type =
+                    __LLVM_Float_Operand_Type__(emitter, expression->__As__.__Unary__.__Operand__);
+                if (float_type != NULL)
+                {
+                    left = __LLVM_Emit_Expression__(emitter, expression->__As__.__Unary__.__Operand__,
+                                                    float_type);
+                    if (left.value == NULL)
+                        return result;
+                    result.value = LLVMBuildFNeg(emitter->builder, left.value, "fneg");
+                    result.type = left.type;
+                    return result;
+                }
+            }
+            if (expression->__As__.__Unary__.__Operation__ == __Unary_Negate__)
+            {
+                /* A negated integer literal is one constant of the context's
+                 * Type (-128 fits ص8 although 128 does not). */
+                int64_t literal_value = 0;
+                unsigned literal_bits;
+                int literal_signed;
+                if (__Semantic_Integer_Literal_Expression_Value__(expression, &literal_value))
+                {
+                    __Ast_Type__ *literal_type =
+                        __LLVM_Resolve_Integer__(emitter, expected, &literal_bits, &literal_signed)
+                            ? expected
+                            : &__LLVM_Integer_Type__;
+                    unsigned long long raw = (unsigned long long)literal_value;
+                    if (!__LLVM_Resolve_Integer__(emitter, literal_type, &literal_bits, &literal_signed))
+                    {
+                        __LLVM_Fail__("negated literal has no integer type");
+                        return result;
+                    }
+                    if (literal_bits < 64U)
+                        raw &= (1ULL << literal_bits) - 1ULL;
+                    result.value =
+                        LLVMConstInt(LLVMIntTypeInContext(emitter->context, literal_bits), raw, 0);
+                    result.type = literal_type;
+                    return result;
+                }
+            }
         {
             /* Stores the operation. */
             __Ast_Unary_Operation__ operation = expression->__As__.__Unary__.__Operation__;
@@ -1114,6 +1364,50 @@ __LLVM_Value__ __LLVM_Emit_Expression__(__LLVM_Emitter__ *emitter,
                 result.value =
                     LLVMBuildLoad2(emitter->builder, inner_type, left.value, "dereference.load");
                 result.type = resolved.__Inner__;
+                /* Reading through a Reference is a non-owning view. Moving
+                 * an owned payload out of a Box, however, consumes the Box:
+                 * release only the now-empty allocation, and disown the
+                 * operand's live local/match owner. Otherwise its drop glue
+                 * releases the transferred payload a second time. */
+                if (resolved.__Kind__ == __Resolved_Type_Box__ &&
+                    __Memory_Type_Is_Owned__(emitter->semantic, resolved.__Inner__))
+                {
+                    LLVMValueRef borrowed = __LLVM_Expression_Borrowed_Flag__(
+                        emitter, expression->__As__.__Unary__.__Operand__);
+                    LLVMValueRef owning = LLVMBuildNot(
+                        emitter->builder, borrowed, "box.payload.is.owning");
+                    LLVMValueRef owner_flag = __LLVM_Match_Source_Owner_Flag__(
+                        emitter, expression->__As__.__Unary__.__Operand__);
+                    LLVMBasicBlockRef source = LLVMGetInsertBlock(emitter->builder);
+                    LLVMValueRef function = source != NULL ? LLVMGetBasicBlockParent(source) : NULL;
+                    LLVMBasicBlockRef release_block;
+                    LLVMBasicBlockRef continue_block;
+                    if (function == NULL)
+                    {
+                        __LLVM_Fail__("box move lacks an enclosing function");
+                        return __LLVM_Invalid_Value__();
+                    }
+                    release_block = LLVMAppendBasicBlockInContext(
+                        emitter->context, function, "box.move.release");
+                    continue_block = LLVMAppendBasicBlockInContext(
+                        emitter->context, function, "box.move.continue");
+                    if (release_block == NULL || continue_block == NULL)
+                    {
+                        __LLVM_Fail__("box move cannot create release blocks");
+                        return __LLVM_Invalid_Value__();
+                    }
+                    LLVMBuildCondBr(emitter->builder, owning, release_block, continue_block);
+                    LLVMPositionBuilderAtEnd(emitter->builder, release_block);
+                    if (owner_flag != NULL)
+                        LLVMBuildStore(emitter->builder,
+                                       LLVMConstInt(LLVMIntTypeInContext(emitter->context, 1U),
+                                                    0U, 0),
+                                       owner_flag);
+                    if (!__LLVM_Free_Bytes__(emitter, left.value))
+                        return __LLVM_Invalid_Value__();
+                    LLVMBuildBr(emitter->builder, continue_block);
+                    LLVMPositionBuilderAtEnd(emitter->builder, continue_block);
+                }
                 return expected != NULL ? __LLVM_Coerce__(emitter, result, expected) : result;
             }
             if (operation == __Unary_Not__)
