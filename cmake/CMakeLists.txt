@@ -40,7 +40,7 @@ endif()
 # asks for it; the self-hosted compiler is built without LLVM unless enabled.
 # Stage1 is always LLVM-enabled: Stage0 takes no capability input, compiles
 # the default module sources, and Stage1 links SultanC::LLVM (Stage1.cmake).
-# See docs/SULTANC_KERNEL_ARCHITECTURE.md ("Compiler-build capabilities").
+# See docs/internals/compiler-architecture.md ("Compiler-build capabilities").
 option(SULTANC_COMPILER_LLVM
     "Include the LLVM backend in the self-hosted SultanC compiler (Stage2+)" OFF)
 set(SULTANC_COMPILER_CAPABILITY_ARGS "")
@@ -115,9 +115,17 @@ set(SULTANC_HOST_TARGET "")
 if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Darwin" AND
    CMAKE_HOST_SYSTEM_PROCESSOR MATCHES "^(arm64|aarch64)$")
     set(SULTANC_HOST_TARGET "arm64-darwin")
+elseif(CMAKE_HOST_SYSTEM_NAME STREQUAL "Darwin" AND
+       CMAKE_HOST_SYSTEM_PROCESSOR MATCHES "^(x86_64|amd64)$")
+    # No Native backend: Stage1 and Stage2 come from LLVM, as on Windows.
+    set(SULTANC_HOST_TARGET "x86_64-darwin")
 elseif(CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux" AND
        CMAKE_HOST_SYSTEM_PROCESSOR MATCHES "^(x86_64|amd64)$")
     set(SULTANC_HOST_TARGET "x86_64-linux")
+elseif(CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux" AND
+       CMAKE_HOST_SYSTEM_PROCESSOR MATCHES "^(aarch64|arm64)$")
+    # No Native backend: Stage1 and Stage2 come from LLVM, as on Windows.
+    set(SULTANC_HOST_TARGET "aarch64-linux-gnu")
 elseif(CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
     # CMAKE_HOST_SYSTEM_PROCESSOR is the real host architecture, not the
     # generator's selected cross/compatibility architecture.
@@ -174,26 +182,33 @@ if(NOT DEFINED SULTANC_STAGE2_TARGET OR NOT SULTANC_STAGE2_TARGET)
 endif()
 
 # Stage0's C objects and the Stage1 object must target the same Darwin
-# architecture.  Stage1 currently has only the arm64-darwin host contract;
-# a universal or x86_64 C link cannot consume its single-architecture object.
+# architecture: the host's (arm64-darwin or x86_64-darwin). A universal or
+# other-architecture C link cannot consume the single-architecture object.
 # (C route only: the wasm route's Stage1 is plain C for whatever the C compiler targets.)
 if(SULTANC_BOOTSTRAP STREQUAL "c" AND CMAKE_HOST_SYSTEM_NAME STREQUAL "Darwin" AND
    NOT SULTANC_REQUESTED_STAGE STREQUAL "stage0")
+    if(SULTANC_HOST_TARGET STREQUAL "x86_64-darwin")
+        set(_sultanc_darwin_arch "x86_64")
+        set(_sultanc_darwin_arch_regex "^(x86_64|amd64)")
+    else()
+        set(_sultanc_darwin_arch "arm64")
+        set(_sultanc_darwin_arch_regex "^(arm64|aarch64)")
+    endif()
     if(CMAKE_OSX_ARCHITECTURES AND
-       NOT CMAKE_OSX_ARCHITECTURES STREQUAL "arm64")
+       NOT CMAKE_OSX_ARCHITECTURES STREQUAL _sultanc_darwin_arch)
         message(FATAL_ERROR
             "Stage1 targets ${SULTANC_STAGE1_TARGET}, but "
             "CMAKE_OSX_ARCHITECTURES=${CMAKE_OSX_ARCHITECTURES}. "
-            "Stage1 requires a single arm64 Darwin linker architecture.")
+            "Stage1 requires a single ${_sultanc_darwin_arch} Darwin linker architecture.")
     endif()
     if(CMAKE_C_COMPILER_TARGET AND
-       NOT CMAKE_C_COMPILER_TARGET MATCHES "^(arm64|aarch64)(-|$)")
+       NOT CMAKE_C_COMPILER_TARGET MATCHES "${_sultanc_darwin_arch_regex}(-|$)")
         message(FATAL_ERROR
             "Stage1 targets ${SULTANC_STAGE1_TARGET}, but the configured "
             "C compiler targets ${CMAKE_C_COMPILER_TARGET}.")
     endif()
     if(CMAKE_C_COMPILER_ARCHITECTURE_ID AND
-       NOT CMAKE_C_COMPILER_ARCHITECTURE_ID MATCHES "^(arm64|aarch64)$")
+       NOT CMAKE_C_COMPILER_ARCHITECTURE_ID MATCHES "${_sultanc_darwin_arch_regex}$")
         message(FATAL_ERROR
             "Stage1 targets ${SULTANC_STAGE1_TARGET}, but the configured "
             "C compiler architecture is ${CMAKE_C_COMPILER_ARCHITECTURE_ID}.")

@@ -25,6 +25,10 @@ static const char *target_alias(const char *requested)
         return "aarch64-apple-macosx11.0.0";
     if (strcmp(requested, "x86_64-linux") == 0)
         return "x86_64-unknown-linux-gnu";
+    if (strcmp(requested, "x86_64-darwin") == 0)
+        return "x86_64-apple-macosx11.0.0";
+    if (strcmp(requested, "aarch64-linux-gnu") == 0)
+        return "aarch64-unknown-linux-gnu";
     return requested;
 }
 

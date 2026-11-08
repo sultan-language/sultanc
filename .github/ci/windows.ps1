@@ -27,7 +27,7 @@ $base = "https://github.com/llvm/llvm-project/releases/download/llvmorg-$version
 $sdk = if ($env:LLVM_SDK) { $env:LLVM_SDK } else { Join-Path $HOME "llvm-sdk-$version" }
 $work = Join-Path $env:RUNNER_TEMP 'llvm-work'
 
-# Downloads are pinned by version and file name, as Zig and Rust pin theirs.
+# Downloads are pinned by version and file name.
 function Fetch([string]$name) {
     New-Item -ItemType Directory -Force $work | Out-Null
     $file = Join-Path $work $name
