@@ -1,9 +1,11 @@
 <div align="center">
 <img src="https://raw.githubusercontent.com/sultan-language/sultanc-vscode/main/icons/sultanc-logo.svg" alt="SultanC" width="100">
 
-# SultanC
+**العربية** | [English](docs/en/README.md)
 
-**A self-hosted systems programming language, written in Arabic.**
+# السلطان
+
+**لغة برمجة أنظمة مستضافة ذاتيا، مكتوبة بالعربية.**
 
 <p>
 <a href="https://github.com/sultan-language/sultanc/actions/workflows/ci.yml"><img src="https://github.com/sultan-language/sultanc/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
@@ -18,30 +20,19 @@
 <img src="https://img.shields.io/badge/license-MIT-8b949e?style=for-the-badge&labelColor=0d1117" alt="License">
 </p>
 
-[Install](#install) &nbsp;·&nbsp; [Language](#language) &nbsp;·&nbsp; [Standard library](#standard-library) &nbsp;·&nbsp; [Targets](#targets) &nbsp;·&nbsp; [Documentation](#documentation)
+[التثبيت](#التثبيت) &nbsp;·&nbsp; [اللغة](#اللغة) &nbsp;·&nbsp; [المكتبة القياسية](#المكتبة-القياسية) &nbsp;·&nbsp; [الأهداف](#الأهداف) &nbsp;·&nbsp; [التوثيق](#التوثيق)
 
 </div>
 
 <br>
 
-SultanC is a native systems language with ownership-aware safety, algebraic data types, pattern matching and threads. Its keywords exist in Arabic and English as equal, interchangeable surfaces of the same syntax. The compiler is written in SultanC and compiles itself: every build passes a byte-for-byte self-host check (Stage3 == Stage4).
+السلطان لغة أنظمة أصلية (native) فيها أمان يراعي الملكية، وأنواع بيانات جبرية، ومطابقة أنماط، وخيوط. كلماتها المفتاحية موجودة بالعربية والإنجليزية بوصفهما واجهتين متكافئتين وقابلتين للتبادل لصياغة واحدة. المترجم مكتوب بلغة السلطان ويترجم نفسه: كل بناء يمر بفحص استضافة ذاتية يطابق الناتج بايتا ببايت (Stage3 == Stage4).
 
 <br>
 
 <table>
-<tr><th width="50%">English</th><th width="50%">العربية</th></tr>
+<tr><th width="50%">العربية</th><th width="50%">English</th></tr>
 <tr>
-<td valign="top">
-
-```
-def main(): int {
-    let x: int = 40;
-    let y: int = 2;
-    return x + y;
-}
-```
-
-</td>
 <td valign="top" dir="rtl">
 
 ```
@@ -53,107 +44,118 @@ def main(): int {
 ```
 
 </td>
+<td valign="top">
+
+```
+def main(): int {
+    let x: int = 40;
+    let y: int = 2;
+    return x + y;
+}
+```
+
+</td>
 </tr>
 </table>
 
-Same AST, same semantics, same diagnostics: only the keywords and identifiers change.
+شجرة الصياغة المجردة (AST) نفسها، والدلالة نفسها، ورسائل التشخيص نفسها: لا يتغير إلا الكلمات المفتاحية والمعرّفات.
 
-## Install
+## التثبيت
 
 ```sh
 git clone https://github.com/sultan-language/sultanc.git && cd sultanc
-./build.sh                          # C Stage0 -> Stage1 -> Stage2 (needs LLVM)
+./build.sh                          # Stage0 بلغة C -> Stage1 -> Stage2 (يتطلب LLVM)
 sudo cp build/sultanc /usr/local/bin/sultanc
 ```
 
-| Route | Command | Needs |
+| الطريق | الأمر | المتطلبات |
 |---|---|---|
-| C bootstrap (default) | `./build.sh` | C compiler + LLVM |
-| WebAssembly seed | `./build.sh --bootstrap=wasm` | only a C compiler |
-| Rebuild from an existing compiler | `./build.sh --bootstrap=existing` | a built `build/sultanc` (about a minute) |
-| With the LLVM backend inside | `./build.sh --enable-llvm` | LLVM 19–23 |
-| Self-host check | `./build.sh verify` | Stage3 == Stage4, byte for byte |
+| الإقلاع الذاتي (bootstrap) بلغة C (الافتراضي) | `./build.sh` | مترجم C وLLVM |
+| seed الخاص بـ WebAssembly | `./build.sh --bootstrap=wasm` | مترجم C فقط |
+| إعادة البناء من مترجم موجود | `./build.sh --bootstrap=existing` | نسخة مبنية من `build/sultanc` (نحو دقيقة) |
+| مع تضمين خلفية LLVM | `./build.sh --enable-llvm` | LLVM من 19 إلى 23 |
+| فحص الاستضافة الذاتية | `./build.sh verify` | Stage3 == Stage4، بايتا ببايت |
 
-> macOS with Homebrew LLVM: `export LLVM_CONFIG="$(brew --prefix llvm)/bin/llvm-config"` before building.
-> Windows: `./build.sh --bootstrap=c --enable-llvm --backend=llvm`.
+> على macOS مع LLVM المثبت عبر Homebrew: نفّذ `export LLVM_CONFIG="$(brew --prefix llvm)/bin/llvm-config"` قبل البناء.
+> على Windows: `./build.sh --bootstrap=c --enable-llvm --backend=llvm`.
 
 ```sh
 sultanc main.sn -o app && ./app
 ```
 
-## Language
+## اللغة
 
-- **Ownership, borrowing and move checking**, verified statically before code generation
-- **Algebraic data types and pattern matching**, with exhaustiveness checking
-- **Generics** and **compile-time evaluation** (`وقت_الترجمة`)
-- **Errors as values**: `نتيجة` results, `؟` propagation, `إنهيار` / `panic`
-- **Threads and synchronization**: spawn/join, atomics, `Arc`, `Mutex`, `Condvar`, `Once`, channels, with a compile-time check on what a thread may capture
-- **Arabic and English** as equal source surfaces, including every diagnostic
-- **A verified intermediate representation (MSIR)**: every pass goes through a checker before reaching a backend
-- **Native output**: ELF, Mach-O, PE/COFF and WebAssembly, with the compiler's own linkers; no libc needed on Linux and FreeBSD
+- **فحص الملكية والاستعارة والنقل**، بتحقق ثابت قبل توليد الشيفرة
+- **أنواع بيانات جبرية ومطابقة أنماط**، مع التحقق من تغطية كل الحالات
+- **الأنواع العامة (generics)** و**التقييم في وقت الترجمة** (`وقت_الترجمة`)
+- **الأخطاء قيم**: نتائج `نتيجة`، والتمرير بـ `؟`، و`إنهيار`
+- **الخيوط والتزامن**: الإنشاء والانتظار (spawn/join)، والعمليات الذرية، و`مشترك` (Arc)، و`قفل` (Mutex)، و`شرط_انتظار` (Condvar)، و`مرة` (Once)، والقنوات، مع فحص في وقت الترجمة لما يجوز للخيط أن يلتقطه
+- **العربية والإنجليزية** واجهتان متكافئتان للشيفرة المصدرية، بما في ذلك كل رسائل التشخيص
+- **تمثيل وسيط متحقق منه (MSIR)**: كل مرحلة تمر على مدقق قبل أن تصل إلى خلفية المترجم
+- **ناتج أصلي**: ELF وMach-O وPE/COFF وWebAssembly، مع روابط (linkers) خاصة بالمترجم؛ ولا حاجة إلى libc على Linux وFreeBSD
 
 ```sh
-sultanc check main.sn                       # type-check only
-sultanc run main.sn                         # run in the interpreter, no compilation
-sultanc --backend=llvm main.sn -o app       # LLVM backend (O2)
-sultanc --target=aarch64-linux-gnu main.sn  # cross-compile
-sultanc --lang=en check main.sn             # English diagnostics (Arabic by default)
+sultanc check main.sn                       # فحص الأنواع فقط
+sultanc run main.sn                         # التشغيل بالمفسر دون ترجمة
+sultanc --backend=llvm main.sn -o app       # خلفية LLVM (بمستوى O2)
+sultanc --target=aarch64-linux-gnu main.sn  # الترجمة لمنصة أخرى
+sultanc --lang=en check main.sn             # رسائل التشخيص بالإنجليزية (العربية افتراضيا)
 sultanc --diagnostic-format=json check main.sn
-sultanc targets                             # list every target
+sultanc targets                             # عرض كل الأهداف
 ```
 
-The interpreter runs the same MSIR and the same standard library as the compiler, on Linux, macOS, Windows and FreeBSD.
+يشغّل المفسر MSIR نفسه والمكتبة القياسية نفسها التي يستخدمها المترجم، على Linux وmacOS وWindows وFreeBSD.
 
-## Standard library
+## المكتبة القياسية
 
-| Area | Highlights |
+| المجال | أبرز ما فيه |
 |---|---|
-| Text and formatting | UTF-8 text, Unicode segmentation and normalization, `std.fmt` (Rust-style format strings, checked at compile time) |
-| Collections | vectors with capacity, maps, sets, sorting |
-| Files and processes | files, directories, links, file locks, streaming child processes, environment |
-| Networking | TCP, UDP, Unix sockets, DNS, TLS 1.3, HTTP/1.1 and HTTP/2 (client and server) |
-| Data formats | JSON, TOML, CSV, zip, tar |
-| Compression | gzip/deflate, zstd, xz/LZMA2 |
-| Crypto and hashing | SHA-2, X25519, Ed25519, ChaCha20-Poly1305, AES-GCM, XXH64, CRC |
-| Concurrency | `std.thread`, `std.sync` (atomics, Arc, Mutex, RwLock, Condvar, Once, channels) |
+| النصوص والتنسيق | نصوص UTF-8، وتقطيع Unicode وتوحيده، و`std.fmt` (سلاسل تنسيق على طريقة Rust، تُفحص في وقت الترجمة) |
+| المجموعات | متجهات ذات سعة، وجداول تقابل (maps)، ومجموعات، وفرز |
+| الملفات والعمليات | الملفات، والمجلدات، والروابط، وأقفال الملفات، والعمليات الفرعية ذات الدفق المستمر، والبيئة |
+| الشبكات | TCP وUDP ومقابس Unix وDNS وTLS 1.3 وHTTP/1.1 وHTTP/2 (عميل وخادم) |
+| صيغ البيانات | JSON وTOML وCSV وzip وtar |
+| الضغط | gzip/deflate وzstd وxz/LZMA2 |
+| التشفير والتجزئة | SHA-2 وX25519 وEd25519 وChaCha20-Poly1305 وAES-GCM وXXH64 وCRC |
+| التزامن | `std.thread`، و`std.sync` (العمليات الذرية، و`مشترك`، و`قفل`، و`قفل_قراءة_كتابة`، و`شرط_انتظار`، و`مرة`، والقنوات) |
 
-See [std coverage](docs/STD_COVERAGE.md) for the full list, compared with Rust and Go.
+انظر [تغطية المكتبة القياسية](docs/ar/reference/std-coverage.md) للقائمة الكاملة، مقارنة بـ Rust وGo.
 
-## Targets
+## الأهداف
 
-| OS | Architectures |
+| نظام التشغيل | المعماريات |
 |---|---|
 | Linux | x86_64, aarch64, riscv64, loongarch64, ppc64le, s390x, mips64el, sparcv9, i686, armv7 |
 | macOS | arm64, x86_64 |
 | Windows | x64, arm64 |
 | FreeBSD | x86_64, aarch64, riscv64 |
 | Android | x86_64, aarch64, armv7 |
-| WebAssembly | WASI (wasm32); freestanding wasm32/wasm64 |
+| WebAssembly | WASI (wasm32)؛ وwasm32/wasm64 المستقلان (freestanding) |
 
-Native backends for x86_64 and arm64; every other target goes through LLVM. See [targets](docs/TARGETS.md).
+توجد خلفيات أصلية لمعماريتي x86_64 وarm64، وكل الأهداف الأخرى تمر عبر LLVM. انظر [الأهداف](docs/ar/reference/targets.md).
 
-## Documentation
+## التوثيق
 
 | | |
 |---|---|
-| [Architecture & MSIR](docs/MSIR_CODEGEN_ARCHITECTURE.md) | How source becomes native code |
-| [Kernel architecture](docs/SULTANC_KERNEL_ARCHITECTURE.md) | Compiler internals |
-| [Bootstrap](docs/BOOTSTRAP.md) | The C Stage0 and the WebAssembly seed |
-| [Safety flow](docs/SULTAN_SAFETY_FLOW.md) | Ownership and borrow checking |
-| [Type system](docs/TYPE_SYSTEM.md) | Types, inference, generics, casts |
-| [Ownership and destruction](docs/OWNERSHIP_AND_DESTRUCTION.md) | Moves, drops, temporaries, capacity |
-| [Errors](docs/ERRORS.md) | Results, `؟`, panics, localized messages |
-| [Concurrency](docs/CONCURRENCY.md) | Threads, atomics, synchronization |
-| [Formatting](docs/FMT.md) | `std.fmt` |
-| [Interpreter](docs/INTERPRETER.md) | `sultanc run` |
-| [Platform dependencies](docs/PLATFORM_DEPENDENCIES.md) | What std needs from each OS |
-| [Arabic terminology](docs/ARABIC_TERMINOLOGY.md) | Canonical Arabic compiler vocabulary |
-| [Examples](docs/EXAMPLES.md) · [Tests](docs/TESTS.md) | `examples/` and the test runner |
+| [البنية وMSIR](docs/ar/internals/msir-and-codegen.md) | كيف تتحول الشيفرة المصدرية إلى شيفرة أصلية |
+| [بنية النواة](docs/ar/internals/compiler-architecture.md) | البنية الداخلية للمترجم |
+| [الإقلاع الذاتي](docs/ar/internals/bootstrap.md) | Stage0 المكتوب بلغة C وseed الخاص بـ WebAssembly |
+| [مسار الأمان](docs/ar/internals/safety-flow.md) | فحص الملكية والاستعارة |
+| [نظام الأنواع](docs/ar/reference/type-system.md) | الأنواع، والاستنتاج، والأنواع العامة، والتحويلات |
+| [الملكية والإتلاف](docs/ar/reference/ownership.md) | النقل، والإسقاط، والقيم المؤقتة، والسعة |
+| [الأخطاء](docs/ar/reference/errors.md) | النتائج، و`؟`، والانهيار، والرسائل المترجمة إلى لغة المستخدم |
+| [التزامن](docs/ar/reference/concurrency.md) | الخيوط، والعمليات الذرية، والتزامن |
+| [التنسيق](docs/ar/reference/formatting.md) | `std.fmt` |
+| [المفسر](docs/ar/internals/interpreter.md) | `sultanc run` |
+| [اعتماديات المنصة](docs/ar/reference/platform-dependencies.md) | ما تحتاجه المكتبة القياسية من كل نظام تشغيل |
+| [المصطلحات العربية](docs/ar/reference/arabic-terminology.md) | المفردات العربية المعتمدة للمترجم |
+| [الأمثلة](docs/ar/contributing/examples.md) · [الاختبارات](docs/ar/contributing/tests.md) | المجلد `examples/` ومشغّل الاختبارات |
 
-## Status
+## الحالة
 
-Self-hosting on `x86_64-linux` and `arm64-darwin`, verified by byte-identical convergence across compiler generations, from the C Stage0 and from the WebAssembly seed. CI builds every route on Linux, macOS and Windows (x64 and arm64).
+الاستضافة الذاتية متحققة على `x86_64-linux` و`arm64-darwin`، ويُثبتها تقارب متطابق بايتا ببايت بين أجيال المترجم، انطلاقا من Stage0 المكتوب بلغة C ومن seed الخاص بـ WebAssembly. ويبني نظام التكامل المستمر (CI) كل الطرق على Linux وmacOS وWindows (x64 وarm64).
 
-## License
+## الترخيص
 
-[MIT License](LICENSE)
+[ترخيص MIT](LICENSE)
