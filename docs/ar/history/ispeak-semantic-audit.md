@@ -1,3 +1,5 @@
+<div dir="rtl">
+
 **العربية** | [English](../../en/history/ispeak-semantic-audit.md)
 
 # تدقيق الأسباب السياقية في iSpeak — نسخة 2 نوفمبر 2026
@@ -5,11 +7,11 @@
 > **سجل تاريخي.** توثق هذه الصفحة المشروع كما كان وقت كتابتها. للاطلاع على التصميم الحالي، راجع
 > [فهرس التوثيق](../index.md).
 
-**النطاق:** جميع مفاتيح الأسباب السياقية النشطة، وعددها 456. يبين العمود الأخير الهوية العامة التي تختارها `خطأ_عام_للسبب` في `staging/compiler/diagnostics/grouping.sn` (تجميع مقترح، 2026-11-04). يملك المترجم دلالة هذه الأسباب في المصدر، ويملك iSpeak صياغتها الإنجليزية والعربية ونقلها برقم ثابت. هذا الجدول دليل للمراجعة، وليس سجلا قابلا للتنفيذ.
+**النطاق:** جميع مفاتيح الأسباب السياقية النشطة، وعددها 456. يبين العمود الأخير الهوية العامة التي تختارها `خطأ_عام_للسبب` في `staging/compiler/diagnostics/grouping.sn` (تجميع مقترح، 2026-11-04). يملك المترجم دلالة هذه الأسباب في المصدر، ويملك iSpeak صياغتها الإنجليزية والعربية ونقلها برقم ثابت. هذا الجدول دليلٌ للمراجعة، لا سجلٌّ قابل للتنفيذ.
 
-يزيل مترجم 2 نوفمبر 18 مفتاح سبب متقادما خاصا بالرابط الخارجي (linker)، ويضيف 18 سببا جديدا تخص الربط الداخلي لـ Wasm، وإعادة التوطين في ملفات الكائنات بصيغة Wasm، وخلفيات المترجم غير المتاحة، والتقييم وقت الترجمة، والتحقق من تعليمات switch في MSIR. المعرفات الرقمية التاريخية للمفاتيح المسحوبة محجوزة، وتستخدم الأسباب الجديدة المعرفات 549–566. ولم تتغير المعرفات المخصصة من قبل.
+يزيل مترجم 2 نوفمبر 18 مفتاح سبب متقادمًا خاصًا بالرابط (linker) الخارجي، ويضيف 18 سببًا جديدًا تتعلق بالربط الداخلي لـ Wasm، وإعادة التوطين في ملفات الكائن بصيغة Wasm، والخلفيات غير المتاحة، والتقييم وقت الترجمة، والتحقق من تعليمات switch في MSIR. والمعرفات الرقمية التاريخية للمفاتيح المسحوبة محجوزة، وتستخدم الأسباب الجديدة المعرفات 549–566. ولم تتغير المعرفات المخصصة من قبل.
 
-يذكر كل صف مفتاح السبب كما ورد حرفيا بين علامتي الاقتباس، وموضعه في مصدر هذه النسخة. يؤكد وجود النص الحرفي الارتباط بين الجهة المنتجة للتشخيص والمفتاح، لكنه لا يثبت وحده صحة الجملة المترجمة كاملة في كل سياق ديناميكي. وتبقى الحقائق الديناميكية ونطاقات المصدر من مسؤولية المترجم.
+يذكر كل صف مفتاح السبب كما ورد حرفيًا بين علامتي الاقتباس، وموضعه في مصدر هذه النسخة. ويؤكد وجود النص الحرفي الارتباطَ بين الجهة المنتجة للتشخيص والمفتاح، لكنه لا يثبت وحده صحة الجملة المترجمة كاملة في كل سياق ديناميكي. وتبقى الحقائق الديناميكية ونطاقات المصدر من مسؤولية المترجم.
 
 | المعرف | السبب ذو النوع | مفتاح السبب للآلة | المصدر في المترجم | الرسالة الإنجليزية | الرسالة العربية | الهوية العامة (التجميع) |
 |---:|---|---|---|---|---|---|
@@ -467,7 +469,7 @@
 | 584 | `سبب_وقت_الترجمة_ناتج_غير_قابل_للتمثيل` | `comptime.unrepresentable-result` | `compiler/driver/compile_time.sn:252` | The compile-time result cannot be represented as a constant of the expected type | لا يمكن تمثيل ناتج وقت الترجمة ثابتا من النوع المتوقع | `ناتج_وقت_الترجمة_غير_ثابت` |
 | 585 | `سبب_وقت_الترجمة_مستدعى_غير_مدعوم` | `comptime.unsupported-callee` | `compiler/driver/compile_time.sn:225` | Only SultanC functions can be called at compile time | يسمح التقييم وقت الترجمة باستدعاء دوال السلطان فقط | `عملية_غير_مدعومة_وقت_الترجمة` |
 | 586 | `سبب_وقت_الترجمة_عملية_غير_مدعومة` | `comptime.unsupported-operation` | `compiler/driver/compile_time.sn:495` | This operation is not supported at compile time | هذه العملية غير مدعومة وقت الترجمة | `عملية_غير_مدعومة_وقت_الترجمة` |
-| 587 | `سبب_سمة_معالجة_غير_منفذة` | `annotation.processing-not-implemented` | `compiler/frontend/semantic_pipeline.sn:850` | Declaration annotation processing is not implemented yet | معالجة سمات التصريحات غير منفذة بعد | — (تحتفظ الجهة المنتجة بهويتها) |
+| 587 | `سبب_سمة_معالجة_غير_منفذة` | `annotation.processing-not-implemented` | `compiler/frontend/semantic_pipeline.sn:850` | Declaration annotation processing is not implemented yet | معالجة توصيفات التصريحات غير منفذة بعد | — (تحتفظ الجهة المنتجة بهويتها) |
 | 588 | `سبب_تدفق_سلامة_نقل_من_مرجع` | `ssf.move-out-of-reference` | `compiler/frontend/semantic_pipeline.sn:1534` | An owned value is moved out of borrowed storage | جرت محاولة نقل قيمة مملوكة من تخزين مستعار | — (تحتفظ الجهة المنتجة بهويتها) |
 | 589 | `سبب_مفسر_وقت_تشغيل_تجاوز_عمق_النداء` | `interpreter.runtime.call-depth-exceeded` | `compiler/interpreter/diagnostic_translation.sn` | The interpreted program exceeded the interpreter's call depth limit | تجاوز البرنامج المفسر حد عمق الاستدعاءات في المفسر | `فشل_تفسير_وقت_تشغيل` |
 | 590 | `سبب_مفسر_وقت_تشغيل_لا_محمل_ديناميكي` | `interpreter.runtime.no-dynamic-loader` | `compiler/interpreter/diagnostic_translation.sn` | This compiler has no dynamic loader to find a C function: it is a static executable. Build the program, or interpret it with a compiler linked against the C library (an LLVM-enabled build) | لا يملك هذا المترجم محمِّلا ديناميكيا يجد به دالة C: إنه ملف تنفيذي ساكن. ابنِ البرنامج، أو فسّره بمترجم مربوط بمكتبة C (بناء يتضمن LLVM) | `نداء_خارجي_تفسير_غير_مدعوم` |
@@ -483,3 +485,5 @@
 | 600 | `سبب_تنسيق_وسيط_غير_مستخدم` | `format.unused-argument` | `compiler/driver/compiler_driver.sn` | The call passes an argument the format string never uses | يمرر النداء وسيطا لا تستخدمه سلسلة التنسيق | `سلسلة_تنسيق_غير_صالحة` |
 | 601 | `سبب_تنسيق_نوع_غير_مناسب` | `format.mismatched-type` | `compiler/driver/compiler_driver.sn` | The placeholder's format type does not apply to the argument it formats | نوع التنسيق في الموضع لا يناسب الوسيط الذي ينسقه | `سلسلة_تنسيق_غير_صالحة` |
 | 602 | `سبب_تنسيق_عدد_غير_صالح` | `format.invalid-count` | `compiler/driver/compiler_driver.sn` | A width or precision taken from an argument needs an integer argument | العرض أو الدقة المأخوذان من وسيط يتطلبان وسيطا صحيحا | `سلسلة_تنسيق_غير_صالحة` |
+
+</div>

@@ -21,7 +21,7 @@ alef forms آ, أ and إ to ا and ignores tatweel
 | `def` | `عرف` | Function definition |
 | `let` | `دع` | Value declaration |
 | `return` | `أرجع` | Return from a function |
-| `if` | `لو` | Conditional branch |
+| `if` | `إذا` | Conditional branch |
 | `else` | `وإلا` | Alternate branch |
 | `while` | `طالما` | While loop ("as long as") |
 | `for` | `لكل` | For loop |

@@ -92,7 +92,7 @@ def main(): int {
 The first two lines import std modules. `std.io.println` provides `println` and `std.text.number`
 provides `int_to_text`. Statements end with a semicolon, and a block that is used as a statement,
 such as an `if`, ends with one too. The program is in the repository as `examples/en/basics/hello.sn`, and its Arabic version as
-`examples/en/basics/hello.sn`.
+`examples/ar/basics/hello.sn`.
 
 ## Compiling and running
 
