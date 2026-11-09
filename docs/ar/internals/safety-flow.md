@@ -107,6 +107,6 @@ SSF تحليل دلالي، وليس مرحلة من مراحل الخلفية. 
 
 - [الملكية والإتلاف](../reference/ownership.md)
 - [MSIR وتوليد الشيفرة الأصلية](msir-and-codegen.md)
-- [معمارية المترجم](compiler-architecture.md)
+- [بنية المترجم](compiler-architecture.md)
 
 </div>

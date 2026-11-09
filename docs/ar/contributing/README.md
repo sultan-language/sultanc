@@ -37,7 +37,7 @@
 | `compiler/interpreter/**` | تنفيذ MSIR المتحقق منه |
 | `compiler/driver/**` | واجهة سطر الأوامر، وطلبات الترجمة، وخطط الربط |
 
-تشرح صفحة [معمارية المترجم](../internals/compiler-architecture.md) كيف تترابط هذه الأجزاء.
+تشرح صفحة [بنية المترجم](../internals/compiler-architecture.md) كيف تترابط هذه الأجزاء.
 
 قبل تغيير أي سلوك، حدد النظام الفرعي الذي يملك المعلومة المعنية. تجنب تثبيت سياسة الهدف في الشيفرة، وتكرار
 الجداول الدلالية، وإصلاح الملفات المولّدة حين يكون سجلٌّ في المنبع هو مالك البيانات. توجد السجلات تحت
@@ -189,7 +189,7 @@ cc -o build-bootstrap bootstrap-wasm/bootstrap.c
 
 ## انظر أيضًا
 
-- [معمارية المترجم](../internals/compiler-architecture.md)
+- [بنية المترجم](../internals/compiler-architecture.md)
 - [الإقلاع الذاتي](../internals/bootstrap.md)
 - [الاختبارات](tests.md)
 - [الأمثلة](examples.md)

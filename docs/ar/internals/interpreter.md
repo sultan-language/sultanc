@@ -187,7 +187,7 @@ SC=build/sultanc bash tools/tests/interp_sweep.sh examples/ar/basics/hello.sn
 ## انظر أيضًا
 
 - [MSIR وتوليد الشيفرة الأصلية](msir-and-codegen.md)
-- [معمارية المترجم](compiler-architecture.md)
+- [بنية المترجم](compiler-architecture.md)
 - [تدفق الأمان](safety-flow.md)
 - [اعتماديات المنصات](../reference/platform-dependencies.md)
 - [الاختبارات](../contributing/tests.md)

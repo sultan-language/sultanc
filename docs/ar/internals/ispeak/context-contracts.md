@@ -58,6 +58,6 @@
 
 - [iSpeak](README.md)
 - [تدقيق الأسباب](../../history/ispeak-semantic-audit.md)
-- [معمارية المترجم](../compiler-architecture.md)
+- [بنية المترجم](../compiler-architecture.md)
 
 </div>

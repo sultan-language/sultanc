@@ -60,6 +60,8 @@ def main(): int {
 
 Same AST, same semantics, same diagnostics: only the keywords and identifiers change.
 
+Why does SultanC exist? Read [its story](story.md).
+
 ## Install
 
 ```sh

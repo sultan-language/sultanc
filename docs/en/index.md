@@ -13,6 +13,7 @@ The [README](README.md) gives a short overview of the project and its build rout
 
 | Page | What it covers |
 | --- | --- |
+| [Why SultanC](story.md) | The story of the language: why it started, how its compiler moved from OCaml to C and then to SultanC itself, and its goal |
 | [Getting started](guide/getting-started.md) | Building the compiler, the first program, compiling, running and checking |
 | [Language tour](guide/language-tour.md) | The language by example: types, functions, control flow, records, enums, pattern matching, ownership, errors and modules |
 

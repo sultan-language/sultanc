@@ -26,7 +26,7 @@ Stage4   Stage3 compiles compiler/main.sn             Stage3 and Stage4 must be 
 
 تقع سياسة المراحل كلها في `cmake/`؛ ولا يفعل `build.sh` سوى استدعاء CMake. وStage1 ملف تنفيذي للمضيف
 دائمًا. وStage2 هو مترجم الإنتاج، وهو أصلي فقط ما لم يُعطَ `--enable-llvm`
-([معمارية المترجم](compiler-architecture.md)، "قدرات بناء المترجم"). ويبني Stage1 المرحلة Stage2 مباشرةً
+([بنية المترجم](compiler-architecture.md)، "قدرات بناء المترجم"). ويبني Stage1 المرحلة Stage2 مباشرةً
 بخلفية السلطان نفسه؛ فلا يوجد بناء وسيط للمترجم بلغة C.
 
 ## المسارات إلى Stage1
@@ -352,7 +352,7 @@ clang-cl من الأرشيف المثبّت. ومجموعة الاختبارات
 
 ## انظر أيضًا
 
-- [معمارية المترجم](compiler-architecture.md)
+- [بنية المترجم](compiler-architecture.md)
 - [دليل المساهمين](../contributing/README.md)
 - [الاختبارات](../contributing/tests.md)
 - [الملكية والإتلاف](../reference/ownership.md)
