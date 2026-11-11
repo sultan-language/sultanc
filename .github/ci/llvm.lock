@@ -1,0 +1,7 @@
+# The pinned LLVM SDK the LLVM jobs build against (sourced by .github/ci/*.sh
+# and read by windows.ps1). The workflow keys the SDK cache on this file only:
+# bump LLVM_RECIPE whenever the way an SDK is assembled changes (archives
+# kept, link flags, CMake options), so every host rebuilds it once, and
+# editing anything else in .github/ never throws a cached SDK away.
+LLVM_VERSION=22.1.8
+LLVM_RECIPE=2

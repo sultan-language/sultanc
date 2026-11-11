@@ -1,17 +1,21 @@
 # Windows CI (x64 and ARM64). PowerShell. Windows has no SultanC Native
-# backend, so a Stage2 always comes from the C Stage0 and LLVM.
+# backend, so a Stage2 always comes from the C Stage0 and LLVM. One job per
+# workflow step (as linux.sh and macos.sh):
 #
-#   windows.ps1 seed   wasm seed through cmake/ (no LLVM), Stage1 only, with
-#                      every C toolchain: MSVC (cl), clang-cl, and MinGW gcc
-#                      (x64; bootstrap.c). The MSVC Stage1 rebuilds the
-#                      committed seed, which must match byte for byte.
-#   windows.ps1 llvm   C Stage0 against the pinned LLVM SDK, LLVM-generated
-#                      Stage2, LLVM Stage3 == Stage4, test suite.
+#   seed          wasm seed through cmake/ (no LLVM), Stage1 only, with every
+#                 C toolchain: MSVC (cl), clang-cl, and MinGW gcc (x64;
+#                 bootstrap.c). The MSVC Stage1 rebuilds the committed seed,
+#                 which must match byte for byte.
+#   llvm-sdk      the pinned LLVM SDK (llvm.lock) in $env:LLVM_SDK, unless cached
+#   llvm-build    C Stage0 against the SDK -> Stage1 -> LLVM-generated Stage2
+#   llvm-verify   LLVM Stage3 == Stage4
+#   test          the test suite on build\sultanc.exe, reported to the job summary
+#   llvm          llvm-sdk, llvm-build, llvm-verify and test in order
 #
 # LLVM: the upstream Windows archive builds only some targets, so the SDK
 # (LLVM-C.dll + LLVM-C.lib) is built from the pinned source with the pinned
 # archive's clang-cl, once, and cached by the workflow in $env:LLVM_SDK.
-param([Parameter(Mandatory)][ValidateSet('seed', 'llvm')][string]$Job)
+param([Parameter(Mandatory)][ValidateSet('seed', 'llvm-sdk', 'llvm-build', 'llvm-verify', 'test', 'llvm')][string]$Job)
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
 
@@ -19,7 +23,10 @@ function Check([string]$what) {
     if ($LASTEXITCODE -ne 0) { throw "$what failed with exit code $LASTEXITCODE" }
 }
 
-$version = '22.1.8'
+$root = Resolve-Path (Join-Path $PSScriptRoot '..\..')
+Set-Location $root
+$lock = Get-Content (Join-Path $PSScriptRoot 'llvm.lock') | Where-Object { $_ -match '^LLVM_VERSION=' }
+$version = ($lock -split '=', 2)[1].Trim()
 $arm = $env:PROCESSOR_ARCHITECTURE -eq 'ARM64'
 $arch = if ($arm) { 'arm64' } else { 'amd64' }
 $triple = if ($arm) { 'aarch64-pc-windows-msvc' } else { 'x86_64-pc-windows-msvc' }
@@ -79,7 +86,34 @@ if ($Job -eq 'seed') {
 }
 
 # --- LLVM route ---------------------------------------------------------------
-if (-not (Test-Path "$sdk\bin\LLVM-C.dll")) {
+function Write-Summary([string]$line) {
+    if ($env:GITHUB_STEP_SUMMARY) { Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value $line -Encoding utf8 }
+    else { Write-Host "summary: $line" }
+}
+
+function Step([string]$name, [scriptblock]$body) {
+    Write-Host "::group::$name"
+    $watch = [Diagnostics.Stopwatch]::StartNew()
+    try {
+        & $body
+        $ok = $true
+    } catch {
+        $ok = $false
+        $failure = $_
+    }
+    $watch.Stop()
+    Write-Host '::endgroup::'
+    $time = '{0}:{1:00}' -f [int][Math]::Floor($watch.Elapsed.TotalMinutes), $watch.Elapsed.Seconds
+    if ($ok) { Write-Summary "- ✅ $name ($time)" }
+    else {
+        Write-Summary "- ❌ ${name}: $failure ($time)"
+        Write-Host "::error title=$name::$failure"
+        throw $failure
+    }
+}
+
+function Invoke-LlvmSdk {
+    if (Test-Path "$sdk\bin\LLVM-C.dll") { Write-Host "LLVM SDK restored from cache: $sdk"; return }
     $hostLlvm = Get-HostLlvm
     Fetch "llvm-project-$version.src.tar.xz"
     $install = Join-Path $work 'install'
@@ -103,13 +137,42 @@ if (-not (Test-Path "$sdk\bin\LLVM-C.dll")) {
     Copy-Item "$install\lib\LLVM-C.lib" "$sdk\lib\"
     Copy-Item -Recurse "$install\include" "$sdk\include"
     Remove-Item -Recurse -Force $work
+    Write-Host "LLVM SDK built: $sdk"
 }
-Write-Host "LLVM SDK: $sdk"
 
-cmake -S cmake -B build\bootstrap\cmake -G Ninja `
-    -DSULTANC_BOOTSTRAP=c -DSULTANC_COMPILER_LLVM=ON -DSULTANC_STAGE2_BACKEND=llvm `
-    -DSULTANC_REQUESTED_STAGE=verify -DSULTANC_LLVM_ROOT="$sdk"; Check 'configure'
-cmake --build build\bootstrap\cmake --target sultanc-verify; Check 'Stage0 -> Stage2 -> LLVM Stage3 == Stage4'
+$tree = 'build\bootstrap\cmake'
 
-# The test suite is a bash script; Git for Windows provides bash on the runner.
-& "$env:ProgramFiles\Git\bin\bash.exe" tools/tests/ci_run.sh; Check 'tests'
+function Invoke-LlvmBuild {
+    if (-not (Test-Path "$sdk\bin\LLVM-C.dll")) { throw "no LLVM SDK in $sdk (run: windows.ps1 llvm-sdk)" }
+    cmake -S cmake -B $tree -G Ninja `
+        -DSULTANC_BOOTSTRAP=c -DSULTANC_COMPILER_LLVM=ON -DSULTANC_STAGE2_BACKEND=llvm `
+        -DSULTANC_REQUESTED_STAGE=verify -DSULTANC_LLVM_ROOT="$sdk"; Check 'configure'
+    cmake --build $tree --target sultanc-stage2; Check 'Stage0 -> Stage1 -> LLVM Stage2'
+    & build\sultanc.exe version; Check 'Stage2 run'
+}
+
+function Invoke-LlvmVerify {
+    cmake --build $tree --target sultanc-verify; Check 'LLVM Stage3 == Stage4'
+}
+
+function Invoke-Tests {
+    # The test suite is a bash script; Git for Windows provides bash on the runner.
+    $env:PATH = "$sdk\bin;$env:PATH"
+    & "$env:ProgramFiles\Git\bin\bash.exe" tools/tests/ci_run.sh
+    $status = $LASTEXITCODE
+    python "$PSScriptRoot\report.py" "$root"
+    if ($status -ne 0) { throw "tests failed with exit code $status" }
+}
+
+switch ($Job) {
+    'llvm-sdk' { Step "LLVM $version SDK" { Invoke-LlvmSdk } }
+    'llvm-build' { Step 'LLVM-generated Stage2' { Invoke-LlvmBuild } }
+    'llvm-verify' { Step 'Convergence' { Invoke-LlvmVerify } }
+    'test' { Step 'Tests' { Invoke-Tests } }
+    'llvm' {
+        Step "LLVM $version SDK" { Invoke-LlvmSdk }
+        Step 'LLVM-generated Stage2' { Invoke-LlvmBuild }
+        Step 'Convergence' { Invoke-LlvmVerify }
+        Step 'Tests' { Invoke-Tests }
+    }
+}

@@ -1,0 +1,18 @@
+# Nightly: the whole CI (ci.yml) on main with the opt-in test suites on
+# (self-host convergence inside the runner, RSS and allocation checks), so
+# slow checks run every day without slowing every push.
+name: SultanC Nightly
+
+on:
+  schedule:
+    - cron: '23 2 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
+    with:
+      extended: true

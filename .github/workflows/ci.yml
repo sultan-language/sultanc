@@ -1,62 +1,166 @@
-# SultanC CI: every route proven on every host where it can run.
+# SultanC CI. Every route is proven on every host where it can run, from
+# source, on every push and pull request (docs-only changes are skipped):
+#
+#   lint         workflows (actionlint), CI shell scripts (shellcheck), report.py
 #   seed         wasm seed through cmake/ with only a C compiler (no LLVM);
-#                the committed seed must equal what the sources rebuild.
-#   seed-update  bootstrap.c --update-seed, then a clean bootstrap from it.
-#   llvm         C Stage0 against LLVM 22.1.8 (pinned by version and file
-#                name, cached), LLVM-enabled Stage2, convergence, tests.
+#                native hosts: Stage1 -> Stage2 -> Stage3 == Stage4 and the
+#                test suite; the committed seed must equal what the sources
+#                rebuild (all six hosts)
+#   seed-update  bootstrap.c --update-seed, then a clean bootstrap from it
+#   llvm-sdk     the pinned LLVM SDK per host (.github/ci/llvm.lock), cached
+#                on llvm.lock alone; built in its own job, so a multi-hour
+#                source build never shares a time budget with a bootstrap
+#   llvm         C Stage0 -> Stage1 -> LLVM-enabled Stage2, convergence,
+#                test suite
+#   summary      one table of every host and route
+#
+# Each job step has its own timeout, sized from a normal run, so a hang
+# fails within the step that hangs. Self-builds of the compiler also have a
+# per-command limit inside the scripts (SULTANC_CI_COMPILE_TIMEOUT).
+# Compilers and test logs are uploaded as artifacts; every job writes its
+# steps, timings and test results to its summary.
+#
+# nightly.yml calls this workflow with extended: true (opt-in test suites).
 # One script per host family: .github/ci/linux.sh and macos.sh (POSIX sh),
 # .github/ci/windows.ps1 (PowerShell).
 name: SultanC CI
 
 on:
   push:
+    paths-ignore: ['docs/**', '**/*.md', 'LICENSE']
   pull_request:
+    paths-ignore: ['docs/**', '**/*.md', 'LICENSE']
   workflow_dispatch:
+    inputs:
+      extended:
+        description: Run the opt-in test suites (convergence, RSS, allocations)
+        type: boolean
+        default: false
+  workflow_call:
+    inputs:
+      extended:
+        type: boolean
+        default: false
 
 permissions:
   contents: read
 
+# A newer push to a pull request cancels its older run; runs on branches
+# (main included) always finish, so every commit there gets a result.
 concurrency:
-  group: sultanc-ci-${{ github.ref }}
-  cancel-in-progress: true
+  group: sultanc-ci-${{ github.workflow }}-${{ github.ref }}-${{ inputs.extended && 'ext' || 'std' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  # Opt-in suites of tests/runner (tests/runner/suites/system.sn).
+  SULTANC_TEST_CONVERGENCE: ${{ inputs.extended && '1' || '' }}
+  SULTANC_TEST_RSS: ${{ inputs.extended && '1' || '' }}
+  SULTANC_TEST_ALLOCATIONS: ${{ inputs.extended && '1' || '' }}
 
 jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: actionlint
+        # The pinned release, checked against its published SHA-256.
+        env:
+          VERSION: 1.7.7
+          SHA256: 023070a287cd8cccd71515fedc843f1985bf96c436b7effaecce67290e7e0757
+        run: |
+          curl -fsSL --retry 3 -o "$RUNNER_TEMP/actionlint.tar.gz" \
+            "https://github.com/rhysd/actionlint/releases/download/v$VERSION/actionlint_${VERSION}_linux_amd64.tar.gz"
+          echo "$SHA256  $RUNNER_TEMP/actionlint.tar.gz" | sha256sum -c -
+          tar -xzf "$RUNNER_TEMP/actionlint.tar.gz" -C "$RUNNER_TEMP" actionlint
+          "$RUNNER_TEMP/actionlint" -color
+      - name: shellcheck
+        run: shellcheck -x .github/ci/linux.sh .github/ci/macos.sh .github/ci/common.sh build.sh
+      - name: Python helpers
+        run: python3 -m py_compile .github/ci/report.py .github/ci/summary.py
+      - name: SDK cache path matches llvm.lock
+        run: |
+          . .github/ci/llvm.lock
+          bad=$(grep -n 'llvm-sdk-[0-9]' .github/workflows/*.yml | grep -v "llvm-sdk-$LLVM_VERSION" || true)
+          if [ -n "$bad" ]; then
+            echo "::error::workflow SDK paths must name llvm-sdk-$LLVM_VERSION (llvm.lock):"
+            echo "$bad"
+            exit 1
+          fi
+
   seed:
     name: Seed / ${{ matrix.host }}
+    needs: lint
     runs-on: ${{ matrix.runner }}
-    timeout-minutes: 120
+    timeout-minutes: 150
     strategy:
       fail-fast: false
       matrix:
         include:
-          - { host: linux-x86_64, runner: ubuntu-24.04, script: linux }
-          - { host: linux-arm64, runner: ubuntu-24.04-arm, script: linux }
-          - { host: macos-arm64, runner: macos-15, script: macos }
-          - { host: macos-x86_64, runner: macos-15-intel, script: macos }
-          - { host: windows-x86_64, runner: windows-2025, script: windows }
-          - { host: windows-arm64, runner: windows-11-arm, script: windows }
+          - { host: linux-x86_64, runner: ubuntu-24.04, script: linux, native: true }
+          - { host: linux-arm64, runner: ubuntu-24.04-arm, script: linux, native: false }
+          - { host: macos-arm64, runner: macos-15, script: macos, native: true }
+          - { host: macos-x86_64, runner: macos-15-intel, script: macos, native: false }
+          - { host: windows-x86_64, runner: windows-2025, script: windows, native: false }
+          - { host: windows-arm64, runner: windows-11-arm, script: windows, native: false }
     steps:
       - uses: actions/checkout@v4
-      - name: Seed (${{ matrix.host }})
+      - name: Bootstrap from the seed
         if: matrix.script != 'windows'
-        run: sh .github/ci/${{ matrix.script }}.sh seed
-      - name: Seed (${{ matrix.host }})
+        timeout-minutes: 100
+        run: sh .github/ci/${{ matrix.script }}.sh seed-build
+      - name: Seed is reproducible
+        if: matrix.script != 'windows'
+        timeout-minutes: 30
+        run: sh .github/ci/${{ matrix.script }}.sh seed-check
+      - name: Bootstrap from the seed (MSVC, clang-cl, MinGW)
         if: matrix.script == 'windows'
+        timeout-minutes: 120
         shell: pwsh
         run: ./.github/ci/windows.ps1 seed
+      - name: Tests
+        if: matrix.native
+        timeout-minutes: 60
+        run: sh .github/ci/${{ matrix.script }}.sh test
+      - name: Upload compiler
+        if: matrix.native
+        uses: actions/upload-artifact@v4
+        with:
+          name: sultanc-seed-${{ matrix.host }}
+          path: build/sultanc
+          retention-days: 7
+          if-no-files-found: warn
+      - name: Upload test results
+        if: always() && matrix.native
+        uses: actions/upload-artifact@v4
+        with:
+          name: tests-seed-${{ matrix.host }}
+          path: |
+            build/tests-result.json
+            build/tests-junit.xml
+            build/tests-ci/*.log
+            build/ispeak-tests-*/summary.txt
+          retention-days: 14
+          if-no-files-found: ignore
 
   seed-update:
     name: Seed update / linux-x86_64
+    needs: lint
     runs-on: ubuntu-24.04
     timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
-      - run: sh .github/ci/linux.sh seed-update
+      - name: Update the seed, then bootstrap from it
+        timeout-minutes: 80
+        run: sh .github/ci/linux.sh seed-update
 
-  llvm:
-    name: LLVM / ${{ matrix.host }}
+  llvm-sdk:
+    name: LLVM SDK / ${{ matrix.host }}
+    needs: lint
     runs-on: ${{ matrix.runner }}
-    timeout-minutes: 360
+    # macOS x86_64 and Windows build LLVM from source when the cache is cold.
+    timeout-minutes: 350
     strategy:
       fail-fast: false
       matrix:
@@ -70,14 +174,120 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: LLVM SDK cache
+        id: cache
         uses: actions/cache@v4
         with:
           path: ~/llvm-sdk-22.1.8
-          key: llvm-sdk-22.1.8-${{ matrix.host }}-${{ hashFiles(format('.github/ci/{0}.*', matrix.script)) }}
-      - name: LLVM (${{ matrix.host }})
-        if: matrix.script != 'windows'
-        run: sh .github/ci/${{ matrix.script }}.sh llvm
-      - name: LLVM (${{ matrix.host }})
-        if: matrix.script == 'windows'
+          key: llvm-sdk-${{ matrix.host }}-${{ hashFiles('.github/ci/llvm.lock') }}
+          lookup-only: true
+      - name: Build the LLVM SDK
+        if: steps.cache.outputs.cache-hit != 'true' && matrix.script != 'windows'
+        timeout-minutes: 340
+        run: sh .github/ci/${{ matrix.script }}.sh llvm-sdk
+      - name: Build the LLVM SDK
+        if: steps.cache.outputs.cache-hit != 'true' && matrix.script == 'windows'
+        timeout-minutes: 340
         shell: pwsh
-        run: ./.github/ci/windows.ps1 llvm
+        run: ./.github/ci/windows.ps1 llvm-sdk
+
+  llvm:
+    name: LLVM / ${{ matrix.host }}
+    needs: llvm-sdk
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 300
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { host: linux-x86_64, runner: ubuntu-24.04, script: linux, exe: sultanc }
+          - { host: linux-arm64, runner: ubuntu-24.04-arm, script: linux, exe: sultanc }
+          - { host: macos-arm64, runner: macos-15, script: macos, exe: sultanc }
+          - { host: macos-x86_64, runner: macos-15-intel, script: macos, exe: sultanc }
+          - { host: windows-x86_64, runner: windows-2025, script: windows, exe: sultanc.exe }
+          - { host: windows-arm64, runner: windows-11-arm, script: windows, exe: sultanc.exe }
+    steps:
+      - uses: actions/checkout@v4
+      - name: LLVM SDK
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/llvm-sdk-22.1.8
+          key: llvm-sdk-${{ matrix.host }}-${{ hashFiles('.github/ci/llvm.lock') }}
+          fail-on-cache-miss: true
+      - name: Stage0 -> Stage1 -> LLVM-enabled Stage2
+        if: matrix.script != 'windows'
+        timeout-minutes: 120
+        run: sh .github/ci/${{ matrix.script }}.sh llvm-build
+      - name: Convergence
+        if: matrix.script != 'windows'
+        timeout-minutes: 150
+        run: sh .github/ci/${{ matrix.script }}.sh llvm-verify
+      - name: Tests
+        if: matrix.script != 'windows'
+        timeout-minutes: 60
+        run: sh .github/ci/${{ matrix.script }}.sh test
+      - name: Stage0 -> Stage1 -> LLVM Stage2
+        if: matrix.script == 'windows'
+        timeout-minutes: 120
+        shell: pwsh
+        run: ./.github/ci/windows.ps1 llvm-build
+      - name: Convergence
+        if: matrix.script == 'windows'
+        timeout-minutes: 150
+        shell: pwsh
+        run: ./.github/ci/windows.ps1 llvm-verify
+      - name: Tests
+        if: matrix.script == 'windows'
+        timeout-minutes: 60
+        shell: pwsh
+        run: ./.github/ci/windows.ps1 test
+      - name: Upload compiler
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sultanc-llvm-${{ matrix.host }}
+          path: |
+            build/${{ matrix.exe }}
+            build/LLVM-C.dll
+          retention-days: 7
+          if-no-files-found: warn
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tests-llvm-${{ matrix.host }}
+          path: |
+            build/tests-result.json
+            build/tests-junit.xml
+            build/tests-ci/*.log
+            build/ispeak-tests-*/summary.txt
+          retention-days: 14
+          if-no-files-found: ignore
+
+  summary:
+    name: Summary
+    if: always()
+    needs: [lint, seed, seed-update, llvm-sdk, llvm]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: tests-*
+          path: results
+      - name: Cross-host summary
+        env:
+          RESULTS: ${{ toJSON(needs) }}
+        run: python3 .github/ci/summary.py results
+      - name: Gate
+        env:
+          RESULTS: ${{ toJSON(needs) }}
+        run: |
+          python3 - <<'EOF'
+          import json, os, sys
+          needs = json.loads(os.environ["RESULTS"])
+          bad = {k: v["result"] for k, v in needs.items() if v["result"] not in ("success", "skipped")}
+          if bad:
+              print("failed jobs:", bad)
+              sys.exit(1)
+          EOF

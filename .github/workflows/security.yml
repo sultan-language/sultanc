@@ -4,12 +4,20 @@ name: SultanC Security
 on:
   push:
     branches: [main]
+    paths: ['bootstrap/**', 'cmake/**', 'build.sh', '.github/workflows/security.yml']
   pull_request:
+    paths: ['bootstrap/**', 'cmake/**', 'build.sh', '.github/workflows/security.yml']
+  schedule:
+    - cron: '41 4 * * 1'
   workflow_dispatch:
 
 permissions:
   contents: read
   security-events: write
+
+concurrency:
+  group: sultanc-security-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   codeql:

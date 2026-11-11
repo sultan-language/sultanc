@@ -1,0 +1,83 @@
+# Release: on a version tag (v*), build the compiler from the committed wasm
+# seed on each host with a Native backend, prove it (Stage3 == Stage4 and the
+# test suite), and attach archives with SHA-256 sums to a draft GitHub
+# release. Archives hold bin/sultanc, the standard library (library/), and
+# the license and readme; the compiler is Native-only, so it needs no libLLVM.
+# Hosts without a Native backend (Windows, Linux arm64, macOS x86_64) build
+# from source with an LLVM SDK (see CONTRIBUTING.md and build.sh --help).
+name: SultanC Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Tag to release (must exist)
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build / ${{ matrix.host }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 150
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - { host: linux-x86_64, runner: ubuntu-24.04, script: linux }
+          - { host: macos-arm64, runner: macos-15, script: macos }
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.ref }}
+      - name: Bootstrap from the seed
+        timeout-minutes: 100
+        run: sh .github/ci/${{ matrix.script }}.sh seed-build
+      - name: Tests
+        timeout-minutes: 60
+        run: sh .github/ci/${{ matrix.script }}.sh test
+      - name: Package
+        id: package
+        shell: bash
+        run: |
+          tag=${{ inputs.tag || github.ref_name }}
+          name=sultanc-$tag-${{ matrix.host }}
+          mkdir -p "dist/$name/bin"
+          cp build/sultanc "dist/$name/bin/"
+          cp -R library "dist/$name/library"
+          cp LICENSE README.md "dist/$name/"
+          tar -C dist -czf "dist/$name.tar.gz" "$name"
+          echo "archive=dist/$name.tar.gz" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ matrix.host }}
+          path: ${{ steps.package.outputs.archive }}
+          if-no-files-found: error
+
+  publish:
+    name: Publish
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: release-*
+          path: dist
+          merge-multiple: true
+      - name: Checksums
+        run: cd dist && sha256sum ./*.tar.gz > SHA256SUMS && cat SHA256SUMS
+      - name: Draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.tag || github.ref_name }}
+        run: |
+          gh release create "$TAG" dist/*.tar.gz dist/SHA256SUMS \
+            --repo "$GITHUB_REPOSITORY" --draft --verify-tag \
+            --title "SultanC $TAG" --generate-notes
