@@ -63,7 +63,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: actionlint
         # The pinned release, checked against its published SHA-256.
         env:
@@ -105,7 +105,7 @@ jobs:
           - { host: windows-x86_64, runner: windows-2025, script: windows, native: false }
           - { host: windows-arm64, runner: windows-11-arm, script: windows, native: false }
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Bootstrap from the seed
         if: matrix.script != 'windows'
         timeout-minutes: 100
@@ -125,7 +125,7 @@ jobs:
         run: sh .github/ci/${{ matrix.script }}.sh test
       - name: Upload compiler
         if: matrix.native
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: sultanc-seed-${{ matrix.host }}
           path: build/sultanc
@@ -133,7 +133,7 @@ jobs:
           if-no-files-found: warn
       - name: Upload test results
         if: always() && matrix.native
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: tests-seed-${{ matrix.host }}
           path: |
@@ -150,7 +150,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 90
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Update the seed, then bootstrap from it
         timeout-minutes: 80
         run: sh .github/ci/linux.sh seed-update
@@ -172,10 +172,10 @@ jobs:
           - { host: windows-x86_64, runner: windows-2025, script: windows }
           - { host: windows-arm64, runner: windows-11-arm, script: windows }
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: LLVM SDK cache
         id: cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/llvm-sdk-22.1.8
           key: llvm-sdk-${{ matrix.host }}-${{ hashFiles('.github/ci/llvm.lock') }}
@@ -206,9 +206,9 @@ jobs:
           - { host: windows-x86_64, runner: windows-2025, script: windows, exe: sultanc.exe }
           - { host: windows-arm64, runner: windows-11-arm, script: windows, exe: sultanc.exe }
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: LLVM SDK
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v6
         with:
           path: ~/llvm-sdk-22.1.8
           key: llvm-sdk-${{ matrix.host }}-${{ hashFiles('.github/ci/llvm.lock') }}
@@ -242,7 +242,7 @@ jobs:
         run: ./.github/ci/windows.ps1 test
       - name: Upload compiler
         if: success()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: sultanc-llvm-${{ matrix.host }}
           path: |
@@ -252,7 +252,7 @@ jobs:
           if-no-files-found: warn
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: tests-llvm-${{ matrix.host }}
           path: |
@@ -270,8 +270,8 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v8
         with:
           pattern: tests-*
           path: results

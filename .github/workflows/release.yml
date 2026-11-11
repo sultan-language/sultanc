@@ -31,7 +31,7 @@ jobs:
           - { host: linux-x86_64, runner: ubuntu-24.04, script: linux }
           - { host: macos-arm64, runner: macos-15, script: macos }
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ inputs.tag || github.ref }}
       - name: Bootstrap from the seed
@@ -52,7 +52,7 @@ jobs:
           cp LICENSE README.md "dist/$name/"
           tar -C dist -czf "dist/$name.tar.gz" "$name"
           echo "archive=dist/$name.tar.gz" >> "$GITHUB_OUTPUT"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: release-${{ matrix.host }}
           path: ${{ steps.package.outputs.archive }}
@@ -66,7 +66,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           pattern: release-*
           path: dist
