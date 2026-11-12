@@ -1,0 +1,11 @@
+# actionlint configuration (https://github.com/rhysd/actionlint/blob/main/docs/config.md).
+#
+# These are GitHub-hosted runner labels, not self-hosted ones: listing them
+# here keeps actionlint from reporting them as unknown when the pinned
+# actionlint (ci.yml, Lint job) predates them.
+#   macos-15-intel  macOS 15 on Intel (x86_64)
+#   windows-11-arm  Windows 11 on arm64
+self-hosted-runner:
+  labels:
+    - macos-15-intel
+    - windows-11-arm

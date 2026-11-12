@@ -65,10 +65,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: actionlint
-        # The pinned release, checked against its published SHA-256.
+        # The pinned release, checked against its published SHA-256
+        # (actionlint_<version>_checksums.txt of the release). Runner labels
+        # newer than the pinned release go in .github/actionlint.yaml.
         env:
-          VERSION: 1.7.7
-          SHA256: 023070a287cd8cccd71515fedc843f1985bf96c436b7effaecce67290e7e0757
+          VERSION: 1.7.12
+          SHA256: 8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8
         run: |
           curl -fsSL --retry 3 -o "$RUNNER_TEMP/actionlint.tar.gz" \
             "https://github.com/rhysd/actionlint/releases/download/v$VERSION/actionlint_${VERSION}_linux_amd64.tar.gz"
