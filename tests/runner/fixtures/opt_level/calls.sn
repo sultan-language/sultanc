@@ -1,0 +1,10 @@
+// A small function called four times: at -O2 the MSIR pipeline inlines it,
+// at -O0 every call stays a call (tests/runner/suites/cli.sn).
+def step(x: int): int { return x + 1; }
+
+def main(): int {
+    let a: int = step(1);
+    let b: int = step(a);
+    let c: int = step(b);
+    return step(c) + 38;
+}

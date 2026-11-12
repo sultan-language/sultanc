@@ -1,0 +1,347 @@
+// `sultanc run` on the machine interpreter (machine_program.sn,
+// machine_engine.sn): selection's code of the program, on host memory.
+//
+// The driver asks here first. لا_شيء means the machine interpreter does not
+// run this program on this host (no selector for the host's architecture, no
+// raw memory port, or an operation it has no meaning for) and the driver
+// runs the checked interpreter (interpreter.sn) instead, which also stays the
+// engine of compile-time evaluation. SULTANC_INTERPRETER=checked selects the
+// checked interpreter for every run; SULTANC_INTERPRETER_TRACE=1 says on
+// standard error why a program was not run here.
+استورد compiler.interpreter.machine.raw_memory;
+استورد compiler.interpreter.machine.machine_heap;
+استورد compiler.interpreter.machine.machine_program;
+استورد compiler.interpreter.machine.machine_engine;
+استورد compiler.interpreter.machine.thread_failure;
+استورد compiler.interpreter.diagnostic_translation;
+استورد compiler.interpreter.interpreter;
+استورد compiler.interpreter.runtime_failures;
+استورد compiler.interpreter.values.runtime_values;
+استورد compiler.interpreter.execution.execution_state;
+استورد compiler.interpreter.execution.host_dynamic;
+استورد compiler.interpreter.execution.load_libraries;
+استورد compiler.backend.target.target_model;
+استورد compiler.backend.target.target_spelling;
+استورد compiler.backend.target.selection_query_context;
+استورد compiler.backend.layout.layout_model;
+استورد compiler.msir.msir_consumer;
+استورد compiler.msir.msir_model;
+استورد compiler.msir.identifiers;
+استورد compiler.source.provenance;
+استورد compiler.runtime.primitive_runtime_abi;
+استورد compiler.frontend.types.type_context;
+استورد compiler.frontend.types.type_identity;
+استورد std.env.system;
+استورد std.io.print;
+استورد std.text.from_bytes;
+استورد std.text.compare;
+استورد std.text.number;
+
+عرف متغير_يساوي_آلة(الاسم: نص, القيمة: نص): منطقي {
+    طابق متغير_بيئة_النظام(&الاسم) مع
+    | نتيجة.نجح(اختياري.موجود(النص)) -> { أرجع نصان_متساويان(&النص, &القيمة); }
+    | _ -> { أرجع خطأ; };
+}
+
+عرف أبلغ_رفض_آلة(السبب: &متجه ط8): فراغ {
+    إذا (متغير_يساوي_آلة(«SULTANC_INTERPRETER_TRACE», «1»)) {
+        دع السطر: متغير متجه ط8 = بايتات_من_نص(«sultanc run: checked interpreter: »);
+        دع ف: متغير طبيعي = 0;
+        طالما (ف < (الطول(*السبب) مثل طبيعي)) { ألحق(السطر, (*السبب)[ف]); ف := ف + 1; }
+        ألحق(السطر, 10);
+        دع _ن: نتيجة عدد, عدد = اكتب_بايتات_خطأ(&السطر);
+    };
+}
+
+// NUL-terminated copies of النصوص and a NULL-terminated table of pointers
+// to them, in the program's heap; the table's address.
+عرف جدول_سلاسل_آلة(ح: &متغير حالة_آلة, النصوص: &متجه متجه ط8): ط64 {
+    دع ن: ط64 = الطول(*النصوص) مثل ط64;
+    دع الجدول: ط64 = خصص_مصفرا_آلة(&(*ح).الذاكرة, &متغير (*ح).الكومة, (ن + 1) * 8);
+    إذا (الجدول == 0) { أرجع 0; };
+    دع ف: متغير ط64 = 0;
+    طالما (ف < ن) {
+        دع النص: &متجه ط8 = &(*النصوص)[ف مثل طبيعي];
+        دع عدد_البايتات: ط64 = الطول(*النص) مثل ط64;
+        دع النسخة: ط64 = خصص_مصفرا_آلة(&(*ح).الذاكرة, &متغير (*ح).الكومة, عدد_البايتات + 1);
+        إذا (النسخة == 0) { أرجع 0; };
+        اكتب_بايتات_خام(&(*ح).الذاكرة, النسخة, النص);
+        اكتب_كلمة_محاذاة_خام(&(*ح).الذاكرة, الجدول + ف * 8, النسخة);
+        ف := ف + 1;
+    }
+    أرجع الجدول;
+}
+
+// The executable startup data the native entry provides: argc, argv, envp.
+عرف هيئ_وسائط_إقلاع_آلة(
+    ح: &متغير حالة_آلة,
+    ب: &برنامج_آلة,
+    المسير: &سياق_مستهلك_مسير,
+    الوسائط: &متجه متجه ط8
+): منطقي {
+    دع اسم_العدد: متجه ط8 = اسم_عدد_وسائط_إقلاع_أساسي();
+    دع اسم_المؤشر: متجه ط8 = اسم_مؤشر_وسائط_إقلاع_أساسي();
+    دع اسم_البيئة: متجه ط8 = اسم_مؤشر_بيئة_إقلاع_أساسي();
+    دع ف: متغير طبيعي = 0;
+    طالما (ف < (الطول((*المسير).المسير.العوام) مثل طبيعي)) {
+        دع العام: &عام_مسير = &(*المسير).المسير.العوام[ف];
+        دع العنوان: ط64 = (*ب).العوام[ف];
+        طابق (*العام).الاسم_الخارجي مع
+        | اختياري.موجود(الاسم) -> {
+            إذا (العنوان != 0) {
+                إذا (اسما_عام_خارجي_متساويان_لمسير(&الاسم, &اسم_العدد)) {
+                    اكتب_كلمة_محاذاة_خام(&(*ح).الذاكرة, العنوان, الطول(*الوسائط) مثل ط64);
+                } وإلا إذا (اسما_عام_خارجي_متساويان_لمسير(&الاسم, &اسم_المؤشر)) {
+                    دع الجدول: ط64 = جدول_سلاسل_آلة(ح, الوسائط);
+                    إذا (الجدول == 0) { أرجع خطأ; };
+                    اكتب_كلمة_محاذاة_خام(&(*ح).الذاكرة, العنوان, الجدول);
+                } وإلا إذا (اسما_عام_خارجي_متساويان_لمسير(&الاسم, &اسم_البيئة)) {
+                    دع المدخلات: متجه متجه ط8 = مدخلات_بيئة_مفسر();
+                    دع الجدول: ط64 = جدول_سلاسل_آلة(ح, &المدخلات);
+                    إذا (الجدول == 0) { أرجع خطأ; };
+                    اكتب_كلمة_محاذاة_خام(&(*ح).الذاكرة, العنوان, الجدول);
+                };
+            };
+        }
+        | اختياري.لا_شيء -> { };
+        ف := ف + 1;
+    }
+    أرجع صواب;
+}
+
+// A FreeBSD host has no kernel bridge for the interpreters (its system call
+// numbers and thread start are not the ones they speak): `sultanc run`
+// builds and runs every program as an executable there.
+إذا (الهدف.المنصة == «freebsd») {
+    عرف مضيف_بتنفيذي_فقط_آلة(): منطقي { أرجع صواب; }
+}
+إذا (الهدف.المنصة != «freebsd») {
+    عرف مضيف_بتنفيذي_فقط_آلة(): منطقي { أرجع خطأ; }
+}
+
+// Whether the program's own C functions (its externs) are callable only from
+// an executable: a variadic one (the interpreter's call bridge passes fixed
+// arguments only), or any one when this compiler has no dynamic loader (a
+// static compiler: host_dynamic.sn). `sultanc run` then builds and runs the
+// program as an executable, as it does for imported .c files. So is every
+// program on a host without a kernel bridge (مضيف_بتنفيذي_فقط_آلة).
+عام عرف يلزم_تنفيذي_لخارجيات_آلة(البرنامج: &برنامج_مسير): منطقي {
+    إذا (مضيف_بتنفيذي_فقط_آلة()) { أرجع صواب; };
+    دع العدد: طبيعي = الطول((*البرنامج).الدوال_الخارجية) مثل طبيعي;
+    إذا (العدد == 0) { أرجع خطأ; };
+    دع ف: متغير طبيعي = 0;
+    طالما (ف < العدد) {
+        طابق (*البرنامج).الدوال_الخارجية[ف].المعاملات_الثابتة مع
+        | اختياري.موجود(_) -> { أرجع صواب; }
+        | اختياري.لا_شيء -> { };
+        ف := ف + 1;
+    }
+    دع المحمل: متغير محمل_ديناميكي_مضيف = محمل_ديناميكي_مضيف_جديد();
+    أرجع !هيئ_محمل_ديناميكي_مضيف(&متغير المحمل);
+}
+
+// Whether libraries `run` is asked to load (-l) can be loaded only by an
+// executable: on a host without a kernel bridge, or when this compiler has
+// no dynamic loader (a static compiler). The driver then builds and runs the
+// program as an executable that links them.
+عام عرف يلزم_تنفيذي_لمكتبات_آلة(عدد_المكتبات: طبيعي): منطقي {
+    إذا (عدد_المكتبات == 0) { أرجع خطأ; };
+    إذا (مضيف_بتنفيذي_فقط_آلة()) { أرجع صواب; };
+    دع المحمل: متغير محمل_ديناميكي_مضيف = محمل_ديناميكي_مضيف_جديد();
+    أرجع !هيئ_محمل_ديناميكي_مضيف(&متغير المحمل);
+}
+
+// Words of the frame region.
+عرف كلمات_المكدس_آلة(): ط64 { أرجع 8388608; }
+
+// A program translated for the machine interpreter, ready to run: its code,
+// its engine state (globals, arguments, frame region in place) and its
+// entry. It refers to nothing of the MSIR it was translated from, so the
+// driver drops the MSIR and the facts before the program runs (a server run
+// under `sultanc run` then does not keep the compiler's memory resident).
+عام نوع تشغيل_آلة_محضر = {
+    البرنامج: برنامج_آلة,
+    الحالة: حالة_آلة,
+    دالة_الدخول: ط64,
+    له_ناتج: منطقي
+};
+
+// Translates the program for the machine interpreter; لا_شيء when it does
+// not run this program on this host (the driver runs the checked
+// interpreter instead).
+عام عرف حضر_برنامج_بالآلة(
+    المسير: &سياق_مستهلك_مسير,
+    الحقائق: &سياق_استعلام_اختيار_خلفية,
+    الهدف: معرف_هدف,
+    دالة_الدخول: معرف_دالة_مسير,
+    وسائط_البرنامج: &متجه متجه ط8
+): اختياري تشغيل_آلة_محضر {
+    دع بلا_مكتبات: متجه ط64 = [];
+    أرجع حضر_برنامج_بالآلة_بمكتبات(المسير, الحقائق, الهدف, دالة_الدخول, وسائط_البرنامج, &بلا_مكتبات);
+}
+
+// The same with the handles of the libraries the driver loaded for the run
+// (load_libraries.sn حمل_مكتبات_مفسر), searched for its externs.
+عام عرف حضر_برنامج_بالآلة_بمكتبات(
+    المسير: &سياق_مستهلك_مسير,
+    الحقائق: &سياق_استعلام_اختيار_خلفية,
+    الهدف: معرف_هدف,
+    دالة_الدخول: معرف_دالة_مسير,
+    وسائط_البرنامج: &متجه متجه ط8,
+    مقابض_المكتبات: &متجه ط64
+): اختياري تشغيل_آلة_محضر {
+    إذا (متغير_يساوي_آلة(«SULTANC_INTERPRETER», «checked»)) { أرجع اختياري.لا_شيء(); };
+    دع الواصف: متغير واصف_هدف;
+    طابق حل_هدف_تفسير_متوافق(الهدف) مع
+    | اختياري.لا_شيء -> { أرجع اختياري.لا_شيء(); }
+    | اختياري.موجود(و) -> { الواصف := و; };
+    // std.async built the program's task frames for the architecture it was
+    // compiled for, whichever selector translates it.
+    دع إزاحة_إغلاق_مهمة: متغير ط64 = 24;
+    طابق الواصف.المعمارية.الهوية مع
+    | هوية_معمارية.ذراع_أربعة_وستون -> { إزاحة_إغلاق_مهمة := 0; }
+    | _ -> { };
+    // SULTANC_INTERPRETER_SELECTOR=<target>: select with another registered
+    // 64-bit little-endian target's selector (to exercise the AArch64 path on
+    // an x86-64 host); the program still runs on this host.
+    دع اسم_المنتقي: نص = «SULTANC_INTERPRETER_SELECTOR»;
+    طابق متغير_بيئة_النظام(&اسم_المنتقي) مع
+    | نتيجة.نجح(اختياري.موجود(التهجئة)) -> {
+        طابق حل_تهجئة_هدف_مسجل(&التهجئة) مع
+        | نتيجة_تهجئة_هدف.معروفة(البديل) -> { الواصف := البديل; }
+        | نتيجة_تهجئة_هدف.غير_معروفة -> { };
+    }
+    | _ -> { };
+    طابق الواصف.المعمارية.الهوية مع
+    | هوية_معمارية.إكس_ستة_وثمانون_أربعة_وستون -> { }
+    | هوية_معمارية.ذراع_أربعة_وستون -> { }
+    | _ -> {
+        دع السبب: متجه ط8 = بايتات_من_نص(«no machine interpreter for this architecture»);
+        أبلغ_رفض_آلة(&السبب);
+        أرجع اختياري.لا_شيء();
+    };
+    دع الذاكرة: ذاكرة_خام = هيئ_ذاكرة_خام();
+    إذا (!الذاكرة.متاحة) {
+        دع السبب: متجه ط8 = بايتات_من_نص(«no raw memory port on this host»);
+        أبلغ_رفض_آلة(&السبب);
+        أرجع اختياري.لا_شيء();
+    };
+    دع الحالة: متغير حالة_آلة = حالة_آلة_جديدة(الذاكرة, كومة_آلة_جديدة());
+    دع التخطيط: متغير سجل_تخطيط = سجل_تخطيط_جديد();
+    دع البرنامج: متغير برنامج_آلة;
+    طابق ترجم_برنامج_آلة(
+        المسير, الحقائق, &الواصف, &متغير التخطيط, دالة_الدخول,
+        &متغير الحالة.الكومة, &الحالة.الذاكرة,
+        !متغير_يساوي_آلة(«SULTANC_INTERPRETER_OPTIMIZE», «0»)
+    ) مع
+    | نتيجة_ترجمة_آلة.غير_مدعومة(السبب) -> { أبلغ_رفض_آلة(&السبب); أرجع اختياري.لا_شيء(); }
+    | نتيجة_ترجمة_آلة.نجحت(ب) -> { البرنامج := ب; };
+    البرنامج.إزاحة_إغلاق_مهمة := إزاحة_إغلاق_مهمة;
+    دع م_: متغير طبيعي = 0;
+    طالما (م_ < (الطول(*مقابض_المكتبات) مثل طبيعي)) {
+        ألحق(البرنامج.مقابض_المكتبات, (*مقابض_المكتبات)[م_]);
+        م_ := م_ + 1;
+    }
+    // SULTANC_INTERPRETER_DUMP=1: the word code, one function per line.
+    إذا (متغير_يساوي_آلة(«SULTANC_INTERPRETER_DUMP», «1»)) { اطبع_شفرة_آلة(&البرنامج); };
+    // The engine runs the copy of the code in raw memory (أساس_الشفرة), so
+    // the word vector (8 MiB for Nahr's HTTP server) is not kept beside it.
+    دع بلا_شفرة: متجه ط64 = [];
+    البرنامج.الشفرة := بلا_شفرة;
+    // The frame region and the ABI area.
+    دع كلمات: ط64 = كلمات_المكدس_آلة();
+    دع المكدس: ط64 = منطقة_مضيف_آلة(كلمات * 8 + 64);
+    دع الواجهة: ط64 = منطقة_مضيف_آلة(حجم_منطقة_الواجهة_آلة() * 8);
+    إذا (المكدس == 0 || الواجهة == 0) {
+        دع السبب: متجه ط8 = بايتات_من_نص(«no memory for the frame region»);
+        أبلغ_رفض_آلة(&السبب);
+        أرجع اختياري.لا_شيء();
+    };
+    // The first frame's registers start 16-byte aligned.
+    دع بداية: متغير ط64 = المكدس + 16 - (المكدس & 15);
+    إذا (((بداية + رأس_إطار_آلة() * 8) & 15) != 0) { بداية := بداية + 8; };
+    الحالة.بداية_المكدس := فهرس_كلمة_خام(&الحالة.الذاكرة, بداية);
+    الحالة.نهاية_المكدس := الحالة.بداية_المكدس + كلمات - 16;
+    الحالة.الواجهة := فهرس_كلمة_خام(&الحالة.الذاكرة, الواجهة);
+    إذا (!هيئ_وسائط_إقلاع_آلة(&متغير الحالة, &البرنامج, المسير, وسائط_البرنامج)) {
+        دع السبب: متجه ط8 = بايتات_من_نص(«no memory for the program arguments»);
+        أبلغ_رفض_آلة(&السبب);
+        أرجع اختياري.لا_شيء();
+    };
+    دع له_ناتج: متغير منطقي = خطأ;
+    إذا ((دالة_الدخول.القيمة مثل طبيعي) < (الطول((*المسير).المسير.الدوال) مثل طبيعي)) {
+        طابق (*المسير).المسير.الدوال[دالة_الدخول.القيمة].الناتج مع
+        | اختياري.موجود(_) -> { له_ناتج := صواب; }
+        | اختياري.لا_شيء -> { };
+    };
+    دع المحضر: تشغيل_آلة_محضر = {
+        البرنامج: البرنامج, الحالة: الحالة,
+        دالة_الدخول: دالة_الدخول.القيمة مثل ط64, له_ناتج: له_ناتج
+    };
+    أرجع اختياري.موجود(المحضر);
+}
+
+// Runs a prepared program to its end. أصول_الدوال: the source origin of
+// each MSIR function (from the debug data), which a trap's location carries.
+عام عرف شغل_برنامجا_محضرا_بالآلة(
+    المحضر: &متغير تشغيل_آلة_محضر,
+    أصول_الدوال: &متجه اختياري معرف_أصل_مصدر
+): نتيجة_تفسير_مسير {
+    دع له_ناتج: منطقي = (*المحضر).له_ناتج;
+    طابق شغل_دالة_آلة(&متغير (*المحضر).البرنامج, &متغير (*المحضر).الحالة, (*المحضر).دالة_الدخول) مع
+    | نتيجة_آلة.عادت(الرمز) -> {
+        إذا (له_ناتج) { أنه_العملية_بخيوط_آلة(&متغير (*المحضر).الحالة, الرمز); } وإلا { أنه_العملية_بخيوط_آلة(&متغير (*المحضر).الحالة, 0); };
+        إذا (!له_ناتج) { أرجع نتيجة_تفسير_مسير.نجح(اختياري.لا_شيء()); };
+        أرجع نتيجة_تفسير_مسير.نجح(اختياري.موجود(قيمة_تشغيل.بتات_عدد(الرمز مثل طبيعي)));
+    }
+    | نتيجة_آلة.فشلت(الفشل) -> {
+        // The process's one failure report: a thread that failed first is
+        // reporting it and ends the process (thread_failure.sn).
+        إذا (!احجز_إبلاغ_فشل_آلة()) { انتظر_نهاية_العملية_آلة(); };
+        أرجع نتيجة_تفسير_مسير.أخفق(فشل_موضعي_آلة(الفشل, أصول_الدوال));
+    };
+}
+
+// The same, with what the driver reports a failure with: a failure on a
+// thread of the program, which ends the process without returning here, is
+// written as the driver writes this run's own failures. السياق and
+// أصول_الدوال stay alive until the run ends.
+عام عرف شغل_برنامجا_محضرا_بالآلة_بمبلغ(
+    المحضر: &متغير تشغيل_آلة_محضر,
+    أصول_الدوال: &متجه اختياري معرف_أصل_مصدر,
+    سياق_المبلغ: &سياق_مبلغ_فشل_خيط
+): نتيجة_تفسير_مسير {
+    ثبت_مبلغ_فشل_آلة(سياق_المبلغ, أصول_الدوال);
+    أرجع شغل_برنامجا_محضرا_بالآلة(المحضر, أصول_الدوال);
+}
+
+عرف اطبع_شفرة_آلة(ب: &برنامج_آلة): فراغ {
+    دع ف: متغير طبيعي = 0;
+    طالما (ف < (الطول((*ب).الدوال) مثل طبيعي)) {
+        إذا ((*ب).الدوال[ف].مترجمة) {
+            دع البداية: ط64 = (*ب).الدوال[ف].البداية;
+            // The function's code runs to the next function's start.
+            دع النهاية: متغير ط64 = الطول((*ب).الشفرة) مثل ط64;
+            دع ج: متغير طبيعي = 0;
+            طالما (ج < (الطول((*ب).الدوال) مثل طبيعي)) {
+                دع أخرى: ط64 = (*ب).الدوال[ج].البداية;
+                إذا ((*ب).الدوال[ج].مترجمة && أخرى > البداية && أخرى < النهاية) { النهاية := أخرى; };
+                ج := ج + 1;
+            }
+            دع السطر: متغير متجه ط8 = بايتات_من_نص(«fn »);
+            ألحق_بايتات_نص(&متغير السطر, عدد_إلى_نص(ف مثل عدد));
+            ألحق_بايتات_نص(&متغير السطر, « @»);
+            ألحق_بايتات_نص(&متغير السطر, عدد_إلى_نص(البداية مثل عدد));
+            ألحق_بايتات_نص(&متغير السطر, «:»);
+            دع ك: متغير ط64 = البداية;
+            طالما (ك < النهاية) {
+                ألحق(السطر, 32);
+                ألحق_بايتات_نص(&متغير السطر, عدد_إلى_نص(((*ب).الشفرة[ك مثل طبيعي] & 0xFFFFFFFF) مثل عدد));
+                ك := ك + 1;
+            }
+            ألحق(السطر, 10);
+            دع _ن: نتيجة عدد, عدد = اكتب_بايتات_خطأ(&السطر);
+        };
+        ف := ف + 1;
+    }
+}

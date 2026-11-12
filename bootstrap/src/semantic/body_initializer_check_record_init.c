@@ -68,6 +68,33 @@ int __Body_Check_Record_Init__(__Semantic_Body_Context__ *__Context__,
                                          __Statement__->__Header__.__Span__);
                 }
                 __Seen__[__Field_Index__] = 1U;
+                if (__Input__->__Is_Vector__)
+                {
+                    /* A vector literal field value: the field has a vector
+                     * Type and each element its element Type. */
+                    __Resolved_Type__ __Field_Resolved__;
+                    if (!__Type_Resolve__(__Context__->__Semantic__, __Field__->__Slot__.__Type__,
+                                          &__Field_Resolved__) ||
+                        __Field_Resolved__.__Kind__ != __Resolved_Type_Vector__ ||
+                        __Field_Resolved__.__Inner__ == NULL)
+                    {
+                        free(__Seen__);
+                        return __Body_Fail__(__Context__, __E0400_Mismatched_Types__,
+                                             __Statement__->__Header__.__Span__);
+                    }
+                    if (!__Body_Check_Vector_Elements__(__Context__,
+                                                        __Field_Resolved__.__Inner__,
+                                                        __Input__->__Vector_Values__,
+                                                        __Input__->__Vector_Expressions__,
+                                                        __Input__->__Vector_Count__,
+                                                        __Statement__->__Header__.__Span__))
+                    {
+                        free(__Seen__);
+                        return 0;
+                    }
+                    __Found__ = 1;
+                    break;
+                }
                 if (!__Body_Check_Expression_Compatible__(__Context__,
                                                           __Field__->__Slot__.__Type__,
                                                           __Input__->__Value__,

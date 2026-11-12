@@ -1,0 +1,20 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/language/surface/record_literal_expressions.sn
+// A record literal is an expression: an argument, a returned value, a value
+// assigned with `:=`. Its context gives its Type; its field values move in,
+// as in `let r: T = {..};`.
+type Point = { x: int, y: int, name: string };
+
+def total(p: Point): int { return p.x + p.y + (length(p.name) as int); }
+
+def make(a: int): Point { return { x: a, y: a * 2, name: "ab" }; }
+
+def main(): int {
+    let a: int = total({ x: 3, y: 4, name: "xyz" });
+    let b: mutable Point = make(5);
+    b := { name: "", x: b.x + 1, y: b.y };
+    return a + b.x + b.y + 16;
+}

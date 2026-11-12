@@ -4,7 +4,7 @@
 // branch per OS: the Unix startup vector (no libc environ), the Windows
 // environment block, the WASI environ_get table.
 
-لو (الهدف.المنصة == «linux» || الهدف.المنصة == «android» || الهدف.المنصة == «freebsd» || الهدف.المنصة == «macos») {
+إذا (الهدف.المنصة == «linux» || الهدف.المنصة == «android» || الهدف.المنصة == «freebsd» || الهدف.المنصة == «macos») {
     استورد os.platform.unix.process_startup;
     عام عرف اقرأ_بيئة_النظام(): نتيجة متجه متجه ط8, خطأ_حد_نظام {
         طابق اجمع_بيئة_إقلاع_يونكس() مع
@@ -13,7 +13,7 @@
     }
 }
 
-لو (الهدف.المنصة == «windows») {
+إذا (الهدف.المنصة == «windows») {
     استورد os.platform.windows.win32.environment_block;
     عام عرف اقرأ_بيئة_النظام(): نتيجة متجه متجه ط8, خطأ_حد_نظام {
         طابق اقرأ_كتلة_بيئة_ويندوز() مع
@@ -23,7 +23,7 @@
     }
 }
 
-لو (الهدف.المنصة == «wasi») {
+إذا (الهدف.المنصة == «wasi») {
     استورد os.platform.wasi.preview1.process_startup;
     استورد os.platform.wasi.preview1.file_descriptors;
     عام عرف اقرأ_بيئة_النظام(): نتيجة متجه متجه ط8, خطأ_حد_نظام {

@@ -1,0 +1,24 @@
+// The root file of the standard library (the package std, Arabic spelling
+// المكتبة). It declares the spellings of std's top-level modules; an import
+// may use any of them (`استورد المكتبة.دخ.اطبع_سطر;` is `import std.io.println;`).
+// A folder's own root file, FOLDER/FOLDER.sn, declares its children's.
+
+module io { ar: دخ, fr: entree_sortie, es: entrada_salida };
+module fs { ar: ملفات, fr: fichiers, es: archivos };
+module text { ar: نصوص, fr: texte, es: texto };
+module chars { ar: حروف, fr: caracteres };
+module bytes { ar: بايتات, fr: octets };
+module encoding { ar: ترميز, fr: encodage };
+module memory { ar: ذاكرة, fr: memoire };
+module net { ar: شبكة, fr: reseau, es: red };
+module http { ar: ويب };
+module debug { ar: تصحيح };
+module meta { ar: انعكاس };
+module error { ar: أخطاء };
+module fmt { ar: تنسيق };
+module process { ar: عمليات };
+module env { ar: بيئة };
+module crypto { ar: تشفير };
+module toml { ar: تومل };
+module collections { ar: مجموعات };
+module version { ar: إصدار };

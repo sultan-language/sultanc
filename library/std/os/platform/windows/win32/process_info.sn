@@ -1,0 +1,19 @@
+// The process id and console checks on Windows through kernel32, as Rust's
+// std (process::id, io::IsTerminal) does: GetCurrentProcessId, and
+// GetConsoleMode on a standard handle, which fails for a file or a pipe.
+// MSDN: DWORD GetCurrentProcessId(void); BOOL GetConsoleMode(HANDLE, LPDWORD).
+استورد os.platform.windows.win32.file_handles;
+
+خارجي «kernel32.dll» عرف GetCurrentProcessId(): ط32;
+خارجي «kernel32.dll» عرف GetConsoleMode(المقبض: ط64, الوضع: *متغير ط32): ص32;
+
+عام عرف معرف_العملية_ويندوز(): ط64 { أرجع GetCurrentProcessId() مثل ط64; }
+
+// التيار: 0 standard input, 1 output, 2 error (STD_INPUT_HANDLE -10, -11, -12).
+عام عرف هل_طرفية_ويندوز(التيار: ط64): منطقي {
+    دع المعرف: ط32 = 0xFFFFFFF6 - (التيار مثل ط32);
+    دع المقبض: ط64 = GetStdHandle(المعرف);
+    إذا (المقبض == 0 || المقبض == (~(0 مثل ط64))) { أرجع خطأ; };
+    دع الوضع: متغير ط32 = 0;
+    أرجع GetConsoleMode(المقبض, &متغير الوضع) != 0;
+}

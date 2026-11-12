@@ -171,6 +171,25 @@ int __Body_Safety_Move_Atom__(__Semantic_Body_Context__ *__Context__,
         {
             return 0;
         }
+        if (__Context__->__Transfer_Into_Plain_Local__ &&
+            __Safety_Type_Is_Move_Only__(__Context__->__Semantic__, __Projected_Type__))
+        {
+            /* A projection through a reference (`(*r).f`, `(*r)[i]`) copied
+             * into a plain local is a borrowed view, as `let x: T = *r;` is
+             * (docs/en/reference/ownership.md, "Borrowed views are not
+             * moves"): it reads the borrowed storage in place and moves
+             * nothing. The local is classed as borrowed by the copy, and
+             * the drop lowering keeps it non-owning. */
+            __Semantic_Ownership__ __Ownership__ = __Semantic_Ownership_Owner__;
+            if (!__Body_Lvalue_Ownership__(__Context__, __Lvalue__, &__Ownership__))
+            {
+                return 0;
+            }
+            if (__Ownership__ == __Semantic_Ownership_Borrowed__)
+            {
+                return 1;
+            }
+        }
         if (__Safety_Type_Is_Move_Only__(__Context__->__Semantic__, __Projected_Type__) &&
             !(__Lvalue__->__Kind__ == __Ast_Lvalue_Field__ &&
               __Lvalue__->__As__.__Field__.__Parent__ != NULL &&

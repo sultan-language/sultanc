@@ -1,0 +1,8 @@
+// اختبار: رفض
+// تشخيص: SULTANC-C-UNTERMINATED-CONDITIONAL
+// نظير: tests/ar/compiler/c_import_errors/unterminated_conditional.sn
+// Jisr reports an #if without #endif in an imported header as SULTANC-C-UNTERMINATED-CONDITIONAL, with the
+// header's file:line:column, and the import fails at compile time.
+import "unterminated_conditional.h";
+
+def main(): int { return 0; }

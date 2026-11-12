@@ -1,7 +1,7 @@
 // اختبار: رفض
 // تشخيص: SULTANC-THREAD-CAPTURE-RAW-POINTER
 // نظير: tests/ar/diagnostics/safety/thread_capture_raw_pointer.sn
-// The spawn capture check (docs/TYPE_SYSTEM.md, "Thread capture rules"): a
+// The spawn capture check (docs/en/reference/type-system.md, "Thread capture rules"): a
 // closure handed to another thread may not capture a raw pointer, which is
 // not safe to send (Rust's *mut T is !Send), unless the spawn sits inside
 // an unsafe block. Share heap state through std.sync instead.

@@ -1,0 +1,17 @@
+// <stdint.h>'s typedefs and limits, in a module of their own. main.sn's
+// system headers declare int32_t too (through bits/stdint-intn.h on
+// glibc), and they are written first: stdint.h's module leaves such a
+// declaration to theirs and imports it (compiler/jisr/shared.sn). This
+// module imports only stdint.h and still sees int32_t: a C module's names
+// include those it takes from another C module.
+import "stdint.h";
+
+public def stdint_checks(): int {
+    if (INT32_MAX != 2147483647 || UINT16_MAX != 65535 || INT8_MIN != -128) { return 2; };
+    if (INT64_MAX != 9223372036854775807 || UINT32_MAX != 4294967295) { return 3; };
+    let width: int32_t = -5;
+    let count: uint64_t = 7;
+    let small: uint8_t = 255;
+    if ((width as i32) + (count as i32) != 2 || (small as i32) != UINT8_MAX) { return 9; };
+    return 0;
+}

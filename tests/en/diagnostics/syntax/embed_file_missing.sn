@@ -1,0 +1,8 @@
+// اختبار: رفض
+// تشخيص: SULTANC-PARSE-SYNTAX
+// نظير: tests/ar/diagnostics/syntax/embed_file_missing.sn
+// An unreadable file in `embed_file` is a compile error naming the literal.
+def main(): int {
+    let m: string = embed_file("no_such_file.txt");
+    return 0;
+}

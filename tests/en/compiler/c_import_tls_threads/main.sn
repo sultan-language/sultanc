@@ -1,0 +1,28 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// Counterpart: tests/ar/compiler/c_import_tls_threads/main.sn (no pair
+// directive: the interpreter runs one OS thread and stops at a spawn).
+// A thread-local object of compiled C code is one per thread: the thread
+// this program starts bumps a counter of its own, which begins at the
+// initial value 3 whatever the main thread did, and the main thread's
+// counter is unchanged by it (compiler/jisr/lower.sn: each thread's copy of
+// the thread-local objects' initial values).
+import "tls.c";
+import std.thread.thread;
+
+def main(): int {
+    let a: i32 = bump();
+    let b: i32 = bump();
+    match spawn(fn(): void -> record()) with
+    | result.ok(h) -> {
+        let handle: mutable join_handle = h;
+        join(&mutable handle);
+    }
+    | result.err(_) -> { return 1; };
+    let c: i32 = bump();
+    // The other thread's counter went 3 -> 4 -> 5; this one's 3 -> 4 -> 5 -> 6.
+    if (get_seen() != 5 || c != 6) { return 2; };
+    // 4 + 5 + 6 + 5 + 22 = 42
+    return (a + b + c + get_seen() + 22) as int;
+}

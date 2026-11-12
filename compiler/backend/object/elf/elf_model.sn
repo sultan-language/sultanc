@@ -21,6 +21,9 @@
     | عنوان_نسبي_اثنان_وثلاثون
     | تحميل_جوت_ريكس_نسبي_اثنان_وثلاثون
     | عنوان_مطلق_أربعة_وستون
+    // AArch64 instruction relocations carry their ELF type (R_AARCH64_*);
+    // the writer checks the instruction word they patch.
+    | تعليمة_ذراع_أربعة_وستون بنوع طبيعي
 ;
 
 عام نوع إزاحة_إلف = {
@@ -40,6 +43,9 @@
 
 عام نوع كائن_إلف = {
     الهدف: معرف_هدف,
+    // e_machine: 62 (EM_X86_64) or 183 (EM_AARCH64). It selects the
+    // relocation numbering of the absolute and DWARF records.
+    الآلة: طبيعي,
     النص: متجه ط8,
     البيانات: متجه ط8,
     محاذاة_البيانات: طبيعي,
@@ -47,5 +53,11 @@
     الإزاحات: متجه إزاحة_إلف,
     دخول_العملية: اختياري موضع_دخول_عملية_إلف,
     منشئ_الوحدة: اختياري معرف_دالة_منتقاة,
+    // Contents of an allocated .note.tag section (the FreeBSD ABI note of
+    // the object holding `_start`); empty when the object has none.
+    ملاحظة_الوسم: متجه ط8,
+    // EI_OSABI: 9 (ELFOSABI_FREEBSD) for FreeBSD, else 0. lld keeps the
+    // value of the input objects (link/elf/target_policy.sn).
+    هوية_النظام: طبيعي,
     دوارف: حزمة_دوارف
 };

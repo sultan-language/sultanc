@@ -1,8 +1,14 @@
+استورد std.process.panic;
+
 // Canonical compiler-wide source position is byte based.
 // Human line/column and LSP UTF-16 coordinates are derived from SourceMap.
+// Both fields are 32-bit: a SourceID is allocated by SourceMap and a byte
+// offset lies inside one source text, and both bounds are checked where the
+// value is made (أضف_مصدر_إلى_خريطة and مصدر_جديد, ط32_متحقق), so every
+// position fits; a span is 16 bytes instead of 32.
 عام نوع موضع = {
-    المصدر: طبيعي,
-    البايت: طبيعي
+    المصدر: ط32,
+    البايت: ط32
 };
 
 // Half-open byte span in one source file.
@@ -41,27 +47,46 @@
 
 // Point queries use the canonical half-open source-range rule: start <= byte < end.
 عام عرف نطاق_يحتوي_بايتا(النطاق: نطاق, المصدر: طبيعي, البايت: طبيعي): منطقي {
-    لو (النطاق.البداية.المصدر != المصدر || النطاق.النهاية.المصدر != المصدر) {
+    إذا ((النطاق.البداية.المصدر مثل طبيعي) != المصدر || (النطاق.النهاية.المصدر مثل طبيعي) != المصدر) {
         أرجع خطأ;
     };
-    أرجع (النطاق.البداية.البايت <= البايت) && (البايت < النطاق.النهاية.البايت);
+    أرجع ((النطاق.البداية.البايت مثل طبيعي) <= البايت) && (البايت < (النطاق.النهاية.البايت مثل طبيعي));
 }
 
 عام عرف طول_نطاق_بالبايت(النطاق: نطاق): طبيعي {
-    لو (النطاق.النهاية.البايت < النطاق.البداية.البايت) { أرجع 0; };
-    أرجع النطاق.النهاية.البايت - النطاق.البداية.البايت;
+    إذا (النطاق.النهاية.البايت < النطاق.البداية.البايت) { أرجع 0; };
+    أرجع (النطاق.النهاية.البايت - النطاق.البداية.البايت) مثل طبيعي;
+}
+
+// The one checked narrowing to a 32-bit compiler identity or source offset:
+// a value above 2^32 - 1 stops the compiler instead of wrapping into another
+// identity. SourceMap, the source constructor and the identity constructors
+// (معرف_رمز_من, معرف_نوع_من, ...) call it, so the values built from them fit
+// without a check of their own.
+عام عرف ط32_متحقق(القيمة: طبيعي): ط32 {
+    إذا (القيمة > 0xFFFFFFFF) {
+        إنهيار(«SultanC: a compiler identity or source offset exceeds 2^32 - 1»);
+    };
+    أرجع القيمة مثل ط32;
+}
+
+// A position from a SourceID and a byte offset held as uint (a cursor or a
+// text index inside that source): both are checked.
+عام عرف موضع_من(المصدر: طبيعي, البايت: طبيعي): موضع {
+    دع الناتج: موضع = { المصدر: ط32_متحقق(المصدر), البايت: ط32_متحقق(البايت) };
+    أرجع الناتج;
 }
 
 // Overlap is defined only inside one canonical source identity. Empty spans
 // overlap only when their byte position lies inside the other span.
 عام عرف نطاقان_متداخلان(أ: نطاق, ب: نطاق): منطقي {
-    لو (أ.البداية.المصدر != ب.البداية.المصدر || أ.النهاية.المصدر != ب.النهاية.المصدر) {
+    إذا (أ.البداية.المصدر != ب.البداية.المصدر || أ.النهاية.المصدر != ب.النهاية.المصدر) {
         أرجع خطأ;
     };
-    لو (أ.البداية.البايت == أ.النهاية.البايت) {
+    إذا (أ.البداية.البايت == أ.النهاية.البايت) {
         أرجع نطاق_يحتوي_بايتا(ب, أ.البداية.المصدر, أ.البداية.البايت);
     };
-    لو (ب.البداية.البايت == ب.النهاية.البايت) {
+    إذا (ب.البداية.البايت == ب.النهاية.البايت) {
         أرجع نطاق_يحتوي_بايتا(أ, ب.البداية.المصدر, ب.البداية.البايت);
     };
     أرجع أ.البداية.البايت < ب.النهاية.البايت && ب.البداية.البايت < أ.النهاية.البايت;
@@ -69,7 +94,7 @@
 
 // Range containment is defined only inside one canonical source identity.
 عام عرف نطاق_يحتوي_نطاقا(الخارجي: نطاق, الداخلي: نطاق): منطقي {
-    لو (الخارجي.البداية.المصدر != الداخلي.البداية.المصدر
+    إذا (الخارجي.البداية.المصدر != الداخلي.البداية.المصدر
         || الخارجي.النهاية.المصدر != الداخلي.النهاية.المصدر) {
         أرجع خطأ;
     };

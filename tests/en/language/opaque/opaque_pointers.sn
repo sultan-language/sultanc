@@ -1,0 +1,39 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/language/opaque/opaque_pointers.sn
+// Pointers to opaque types: null, == and !=, parameters and results, locals,
+// record fields, vectors, an alias of the opaque type (the same type), and
+// address words in both directions.
+type Db = opaque;
+type Stmt = opaque;
+type DbAlias = Db;
+type Holder = { db: *Db, stmts: vector *Stmt, count: int };
+
+def open_at(address: u64): *Db {
+    unsafe { return address as *Db; };
+}
+
+def same(a: *Db, b: *DbAlias): bool { return a == b; }
+
+def first_db(holder: &Holder): *Db { return (*holder).db; }
+
+def main(): int {
+    let none: *Db = 0 as *Db;
+    let db: *Db = open_at(4096);
+    let writable: mutable *mutable Db = 0 as *mutable Db;
+    unsafe { writable := 8192 as *mutable Db; };
+    let holder: Holder = { db: db, stmts: [0 as *Stmt], count: 1 };
+    let all: mutable vector *Db = [];
+    append(all, db);
+    append(all, none);
+    let address: u64 = first_db(&holder) as u64;
+    let writable_address: u64 = writable as u64;
+    let total: mutable int = 0;
+    if (same(holder.db, all[0])) { total := total + 10; };
+    if (all[1] == none && none != db) { total := total + 10; };
+    if (holder.stmts[0] == 0 as *Stmt) { total := total + 10; };
+    if (address == 4096 && writable_address == 8192) { total := total + 12; };
+    return total;
+}

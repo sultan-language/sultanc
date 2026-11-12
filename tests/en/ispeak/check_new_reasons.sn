@@ -88,7 +88,7 @@ def main(): int {
     // comptime.unrepresentable-result, compiler/driver/compile_time.sn:252
     if (!check_reason(سبب_تشخيص.سبب_وقت_الترجمة_ناتج_غير_قابل_للتمثيل(), "The compile-time result cannot be represented as a constant of the expected type", "لا يمكن تمثيل ناتج وقت الترجمة ثابتا من النوع المتوقع")) { return 35; };
     // comptime.unsupported-callee, compiler/driver/compile_time.sn:225
-    if (!check_reason(سبب_تشخيص.سبب_وقت_الترجمة_مستدعى_غير_مدعوم(), "Only SultanC functions can be called at compile time", "يسمح التقييم وقت الترجمة باستدعاء دوال سلطان سي فقط")) { return 36; };
+    if (!check_reason(سبب_تشخيص.سبب_وقت_الترجمة_مستدعى_غير_مدعوم(), "Only SultanC functions can be called at compile time", "يسمح التقييم وقت الترجمة باستدعاء دوال السلطان فقط")) { return 36; };
     // comptime.unsupported-operation, compiler/driver/compile_time.sn:495
     if (!check_reason(سبب_تشخيص.سبب_وقت_الترجمة_عملية_غير_مدعومة(), "This operation is not supported at compile time", "هذه العملية غير مدعومة وقت الترجمة")) { return 37; };
     // annotation.processing-not-implemented, compiler/frontend/semantic_pipeline.sn:850

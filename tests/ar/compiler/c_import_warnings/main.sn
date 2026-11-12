@@ -1,0 +1,9 @@
+// اختبار: قبول
+// تشخيص: SULTANC-C-WARNING-DIRECTIVE
+// نظير: tests/en/compiler/c_import_warnings/main.sn
+// ينجح استيراد سي ليس فيه إلا تحذيرات، وتطبع تحذيراته: `#warning`
+// (SULTANC-C-WARNING-DIRECTIVE) والتصريح بلا نموذج المتروك من الوحدة
+// (SULTANC-C-UNPROTOTYPED)، كل منهما في موضعه من ملف سي. ويخرج `check` بالحالة 0.
+استورد "warnings.h";
+
+عرف الرئيسية(): عدد { أرجع 0; }

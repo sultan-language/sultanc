@@ -1,0 +1,9 @@
+// اختبار: قبول
+// تشخيص: SULTANC-C-NAME-CONFLICT-SKIPPED
+// نظير: tests/en/compiler/c_import_warnings/unspellable.sn
+// اسم سي لا تستطيع معرفات السلطان تهجئته (`café`، ‏U+00E9) يترك خارج الوحدة
+// بالتحذير SULTANC-C-NAME-CONFLICT-SKIPPED في موضعه من ملف سي، ويستورد باقي
+// الترويسة ويخرج `check` بالحالة 0.
+استورد "unspellable.h";
+
+عرف الرئيسية(): عدد { أرجع 0; }

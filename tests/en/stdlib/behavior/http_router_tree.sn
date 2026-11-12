@@ -1,0 +1,126 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 0
+// نظير: tests/ar/stdlib/behavior/http_router_tree.sn
+// The router's segment tree keeps the routing rules: a static segment
+// outranks a parameter, a parameter outranks a catch-all, a catch-all takes
+// the rest of the path (also nothing, and keeps inner slashes), a trailing
+// slash is an empty last segment, the query string is not part of the path,
+// an absolute-form target routes by its path, a path that matches only other
+// methods is 405 with every such method in "allow" (in registration order),
+// and an unknown path is 404. A route registered twice is refused.
+import std.http.model;
+import std.http.headers;
+import std.http.body;
+import std.http.router;
+import std.text.transform;
+import std.text.from_bytes;
+import std.text.compare;
+
+def reply(tag: string, params: &route_parameters): buffered_http_response {
+    let parts: mutable vector string = [tag];
+    let i: mutable uint = 0;
+    while (i < (length((*params).القيم) as uint)) {
+        append(parts, copy_text(&(*params).القيم[i].القيمة));
+        i := i + 1;
+    }
+    let sep: string = «|»;
+    let body: string = join(&parts, &sep);
+    return text_http_response(200, &body);
+}
+
+def users_list(s: &int, r: &buffered_http_request, p: &route_parameters): buffered_http_response { return reply(«list», p); }
+def users_me(s: &int, r: &buffered_http_request, p: &route_parameters): buffered_http_response { return reply(«me», p); }
+def users_one(s: &int, r: &buffered_http_request, p: &route_parameters): buffered_http_response { return reply(«one», p); }
+def users_post(s: &int, r: &buffered_http_request, p: &route_parameters): buffered_http_response { return reply(«post», p); }
+def user_book(s: &int, r: &buffered_http_request, p: &route_parameters): buffered_http_response { return reply(«book», p); }
+def files(s: &int, r: &buffered_http_request, p: &route_parameters): buffered_http_response { return reply(«files», p); }
+def root(s: &int, r: &buffered_http_request, p: &route_parameters): buffered_http_response { return reply(«root», p); }
+def deep(s: &int, r: &buffered_http_request, p: &route_parameters): buffered_http_response { return reply(«deep», p); }
+
+def request(method: string, target: string): buffered_http_request {
+    let headers: vector http_header = [];
+    let trailers: vector http_header = [];
+    let body: vector u8 = [];
+    let r: buffered_http_request = {
+        الطريقة: method, الهدف: target, الإصدار: http_version.http_1_1(), الرؤوس: headers,
+        الرؤوس_اللاحقة: trailers, الجسم: body, العنوان_البعيد: "", السياق: http_request_context_empty()
+    };
+    return r;
+}
+
+def body_is(response: &buffered_http_response, expected: string): bool {
+    if ((*response).الحالة != 200) { return false; };
+    let text: string = from_bytes_web(&(*response).الجسم);
+    return texts_equal(&text, &expected);
+}
+
+def from_bytes_web(bytes: &vector u8): string {
+    let out: mutable vector u8 = [];
+    let i: mutable uint = 0;
+    while (i < (length(*bytes) as uint)) { append(out, (*bytes)[i]); i := i + 1; }
+    return from_bytes(&out);
+}
+
+def expect(router: &موجه_ويب<int>, method: string, target: string, expected: string): bool {
+    let r: buffered_http_request = request(method, target);
+    let response: buffered_http_response = http_router_dispatch(router, &r);
+    return body_is(&response, expected);
+}
+
+def status(router: &موجه_ويب<int>, method: string, target: string): int {
+    let r: buffered_http_request = request(method, target);
+    let response: buffered_http_response = http_router_dispatch(router, &r);
+    return response.الحالة as int;
+}
+
+def run(): int {
+    let router: mutable موجه_ويب<int> = new_http_router(0);
+    let p1: string = «/users»;
+    let p2: string = «/users/me»;
+    let p3: string = «/users/{id}»;
+    let p4: string = «/users/{id}/books/{book}»;
+    let p5: string = «/files/{*path}»;
+    let p6: string = «/»;
+    let p7: string = «/a/{x}/{*rest}»;
+    match http_router_get(&mutable router, &p1, users_list) with | result.err(_) -> { return 1; } | result.ok(_) -> {};
+    match http_router_get(&mutable router, &p3, users_one) with | result.err(_) -> { return 2; } | result.ok(_) -> {};
+    match http_router_get(&mutable router, &p2, users_me) with | result.err(_) -> { return 3; } | result.ok(_) -> {};
+    match http_router_post(&mutable router, &p3, users_post) with | result.err(_) -> { return 4; } | result.ok(_) -> {};
+    match http_router_get(&mutable router, &p4, user_book) with | result.err(_) -> { return 5; } | result.ok(_) -> {};
+    match http_router_get(&mutable router, &p5, files) with | result.err(_) -> { return 6; } | result.ok(_) -> {};
+    match http_router_get(&mutable router, &p6, root) with | result.err(_) -> { return 7; } | result.ok(_) -> {};
+    match http_router_get(&mutable router, &p7, deep) with | result.err(_) -> { return 8; } | result.ok(_) -> {};
+    match http_router_get(&mutable router, &p3, users_one) with | result.err(_) -> {} | result.ok(_) -> { return 9; };
+
+    if (!expect(&router, «GET», «/users», «list»)) { return 10; };
+    if (!expect(&router, «GET», «/users/me», «me»)) { return 11; };
+    if (!expect(&router, «GET», «/users/42», «one|42»)) { return 12; };
+    if (!expect(&router, «GET», «/users/42?x=1&y=2», «one|42»)) { return 13; };
+    if (!expect(&router, «POST», «/users/7», «post|7»)) { return 14; };
+    if (!expect(&router, «GET», «/users/7/books/b9», «book|7|b9»)) { return 15; };
+    if (!expect(&router, «GET», «/files/a/b/c.txt», «files|a/b/c.txt»)) { return 16; };
+    if (!expect(&router, «GET», «/files», «files|»)) { return 17; };
+    if (!expect(&router, «GET», «/files/», «files|»)) { return 18; };
+    if (!expect(&router, «GET», «/», «root»)) { return 19; };
+    if (!expect(&router, «GET», «http://example.com/users/5?q», «one|5»)) { return 20; };
+    if (!expect(&router, «GET», «/a/1/x/y», «deep|1|x/y»)) { return 21; };
+    if (!expect(&router, «GET», «/a/1», «deep|1|»)) { return 22; };
+    // A trailing slash is an empty last segment: /users/ is /users/{id} with id "".
+    if (!expect(&router, «GET», «/users/», «one|»)) { return 23; };
+    if (status(&router, «GET», «/nothing») != 404) { return 24; };
+    if (status(&router, «GET», «/users/1/books») != 404) { return 25; };
+    if (status(&router, «DELETE», «/users/3») != 405) { return 26; };
+    let r: buffered_http_request = request(«DELETE», «/users/3»);
+    let response: buffered_http_response = http_router_dispatch(&router, &r);
+    let allow_name: string = «allow»;
+    let allow: vector string = http_header_values(&response.الرؤوس, &allow_name);
+    if ((length(allow) as uint) != 1) { return 27; };
+    let expected_allow: string = «GET, POST»;
+    if (!texts_equal(&allow[0], &expected_allow)) { return 28; };
+    return 0;
+}
+
+def main(): int {
+    return run();
+}

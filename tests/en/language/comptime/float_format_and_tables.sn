@@ -1,0 +1,26 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// نظير: tests/ar/language/comptime/float_format_and_tables.sn
+// Compile-time code reads immutable module constants (std.text's float
+// formatting uses its tables of powers of ten), and copies a vector of
+// plain values in one step: the clone of a 200000-element vector fits the
+// default budget.
+from std.text import f64_to_string;
+def formatted(): string { return f64_to_string(3.25); }
+def copies(): int {
+    let v: mutable vector int = [7];
+    while (length(v) < 200000) {
+        let c: vector int = clone(&v);
+        extend_from(v, &c, 0 as uint, length(c) as uint);
+    }
+    let w: vector int = clone(&v);
+    return length(w) as int;
+}
+def main(): int {
+    let text: string = comptime { formatted() };
+    let count: int = comptime { copies() };
+    if (length(text) != 4 || text[1] != 46) { return 1; };
+    if (count < 200000) { return 2; };
+    return 42;
+}

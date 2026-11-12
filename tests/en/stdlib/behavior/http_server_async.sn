@@ -1,0 +1,101 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 0
+// نظير: tests/ar/stdlib/behavior/http_server_async.sn
+// The async HTTP server (std.http.server http_serve_async) runs as a task;
+// two client tasks connect at once over loopback, each connection is served
+// by a task of its own, both get 200 with the handler's body, and a shutdown
+// request ends the server within its 250 ms accept wait.
+import std.http.server;
+import std.http.shutdown;
+import std.http.model;
+import std.http.body;
+import std.async.runtime;
+import std.async.net;
+import std.net.socket_address;
+import std.net.tcp;
+import std.text.from_bytes;
+
+def service(state: &int, request: &buffered_http_request): buffered_http_response {
+    let body: string = «async ok»;
+    return text_http_response(200, &body);
+}
+
+def serve(): int {
+    let address: string = «127.0.0.1:38523»;
+    let config: http_server_config = default_http_server_config(&address);
+    let state: int = 0;
+    match http_serve_async(&config, &state, service) with
+    | result.err(_) -> { return 1; }
+    | result.ok(_) -> { return 0; };
+}
+
+def zeros(n: uint): vector u8 {
+    let out: mutable vector u8 = [];
+    let i: mutable uint = 0;
+    while (i < n) { append(out, 0); i := i + 1; }
+    return out;
+}
+
+def contains(haystack: &vector u8, size: uint, needle: &vector u8): bool {
+    let n: uint = length(*needle) as uint;
+    let i: mutable uint = 0;
+    while (i + n <= size) {
+        let j: mutable uint = 0;
+        while (j < n && (*haystack)[i + j] == (*needle)[j]) { j := j + 1; }
+        if (j == n) { return true; };
+        i := i + 1;
+    }
+    return false;
+}
+
+def fetch(): int {
+    sleep_task(30000000);
+    let text: string = «127.0.0.1:38523»;
+    let addr: mutable socket_addr;
+    match parse_socket_addr(&text) with
+    | result.err(_) -> { return 1; }
+    | result.ok(a) -> { addr := a; };
+    let stream: tcp_stream;
+    match tcp_connect_async(&addr) with
+    | result.err(_) -> { return 2; }
+    | result.ok(s) -> { stream := s; };
+    let request: vector u8 = bytes_from_text("GET / HTTP/1.1\r\nHost: local\r\nConnection: close\r\n\r\n");
+    match tcp_write_all_async(&stream, &request) with
+    | result.err(_) -> { return 3; }
+    | result.ok(_) -> { };
+    let buffer: mutable vector u8 = zeros(4096);
+    let got: mutable uint = 0;
+    let open: mutable bool = true;
+    while (open && got < 4096) {
+        match tcp_read_async(&stream, &mutable buffer, got as int, 4096 - (got as int)) with
+        | result.err(_) -> { return 4; }
+        | result.ok(k) -> {
+            if (k <= 0) { open := false; } else { got := got + (k as uint); };
+        };
+    }
+    let c: result int, int = tcp_close_async(stream);
+    let status: vector u8 = bytes_from_text("HTTP/1.1 200");
+    let body: vector u8 = bytes_from_text("async ok");
+    if (!contains(&buffer, got, &status)) { return 5; };
+    if (!contains(&buffer, got, &body)) { return 6; };
+    return 0;
+}
+
+def main(): int {
+    if (!tasks_supported()) { return 1; };
+    let server: mutable task<int> = spawn_task(fn(): int -> serve());
+    let first: mutable task<int> = spawn_task(fn(): int -> fetch());
+    let second: mutable task<int> = spawn_task(fn(): int -> fetch());
+    match await_task(&mutable first) with
+    | option.some(v) -> { if (v != 0) { return 10 + v; }; }
+    | option.none -> { return 10; };
+    match await_task(&mutable second) with
+    | option.some(v) -> { if (v != 0) { return 20 + v; }; }
+    | option.none -> { return 20; };
+    request_http_shutdown();
+    match await_task(&mutable server) with
+    | option.some(v) -> { if (v != 0) { return 30 + v; }; }
+    | option.none -> { return 30; };
+    return 0;
+}

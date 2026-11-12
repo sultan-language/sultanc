@@ -1,0 +1,8 @@
+// اختبار: رفض
+// تشخيص: SULTANC-C-MACRO-ARGUMENT-COUNT
+// نظير: tests/ar/compiler/c_import_errors/macro_arguments.sn
+// Jisr reports a macro call with the wrong number of arguments in an imported header as SULTANC-C-MACRO-ARGUMENT-COUNT, with the
+// header's file:line:column, and the import fails at compile time.
+import "macro_arguments.h";
+
+def main(): int { return 0; }

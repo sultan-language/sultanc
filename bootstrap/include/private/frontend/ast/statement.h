@@ -10,8 +10,19 @@ typedef struct
 {
     /* Stores the name. */
     __Text_Slice__ __Name__;
-    /* References the value expression. */
+    /* References the value expression (NULL for a vector literal). */
     __Ast_Expression__ *__Value__;
+    /* A vector literal value `[e, ...]` (canonical: a vector literal is an
+     * expression, so it may initialize a record field). Its elements are
+     * kept as in a vector initializer: an atom per element, or an expression
+     * where the element is not an atom. */
+    int __Is_Vector__;
+    /* References the vector element atoms. */
+    __Ast_Atom__ *__Vector_Values__;
+    /* References the vector elements that are not atoms, or NULL. */
+    __Ast_Expression__ **__Vector_Expressions__;
+    /* Stores the vector element count. */
+    size_t __Vector_Count__;
 } __Ast_Record_Input__;
 
 /* Defines the AST pattern kind values. */

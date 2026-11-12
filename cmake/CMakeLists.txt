@@ -40,7 +40,7 @@ endif()
 # asks for it; the self-hosted compiler is built without LLVM unless enabled.
 # Stage1 is always LLVM-enabled: Stage0 takes no capability input, compiles
 # the default module sources, and Stage1 links SultanC::LLVM (Stage1.cmake).
-# See docs/internals/compiler-architecture.md ("Compiler-build capabilities").
+# See docs/en/internals/compiler-architecture.md ("Compiler-build capabilities").
 option(SULTANC_COMPILER_LLVM
     "Include the LLVM backend in the self-hosted SultanC compiler (Stage2+)" OFF)
 set(SULTANC_COMPILER_CAPABILITY_ARGS "")

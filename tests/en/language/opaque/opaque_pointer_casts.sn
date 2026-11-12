@@ -1,0 +1,33 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/language/opaque/opaque_pointer_casts.sn
+// Raw pointer to raw pointer casts inside unsafe: *T to *mutable T and back,
+// *T to *void and back, *mutable T through *mutable void, and *A to *B
+// between two records.
+type Db = opaque;
+type First = { value: int };
+type Second = { other: int };
+
+def main(): int {
+    let record: First = { value: 22 };
+    let first: *First = (&record) as *First;
+    let total: mutable int = 0;
+    unsafe {
+        let db: *Db = 4096 as *Db;
+        let writable: *mutable Db = db as *mutable Db;
+        let readable: *Db = writable as *Db;
+        let untyped: *void = readable as *void;
+        let again: *Db = untyped as *Db;
+        let untyped_writable: *mutable void = writable as *mutable void;
+        let again_writable: *mutable Db = untyped_writable as *mutable Db;
+        if (again == db && again_writable == writable && (again as u64) == 4096) {
+            total := total + 20;
+        };
+        let second: *Second = first as *Second;
+        let back: *First = second as *First;
+        total := total + (*back).value;
+    };
+    return total;
+}

@@ -5,27 +5,24 @@
 
 // An independent copy of a byte vector: new storage holding the same bytes.
 // Owned values are never duplicated by reading them through a reference
-// (docs/OWNERSHIP_AND_DESTRUCTION.md); a copy is this explicit allocation.
+// (docs/en/reference/ownership.md); a copy is this explicit allocation.
+// One allocation of exactly the length and one block copy, as Rust's
+// Vec::clone.
 عام عرف انسخ_بايتات(البايتات: &متجه ط8): متجه ط8 {
     دع النسخة: متغير متجه ط8 = [];
     دع العدد: طبيعي = الطول(*البايتات) مثل طبيعي;
-    دع الفهرس: متغير طبيعي = 0;
-    طالما (الفهرس < العدد) {
-        ألحق(النسخة, (*البايتات)[الفهرس]);
-        الفهرس := الفهرس + 1;
-    }
+    احجز_سعة(النسخة, العدد);
+    ألحق_من(النسخة, البايتات, 0, العدد);
     أرجع النسخة;
 }
 
-// An independent copy of a text value.
+// An independent copy of a text value: one allocation, one block copy of
+// its bytes.
 عام عرف انسخ_نص(القيمة: &نص): نص {
     دع النسخة: متغير متجه ط8 = [];
     دع العدد: طبيعي = الطول(*القيمة) مثل طبيعي;
-    دع الفهرس: متغير طبيعي = 0;
-    طالما (الفهرس < العدد) {
-        ألحق(النسخة, (*القيمة)[الفهرس]);
-        الفهرس := الفهرس + 1;
-    }
+    احجز_سعة(النسخة, العدد);
+    ألحق_من(النسخة, القيمة, 0, العدد);
     أرجع النسخة مثل نص;
 }
 
@@ -33,14 +30,13 @@
 // spellings are written as readable literals and converted here where an API
 // needs bytes, instead of being hand-encoded as byte arrays.
 عام عرف بايتات_من_نص(النص: نص): متجه ط8 {
-    دع الناتج: متغير متجه ط8 = [];
+    // One allocation and one block copy. The text's buffer is not taken
+    // over: a literal's is static data, which a vector would grow in place.
     دع العدد: طبيعي = الطول(النص) مثل طبيعي;
-    دع الفهرس: متغير طبيعي = 0;
-    طالما (الفهرس < العدد) {
-        ألحق(الناتج, النص[الفهرس]);
-        الفهرس := الفهرس + 1;
-    }
-    أرجع الناتج;
+    دع النسخة: متغير متجه ط8 = [];
+    احجز_سعة(النسخة, العدد);
+    ألحق_من(النسخة, &النص, 0, العدد);
+    أرجع النسخة;
 }
 
 // The same bytes followed by one NUL byte (the C string ABI, e.g. LLVM names).
@@ -55,18 +51,14 @@
 // the text as byte codes and without an intermediate vector.
 عام عرف ألحق_بايتات_نص(الهدف: &متغير متجه ط8, النص: نص): فراغ {
     دع العدد: طبيعي = الطول(النص) مثل طبيعي;
-    دع الفهرس: متغير طبيعي = 0;
-    طالما (الفهرس < العدد) {
-        ألحق(*الهدف, النص[الفهرس]);
-        الفهرس := الفهرس + 1;
-    }
+    ألحق_من(*الهدف, &النص, 0, العدد);
 }
 
 // The byte of a one-byte (ASCII) text value, so byte-oriented parsers can
 // compare against «:» instead of a concealed byte code. A text of any other
 // length yields none.
 عام عرف بايت_نص(النص: نص): اختياري ط8 {
-    لو ((الطول(النص) مثل طبيعي) != 1) { أرجع اختياري.لا_شيء(); };
+    إذا ((الطول(النص) مثل طبيعي) != 1) { أرجع اختياري.لا_شيء(); };
     أرجع اختياري.موجود(النص[0]);
 }
 

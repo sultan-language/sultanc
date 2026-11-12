@@ -1,4 +1,4 @@
-/* Declares the never-returning call query (docs/ERRORS.md, "Never returning"). */
+/* Declares the never-returning call query (docs/en/reference/errors.md, "Never returning"). */
 
 #ifndef SULTANC__SEMANTIC_NEVER_RETURN_H__
 #define SULTANC__SEMANTIC_NEVER_RETURN_H__

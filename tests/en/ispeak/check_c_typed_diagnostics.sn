@@ -1,0 +1,72 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 0
+// نظير: tests/ar/ispeak/check_c_typed_diagnostics.sn
+import std.text.compare;
+import std.text.from_bytes;
+import std.io.print;
+import compiler.diagnostics.identity;
+import compiler.diagnostics.reason;
+import compiler.diagnostics.record;
+import compiler.diagnostics.schema;
+import compiler.diagnostics.message;
+import compiler.diagnostics.foreign_c;
+import compiler.source.source_file;
+
+// Typed C diagnostics (diagnostics/foreign_c.sn): Jisr hands over an
+// identity, a C reason, typed facts and BYTE columns with the source line;
+// iSpeak words them in both languages, and the character columns are derived
+// from the line (a two-byte letter before the column counts once).
+def same(actual: string, expected: string): bool {
+    if (texts_equal(&actual, &expected)) { return true; };
+    let ignored: result int, int = اطبع_خطأ(actual);
+    let newline: result int, int = اطبع_خطأ("\n");
+    return false;
+}
+
+def main(): int {
+    // `é` is two bytes: the byte column 6 of `  é foo_t x;` is character column 5 (0-based 4).
+    let place: موقع_سي = موقع_سي_جديد("lib.h", 3, 6, 5, "  é foo_t x;");
+    let diagnostic: mutable تشخيص_سي_منظم = تشخيص_سي_منظم_جديد(
+        معرف_تشخيص.سي_اسم_نوع_مجهول(), سبب_تشخيص.سبب_سي_اسم_نوع_مجهول(), place
+    );
+    أضف_رمز_سي(&mutable diagnostic, "foo_t");
+    أضف_موقع_تضمين_سي(&mutable diagnostic, موقع_سي_جديد("main.h", 1, 1, 0, "#include \"lib.h\""));
+    أبلغ_تشخيص_سي_منظم(diagnostic);
+    // The same report again (a C file read twice) is reported once.
+    let again: mutable تشخيص_سي_منظم = تشخيص_سي_منظم_جديد(
+        معرف_تشخيص.سي_اسم_نوع_مجهول(), سبب_تشخيص.سبب_سي_اسم_نوع_مجهول(),
+        موقع_سي_جديد("lib.h", 3, 6, 5, "  é foo_t x;")
+    );
+    أضف_رمز_سي(&mutable again, "foo_t");
+    أبلغ_تشخيص_سي_منظم(again);
+    let warning: mutable تشخيص_سي_منظم = تشخيص_سي_منظم_جديد(
+        معرف_تشخيص.سي_ماكرو_غير_ثابت(), سبب_تشخيص.سبب_سي_مخطى_ماكرو_دالي(),
+        موقع_سي_جديد("lib.h", 7, 9, 3, "#define MAX(a, b) a")
+    );
+    أضف_رمز_سي(&mutable warning, "MAX");
+    أبلغ_تشخيص_سي_منظم(warning);
+
+    let pending: vector تشخيص = اسحب_تشخيصات_سي();
+    if (length(pending) != 2) { return 1; };
+    if (pending[0].المعرف != معرف_تشخيص.سي_اسم_نوع_مجهول()) { return 2; };
+    match pending[0].المصدر_الرئيسي with
+    | option.some(span) -> {
+        match span.بداية_العرض with
+        | option.some(start) -> {
+            if (start.السطر != 3 || start.العمود != 4) { return 3; };
+        }
+        | option.none -> { return 3; };
+        match span.نهاية_العرض with
+        | option.some(end) -> { if (end.العمود != 9) { return 4; }; }
+        | option.none -> { return 4; };
+    }
+    | option.none -> { return 3; };
+    if (length(pending[0].النطاقات_المرتبطة) != 1) { return 5; };
+    if (pending[0].النطاقات_المرتبطة[0].الدور != دور_نطاق_تشخيص.مضمن_من()) { return 5; };
+    if (!same(نص_رسالة_تشخيص(&pending[0], لغة_تشخيص.الإنجليزية()), "unknown C type name — The C name is `foo_t`. No type of this name is declared.")) { return 6; };
+    if (!same(نص_رسالة_تشخيص(&pending[0], لغة_تشخيص.العربية()), "اسم نوع سي مجهول — اسم سي هو `foo_t`. لا نوع مصرحا بهذا الاسم.")) { return 7; };
+    if (!same(نص_رسالة_تشخيص(&pending[1], لغة_تشخيص.الإنجليزية()), "C macro is not a constant — The C name is `MAX`. A function-like macro is not a constant, so it is not imported.")) { return 8; };
+    if (!same(نص_رسالة_تشخيص(&pending[1], لغة_تشخيص.العربية()), "ماكرو سي ليس ثابتا — اسم سي هو `MAX`. الماكرو الدالي ليس ثابتا فلا يستورد.")) { return 9; };
+    return 0;
+}

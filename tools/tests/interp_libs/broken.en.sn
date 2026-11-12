@@ -1,0 +1,7 @@
+// With `-l interp_broken`, whose dependency is missing: `run` reports
+// SULTANC-RUN-LIBRARY-LOAD-FAILED before the program starts.
+extern def interp_lib_broken(): i32;
+
+def main(): int {
+    unsafe { return interp_lib_broken() as int; }
+}

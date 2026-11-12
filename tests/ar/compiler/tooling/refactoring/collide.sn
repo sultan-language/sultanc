@@ -1,0 +1,12 @@
+// مُثبّت tests/ar/compiler/tooling/refactoring_queries.sn (ليس اختبارا).
+استورد «helper.sn»;
+استورد std.text.compare;
+استورد std.text.search;
+استورد std.text.compare;
+
+عرف الرئيسية(): عدد {
+    دع الأول: نص = «a»;
+    دع الثاني: نص = «a»;
+    إذا (نصان_متساويان(&الأول, &الثاني)) { أرجع ضاعف(21); }
+    أرجع 0;
+}

@@ -4,7 +4,7 @@
 // تفاضلي: نعم
 // بيئة: SULTANC_LANG=en_GB.UTF-8
 // نظير: tests/ar/stdlib/error/system_language.sn
-// std.text.system_language (docs/ERRORS.md): the program's locale from its
+// std.text.system_language (docs/en/reference/errors.md): the program's locale from its
 // environment. SULTANC_LANG comes first; a POSIX value loses its encoding
 // and its «_» becomes «-». Native and interpreter agree.
 import std.text.language;

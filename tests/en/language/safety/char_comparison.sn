@@ -1,0 +1,80 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// نظير: tests/ar/language/safety/char_comparison.sn
+// Characters compare by their Unicode scalar values with ==, !=, <, <=, >
+// and >=: literals, locals, elements of a vector, bytes of text viewed as
+// characters, Arabic letters and a character beyond the Basic Multilingual
+// Plane (ordered as unsigned values); in a module constant and at compile
+// time too; character patterns, ranges included, agree.
+
+def is_arabic_letter(c: char): bool {
+    return c >= 'ء' && c <= 'ي';
+}
+
+// Folded by constant evaluation.
+let constant_order: bool = 'a' < 'ب' && 'ب' != 'ا' && '😀' >= 'ي';
+
+def count_below(letters: &vector char, limit: char): int {
+    let count: mutable int = 0;
+    let i: mutable int = 0;
+    while (i < (length(*letters) as int)) {
+        if ((*letters)[i] < limit) { count := count + 1; };
+        i := i + 1;
+    }
+    return count;
+}
+
+def main(): int {
+    let n: char = 'n';
+    let m: char = 'm';
+    let n_again: char = (110 as u8) as char;
+
+    // Equality.
+    if (!(n == 'n') || n != n_again || n == m || !(n != m)) { return 1; };
+
+    // Ordering.
+    if (!(m < n) || n < m || n < n_again) { return 2; };
+    if (!(m <= n) || !(n <= n_again) || n <= m) { return 3; };
+    if (!(n > m) || m > n || n > n_again) { return 4; };
+    if (!(n >= m) || !(n >= n_again) || m >= n) { return 5; };
+
+    // Elements of a vector.
+    let letters: vector char = ['s', 'u', 'l', 't', 'a', 'n'];
+    if (letters[0] != 's' || letters[5] != 'n' || !(letters[1] > letters[0])) { return 6; };
+    if (count_below(&letters, 'm') != 2) { return 7; };
+
+    // Bytes of text, viewed as characters.
+    let word: string = "Sultan";
+    let first: char = word[0] as char;
+    if (first != 'S' || !(first < 's') || (word[5] as char) != letters[5]) { return 8; };
+
+    // Arabic letters and a character outside the BMP: unsigned order.
+    let alif: char = 'ا';
+    let ba: char = 'ب';
+    let ya: char = 'ي';
+    if (!(alif < ba) || !(ba < ya) || alif == ba || ya <= ba) { return 9; };
+    if (!('z' < alif) || !is_arabic_letter(ba) || is_arabic_letter('z')) { return 10; };
+    let smile: char = '😀';
+    if (!(smile > ya) || smile <= 'z' || smile == alif) { return 11; };
+    let arabic: vector char = ['س', 'ل', 'ط', 'ا', 'ن'];
+    if (arabic[3] != alif || count_below(&arabic, 'ل') != 3) { return 12; };
+
+    // Compile time.
+    let arabic_at_compile: bool = comptime { is_arabic_letter('ب') };
+    let latin_at_compile: bool = comptime { is_arabic_letter('z') };
+    if (!constant_order || !arabic_at_compile || latin_at_compile) { return 14; };
+
+    // Character patterns read the same scalar value.
+    match ba with
+    | 'ب' -> { }
+    | _ -> { return 13; };
+    match ya with
+    | range 'ء' to 'ي' -> { }
+    | _ -> { return 15; };
+    match smile with
+    | range 'a' to 'ي' -> { return 16; }
+    | _ -> { };
+
+    return 42;
+}

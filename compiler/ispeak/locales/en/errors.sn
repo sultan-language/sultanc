@@ -46,6 +46,86 @@
     | معرف_تشخيص.بيان_حزمة_غير_صالح -> { أرجع «package manifest is invalid»; }
     | معرف_تشخيص.نوع_ملف_إدخال_غير_معروف -> { أرجع «unrecognized input file type»; }
     | معرف_تشخيص.وحدة_مصدر_غير_موجودة -> { أرجع «source module was not found»; }
+    | معرف_تشخيص.سي_خطأ_نحوي -> { أرجع «C syntax error»; }
+    | معرف_تشخيص.سي_أنواع_متعارضة -> { أرجع «conflicting C declarations»; }
+    | معرف_تشخيص.سي_معامل_ماكرو_مكرر -> { أرجع «duplicate C macro parameter»; }
+    | معرف_تشخيص.سي_توجيه_خطأ -> { أرجع «C #error directive»; }
+    | معرف_تشخيص.سي_عمق_تضمين -> { أرجع «C #include nested too deeply»; }
+    | معرف_تشخيص.سي_تضمين_غير_موجود -> { أرجع «C include file not found»; }
+    | معرف_تشخيص.سي_عضو_ناقص -> { أرجع «C member of incomplete type»; }
+    | معرف_تشخيص.سي_حقل_بتي_غير_صالح -> { أرجع «invalid C bit-field»; }
+    | معرف_تشخيص.سي_شرط_غير_صالح -> { أرجع «invalid C preprocessor condition»; }
+    | معرف_تشخيص.سي_توجيه_غير_صالح -> { أرجع «invalid C preprocessor directive»; }
+    | معرف_تشخيص.سي_مصفوفة_مرنة_غير_صالحة -> { أرجع «invalid C flexible array member»; }
+    | معرف_تشخيص.سي_تضمين_غير_صالح -> { أرجع «invalid C include directive»; }
+    | معرف_تشخيص.سي_اسم_ماكرو_غير_صالح -> { أرجع «invalid C macro name»; }
+    | معرف_تشخيص.سي_معاملات_ماكرو_غير_صالحة -> { أرجع «invalid C macro parameter list»; }
+    | معرف_تشخيص.سي_عدد_غير_صالح -> { أرجع «invalid C numeric constant»; }
+    | معرف_تشخيص.سي_لصق_غير_صالح -> { أرجع «invalid C token paste»; }
+    | معرف_تشخيص.سي_عامل_براغما_غير_صالح -> { أرجع «invalid C _Pragma operator»; }
+    | معرف_تشخيص.سي_معالج_غير_صالح -> { أرجع «invalid C preprocessor selection»; }
+    | معرف_تشخيص.سي_تنصيص_غير_صالح -> { أرجع «invalid C stringizing operator»; }
+    | معرف_تشخيص.سي_عدد_حجج_ماكرو -> { أرجع «wrong number of C macro arguments»; }
+    | معرف_تشخيص.سي_نداء_ماكرو_غير_منته -> { أرجع «unterminated C macro call»; }
+    | معرف_تشخيص.سي_نوع_مفقود -> { أرجع «C declaration without a type»; }
+    | معرف_تشخيص.سي_تعارض_اسم -> { أرجع «C name conflict»; }
+    | معرف_تشخيص.سي_حجم_مصفوفة_سالب -> { أرجع «negative C array size»; }
+    | معرف_تشخيص.سي_عضو_غير_موجود -> { أرجع «no such C member»; }
+    | معرف_تشخيص.سي_ليس_ثابتا -> { أرجع «C expression is not constant»; }
+    | معرف_تشخيص.سي_إعادة_تعريف -> { أرجع «C redefinition»; }
+    | معرف_تشخيص.سي_تأكيد_ساكن -> { أرجع «C static assertion failed»; }
+    | معرف_تشخيص.سي_صنف_وسم_مختلف -> { أرجع «C tag used with a different kind»; }
+    | معرف_تشخيص.سي_غير_مصرح -> { أرجع «undeclared C identifier»; }
+    | معرف_تشخيص.سي_اسم_نوع_مجهول -> { أرجع «unknown C type name»; }
+    | معرف_تشخيص.سي_شرطي_بلا_مقابل -> { أرجع «unmatched C conditional directive»; }
+    | معرف_تشخيص.سي_تعليق_غير_منته -> { أرجع «unterminated C comment»; }
+    | معرف_تشخيص.سي_شرطي_غير_منته -> { أرجع «unterminated C conditional directive»; }
+    | معرف_تشخيص.سي_معاملات_عملية_غير_صالحة -> { أرجع «invalid operands to a C operator»; }
+    | معرف_تشخيص.سي_أنواع_غير_متوافقة -> { أرجع «incompatible C types»; }
+    | معرف_تشخيص.سي_غير_قابل_للإسناد -> { أرجع «C expression is not assignable»; }
+    | معرف_تشخيص.سي_عدد_حجج_نداء -> { أرجع «wrong number of arguments in a C call»; }
+    | معرف_تشخيص.سي_غير_قابل_للنداء -> { أرجع «called C object is not a function»; }
+    | معرف_تشخيص.سي_لافتة_غير_معرفة -> { أرجع «undefined C label»; }
+    | معرف_تشخيص.سي_قفز_غير_صالح -> { أرجع «C jump statement outside its construct»; }
+    | معرف_تشخيص.سي_حالة_مكررة -> { أرجع «duplicate C case value»; }
+    | معرف_تشخيص.سي_مهيئ_غير_صالح -> { أرجع «invalid C initializer»; }
+    | معرف_تشخيص.سي_بناء_غير_مدعوم -> { أرجع «C construct not supported by Jisr»; }
+    | معرف_تشخيص.سي_نوع_غير_مدعوم -> { أرجع «C type has no SultanC form»; }
+    | معرف_تشخيص.سي_متغير_غير_مدعوم -> { أرجع «C object has no SultanC form»; }
+    | معرف_تشخيص.سي_متغيرة_غير_مدعومة -> { أرجع «variadic C function not callable on this target»; }
+    | معرف_تشخيص.سي_لافتة_ربط_غير_مدعومة -> { أرجع «C asm label not usable as a link name»; }
+    | معرف_تشخيص.سي_غير_متاح -> { أرجع «C declaration marked unavailable»; }
+    | معرف_تشخيص.سي_بلا_نموذج -> { أرجع «C function declared without a prototype»; }
+    | معرف_تشخيص.سي_ماكرو_غير_ثابت -> { أرجع «C macro is not a constant»; }
+    | معرف_تشخيص.سي_توجيه_تحذير -> { أرجع «C #warning directive»; }
+    | معرف_تشخيص.سي_ترويسات_المضيف -> { أرجع «the host's C headers stand in for the target's»; }
+    | معرف_تشخيص.سي_بلا_ترويسات_نظام -> { أرجع «no C system headers for the target»; }
+    | معرف_تشخيص.سي_نداء_متغير_غير_مدعوم -> { أرجع «variadic C call not supported on this target»; }
+    | معرف_تشخيص.سي_نص_يوتيف8_غير_صالح -> { أرجع «C source is not valid UTF-8»; }
+    | معرف_تشخيص.سي_محرف_معرف_غير_صالح -> { أرجع «character not allowed in a C identifier»; }
+    | معرف_تشخيص.سي_تعارض_اسم_متخطى -> { أرجع «C declaration skipped: its name is taken»; }
+    | معرف_تشخيص.سي_ترويسة_مقروءة_غير_مترجمة -> { أرجع «a declaration of a header the import only reads was not translated»; }
+    | معرف_تشخيص.اشتقاق_جسون_نوع_حقل_غير_مدعوم -> { أرجع «`@@json` cannot derive this field type»; }
+    | معرف_تشخيص.مكتبة_تفسير_ساكنة_فقط -> { أرجع «a static library cannot be loaded into a running program»; }
+    | معرف_تشخيص.اعتمادية_جت_غير_محلولة -> { أرجع «git dependency is not resolved»; }
+    | معرف_تشخيص.رسم_حزم_غير_صالح -> { أرجع «package graph is invalid»; }
+    | معرف_تشخيص.مكتبة_قياسية_غير_موجودة -> { أرجع «standard library not found»; }
+    | معرف_تشخيص.وحدة_معلنة_بلا_ابن -> { أرجع «`module` names no file or folder of this folder»; }
+    | معرف_تشخيص.تهجئة_وحدة_مشتركة -> { أرجع «two children of one folder share a spelling»; }
+    | معرف_تشخيص.تهجئة_وحدة_محجوزة -> { أرجع «a reserved word cannot be a module spelling»; }
+    | معرف_تشخيص.تصريح_وحدة_خارج_ملف_الجذر -> { أرجع «`module` is allowed only in a folder's root file»; }
+    | معرف_تشخيص.خريطة_اعتماديات_غير_صالحة -> { أرجع «dependency map is invalid»; }
+    | معرف_تشخيص.مكتبة_تفسير_بلا_اسم_تثبيت -> { أرجع «the library's `.tbd` stub names no install name»; }
+    | معرف_تشخيص.مكتبة_تفسير_غير_محملة -> { أرجع «a -l library could not be loaded into the running program»; }
+    | معرف_تشخيص.مترجم_سي_لغير_المضيف -> { أرجع «the system C compiler builds C imports for the host only»; }
+    | معرف_تشخيص.فشل_مترجم_سي -> { أرجع «the system C compiler failed to compile an imported C file»; }
+    | معرف_تشخيص.مكتبة_سي_غير_موجودة -> { أرجع «the C library of a C import was not found; linking without it»; }
+    | معرف_تشخيص.قيمة_متغير_بيئة_غير_مقبولة -> { أرجع «an environment variable holds a value the compiler does not accept»; }
+    | معرف_تشخيص.نوع_معتم_بالقيمة -> { أرجع «an opaque type cannot be used by value»; }
+    | معرف_تشخيص.نوع_معتم_حجة_نوع -> { أرجع «this generic instance needs the layout of an opaque type argument»; }
+    | معرف_تشخيص.فك_مؤشر_معتم -> { أرجع «cannot dereference a pointer to an opaque type»; }
+    | معرف_تشخيص.حقل_عبر_مؤشر_معتم -> { أرجع «an opaque type has no fields»; }
+    | معرف_تشخيص.حساب_مؤشر_معتم -> { أرجع «cannot index a pointer to an opaque type»; }
     | معرف_تشخيص.وحدة_مصدر_غير_مقروءة -> { أرجع «source module could not be read»; }
     | معرف_تشخيص.مرجع_استيراد_غير_صالح -> { أرجع «invalid import reference»; }
     | معرف_تشخيص.جذر_مكتبة_غير_مسجل -> { أرجع «library root is not registered»; }
@@ -76,7 +156,6 @@
     | معرف_تشخيص.تعبير_نوعي_غير_مدعوم -> { أرجع «Internal type checker cannot handle this expression kind»; }
     | معرف_تشخيص.تعبير_غير_قابل_للاستدعاء -> { أرجع «expression is not callable»; }
     | معرف_تشخيص.حقل_سجل_غير_معروف -> { أرجع «unknown record field»; }
-    | معرف_تشخيص.منشئ_نوع_غير_صالح -> { أرجع «invalid tagged constructor»; }
     | معرف_تشخيص.عدد_حمولات_نمط_غير_مطابق -> { أرجع «pattern constructor payload count does not match»; }
     | معرف_تشخيص.نمط_غير_صالح -> { أرجع «invalid pattern»; }
     | معرف_تشخيص.خفض_تعبير_غير_مدعوم -> { أرجع «expression is not supported by semantic lowering»; }
@@ -116,11 +195,8 @@
     | معرف_تشخيص.نص_تفسير_غير_صالح -> { أرجع «interpreter encountered invalid UTF-8 text»; }
     | معرف_تشخيص.عدد_حجج_بدائي_تفسير_غير_مطابق -> { أرجع نص_خطأ_عدد_حجج_بدائي_تفسير_غير_مطابق(); }
     | معرف_تشخيص.حجة_بدائي_تفسير_غير_صالحة -> { أرجع «interpreter primitive received an invalid argument»; }
-    | معرف_تشخيص.جسر_نص_مضيف_تفسير_غير_متاح -> { أرجع نص_خطأ_جسر_نص_مضيف_تفسير_غير_متاح(); }
-    | معرف_تشخيص.بدائي_مضيف_تفسير_غير_مدعوم -> { أرجع «interpreter does not support this host primitive»; }
     | معرف_تشخيص.فشل_تفسير_وقت_تشغيل -> { أرجع «program failed during interpretation»; }
     | معرف_تشخيص.فخ_تفسير -> { أرجع «program trapped during interpretation»; }
-    | معرف_تشخيص.تحذير_عام -> { أرجع «compiler warning»; }
     | معرف_تشخيص.خلفية_مترجم_غير_متاحة -> { أرجع نص_خطأ_خلفية_مترجم_غير_متاحة(); }
     | معرف_تشخيص.تعبير_وقت_الترجمة_غير_ثابت -> { أرجع «comptime expression must be a pure compile-time constant»; }
     | معرف_تشخيص.مكتبة_إل_إل_في_إم_للهدف_مفقودة -> { أرجع نص_خطأ_مكتبة_إل_إل_في_إم_للهدف_مفقودة(); }
@@ -137,11 +213,14 @@
     | معرف_تشخيص.موفر_وقت_تشغيل_مفقود -> { أرجع «the target runtime does not provide a service this program needs»; }
     | معرف_تشخيص.نفاد_ذاكرة_المترجم -> { أرجع «the compiler ran out of memory»; }
     | معرف_تشخيص.رمز_ربط_بنوع_غير_متطابق -> { أرجع «a symbol is defined with a different kind than its use expects»; }
+    | معرف_تشخيص.رمز_خارجي_بتوقيعين -> { أرجع «two external declarations bind one linker symbol with different signatures»; }
     | معرف_تشخيص.رمز_خارجي_غير_مدعوم -> { أرجع «the linker cannot use this external symbol for the target»; }
     | معرف_تشخيص.إعادة_توطين_غير_مدعومة -> { أرجع «the object format cannot express a relocation this code needs»; }
     | معرف_تشخيص.صيغة_كائن_غير_مدعومة_للهدف -> { أرجع «the compiler cannot write object files of this format for the target»; }
     | معرف_تشخيص.مخرج_ربط_غير_مدعوم -> { أرجع «the linker cannot produce this output for the target»; }
     | معرف_تشخيص.مكتبة_ربط_غير_موجودة -> { أرجع «library not found in any library search directory»; }
+    | معرف_تشخيص.مدخل_ربط_غير_مدعوم -> { أرجع «link input is not a file this target's linker reads»; }
+    | معرف_تشخيص.ملف_غير_منسق -> { أرجع «the file is not formatted»; }
     | معرف_تشخيص.واجهة_استدعاء_غير_متاحة_للهدف -> { أرجع «the target has no calling convention for this code»; }
     | معرف_تشخيص.حد_صيغة_كائن_متجاوز -> { أرجع «the output exceeds a size limit of its file format»; }
     | معرف_تشخيص.حد_وقت_الترجمة_متجاوز -> { أرجع «compile-time evaluation exceeded one of its limits»; }
@@ -160,7 +239,6 @@
 عرف نص_خطأ_وحدة_مستوردة_غير_محملة(): نص { أرجع «Imported module was not loaded into the compiler module graph»; }
 عام عرف نص_خطأ_رسم_وحدات_مرفوض(): نص { أرجع «Compiler rejected the module dependency graph after an internal consistency failure»; }
 عرف نص_خطأ_عدد_حجج_بدائي_تفسير_غير_مطابق(): نص { أرجع «interpreter primitive received the wrong number of arguments»; }
-عرف نص_خطأ_جسر_نص_مضيف_تفسير_غير_متاح(): نص { أرجع «interpreter host text bridge is unavailable for this primitive»; }
 عرف نص_خطأ_خلفية_مترجم_غير_متاحة(): نص { أرجع «the selected code-generation backend is not available in this compiler»; }
 
 عام عرف رسالة_إنجليزية(المفتاح: مفتاح_رسالة_تشخيص): نص {

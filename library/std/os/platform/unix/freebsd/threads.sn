@@ -1,4 +1,4 @@
-// FreeBSD OS threads (docs/CONCURRENCY.md), on raw system calls with no
+// FreeBSD OS threads (docs/en/reference/concurrency.md), on raw system calls with no
 // libc, the way FreeBSD's libthr starts and joins a thread
 // (lib/libthr/thread/thr_create.c, thr_join.c, thr_exit.c):
 //
@@ -159,7 +159,7 @@
             }
             ق := ق + 1;
         }
-        لو (العدد > 0) { أرجع نتيجة.نجح(العدد); };
+        إذا (العدد > 0) { أرجع نتيجة.نجح(العدد); };
     };
     أرجع اقرأ_عدد_المعالجات_فري_بي_إس_دي();
 }

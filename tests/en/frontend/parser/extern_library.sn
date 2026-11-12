@@ -1,5 +1,5 @@
 // An external declaration may name the library that exports it and the exact
-// linker symbol it binds (docs/PLATFORM_DEPENDENCIES.md).
+// linker symbol it binds (docs/en/reference/platform-dependencies.md).
 extern "kernel32.dll" def GetTickCount64(): u64;
 extern "/usr/lib/libSystem.B.dylib" def stat_inode64(path: *u8, info: *mutable u8): i32 = "stat$INODE64";
 extern def labs_alias(value: i64): i64 = "labs";

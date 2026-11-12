@@ -1,0 +1,11 @@
+// اختبار: رفض
+// أهداف: arm64-darwin,x86_64-linux
+// تشخيص: SULTANC-TYPE-OPAQUE-POINTER-ARITHMETIC
+// نظير: tests/ar/language/opaque/reject_pointer_index.sn
+// Indexing a pointer to an opaque type steps by a size it does not have.
+type Db = opaque;
+def main(): int {
+    let p: *Db = 0 as *Db;
+    unsafe { let q: *Db = p[1]; };
+    return 0;
+}

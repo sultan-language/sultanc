@@ -140,7 +140,7 @@ def render_contextual_surface(es: list[Contextual]) -> str:
     for e in es:
         spellings = [e.english, e.arabic, *e.deprecated]
         lines.append(
-            f"    لو (تطابق_هوية_معرف_وشريحة(&الأصل.المحتوى, النطاق.البداية.البايت, النطاق.النهاية.البايت, «{spellings[0]}»)"
+            f"    إذا (تطابق_هوية_معرف_وشريحة(&الأصل.المحتوى, النطاق.البداية.البايت, النطاق.النهاية.البايت, «{spellings[0]}»)"
         )
         for spelling in spellings[1:]:
             lines.append(
@@ -164,7 +164,7 @@ def render_contextual_surface(es: list[Contextual]) -> str:
     for e in es:
         for spelling in e.deprecated:
             lines += [
-                f"    لو (تطابق_هوية_معرف_وشريحة(النص, البداية, النهاية, «{spelling}»)) {{",
+                f"    إذا (تطابق_هوية_معرف_وشريحة(النص, البداية, النهاية, «{spelling}»)) {{",
                 f"        دع التهجئة: تهجئة_كلمة_مهجورة = {{ القديمة: «{spelling}», الجديدة: «{e.arabic}» }};",
                 "        أرجع اختياري.موجود(التهجئة);",
                 "    };",

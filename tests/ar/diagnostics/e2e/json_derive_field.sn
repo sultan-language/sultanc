@@ -1,0 +1,15 @@
+// اختبار: رفض
+// تشخيص: SULTANC-JSON-DERIVE-UNSUPPORTED-FIELD-TYPE
+// نظير: tests/en/diagnostics/e2e/json_derive_field.sn
+// خرج-تشخيص-عربي: json_derive_field.ar.stderr
+// خرج-تشخيص-إنجليزي: json_derive_field.en.stderr
+// A `@@json` field type the derivation cannot encode is a compile-time error
+// at the field, not a JSON null at run time.
+@@جسون
+نوع نقطة = {
+    س: ص32,
+    زوج: (ص32, ص32)
+};
+عرف الرئيسية(): ص32 {
+    أرجع 0;
+}

@@ -5,7 +5,7 @@
 // into one atomic cell shared through an Arc (std.sync), so there is no
 // race; after join the write is visible (CLONE_VM), and every thread has
 // dropped its clone of the Arc. This exercises the thread clone, running
-// the closure, the futex join (docs/CONCURRENCY.md) and the release of a
+// the closure, the futex join (docs/en/reference/concurrency.md) and the release of a
 // finished thread's closure. Counterpart:
 // tests/ar/stdlib/behavior/thread_spawn_join.sn. No pair directive: the
 // interpreter runs one thread.

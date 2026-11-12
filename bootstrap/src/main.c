@@ -8,6 +8,7 @@
 #include "semantic/context_lifecycle.h"
 #include "core/diagnostic.h"
 #include "target/bootstrap_target.h"
+#include "support/path/source_import_path.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -191,7 +192,7 @@ int main(int argc, char **argv)
 
     if (argc < 2)
     {
-        fprintf(stderr, "usage: %s <input.sn> [--target=<target>] -o <output.o>\n", argv[0]);
+        fprintf(stderr, "usage: %s <input.sn> [--target=<target>] [--module-source=<module>=<file>] -o <output.o>\n", argv[0]);
         return 2;
     }
 
@@ -215,6 +216,14 @@ int main(int argc, char **argv)
                 return 2;
             }
             target = argv[++argument_index];
+        }
+        else if (strncmp(argv[argument_index], "--module-source=", 16U) == 0)
+        {
+            if (!__Source_Path_Bind_Module_Source__(argv[argument_index] + 16U))
+            {
+                fprintf(stderr, "sultanc-stage0: --module-source takes <module>=<file>\n");
+                return 2;
+            }
         }
         else if (strcmp(argv[argument_index], "-o") == 0 && argument_index + 1 < argc)
         {

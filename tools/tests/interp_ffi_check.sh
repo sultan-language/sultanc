@@ -1,6 +1,6 @@
 #!/bin/sh
 # Runs the programs that call C functions they declare themselves
-# (docs/INTERPRETER.md, "Dynamic C functions") natively and interpreted, and
+# (docs/en/internals/interpreter.md, "Dynamic C functions") natively and interpreted, and
 # prints one row per program:
 #   program  native-exit  interpreted-exit  same|different
 # then whether each Arabic/English pair printed the same output. The

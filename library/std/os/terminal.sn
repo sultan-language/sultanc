@@ -1,0 +1,11 @@
+// Whether a standard stream is a terminal (Rust io::IsTerminal, Go
+// x/term.IsTerminal, isatty(3)): colored or interactive output only when a
+// person is watching. A file, a pipe or a closed stream answers false.
+استورد os.process_info;
+
+عام عرف هل_الدخل_طرفية(): منطقي { أرجع هل_طرفية_نظام(0); }
+عام عرف هل_الخرج_طرفية(): منطقي { أرجع هل_طرفية_نظام(1); }
+عام عرف هل_الخطأ_طرفية(): منطقي { أرجع هل_طرفية_نظام(2); }
+عام مرادف stdin_is_terminal = هل_الدخل_طرفية;
+عام مرادف stdout_is_terminal = هل_الخرج_طرفية;
+عام مرادف stderr_is_terminal = هل_الخطأ_طرفية;

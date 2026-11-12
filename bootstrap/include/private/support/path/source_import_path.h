@@ -13,4 +13,10 @@ char *__Source_Path_Resolve_Import__(const char *__Importer_Path__,
                                      __Text_Slice__ __Import__,
                                      int *__Escapes_Root__);
 
+/* Binds a logical module to an explicit source file (--module-source=
+ * <module>=<file>, as the self-hosted compiler's option): a logical import of
+ * <module> resolves to <file>, relative to the project root unless absolute.
+ * Answers 0 when the binding is malformed or cannot be stored. */
+int __Source_Path_Bind_Module_Source__(const char *__Binding__);
+
 #endif

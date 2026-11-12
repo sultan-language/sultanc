@@ -1,0 +1,58 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// نظير: tests/ar/language/safety/unchecked_pointer_reference.sn
+// A raw pointer carries no checked provenance, so `p as &T` inside unsafe is
+// an unchecked borrow (Rust's `&*p`): the value it points to may be written
+// while the reference is in scope, and a function may return it; the unsafe
+// block vouches for the address. The reference reads and writes the
+// pointer's address and owns nothing. Safe references keep every check
+// (reject_borrow_through_pointer_cast.sn, reject_escape_beside_pointer.sn).
+type cell = { value: int, label: string };
+
+// Returns a reference made from a pointer to its own local: no escape error,
+// and the result dangles. It is the caller's responsibility never to read it.
+def dangling(): &int {
+    let local: int = 5;
+    let p: *int = &local;
+    unsafe { return p as &int; }
+}
+
+def read(r: &int): int {
+    return *r;
+}
+
+def main(): int {
+    let v: mutable int = 1;
+    let p: *mutable int = &mutable v;
+    unsafe {
+        // Written through the pointer-derived reference.
+        let w: &mutable int = p as &mutable int;
+        *w := 7;
+        if (v != 7) { return 1; };
+
+        // The value written directly while a reference read from the same
+        // pointer is in scope: the reference sees the write.
+        let r: &int = p as &int;
+        v := 3;
+        if (*r != 3 || read(p as &int) != 3) { return 2; };
+    };
+
+    // A record, through a pointer to it.
+    let c: cell = { value: 40, label: "ab" };
+    let q: *cell = &c;
+    unsafe {
+        let rc: &cell = q as &cell;
+        if ((*rc).value != 40 || length((*rc).label) != 2) { return 3; };
+    };
+
+    // A pointer copied first, and a pointer made from a safe reference.
+    let copy: *mutable int = p;
+    let from_ref: *int = (&v) as *int;
+    unsafe {
+        if (read(copy as &int) != 3 || read(from_ref as &int) != 3) { return 4; };
+    };
+
+    let unused: &int = dangling();
+    return 42;
+}

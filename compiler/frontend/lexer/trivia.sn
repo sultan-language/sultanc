@@ -1,0 +1,23 @@
+استورد compiler.source.span;
+
+// Trivia: the parts of a source the token stream leaves out that a tool which
+// rewrites source (the formatter) must keep. The lexer records them only when
+// asked (حلل_معجميا_مع_التوافه); ordinary lexing records nothing. Spaces,
+// tabs and line breaks are not trivia here: every byte between two tokens
+// that is not a recorded item is whitespace, and its line breaks are its LF
+// bytes, as the scan cursor counts them.
+عام نوع صنف_تافهة =
+    // A `//` comment, from the slashes to the end of its line (the line
+    // break is not part of it).
+    | تعليق_سطر
+    // An implicit direction mark between tokens: LRM U+200E, RLM U+200F or
+    // ALM U+061C.
+    | علامة_اتجاه
+    // The byte-order mark U+FEFF.
+    | علامة_ترتيب_بايت
+;
+
+عام نوع تافهة_مصدر = {
+    الصنف: صنف_تافهة,
+    النطاق: نطاق
+};

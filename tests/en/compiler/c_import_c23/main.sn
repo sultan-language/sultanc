@@ -1,0 +1,20 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// نظير: tests/ar/compiler/c_import_c23/main.sn
+// C23 through Jisr: constexpr constants (file scope and block scope, in
+// array lengths and case labels), #embed with limit, prefix, suffix and
+// if_empty and __has_embed, typeof and typeof_unqual, and _BitInt(N)
+// arithmetic that wraps within N bits without integer promotion, and
+// __int128 / unsigned __int128 arithmetic, shifts, division, comparisons
+// and conversions in compiled code. A file-scope constexpr is a constant
+// of the module; a vector type (vector_size) is left out with a skip
+// comment.
+import "c23.c";
+
+def main(): int {
+    let failure: i32 = run_c23();
+    if (failure != 0) { return 1; };
+    if (WORD_LIMIT != 4 || BIG_MASK != 280375465082880) { return 2; };
+    return 42;
+}

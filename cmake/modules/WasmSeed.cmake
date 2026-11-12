@@ -40,6 +40,21 @@ function(sultanc_wasm_add_stage1 exe_target)
     # 2. Translate the seed (the translator rejects a malformed zstd frame or
     #    module with a diagnostic).
     set(_gen "${CMAKE_CURRENT_BINARY_DIR}/bootstrap-wasm-gen")
+    # The seed's content, not its file time, decides when to translate again:
+    # an unpacked archive or a checkout can give a new seed an older time than
+    # the C a previous build generated, and a stale Stage1 would then build
+    # the sources. The stamp is rewritten (and so newer) only when the hash
+    # changes; every configure (each build.sh run) checks it.
+    file(SHA256 "${_seed}" _seed_hash)
+    set(_seed_stamp "${CMAKE_CURRENT_BINARY_DIR}/bootstrap-wasm-seed.sha256")
+    set(_old_hash "")
+    if(EXISTS "${_seed_stamp}")
+        file(READ "${_seed_stamp}" _old_hash)
+    endif()
+    if(NOT _old_hash STREQUAL _seed_hash)
+        file(WRITE "${_seed_stamp}" "${_seed_hash}")
+    endif()
+    set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${_seed}")
     set(_sources "${_gen}/sultanc-runtime.c")
     math(EXPR _last "${ARG_SHARDS} - 1")
     foreach(_i RANGE 0 ${_last})
@@ -57,7 +72,7 @@ function(sultanc_wasm_add_stage1 exe_target)
         OUTPUT "${_gen}/sultanc.h" ${_sources}
         COMMAND "${CMAKE_COMMAND}" -E make_directory "${_gen}"
         COMMAND "${_wasm2c}" "--shards=${ARG_SHARDS}" "${_seed}" "${_gen}/sultanc"
-        DEPENDS ${_wasm2c_dep} "${_seed}"
+        DEPENDS ${_wasm2c_dep} "${_seed}" "${_seed_stamp}"
         COMMENT "Translating the SultanC WASI seed to C"
         VERBATIM)
 

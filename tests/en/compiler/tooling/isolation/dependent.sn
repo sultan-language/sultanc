@@ -1,0 +1,4 @@
+// Fixture of tests/en/compiler/tooling/isolation.sn (not a test).
+import "failed.sn";
+public def uses_broken(): int { return broken_value(); }
+public def kept_value(): int { return 5; }

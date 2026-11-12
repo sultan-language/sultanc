@@ -1330,7 +1330,11 @@ static const char *const runtime_helpers[] = {
     "#if defined(__BYTE_ORDER__) && defined(__ORDER_BIG_ENDIAN__) && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__\n",
     "#define W2C_BIG_ENDIAN 1\n#else\n#define W2C_BIG_ENDIAN 0\n#endif\n\n",
     "extern uint8_t *w2c_memory;\nextern uint64_t w2c_memory_size;\n",
-    "void w2c_trap(const char *why);\n",
+    "/* w2c_trap never returns: every function body ends in a trap tail, and a\n"
+    " * non-void one would otherwise warn (-Wreturn-type) on that path. */\n",
+    "#if defined(__GNUC__) || defined(__clang__) || defined(__TINYC__)\n#define W2C_NORETURN __attribute__((noreturn))\n",
+    "#elif defined(_MSC_VER)\n#define W2C_NORETURN __declspec(noreturn)\n#else\n#define W2C_NORETURN\n#endif\n",
+    "W2C_NORETURN void w2c_trap(const char *why);\n",
     "uint32_t w2c_memory_pages(void);\nuint32_t w2c_memory_grow(uint32_t pages);\n",
     "void w2c_memory_copy(uint32_t dst, uint32_t src, uint32_t n);\n",
     "void w2c_memory_fill(uint32_t dst, uint32_t value, uint32_t n);\n",
@@ -1464,7 +1468,7 @@ static void emit_runtime(const char *prefix) {
         }
     }
     bprintf(&b,
-            "\nvoid w2c_trap(const char *why) {\n"
+            "\nW2C_NORETURN void w2c_trap(const char *why) {\n"
             "    fflush(stdout);\n"
             "    fprintf(stderr, \"sultanc (wasm bootstrap): trap: %%s\\n\", why);\n"
             "    abort();\n}\n"

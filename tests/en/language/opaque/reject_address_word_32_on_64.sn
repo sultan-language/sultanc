@@ -1,0 +1,12 @@
+// اختبار: رفض
+// أهداف: arm64-darwin,x86_64-linux
+// تشخيص: SULTANC-TYPE-MISMATCH
+// نظير: tests/ar/language/opaque/reject_address_word_32_on_64.sn
+// A 32-bit address word is accepted only on targets with 32-bit pointers;
+// on a 64-bit target `p as u32` is an invalid cast.
+type Db = opaque;
+def main(): int {
+    let p: *Db = 0 as *Db;
+    unsafe { let word: u32 = p as u32; };
+    return 0;
+}

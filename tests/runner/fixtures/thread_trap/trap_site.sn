@@ -1,0 +1,6 @@
+// The one trap site of main_trap.sn, thread_trap.sn and threads4_trap.sn: an
+// index past the end of a three-element vector.
+public def element_at(index: uint): int {
+    let values: vector int = [1, 2, 3];
+    return values[index];
+}

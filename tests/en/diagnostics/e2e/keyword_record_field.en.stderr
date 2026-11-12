@@ -1,0 +1,7 @@
+error[SULTANC-PARSE-SYNTAX]: syntax error: expected `identifier`, found `from` — The parser expected a different token at this location.
+  --> tests/en/diagnostics/e2e/keyword_record_field.sn:8:15..8:19
+   |
+ 8 | type edge = { from: int, to: int };
+   |               ^^^^ parser discovered the problem here
+   |
+  = help: this word is reserved and cannot be a name; choose another name

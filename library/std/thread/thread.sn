@@ -1,9 +1,9 @@
-// OS threads (docs/CONCURRENCY.md), after Rust's std::thread. `أطلق` moves a
+// OS threads (docs/en/reference/concurrency.md), after Rust's std::thread. `أطلق` moves a
 // closure to a new thread and returns a join handle; `انضم` waits for the
 // thread and reclaims its stack. The closure may capture only values safe to
 // move to another thread: the spawn capture check rejects at compile time a
 // closure literal that captures a raw pointer (outside غير_آمن), a borrowed
-// reference, or uses a writable module variable (docs/TYPE_SYSTEM.md,
+// reference, or uses a writable module variable (docs/en/reference/type-system.md,
 // "Thread capture rules"). Shared state goes through std.sync (Arc, Mutex,
 // atomics) and the channels.
 //
@@ -80,7 +80,7 @@
 // (compiler/frontend/types/thread_capture.sn). The interpreter, which runs
 // one OS thread, stops here.
 عام عرف أطلق(العمل: دالة(): فراغ): نتيجة مقبض_خيط, خطأ_خيط {
-    لو (!خيوط_النظام_مدعومة()) { أرجع نتيجة.خطأ(خطأ_خيط.غير_مدعوم()); };
+    إذا (!خيوط_النظام_مدعومة()) { أرجع نتيجة.خطأ(خطأ_خيط.غير_مدعوم()); };
     دع المدخل: دالة(): فراغ = مدخل_خيط_لعمل(العمل);
     دع العنوان: ط64;
     غير_آمن { العنوان := عنوان_إغلاق_خيط(المدخل); }
@@ -90,7 +90,7 @@
 
 // Waits for the thread to end; a second join does nothing.
 عام عرف انضم(المقبض: &متغير مقبض_خيط): فراغ {
-    لو ((*المقبض).منضم) { أرجع; };
+    إذا ((*المقبض).منضم) { أرجع; };
     انضم_خيط_نظام(&(*المقبض).الخيط);
     (*المقبض).منضم := صواب;
 }
@@ -122,7 +122,7 @@
 }
 
 عام عرف أطلق_بقيمة<ق>(العمل: دالة(): ق): نتيجة مقبض_خيط_بقيمة<ق>, خطأ_خيط {
-    لو (!خيوط_النظام_مدعومة()) { أرجع نتيجة.خطأ(خطأ_خيط.غير_مدعوم()); };
+    إذا (!خيوط_النظام_مدعومة()) { أرجع نتيجة.خطأ(خطأ_خيط.غير_مدعوم()); };
     دع الفارغة: متجه ق = [];
     دع الخانة: مشترك<قفل<متجه ق>> = أنشئ_مشترك(أنشئ_قفل(الفارغة));
     دع للخيط: مشترك<قفل<متجه ق>> = استنسخ_مشترك(&الخانة);
@@ -175,7 +175,7 @@
 // CPUs in the affinity mask on Linux and FreeBSD, hw.logicalcpu on macOS,
 // dwNumberOfProcessors on Windows.
 عام عرف عدد_المعالجات_المتاحة(): نتيجة طبيعي, خطأ_خيط {
-    لو (!خيوط_النظام_مدعومة()) { أرجع نتيجة.خطأ(خطأ_خيط.غير_مدعوم()); };
+    إذا (!خيوط_النظام_مدعومة()) { أرجع نتيجة.خطأ(خطأ_خيط.غير_مدعوم()); };
     طابق عدد_المعالجات_نظام() مع
     | نتيجة.خطأ(الخطأ) -> { أرجع نتيجة.خطأ(خطأ_خيط.نظام(الخطأ)); }
     | نتيجة.نجح(العدد) -> { أرجع نتيجة.نجح(العدد مثل طبيعي); };

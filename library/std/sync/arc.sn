@@ -1,4 +1,4 @@
-// Shared ownership across threads (docs/CONCURRENCY.md, "Arc"), after Rust's
+// Shared ownership across threads (docs/en/reference/concurrency.md, "Arc"), after Rust's
 // std::sync::Arc: one heap value, any number of handles, an atomic reference
 // count, and the value dropped exactly once, when the last handle goes.
 //
@@ -16,10 +16,10 @@
 // Copying a handle is Rust's Arc::clone (closures are copyable values in
 // SultanC); استنسخ_مشترك spells it out. A handle is safe to move to another
 // thread (its count is atomic), so a spawned closure may capture it
-// (docs/TYPE_SYSTEM.md, "Thread capture rules").
+// (docs/en/reference/type-system.md, "Thread capture rules").
 //
 // The interpreter counts no closure references, so there a shared value is
-// never freed (docs/INTERPRETER.md); compiled programs free it.
+// never freed (docs/en/internals/interpreter.md); compiled programs free it.
 
 مرادف عنوان_إغلاق_مشترك = بدائي_عنوان_دالة;
 مرادف إغلاق_من_عنوان_مشترك = بدائي_دالة_من_عنوان;
@@ -76,7 +76,7 @@
 // Rust's Arc::strong_count: how many handles exist now. Another thread may
 // change it at any moment, so it is a snapshot (Rust documents the same).
 // The count is the environment's reference count, the 8-byte slot after the
-// code pointer (docs/OWNERSHIP_AND_DESTRUCTION.md, "Closure environments").
+// code pointer (docs/en/reference/ownership.md, "Closure environments").
 عام عرف عدد_مراجع_مشترك<ق>(المشترك: &مشترك<ق>): طبيعي {
     أرجع عدد_مراجع_حمولة_مشترك(المشترك, خطأ) مثل طبيعي;
 }
@@ -92,6 +92,6 @@
     غير_آمن { العدد := اقرأ_كلمة_مشترك(البيئة + 8); }
     دع المؤقت: دالة(): فراغ;
     غير_آمن { المؤقت := إغلاق_من_عنوان_مشترك(البيئة); }
-    لو (عنوان) { أرجع البيئة; };
+    إذا (عنوان) { أرجع البيئة; };
     أرجع العدد - 1;
 }

@@ -47,6 +47,10 @@
     // message. Lowering ends its block with a trap; the driver removes the call
     // after compile-time evaluation, so at run time the block only traps.
     | فشل_وقت_الترجمة
+    // Sets the instruction budget left to the compile-time evaluation it
+    // runs in (the argument, a طبيعي); nothing at run time: the driver
+    // removes every call once compile-time work is done.
+    | ميزانية_وقت_الترجمة
     // Explicit deep copy of the value a reference argument refers to. MSIR
     // lowering replaces every call with a call of the Type's clone glue
     // (compiler/msir/lowering/ownership_glue.sn), so no backend sees it.
@@ -87,13 +91,24 @@
     // it grows (Rust's Vec::reserve_exact). Every backend and the
     // interpreter reallocate the buffer as append does when it is full.
     | حجز_سعة_متجه
+    // Appends a range of another vector of the same integer element Type
+    // (Rust's Vec::extend_from_slice, Go's append(dst, src[a:b]...)):
+    // arguments are the mutated vector place, a reference to the source,
+    // the first source index and the count, each a طبيعي. A range past the
+    // source's end traps. A buffer too small for length + count grows once,
+    // by the growth policy's amortized rule (سعة_نمو_المتجه in
+    // vector_memory_policy.sn, not to length + count exactly as reserve_exact
+    // does), and the range is copied as one block (x86-64 REP MOVSB, an
+    // AArch64 word loop, WebAssembly memory.copy, an LLVM loop the optimizer
+    // widens), never per element.
+    | إلحاق_نطاق_متجه
     // IEEE 754 operations on the float Type of the first argument (f32 or
     // f64): every operand and the result have that Type. They lower to the
     // target's instruction (x86-64 SQRTSD, AArch64 FSQRT/FRINT*/FMIN/FMADD,
     // WebAssembly f64.sqrt/f64.floor/f64.min, LLVM llvm.sqrt.* ...), as rustc
     // lowers f64::sqrt and friends to LLVM intrinsics.
     | عملية_عائمة بنوع عملية_عائمة_بدائية
-    // Thread support (docs/CONCURRENCY.md). Atomic operations on the
+    // Thread support (docs/en/reference/concurrency.md). Atomic operations on the
     // integer a mutable reference refers to (32 or 64 bits); the last
     // argument(s) are memory orderings (0 Relaxed, 1 Release, 2 Acquire,
     // 3 AcqRel, 4 SeqCst). Every backend lowers them; the interpreter runs
@@ -210,6 +225,7 @@
     | هوية_بدائي_مترجم.عدد_حقول_النوع -> { أرجع هوية_بدائي_مترجم.عدد_حقول_النوع(); }
     | هوية_بدائي_مترجم.عدد_منشئات_النوع -> { أرجع هوية_بدائي_مترجم.عدد_منشئات_النوع(); }
     | هوية_بدائي_مترجم.فشل_وقت_الترجمة -> { أرجع هوية_بدائي_مترجم.فشل_وقت_الترجمة(); }
+    | هوية_بدائي_مترجم.ميزانية_وقت_الترجمة -> { أرجع هوية_بدائي_مترجم.ميزانية_وقت_الترجمة(); }
     | هوية_بدائي_مترجم.استنساخ -> { أرجع هوية_بدائي_مترجم.استنساخ(); }
     | هوية_بدائي_مترجم.احتفاظ_بقيمة -> { أرجع هوية_بدائي_مترجم.احتفاظ_بقيمة(); }
     | هوية_بدائي_مترجم.زيادة_مراجع_إغلاق -> { أرجع هوية_بدائي_مترجم.زيادة_مراجع_إغلاق(); }
@@ -220,6 +236,7 @@
     | هوية_بدائي_مترجم.ضبط_طول_متجه -> { أرجع هوية_بدائي_مترجم.ضبط_طول_متجه(); }
     | هوية_بدائي_مترجم.سعة_متجه -> { أرجع هوية_بدائي_مترجم.سعة_متجه(); }
     | هوية_بدائي_مترجم.حجز_سعة_متجه -> { أرجع هوية_بدائي_مترجم.حجز_سعة_متجه(); }
+    | هوية_بدائي_مترجم.إلحاق_نطاق_متجه -> { أرجع هوية_بدائي_مترجم.إلحاق_نطاق_متجه(); }
     | هوية_بدائي_مترجم.عملية_عائمة(العملية) -> { أرجع هوية_بدائي_مترجم.عملية_عائمة(العملية); }
     | هوية_بدائي_مترجم.ذري_حمل -> { أرجع هوية_بدائي_مترجم.ذري_حمل(); }
     | هوية_بدائي_مترجم.ذري_خزن -> { أرجع هوية_بدائي_مترجم.ذري_خزن(); }
@@ -270,6 +287,7 @@
     | هوية_بدائي_مترجم.عدد_حقول_النوع -> { طابق ب مع | هوية_بدائي_مترجم.عدد_حقول_النوع -> { أرجع صواب; } | _ -> { أرجع خطأ; }; }
     | هوية_بدائي_مترجم.عدد_منشئات_النوع -> { طابق ب مع | هوية_بدائي_مترجم.عدد_منشئات_النوع -> { أرجع صواب; } | _ -> { أرجع خطأ; }; }
     | هوية_بدائي_مترجم.فشل_وقت_الترجمة -> { طابق ب مع | هوية_بدائي_مترجم.فشل_وقت_الترجمة -> { أرجع صواب; } | _ -> { أرجع خطأ; }; }
+    | هوية_بدائي_مترجم.ميزانية_وقت_الترجمة -> { طابق ب مع | هوية_بدائي_مترجم.ميزانية_وقت_الترجمة -> { أرجع صواب; } | _ -> { أرجع خطأ; }; }
     | هوية_بدائي_مترجم.استنساخ -> { طابق ب مع | هوية_بدائي_مترجم.استنساخ -> { أرجع صواب; } | _ -> { أرجع خطأ; }; }
     | هوية_بدائي_مترجم.احتفاظ_بقيمة -> { طابق ب مع | هوية_بدائي_مترجم.احتفاظ_بقيمة -> { أرجع صواب; } | _ -> { أرجع خطأ; }; }
     | هوية_بدائي_مترجم.زيادة_مراجع_إغلاق -> { طابق ب مع | هوية_بدائي_مترجم.زيادة_مراجع_إغلاق -> { أرجع صواب; } | _ -> { أرجع خطأ; }; }
@@ -280,6 +298,7 @@
     | هوية_بدائي_مترجم.ضبط_طول_متجه -> { طابق ب مع | هوية_بدائي_مترجم.ضبط_طول_متجه -> { أرجع صواب; } | _ -> { أرجع خطأ; }; }
     | هوية_بدائي_مترجم.سعة_متجه -> { طابق ب مع | هوية_بدائي_مترجم.سعة_متجه -> { أرجع صواب; } | _ -> { أرجع خطأ; }; }
     | هوية_بدائي_مترجم.حجز_سعة_متجه -> { طابق ب مع | هوية_بدائي_مترجم.حجز_سعة_متجه -> { أرجع صواب; } | _ -> { أرجع خطأ; }; }
+    | هوية_بدائي_مترجم.إلحاق_نطاق_متجه -> { طابق ب مع | هوية_بدائي_مترجم.إلحاق_نطاق_متجه -> { أرجع صواب; } | _ -> { أرجع خطأ; }; }
     | هوية_بدائي_مترجم.عملية_عائمة(الأولى) -> { طابق ب مع | هوية_بدائي_مترجم.عملية_عائمة(الثانية) -> { أرجع الأولى == الثانية; } | _ -> { أرجع خطأ; }; }
     | هوية_بدائي_مترجم.ذري_حمل -> { طابق ب مع | هوية_بدائي_مترجم.ذري_حمل -> { أرجع صواب; } | _ -> { أرجع خطأ; }; }
     | هوية_بدائي_مترجم.ذري_خزن -> { طابق ب مع | هوية_بدائي_مترجم.ذري_خزن -> { أرجع صواب; } | _ -> { أرجع خطأ; }; }

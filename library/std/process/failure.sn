@@ -1,4 +1,4 @@
-// The runtime-failure path of a program (docs/ERRORS.md): the one place a
+// The runtime-failure path of a program (docs/en/reference/errors.md): the one place a
 // compiled or interpreted program prints why it ends. `main` returning an
 // error, the stop primitive إنهيار and a failed assertion all come here.
 //
@@ -35,7 +35,7 @@
 عام عرف اطبع_فشل_تشغيل(المفتاح: عدد, الحمولة: &نص): فراغ {
     دع الإطار: نص = إطار_فشل_تشغيل(المفتاح, البرنامج_بالإنجليزية());
     دع تجاهل: نتيجة عدد, عدد = اطبع_سطر_خطأ(الإطار);
-    لو ((الطول(*الحمولة) مثل طبيعي) > 0) {
+    إذا ((الطول(*الحمولة) مثل طبيعي) > 0) {
         دع تجاهل_الحمولة: نتيجة عدد, عدد = اطبع_سطر_خطأ(انسخ_نص(الحمولة));
     };
 }

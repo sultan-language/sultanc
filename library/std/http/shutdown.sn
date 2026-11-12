@@ -1,0 +1,96 @@
+// Graceful shutdown of the std HTTP servers, as Go's http.Server.Shutdown and
+// uvicorn on SIGINT/SIGTERM: once requested, every std server stops accepting
+// connections, lets each request in progress finish and its response go out
+// (with "connection: close"), closes keep-alive connections that wait between
+// requests, and then its run function returns. The evented server gives
+// connections at most مهلة_إيقاف_الويب_بالثواني seconds to finish, then closes
+// the rest.
+//
+// The request is one process-wide flag, so any thread can set it: a program's
+// own signal thread, or أوقف_الويب_عند_إشارة, which blocks SIGINT and SIGTERM
+// and starts that thread (call it first in main, before any thread exists).
+//
+// Without a readiness poller (Windows) the sequential servers notice the
+// request after their next connection; a keep-alive connection that is idle
+// in a sequential server ends when its client sends or closes.
+استورد os.signal;
+استورد thread.thread;
+استورد http.model;
+استورد http.headers;
+
+مرادف احمل_ذري_إيقاف_ويب = بدائي_ذري_حمل;
+مرادف خزن_ذري_إيقاف_ويب = بدائي_ذري_خزن;
+
+// 0 running, 1 shutdown requested. The signal word: 0 none, else its number.
+دع إيقاف_خوادم_الويب: متغير ط32 = 0;
+دع إشارة_إيقاف_خوادم_الويب: متغير ط32 = 0;
+
+// 1 once a shutdown's grace period has run out (http.deadline cancels the
+// requests still running then).
+دع انتهاء_مهلة_إيقاف_الويب: متغير ط32 = 0;
+
+عام عرف مهلة_إيقاف_الويب_بالثواني(): عدد { أرجع 30; }
+عام مرادف http_shutdown_grace_seconds = مهلة_إيقاف_الويب_بالثواني;
+
+// Asks every std HTTP server in the process to shut down gracefully.
+عام عرف اطلب_إيقاف_خوادم_الويب(): فراغ {
+    خزن_ذري_إيقاف_ويب(&متغير إيقاف_خوادم_الويب, 1 مثل ط32, 4);
+}
+عام مرادف request_http_shutdown = اطلب_إيقاف_خوادم_الويب;
+
+عام عرف هل_طلب_إيقاف_الويب(): منطقي {
+    أرجع احمل_ذري_إيقاف_ويب(&متغير إيقاف_خوادم_الويب, 4) != (0 مثل ط32);
+}
+عام مرادف http_shutdown_requested = هل_طلب_إيقاف_الويب;
+
+// The signal that requested the shutdown through أوقف_الويب_عند_إشارة.
+عام عرف إشارة_إيقاف_الويب(): اختياري إشارة_إيقاف {
+    دع الرقم: ط32 = احمل_ذري_إيقاف_ويب(&متغير إشارة_إيقاف_خوادم_الويب, 4);
+    إذا (الرقم == (2 مثل ط32)) { أرجع اختياري.موجود(إشارة_إيقاف.مقاطعة()); };
+    إذا (الرقم == (15 مثل ط32)) { أرجع اختياري.موجود(إشارة_إيقاف.إنهاء()); };
+    أرجع اختياري.لا_شيء();
+}
+عام مرادف http_shutdown_signal = إشارة_إيقاف_الويب;
+
+عرف انتظر_إشارة_إيقاف_الويب(): فراغ {
+    طابق انتظر_إشارة_إيقاف() مع
+    | نتيجة.خطأ(_) -> { أرجع; }
+    | نتيجة.نجح(الإشارة) -> {
+        طابق الإشارة مع
+        | إشارة_إيقاف.مقاطعة -> { خزن_ذري_إيقاف_ويب(&متغير إشارة_إيقاف_خوادم_الويب, 2 مثل ط32, 4); }
+        | إشارة_إيقاف.إنهاء -> { خزن_ذري_إيقاف_ويب(&متغير إشارة_إيقاف_خوادم_الويب, 15 مثل ط32, 4); };
+        اطلب_إيقاف_خوادم_الويب();
+    };
+}
+
+// Blocks SIGINT and SIGTERM and starts a thread that requests the shutdown
+// when one arrives. Call it first in main, before any other thread starts.
+عام عرف أوقف_الويب_عند_إشارة(): نتيجة منطقي, خطأ_إشارة {
+    طابق احجب_إشارات_الإيقاف() مع
+    | نتيجة.خطأ(الخطأ) -> { أرجع نتيجة.خطأ(الخطأ); }
+    | نتيجة.نجح(_) -> {};
+    طابق أطلق(دالة(): فراغ -> انتظر_إشارة_إيقاف_الويب()) مع
+    | نتيجة.خطأ(_) -> { أرجع نتيجة.خطأ(خطأ_إشارة.غير_مدعوم()); }
+    | نتيجة.نجح(_) -> { أرجع نتيجة.نجح(صواب); };
+}
+عام مرادف shutdown_http_on_signal = أوقف_الويب_عند_إشارة;
+
+// During a shutdown, a response closes its connection.
+عام عرف علم_إغلاق_عند_الإيقاف_ويب(الاستجابة: &متغير استجابة_ويب_مخزنة): فراغ {
+    إذا (!هل_طلب_إيقاف_الويب()) { أرجع; };
+    دع الاسم: نص = «connection»;
+    دع القيمة: نص = «close»;
+    دع تجاهل: منطقي = ضع_رأس_ويب(&متغير (*الاستجابة).الرؤوس, &الاسم, &القيمة);
+}
+
+// Marks the grace period as over: requests still running are cancelled
+// (هل_ألغي_الطلب_ويب).
+عام عرف علّم_انتهاء_مهلة_إيقاف_الويب(): فراغ {
+    خزن_ذري_إيقاف_ويب(&متغير انتهاء_مهلة_إيقاف_الويب, 1 مثل ط32, 4);
+}
+عام مرادف mark_http_shutdown_grace_over = علّم_انتهاء_مهلة_إيقاف_الويب;
+
+عام عرف هل_انتهت_مهلة_إيقاف_الويب(): منطقي {
+    أرجع احمل_ذري_إيقاف_ويب(&متغير انتهاء_مهلة_إيقاف_الويب, 4) != (0 مثل ط32);
+}
+عام مرادف http_shutdown_grace_over = هل_انتهت_مهلة_إيقاف_الويب;

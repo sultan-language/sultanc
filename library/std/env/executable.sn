@@ -11,7 +11,7 @@
 // that starts a copy of itself runs this path with `interpret`, its source
 // (its first argument) and `--` before its own arguments.
 
-لو (الهدف.المنصة == «macos») {
+إذا (الهدف.المنصة == «macos») {
     استورد fs.canonical;
 
     عام عرف مسار_البرنامج_الحالي(): نتيجة نص, فئة_خطأ_نظام {

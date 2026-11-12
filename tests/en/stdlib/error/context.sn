@@ -3,7 +3,7 @@
 // خروج: 42
 // تفاضلي: نعم
 // نظير: tests/ar/stdlib/error/context.sn
-// std.error.context (docs/ERRORS.md): with_context wraps an error as the
+// std.error.context (docs/en/reference/errors.md): with_context wraps an error as the
 // cause of a new one, to_error converts a typed error with a converter
 // function value, with_note adds a note; on success each moves an owning
 // value (text, a vector) through unchanged. The exact error_describe text of

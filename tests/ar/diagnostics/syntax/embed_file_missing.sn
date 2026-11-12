@@ -1,0 +1,8 @@
+// اختبار: رفض
+// تشخيص: SULTANC-PARSE-SYNTAX
+// نظير: tests/en/diagnostics/syntax/embed_file_missing.sn
+// ملف لا يُقرأ في `ضمن_ملف` خطأ ترجمة يسمّي الحرفي.
+عرف الرئيسية(): عدد {
+    دع م: نص = ضمن_ملف(«no_such_file.txt»);
+    أرجع 0;
+}

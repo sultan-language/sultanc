@@ -3,6 +3,48 @@
 #include "semantic/body_internal.h"
 #include "kernel/memory/memory.h"
 
+/* Checks the elements of a vector literal against its element Type INNER:
+ * each element is compatible with it and moved when the Type is move-only.
+ * A vector initializer and a vector literal record field share this. */
+int __Body_Check_Vector_Elements__(__Semantic_Body_Context__ *__Context__,
+                                   __Ast_Type__ *__Inner__,
+                                   __Ast_Atom__ *__Values__,
+                                   __Ast_Expression__ **__Expressions__,
+                                   size_t __Count__,
+                                   __Source_Span__ __Span__)
+{
+    /* Tracks the index. */
+    size_t __Index__ = 0U;
+    if (__Memory_Type_Contains_View__(__Context__->__Semantic__, __Inner__))
+    {
+        /* Stage 0 has no multi-provenance vector lifetime representation. */
+        return __Body_Fail__(__Context__, __E1303_Reference_Escape__, __Span__);
+    }
+    for (__Index__ = 0U; __Index__ < __Count__; ++__Index__)
+    {
+        if (__Expressions__ != NULL && __Expressions__[__Index__] != NULL)
+        {
+            /* An element that is not an atom: a call, cast or arithmetic. */
+            __Ast_Expression__ *__Element__ = __Expressions__[__Index__];
+            if (!__Body_Check_Expression_Compatible__(__Context__, __Inner__, __Element__,
+                                                      __Element__->__Header__.__Span__) ||
+                (__Safety_Type_Is_Move_Only__(__Context__->__Semantic__, __Inner__) &&
+                 !__Body_Safety_Move_Expression__(__Context__, __Element__, NULL)))
+            {
+                return 0;
+            }
+            continue;
+        }
+        if (!__Body_Check_Atom_Compatible__(__Context__, __Inner__, &__Values__[__Index__], __Span__) ||
+            (__Safety_Type_Is_Move_Only__(__Context__->__Semantic__, __Inner__) &&
+             !__Body_Safety_Move_Atom__(__Context__, &__Values__[__Index__], __Span__)))
+        {
+            return 0;
+        }
+    }
+    return 1;
+}
+
 /* Checks the body vector initializer. */
 int __Body_Check_Vector_Init__(__Semantic_Body_Context__ *__Context__,
                                __Ast_Statement__ *__Statement__)
@@ -13,8 +55,6 @@ int __Body_Check_Vector_Init__(__Semantic_Body_Context__ *__Context__,
     __Semantic_Local__ *__Local__ = NULL;
     /* Stores the resolved. */
     __Resolved_Type__ __Resolved__;
-    /* Tracks the index. */
-    size_t __Index__ = 0U;
     if (!__Body_Check_Assignable__(__Context__,
                                    __Statement__->__As__.__Aggregate__.__Destination__,
                                    &__Destination_Type__,
@@ -28,42 +68,14 @@ int __Body_Check_Vector_Init__(__Semantic_Body_Context__ *__Context__,
         return __Body_Fail__(
             __Context__, __E0400_Mismatched_Types__, __Statement__->__Header__.__Span__);
     }
-    if (__Resolved__.__Kind__ == __Resolved_Type_Vector__ &&
-        __Memory_Type_Contains_View__(__Context__->__Semantic__, __Resolved__.__Inner__))
+    if (!__Body_Check_Vector_Elements__(__Context__,
+                                        __Resolved__.__Inner__,
+                                        __Statement__->__As__.__Aggregate__.__Values__,
+                                        __Statement__->__As__.__Aggregate__.__Expressions__,
+                                        __Statement__->__As__.__Aggregate__.__Value_Count__,
+                                        __Statement__->__Header__.__Span__))
     {
-        /* Stage 0 has no multi-provenance vector lifetime representation. */
-        return __Body_Fail__(
-            __Context__, __E1303_Reference_Escape__, __Statement__->__Header__.__Span__);
-    }
-    for (__Index__ = 0U; __Index__ < __Statement__->__As__.__Aggregate__.__Value_Count__;
-         ++__Index__)
-    {
-        if (__Statement__->__As__.__Aggregate__.__Expressions__ != NULL &&
-            __Statement__->__As__.__Aggregate__.__Expressions__[__Index__] != NULL)
-        {
-            /* An element that is not an atom: a call, cast or arithmetic. */
-            __Ast_Expression__ *__Element__ = __Statement__->__As__.__Aggregate__.__Expressions__[__Index__];
-            if (!__Body_Check_Expression_Compatible__(__Context__, __Resolved__.__Inner__, __Element__,
-                                                      __Element__->__Header__.__Span__) ||
-                (__Safety_Type_Is_Move_Only__(__Context__->__Semantic__, __Resolved__.__Inner__) &&
-                 !__Body_Safety_Move_Expression__(__Context__, __Element__, NULL)))
-            {
-                return 0;
-            }
-            continue;
-        }
-        if (!__Body_Check_Atom_Compatible__(
-                __Context__,
-                __Resolved__.__Inner__,
-                &__Statement__->__As__.__Aggregate__.__Values__[__Index__],
-                __Statement__->__Header__.__Span__) ||
-            (__Safety_Type_Is_Move_Only__(__Context__->__Semantic__, __Resolved__.__Inner__) &&
-             !__Body_Safety_Move_Atom__(__Context__,
-                                        &__Statement__->__As__.__Aggregate__.__Values__[__Index__],
-                                        __Statement__->__Header__.__Span__)))
-        {
-            return 0;
-        }
+        return 0;
     }
     if (__Local__ != NULL)
     {

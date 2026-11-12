@@ -2,7 +2,7 @@
 استورد os.platform.windows.win32.error;
 استورد os.platform.windows.win32.file_handles;
 
-// Windows OS threads (docs/CONCURRENCY.md) through kernel32, as Rust's std
+// Windows OS threads (docs/en/reference/concurrency.md) through kernel32, as Rust's std
 // does (library/std/src/sys/pal/windows/thread.rs): CreateThread with a
 // 2 MiB stack reservation (STACK_SIZE_PARAM_IS_A_RESERVATION), then
 // WaitForSingleObject(INFINITE) to join, GetExitCodeThread to confirm the
@@ -43,7 +43,7 @@
     دع المعرف: متغير متجه ط32 = [0];
     // STACK_SIZE_PARAM_IS_A_RESERVATION 0x10000.
     دع المقبض: ط64 = CreateThread(0, 2097152, المدخل, العنوان, 0x10000, &متغير المعرف[0]);
-    لو (المقبض == 0) {
+    إذا (المقبض == 0) {
         دع الخطأ: خطأ_نظام_أصلي = التقط_خطأ_وين32();
         حرر_إغلاق_خيط_ويندوز(العنوان);
         أرجع نتيجة.خطأ(الخطأ);
@@ -63,7 +63,7 @@
     دع الرمز: متغير متجه ط32 = [259];
     طالما (الرمز[0] == 259) {
         دع تجاهل_الانتظار: ط32 = WaitForSingleObject(المقبض, 0xFFFFFFFF);
-        لو (GetExitCodeThread(المقبض, &متغير الرمز[0]) == 0) { الرمز[0] := 0; };
+        إذا (GetExitCodeThread(المقبض, &متغير الرمز[0]) == 0) { الرمز[0] := 0; };
     }
     دع تجاهل: ص32 = CloseHandle(المقبض);
 }
@@ -78,6 +78,6 @@
     دع المعلومات: متغير متجه ط64 = [0, 0, 0, 0, 0, 0];
     GetSystemInfo(&متغير المعلومات[0]);
     دع العدد: ط64 = المعلومات[4] & 0xFFFFFFFF;
-    لو (العدد == 0) { أرجع نتيجة.خطأ(أنشئ_خطأ_نظام_أصلي(مصدر_خطأ_نظام.وين32(), 87)); };
+    إذا (العدد == 0) { أرجع نتيجة.خطأ(أنشئ_خطأ_نظام_أصلي(مصدر_خطأ_نظام.وين32(), 87)); };
     أرجع نتيجة.نجح(العدد);
 }

@@ -1,0 +1,164 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 0
+// نظير: tests/ar/stdlib/behavior/async_tasks.sn
+// std.async on one thread: three tasks that each sleep 40 ms finish
+// together (well under the 120 ms one after another would take) and await
+// hands back each result once; a task awaiting another suspends only
+// itself; yield lets a ready task run first; and two tasks talk over
+// loopback TCP with async accept, read and write, the server task waiting
+// in the poller until the client task (which starts later) connects.
+import std.async.runtime;
+import std.async.net;
+import std.net.socket_address;
+import std.net.tcp;
+import std.time.time;
+
+def now(): int {
+    match monotonic_time_ns() with
+    | result.ok(t) -> { return t; }
+    | result.err(_) -> { return 0; };
+}
+
+def sleeper(ns: int, value: int): int {
+    sleep_task(ns);
+    return value;
+}
+
+def twice_of_sleeper(): int {
+    let inner: mutable task<int> = spawn_task(fn(): int -> sleeper(10000000, 21));
+    match await_task(&mutable inner) with
+    | option.some(v) -> { return v * 2; }
+    | option.none -> { return -1; };
+}
+
+def zeros(n: uint): vector u8 {
+    let out: mutable vector u8 = [];
+    let i: mutable uint = 0;
+    while (i < n) { append(out, 0); i := i + 1; }
+    return out;
+}
+
+def address(): result socket_addr, socket_addr_parse_error {
+    let text: string = "127.0.0.1:38517";
+    return parse_socket_addr(&text);
+}
+
+// Accepts one connection and answers each byte plus one.
+def serve_once(): int {
+    let addr: mutable socket_addr;
+    match address() with
+    | result.err(_) -> { return 5; }
+    | result.ok(a) -> { addr := a; };
+    let listener: tcp_listener;
+    match tcp_listen_async(&addr, 16) with
+    | result.err(_) -> { return 1; }
+    | result.ok(l) -> { listener := l; };
+    let stream: tcp_stream;
+    match tcp_accept_async(&listener) with
+    | result.err(_) -> { return 2; }
+    | result.ok(s) -> { stream := s; };
+    let buffer: mutable vector u8 = zeros(16);
+    let n: mutable int = 0;
+    match tcp_read_async(&stream, &mutable buffer, 0, 16) with
+    | result.err(_) -> { return 3; }
+    | result.ok(k) -> { n := k; };
+    let reply: mutable vector u8 = [];
+    let i: mutable int = 0;
+    while (i < n) { append(reply, buffer[i as uint] + 1); i := i + 1; }
+    match tcp_write_all_async(&stream, &reply) with
+    | result.err(_) -> { return 4; }
+    | result.ok(_) -> { };
+    // Wait for the client to close first, so the closed connection's
+    // TIME_WAIT is on the client's port, not the listening one (the next
+    // run binds it again).
+    let rest: mutable int = 1;
+    while (rest > 0) {
+        match tcp_read_async(&stream, &mutable buffer, 0, 16) with
+        | result.err(_) -> { rest := 0; }
+        | result.ok(k) -> { rest := k; };
+    }
+    let c1: result int, int = tcp_close_async(stream);
+    let c2: result int, int = tcp_listener_close_async(listener);
+    return 0;
+}
+
+def client_once(): int {
+    sleep_task(20000000);
+    let addr: mutable socket_addr;
+    match address() with
+    | result.err(_) -> { return 16; }
+    | result.ok(a) -> { addr := a; };
+    let stream: tcp_stream;
+    match tcp_connect_async(&addr) with
+    | result.err(_) -> { return 11; }
+    | result.ok(s) -> { stream := s; };
+    let message: vector u8 = [1, 2, 3];
+    match tcp_write_all_async(&stream, &message) with
+    | result.err(_) -> { return 12; }
+    | result.ok(_) -> { };
+    let buffer: mutable vector u8 = zeros(16);
+    let got: mutable uint = 0;
+    while (got < 3) {
+        match tcp_read_async(&stream, &mutable buffer, got as int, 16 - (got as int)) with
+        | result.err(_) -> { return 13; }
+        | result.ok(k) -> {
+            if (k <= 0) { return 14; };
+            got := got + (k as uint);
+        };
+    }
+    if (buffer[0] != 2 || buffer[1] != 3 || buffer[2] != 4) { return 15; };
+    let c: result int, int = tcp_close_async(stream);
+    return 0;
+}
+
+def main(): int {
+    if (!tasks_supported()) { return 1; };
+
+    let start: int = now();
+    let a: mutable task<int> = spawn_task(fn(): int -> sleeper(40000000, 1));
+    let b: mutable task<int> = spawn_task(fn(): int -> sleeper(40000000, 2));
+    let c: mutable task<int> = spawn_task(fn(): int -> sleeper(40000000, 3));
+    let sum: mutable int = 0;
+    match await_task(&mutable a) with
+    | option.some(v) -> { sum := sum + v; }
+    | option.none -> { return 2; };
+    match await_task(&mutable b) with
+    | option.some(v) -> { sum := sum + v; }
+    | option.none -> { return 3; };
+    match await_task(&mutable c) with
+    | option.some(v) -> { sum := sum + v; }
+    | option.none -> { return 4; };
+    if (sum != 6) { return 5; };
+    if (now() - start >= 100000000) { return 6; };
+    // A second await has nothing left.
+    match await_task(&mutable a) with
+    | option.some(_) -> { return 7; }
+    | option.none -> { };
+    if (!task_finished(&a)) { return 8; };
+
+    // A task awaiting another task.
+    match block_on(fn(): int -> twice_of_sleeper()) with
+    | option.some(v) -> { if (v != 42) { return 9; }; }
+    | option.none -> { return 10; };
+
+    // Yield: the spawned task runs before the caller goes on.
+    let d: mutable task<int> = spawn_task(fn(): int -> 5);
+    if (task_finished(&d)) { return 20; };
+    yield_task();
+    if (!task_finished(&d)) { return 21; };
+    match await_task(&mutable d) with
+    | option.some(v) -> { if (v != 5) { return 22; }; }
+    | option.none -> { return 23; };
+
+    // Async TCP between two tasks.
+    let server: mutable task<int> = spawn_task(fn(): int -> serve_once());
+    let client: mutable task<int> = spawn_task(fn(): int -> client_once());
+    match await_task(&mutable client) with
+    | option.some(v) -> { if (v != 0) { return 30 + v; }; }
+    | option.none -> { return 30; };
+    match await_task(&mutable server) with
+    | option.some(v) -> { if (v != 0) { return 50 + v; }; }
+    | option.none -> { return 50; };
+    return 0;
+}

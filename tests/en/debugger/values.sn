@@ -1,0 +1,59 @@
+// اختبار: تشغيل
+// أهداف: x86_64-linux
+// خروج: 0
+// نظير: tests/ar/debugger/قيم.sn
+// Program the debugger tests run under gdb and lldb (values.dbg,
+// tools/tests/debugger_tests.sh). Lines marked `// BP:name` are breakpoint
+// targets; the Arabic twin is tests/ar/debugger/قيم.sn.
+import std.io.println;
+import std.text.number;
+import "helpers/math.sn";
+
+type Point = { x: int, y: int };
+type Big = { a: int, b: int, c: int, label: string };
+type Shape = | Square of int | Rect of Point | Empty;
+
+let counter_global: int = 7;
+
+def sum_big(value: Big): int {
+    let partial: int = value.a + value.b;
+    println(int_to_text(partial));                          // BP:sum_big
+    return partial + value.c;
+}
+
+def area(shape: Shape): int {
+    match shape with
+    | Shape.Square(side) -> { return side * side; }
+    | Shape.Rect({ x: w, y: h }) -> { return w * h; }
+    | Shape.Empty -> { return 0; };
+}
+
+def bump(target: &mutable int): void {
+    *target := *target + 1;                                 // BP:bump
+}
+
+def count_up(limit: int): int {
+    let total: mutable int = 0;
+    let index: mutable int = 0;
+    while (index < limit) {
+        total := total + index;                             // BP:loop
+        index := index + 1;
+    }
+    return total;
+}
+
+def main(): int {
+    let p: Point = { x: 3, y: 4 };
+    let big: Big = { a: 1, b: 2, c: 3, label: "hello" };
+    let s: Shape = Shape.Rect(p);
+    let values: vector int = [10, 20, 30];
+    let name: string = "world";
+    let total: mutable int = sum_big(big);
+    bump(&mutable total);                                   // BP:main_bump
+    total := total + area(s);
+    total := total + count_up(4);
+    total := total + scaled_sum(total, counter_global, 2);
+    println(int_to_text(total));                            // BP:main_print
+    println(name);
+    return 0;
+}

@@ -6,7 +6,7 @@
 // خرج-قياسي: قبل الإيقاف
 // خطأ-قياسي-ملف: panic_ar.stderr
 // نظير: tests/ar/runtime/failure/panic_ar.sn
-// The stop primitive panic (docs/ERRORS.md): the iSpeak frame "the program
+// The stop primitive panic (docs/en/reference/errors.md): the iSpeak frame "the program
 // stopped" in the program's language with the message under it, exit status
 // 1. It never returns, so `divide` needs no return after it; the owned text
 // still alive is not dropped (abort semantics).

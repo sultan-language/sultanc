@@ -1,0 +1,107 @@
+// Where the standard library is, as Go finds GOROOT and rustc its sysroot:
+//
+//   1. $SULTANC_STD, the library directory (the one holding std/). Set, it
+//      is the answer even when it is wrong, so its error names it.
+//   2. ./library, the checkout the compiler is run from: the stage builds and
+//      the self-host check run there and keep their exact paths.
+//   3. Next to the running compiler: <bin>/library, <bin>/../library (a
+//      build/sultanc in a checkout) and <bin>/../lib/sultanc/library (an
+//      install prefix: <prefix>/bin/sultanc).
+//
+// The marker is the layout itself: a candidate counts only if it holds a
+// std/ folder, so a project's own library/ directory without one is passed
+// over. No file describes std. The compiler knows it (the table below):
+// one package, canonical name std, Arabic spelling المكتبة, sources in
+// <library>/std, root file std/std.sn. Spellings of the modules inside it
+// are declared there with `module` (module_spellings.sn). Without any
+// candidate, the answer is ./library, whose missing std/ the package setup
+// then reports (SULTANC-STD-NOT-FOUND).
+استورد std.env.environment;
+استورد std.env.executable;
+استورد std.fs.path;
+استورد std.fs.directory;
+استورد compiler.driver.package_graph;
+
+// The one table of std's names: its canonical name, which is also its
+// folder, and its spellings by language.
+عام عرف اسم_المكتبة_القياسية(): نص { أرجع «std»; }
+
+عرف تهجئات_المكتبة_القياسية(): متجه تهجئة_رسم_حزم {
+    دع الناتج: متغير متجه تهجئة_رسم_حزم = [];
+    دع العربية: تهجئة_رسم_حزم = { اللغة: «ar», التهجئة: «المكتبة» };
+    ألحق(الناتج, العربية);
+    أرجع الناتج;
+}
+
+عرف مجلد_المكتبة_في(الدليل: &نص): نص {
+    دع الاسم: نص = اسم_المكتبة_القياسية();
+    دع الموصول: نص = صل_المسار(الدليل, &الاسم);
+    أرجع نظف_المسار(&الموصول);
+}
+
+عرف فيه_مجلد_المكتبة(الدليل: &نص): منطقي {
+    دع المجلد: نص = مجلد_المكتبة_في(الدليل);
+    طابق حاول_مسار_دليل(&المجلد) مع
+    | نتيجة.نجح(صواب) -> { أرجع صواب; }
+    | _ -> { أرجع خطأ; };
+}
+
+// The library directory (the one holding std/).
+عام عرف حدد_دليل_المكتبة_القياسية(): نص {
+    دع اسم_المتغير: نص = «SULTANC_STD»;
+    طابق متغير_بيئة(&اسم_المتغير) مع
+    | نتيجة.نجح(اختياري.موجود(الدليل)) -> {
+        إذا ((الطول(الدليل) مثل طبيعي) > 0) { أرجع الدليل; };
+    }
+    | _ -> { };
+
+    دع المحلي: نص = «library»;
+    إذا (فيه_مجلد_المكتبة(&المحلي)) { أرجع المحلي; };
+
+    طابق مسار_البرنامج_الحالي() مع
+    | نتيجة.خطأ(_) -> { }
+    | نتيجة.نجح(البرنامج) -> {
+        طابق أب_المسار(&البرنامج) مع
+        | اختياري.لا_شيء -> { }
+        | اختياري.موجود(دليل_البرنامج) -> {
+            دع المرشحات: متجه نص = [«library», «../library», «../lib/sultanc/library»];
+            دع ف: متغير طبيعي = 0;
+            طالما (ف < (الطول(المرشحات) مثل طبيعي)) {
+                دع المضموم: نص = صل_المسار(&دليل_البرنامج, &المرشحات[ف]);
+                دع الدليل: نص = نظف_المسار(&المضموم);
+                إذا (فيه_مجلد_المكتبة(&الدليل)) { أرجع الدليل; };
+                ف := ف + 1;
+            }
+        };
+    };
+    أرجع المحلي;
+}
+
+// The standard library as a package graph of one package and no root, for
+// the package setup (package_environment.sn). Its المسار is the library
+// directory, named by SULTANC-STD-NOT-FOUND when std/ is not in it.
+عام عرف رسم_المكتبة_القياسية(): نتيجة رسم_حزم, خطأ_رسم_حزم {
+    دع الدليل: نص = حدد_دليل_المكتبة_القياسية();
+    دع المجلد: نص = مجلد_المكتبة_في(&الدليل);
+    إذا (!فيه_مجلد_المكتبة(&الدليل)) {
+        أرجع نتيجة.خطأ(خطأ_مكتبة_قياسية_مفقودة(&المجلد));
+    };
+    دع الحزمة: حزمة_رسم = {
+        المعرف: اسم_المكتبة_القياسية(),
+        جذر_المصدر: المجلد,
+        الاسم: اسم_المكتبة_القياسية(),
+        التهجئات: تهجئات_المكتبة_القياسية(),
+        المدخل: اختياري.لا_شيء(),
+        النطاق: اختياري.لا_شيء()
+    };
+    دع الحزم: متغير متجه حزمة_رسم = [];
+    ألحق(الحزم, الحزمة);
+    دع الحواف: متجه حافة_رسم = [];
+    دع الرسم: رسم_حزم = {
+        المسار: الدليل,
+        الجذر: اختياري.لا_شيء(),
+        الحزم: الحزم,
+        الحواف: الحواف
+    };
+    أرجع نتيجة.نجح(الرسم);
+}

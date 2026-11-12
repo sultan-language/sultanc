@@ -1,0 +1,15 @@
+// اختبار: رفض
+// تشخيص: SULTANC-BORROW-REFERENCE-ESCAPE
+// نظير: tests/ar/language/safety/reject_escape_beside_pointer.sn
+// A safe reference to a local still cannot escape its function when a raw
+// pointer to the same local exists.
+def escape(): &int {
+    let local: int = 5;
+    let p: *int = &local;
+    let r: &int = &local;
+    return r;
+}
+
+def main(): int {
+    return *escape();
+}

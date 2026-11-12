@@ -29,7 +29,11 @@
     مرادفات_الأسماء: متجه تصريح_مرادف_اسم,
     // Name spans of declarations a false target condition left out, so an
     // unknown name can say that it exists only for other targets.
-    المستبعدة_للهدف: متجه نطاق
+    المستبعدة_للهدف: متجه نطاق,
+    // The `module` (`وحدة`) keyword of each module-spelling declaration. Only
+    // a folder's root file may have them; module loading reads their content
+    // from the root file (module_loading/module_spellings.sn).
+    تصريحات_الوحدات: متجه نطاق
 };
 
 // Deep copies of owned values (one per Type; read the source through a

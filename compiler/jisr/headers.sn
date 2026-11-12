@@ -1,0 +1,324 @@
+// The freestanding headers a C compiler provides itself (C17 clause 4):
+// <stddef.h>, <stdarg.h>, <stdbool.h>, <stdint.h>, <limits.h>, <float.h>,
+// <stdalign.h>, <stdnoreturn.h> and <iso646.h>, as GCC and Clang ship them
+// in their resource directory. They are written over the predefined macros
+// of the target (__SIZE_TYPE__, __INT_MAX__, ...), so they hold for every
+// target; <stdint.h> and <limits.h> defer to the C library's own header
+// when there is one, as Clang's do. The search directory "<jisr>" names
+// them; it comes right after /usr/local/include, where GCC's own is.
+استورد std.text.compare;
+استورد std.text.from_bytes;
+استورد std.text.transform;
+استورد compiler.jisr.core;
+
+عرف أسطر_رأس_جسر(الأسطر: &متجه نص): نص {
+    دع البايتات: متغير متجه ط8 = [];
+    دع ف: متغير طبيعي = 0;
+    طالما (ف < (الطول(*الأسطر) مثل طبيعي)) {
+        ألحق_بايتات_نص(&متغير البايتات, انسخ_نص(&(*الأسطر)[ف]));
+        ألحق(البايتات, 10);
+        ف := ف + 1;
+    }
+    أرجع البايتات مثل نص;
+}
+
+عرف رأس_stddef_جسر(): نص {
+    دع الأسطر: متجه نص = [
+        «#if !defined(__need_ptrdiff_t) && !defined(__need_size_t) && !defined(__need_wchar_t) && !defined(__need_NULL) && !defined(__need_wint_t) && !defined(__need_max_align_t) && !defined(__need_offsetof)»,
+        «#define __need_ptrdiff_t»,
+        «#define __need_size_t»,
+        «#define __need_wchar_t»,
+        «#define __need_NULL»,
+        «#define __need_max_align_t»,
+        «#define __need_offsetof»,
+        «#endif»,
+        «#ifdef __need_ptrdiff_t»,
+        «typedef __PTRDIFF_TYPE__ ptrdiff_t;»,
+        «#undef __need_ptrdiff_t»,
+        «#endif»,
+        «#ifdef __need_size_t»,
+        «typedef __SIZE_TYPE__ size_t;»,
+        «#undef __need_size_t»,
+        «#endif»,
+        «#ifdef __need_wchar_t»,
+        «typedef __WCHAR_TYPE__ wchar_t;»,
+        «#undef __need_wchar_t»,
+        «#endif»,
+        «#ifdef __need_NULL»,
+        «#undef NULL»,
+        «#define NULL ((void *)0)»,
+        «#undef __need_NULL»,
+        «#endif»,
+        «#ifdef __need_wint_t»,
+        «typedef __WINT_TYPE__ wint_t;»,
+        «#undef __need_wint_t»,
+        «#endif»,
+        «#ifdef __need_max_align_t»,
+        «#ifndef __JISR_MAX_ALIGN_T»,
+        «#define __JISR_MAX_ALIGN_T»,
+        «typedef struct { long long __jisr_ll; long double __jisr_ld; } max_align_t;»,
+        «#endif»,
+        «#undef __need_max_align_t»,
+        «#endif»,
+        «#ifdef __need_offsetof»,
+        «#undef offsetof»,
+        «#define offsetof(t, d) __builtin_offsetof(t, d)»,
+        «#undef __need_offsetof»,
+        «#endif»
+    ];
+    أرجع أسطر_رأس_جسر(&الأسطر);
+}
+
+عرف رأس_stdarg_جسر(): نص {
+    دع الأسطر: متجه نص = [
+        «#ifndef __JISR_GNUC_VA_LIST»,
+        «#define __JISR_GNUC_VA_LIST»,
+        «typedef __builtin_va_list __gnuc_va_list;»,
+        «#endif»,
+        «#ifdef __need___va_list»,
+        «#undef __need___va_list»,
+        «#else»,
+        «#ifndef __JISR_STDARG_H»,
+        «#define __JISR_STDARG_H»,
+        «#define _STDARG_H»,
+        «#define _VA_LIST_DEFINED»,
+        «typedef __builtin_va_list va_list;»,
+        «#define va_start(ap, ...) __builtin_va_start(ap, 0)»,
+        «#define va_end(ap) __builtin_va_end(ap)»,
+        «#define va_arg(ap, type) __builtin_va_arg(ap, type)»,
+        «#define va_copy(dest, src) __builtin_va_copy(dest, src)»,
+        «#define __va_copy(dest, src) __builtin_va_copy(dest, src)»,
+        «#endif»,
+        «#endif»
+    ];
+    أرجع أسطر_رأس_جسر(&الأسطر);
+}
+
+عرف رأس_stdbool_جسر(): نص {
+    دع الأسطر: متجه نص = [
+        «#ifndef __JISR_STDBOOL_H»,
+        «#define __JISR_STDBOOL_H»,
+        «#define bool _Bool»,
+        «#define true 1»,
+        «#define false 0»,
+        «#define __bool_true_false_are_defined 1»,
+        «#endif»
+    ];
+    أرجع أسطر_رأس_جسر(&الأسطر);
+}
+
+عرف رأس_stdint_جسر(): نص {
+    دع الأسطر: متغير متجه نص = [
+        «#ifndef __JISR_STDINT_H»,
+        «#if __STDC_HOSTED__ && __has_include_next(<stdint.h>)»,
+        «#include_next <stdint.h>»,
+        «#else»,
+        «#define __JISR_STDINT_H»,
+        «typedef __INTPTR_TYPE__ intptr_t;»,
+        «typedef __UINTPTR_TYPE__ uintptr_t;»,
+        «typedef __INTMAX_TYPE__ intmax_t;»,
+        «typedef __UINTMAX_TYPE__ uintmax_t;»,
+        «#define INTPTR_MAX __INTPTR_MAX__»,
+        «#define INTPTR_MIN (-__INTPTR_MAX__ - 1)»,
+        «#define UINTPTR_MAX __UINTPTR_MAX__»,
+        «#define INTMAX_MAX __INTMAX_MAX__»,
+        «#define INTMAX_MIN (-__INTMAX_MAX__ - 1)»,
+        «#define UINTMAX_MAX __UINTMAX_MAX__»,
+        «#define SIZE_MAX __SIZE_MAX__»,
+        «#define PTRDIFF_MAX __PTRDIFF_MAX__»,
+        «#define PTRDIFF_MIN (-__PTRDIFF_MAX__ - 1)»,
+        «#define INTMAX_C(c) __INTMAX_C(c)»,
+        «#define UINTMAX_C(c) __UINTMAX_C(c)»
+    ];
+    دع العروض: متجه نص = [«8», «16», «32», «64»];
+    دع ف: متغير طبيعي = 0;
+    طالما (ف < 4) {
+        دع ع: &نص = &العروض[ف];
+        دع البادئات: متجه نص = [«», «_LEAST», «_FAST»];
+        دع ب: متغير طبيعي = 0;
+        طالما (ب < 3) {
+            دع ب_ن: &نص = &البادئات[ب];
+            ألحق(الأسطر, سطر_نوع_جسر(ب_ن, ع, صواب));
+            ألحق(الأسطر, سطر_نوع_جسر(ب_ن, ع, خطأ));
+            ألحق(الأسطر, سطر_أقصى_جسر(ب_ن, ع, «INT», «__INT»));
+            ألحق(الأسطر, سطر_أقصى_جسر(ب_ن, ع, «UINT», «__UINT»));
+            دع أدنى: متجه نص = [«#define INT», انسخ_نص(ب_ن), انسخ_نص(ع), «_MIN (-__INT», انسخ_نص(ب_ن), انسخ_نص(ع), «_MAX__ - 1)»];
+            ألحق(الأسطر, صل_النصوص(&أدنى, &«»));
+            ب := ب + 1;
+        }
+        دع ثابت1: متجه نص = [«#define INT», انسخ_نص(ع), «_C(c) __INT», انسخ_نص(ع), «_C(c)»];
+        ألحق(الأسطر, صل_النصوص(&ثابت1, &«»));
+        دع ثابت2: متجه نص = [«#define UINT», انسخ_نص(ع), «_C(c) __UINT», انسخ_نص(ع), «_C(c)»];
+        ألحق(الأسطر, صل_النصوص(&ثابت2, &«»));
+        ف := ف + 1;
+    }
+    ألحق(الأسطر, «#endif»);
+    ألحق(الأسطر, «#endif»);
+    أرجع أسطر_رأس_جسر(&الأسطر);
+}
+
+// `typedef __INT_LEAST8_TYPE__ int_least8_t;` and the unsigned twin.
+عرف سطر_نوع_جسر(البادئة: &نص, العرض: &نص, موقع: منطقي): نص {
+    دع الأجزاء: متغير متجه نص = [];
+    إذا (موقع) { ألحق(الأجزاء, «typedef __INT»); } وإلا { ألحق(الأجزاء, «typedef __UINT»); };
+    ألحق(الأجزاء, انسخ_نص(البادئة));
+    ألحق(الأجزاء, انسخ_نص(العرض));
+    إذا (موقع) { ألحق(الأجزاء, «_TYPE__ int»); } وإلا { ألحق(الأجزاء, «_TYPE__ uint»); };
+    ألحق(الأجزاء, حول_النص_إلى_صغير_أسكي(البادئة));
+    ألحق(الأجزاء, انسخ_نص(العرض));
+    ألحق(الأجزاء, «_t;»);
+    أرجع صل_النصوص(&الأجزاء, &«»);
+}
+
+// `#define INT_LEAST8_MAX __INT_LEAST8_MAX__`.
+عرف سطر_أقصى_جسر(البادئة: &نص, العرض: &نص, الاسم: نص, الأصل: نص): نص {
+    دع الأجزاء: متجه نص = [«#define », الاسم, انسخ_نص(البادئة), انسخ_نص(العرض), «_MAX », الأصل,
+        انسخ_نص(البادئة), انسخ_نص(العرض), «_MAX__»];
+    أرجع صل_النصوص(&الأجزاء, &«»);
+}
+
+عرف رأس_limits_جسر(): نص {
+    دع الأسطر: متجه نص = [
+        «#ifndef __JISR_LIMITS_H»,
+        «#define __JISR_LIMITS_H»,
+        «#if __STDC_HOSTED__ && __has_include_next(<limits.h>)»,
+        «#define _GCC_LIMITS_H_»,
+        «#include_next <limits.h>»,
+        «#endif»,
+        «#undef CHAR_BIT»,
+        «#undef SCHAR_MAX»,
+        «#undef SCHAR_MIN»,
+        «#undef UCHAR_MAX»,
+        «#undef CHAR_MIN»,
+        «#undef CHAR_MAX»,
+        «#undef SHRT_MAX»,
+        «#undef SHRT_MIN»,
+        «#undef USHRT_MAX»,
+        «#undef INT_MAX»,
+        «#undef INT_MIN»,
+        «#undef UINT_MAX»,
+        «#undef LONG_MAX»,
+        «#undef LONG_MIN»,
+        «#undef ULONG_MAX»,
+        «#undef LLONG_MAX»,
+        «#undef LLONG_MIN»,
+        «#undef ULLONG_MAX»,
+        «#define CHAR_BIT __CHAR_BIT__»,
+        «#define SCHAR_MAX __SCHAR_MAX__»,
+        «#define SCHAR_MIN (-__SCHAR_MAX__ - 1)»,
+        «#define UCHAR_MAX (__SCHAR_MAX__ * 2 + 1)»,
+        «#ifdef __CHAR_UNSIGNED__»,
+        «#define CHAR_MIN 0»,
+        «#define CHAR_MAX UCHAR_MAX»,
+        «#else»,
+        «#define CHAR_MIN SCHAR_MIN»,
+        «#define CHAR_MAX SCHAR_MAX»,
+        «#endif»,
+        «#define SHRT_MAX __SHRT_MAX__»,
+        «#define SHRT_MIN (-__SHRT_MAX__ - 1)»,
+        «#define USHRT_MAX (__SHRT_MAX__ * 2 + 1)»,
+        «#define INT_MAX __INT_MAX__»,
+        «#define INT_MIN (-__INT_MAX__ - 1)»,
+        «#define UINT_MAX (__INT_MAX__ * 2U + 1U)»,
+        «#define LONG_MAX __LONG_MAX__»,
+        «#define LONG_MIN (-__LONG_MAX__ - 1L)»,
+        «#define ULONG_MAX (__LONG_MAX__ * 2UL + 1UL)»,
+        «#define LLONG_MAX __LONG_LONG_MAX__»,
+        «#define LLONG_MIN (-__LONG_LONG_MAX__ - 1LL)»,
+        «#define ULLONG_MAX (__LONG_LONG_MAX__ * 2ULL + 1ULL)»,
+        «#ifndef MB_LEN_MAX»,
+        «#define MB_LEN_MAX 16»,
+        «#endif»,
+        «#endif»
+    ];
+    أرجع أسطر_رأس_جسر(&الأسطر);
+}
+
+عرف رأس_float_جسر(): نص {
+    دع الأسطر: متجه نص = [
+        «#ifndef __JISR_FLOAT_H»,
+        «#define __JISR_FLOAT_H»,
+        «#define FLT_RADIX 2»,
+        «#define FLT_EVAL_METHOD 0»,
+        «#define DECIMAL_DIG 17»,
+        «#define FLT_DECIMAL_DIG 9»,
+        «#define DBL_DECIMAL_DIG 17»,
+        «#define FLT_MANT_DIG 24»,
+        «#define DBL_MANT_DIG 53»,
+        «#define FLT_DIG 6»,
+        «#define DBL_DIG 15»,
+        «#define FLT_MIN_EXP (-125)»,
+        «#define DBL_MIN_EXP (-1021)»,
+        «#define FLT_MIN_10_EXP (-37)»,
+        «#define DBL_MIN_10_EXP (-307)»,
+        «#define FLT_MAX_EXP 128»,
+        «#define DBL_MAX_EXP 1024»,
+        «#define FLT_MAX_10_EXP 38»,
+        «#define DBL_MAX_10_EXP 308»,
+        «#define FLT_MAX 3.40282347e+38F»,
+        «#define DBL_MAX 1.7976931348623157e+308»,
+        «#define FLT_EPSILON 1.19209290e-7F»,
+        «#define DBL_EPSILON 2.2204460492503131e-16»,
+        «#define FLT_MIN 1.17549435e-38F»,
+        «#define DBL_MIN 2.2250738585072014e-308»,
+        «#define FLT_TRUE_MIN 1.40129846e-45F»,
+        «#define DBL_TRUE_MIN 4.9406564584124654e-324»,
+        «#define FLT_HAS_SUBNORM 1»,
+        «#define DBL_HAS_SUBNORM 1»,
+        «#endif»
+    ];
+    أرجع أسطر_رأس_جسر(&الأسطر);
+}
+
+عرف رأس_stdalign_جسر(): نص {
+    دع الأسطر: متجه نص = [
+        «#ifndef __JISR_STDALIGN_H»,
+        «#define __JISR_STDALIGN_H»,
+        «#define alignas _Alignas»,
+        «#define alignof _Alignof»,
+        «#define __alignas_is_defined 1»,
+        «#define __alignof_is_defined 1»,
+        «#endif»
+    ];
+    أرجع أسطر_رأس_جسر(&الأسطر);
+}
+
+عرف رأس_stdnoreturn_جسر(): نص {
+    دع الأسطر: متجه نص = [«#ifndef __JISR_STDNORETURN_H», «#define __JISR_STDNORETURN_H», «#define noreturn _Noreturn», «#endif»];
+    أرجع أسطر_رأس_جسر(&الأسطر);
+}
+
+عرف رأس_iso646_جسر(): نص {
+    دع الأسطر: متجه نص = [
+        «#ifndef __JISR_ISO646_H»,
+        «#define __JISR_ISO646_H»,
+        «#define and &&»,
+        «#define and_eq &=»,
+        «#define bitand &»,
+        «#define bitor |»,
+        «#define compl ~»,
+        «#define not !»,
+        «#define not_eq !=»,
+        «#define or ||»,
+        «#define or_eq |=»,
+        «#define xor ^»,
+        «#define xor_eq ^=»,
+        «#endif»
+    ];
+    أرجع أسطر_رأس_جسر(&الأسطر);
+}
+
+// The text of the builtin header الاسم ("stddef.h", ...), if Jisr has one.
+عام عرف رأس_مدمج_جسر(الاسم: &نص): اختياري نص {
+    إذا (نصان_متساويان(الاسم, &«stddef.h»)) { أرجع اختياري.موجود(رأس_stddef_جسر()); };
+    إذا (نصان_متساويان(الاسم, &«stdarg.h»)) { أرجع اختياري.موجود(رأس_stdarg_جسر()); };
+    إذا (نصان_متساويان(الاسم, &«stdbool.h»)) { أرجع اختياري.موجود(رأس_stdbool_جسر()); };
+    إذا (نصان_متساويان(الاسم, &«stdint.h»)) { أرجع اختياري.موجود(رأس_stdint_جسر()); };
+    إذا (نصان_متساويان(الاسم, &«limits.h»)) { أرجع اختياري.موجود(رأس_limits_جسر()); };
+    إذا (نصان_متساويان(الاسم, &«float.h»)) { أرجع اختياري.موجود(رأس_float_جسر()); };
+    إذا (نصان_متساويان(الاسم, &«stdalign.h»)) { أرجع اختياري.موجود(رأس_stdalign_جسر()); };
+    إذا (نصان_متساويان(الاسم, &«stdnoreturn.h»)) { أرجع اختياري.موجود(رأس_stdnoreturn_جسر()); };
+    إذا (نصان_متساويان(الاسم, &«iso646.h»)) { أرجع اختياري.موجود(رأس_iso646_جسر()); };
+    أرجع اختياري.لا_شيء();
+}
+

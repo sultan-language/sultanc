@@ -4,7 +4,7 @@
 // تفاضلي: نعم
 // مرحلة0: نعم
 // نظير: tests/ar/language/propagation/positions.sn
-// The propagation operator `?` (docs/ERRORS.md) in its four positions: a let
+// The propagation operator `?` (docs/en/reference/errors.md) in its four positions: a let
 // initializer, an assignment, a return and an expression statement, on a
 // result and on an option. The Arabic counterpart spells it `؟`.
 import std.io.println;

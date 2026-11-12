@@ -1,0 +1,21 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/language/surface/explicit_type_arguments.sn
+// `f<T>(..)`: explicit type arguments bind the function's type parameters in
+// order ahead of inference, including one that only the result uses.
+// `a < b` stays a comparison.
+def empty<T>(): vector T { let v: vector T = []; return v; }
+def same<T>(x: T): T { return x; }
+def pair<A, B>(x: A, y: B): int { return (x as int) + (y as int); }
+
+def main(): int {
+    let v: mutable vector u8 = empty<u8>();
+    append(v, same<u8>(30));
+    let k: int = pair<u8, u16>(4, 5);
+    let a: int = 1;
+    let b: int = 2;
+    if (a < b) { return (v[0] as int) + k + 3; };
+    return 0;
+}

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Lexer-based rewrite of renamed SultanC spellings (docs/ARABIC_TERMINOLOGY.md).
+"""Lexer-based rewrite of renamed SultanC spellings (docs/en/reference/arabic-terminology.md).
 
     python3 tools/rename/rename_tokens.py --wave N [--check] [--segments] PATH...
 

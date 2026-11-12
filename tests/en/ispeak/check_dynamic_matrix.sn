@@ -10,7 +10,7 @@ import compiler.ispeak.format.facts;
 import compiler.diagnostics.schema;
 import compiler.ispeak.ispeak;
 
-// Every one of the 645 active identities must preserve each of the 22
+// Every one of the 900 active identities must preserve each of the 22
 // named context facts in both languages, without falling back to fixed text.
 def check(language: لغة_تشخيص, key: مفتاح_رسالة_تشخيص, payload: حقائق_رسالة): bool {
     match رسالة_تشخيص_بحجج(language, key, payload) with
@@ -127,6 +127,6 @@ def main(): int {
         count := count + 1;
         number_value := number_value + 1;
     }
-    if (count != (645 as uint)) { return 3; };
+    if (count != (900 as uint)) { return 3; };
     return 0;
 }

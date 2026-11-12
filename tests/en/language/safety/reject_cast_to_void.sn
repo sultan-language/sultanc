@@ -1,0 +1,13 @@
+// اختبار: رفض
+// أهداف: arm64-darwin,x86_64-linux
+// تشخيص: SULTANC-SAFETY-UNSAFE-OPERATION
+// نظير: tests/ar/language/safety/reject_cast_to_void.sn
+// A raw pointer cast to *void needs unsafe.
+type First = { value: int };
+type Second = { other: int };
+
+def main(): int {
+    let p: *First = 0 as *First;
+    let v: *void = p as *void;
+    return 0;
+}

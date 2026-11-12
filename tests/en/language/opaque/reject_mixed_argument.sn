@@ -1,0 +1,12 @@
+// اختبار: رفض
+// أهداف: arm64-darwin,x86_64-linux
+// تشخيص: SULTANC-CALL-ARGUMENT-TYPE-MISMATCH
+// نظير: tests/ar/language/opaque/reject_mixed_argument.sn
+// Two opaque types are two types: *Stmt is not a *Db.
+type Db = opaque;
+type Stmt = opaque;
+def close(db: *Db): int { return 0; }
+def main(): int {
+    let stmt: *Stmt = 0 as *Stmt;
+    return close(stmt);
+}

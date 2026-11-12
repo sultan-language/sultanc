@@ -1,8 +1,9 @@
 استورد compiler.frontend.types.type_model;
 استورد compiler.frontend.types.type_identity;
 
+// الهاش is below 1048573 (امزج_هاش_نوع reduces modulo it), so it is 32-bit;
 عام نوع مدخل_فهرس_نوع = {
-    الهاش: طبيعي,
+    الهاش: ط32,
     المعرف: معرف_نوع
 };
 

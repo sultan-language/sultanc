@@ -1,0 +1,10 @@
+// اختبار: رفض
+// تشخيص: SULTANC-PARSE-SYNTAX
+// نظير: tests/en/diagnostics/e2e/keyword_type_parameter.sn
+// خرج-تشخيص-عربي: keyword_type_parameter.ar.stderr
+// خرج-تشخيص-إنجليزي: keyword_type_parameter.en.stderr
+// A keyword as a type parameter name is a syntax error at the keyword.
+نوع حاوية<إذا> = { القيمة: عدد };
+عرف الرئيسية(): ص32 {
+    أرجع 0;
+}

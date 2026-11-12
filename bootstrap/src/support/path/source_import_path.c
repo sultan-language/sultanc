@@ -9,6 +9,130 @@
 #include <stdlib.h>
 #include <string.h>
 
+/* Explicit module sources (--module-source): the module as a path without
+ * extension (dots become slashes) and the file it binds. */
+typedef struct
+{
+    /* Owns the module path. */
+    char *__Module__;
+    /* Owns the bound file path. */
+    char *__File__;
+} __Module_Source_Binding__;
+
+/* Stores the bindings. */
+static __Module_Source_Binding__ *__Module_Source_Bindings__ = NULL;
+/* Stores the binding count. */
+static size_t __Module_Source_Binding_Count__ = 0U;
+
+/* Copies a module spelling as a path: dots become slashes, a trailing .sn
+ * is dropped. */
+static char *__Module_Source_Key__(const char *__Data__, size_t __Length__)
+{
+    /* References the key. */
+    char *__Key__;
+    /* Tracks the index. */
+    size_t __Index__;
+
+    if (__Length__ >= 3U && memcmp(__Data__ + __Length__ - 3U, ".sn", 3U) == 0)
+    {
+        __Length__ -= 3U;
+    }
+    __Key__ = (char *)malloc(__Length__ + 1U);
+    if (__Key__ == NULL)
+    {
+        return NULL;
+    }
+    for (__Index__ = 0U; __Index__ < __Length__; ++__Index__)
+    {
+        __Key__[__Index__] = __Data__[__Index__] == '.' ? '/' : __Data__[__Index__];
+    }
+    __Key__[__Length__] = '\0';
+    return __Key__;
+}
+
+/* Binds a logical module to an explicit source file. */
+int __Source_Path_Bind_Module_Source__(const char *__Binding__)
+{
+    /* References the separator. */
+    const char *__Equals__ = strchr(__Binding__, '=');
+    /* References the grown table. */
+    __Module_Source_Binding__ *__Grown__;
+    /* References the module key. */
+    char *__Module__;
+    /* References the file copy. */
+    char *__File__;
+
+    if (__Equals__ == NULL || __Equals__ == __Binding__ || __Equals__[1] == '\0')
+    {
+        return 0;
+    }
+    __Module__ = __Module_Source_Key__(__Binding__, (size_t)(__Equals__ - __Binding__));
+    __File__ = (char *)malloc(strlen(__Equals__ + 1) + 1U);
+    __Grown__ = (__Module_Source_Binding__ *)realloc(
+        __Module_Source_Bindings__,
+        (__Module_Source_Binding_Count__ + 1U) * sizeof(__Module_Source_Binding__));
+    if (__Module__ == NULL || __File__ == NULL || __Grown__ == NULL)
+    {
+        free(__Module__);
+        free(__File__);
+        if (__Grown__ != NULL)
+        {
+            __Module_Source_Bindings__ = __Grown__;
+        }
+        return 0;
+    }
+    strcpy(__File__, __Equals__ + 1);
+    __Module_Source_Bindings__ = __Grown__;
+    __Module_Source_Bindings__[__Module_Source_Binding_Count__].__Module__ = __Module__;
+    __Module_Source_Bindings__[__Module_Source_Binding_Count__].__File__ = __File__;
+    ++__Module_Source_Binding_Count__;
+    return 1;
+}
+
+/* The file bound to a logical import, or NULL. */
+static char *__Module_Source_For_Import__(const char *__Project_Root__, __Text_Slice__ __Import__)
+{
+    /* References the import key. */
+    char *__Key__;
+    /* Tracks the index. */
+    size_t __Index__;
+
+    if (__Module_Source_Binding_Count__ == 0U)
+    {
+        return NULL;
+    }
+    __Key__ = __Module_Source_Key__(__Import__.__Data__, __Import__.__Length__);
+    if (__Key__ == NULL)
+    {
+        return NULL;
+    }
+    for (__Index__ = 0U; __Index__ < __Module_Source_Binding_Count__; ++__Index__)
+    {
+        if (strcmp(__Key__, __Module_Source_Bindings__[__Index__].__Module__) == 0)
+        {
+            /* References the bound file. */
+            const char *__File__ = __Module_Source_Bindings__[__Index__].__File__;
+            /* Stores the file slice. */
+            __Text_Slice__ __File_Text__ = {__File__, strlen(__File__)};
+            /* References the copy of an absolute path. */
+            char *__Copy__;
+            free(__Key__);
+            if (__File__[0] == '/' || __Project_Root__ == NULL)
+            {
+                __Copy__ = (char *)malloc(strlen(__File__) + 1U);
+                if (__Copy__ != NULL)
+                {
+                    strcpy(__Copy__, __File__);
+                }
+                return __Copy__;
+            }
+            return __Path_Join_Text__(__Project_Root__, __File_Text__);
+        }
+    }
+    free(__Key__);
+    return NULL;
+}
+
 /* Checks whether the import has prefix. */
 static int __Import_Has_Prefix__(__Text_Slice__ __Import__, const char *__Prefix__)
 {
@@ -331,6 +455,11 @@ char *__Source_Path_Resolve_Import__(const char *__Importer_Path__,
 
     if (__Logical__)
     {
+        __Candidate__ = __Module_Source_For_Import__(__Project_Root__, __Import__);
+        if (__Candidate__ != NULL)
+        {
+            return __Candidate__;
+        }
         __Candidate__ = __Resolve_Logical_Import__(__Importer_Path__, __Project_Root__, __Import__);
     }
     else

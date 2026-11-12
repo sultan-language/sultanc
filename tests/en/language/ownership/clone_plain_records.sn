@@ -1,0 +1,125 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// نظير: tests/ar/language/ownership/clone_plain_records.sn
+// clone of a vector whose elements own no storage: records and tuples of
+// numbers (any size and alignment), nested records, enums whose payloads are
+// numbers, floats, booleans and characters copy element by element; integer
+// vectors (an alias of an integer included) copy with one extend. Each copy
+// is independent of its source, and records that own text still copy deeply.
+import std.text.compare;
+
+type Cell = { a: uint };
+type Mixed = { x: i32, y: f64, z: u8 };
+type Point = { x: i64, y: i64 };
+type Placed = { at: Point, weight: u16, tag: u8 };
+type Kind =
+    | small
+    | big of i64
+    | pair of (i32, i32)
+;
+type Named = { name: string, id: int };
+type Count = u16;
+
+def copy_cells(value: &vector Cell): vector Cell {
+    let copy: vector Cell = clone(value);
+    return copy;
+}
+
+def kind_value(k: &Kind): int {
+    match *k with
+    | Kind.small -> { return 1; }
+    | Kind.big(n) -> { return n; }
+    | Kind.pair(l, r) -> { return (l as int) * 10 + (r as int); };
+}
+
+def main(): int {
+    // The reported case: a record of one number.
+    let cells: vector Cell = [{ a: 40 }, { a: 2 }];
+    let cells_copy: vector Cell = copy_cells(&cells);
+    if ((length(cells_copy) as int) != 2 || cells_copy[0].a + cells_copy[1].a != 42) { return 1; };
+
+    // Records of mixed widths (16 bytes, padded) and independence.
+    let mixed: vector Mixed = [{ x: 7, y: 1.5, z: 200 }, { x: -3, y: 0.25, z: 9 }];
+    let mixed_copy: mutable vector Mixed = clone(&mixed);
+    mixed_copy[0] := { x: 100, y: 9.0, z: 1 };
+    if (mixed[0].x != 7 || mixed[0].y != 1.5 || mixed[0].z != 200) { return 2; };
+    if (mixed_copy[1].x != -3 || mixed_copy[1].y != 0.25 || mixed_copy[1].z != 9) { return 3; };
+    if (mixed_copy[0].x != 100) { return 4; };
+
+    // Nested records (24 bytes).
+    let placed: vector Placed = [
+        { at: { x: 1, y: 2 }, weight: 300, tag: 4 },
+        { at: { x: -5, y: 6 }, weight: 7, tag: 8 },
+        { at: { x: 9, y: -10 }, weight: 11, tag: 12 }
+    ];
+    let placed_copy: vector Placed = clone(&placed);
+    if ((length(placed_copy) as int) != 3) { return 5; };
+    if (placed_copy[0].at.y != 2 || placed_copy[0].weight != 300 || placed_copy[1].at.x != -5
+        || placed_copy[2].at.y != -10 || placed_copy[2].tag != 12) { return 6; };
+
+    // Enums whose payloads own nothing.
+    let kinds: vector Kind = [Kind.small(), Kind.big(1000), Kind.pair(3, 4)];
+    let kinds_copy: vector Kind = clone(&kinds);
+    if (kind_value(&kinds_copy[0]) != 1 || kind_value(&kinds_copy[1]) != 1000
+        || kind_value(&kinds_copy[2]) != 34) { return 7; };
+
+    // Floats, booleans, characters and tuples of numbers.
+    let floats: vector f64 = [0.5, -2.25, 1000000.125];
+    let floats_copy: vector f64 = clone(&floats);
+    if (floats_copy[0] != 0.5 || floats_copy[1] != -2.25 || floats_copy[2] != 1000000.125) { return 8; };
+    let flags: vector bool = [true, false, true];
+    let flags_copy: vector bool = clone(&flags);
+    if (!flags_copy[0] || flags_copy[1] || !flags_copy[2]) { return 9; };
+    let letters: vector char = [(115 as u8) as char, (110 as u8) as char];
+    let letters_copy: vector char = clone(&letters);
+    if ((letters_copy[0] as u32) != 115 || (letters_copy[1] as u32) != 110) { return 10; };
+    let first_pair: (i64, u8) = (1, 2);
+    let second_pair: (i64, u8) = (30, 40);
+    let pairs: vector (i64, u8) = [first_pair, second_pair];
+    let pairs_copy: vector (i64, u8) = clone(&pairs);
+    match pairs_copy[1] with
+    | (p, q) -> { if (p != 30 || q != 40) { return 11; }; };
+
+    // Integers, and an alias of an integer, keep the single-extend copy.
+    let numbers: vector i32 = [5, 6, 7];
+    let numbers_copy: mutable vector i32 = clone(&numbers);
+    numbers_copy[0] := 50;
+    if (numbers[0] != 5 || numbers_copy[0] != 50 || numbers_copy[2] != 7) { return 12; };
+    let counts: vector Count = [65535, 1];
+    let counts_copy: vector Count = clone(&counts);
+    if (counts_copy[0] != 65535 || counts_copy[1] != 1) { return 13; };
+
+    // An empty vector.
+    let none: vector Placed = [];
+    let none_copy: vector Placed = clone(&none);
+    if ((length(none_copy) as int) != 0) { return 14; };
+
+    // A large vector.
+    let many: mutable vector Mixed = [];
+    let i: mutable int = 0;
+    while (i < 5000) {
+        append(many, { x: i as i32, y: (i as f64) * 0.5, z: (i % 256) as u8 });
+        i := i + 1;
+    }
+    let many_copy: vector Mixed = clone(&many);
+    if ((length(many_copy) as int) != 5000) { return 15; };
+    let sum: mutable int = 0;
+    let j: mutable int = 0;
+    while (j < 5000) {
+        sum := sum + (many_copy[j].x as int) + (many_copy[j].z as int);
+        if (many_copy[j].y != (j as f64) * 0.5) { return 16; };
+        j := j + 1;
+    }
+    if (sum != 12497500 + 629340) { return 17; };
+
+    // Negative control: records that own text still copy deeply.
+    let named: vector Named = [{ name: "first", id: 1 }, { name: "second", id: 2 }];
+    let named_copy: mutable vector Named = clone(&named);
+    named_copy[0] := { name: "changed", id: 10 };
+    if (!texts_equal(&named[0].name, &"first") || named[0].id != 1) { return 18; };
+    if (!texts_equal(&named_copy[1].name, &"second") || named_copy[1].id != 2) { return 19; };
+    if (!texts_equal(&named_copy[0].name, &"changed")) { return 20; };
+
+    return 42;
+}

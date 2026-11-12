@@ -1,0 +1,10 @@
+// اختبار: رفض
+// أهداف: arm64-darwin,x86_64-linux
+// تشخيص: SULTANC-TYPE-OPAQUE-FIELD-ACCESS
+// نظير: tests/ar/language/opaque/reject_field_access.sn
+// A field read through a pointer to an opaque type: it declares no fields.
+type Db = opaque;
+def main(): int {
+    let p: *Db = 0 as *Db;
+    unsafe { return p.handle; };
+}

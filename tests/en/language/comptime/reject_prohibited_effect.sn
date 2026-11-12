@@ -1,0 +1,10 @@
+// اختبار: رفض
+// خروج: 1
+// تشخيص: SULTANC-COMPTIME-PROHIBITED-EFFECT
+// Writing to standard output at compile time: the diagnostic names the
+// refused operation and the call chain from the comptime block.
+from std.io import println;
+def main(): int {
+    comptime { println("hi"); }
+    return 0;
+}

@@ -89,7 +89,7 @@
 # values and 128-bit sigset_t come from freebsd/uapi.sn.
 حجب_إشارات sigprocmask
 انتظر_إشارة sigtimedwait
-# Threads (std.thread, docs/CONCURRENCY.md): _umtx_op for wait/wake on an
+# Threads (std.thread, docs/en/reference/concurrency.md): _umtx_op for wait/wake on an
 # address, thr_self(&id) for the current id, cpuset_getaffinity for the
 # available CPUs, thr_exit(&state) and thr_new(&param, size).
 مستقبل _umtx_op
@@ -100,3 +100,13 @@
 ألفة_المعالج cpuset_getaffinity
 إنهاء_خيط thr_exit
 إنشاء_خيط thr_new
+# The readiness poller (std.os.poll): kqueue; kevent both changes and waits.
+أنشئ_مستطلع_أحداث kqueue
+تحكم_مستطلع_أحداث -
+انتظر_مستطلع_أحداث kevent
+# std.process.id and std.os.terminal (isatty: TIOCGETA).
+معرف_العملية getpid
+تحكم_جهاز ioctl
+# std.os.poll's ring poller is Linux only.
+إعداد_حلقة_إدخال -
+دخول_حلقة_إدخال -

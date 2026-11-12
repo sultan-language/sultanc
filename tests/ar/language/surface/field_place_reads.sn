@@ -51,6 +51,6 @@
     total := total + by_value(copy);
     دع n: نص = take_name(make(0));
     total := total + (الطول(n) مثل عدد);
-    لو (total != 72) { أرجع total; };
+    إذا (total != 72) { أرجع total; };
     أرجع 42;
 }

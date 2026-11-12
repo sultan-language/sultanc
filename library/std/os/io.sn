@@ -2,7 +2,7 @@
 
 // Only native stream operations live here. Each write makes one OS call and
 // may report a short count; retry and buffering policy belongs to std.io.
-لو ((الهدف.المنصة == «linux» || الهدف.المنصة == «android» || الهدف.المنصة == «freebsd») && الهدف.المعمارية != «ve») {
+إذا ((الهدف.المنصة == «linux» || الهدف.المنصة == «android» || الهدف.المنصة == «freebsd») && الهدف.المعمارية != «ve») {
     استورد os.platform.unix.linux.file_descriptors;
     استورد os.platform.unix.linux.syscalls.operations;
     استورد os.platform.unix.linux.syscalls.selection;
@@ -51,7 +51,7 @@
     }
 }
 
-لو (الهدف.المنصة == «windows») {
+إذا (الهدف.المنصة == «windows») {
     استورد os.buffer;
     استورد os.platform.windows.win32.file_handles;
 
@@ -75,13 +75,13 @@
     عرف اكتب_تيارا_قياسيا_للويندوز(
         المحتوى: &متجه ط8, الإزاحة: عدد, المطلوب: عدد, التيار: تيار_قياسي_ويندوز
     ): نتيجة عدد, خطأ_حد_نظام {
-        لو (!نطاق_بايتات_نظام_صالح(الطول(*المحتوى), الإزاحة, المطلوب)) {
+        إذا (!نطاق_بايتات_نظام_صالح(الطول(*المحتوى), الإزاحة, المطلوب)) {
             أرجع نتيجة.خطأ(خطأ_حد_نظام.وسيط_غير_صالح());
         };
         // The native WriteFile count is a DWORD. Keep each call bounded;
         // std.io.writer handles the remaining bytes after a short write.
         دع الدفعة: متغير عدد = المطلوب;
-        لو (الدفعة > 2147483647) { الدفعة := 2147483647; };
+        إذا (الدفعة > 2147483647) { الدفعة := 2147483647; };
         طابق اكتب_تيارا_قياسيا_ويندوز(التيار, المحتوى, الإزاحة, الدفعة) مع
         | نتيجة.خطأ(الخطأ) -> { أرجع نتيجة.خطأ(خطأ_تيار_ويندوز_للنظام(الخطأ)); }
         | نتيجة.نجح(العدد) -> { أرجع نتيجة.نجح(العدد); };
@@ -104,7 +104,7 @@
     }
 }
 
-لو (الهدف.المنصة == «macos») {
+إذا (الهدف.المنصة == «macos») {
     استورد os.platform.unix.apple.darwin.file_descriptors;
 
     عام عرف اقرأ_دخلا_قياسيا_للنظام(
@@ -137,7 +137,7 @@
 }
 
 // WASI command standard streams are descriptors 0, 1 and 2.
-لو (الهدف.المنصة == «wasi») {
+إذا (الهدف.المنصة == «wasi») {
     استورد os.platform.wasi.preview1.file_descriptors;
 
     عام عرف اقرأ_دخلا_قياسيا_للنظام(

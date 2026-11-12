@@ -2,7 +2,7 @@
 // خروج: 0
 // مرحلة0: نعم
 // نظير: tests/ar/stdlib/error/stage0_contract.sn
-// std.error stays within the C Stage0's language (docs/ERRORS.md): every
+// std.error stays within the C Stage0's language (docs/en/reference/errors.md): every
 // public function of std.error.failure, std.error.from_os,
 // std.error.from_number and std.error.context, and of the Phase 3 helpers
 // std.text.language, std.text.bidi and std.text.system_language, accepted by

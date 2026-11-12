@@ -31,7 +31,7 @@
 }
 
 عام عرف سياسة_إلف_للهدف(الهدف: &واصف_هدف): اختياري سياسة_هدف_إلف {
-    لو ((*الهدف).صيغة_الكائن != صيغة_كائن_هدف.إلف()) {
+    إذا ((*الهدف).صيغة_الكائن != صيغة_كائن_هدف.إلف()) {
         أرجع اختياري.لا_شيء();
     };
     دع الآلة: طبيعي;
@@ -39,7 +39,7 @@
     | اختياري.لا_شيء -> { أرجع اختياري.لا_شيء(); }
     | اختياري.موجود(القيمة) -> { الآلة := القيمة; };
     دع الصنف: صنف_إلف_مدخل;
-    لو ((*الهدف).نموذج_البيانات.عرض_المؤشر > 32) {
+    إذا ((*الهدف).نموذج_البيانات.عرض_المؤشر > 32) {
         الصنف := صنف_إلف_مدخل.أربعة_وستون();
     } وإلا {
         الصنف := صنف_إلف_مدخل.اثنان_وثلاثون();
@@ -74,8 +74,11 @@
     | ترتيب_إلف_مدخل.كبير -> { أرجع 2; };
 }
 
-// The ELF system images SultanC links itself: Linux x86_64 and AArch64
-// fixed-base ET_EXEC executables (final_image.sn) and relocatable objects
+// The ELF system images SultanC links itself: Linux, Android and FreeBSD
+// x86_64, AArch64, RISC-V 64 and LoongArch 64 fixed-base ET_EXEC
+// executables (final_image.sn; the
+// FreeBSD image carries ELFOSABI_FREEBSD and a PT_NOTE over the ABI note)
+// and relocatable objects
 // (relocatable.sn). These images link no C runtime: the selected backend
 // emits the process start (backend/provider/llvm/entry.sn, the native
 // encoder) and std exits through raw kernel calls; the Driver's
@@ -85,22 +88,43 @@
 // architectures, Android, FreeBSD and every ELF shared library were handed
 // to ld.lld or nld with the platform C runtime startup objects and libc.
 عام عرف يستخدم_رابط_إلف_الداخلي(الهدف: &واصف_هدف): منطقي {
-    لو ((*الهدف).المنصة.المنصة != هوية_منصة.لينكس()) {
-        أرجع خطأ;
-    };
+    طابق (*الهدف).المنصة.المنصة مع
+    | هوية_منصة.لينكس -> { }
+    | هوية_منصة.أندرويد -> { }
+    | هوية_منصة.فري_بي_إس_دي -> { }
+    | _ -> { أرجع خطأ; };
     طابق (*الهدف).المعمارية.الهوية مع
     | هوية_معمارية.إكس_ستة_وثمانون_أربعة_وستون -> { أرجع صواب; }
     | هوية_معمارية.ذراع_أربعة_وستون -> { أرجع صواب; }
+    // Static images only: final_image.sn has no PLT for these two.
+    | هوية_معمارية.رايسك_في_أربعة_وستون -> { أرجع صواب; }
+    | هوية_معمارية.لونغ_آرتش_أربعة_وستون -> { أرجع صواب; }
+    | _ -> { أرجع رابط_إلف_داخلي_مفعل_لمعمارية((*الهدف).المعمارية.الهوية); };
+}
+
+// The static ELF32 (i386, ARM), big-endian (s390x, SPARC V9), PowerPC 64
+// and MIPS64 images the internal linker lays out (final_image.sn,
+// relocation_patch.sn), once a target's executables, linked both ways, run
+// as the ld.lld-linked ones do. The others are linked by ld.lld
+// (يستخدم_رابط_إلف_خارجي).
+عرف رابط_إلف_داخلي_مفعل_لمعمارية(المعمارية: هوية_معمارية): منطقي {
+    طابق المعمارية مع
+    | هوية_معمارية.إكس_ستة_وثمانون_اثنان_وثلاثون -> { أرجع صواب; }
+    | هوية_معمارية.ذراع_سبعة -> { أرجع صواب; }
+    | هوية_معمارية.سيستم_زد -> { أرجع صواب; }
+    | هوية_معمارية.سبارك_أربعة_وستون -> { أرجع صواب; }
+    | هوية_معمارية.باور_بي_سي_أربعة_وستون -> { أرجع صواب; }
+    | هوية_معمارية.ميبس_أربعة_وستون -> { أرجع صواب; }
     | _ -> { أرجع خطأ; };
 }
 
 // Linux- and FreeBSD-kernel ELF executables SultanC's own ELF linker does
-// not lay out (the other Linux architectures, Android and FreeBSD). The LLVM provider emits their
+// not lay out (i686, ARMv7, PowerPC 64, s390x, MIPS64 and SPARC V9). The LLVM provider emits their
 // `_start` and an external LLD links them (driver/external_linker.sn), the
 // split rustc makes between code generation and system linking.
 عام عرف يستخدم_رابط_إلف_خارجي(الهدف: &واصف_هدف): منطقي {
-    لو ((*الهدف).صيغة_الكائن != صيغة_كائن_هدف.إلف()) { أرجع خطأ; };
-    لو (يستخدم_رابط_إلف_الداخلي(الهدف)) { أرجع خطأ; };
+    إذا ((*الهدف).صيغة_الكائن != صيغة_كائن_هدف.إلف()) { أرجع خطأ; };
+    إذا (يستخدم_رابط_إلف_الداخلي(الهدف)) { أرجع خطأ; };
     أرجع هدف_نواة_مباشر(الهدف);
 }
 
@@ -110,6 +134,14 @@
     | هوية_منصة.أندرويد -> { أرجع صواب; }
     | هوية_منصة.فري_بي_إس_دي -> { أرجع صواب; }
     | _ -> { أرجع خطأ; };
+}
+
+// Bare-metal 32-bit Arm (the Cortex-M targets): executables laid out by the
+// link's linker scripts (elf/script_image.sn).
+عام عرف رابط_إلف_بسكربت_للهدف(الهدف: &واصف_هدف): منطقي {
+    أرجع (*الهدف).المعمارية.الهوية == هوية_معمارية.ذراع_سبعة()
+        && (*الهدف).المنصة.المنصة == هوية_منصة.عتاد_مباشر()
+        && (*الهدف).صيغة_الكائن == صيغة_كائن_هدف.إلف();
 }
 
 عام عرف هدف_إلف_ليس_تنفيذيا_نظاميا(الهدف: &واصف_هدف): منطقي {

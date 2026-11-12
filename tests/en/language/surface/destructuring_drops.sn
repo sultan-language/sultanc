@@ -1,0 +1,224 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// نظير: tests/ar/language/surface/destructuring_drops.sn
+// A match arm that moves a part out of an owned scrutinee consumes it, and
+// every part no owning binding takes is destroyed: a wildcard, a record field
+// the pattern omits, a literal sub-pattern, a part bound only by a plain or
+// counted binding, at any depth of record, tuple, option, result and enum
+// payload patterns, with a local or a temporary scrutinee, in a generic
+// instance, and on early return and break. An arm that moves nothing, and a
+// match through a reference, leave the value with its owner. The allocator's
+// counters (std.os.allocation) show no allocation is left behind per round.
+// The checked interpreter does not use the std allocator (its counters stay
+// put); there the rounds still run and a double release would trap.
+import std.os.allocation;
+import std.text.number;
+
+type Inner = { label: string, items: vector string };
+type Rec = { name: string, id: int, tags: vector string, inner: Inner, callback: fn(int): int };
+type Shape =
+    | Named of Rec
+    | Pair of (string, string)
+    | Empty
+;
+type Holder<T> = { item: T, extra: string };
+
+// Seven characters, owned (heap) text.
+def text(i: int): string { return int_to_text(1000000 + i); }
+def size(s: string): int { return length(s) as int; }
+def adder(k: int): fn(int): int { return fn(x: int): int -> x + k; }
+
+def make(i: int): Rec {
+    let tags: mutable vector string = [];
+    append(tags, text(i + 2));
+    append(tags, text(i + 3));
+    let items: mutable vector string = [];
+    append(items, text(i + 4));
+    let inner: Inner = { label: text(i + 1), items: items };
+    return { name: text(i), id: i, tags: tags, inner: inner, callback: adder(3) };
+}
+
+def make_option(i: int): option Rec { return option.some(make(i)); }
+
+def record_wildcards(i: int): int {
+    let r: Rec = make(i);
+    match r with
+    | { name: n, id: _, tags: _, inner: _, callback: _ } -> { return size(n); };
+}
+
+def record_omitted_fields(i: int): int {
+    let r: Rec = make(i);
+    match r with
+    | { tags: t } -> { return length(t) as int; };
+}
+
+def nested_payload(i: int): int {
+    let s: Shape = Shape.Named(make(i));
+    match s with
+    | Shape.Named({ name: n, inner: { label: _, items: it } }) -> {
+        return size(n) + (length(it) as int);
+    }
+    | Shape.Pair(a, _) -> { return size(a); }
+    | Shape.Empty -> { return 0; };
+}
+
+def tuple_payload(i: int): int {
+    let s: Shape = Shape.Pair(text(i), text(i + 1));
+    match s with
+    | Shape.Named(_) -> { return 0; }
+    | Shape.Pair(a, _) -> { return size(a); }
+    | Shape.Empty -> { return 0; };
+}
+
+def temporary_scrutinee(i: int): int {
+    match make(i) with
+    | { name: n, tags: _ } -> { return size(n); };
+}
+
+def binds_nothing(i: int): int {
+    let s: Shape = Shape.Named(make(i));
+    match s with
+    | Shape.Named(_) -> { }
+    | _ -> { };
+    match make(i) with
+    | { id: _ } -> { };
+    return 1;
+}
+
+def early_return(i: int): int {
+    let s: Shape = Shape.Named(make(i));
+    match s with
+    | Shape.Named({ name: n, tags: _ }) -> {
+        if (size(n) == 7) { return 7; };
+        return 0;
+    }
+    | _ -> { return 0; };
+}
+
+def nested_result(i: int): int {
+    let v: result option Rec, string = result.ok(make_option(i));
+    match v with
+    | result.ok(option.some({ name: n })) -> { return size(n); }
+    | result.ok(option.none) -> { return 0; }
+    | result.err(_) -> { return 0; };
+}
+
+def tuple_root(i: int): int {
+    let t: (string, string, int) = (text(i), text(i + 1), i);
+    match t with
+    | (a, _, _) -> { return size(a); };
+}
+
+def counted_binding(i: int): int {
+    let r: Rec = make(i);
+    match r with
+    | { callback: f, name: n } -> { return f(1) + size(n) - 7; };
+}
+
+def holder_extra<T>(h: Holder<T>): int {
+    match h with
+    | { item: _, extra: e } -> { return size(e); };
+}
+
+def generic_instance(i: int): int {
+    let h: Holder<Rec> = { item: make(i), extra: text(i) };
+    let g: Holder<int> = { item: i, extra: text(i) };
+    return holder_extra(h) + holder_extra(g);
+}
+
+def break_from_arm(i: int): int {
+    let k: mutable int = 0;
+    let total: mutable int = 0;
+    while (k < 3) {
+        let r: Rec = make(i + k);
+        match r with
+        | { name: n, tags: _ } -> {
+            total := total + size(n);
+            if (k == 1) { break; };
+        };
+        k := k + 1;
+    }
+    return total;
+}
+
+def literal_part(i: int): int {
+    let t: (string, string) = (text(i), text(5));
+    match t with
+    | (a, "1000005") -> { return size(a); }
+    | (a, _) -> { return 0; };
+}
+
+def through_reference(i: int): int {
+    let r: Rec = make(i);
+    let p: &Rec = &r;
+    let seen: mutable int = 0;
+    match *p with
+    | { name: n, tags: _ } -> { seen := length(n) as int; };
+    return seen + (length(r.name) as int);
+}
+
+def moving_arm_not_taken(i: int): int {
+    let o: option Rec = make_option(i + 1);
+    match o with
+    | option.some({ id: 0, name: n }) -> { return size(n); }
+    | _ -> { return 2; };
+}
+
+def temporary_option(i: int): int {
+    match make_option(i) with
+    | option.some({ name: n, inner: _ }) -> { return size(n); }
+    | option.none -> { return 0; };
+}
+
+def run(k: int, i: int): int {
+    if (k == 1) { return record_wildcards(i); };
+    if (k == 2) { return record_omitted_fields(i); };
+    if (k == 3) { return nested_payload(i); };
+    if (k == 4) { return tuple_payload(i); };
+    if (k == 5) { return temporary_scrutinee(i); };
+    if (k == 6) { return binds_nothing(i); };
+    if (k == 7) { return early_return(i); };
+    if (k == 8) { return nested_result(i); };
+    if (k == 9) { return tuple_root(i); };
+    if (k == 10) { return counted_binding(i); };
+    if (k == 11) { return generic_instance(i); };
+    if (k == 12) { return break_from_arm(i); };
+    if (k == 13) { return literal_part(i); };
+    if (k == 14) { return through_reference(i); };
+    if (k == 15) { return moving_arm_not_taken(i); };
+    return temporary_option(i);
+}
+
+def expected(k: int): int {
+    if (k == 2) { return 2; };
+    if (k == 3) { return 8; };
+    if (k == 6) { return 1; };
+    if (k == 10) { return 4; };
+    if (k == 11 || k == 12 || k == 14) { return 14; };
+    if (k == 15) { return 2; };
+    return 7;
+}
+
+def main(): int {
+    let k: mutable int = 1;
+    while (k <= 16) {
+        if (run(k, 0) != expected(k)) { return k; };
+        let allocations: u64 = allocation_count();
+        let frees: u64 = free_count();
+        let i: mutable int = 0;
+        while (i < 200) {
+            if (run(k, i) != expected(k)) { return 20 + k; };
+            i := i + 1;
+        }
+        let allocated: u64 = allocation_count() - allocations;
+        let freed: u64 = free_count() - frees;
+        // Under the std allocator every round allocates, and frees as much.
+        if (allocated != 0) {
+            if (allocated < 200) { return 40 + k; };
+            if (freed + 8 < allocated) { return 60 + k; };
+        };
+        k := k + 1;
+    }
+    return 42;
+}

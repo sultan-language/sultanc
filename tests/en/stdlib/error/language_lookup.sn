@@ -3,7 +3,7 @@
 // خروج: 42
 // تفاضلي: نعم
 // نظير: tests/ar/stdlib/error/language_lookup.sn
-// std.error language versions (docs/ERRORS.md): error_text_in chooses by the
+// std.error language versions (docs/en/reference/errors.md): error_text_in chooses by the
 // RFC 4647 lookup, for each tag of the locale the exact tag, then its
 // shorter forms down to the primary language (ar-SA → ar); then the author's
 // message (an unknown tag); then, when that is empty, the first version.

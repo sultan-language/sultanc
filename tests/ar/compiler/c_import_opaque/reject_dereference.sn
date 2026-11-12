@@ -1,0 +1,13 @@
+// اختبار: رفض
+// أهداف: arm64-darwin,x86_64-linux
+// تشخيص: SULTANC-TYPE-OPAQUE-DEREFERENCE
+// نظير: tests/en/compiler/c_import_opaque/reject_dereference.sn
+// بنية سي لا يراها البرنامج إلا عبر المؤشرات لا تخطيط لها في سلطان: فك مرجع
+// مؤشرها مرفوض، داخل غير_آمن أيضا.
+استورد "handles.h";
+
+عرف الرئيسية(): عدد {
+    دع ق: *متغير db = db_open(1);
+    غير_آمن { دع س: عدد = *ق; };
+    أرجع 0;
+}

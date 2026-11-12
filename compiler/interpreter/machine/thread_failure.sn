@@ -1,0 +1,104 @@
+استورد std.text.from_bytes;
+استورد std.io.print;
+استورد std.process.exit;
+استورد compiler.interpreter.runtime_failures;
+استورد compiler.interpreter.diagnostic_translation;
+استورد compiler.source.provenance;
+
+// ---- Reporting a failure of the running program -----------------------------
+//
+// A trap or failure on a thread of the program ends the process with status
+// 101, as a native thread's trap does. When the driver gave its reporting
+// context (diagnostic_translation.sn سياق_مبلغ_فشل_خيط, through
+// machine_entry.sn شغل_برنامجا_محضرا_بالآلة_بمبلغ), the failing thread writes
+// the failure as the driver writes a main-thread one; without it, one fixed
+// line. Only the first failure of the process is reported: a thread (or the
+// main thread) failing after it waits for the exit, so two reports never
+// interleave.
+
+نوع مبلغ_فشل_آلة = {
+    السياق: *سياق_مبلغ_فشل_خيط,
+    الأصول: *متجه اختياري معرف_أصل_مصدر
+};
+
+// The context of the run (at most one).
+دع مبلغ_فشل_آلة_الحالي: متغير متجه مبلغ_فشل_آلة = [];
+// 0 until a failure of the process is being reported.
+دع قفل_إبلاغ_فشل_آلة: متغير ط64 = 0;
+مرادف قارن_وبدل_إبلاغ_آلة = بدائي_ذري_قارن_وبدل;
+
+// Before the program starts: the driver's context and the origins of the
+// program's functions, both kept alive by the caller for the whole run.
+عام عرف ثبت_مبلغ_فشل_آلة(السياق: &سياق_مبلغ_فشل_خيط, الأصول: &متجه اختياري معرف_أصل_مصدر): فراغ {
+    دع المبلغ: مبلغ_فشل_آلة = { السياق: السياق, الأصول: الأصول };
+    غير_آمن {
+        طالما ((الطول(مبلغ_فشل_آلة_الحالي) مثل طبيعي) > 0) { دع _س: اختياري مبلغ_فشل_آلة = أزل_الأخير(مبلغ_فشل_آلة_الحالي); }
+        ألحق(مبلغ_فشل_آلة_الحالي, المبلغ);
+    }
+}
+
+// Whether this caller reports the process's failure (the first to ask).
+عام عرف احجز_إبلاغ_فشل_آلة(): منطقي {
+    دع القديم: متغير ط64 = 1;
+    غير_آمن { القديم := قارن_وبدل_إبلاغ_آلة(&قفل_إبلاغ_فشل_آلة, 0 مثل ط64, 1 مثل ط64, 4 مثل ط32, 4 مثل ط32); }
+    أرجع القديم == 0;
+}
+
+// Another failure is being reported: this thread waits for the process to end.
+عام عرف انتظر_نهاية_العملية_آلة(): فراغ {
+    طالما (صواب) { }
+}
+
+// A failure of the machine engine with the source origin of its function.
+عام عرف فشل_موضعي_آلة(الفشل: فشل_تفسير_مسير, أصول_الدوال: &متجه اختياري معرف_أصل_مصدر): فشل_تفسير_موضعي {
+    دع بلا_نداءات: متجه موقع_فشل_تفسير_مسير = [];
+    دع الموقع: متغير اختياري موقع_فشل_تفسير_مسير = اختياري.لا_شيء();
+    طابق الفشل مع
+    | فشل_تفسير_مسير.فخ_مسير(الدالة, الكتلة) -> {
+        دع الأصل: متغير اختياري معرف_أصل_مصدر = اختياري.لا_شيء();
+        إذا ((الدالة.القيمة مثل طبيعي) < (الطول(*أصول_الدوال) مثل طبيعي)) {
+            الأصل := (*أصول_الدوال)[الدالة.القيمة];
+        };
+        دع م: موقع_فشل_تفسير_مسير = {
+            الدالة: الدالة, الكتلة: الكتلة, التعليمة: اختياري.لا_شيء(),
+            الأصل: الأصل, موقع_التصحيح: اختياري.لا_شيء()
+        };
+        الموقع := اختياري.موجود(م);
+    }
+    | _ -> { };
+    دع الموضعي: فشل_تفسير_موضعي = {
+        الفشل: الفشل, الموقع: الموقع, النداءات: بلا_نداءات, المنفذ: 0
+    };
+    أرجع الموضعي;
+}
+
+// A thread of the program stopped (الفشل: its failure, لا_شيء when the
+// engine lost its context): the process ends with status 101.
+عام عرف أنه_بفشل_خيط_آلة(الفشل: اختياري فشل_تفسير_مسير): فراغ {
+    إذا (!احجز_إبلاغ_فشل_آلة()) { انتظر_نهاية_العملية_آلة(); };
+    دع المبلغ: متغير اختياري مبلغ_فشل_آلة = اختياري.لا_شيء();
+    غير_آمن {
+        إذا ((الطول(مبلغ_فشل_آلة_الحالي) مثل طبيعي) > 0) { المبلغ := اختياري.موجود(مبلغ_فشل_آلة_الحالي[0]); };
+    }
+    دع تم_الإبلاغ: متغير منطقي = خطأ;
+    طابق الفشل مع
+    | اختياري.موجود(ف) -> {
+        طابق المبلغ مع
+        | اختياري.موجود(م) -> {
+            غير_آمن {
+                دع الموضعي: فشل_تفسير_موضعي = فشل_موضعي_آلة(ف, &(*م.الأصول));
+                اعرض_فشل_تفسير_بسياق(&الموضعي, &(*م.السياق));
+            }
+            تم_الإبلاغ := صواب;
+        }
+        | اختياري.لا_شيء -> { };
+    }
+    | اختياري.لا_شيء -> { };
+    إذا (!تم_الإبلاغ) {
+        // A «…» literal has no escapes: the line ends with byte 10.
+        دع السطر: متغير متجه ط8 = بايتات_من_نص(«sultanc run: a thread of the program stopped on a trap»);
+        ألحق(السطر, 10);
+        دع _ن: نتيجة عدد, عدد = اكتب_بايتات_خطأ(&السطر);
+    };
+    اخرج(101);
+}

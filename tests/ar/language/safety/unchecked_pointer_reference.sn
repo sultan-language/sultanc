@@ -1,0 +1,58 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// نظير: tests/en/language/safety/unchecked_pointer_reference.sn
+// A raw pointer carries no checked provenance, so `p as &T` inside unsafe is
+// an unchecked borrow (Rust's `&*p`): the value it points to may be written
+// while the reference is in scope, and a function may return it; the unsafe
+// block vouches for the address. The reference reads and writes the
+// pointer's address and owns nothing. Safe references keep every check
+// (reject_borrow_through_pointer_cast.sn, reject_escape_beside_pointer.sn).
+نوع خلية = { القيمة: عدد, الوسم: نص };
+
+// Returns a reference made from a pointer to its own local: no escape error,
+// and the result dangles. It is the caller's responsibility never to read it.
+عرف معلق(): &عدد {
+    دع المحلي: عدد = 5;
+    دع م: *عدد = &المحلي;
+    غير_آمن { أرجع م مثل &عدد; }
+}
+
+عرف اقرأ(ر: &عدد): عدد {
+    أرجع *ر;
+}
+
+عرف الرئيسية(): عدد {
+    دع ق: متغير عدد = 1;
+    دع م: *متغير عدد = &متغير ق;
+    غير_آمن {
+        // Written through the pointer-derived reference.
+        دع ك: &متغير عدد = م مثل &متغير عدد;
+        *ك := 7;
+        إذا (ق != 7) { أرجع 1; };
+
+        // The value written directly while a reference read from the same
+        // pointer is in scope: the reference sees the write.
+        دع ر: &عدد = م مثل &عدد;
+        ق := 3;
+        إذا (*ر != 3 || اقرأ(م مثل &عدد) != 3) { أرجع 2; };
+    };
+
+    // A record, through a pointer to it.
+    دع خ: خلية = { القيمة: 40, الوسم: «ab» };
+    دع مخ: *خلية = &خ;
+    غير_آمن {
+        دع رخ: &خلية = مخ مثل &خلية;
+        إذا ((*رخ).القيمة != 40 || الطول((*رخ).الوسم) != 2) { أرجع 3; };
+    };
+
+    // A pointer copied first, and a pointer made from a safe reference.
+    دع النسخة: *متغير عدد = م;
+    دع من_مرجع: *عدد = (&ق) مثل *عدد;
+    غير_آمن {
+        إذا (اقرأ(النسخة مثل &عدد) != 3 || اقرأ(من_مرجع مثل &عدد) != 3) { أرجع 4; };
+    };
+
+    دع غير_مستخدم: &عدد = معلق();
+    أرجع 42;
+}

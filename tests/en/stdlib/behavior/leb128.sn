@@ -1,0 +1,98 @@
+// اختبار: تفاضلي
+// خروج: 42
+// تفاضلي: نعم
+// std.encoding.varint LEB128 helpers (DWARF / WebAssembly / Mach-O forms)
+// and std.encoding.binary writes at an offset.
+import std.encoding.varint;
+import std.encoding.binary;
+
+def bytes_are(actual: &vector u8, expected: &vector u8): bool {
+    if (length(*actual) != length(*expected)) { return false; };
+    let i: mutable uint = 0;
+    while (i < (length(*actual) as uint)) {
+        if ((*actual)[i] != (*expected)[i]) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+
+def uleb_is(value: uint, expected: vector u8): bool {
+    let out: mutable vector u8 = [];
+    uleb128_append(&mutable out, value);
+    if (uleb128_size(value) != (length(expected) as uint)) { return false; };
+    return bytes_are(&out, &expected);
+}
+
+def sleb_round_trips(value: int, expected: vector u8): bool {
+    let out: mutable vector u8 = [];
+    sleb128_append(&mutable out, value);
+    if (!bytes_are(&out, &expected)) { return false; };
+    let used: mutable uint = 0;
+    match sleb128_decode_from(&out, 0, &mutable used) with
+    | result.ok(back) -> { return back == value && used == (length(out) as uint); }
+    | result.err(_) -> { return false; };
+}
+
+def main(): int {
+    // DWARF 5, 7.6: the reference examples.
+    if (!uleb_is(2, [2])) { return 1; };
+    if (!uleb_is(127, [127])) { return 2; };
+    if (!uleb_is(128, [0x80, 1])) { return 3; };
+    if (!uleb_is(12857, [0xB9, 0x64])) { return 4; };
+    if (!uleb_is(18446744073709551615, [0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x01])) { return 5; };
+    if (!sleb_round_trips(2, [2])) { return 6; };
+    if (!sleb_round_trips(-2, [0x7E])) { return 7; };
+    if (!sleb_round_trips(127, [0xFF, 0])) { return 8; };
+    if (!sleb_round_trips(-127, [0x81, 0x7F])) { return 9; };
+    if (!sleb_round_trips(-128, [0x80, 0x7F])) { return 10; };
+    if (!sleb_round_trips(63, [0x3F])) { return 11; };
+    if (!sleb_round_trips(-64, [0x40])) { return 12; };
+    if (!sleb_round_trips(9223372036854775807, [0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0])) { return 13; };
+    if (!sleb_round_trips((0 - 9223372036854775807) - 1, [0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x7F])) { return 14; };
+    // Malformed signed input.
+    let cut: vector u8 = [0x80];
+    let used: mutable uint = 0;
+    match sleb128_decode_from(&cut, 0, &mutable used) with
+    | result.ok(_) -> { return 15; }
+    | result.err(_) -> { };
+    let wide: vector u8 = [0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x01];
+    match sleb128_decode_from(&wide, 0, &mutable used) with
+    | result.ok(_) -> { return 16; }
+    | result.err(_) -> { };
+
+    // Fixed-width fields (WebAssembly relocations: five bytes).
+    let padded: mutable vector u8 = [];
+    if (!uleb128_append_padded(&mutable padded, 3, 5)) { return 17; };
+    let padded_expected: vector u8 = [0x83, 0x80, 0x80, 0x80, 0];
+    if (!bytes_are(&padded, &padded_expected)) { return 18; };
+    if (uleb128_append_padded(&mutable padded, 34359738368, 5)) { return 19; };
+    if (!uleb128_write_padded_at(&mutable padded, 0, 624485, 5)) { return 20; };
+    let patched: vector u8 = [0xE5, 0x8E, 0xA6, 0x80, 0];
+    if (!bytes_are(&padded, &patched)) { return 21; };
+    if (uleb128_write_padded_at(&mutable padded, 1, 1, 5)) { return 22; };
+    let signed_padded: mutable vector u8 = [];
+    if (!sleb128_append_padded(&mutable signed_padded, -1, 5)) { return 23; };
+    let minus_one: vector u8 = [0xFF, 0xFF, 0xFF, 0xFF, 0x7F];
+    if (!bytes_are(&signed_padded, &minus_one)) { return 24; };
+    if (!sleb128_write_padded_at(&mutable signed_padded, 0, -2147483648, 5)) { return 25; };
+    let int_min: vector u8 = [0x80, 0x80, 0x80, 0x80, 0x78];
+    if (!bytes_are(&signed_padded, &int_min)) { return 26; };
+    if (sleb128_append_padded(&mutable signed_padded, 34359738368, 5)) { return 27; };
+    let back: mutable uint = 0;
+    match sleb128_decode_from(&int_min, 0, &mutable back) with
+    | result.ok(v) -> { if (v != -2147483648 || back != 5) { return 28; }; }
+    | result.err(_) -> { return 29; };
+
+    // Writes at an offset replace bytes and never grow the buffer.
+    let image: mutable vector u8 = [0, 0, 0, 0, 0, 0, 0, 0];
+    if (!write_u32_le_at(&mutable image, 2, 0x11223344)) { return 30; };
+    if (!write_u16_be_at(&mutable image, 0, 0xABCD)) { return 31; };
+    let image_expected: vector u8 = [0xAB, 0xCD, 0x44, 0x33, 0x22, 0x11, 0, 0];
+    if (!bytes_are(&image, &image_expected)) { return 32; };
+    if (write_u64_le_at(&mutable image, 1, 7)) { return 33; };
+    if (!write_u64_be_at(&mutable image, 0, 0x0102030405060708)) { return 34; };
+    let be: vector u8 = [1, 2, 3, 4, 5, 6, 7, 8];
+    if (!bytes_are(&image, &be)) { return 35; };
+    if (write_u16_le_at(&mutable image, 9, 1)) { return 36; };
+    return 42;
+}

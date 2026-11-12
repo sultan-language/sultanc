@@ -1,4 +1,4 @@
-// Condition variables (docs/CONCURRENCY.md, "Condvar"), after Rust's
+// Condition variables (docs/en/reference/concurrency.md, "Condvar"), after Rust's
 // std::sync::Condvar and its futex implementation (std/src/sys/sync/
 // condvar/futex.rs). The condition variable is one 32-bit sequence number:
 // a notify increments it and wakes sleepers; a waiter reads it before it
@@ -62,7 +62,7 @@
     طالما (صواب) {
         دع المؤشر: *متغير ق = مؤشر_قيمة_القفل(القفل);
         دع يستمر: منطقي = اختبر_القيمة(المؤشر, الشرط_المنطقي);
-        لو (!يستمر) { أرجع; };
+        إذا (!يستمر) { أرجع; };
         انتظر_الشرط(الشرط, القفل);
     }
 }

@@ -1,0 +1,199 @@
+استورد "../common.sn";
+استورد std.text.search;
+استورد std.text.compare;
+
+// Package graphs (--package-graph, compiler/driver/package_graph.sn), in
+// English and Arabic (tests/runner/fixtures/packages): a graph's packages,
+// names in both languages, module spellings in a package's root file
+// (app/src/app.sn) and edges with local names; each invalid graph reported
+// at path:line:column; a source root written through `..`, cleaned in every
+// diagnostic; the four module-spelling errors; a missing standard library;
+// and a standalone file, which reads no Supax.toml even when one is beside
+// it and imports std by a spelling of std.sn.
+// The graphs use paths relative to themselves, so they are fixtures.
+
+// One compiler run: its status, and markers its standard error (or output)
+// all contain. البيئة is an environment assignment for the run, «» for none.
+عرف تحقق_رسم(
+    الملخص: &متغير ملخص_اختبارات,
+    الاسم: نص,
+    الوسائط: متجه نص,
+    البيئة: نص,
+    الحالة: عدد,
+    العلامات: متجه نص
+): فراغ {
+    دع المترجم: نص = مسار_المترجم();
+    دع أجزاء: متغير متجه نص = [];
+    إذا ((الطول(البيئة) مثل طبيعي) > 0) { ألحق(أجزاء, استنسخ(&البيئة)); ألحق(أجزاء, « »); };
+    ألحق(أجزاء, «exec »);
+    ألحق(أجزاء, اقتبس_لشل(&المترجم));
+    دع ف: متغير طبيعي = 0;
+    طالما (ف < (الطول(الوسائط) مثل طبيعي)) {
+        ألحق(أجزاء, « »);
+        ألحق(أجزاء, اقتبس_لشل(&الوسائط[ف]));
+        ف := ف + 1;
+    }
+    دع الأمر: نص = اجمع_نصوص(&أجزاء);
+    دع النتيجة: نتيجة_أمر = نفذ_نص_شل(&الأمر, &الاسم);
+    إذا (النتيجة.الحالة != الحالة) {
+        دع سبب: نص = «حالة المترجم لا تطابق المتوقع»;
+        سجل_فشل(الملخص, &الاسم, &سبب);
+        أرجع;
+    };
+    ف := 0;
+    طالما (ف < (الطول(العلامات) مثل طبيعي)) {
+        إذا (!يحتوي_نصا(&النتيجة.الخطأ, &العلامات[ف]) && !يحتوي_نصا(&النتيجة.الخرج, &العلامات[ف])) {
+            دع سبب: نص = «خرج المترجم لا يحتوي علامة مطلوبة»;
+            سجل_فشل(الملخص, &الاسم, &سبب);
+            أرجع;
+        };
+        ف := ف + 1;
+    }
+    سجل_نجاح(الملخص, &الاسم);
+}
+
+عرف اسم_حالة(اللغة: &نص, الوصف: نص): نص {
+    دع أجزاء: متجه نص = [«رسم الحزم », استنسخ(اللغة), «: », الوصف];
+    أرجع اجمع_نصوص(&أجزاء);
+}
+
+عرف مسار_تثبيت(الأساس: نص, الباقي: نص): نص {
+    دع أجزاء: متجه نص = [الأساس, الباقي];
+    أرجع اجمع_نصوص(&أجزاء);
+}
+
+// الحالات: name, location marker, reason marker, three per invalid graph.
+عرف اختبر_رسم_لغة(
+    الملخص: &متغير ملخص_اختبارات,
+    اللغة: نص,
+    الحالات: &متجه نص,
+    سبب_الخارج: نص,
+    سبب_التعذر: نص
+): فراغ {
+    دع الأساس: نص = مسار_تثبيت(«tests/runner/fixtures/packages/», انسخ_نص_اختبار(&اللغة));
+    دع الرسم: نص = مسار_تثبيت(استنسخ(&الأساس), «/graph.toml»);
+    دع خيار_الرسم: نص = مسار_تثبيت(«--package-graph=», انسخ_نص_اختبار(&الرسم));
+    دع المصدر: نص = مسار_تثبيت(استنسخ(&الأساس), «/app/src/main.sn»);
+    دع ل: نص = انسخ_نص_اختبار(&اللغة);
+    دع بلا: متجه نص = [];
+
+    // Names in both languages, a module spelling, an edge's local name, both option forms.
+    تحقق_رسم(الملخص, اسم_حالة(&ل, «check برسم الحزم»),
+        [«--lang», استنسخ(&ل), «check», استنسخ(&خيار_الرسم), استنسخ(&المصدر)], «», 0, انسخ_مملوكا_متجه_نصوص(&بلا));
+    تحقق_رسم(الملخص, اسم_حالة(&ل, «--package-graph بقيمة منفصلة»),
+        [«--lang», استنسخ(&ل), «check», «--package-graph», استنسخ(&الرسم), استنسخ(&المصدر)], «», 0, انسخ_مملوكا_متجه_نصوص(&بلا));
+    تحقق_رسم(الملخص, اسم_حالة(&ل, «run برسم الحزم»),
+        [«--lang», استنسخ(&ل), استنسخ(&خيار_الرسم), «run», استنسخ(&المصدر)], «», 42, انسخ_مملوكا_متجه_نصوص(&بلا));
+
+    // A source of another package is not the root package's.
+    دع خارج: نص = مسار_تثبيت(استنسخ(&الأساس), «/json/src/lib.sn»);
+    تحقق_رسم(الملخص, اسم_حالة(&ل, «مصدر خارج حزمة الجذر»),
+        [«--lang», استنسخ(&ل), «--color», «never», «check», استنسخ(&خيار_الرسم), خارج], «», 1,
+        [«SULTANC-PACKAGE-GRAPH-INVALID», استنسخ(&سبب_الخارج)]);
+
+    // A graph file that does not exist.
+    دع غائب: نص = مسار_تثبيت(«--package-graph=», مسار_تثبيت(استنسخ(&الأساس), «/missing.toml»));
+    تحقق_رسم(الملخص, اسم_حالة(&ل, «رسم غير موجود»),
+        [«--lang», استنسخ(&ل), «--color», «never», «check», غائب, استنسخ(&المصدر)], «», 1,
+        [«SULTANC-PACKAGE-GRAPH-INVALID», استنسخ(&سبب_التعذر)]);
+
+    // Every invalid graph, at its line and column.
+    دع ف: متغير طبيعي = 0;
+    طالما (ف + 2 < (الطول(*الحالات) مثل طبيعي)) {
+        دع الملف: نص = مسار_تثبيت(«--package-graph=tests/runner/fixtures/packages/invalid/», مسار_تثبيت(استنسخ(&(*الحالات)[ف]), «.toml»));
+        تحقق_رسم(الملخص, اسم_حالة(&ل, استنسخ(&(*الحالات)[ف])),
+            [«--lang», استنسخ(&ل), «--color», «never», «check», الملف, استنسخ(&المصدر)], «», 1,
+            [«SULTANC-PACKAGE-GRAPH-INVALID», استنسخ(&(*الحالات)[ف + 1]), استنسخ(&(*الحالات)[ف + 2])]);
+        ف := ف + 3;
+    }
+
+    // A dependency whose source_root goes through `main/..`: its diagnostic
+    // names dotdot/util/broken.sn, with no `..` (std.fs.path نظف_المسار).
+    دع رسم_النقطتين: نص = مسار_تثبيت(«--package-graph=», مسار_تثبيت(استنسخ(&الأساس), «/dotdot/graph.toml»));
+    دع مصدر_النقطتين: نص = مسار_تثبيت(استنسخ(&الأساس), «/dotdot/main/main.sn»);
+    دع موقع_النقطتين: نص = مسار_تثبيت(استنسخ(&الأساس), «/dotdot/util/broken.sn:»);
+    تحقق_رسم(الملخص, اسم_حالة(&ل, «جذر مصدر عبر .. منظف»),
+        [«--lang», استنسخ(&ل), «--color», «never», «check», رسم_النقطتين, مصدر_النقطتين], «», 1,
+        [«SULTANC-NAME-UNKNOWN», موقع_النقطتين]);
+
+    // Module spellings: `module` naming no child, a spelling two children
+    // share, a reserved word as a spelling, and `module` outside a root file,
+    // each at its place.
+    دع حالات_التهجئة: متجه نص = [
+        «no_child», «SULTANC-MODULE-SPELLING-NO-CHILD», «/lib/lib.sn:1:»,
+        «shared», «SULTANC-MODULE-SPELLING-SHARED», «/lib/lib.sn:2:»,
+        «reserved», «SULTANC-MODULE-SPELLING-RESERVED», «/lib/lib.sn:1:»,
+        «outside», «SULTANC-MODULE-OUTSIDE-ROOT-FILE», «/lib/x.sn:1:1»
+    ];
+    دع ح: متغير طبيعي = 0;
+    طالما (ح + 2 < (الطول(حالات_التهجئة) مثل طبيعي)) {
+        دع الحالة: نص = مسار_تثبيت(مسار_تثبيت(استنسخ(&الأساس), «/spellings/»), استنسخ(&حالات_التهجئة[ح]));
+        دع الرئيسي: نص = مسار_تثبيت(استنسخ(&الحالة), «/main.sn»);
+        دع الموقع: نص = مسار_تثبيت(استنسخ(&الحالة), استنسخ(&حالات_التهجئة[ح + 2]));
+        تحقق_رسم(الملخص, اسم_حالة(&ل, مسار_تثبيت(«تهجئات الوحدات: », استنسخ(&حالات_التهجئة[ح]))),
+            [«--lang», استنسخ(&ل), «--color», «never», «check», الرئيسي], «», 1,
+            [استنسخ(&حالات_التهجئة[ح + 1]), الموقع]);
+        ح := ح + 3;
+    }
+
+    // Without a graph: the file, its relative import and std; the Supax.toml
+    // beside it is not TOML and is never read.
+    دع المستقل: نص = مسار_تثبيت(استنسخ(&الأساس), «/standalone/main.sn»);
+    تحقق_رسم(الملخص, اسم_حالة(&ل, «ملف مستقل يتجاهل Supax.toml»),
+        [«--lang», استنسخ(&ل), «check», استنسخ(&المستقل)], «», 0, انسخ_مملوكا_متجه_نصوص(&بلا));
+    // A source of the standard library itself is compiled as std.
+    تحقق_رسم(الملخص, اسم_حالة(&ل, «مصدر من المكتبة القياسية»),
+        [«--lang», استنسخ(&ل), «check», «library/std/text/compare.sn»], «», 0, انسخ_مملوكا_متجه_نصوص(&بلا));
+    // No standard library where the compiler looks.
+    تحقق_رسم(الملخص, اسم_حالة(&ل, «مكتبة قياسية غير موجودة»),
+        [«--lang», استنسخ(&ل), «--color», «never», «check», المستقل],
+        «SULTANC_STD=tests/runner/fixtures/packages/nostd», 3, [«SULTANC-STD-NOT-FOUND»]);
+}
+
+عرف انسخ_مملوكا_متجه_نصوص(القيمة: &متجه نص): متجه نص {
+    دع الناتج: متغير متجه نص = [];
+    دع ف: متغير طبيعي = 0;
+    طالما (ف < (الطول(*القيمة) مثل طبيعي)) { ألحق(الناتج, انسخ_نص_اختبار(&(*القيمة)[ف])); ف := ف + 1; }
+    أرجع الناتج;
+}
+
+عام عرف اختبر_الحزم(الملخص: &متغير ملخص_اختبارات): فراغ {
+    دع حالات_إن: متجه نص = [
+        «reserved_name», «reserved_name.toml:7:1», «a reserved word cannot be a package name»,
+        «reserved_spelling», «reserved_spelling.toml:8:1», «a reserved word cannot be a package name»,
+        «reserved_edge_name», «reserved_edge_name.toml:17:1», «a reserved word cannot be a package name»,
+        «bad_version», «bad_version.toml:1:1», «only package graph version 1»,
+        «bad_toml», «bad_toml.toml:1:1», «invalid TOML syntax»,
+        «unknown_field», «unknown_field.toml:8:1», «unknown package graph field»,
+        «missing_field», «missing_field.toml:5:1», «required package graph field is missing»,
+        «not_string», «not_string.toml:7:1», «package graph field must be a string»,
+        «duplicate_id», «duplicate_id.toml:10:1», «two packages in the graph have the same id»,
+        «std_reserved», «std_reserved.toml:10:1», «the id std is the standard library»,
+        «unknown_package», «unknown_package.toml:11:1», «no package in the graph has this id»,
+        «missing_source_root», «missing_source_root.toml:6:1», «source_root is not an existing directory»,
+        «missing_entry», «missing_entry.toml:8:1», «entry names no module file under source_root»,
+        «duplicate_source_root», «duplicate_source_root.toml:11:1», «two packages have the same source_root»,
+        «no_root», «no_root.toml:1:1», «required package graph field is missing»
+    ];
+    اختبر_رسم_لغة(الملخص, «en», &حالات_إن,
+        «is not under the root package», «package graph could not be read»);
+    دع حالات_ع: متجه نص = [
+        «reserved_name», «reserved_name.toml:7:1», «لا تكون الكلمة المحجوزة اسم حزمة»,
+        «reserved_spelling», «reserved_spelling.toml:8:1», «لا تكون الكلمة المحجوزة اسم حزمة»,
+        «reserved_edge_name», «reserved_edge_name.toml:17:1», «لا تكون الكلمة المحجوزة اسم حزمة»,
+        «bad_version», «bad_version.toml:1:1», «لا يُدعم إلا الإصدار 1»,
+        «bad_toml», «bad_toml.toml:1:1», «صياغة TOML غير صالحة»,
+        «unknown_field», «unknown_field.toml:8:1», «حقل غير معروف في رسم الحزم»,
+        «missing_field», «missing_field.toml:5:1», «حقل مطلوب مفقود في رسم الحزم»,
+        «not_string», «not_string.toml:7:1», «يجب أن يكون حقل رسم الحزم نصا»,
+        «duplicate_id», «duplicate_id.toml:10:1», «حزمتان في الرسم بالمعرف نفسه»,
+        «std_reserved», «std_reserved.toml:10:1», «المعرف std للمكتبة القياسية»,
+        «unknown_package», «unknown_package.toml:11:1», «لا حزمة في الرسم بهذا المعرف»,
+        «missing_source_root», «missing_source_root.toml:6:1», «source_root ليس دليلا موجودا»,
+        «missing_entry», «missing_entry.toml:8:1», «لا يسمي entry ملف وحدة تحت source_root»,
+        «duplicate_source_root», «duplicate_source_root.toml:11:1», «حزمتان لهما source_root نفسه»,
+        «no_root», «no_root.toml:1:1», «حقل مطلوب مفقود في رسم الحزم»
+    ];
+    اختبر_رسم_لغة(الملخص, «ar», &حالات_ع,
+        «ليس تحت source_root لحزمة الجذر», «تعذرت قراءة رسم الحزم»);
+}

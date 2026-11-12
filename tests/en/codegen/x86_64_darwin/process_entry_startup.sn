@@ -1,0 +1,26 @@
+// اختبار: تشغيل
+// أهداف: x86_64-linux,x86_64-darwin,aarch64-linux-gnu,aarch64-android,x86_64-android,x86_64-freebsd,aarch64-freebsd
+// خروج: 42
+// نظير: tests/ar/codegen/x86_64_darwin/process_entry_startup.sn
+// The native process entry records argc, argv and envp before the language
+// entry: Linux _start reads the kernel's initial stack; x86-64 macOS gets
+// them from dyld's call of `_main` (in RDI, RSI and RDX) and the module
+// initializer from __mod_init_func. The program reads them back through
+// std and checks a global set by the module initializer.
+import std.process.argument_count;
+import std.process.argument;
+import std.env.environment;
+
+let base: vector u64 = [40, 2];
+
+def main(): int {
+    if (argument_count() < 1) { return 1; };
+    match argument(0) with
+    | option.some(text) -> { if (length(text) == 0) { return 2; }; }
+    | option.none -> { return 3; };
+    let name: string = "PATH";
+    match get_environment_variable(&name) with
+    | result.ok(option.some(_)) -> { }
+    | _ -> { return 4; };
+    return (base[0] + base[1]) as int;
+}

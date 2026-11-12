@@ -1,0 +1,105 @@
+استورد std.text.from_bytes;
+استورد compiler.interpreter.execution.host_dynamic;
+استورد compiler.interpreter.runtime_failures;
+
+// ---- Libraries `run` and `interpret` load (-l, -L) ---------------------------
+//
+// The driver resolves each -l name to the shared library a native link would
+// use (compiler/driver/library_search.sn) and passes them in command-line
+// order; -lc and -lm are the process's own C library and are not passed. The
+// interpreter loads them all before the program starts, through the same
+// host loader its foreign-call bridge uses (host_dynamic.sn: dlopen on Linux
+// and macOS, LoadLibraryW on Windows), so a library's initializers run before
+// main as they do for an executable that links it, and a library that cannot
+// be loaded stops the run before it begins.
+//
+// An extern then resolves as in the linked executable, as closely as the host
+// loader allows:
+//   1. a library the declaration itself names (`extern "libfoo.so" def`), as
+//      before;
+//   2. the -l libraries, in command-line order: the first that defines the
+//      symbol, as a native link takes the first input that defines it (and
+//      ld.so searches an executable's DT_NEEDED libraries in order);
+//   3. the process's global scope, then the platform C libraries, as before.
+// The -l libraries are opened with RTLD_LAZY | RTLD_GLOBAL on Linux and macOS,
+// so one can use the symbols of another, as DT_NEEDED libraries can. ld.so
+// maps all of an executable's libraries before it relocates any, so there a
+// library may need a symbol of one named after it; the interpreter opens them
+// one by one, so a library whose load fails is tried again once the others
+// are loaded, until a round loads none (it then comes later in the global
+// scope than its place on the command line; the search for externs below
+// keeps the command-line order).
+
+// A library to load: the -l name as given (for diagnostics) and the resolved
+// path of a loadable shared library (.so; a .dylib or a dyld-cache install
+// name on macOS; a .dll on Windows).
+عام نوع مكتبة_تحميل_مفسر = {
+    الاسم: نص,
+    المسار: نص
+};
+
+// Why a library could not be loaded: its -l name, its path, and what the
+// host loader reported.
+عام نوع تعذر_تحميل_مكتبة_مفسر = {
+    الاسم: نص,
+    المسار: نص,
+    التفصيل: تفصيل_محمل_مفسر
+};
+
+// Opens each library in order; their handles in the same order, or why the
+// first that could not be loaded failed. The caller has checked that the host
+// has a dynamic loader (machine_entry.sn يلزم_تنفيذي_لمكتبات_آلة).
+عام عرف حمل_مكتبات_مفسر(المكتبات: &متجه مكتبة_تحميل_مفسر): نتيجة متجه ط64, تعذر_تحميل_مكتبة_مفسر {
+    دع المقابض: متغير متجه ط64 = [];
+    دع العدد: طبيعي = الطول(*المكتبات) مثل طبيعي;
+    إذا (العدد == 0) { أرجع نتيجة.نجح(المقابض); };
+    دع المحمل: متغير محمل_ديناميكي_مضيف = محمل_ديناميكي_مضيف_جديد();
+    دع ف: متغير طبيعي = 0;
+    طالما (ف < العدد) { ألحق(المقابض, 0); ف := ف + 1; }
+    // Rounds over the libraries not yet loaded, while one loads.
+    دع الأول_المتعذر: متغير طبيعي = العدد;
+    دع تفصيل_الأول: متغير تفصيل_محمل_مفسر = تفصيل_محمل_مفسر.بلا_تفصيل();
+    دع تقدم: متغير منطقي = صواب;
+    طالما (تقدم) {
+        تقدم := خطأ;
+        الأول_المتعذر := العدد;
+        ف := 0;
+        طالما (ف < العدد) {
+            إذا (المقابض[ف] == 0) {
+                دع المسار: متجه ط8 = بايتات_من_نص(انسخ_نص(&(*المكتبات)[ف].المسار));
+                دع المقبض: ط64 = افتح_مكتبة_تحميل_مضيف(&متغير المحمل, &المسار);
+                إذا (المقبض != 0) {
+                    المقابض[ف] := المقبض;
+                    تقدم := صواب;
+                } وإلا إذا (الأول_المتعذر == العدد) {
+                    الأول_المتعذر := ف;
+                    تفصيل_الأول := خطأ_محمل_مضيف(&متغير المحمل);
+                };
+            };
+            ف := ف + 1;
+        }
+        إذا (الأول_المتعذر == العدد) { أرجع نتيجة.نجح(المقابض); };
+    }
+    دع التعذر: تعذر_تحميل_مكتبة_مفسر = {
+        الاسم: انسخ_نص(&(*المكتبات)[الأول_المتعذر].الاسم),
+        المسار: انسخ_نص(&(*المكتبات)[الأول_المتعذر].المسار),
+        التفصيل: تفصيل_الأول
+    };
+    أرجع نتيجة.خطأ(التعذر);
+}
+
+// The address of الاسم in the first loaded library that defines it; 0 when
+// none does.
+عام عرف رمز_في_مكتبات_التحميل_مفسر(
+    المحمل: &متغير محمل_ديناميكي_مضيف,
+    المقابض: &متجه ط64,
+    الاسم: &متجه ط8
+): ط64 {
+    دع ف: متغير طبيعي = 0;
+    طالما (ف < (الطول(*المقابض) مثل طبيعي)) {
+        دع العنوان: ط64 = رمز_مكتبة_مضيف(المحمل, (*المقابض)[ف], الاسم);
+        إذا (العنوان != 0) { أرجع العنوان; };
+        ف := ف + 1;
+    }
+    أرجع 0;
+}

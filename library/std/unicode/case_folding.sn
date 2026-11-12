@@ -29,3 +29,7 @@
         أرجع حول_سلالم_إلى_نص_يونيكود(&الناتج);
     };
 }
+
+// English names (declared with their Arabic declarations: an alias names
+// a declaration of its own module).
+عام مرادف unicode_case_fold = طي_حالة_الأحرف_يونيكود;

@@ -1,0 +1,43 @@
+// اختبار: تشغيل
+// أهداف: x86_64-linux,aarch64-linux-gnu,aarch64-android,x86_64-android,x86_64-freebsd,aarch64-freebsd
+// خروج: 42
+// نظير: tests/ar/codegen/aarch64_linux/aapcs64_stack_arguments.sn
+// Calls whose arguments overflow the registers. On AArch64 Linux native
+// code uses AAPCS64: x0-x7 and v0-v7, then one 8-byte stack slot per
+// argument (Apple packs narrow stack arguments instead), narrow integers
+// unextended, records of at most 16 bytes in register pairs and larger
+// records by address.
+type Pair = { first: i64, second: i64 };
+type Triple = { a: i64, b: i64, c: i64 };
+
+def narrow_tail(
+    a0: i64, a1: i64, a2: i64, a3: i64, a4: i64, a5: i64, a6: i64, a7: i64,
+    s0: i8, s1: u16, s2: i32, s3: u8
+): i64 {
+    return a0 + a7 + (s0 as i64) + (s1 as i64) + (s2 as i64) + (s3 as i64);
+}
+
+def float_tail(
+    f0: f64, f1: f64, f2: f64, f3: f64, f4: f64, f5: f64, f6: f64, f7: f64,
+    f8: f64, f9: f32
+): f64 {
+    return f0 + f7 + f8 + (f9 as f64);
+}
+
+def records(p: Pair, t: Triple, q: Pair, r: Pair, s: Pair): i64 {
+    return p.first + p.second + t.a + t.c + q.second + r.first + s.second;
+}
+
+def main(): int {
+    if (narrow_tail(1, 2, 3, 4, 5, 6, 7, 8, -3 as i8, 700 as u16, -40000, 250 as u8) != 1 + 8 - 3 + 700 - 40000 + 250) {
+        return 1;
+    };
+    if (float_tail(1.5, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 2.5, 4.0, 0.5 as f32) != 8.5) { return 2; };
+    let p: Pair = { first: 1, second: 2 };
+    let t: Triple = { a: 10, b: 20, c: 30 };
+    let q: Pair = { first: 100, second: 200 };
+    let r: Pair = { first: 1000, second: 2000 };
+    let s: Pair = { first: 3, second: 4 };
+    if (records(p, t, q, r, s) != 1 + 2 + 10 + 30 + 200 + 1000 + 4) { return 3; };
+    return 42;
+}

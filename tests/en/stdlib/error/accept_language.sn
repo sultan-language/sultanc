@@ -3,7 +3,7 @@
 // خروج: 42
 // تفاضلي: نعم
 // نظير: tests/ar/stdlib/error/accept_language.sn
-// std.text.language (docs/ERRORS.md): BCP 47 tags (well-formedness,
+// std.text.language (docs/en/reference/errors.md): BCP 47 tags (well-formedness,
 // canonical case, primary language, RFC 4647 truncation), locales built from
 // a tag, and HTTP Accept-Language with q-values: ranges ordered by weight,
 // equal weights in the order written; weight 0, «*», ill-formed ranges and

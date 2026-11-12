@@ -47,12 +47,12 @@ def main(): int {
         | _ -> { };
         number := number + 1;
     }
-    if (count != (142 as uint)) { return 3; };
+    if (count != (221 as uint)) { return 3; };
     let unknown: string = "SULTANC-E0001";
     match معرف_تشخيص_من_كود(&unknown) with
     | option.none -> { }
     | _ -> { return 8; };
-    let warning: تعريف_تشخيص = تعريف_التشخيص(معرف_تشخيص.تحذير_عام());
+    let warning: تعريف_تشخيص = تعريف_التشخيص(معرف_تشخيص.نمط_غير_قابل_للوصول());
     if (warning.الشدة != شدة_تشخيص.تحذير()) { return 9; };
     if (!matching_code(معرف_تشخيص.هدف_لا_يدعم_الميزة(), "SULTANC-TARGET-FEATURE-UNSUPPORTED")) { return 4; };
     if (!matching_class(معرف_تشخيص.هدف_لا_يدعم_الميزة(), فئة_تشخيص.بيئة())) { return 5; };
@@ -78,6 +78,8 @@ def main(): int {
     if (!matching_class(معرف_تشخيص.صيغة_كائن_غير_مدعومة_للهدف(), فئة_تشخيص.بيئة())) { return 5; };
     if (!matching_code(معرف_تشخيص.مخرج_ربط_غير_مدعوم(), "SULTANC-LINK-OUTPUT-UNSUPPORTED")) { return 4; };
     if (!matching_class(معرف_تشخيص.مخرج_ربط_غير_مدعوم(), فئة_تشخيص.بيئة())) { return 5; };
+    if (!matching_code(معرف_تشخيص.مدخل_ربط_غير_مدعوم(), "SULTANC-LINK-INPUT-UNSUPPORTED")) { return 4; };
+    if (!matching_class(معرف_تشخيص.مدخل_ربط_غير_مدعوم(), فئة_تشخيص.مستخدم())) { return 5; };
     if (!matching_code(معرف_تشخيص.واجهة_استدعاء_غير_متاحة_للهدف(), "SULTANC-TARGET-ABI-UNAVAILABLE")) { return 4; };
     if (!matching_class(معرف_تشخيص.واجهة_استدعاء_غير_متاحة_للهدف(), فئة_تشخيص.بيئة())) { return 5; };
     if (!matching_code(معرف_تشخيص.حد_صيغة_كائن_متجاوز(), "SULTANC-OBJECT-FORMAT-LIMIT-EXCEEDED")) { return 4; };
@@ -103,6 +105,8 @@ def main(): int {
     if (!matching_code(معرف_تشخيص.خطأ_نحوي(), "SULTANC-PARSE-SYNTAX")) { return 6; };
     if (!matching_code(معرف_تشخيص.نقل_من_مرجع(), "SULTANC-OWNERSHIP-MOVE-OUT-OF-REFERENCE")) { return 6; };
     if (!matching_code(معرف_تشخيص.مسير_غير_صالح(), "SULTANC-ICE-MSIR-INVALID")) { return 6; };
-    if (!matching_code(معرف_تشخيص.تحذير_عام(), "SULTANC-WARNING-GENERAL")) { return 6; };
+    if (!matching_code(معرف_تشخيص.نمط_غير_قابل_للوصول(), "SULTANC-PATTERN-UNREACHABLE")) { return 6; };
+    if (!matching_code(معرف_تشخيص.ملف_غير_منسق(), "SULTANC-FMT-UNFORMATTED")) { return 4; };
+    if (!matching_class(معرف_تشخيص.ملف_غير_منسق(), فئة_تشخيص.مستخدم())) { return 5; };
     return 0;
 }

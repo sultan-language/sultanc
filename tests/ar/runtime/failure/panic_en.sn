@@ -6,7 +6,7 @@
 // خرج-قياسي: قبل الإيقاف
 // خطأ-قياسي-ملف: panic_en.stderr
 // نظير: tests/en/runtime/failure/panic_en.sn
-// The stop primitive إنهيار (docs/ERRORS.md): the iSpeak frame "the program
+// The stop primitive إنهيار (docs/en/reference/errors.md): the iSpeak frame "the program
 // stopped" in the program's language with the message under it, exit status
 // 1. It never returns, so `قسم` needs no return after it; the owned text
 // still alive is not dropped (abort semantics).
@@ -14,7 +14,7 @@
 استورد std.process.panic;
 
 عرف قسم(أ: عدد, ب: عدد): عدد {
-    لو (ب != 0) { أرجع أ / ب; };
+    إذا (ب != 0) { أرجع أ / ب; };
     إنهيار(«القسمة على صفر»);
 }
 

@@ -1,0 +1,12 @@
+// اختبار: رفض
+// تشخيص: SULTANC-NAME-UNKNOWN
+// نظير: tests/en/diagnostics/e2e/missing_import_hint.sn
+// خرج-تشخيص-عربي: missing_import_hint.ar.stderr
+// خرج-تشخيص-إنجليزي: missing_import_hint.en.stderr
+// A std module the compilation loaded declares the unknown name public:
+// the help names the module to import (std.io.print loads std.io.writer).
+استورد std.io.print;
+عرف الرئيسية(): ص32 {
+    دع المكتوب: ص32 = اكتب_الكل(3);
+    أرجع 0;
+}

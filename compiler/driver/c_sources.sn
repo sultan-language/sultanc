@@ -1,0 +1,124 @@
+استورد compiler.source.source_map;
+استورد compiler.source.source_file;
+استورد compiler.jisr.translate;
+استورد compiler.jisr.jisr;
+استورد compiler.driver.library_search;
+استورد compiler.backend.target.target_model;
+استورد std.fs.mutation;
+استورد std.fs.path;
+استورد std.text.from_bytes;
+
+// C translation units imported with `import "x.c"` are compiled by Jisr
+// into their SultanC module (compiler/jisr/lower.sn); with
+// SULTANC_C_COMPILER=cc they are compiled by the system C compiler instead,
+// for the host target only, and their objects (temporary files) linked with
+// the program. On a target whose programs name libc (هدف_يسمي_مكتبة_سي) it
+// is added once when C code is imported and the command line did not name
+// it; when no library directory provides it the link goes on without it (a
+// C import that calls nothing in libc still links) and the driver warns
+// (SULTANC-LINK-LIBC-NOT-FOUND).
+
+عام نوع نتيجة_كائنات_سي =
+    // The link inputs, the temporary objects, and whether the libc the
+    // target names was found in no library directory.
+    | جاهزة بنوع (متجه نص, متجه نص, منطقي)
+    // SULTANC_C_COMPILER=cc for a target other than the host: the .c file.
+    | لغير_المضيف بنوع نص
+    // The system C compiler did not build this translation unit, and why
+    // (compiler/jisr/translate.sn كائن_مصدر_سي_بحالة).
+    | فشل بنوع (نص, فشل_كائن_سي)
+;
+
+عرف اسم_ملف_سي_للربط(المسار: &نص): نص {
+    طابق اسم_الملف(المسار) مع
+    | اختياري.موجود(الاسم) -> { أرجع الاسم; }
+    | اختياري.لا_شيء -> { أرجع «»; };
+}
+
+// Whether a link input is the C library (libc.so, libc.a, libc.tbd, ...).
+عرف مكتبة_سي_القياسية(المسار: &نص): منطقي {
+    دع الاسم: نص = اسم_ملف_سي_للربط(المسار);
+    أرجع (الطول(الاسم) مثل طبيعي) > 5 && الاسم[0] == 0x6C && الاسم[1] == 0x69 && الاسم[2] == 0x62
+        && الاسم[3] == 0x63 && الاسم[4] == 0x2E;
+}
+
+// The imported .c sources of the program.
+عام عرف مسارات_مصادر_سي(المصادر: &خريطة_مصادر): متجه نص {
+    دع الناتج: متغير متجه نص = [];
+    دع ف: متغير طبيعي = 0;
+    طالما (ف < (الطول((*المصادر).المصادر) مثل طبيعي)) {
+        إذا (هل_وحدة_سي(&(*المصادر).المصادر[ف].الاسم)) {
+            ألحق(الناتج, انسخ_نص(&(*المصادر).المصادر[ف].الاسم));
+        };
+        ف := ف + 1;
+    }
+    أرجع الناتج;
+}
+
+// المدخلات followed by an object for each C source in المسارات, and libc.
+// The second vector holds the objects to delete after linking; the caller
+// compiles them right before the link, so no early return leaves one.
+عام عرف كائنات_مصادر_سي(
+    المسارات: &متجه نص,
+    المدخلات: &متجه نص,
+    // The -L directories, searched for libc before the target's own.
+    أدلة_المكتبات: &متجه نص,
+    الهدف: &واصف_هدف
+): نتيجة_كائنات_سي {
+    دع الكل: متغير متجه نص = [];
+    دع المؤقتة: متغير متجه نص = [];
+    دع ف: متغير طبيعي = 0;
+    دع له_وحدة: متغير منطقي = خطأ;
+    دع بالمترجم: منطقي = مترجم_سي_خارجي_جسر();
+    طالما (ف < (الطول(*المسارات) مثل طبيعي)) {
+        دع المسار: &نص = &(*المسارات)[ف];
+        إذا (هل_وحدة_سي(المسار)) { له_وحدة := صواب; };
+        إذا (هل_وحدة_سي(المسار) && بالمترجم) {
+            // The host's C compiler builds for the host only.
+            إذا (!هدف_المضيف_سي(الهدف)) {
+                أزل_كائنات_سي(&المؤقتة);
+                أرجع نتيجة_كائنات_سي.لغير_المضيف(انسخ_نص(المسار));
+            };
+            // `a.c+b.c` is several translation units.
+            دع الأجزاء: متجه نص = أجزاء_مصدر_سي(المسار);
+            دع ج_: متغير طبيعي = 0;
+            طالما (ج_ < (الطول(الأجزاء) مثل طبيعي)) {
+                طابق كائن_مصدر_سي_بحالة(&الأجزاء[ج_]) مع
+                | نتيجة.خطأ(السبب) -> {
+                    أزل_كائنات_سي(&المؤقتة);
+                    أرجع نتيجة_كائنات_سي.فشل(انسخ_نص(&الأجزاء[ج_]), السبب);
+                }
+                | نتيجة.نجح(الكائن) -> {
+                    ألحق(الكل, انسخ_نص(&الكائن));
+                    ألحق(المؤقتة, الكائن);
+                };
+                ج_ := ج_ + 1;
+            }
+        };
+        ف := ف + 1;
+    }
+    دع له_سي: متغير منطقي = خطأ;
+    ف := 0;
+    طالما (ف < (الطول(*المدخلات) مثل طبيعي)) {
+        إذا (مكتبة_سي_القياسية(&(*المدخلات)[ف])) { له_سي := صواب; };
+        ألحق(الكل, انسخ_نص(&(*المدخلات)[ف]));
+        ف := ف + 1;
+    }
+    دع بلا_مكتبة_سي: متغير منطقي = خطأ;
+    إذا (له_وحدة && !له_سي && هدف_يسمي_مكتبة_سي(الهدف)) {
+        دع الأسماء: متغير متجه نص = [];
+        ألحق(الأسماء, «c»);
+        طابق حل_مكتبات_الربط(&الأسماء, أدلة_المكتبات, الهدف, &متغير الكل) مع
+        | اختياري.لا_شيء -> { }
+        | اختياري.موجود(_) -> { بلا_مكتبة_سي := صواب; };
+    };
+    أرجع نتيجة_كائنات_سي.جاهزة(الكل, المؤقتة, بلا_مكتبة_سي);
+}
+
+عام عرف أزل_كائنات_سي(المؤقتة: &متجه نص): فراغ {
+    دع ف: متغير طبيعي = 0;
+    طالما (ف < (الطول(*المؤقتة) مثل طبيعي)) {
+        دع الحذف: نتيجة عدد, عدد = أزل_ملفا(&(*المؤقتة)[ف]);
+        ف := ف + 1;
+    }
+}

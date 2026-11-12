@@ -19,6 +19,93 @@ static int __LLVM_Emit_Statement__(__LLVM_Emitter__ *emitter,
                                    __Ast_Type__ *return_type,
                                    int *path_terminated);
 
+/* Builds the value of a vector literal of VECTOR_TYPE (LLVM type
+ * VECTOR_LLVM_TYPE) from its elements: a fresh buffer of the initial capacity
+ * for COUNT elements holds each element, then the {data, length, capacity}
+ * header is assembled. A vector initializer and a vector literal record field
+ * share it. Answers NULL after reporting a failure. */
+static LLVMValueRef __LLVM_Emit_Vector_Literal__(__LLVM_Emitter__ *emitter,
+                                                 __Ast_Type__ *vector_type,
+                                                 LLVMTypeRef vector_llvm_type,
+                                                 __Ast_Atom__ *values,
+                                                 __Ast_Expression__ **expressions,
+                                                 size_t length)
+{
+    /* Stores the resolved. */
+    __Resolved_Type__ resolved;
+    /* Stores the element LLVM type. */
+    LLVMTypeRef element_llvm_type;
+    /* Stores the element pointer type. */
+    LLVMTypeRef element_pointer_type;
+    /* Stores the data. */
+    LLVMValueRef data;
+    /* Stores the vector value. */
+    LLVMValueRef vector_value;
+    /* Stores the element size. */
+    size_t element_size = 0U;
+    /* Stores the element alignment. */
+    size_t element_alignment = 1U;
+    /* Stores the capacity. */
+    size_t capacity;
+    /* Stores the backing size. */
+    size_t backing_size = 0U;
+    /* Tracks the index. */
+    size_t index;
+    if (vector_type == NULL || vector_llvm_type == NULL ||
+        !__Type_Resolve__(emitter->semantic, vector_type, &resolved) ||
+        resolved.__Kind__ != __Resolved_Type_Vector__ || resolved.__Inner__ == NULL ||
+        !__Layout_Type__(emitter->semantic, resolved.__Inner__, &element_size, &element_alignment))
+    {
+        (void)__LLVM_Fail__("L2.7 vector initialization requires canonical vector storage");
+        return NULL;
+    }
+    (void)element_alignment;
+    capacity = __Memory_Vector_Initial_Capacity__(length);
+    if (!__Memory_Element_Bytes__(element_size, capacity, &backing_size))
+    {
+        (void)__LLVM_Fail__("L2.7 vector backing byte size overflow");
+        return NULL;
+    }
+    element_llvm_type = __LLVM_Type__(emitter, resolved.__Inner__);
+    if (element_llvm_type == NULL)
+        return NULL;
+    element_pointer_type = LLVMPointerType(element_llvm_type, 0U);
+    data = __LLVM_Allocate_Bytes__(emitter, backing_size, element_pointer_type, "vector.data");
+    if (data == NULL)
+        return NULL;
+    for (index = 0U; index < length; ++index)
+    {
+        /* Tracks the LLVM index. */
+        LLVMValueRef llvm_index =
+            LLVMConstInt(LLVMIntTypeInContext(emitter->context, 64U), (unsigned long long)index, 0);
+        /* Stores the element place. */
+        LLVMValueRef element_place = LLVMBuildGEP2(
+            emitter->builder, element_llvm_type, data, &llvm_index, 1U, "vector.element.init");
+        /* Stores the element. */
+        __LLVM_Value__ element =
+            (expressions != NULL && expressions[index] != NULL)
+                ? __LLVM_Emit_Expression__(emitter, expressions[index], resolved.__Inner__)
+                : __LLVM_Emit_Atom__(emitter, &values[index], resolved.__Inner__);
+        if (element.value == NULL)
+            return NULL;
+        element = __LLVM_Coerce__(emitter, element, resolved.__Inner__);
+        if (element.value == NULL)
+            return NULL;
+        LLVMBuildStore(emitter->builder, element.value, element_place);
+    }
+    vector_value = LLVMConstNull(vector_llvm_type);
+    vector_value = LLVMBuildInsertValue(emitter->builder, vector_value, data, 0U, "vector.with.data");
+    vector_value = LLVMBuildInsertValue(
+        emitter->builder, vector_value,
+        LLVMConstInt(LLVMIntTypeInContext(emitter->context, 64U), (unsigned long long)length, 0), 1U,
+        "vector.with.length");
+    vector_value = LLVMBuildInsertValue(
+        emitter->builder, vector_value,
+        LLVMConstInt(LLVMIntTypeInContext(emitter->context, 64U), (unsigned long long)capacity, 0), 2U,
+        "vector.with.capacity");
+    return vector_value;
+}
+
 /* Enters a loop: `continue` branches to CONTINUE_BLOCK, `break` to BREAK_BLOCK. */
 static int __LLVM_Push_Loop__(__LLVM_Emitter__ *emitter,
                               LLVMBasicBlockRef continue_block,
@@ -146,7 +233,7 @@ static int __LLVM_Emit_Statement__(__LLVM_Emitter__ *emitter,
                 if (value.value == NULL)
                     return 0;
                 /* The stop primitive never returns: the path ends here, with
-                 * nothing dropped (abort semantics, docs/ERRORS.md). */
+                 * nothing dropped (abort semantics, docs/en/reference/errors.md). */
                 if (destination_lvalue->__Kind__ == __Ast_Lvalue_Base__ &&
                     destination_lvalue->__As__.__Base__.__Kind__ == __Ast_Lvalue_Base_Temporary__ &&
                     statement->__As__.__Copy__.__Expression__->__Kind__ == __Ast_Expression_Call__ &&
@@ -517,6 +604,17 @@ static int __LLVM_Emit_Statement__(__LLVM_Emitter__ *emitter,
                                                     destination.address,
                                                     (unsigned)field_index,
                                                     "record.field.init");
+                if (input->__Is_Vector__)
+                {
+                    /* A vector literal field value. */
+                    LLVMValueRef vector_value = __LLVM_Emit_Vector_Literal__(
+                        emitter, field_type, field_llvm_type, input->__Vector_Values__,
+                        input->__Vector_Expressions__, input->__Vector_Count__);
+                    if (vector_value == NULL)
+                        return 0;
+                    LLVMBuildStore(emitter->builder, vector_value, field_address);
+                    continue;
+                }
                 field_value = __LLVM_Emit_Expression__(emitter, input->__Value__, field_type);
                 if (field_value.value == NULL)
                 {
@@ -544,33 +642,9 @@ static int __LLVM_Emit_Statement__(__LLVM_Emitter__ *emitter,
             /* Stores the destination. */
             __LLVM_Place__ destination =
                 __LLVM_Emit_Place__(emitter, statement->__As__.__Aggregate__.__Destination__);
-            /* Stores the resolved. */
-            __Resolved_Type__ resolved;
-            /* Stores the element LLVM type. */
-            LLVMTypeRef element_llvm_type;
-            /* Stores the element pointer type. */
-            LLVMTypeRef element_pointer_type;
-            /* Stores the data. */
-            LLVMValueRef data;
             /* Stores the vector value. */
             LLVMValueRef vector_value;
-            /* Stores the element size. */
-            size_t element_size = 0U;
-            /* Stores the element alignment. */
-            size_t element_alignment = 1U;
-            /* Stores the length. */
-            size_t length = statement->__As__.__Aggregate__.__Value_Count__;
-            /* Stores the capacity. */
-            size_t capacity;
-            /* Stores the backing size. */
-            size_t backing_size = 0U;
-            /* Tracks the index. */
-            size_t index;
-            if (destination.address == NULL || destination.type == NULL ||
-                !__Type_Resolve__(emitter->semantic, destination.type, &resolved) ||
-                resolved.__Kind__ != __Resolved_Type_Vector__ || resolved.__Inner__ == NULL ||
-                !__Layout_Type__(
-                    emitter->semantic, resolved.__Inner__, &element_size, &element_alignment))
+            if (destination.address == NULL || destination.type == NULL)
             {
                 return __LLVM_Fail__(
                     "L2.7 vector initialization requires canonical vector storage");
@@ -581,66 +655,14 @@ static int __LLVM_Emit_Statement__(__LLVM_Emitter__ *emitter,
             {
                 return 0;
             }
-            (void)element_alignment;
-            capacity = __Memory_Vector_Initial_Capacity__(length);
-            if (!__Memory_Element_Bytes__(element_size, capacity, &backing_size))
-            {
-                return __LLVM_Fail__("L2.7 vector backing byte size overflow");
-            }
-            element_llvm_type = __LLVM_Type__(emitter, resolved.__Inner__);
-            if (element_llvm_type == NULL)
+            vector_value = __LLVM_Emit_Vector_Literal__(emitter,
+                                                        destination.type,
+                                                        destination.llvm_type,
+                                                        statement->__As__.__Aggregate__.__Values__,
+                                                        statement->__As__.__Aggregate__.__Expressions__,
+                                                        statement->__As__.__Aggregate__.__Value_Count__);
+            if (vector_value == NULL)
                 return 0;
-            element_pointer_type = LLVMPointerType(element_llvm_type, 0U);
-            data =
-                __LLVM_Allocate_Bytes__(emitter, backing_size, element_pointer_type, "vector.data");
-            if (data == NULL)
-                return 0;
-            for (index = 0U; index < length; ++index)
-            {
-                /* Tracks the LLVM index. */
-                LLVMValueRef llvm_index = LLVMConstInt(
-                    LLVMIntTypeInContext(emitter->context, 64U), (unsigned long long)index, 0);
-                /* Stores the element place. */
-                LLVMValueRef element_place = LLVMBuildGEP2(emitter->builder,
-                                                           element_llvm_type,
-                                                           data,
-                                                           &llvm_index,
-                                                           1U,
-                                                           "vector.element.init");
-                /* Stores the element. */
-                __LLVM_Value__ element =
-                    (statement->__As__.__Aggregate__.__Expressions__ != NULL &&
-                     statement->__As__.__Aggregate__.__Expressions__[index] != NULL)
-                        ? __LLVM_Emit_Expression__(emitter,
-                                                   statement->__As__.__Aggregate__.__Expressions__[index],
-                                                   resolved.__Inner__)
-                        : __LLVM_Emit_Atom__(emitter,
-                                             &statement->__As__.__Aggregate__.__Values__[index],
-                                             resolved.__Inner__);
-                if (element.value == NULL)
-                    return 0;
-                element = __LLVM_Coerce__(emitter, element, resolved.__Inner__);
-                if (element.value == NULL)
-                    return 0;
-                LLVMBuildStore(emitter->builder, element.value, element_place);
-            }
-            vector_value = LLVMConstNull(destination.llvm_type);
-            vector_value =
-                LLVMBuildInsertValue(emitter->builder, vector_value, data, 0U, "vector.with.data");
-            vector_value = LLVMBuildInsertValue(
-                emitter->builder,
-                vector_value,
-                LLVMConstInt(
-                    LLVMIntTypeInContext(emitter->context, 64U), (unsigned long long)length, 0),
-                1U,
-                "vector.with.length");
-            vector_value = LLVMBuildInsertValue(
-                emitter->builder,
-                vector_value,
-                LLVMConstInt(
-                    LLVMIntTypeInContext(emitter->context, 64U), (unsigned long long)capacity, 0),
-                2U,
-                "vector.with.capacity");
             LLVMBuildStore(emitter->builder, vector_value, destination.address);
             if (!__LLVM_Mark_Local_Owning__(emitter, statement->__As__.__Aggregate__.__Destination__))
             {

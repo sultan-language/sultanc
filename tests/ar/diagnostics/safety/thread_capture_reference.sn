@@ -1,7 +1,7 @@
 // اختبار: رفض
 // تشخيص: SULTANC-THREAD-CAPTURE-REFERENCE
 // نظير: tests/en/diagnostics/safety/thread_capture_reference.sn
-// فحص التقاطات الإطلاق (docs/TYPE_SYSTEM.md، «قواعد الالتقاط في الخيوط»): لا
+// فحص التقاطات الإطلاق (docs/en/reference/type-system.md، «قواعد الالتقاط في الخيوط»): لا
 // يجوز لإغلاق يُسلَّم إلى خيط آخر أن يلتقط مرجعا مستعارا، لأن الخيط قد يعيش أطول
 // من التخزين المستعار (قيد 'static على spawn في Rust). انقل قيمة مملوكة إليه، أو
 // شاركها عبر مشترك.

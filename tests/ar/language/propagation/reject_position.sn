@@ -2,7 +2,7 @@
 // تشخيص: SULTANC-PARSE-SYNTAX
 // نظير: tests/en/language/propagation/reject_position.sn
 // `؟` is accepted only as the last postfix of a statement's whole right-hand
-// side (docs/ERRORS.md); inside a call argument it is an unexpected token.
+// side (docs/en/reference/errors.md); inside a call argument it is an unexpected token.
 عرف حلل(س: عدد): نتيجة عدد, نص {
     أرجع نتيجة.نجح(س);
 }

@@ -1,5 +1,5 @@
 /* Folds module constants (canonical: compile-time evaluation of a قيمة_عليا
- * initializer, docs/TYPE_SYSTEM.md "Negation and constant arithmetic").
+ * initializer, docs/en/reference/type-system.md "Negation and constant arithmetic").
  *
  * The initializer runs with the run-time semantics: an operation that would
  * trap at run time (integer overflow, division or remainder by zero, the

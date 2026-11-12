@@ -68,6 +68,19 @@ int __Body_Infer_Unary__(__Semantic_Body_Context__ *__Context__,
         {
             return 0;
         }
+        if (__Resolved__.__Kind__ == __Resolved_Type_Pointer__ && __Resolved__.__Inner__ != NULL)
+        {
+            /* Reading through a raw pointer: only inside غير_آمن, as indexing
+             * a raw pointer is. The read is a view of the pointed storage. */
+            if (__Context__->__Unsafe_Depth__ == 0U)
+            {
+                return __Body_Fail__(__Context__,
+                                     __E0400_Mismatched_Types__,
+                                     __Expression__->__Header__.__Span__);
+            }
+            *__Out_Type__ = __Type_Unwrap_Mutable__(__Resolved__.__Inner__);
+            return 1;
+        }
         if (__Resolved__.__Kind__ != __Resolved_Type_Reference__ &&
             __Resolved__.__Kind__ != __Resolved_Type_Box__)
         {

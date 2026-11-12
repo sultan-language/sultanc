@@ -115,7 +115,7 @@
 // starts); their initialization does nothing there and LLVMGetTargetFromTriple
 // reports the target as unavailable, as for SPIR-V below. Every other host
 // links a libLLVM with all of them.
-لو (الهدف.المنصة != «windows») {
+إذا (الهدف.المنصة != «windows») {
     عام خارجي عرف LLVMInitializeAMDGPUTargetInfo(): فراغ;
     عام خارجي عرف LLVMInitializeAMDGPUTarget(): فراغ;
     عام خارجي عرف LLVMInitializeAMDGPUTargetMC(): فراغ;
@@ -247,7 +247,7 @@
     }
 }
 
-لو (الهدف.المنصة == «windows») {
+إذا (الهدف.المنصة == «windows») {
     عام عرف هيئ_هدف_إيه_إم_دي_جي_بي_يو_إل_إل_في_إم(): فراغ { دع لا_تشغيل: عدد = 0; }
     عام عرف هيئ_هدف_سبير_في_إل_إل_في_إم(): فراغ { دع لا_تشغيل: عدد = 0; }
     عام عرف هيئ_هدف_إيه_في_آر_إل_إل_في_إم(): فراغ { دع لا_تشغيل: عدد = 0; }

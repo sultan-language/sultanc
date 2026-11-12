@@ -1,3 +1,7 @@
 استورد unicode.data.version;
 
 عام عرف إصدار_بيانات_يونيكود(): نص { أرجع إصدار_بيانات_يونيكود_داخلية(); }
+
+// English names (declared with their Arabic declarations: an alias names
+// a declaration of its own module).
+عام مرادف unicode_data_version = إصدار_بيانات_يونيكود;

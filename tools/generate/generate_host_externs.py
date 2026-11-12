@@ -71,6 +71,15 @@ SHIMS = {
                 "GetEnvironmentStringsW", "GetAddrInfoW", "FreeAddrInfoW",
                 "CertEnumCertificatesInStore"},
 }
+# Shims foreign_calls.sn answers entirely, so they never reach the host
+# table: they are not re-declared here. The compiler declares __error itself
+# (host_memory.sn, `*mut i32`), and two externs binding one symbol must have
+# one signature (SULTANC-EXTERN-SYMBOL-CONFLICT), while this table writes
+# every pointer as `*u8`.
+SHIM_ONLY = {
+    "macos": {"__error"},
+    "windows": set(),
+}
 # Pointer results the generic bridge maps back without a shim: the result
 # aliases a pointer argument (getcwd returns its buffer).
 ALIASING_RESULTS = {"getcwd"}
@@ -98,7 +107,8 @@ def kind(t, recs):
         return ("int", t)
     if t == "فراغ":
         return ("void",)
-    m = re.match(r"^\*(متغير )?(.+)$", t)
+    # A reference crosses an extern as an address, like a raw pointer.
+    m = re.match(r"^[*&](متغير )?(.+)$", t)
     if m:
         inner = m.group(2).strip()
         if inner in INTS:
@@ -112,9 +122,41 @@ def kind(t, recs):
     return None
 
 
-def collect(platform_dir, plat, recs, errors):
+# std modules outside os/platform/ whose externs are audited with a
+# platform's (their declarations sit in that platform's `إذا` block).
+EXTRA_SOURCES = {
+    "macos": ["os/poll.sn"],
+    # The allocator's thread-local cache slot (TlsAlloc, TlsGetValue,
+    # TlsSetValue: integer words only).
+    "windows": ["os/allocation.sn"],
+}
+
+
+def arch_condition(text, pos):
+    """The architecture condition of the innermost enclosing `إذا (الهدف.المعمارية
+    == «a») {` / `!= «a»` block at pos: ("==", a), ("!=", a), or None."""
+    stack = []
+    line_start = 0
+    for i, ch in enumerate(text[:pos]):
+        if ch == "\n":
+            line_start = i + 1
+        elif ch == "{":
+            stack.append(text[line_start:i])
+        elif ch == "}" and stack:
+            stack.pop()
+    for header in reversed(stack):
+        m = re.search(r"الهدف\.المعمارية\s*(==|!=)\s*«([^»]+)»", header)
+        if m:
+            return (m.group(1), m.group(2))
+    return None
+
+
+def collect(platform_dir, plat, recs, errors, per_arch):
     seen = {}
-    for f in sorted((STD / platform_dir).rglob("*.sn")):
+    variants = set()
+    arches = {}
+    extra = [ROOT / "library/std" / rel for rel in EXTRA_SOURCES[plat]]
+    for f in sorted((STD / platform_dir).rglob("*.sn")) + extra:
         text = f.read_text(encoding="utf-8")
         for m in DECL.finditer(text):
             lib, name, params, ret = m.group(1), m.group(2), m.group(3), m.group(4).strip()
@@ -146,9 +188,49 @@ def collect(platform_dir, plat, recs, errors):
             for t, k in ps:
                 if k[0] == "ptr" and k[1] in ("record-with-pointers", "other") and not shimmed:
                     errors.append(f"{where}: argument {t} needs a shim in foreign_calls.sn")
+            if link in SHIM_ONLY[plat]:
+                continue
             if link in seen:
+                # The same symbol with another signature: std declares it per
+                # architecture (open and fcntl pass the variadic mode at a
+                # different position on Apple arm64). One table entry cannot
+                # hold both, and target conditions do not reach inside the
+                # dispatch function, so the interpreter resolves it at run
+                # time and calls it with the program's own declaration.
+                if [t for t, _ in seen[link][1]] != [t for t, _ in ps] or seen[link][2] != ret:
+                    variants.add(link)
                 continue
             seen[link] = (lib, ps, ret, rk)
+    for link in variants:
+        seen.pop(link, None)
+    # Per-architecture declarations of one symbol (open and fcntl pass the
+    # variadic mode on the stack on Apple arm64): each architecture's table
+    # gets its own declaration and a same-named caller that takes the
+    # program's words, so the dispatch needs no target condition and the
+    # compiled compiler calls the symbol natively with the right arguments
+    # (the dynamic path has no stack arguments).
+    for f in sorted((STD / platform_dir).rglob("*.sn")) + extra:
+        text = f.read_text(encoding="utf-8")
+        for m in DECL.finditer(text):
+            lib, name, params, ret = m.group(1), m.group(2), m.group(3), m.group(4).strip()
+            am = re.match(r"^(.*?)\s*=\s*«([^»]*)»$", ret)
+            alias = am.group(2) if am else None
+            ret = am.group(1).strip() if am else ret
+            link = alias or name
+            if link not in variants:
+                continue
+            cond = arch_condition(text, m.start())
+            if cond is None:
+                errors.append(f"{f.relative_to(ROOT)}: {link}: per-architecture variant outside an architecture block")
+                continue
+            ps = [" ".join(p.split(":", 1)[1].split()) for p in params.split(",") if ":" in p]
+            ps = [(t, kind(t, recs)) for t in ps]
+            arches.setdefault(link, {})[cond] = (lib, ps, ret, kind(ret, recs))
+    for link, by_cond in arches.items():
+        if set(by_cond) != {("==", "aarch64"), ("!=", "aarch64")}:
+            errors.append(f"{plat}: {link}: variants {sorted(by_cond)} are not one aarch64 and one other declaration")
+            continue
+        per_arch[link] = by_cond
     return seen
 
 
@@ -162,8 +244,43 @@ def word_type(t, k):
     return "*ط8" if k[0] == "ptr" else t
 
 
-def emit_platform(cond, entries):
-    out = [f"لو ({cond}) {{"]
+def call_lines(callee, ps, rk, indent):
+    """Lines that check the word count, call callee and return its result word."""
+    pad = " " * indent
+    out = [f"{pad}إذا ((الطول(*الكلمات) مثل طبيعي) != {len(ps)}) {{ أرجع اختياري.لا_شيء(); }};"]
+    args = []
+    for i, (t, k) in enumerate(ps):
+        if k[0] == "int":
+            args.append(f"(*الكلمات)[{i}] مثل {t}")
+        else:
+            args.append(f"مؤشر_من_عنوان_مضيف((*الكلمات)[{i}])")
+    call = f"{callee}({', '.join(args)})"
+    if rk[0] == "void":
+        out.append(f"{pad}{call};")
+        out.append(f"{pad}أرجع اختياري.موجود(0 مثل ط64);")
+    elif rk[0] == "ptr":
+        out.append(f"{pad}دع الناتج: *ط8 = {call};")
+        out.append(f"{pad}أرجع اختياري.موجود(عنوان_من_مؤشر_مضيف(الناتج));")
+    else:
+        out.append(f"{pad}دع الناتج: {rk[1]} = {call};")
+        out.append(f"{pad}أرجع اختياري.موجود(الناتج مثل ط64);")
+    return out
+
+
+def emit_platform(cond, entries, per_arch=None):
+    per_arch = per_arch or {}
+    out = [f"إذا ({cond}) {{"]
+    for link, by_cond in sorted(per_arch.items()):
+        for c_op, c_arch in [("==", "aarch64"), ("!=", "aarch64")]:
+            lib, ps, ret, rk = by_cond[(c_op, c_arch)]
+            params = ", ".join(f"م{i}: {word_type(t, k)}" for i, (t, k) in enumerate(ps))
+            result = "*ط8" if rk[0] == "ptr" else ret
+            out.append(f"    إذا (الهدف.المعمارية {c_op} «{c_arch}») {{")
+            out.append(f"        خارجي «{lib}» عرف مضيف_{local(link)}({params}): {result} = «{link}»;")
+            out.append(f"        عرف نادي_مضيف_{local(link)}(الكلمات: &متجه ط64): اختياري ط64 {{")
+            out += call_lines(f"مضيف_{local(link)}", ps, rk, 12)
+            out.append("        }")
+            out.append("    }")
     for link, (lib, ps, ret, rk) in sorted(entries.items()):
         params = ", ".join(f"م{i}: {word_type(t, k)}" for i, (t, k) in enumerate(ps))
         result = "*ط8" if rk[0] == "ptr" else ret
@@ -173,7 +290,7 @@ def emit_platform(cond, entries):
             # link_name = "stat$INODE64" behind not(target_arch = "aarch64")).
             # arm64 has only the 64-bit-inode ABI, under the plain name.
             plain = link.replace("$INODE64", "")
-            out.append("    لو (الهدف.المعمارية == «x86_64») {")
+            out.append("    إذا (الهدف.المعمارية == «x86_64») {")
             out.append(f"        {decl} = «{link}»;")
             out.append("    } وإلا {")
             out.append(f"        {decl} = «{plain}»;")
@@ -182,8 +299,8 @@ def emit_platform(cond, entries):
         out.append(f"    {decl} = «{link}»;")
     out.append("")
     out.append("    عام عرف دالة_خارجية_مضيف_معروفة(الاسم: &متجه ط8): منطقي {")
-    for link in sorted(entries):
-        out.append(f"        لو (بايتات_تساوي_نص_خارجية(الاسم, «{link}»)) {{ أرجع صواب; }};")
+    for link in sorted(list(entries) + list(per_arch)):
+        out.append(f"        إذا (بايتات_تساوي_نص_خارجية(الاسم, «{link}»)) {{ أرجع صواب; }};")
     out.append("        أرجع خطأ;")
     out.append("    }")
     out.append("")
@@ -191,9 +308,11 @@ def emit_platform(cond, entries):
     out.append("    // extended to 64 bits, or a host address) and returns its result word")
     out.append("    // (0 for فراغ); لا_شيء for an unknown name or a wrong argument count.")
     out.append("    عام عرف نفذ_دالة_خارجية_مضيف(الاسم: &متجه ط8, الكلمات: &متجه ط64): اختياري ط64 {")
+    for link in sorted(per_arch):
+        out.append(f"        إذا (بايتات_تساوي_نص_خارجية(الاسم, «{link}»)) {{ أرجع نادي_مضيف_{local(link)}(الكلمات); }};")
     for link, (lib, ps, ret, rk) in sorted(entries.items()):
-        out.append(f"        لو (بايتات_تساوي_نص_خارجية(الاسم, «{link}»)) {{")
-        out.append(f"            لو ((الطول(*الكلمات) مثل طبيعي) != {len(ps)}) {{ أرجع اختياري.لا_شيء(); }};")
+        out.append(f"        إذا (بايتات_تساوي_نص_خارجية(الاسم, «{link}»)) {{")
+        out.append(f"            إذا ((الطول(*الكلمات) مثل طبيعي) != {len(ps)}) {{ أرجع اختياري.لا_شيء(); }};")
         args = []
         for i, (t, k) in enumerate(ps):
             if k[0] == "int":
@@ -221,13 +340,15 @@ def emit_platform(cond, entries):
 def main():
     recs = records()
     errors = []
-    win = collect("windows", "windows", recs, errors)
-    mac = collect("unix/apple", "macos", recs, errors)
+    win_arch = {}
+    mac_arch = {}
+    win = collect("windows", "windows", recs, errors, win_arch)
+    mac = collect("unix/apple", "macos", recs, errors, mac_arch)
     # An extern outside the per-OS directories could reach macOS or Windows
     # without being audited here: std keeps every extern in os/platform.
     for f in sorted((ROOT / "library/std").rglob("*.sn")):
         rel = f.relative_to(ROOT / "library/std").as_posix()
-        if rel.startswith("os/platform/"):
+        if rel.startswith("os/platform/") or any(rel in v for v in EXTRA_SOURCES.values()):
             continue
         if DECL.search(f.read_text(encoding="utf-8")):
             errors.append(f"library/std/{rel}: extern outside os/platform/ (not audited for the interpreter)")
@@ -249,21 +370,21 @@ def main():
         "استورد compiler.interpreter.execution.host_memory;",
         "",
         "عرف بايتات_تساوي_نص_خارجية(الأولى: &متجه ط8, الثاني: نص): منطقي {",
-        "    لو ((الطول(*الأولى) مثل طبيعي) != (الطول(الثاني) مثل طبيعي)) { أرجع خطأ; };",
+        "    إذا ((الطول(*الأولى) مثل طبيعي) != (الطول(الثاني) مثل طبيعي)) { أرجع خطأ; };",
         "    دع ف: متغير طبيعي = 0;",
         "    طالما (ف < (الطول(الثاني) مثل طبيعي)) {",
-        "        لو ((*الأولى)[ف] != الثاني[ف]) { أرجع خطأ; };",
+        "        إذا ((*الأولى)[ف] != الثاني[ف]) { أرجع خطأ; };",
         "        ف := ف + 1;",
         "    }",
         "    أرجع صواب;",
         "}",
         "",
     ]
-    lines += emit_platform("الهدف.المنصة == «windows»", win)
+    lines += emit_platform("الهدف.المنصة == «windows»", win, win_arch)
     lines.append("")
-    lines += emit_platform("الهدف.المنصة == «macos»", mac)
+    lines += emit_platform("الهدف.المنصة == «macos»", mac, mac_arch)
     lines.append("")
-    lines.append("لو (الهدف.المنصة != «windows» && الهدف.المنصة != «macos») {")
+    lines.append("إذا (الهدف.المنصة != «windows» && الهدف.المنصة != «macos») {")
     lines.append("    عام عرف دالة_خارجية_مضيف_معروفة(الاسم: &متجه ط8): منطقي { أرجع خطأ; }")
     lines.append("    عام عرف نفذ_دالة_خارجية_مضيف(الاسم: &متجه ط8, الكلمات: &متجه ط64): اختياري ط64 {")
     lines.append("        أرجع اختياري.لا_شيء();")

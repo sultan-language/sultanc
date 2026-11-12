@@ -357,6 +357,73 @@ static int __Body_Builtin_Vector_Primitive__(__Semantic_Body_Context__ *__Contex
     }
 }
 
+/* extend_from (compiler/frontend/types/primitive_call.sn, إلحاق_نطاق_متجه):
+ * the first operand is a mutable vector place of an integer element Type;
+ * the second is a reference to a vector of that element Type, or to a text
+ * when the element Type is ط8; the start and the count are integers
+ * (طبيعي). The verified source reference Type is kept on its operand for
+ * the emitter. */
+static int __Body_Builtin_Extend_From__(__Semantic_Body_Context__ *__Context__,
+                                        __Ast_Expression__ *__Expression__,
+                                        __Ast_Type__ **__Out_Type__)
+{
+    __Ast_Expression__ **__Arguments__ = __Expression__->__As__.__Call__.__Arguments__;
+    __Resolved_Type__ __Resolved__;
+    __Resolved_Type__ __Element__;
+    __Resolved_Type__ __Source__;
+    __Resolved_Type__ __Source_Sequence__;
+    __Semantic_Local__ *__Local__ = NULL;
+    __Ast_Type__ *__Source_Type__ = NULL;
+    __Ast_Type__ *__Persisted__;
+    int __Matches__;
+    if (__Expression__->__As__.__Call__.__Argument_Count__ != 4U)
+    {
+        return __Body_Fail__(__Context__, __E0400_Mismatched_Types__, __Expression__->__Header__.__Span__);
+    }
+    if (!__Body_Builtin_Vector_Place__(__Context__, __Expression__, &__Resolved__, &__Local__))
+    {
+        return 0;
+    }
+    if (!__Type_Resolve__(__Context__->__Semantic__, __Resolved__.__Inner__, &__Element__) ||
+        (__Element__.__Kind__ != __Resolved_Type_Signed_Integer__ &&
+         __Element__.__Kind__ != __Resolved_Type_Unsigned_Integer__))
+    {
+        return __Body_Fail__(__Context__, __E0400_Mismatched_Types__, __Arguments__[0]->__Header__.__Span__);
+    }
+    if (!__Body_Infer_Expression__(__Context__, __Arguments__[1], &__Source_Type__) ||
+        !__Type_Resolve__(__Context__->__Semantic__, __Source_Type__, &__Source__))
+    {
+        return 0;
+    }
+    __Matches__ = __Source__.__Kind__ == __Resolved_Type_Reference__ && __Source__.__Inner__ != NULL &&
+                  __Type_Resolve__(__Context__->__Semantic__, __Source__.__Inner__, &__Source_Sequence__) &&
+                  ((__Source_Sequence__.__Kind__ == __Resolved_Type_Vector__ &&
+                    __Source_Sequence__.__Inner__ != NULL &&
+                    __Type_Compatible__(__Context__->__Semantic__, __Source_Sequence__.__Inner__,
+                                        __Resolved__.__Inner__) &&
+                    __Type_Compatible__(__Context__->__Semantic__, __Resolved__.__Inner__,
+                                        __Source_Sequence__.__Inner__)) ||
+                   (__Source_Sequence__.__Kind__ == __Resolved_Type_String__ &&
+                    __Element__.__Kind__ == __Resolved_Type_Unsigned_Integer__ && __Element__.__Bits__ == 8U));
+    if (!__Matches__)
+    {
+        return __Body_Fail__(__Context__, __E0400_Mismatched_Types__, __Arguments__[1]->__Header__.__Span__);
+    }
+    __Persisted__ = __Body_Persist_Type__(__Context__, __Source_Type__);
+    if (__Persisted__ == NULL)
+    {
+        return __Body_Fail__(__Context__, __E1100_Internal_Context_Error__, __Expression__->__Header__.__Span__);
+    }
+    __Arguments__[1]->__Contextual_Type__ = __Persisted__;
+    if (!__Body_Builtin_Integer_Operand__(__Context__, __Arguments__[2]) ||
+        !__Body_Builtin_Integer_Operand__(__Context__, __Arguments__[3]))
+    {
+        return 0;
+    }
+    *__Out_Type__ = &__Body_Builtin_Void_Type__;
+    return 1;
+}
+
 /* The wrapping arithmetic primitives: two operands of one integer Type. */
 static int __Body_Builtin_Wrapping__(__Semantic_Body_Context__ *__Context__,
                                      __Ast_Expression__ *__Expression__,
@@ -494,6 +561,225 @@ static int __Body_Builtin_Require_Argument_Count__(__Semantic_Body_Context__ *__
     }
     return __Body_Fail__(
         __Context__, __E0400_Mismatched_Types__, __Expression__->__Header__.__Span__);
+}
+
+/* Checks a memory-ordering operand of an atomic primitive or the fence: a u32
+ * code (0 Relaxed, 1 Release, 2 Acquire, 3 AcqRel, 4 SeqCst). */
+static int __Body_Builtin_Ordering_Operand__(__Semantic_Body_Context__ *__Context__,
+                                             __Ast_Expression__ *__Operand__)
+{
+    return __Body_Check_Expression_Compatible__(__Context__, &__Body_Builtin_U32_Type__, __Operand__,
+                                                __Operand__->__Header__.__Span__);
+}
+
+/* The atomic primitives (compiler/frontend/types/primitive_call.sn,
+ * هل_مرجع_ذري_لبدائي): the first operand is a reference (mutable or not) to a
+ * 32- or 64-bit integer, عدد or طبيعي; the value operands have that integer's
+ * Type and the trailing operands are u32 ordering codes. Load, swap,
+ * compare-and-swap and the fetch operations answer the referenced Type (the
+ * old value); store answers nothing. The fence takes one ordering. The
+ * verified reference Type is kept on the first operand and the result Type on
+ * the call, both persisted for the emitter. */
+static int __Body_Builtin_Atomic__(__Semantic_Body_Context__ *__Context__,
+                                   __Ast_Expression__ *__Expression__,
+                                   __Name_Builtin_Function__ __Builtin__,
+                                   __Ast_Type__ **__Out_Type__)
+{
+    __Ast_Expression__ **__Arguments__ = __Expression__->__As__.__Call__.__Arguments__;
+    __Ast_Type__ *__Reference_Type__ = NULL;
+    __Ast_Type__ *__Persisted_Reference__;
+    __Ast_Type__ *__Cell_Type__;
+    __Resolved_Type__ __Reference__;
+    __Resolved_Type__ __Cell__;
+    size_t __Count__;
+    size_t __Values__;
+    size_t __Index__;
+    if (__Builtin__ == __Name_Builtin_Memory_Fence__)
+    {
+        if (!__Body_Builtin_Require_Argument_Count__(__Context__, __Expression__, 1U) ||
+            !__Body_Builtin_Ordering_Operand__(__Context__, __Arguments__[0]))
+            return 0;
+        __Expression__->__Contextual_Type__ = &__Body_Builtin_Void_Type__;
+        *__Out_Type__ = &__Body_Builtin_Void_Type__;
+        return 1;
+    }
+    switch (__Builtin__)
+    {
+        case __Name_Builtin_Atomic_Load__:
+            __Count__ = 2U;
+            __Values__ = 0U;
+            break;
+        case __Name_Builtin_Atomic_Compare_Swap__:
+            __Count__ = 5U;
+            __Values__ = 2U;
+            break;
+        default:
+            __Count__ = 3U;
+            __Values__ = 1U;
+            break;
+    }
+    if (!__Body_Builtin_Require_Argument_Count__(__Context__, __Expression__, __Count__))
+        return 0;
+    if (!__Body_Infer_Expression__(__Context__, __Arguments__[0], &__Reference_Type__) ||
+        !__Type_Resolve__(__Context__->__Semantic__, __Reference_Type__, &__Reference__))
+        return 0;
+    if (__Reference__.__Kind__ != __Resolved_Type_Reference__ || __Reference__.__Inner__ == NULL ||
+        !__Type_Resolve__(__Context__->__Semantic__, __Reference__.__Inner__, &__Cell__) ||
+        (__Cell__.__Kind__ != __Resolved_Type_Signed_Integer__ &&
+         __Cell__.__Kind__ != __Resolved_Type_Unsigned_Integer__) ||
+        (__Cell__.__Bits__ != 32U && __Cell__.__Bits__ != 64U))
+        return __Body_Fail__(__Context__, __E0400_Mismatched_Types__,
+                             __Arguments__[0]->__Header__.__Span__);
+    __Persisted_Reference__ = __Body_Persist_Type__(__Context__, __Reference_Type__);
+    if (__Persisted_Reference__ == NULL)
+        return __Body_Fail__(__Context__, __E1100_Internal_Context_Error__,
+                             __Expression__->__Header__.__Span__);
+    __Arguments__[0]->__Contextual_Type__ = __Persisted_Reference__;
+    if (!__Type_Resolve__(__Context__->__Semantic__, __Persisted_Reference__, &__Reference__) ||
+        __Reference__.__Inner__ == NULL)
+        return __Body_Fail__(__Context__, __E1100_Internal_Context_Error__,
+                             __Expression__->__Header__.__Span__);
+    __Cell_Type__ = __Reference__.__Inner__;
+    for (__Index__ = 1U; __Index__ < __Count__; ++__Index__)
+    {
+        if (__Index__ <= __Values__)
+        {
+            if (!__Body_Check_Expression_Compatible__(__Context__, __Cell_Type__, __Arguments__[__Index__],
+                                                      __Arguments__[__Index__]->__Header__.__Span__))
+                return 0;
+        }
+        else if (!__Body_Builtin_Ordering_Operand__(__Context__, __Arguments__[__Index__]))
+            return 0;
+    }
+    if (__Builtin__ == __Name_Builtin_Atomic_Store__)
+    {
+        __Expression__->__Contextual_Type__ = &__Body_Builtin_Void_Type__;
+        *__Out_Type__ = &__Body_Builtin_Void_Type__;
+        return 1;
+    }
+    __Expression__->__Contextual_Type__ = __Cell_Type__;
+    *__Out_Type__ = __Cell_Type__;
+    return 1;
+}
+
+/* Flat machine memory (compiler/frontend/types/primitive_call.sn): every
+ * operand is a u64 (the address, and the stored word). Read answers the u64
+ * word; write answers nothing. */
+static int __Body_Builtin_Machine_Memory__(__Semantic_Body_Context__ *__Context__,
+                                           __Ast_Expression__ *__Expression__,
+                                           __Name_Builtin_Function__ __Builtin__,
+                                           __Ast_Type__ **__Out_Type__)
+{
+    size_t __Count__ = __Builtin__ == __Name_Builtin_Machine_Memory_Read__ ? 1U : 2U;
+    size_t __Index__;
+    if (!__Body_Builtin_Require_Argument_Count__(__Context__, __Expression__, __Count__))
+        return 0;
+    for (__Index__ = 0U; __Index__ < __Count__; ++__Index__)
+    {
+        __Ast_Expression__ *__Argument__ = __Expression__->__As__.__Call__.__Arguments__[__Index__];
+        if (!__Body_Check_Expression_Compatible__(__Context__, &__Body_Builtin_U64_Type__, __Argument__,
+                                                  __Argument__->__Header__.__Span__))
+            return 0;
+    }
+    *__Out_Type__ = __Builtin__ == __Name_Builtin_Machine_Memory_Read__ ? &__Body_Builtin_U64_Type__
+                                                                       : &__Body_Builtin_Void_Type__;
+    __Expression__->__Contextual_Type__ = *__Out_Type__;
+    return 1;
+}
+
+/* WebAssembly linear memory (compiler/frontend/types/primitive_call.sn): every
+ * operand is a u32. Grow, read and heap base answer a u32; write and copy
+ * answer nothing. Only wasm32 lowers them (checked by the emitter). */
+static int __Body_Builtin_Linear_Memory__(__Semantic_Body_Context__ *__Context__,
+                                          __Ast_Expression__ *__Expression__,
+                                          __Name_Builtin_Function__ __Builtin__,
+                                          __Ast_Type__ **__Out_Type__)
+{
+    size_t __Count__;
+    size_t __Index__;
+    switch (__Builtin__)
+    {
+        case __Name_Builtin_Linear_Heap_Base__:
+            __Count__ = 0U;
+            break;
+        case __Name_Builtin_Linear_Memory_Write__:
+            __Count__ = 2U;
+            break;
+        case __Name_Builtin_Linear_Memory_Copy__:
+            __Count__ = 3U;
+            break;
+        default:
+            __Count__ = 1U;
+            break;
+    }
+    if (!__Body_Builtin_Require_Argument_Count__(__Context__, __Expression__, __Count__))
+        return 0;
+    for (__Index__ = 0U; __Index__ < __Count__; ++__Index__)
+    {
+        __Ast_Expression__ *__Argument__ = __Expression__->__As__.__Call__.__Arguments__[__Index__];
+        if (!__Body_Check_Expression_Compatible__(__Context__, &__Body_Builtin_U32_Type__, __Argument__,
+                                                  __Argument__->__Header__.__Span__))
+            return 0;
+    }
+    *__Out_Type__ = (__Builtin__ == __Name_Builtin_Linear_Memory_Write__ ||
+                     __Builtin__ == __Name_Builtin_Linear_Memory_Copy__)
+                        ? &__Body_Builtin_Void_Type__
+                        : &__Body_Builtin_U32_Type__;
+    __Expression__->__Contextual_Type__ = *__Out_Type__;
+    return 1;
+}
+
+/* The number of operands of a float operation. */
+static size_t __Body_Builtin_Float_Operand_Count__(__Name_Builtin_Function__ __Builtin__)
+{
+    switch (__Builtin__)
+    {
+        case __Name_Builtin_Float_Minimum__:
+        case __Name_Builtin_Float_Maximum__:
+        case __Name_Builtin_Float_Copy_Sign__:
+            return 2U;
+        case __Name_Builtin_Float_Fused_Multiply_Add__:
+            return 3U;
+        default:
+            return 1U;
+    }
+}
+
+/* The float operations (compiler/frontend/types/primitive_call.sn): the first
+ * operand has a float Type (f32 or f64) and every other operand has that
+ * Type, which is also the result Type, persisted on the call. */
+static int __Body_Builtin_Float_Operation__(__Semantic_Body_Context__ *__Context__,
+                                            __Ast_Expression__ *__Expression__,
+                                            __Name_Builtin_Function__ __Builtin__,
+                                            __Ast_Type__ **__Out_Type__)
+{
+    __Ast_Expression__ **__Arguments__ = __Expression__->__As__.__Call__.__Arguments__;
+    size_t __Count__ = __Body_Builtin_Float_Operand_Count__(__Builtin__);
+    __Ast_Type__ *__Type__ = NULL;
+    __Ast_Type__ *__Persisted__;
+    __Resolved_Type__ __Resolved__;
+    size_t __Index__;
+    if (!__Body_Builtin_Require_Argument_Count__(__Context__, __Expression__, __Count__))
+        return 0;
+    if (!__Body_Infer_Expression__(__Context__, __Arguments__[0], &__Type__) ||
+        !__Type_Resolve__(__Context__->__Semantic__, __Type__, &__Resolved__))
+        return 0;
+    if (__Resolved__.__Kind__ != __Resolved_Type_Float__ ||
+        (__Resolved__.__Bits__ != 32U && __Resolved__.__Bits__ != 64U))
+        return __Body_Fail__(__Context__, __E0400_Mismatched_Types__, __Arguments__[0]->__Header__.__Span__);
+    __Persisted__ = __Body_Persist_Type__(__Context__, __Type__);
+    if (__Persisted__ == NULL)
+        return __Body_Fail__(__Context__, __E1100_Internal_Context_Error__,
+                             __Expression__->__Header__.__Span__);
+    for (__Index__ = 1U; __Index__ < __Count__; ++__Index__)
+    {
+        if (!__Body_Check_Expression_Compatible__(__Context__, __Persisted__, __Arguments__[__Index__],
+                                                  __Arguments__[__Index__]->__Header__.__Span__))
+            return 0;
+    }
+    __Expression__->__Contextual_Type__ = __Persisted__;
+    *__Out_Type__ = __Persisted__;
+    return 1;
 }
 
 /* Returns the retained compiler builtin type. */
@@ -658,11 +944,38 @@ static int __Body_Builtin_Runtime__(__Semantic_Body_Context__ *__Context__,
         case __Name_Builtin_Reserve_Exact__:
         case __Name_Builtin_Pop__:
         case __Name_Builtin_Truncate__:
+        case __Name_Builtin_Extend_From__:
         case __Name_Builtin_Wrapping_Add__:
         case __Name_Builtin_Wrapping_Subtract__:
         case __Name_Builtin_Wrapping_Multiply__:
         case __Name_Builtin_Wrapping_Shift_Left__:
         case __Name_Builtin_Wrapping_Shift_Right__:
+        case __Name_Builtin_Atomic_Load__:
+        case __Name_Builtin_Atomic_Store__:
+        case __Name_Builtin_Atomic_Swap__:
+        case __Name_Builtin_Atomic_Compare_Swap__:
+        case __Name_Builtin_Atomic_Fetch_Add__:
+        case __Name_Builtin_Atomic_Fetch_And__:
+        case __Name_Builtin_Atomic_Fetch_Or__:
+        case __Name_Builtin_Atomic_Fetch_Xor__:
+        case __Name_Builtin_Memory_Fence__:
+        case __Name_Builtin_Machine_Memory_Read__:
+        case __Name_Builtin_Machine_Memory_Write__:
+        case __Name_Builtin_Linear_Memory_Grow__:
+        case __Name_Builtin_Linear_Memory_Read__:
+        case __Name_Builtin_Linear_Memory_Write__:
+        case __Name_Builtin_Linear_Memory_Copy__:
+        case __Name_Builtin_Linear_Heap_Base__:
+        case __Name_Builtin_Float_Sqrt__:
+        case __Name_Builtin_Float_Abs__:
+        case __Name_Builtin_Float_Floor__:
+        case __Name_Builtin_Float_Ceil__:
+        case __Name_Builtin_Float_Trunc__:
+        case __Name_Builtin_Float_Round_Even__:
+        case __Name_Builtin_Float_Minimum__:
+        case __Name_Builtin_Float_Maximum__:
+        case __Name_Builtin_Float_Copy_Sign__:
+        case __Name_Builtin_Float_Fused_Multiply_Add__:
             return 0;
     }
 
@@ -726,12 +1039,59 @@ int __Body_Try_Infer_Builtin_Call__(__Semantic_Body_Context__ *__Context__,
                 return 0;
             __Expression__->__Semantic_Effects_Applied__ = 1;
             return 1;
+        case __Name_Builtin_Extend_From__:
+            if (!__Body_Builtin_Extend_From__(__Context__, __Expression__, __Out_Type__))
+                return 0;
+            __Expression__->__Semantic_Effects_Applied__ = 1;
+            return 1;
         case __Name_Builtin_Wrapping_Add__:
         case __Name_Builtin_Wrapping_Subtract__:
         case __Name_Builtin_Wrapping_Multiply__:
         case __Name_Builtin_Wrapping_Shift_Left__:
         case __Name_Builtin_Wrapping_Shift_Right__:
             if (!__Body_Builtin_Wrapping__(__Context__, __Expression__, __Out_Type__))
+                return 0;
+            __Expression__->__Semantic_Effects_Applied__ = 1;
+            return 1;
+        case __Name_Builtin_Atomic_Load__:
+        case __Name_Builtin_Atomic_Store__:
+        case __Name_Builtin_Atomic_Swap__:
+        case __Name_Builtin_Atomic_Compare_Swap__:
+        case __Name_Builtin_Atomic_Fetch_Add__:
+        case __Name_Builtin_Atomic_Fetch_And__:
+        case __Name_Builtin_Atomic_Fetch_Or__:
+        case __Name_Builtin_Atomic_Fetch_Xor__:
+        case __Name_Builtin_Memory_Fence__:
+            if (!__Body_Builtin_Atomic__(__Context__, __Expression__, __Builtin__, __Out_Type__))
+                return 0;
+            __Expression__->__Semantic_Effects_Applied__ = 1;
+            return 1;
+        case __Name_Builtin_Machine_Memory_Read__:
+        case __Name_Builtin_Machine_Memory_Write__:
+            if (!__Body_Builtin_Machine_Memory__(__Context__, __Expression__, __Builtin__, __Out_Type__))
+                return 0;
+            __Expression__->__Semantic_Effects_Applied__ = 1;
+            return 1;
+        case __Name_Builtin_Linear_Memory_Grow__:
+        case __Name_Builtin_Linear_Memory_Read__:
+        case __Name_Builtin_Linear_Memory_Write__:
+        case __Name_Builtin_Linear_Memory_Copy__:
+        case __Name_Builtin_Linear_Heap_Base__:
+            if (!__Body_Builtin_Linear_Memory__(__Context__, __Expression__, __Builtin__, __Out_Type__))
+                return 0;
+            __Expression__->__Semantic_Effects_Applied__ = 1;
+            return 1;
+        case __Name_Builtin_Float_Sqrt__:
+        case __Name_Builtin_Float_Abs__:
+        case __Name_Builtin_Float_Floor__:
+        case __Name_Builtin_Float_Ceil__:
+        case __Name_Builtin_Float_Trunc__:
+        case __Name_Builtin_Float_Round_Even__:
+        case __Name_Builtin_Float_Minimum__:
+        case __Name_Builtin_Float_Maximum__:
+        case __Name_Builtin_Float_Copy_Sign__:
+        case __Name_Builtin_Float_Fused_Multiply_Add__:
+            if (!__Body_Builtin_Float_Operation__(__Context__, __Expression__, __Builtin__, __Out_Type__))
                 return 0;
             __Expression__->__Semantic_Effects_Applied__ = 1;
             return 1;

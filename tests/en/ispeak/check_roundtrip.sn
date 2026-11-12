@@ -72,7 +72,7 @@ def main(): int {
         | _ -> { };
         number := number + 1;
     }
-    if (public_count != 142 || (length(all_keys) as uint) != 645) { return 6; };
+    if (public_count != 221 || (length(all_keys) as uint) != 900) { return 6; };
     let unknown_code: string = "SULTANC-E0001";
     match معرف_تشخيص_من_كود(&unknown_code) with
     | option.none -> { }

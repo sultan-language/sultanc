@@ -1,0 +1,2 @@
+// Fixture of tests/en/compiler/tooling/isolation.sn (not a test).
+public def independent_value(): int { return 3; }

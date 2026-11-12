@@ -1,5 +1,5 @@
 // يمكن للتصريح الخارجي أن يسمي المكتبة التي تصدّره ورمز الربط الدقيق الذي
-// يرتبط به (docs/PLATFORM_DEPENDENCIES.md).
+// يرتبط به (docs/en/reference/platform-dependencies.md).
 خارجي «kernel32.dll» عرف GetTickCount64(): ط64;
 خارجي «/usr/lib/libSystem.B.dylib» عرف stat_inode64(المسار: *ط8, المعلومات: *متغير ط8): ص32 = «stat$INODE64»;
 خارجي عرف labs_alias(القيمة: ص64): ص64 = «labs»;

@@ -1,0 +1,54 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// مرحلة0: نعم
+// نظير: tests/ar/language/stage0/call_borrow.sn
+// A shared borrow of a call result, `&f(x)`, as a call argument: the result
+// is a temporary made before the call and dropped after it, in the C Stage0
+// as in the self-hosted compiler, so no named local is needed to pass a call
+// result to a `&string` or `&vector` parameter. Nested borrows work, and a
+// borrow in a loop releases each result: the allocator's live bytes are the
+// same after a thousand of them. Native, the interpreter and Stage0 agree.
+import std.os.allocation;
+import std.text.number;
+
+def size(text: &string): int { return length(*text) as int; }
+
+def count(values: &vector int): int { return length(*values) as int; }
+
+def joined(first: &string, second: &string): string {
+    let bytes: mutable vector u8 = [];
+    let i: mutable uint = 0;
+    while (i < (length(*first) as uint)) { append(bytes, (*first)[i]); i := i + 1; }
+    i := 0;
+    while (i < (length(*second) as uint)) { append(bytes, (*second)[i]); i := i + 1; }
+    return bytes as string;
+}
+
+def numbers(n: int): vector int {
+    let values: mutable vector int = [];
+    let i: mutable int = 0;
+    while (i < n) { append(values, i); i := i + 1; }
+    return values;
+}
+
+def main(): int {
+    let a: string = "ab";
+    let b: string = "cd";
+    // "abcde": the inner result is dropped after the inner call, the outer
+    // one after size.
+    let nested: int = size(&joined(&joined(&a, &b), &"e"));
+    let before: u64 = بايتات_حية_مخصص_النظام();
+    let digits: mutable int = 0;
+    let i: mutable int = 0;
+    while (i < 1000) {
+        digits := digits + size(&int_to_text(i));
+        i := i + 1;
+    }
+    let after: u64 = بايتات_حية_مخصص_النظام();
+    if (after != before) { return 1; };
+    // 10 one-digit, 90 two-digit and 900 three-digit numbers.
+    if (digits != 2890) { return 2; };
+    return nested + count(&numbers(3)) + 34;
+}

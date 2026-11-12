@@ -3,7 +3,7 @@
 استورد compiler.frontend.names.identifiers;
 
 // Ownership facts that SSF proves and MSIR drop elaboration consumes (see
-// docs/OWNERSHIP_AND_DESTRUCTION.md, "Destruction"). SSF is the only owner of
+// docs/en/reference/ownership.md, "Destruction"). SSF is the only owner of
 // move and view semantics; lowering never re-derives them.
 //   النقول   the span of every local name use that moves the local's value
 //            out (a value transfer, or an explicit release). Lowering clears
@@ -23,9 +23,9 @@
 };
 
 // A name use is identified by where it starts: its source and first byte
-// (sources stay below 2^24 and files below 2^40 bytes).
+// (both 32-bit, span.sn, so the key is exact).
 عرف مفتاح_نطاق_ملكية(النطاق: &نطاق): طبيعي {
-    أرجع ((*النطاق).البداية.المصدر * 1099511627776) + (*النطاق).البداية.البايت;
+    أرجع (((*النطاق).البداية.المصدر مثل طبيعي) * 1099511627776) + ((*النطاق).البداية.البايت مثل طبيعي);
 }
 
 عرف هاش_مفتاح_ملكية(المفتاح: &طبيعي): طبيعي {
@@ -56,14 +56,14 @@
 
 // Records that the local الرمز is a borrowed view.
 عام عرف سجل_عرض_ملكية(الحقائق: &متغير حقائق_ملكية_تدفق, الرمز: معرف_رمز): فراغ {
-    طابق أدرج_في_الخريطة(&متغير (*الحقائق).العروض, الرمز.القيمة, صواب) مع
+    طابق أدرج_في_الخريطة(&متغير (*الحقائق).العروض, الرمز.القيمة مثل طبيعي, صواب) مع
     | نتيجة.نجح(_) -> { }
     | نتيجة.خطأ(_) -> { };
 }
 
 // Records that the module value الرمز is a substituted compile-time constant.
 عام عرف سجل_عليا_ثابتة(الحقائق: &متغير حقائق_ملكية_تدفق, الرمز: معرف_رمز): فراغ {
-    طابق أدرج_في_الخريطة(&متغير (*الحقائق).العليا_الثابتة, الرمز.القيمة, صواب) مع
+    طابق أدرج_في_الخريطة(&متغير (*الحقائق).العليا_الثابتة, الرمز.القيمة مثل طبيعي, صواب) مع
     | نتيجة.نجح(_) -> { }
     | نتيجة.خطأ(_) -> { };
 }

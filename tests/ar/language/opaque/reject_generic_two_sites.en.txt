@@ -1,0 +1,12 @@
+error[SULTANC-TYPE-OPAQUE-TYPE-ARGUMENT]: this generic instance needs the layout of an opaque type argument — The opaque type is `قاعدة`.
+  --> tests/ar/language/opaque/reject_generic_two_sites.sn:19:16..19:34
+    |
+ 19 |     أرجع جيد + اقرأ(0 مثل *قاعدة);
+    |                ^^^^^^^^^^^^^^^^^^
+    |
+  ::: tests/ar/language/opaque/reject_generic_two_sites.sn:13:15..13:33
+    |
+ 13 |     غير_آمن { دع النسخة: أ = *م; };
+    |               ^^^^^^^^^^^^^^^^^^ related context
+    |
+  = help: pass the pointer type `*T` as the type argument instead

@@ -13,6 +13,7 @@
 استورد compiler.backend.provider.llvm.lowering;
 استورد compiler.backend.provider.llvm.optimization;
 استورد compiler.backend.provider.llvm.emission;
+استورد compiler.backend.provider.llvm.freestanding_check;
 استورد compiler.backend.provider.llvm.entry;
 استورد compiler.backend.provider.llvm.debuginfo;
 استورد compiler.backend.provider.llvm.toolchain;
@@ -40,7 +41,7 @@
 // platform (`الهدف.المنصة != «wasi»`): every non-WASI compiler carried the
 // LLVM C API, so a Native-generated arm64-darwin compiler needed a Darwin
 // libLLVM at link time even when it was meant to be Native-only, and a WASI
-// compiler could never include LLVM. See docs/SULTANC_KERNEL_ARCHITECTURE.md ("Compiler-build capabilities").
+// compiler could never include LLVM. See docs/en/internals/compiler-architecture.md ("Compiler-build capabilities").
 
 // مدخل مزود LLVM المنتج. يستهلك MSIR المتحقق وحقائق Target/Layout المقننة فقط.
 // لا يملك سياق تجميع موازيا ولا يعيد بناء حقائق الواجهة أو الأنواع.
@@ -101,6 +102,17 @@
     }
     | اختياري.لا_شيء -> { };
 
+    // Operations the target would need a run-time routine for fail at their
+    // source location before lowering (Cortex-M, freestanding_check.sn).
+    طابق افحص_عمليات_بلا_روتين_مسير_إل_إل_في_إم(المسير, حقائق_الخلفية, الهدف, التصحيح, المصادر, الأصول,
+        &الدوال_المطلوبة) مع
+    | اختياري.موجود(خ) -> {
+        حرر_حالة_تصحيح_إل_إل_في_إم(&متغير حالة_التصحيح);
+        حرر_حالة_مزود_إل_إل_في_إم(&متغير الحالة);
+        أرجع نتيجة_مزود_إل_إل_في_إم.خطأ(خ);
+    }
+    | اختياري.لا_شيء -> { };
+
     طابق اخفض_كل_دوال_إل_إل_في_إم(&متغير الحالة, &متغير حالة_التصحيح, المسير, حقائق_الخلفية, الهدف, سجل_التخطيط,
         التصحيح, المصادر, الأصول, &الدوال_المطلوبة) مع
     | اختياري.موجود(خ) -> {
@@ -118,7 +130,18 @@
     }
     | اختياري.لا_شيء -> { };
     اختم_حالة_تصحيح_إل_إل_في_إم(&متغير حالة_التصحيح);
+    علّم_جداول_فك_المكدس_إل_إل_في_إم(&الحالة, الهدف);
     طابق تحقق_وحسن_وحدة_إل_إل_في_إم(&الحالة, المستوى) مع
+    | اختياري.موجود(خ) -> {
+        حرر_حالة_تصحيح_إل_إل_في_إم(&متغير حالة_التصحيح);
+        حرر_حالة_مزود_إل_إل_في_إم(&متغير الحالة);
+        أرجع نتيجة_مزود_إل_إل_في_إم.خطأ(خ);
+    }
+    | اختياري.لا_شيء -> { };
+
+    // What lowering and optimization formed that the target lacks: expanded
+    // (ARMv6-M 64-bit multiply and shifts) or rejected at its function.
+    طابق اخفض_روتينات_التشغيل_بمواقع_إل_إل_في_إم(&الحالة, الهدف, التصحيح, المصادر, الأصول) مع
     | اختياري.موجود(خ) -> {
         حرر_حالة_تصحيح_إل_إل_في_إم(&متغير حالة_التصحيح);
         حرر_حالة_مزود_إل_إل_في_إم(&متغير الحالة);

@@ -4,7 +4,7 @@
 // نظير: tests/ar/stdlib/behavior/atomic_single.sn
 // std.sync.atomic: load, store, swap, compare-exchange, fetch_add and the
 // bitwise atomics on atomic_u64, lowered to native atomic instructions
-// (docs/CONCURRENCY.md).
+// (docs/en/reference/concurrency.md).
 import std.sync.atomic;
 
 def main(): i32 {

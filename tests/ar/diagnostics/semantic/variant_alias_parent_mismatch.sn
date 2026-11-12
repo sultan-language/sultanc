@@ -1,0 +1,12 @@
+// اختبار: رفض
+// تشخيص: SULTANC-NAME-UNRESOLVED
+// نظير: tests/en/diagnostics/semantic/variant_alias_parent_mismatch.sn
+// مرادف منشئ أبوه نوع مستقل لا مرادف لنوع المنشئ خطأ للمستخدم (كان
+// SULTANC-ICE-CONTEXT).
+عام نوع لون = | أحمر | أزرق;
+عام نوع درجة = لون;
+عام مرادف درجة.داكن = لون.أحمر;
+
+عرف الرئيسية(): عدد {
+    أرجع 0;
+}

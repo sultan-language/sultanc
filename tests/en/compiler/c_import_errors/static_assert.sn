@@ -1,0 +1,8 @@
+// اختبار: رفض
+// تشخيص: SULTANC-C-STATIC-ASSERT
+// نظير: tests/ar/compiler/c_import_errors/static_assert.sn
+// Jisr reports a failed static assertion in an imported header as SULTANC-C-STATIC-ASSERT, with the
+// header's file:line:column, and the import fails at compile time.
+import "static_assert.h";
+
+def main(): int { return 0; }

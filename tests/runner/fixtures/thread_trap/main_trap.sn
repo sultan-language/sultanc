@@ -1,0 +1,6 @@
+// Traps on the main thread (tests/runner/suites/cli.sn).
+import "trap_site.sn";
+
+def main(): int {
+    return element_at(7);
+}

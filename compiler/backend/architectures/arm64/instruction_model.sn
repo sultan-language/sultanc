@@ -139,6 +139,10 @@
     | قيمة_دالة بنوع معرف_سجل_افتراضي
     // The C function at the address the register holds (بدائي_نداء_عنوان_سي).
     | عنوان_سي بنوع معرف_سجل_افتراضي
+    // A Linux kernel call (svc #0): the number and six arguments arrive in
+    // x0..x6 by the call plan. True for the thread clone, whose child runs
+    // the closure passed as the seventh value.
+    | نداء_نواة بنوع منطقي
 ;
 
 عام عرف انسخ_هدف_نداء_ذراع(
@@ -159,6 +163,9 @@
     }
     | هدف_نداء_ذراع_أربعة_وستون.عنوان_سي(السجل) -> {
         أرجع هدف_نداء_ذراع_أربعة_وستون.عنوان_سي(السجل);
+    }
+    | هدف_نداء_ذراع_أربعة_وستون.نداء_نواة(استنساخ) -> {
+        أرجع هدف_نداء_ذراع_أربعة_وستون.نداء_نواة(استنساخ);
     };
 }
 
@@ -194,6 +201,23 @@
 
 // append يحتاج عنوان رأس المتجه نفسه، لذلك لا يمر عبر ABI كتجميع منسوخ.
 // Layout يقرر الإزاحات/الحجم وRuntime يقرر سياسة النمو؛ ARM64 يملك خفض الآلة فقط.
+// Extend (إلحاق_نطاق_متجه): append العدد elements of the vector whose
+// header المصدر addresses, from index البداية; allocated as a call. A full
+// buffer grows by the Runtime growth policy (السعة_الدنيا, عامل_النمو), as
+// append's does (سعة_نمو_المتجه).
+عام نوع امتداد_متجه_ذراع_أربعة_وستون = {
+    المتجه: معرف_سجل_افتراضي,
+    المصدر: معرف_سجل_افتراضي,
+    البداية: معرف_سجل_افتراضي,
+    العدد: معرف_سجل_افتراضي,
+    إزاحة_البيانات: طبيعي,
+    إزاحة_الطول: طبيعي,
+    إزاحة_السعة: طبيعي,
+    حجم_العنصر: طبيعي,
+    السعة_الدنيا: طبيعي,
+    عامل_النمو: طبيعي
+};
+
 عام نوع إلحاق_متجه_ذراع_أربعة_وستون = {
     المتجه: معرف_سجل_افتراضي,
     العنصر: معرف_سجل_افتراضي,
@@ -233,9 +257,10 @@
     أرجع الناتج;
 }
 
-// Atomic read-modify-write on a memory word (thread support), as the
-// ARMv8.1 LSE instructions every Apple Silicon core has: SWPAL, LDADDAL,
-// LDCLRAL (AND of the complement), LDSETAL (OR), LDEORAL (XOR).
+// Atomic read-modify-write on a memory word (thread support). On macOS the
+// encoder emits the ARMv8.1 LSE instructions every Apple Silicon core has
+// (SWPAL, LDADDAL, LDCLRAL of the complement for AND, LDSETAL, LDEORAL);
+// elsewhere an ARMv8.0 LDAXR/STLXR loop (encoder.sn).
 عام نوع عملية_ذرية_ذراع =
     | تبديل
     | جلب_جمع
@@ -271,6 +296,7 @@
     | نسخ_ذاكرة_ذراع بنوع (معرف_سجل_افتراضي, معرف_سجل_افتراضي, طبيعي, طبيعي, طبيعي)
     | تخزين_فوري_ذراع بنوع تخزين_فوري_ذراع_أربعة_وستون
     | إلحاق_متجه_ذراع بنوع إلحاق_متجه_ذراع_أربعة_وستون
+    | امتداد_متجه_ذراع بنوع امتداد_متجه_ذراع_أربعة_وستون
     | ثابت_نص_ذراع بنوع ثابت_نص_ذراع_أربعة_وستون
     | تخصيص_صندوق_ذراع بنوع (معرف_سجل_افتراضي, طبيعي, طبيعي)
     | جمع_سجل_ذراع بنوع (معرف_سجل_افتراضي, معرف_سجل_افتراضي, معرف_سجل_افتراضي)
@@ -284,7 +310,8 @@
     | فخ_ذراع
     // (operation, destination, address, operand, bits): the old value.
     | ذري_ذراع بنوع (عملية_ذرية_ذراع, معرف_سجل_افتراضي, معرف_سجل_افتراضي, معرف_سجل_افتراضي, طبيعي)
-    // (destination, address, expected, new, bits): CASAL, the old value.
+    // (destination, address, expected, new, bits): CASAL or an LDAXR/STLXR
+    // loop, the old value.
     | ذري_قارن_وبدل_ذراع بنوع (معرف_سجل_افتراضي, معرف_سجل_افتراضي, معرف_سجل_افتراضي, معرف_سجل_افتراضي, طبيعي)
     // (destination, address, bits): LDAR.
     | ذري_حمل_ذراع بنوع (معرف_سجل_افتراضي, معرف_سجل_افتراضي, طبيعي)

@@ -10,6 +10,9 @@
     | صف
     | سجل
     | تعداد
+    // A named opaque type: no fields, size or alignment. Representation
+    // consumers only ever see it as the pointee of a raw pointer.
+    | معتم
     | صندوق
     | اختيار
     | نتيجة

@@ -1,0 +1,20 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 0
+// نظير: tests/ar/stdlib/behavior/stop_signal_block.sn
+// std.os.signal: SIGINT and SIGTERM can be blocked, and with none sent the
+// pending check answers none without waiting; then they can be unblocked.
+import std.os.signal;
+
+def main(): int {
+    match block_stop_signals() with
+    | result.err(_) -> { return 1; }
+    | result.ok(_) -> {};
+    match pending_stop_signal() with
+    | option.some(_) -> { return 2; }
+    | option.none -> {};
+    match unblock_stop_signals() with
+    | result.err(_) -> { return 3; }
+    | result.ok(_) -> {};
+    return 0;
+}

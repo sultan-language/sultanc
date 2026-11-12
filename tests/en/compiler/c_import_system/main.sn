@@ -1,0 +1,31 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// نظير: tests/ar/compiler/c_import_system/main.sn
+// Real system headers through Jisr (compiler/c_import/jisr): each import
+// preprocesses the C library's header with its nested includes (bits/,
+// sys/, asm/, the builtin <stddef.h> and <stdint.h>) for the target and
+// writes its declarations: constants from #define and enum, typedefs as
+// aliases (widths.sn), records such as FILE's, typed externs. The values
+// checked are the same on Linux and macOS.
+import "stdio.h";
+import "signal.h";
+import "errno.h";
+import "sys/socket.h";
+import "limits.h";
+import "widths.sn";
+
+// FILE is a record type; fopen's result is a typed pointer to it.
+def stream_type(stream: *mutable FILE): *mutable FILE { return stream; }
+
+def main(): int {
+    if (EOF != -1 || SEEK_SET != 0 || SEEK_END != 2) { return 1; };
+    let widths: int = stdint_checks();
+    if (widths != 0) { return widths; };
+    if (SIGINT != 2 || SIGTERM != 15 || SIGKILL != 9) { return 4; };
+    if (EINVAL != 22 || ENOENT != 2 || EAGAIN <= 0) { return 5; };
+    if (AF_INET != 2 || SOCK_STREAM != 1 || SOCK_DGRAM != 2) { return 6; };
+    if (CHAR_BIT != 8 || INT_MAX != 2147483647 || INT_MIN != -2147483647 - 1) { return 7; };
+    if (LONG_MAX != 9223372036854775807 || UCHAR_MAX != 255) { return 8; };
+    return 42;
+}

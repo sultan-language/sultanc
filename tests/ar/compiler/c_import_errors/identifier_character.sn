@@ -1,0 +1,8 @@
+// اختبار: رفض
+// تشخيص: SULTANC-C-INVALID-IDENTIFIER-CHARACTER
+// نظير: tests/en/compiler/c_import_errors/identifier_character.sn
+// معرفات C23 من محارف XID_Start/XID_Continue: المحرف U+20AC داخل اسم هو
+// SULTANC-C-INVALID-IDENTIFIER-CHARACTER مع ملفه وسطره وعموده.
+استورد "identifier_character.h";
+
+عرف الرئيسية(): عدد { أرجع 0; }

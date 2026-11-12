@@ -1,0 +1,29 @@
+استورد std.process.argument;
+استورد std.process.argument_count;
+استورد std.text.compare;
+استورد compiler.format.command;
+
+// format_files [--check] <path>...: runs the formatter command
+// (compiler/format/command.sn) as `sultanc fmt` does, for the corpus check
+// of tools/tests/format_corpus.sh. Exit 0: formatted; 1: --check found files
+// to format; 2: an input could not be read, parsed or written. The
+// diagnostics are the command's; this tool reports only the status.
+عرف الرئيسية(): عدد {
+    دع المسارات: متغير متجه نص = [];
+    دع فحص: متغير منطقي = خطأ;
+    دع خيار_الفحص: نص = «--check»;
+    دع ف: متغير طبيعي = 1;
+    طالما (ف < عدد_الوسائط()) {
+        طابق وسيطة(ف) مع
+        | اختياري.موجود(ق) -> {
+            إذا (نصان_متساويان(&ق, &خيار_الفحص)) { فحص := صواب; } وإلا { ألحق(المسارات, ق); };
+        }
+        | اختياري.لا_شيء -> { };
+        ف := ف + 1;
+    }
+    دع الطلب: طلب_تنسيق = { المسارات: المسارات, فحص_فقط: فحص };
+    طابق نفذ_أمر_التنسيق(&الطلب) مع
+    | نتيجة_أمر_تنسيق.منسقة -> { أرجع 0; }
+    | نتيجة_أمر_تنسيق.تحتاج_تنسيقا(_) -> { أرجع 1; }
+    | نتيجة_أمر_تنسيق.فشلت(_) -> { أرجع 2; };
+}

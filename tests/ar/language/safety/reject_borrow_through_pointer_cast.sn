@@ -1,0 +1,12 @@
+// اختبار: رفض
+// تشخيص: SULTANC-BORROW-CONFLICT
+// نظير: tests/en/language/safety/reject_borrow_through_pointer_cast.sn
+// A safe reference keeps its checks when a raw pointer is made from it: the
+// value it borrows cannot be written while it is in scope.
+عرف الرئيسية(): عدد {
+    دع ق: متغير عدد = 1;
+    دع ر: &عدد = &ق;
+    دع م: *عدد = ر مثل *عدد;
+    ق := 3;
+    أرجع *ر;
+}

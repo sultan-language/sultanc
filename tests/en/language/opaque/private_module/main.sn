@@ -1,0 +1,12 @@
+// اختبار: رفض
+// أهداف: arm64-darwin,x86_64-linux
+// تشخيص: SULTANC-NAME-PRIVATE
+// نظير: tests/ar/language/opaque/private_module/main.sn
+// An opaque type follows the visibility rules of any named type: a private
+// one is not visible from another module.
+import "hidden.sn";
+
+def main(): int {
+    let p: *Secret = 0 as *Secret;
+    return secret_count();
+}

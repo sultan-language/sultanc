@@ -1,0 +1,50 @@
+// اختبار: تفاضلي
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/stdlib/behavior/utf8_range_code_point_text.sn
+// std.encoding.utf8 is_valid_utf8_range (a byte range of a text is
+// well-formed UTF-8), std.unicode.code_point_text unicode_code_point_text
+// ("U+XXXX") and std.chars.ascii is_octal_digit.
+import std.encoding.utf8;
+import std.unicode.code_point_text;
+import std.chars.ascii;
+import std.text.compare;
+import std.text.from_bytes;
+
+def spelled(value: u32, expected: string): bool {
+    let actual: string = unicode_code_point_text(value);
+    return texts_equal(&actual, &expected);
+}
+
+def main(): int {
+    // "a" (1 byte), U+00E9 (2), U+20AC (3), U+1F600 (4): 10 bytes.
+    let mixed: string = from_bytes(&[0x61, 0xC3, 0xA9, 0xE2, 0x82, 0xAC, 0xF0, 0x9F, 0x98, 0x80]);
+    if (!is_valid_utf8_range(&mixed, 0, 10)) { return 1; };
+    if (!is_valid_utf8_range(&mixed, 0, 0)) { return 2; };
+    if (!is_valid_utf8_range(&mixed, 1, 3)) { return 3; };
+    if (is_valid_utf8_range(&mixed, 1, 2)) { return 4; };
+    if (is_valid_utf8_range(&mixed, 2, 3)) { return 5; };
+    if (!is_valid_utf8_range(&mixed, 3, 6)) { return 6; };
+    if (is_valid_utf8_range(&mixed, 6, 9)) { return 7; };
+    if (!is_valid_utf8_range(&mixed, 6, 10)) { return 8; };
+    if (is_valid_utf8_range(&mixed, 0, 11)) { return 9; };
+    if (is_valid_utf8_range(&mixed, 5, 3)) { return 10; };
+    // An overlong "/" (C0 AF) and an encoded surrogate (ED A0 80).
+    let broken: string = from_bytes(&[0x61, 0xC0, 0xAF, 0x62, 0xED, 0xA0, 0x80]);
+    if (!is_valid_utf8_range(&broken, 0, 1)) { return 11; };
+    if (is_valid_utf8_range(&broken, 0, 4)) { return 12; };
+    if (!is_valid_utf8_range(&broken, 3, 4)) { return 13; };
+    if (is_valid_utf8_range(&broken, 4, 7)) { return 14; };
+
+    if (!spelled(0x41, "U+0041")) { return 20; };
+    if (!spelled(0, "U+0000")) { return 21; };
+    if (!spelled(0xABC, "U+0ABC")) { return 22; };
+    if (!spelled(0xFFFF, "U+FFFF")) { return 23; };
+    if (!spelled(0x1F600, "U+1F600")) { return 24; };
+    if (!spelled(0x10FFFF, "U+10FFFF")) { return 25; };
+    if (!spelled(0x110000, "U+110000")) { return 26; };
+
+    if (!is_octal_digit(48) || !is_octal_digit(55)) { return 30; };
+    if (is_octal_digit(56) || is_octal_digit(47)) { return 31; };
+    return 42;
+}

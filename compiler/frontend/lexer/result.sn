@@ -10,7 +10,17 @@
     | بناء
     | يوتيف8
     | داخلي
+    // A bidirectional embedding, override or isolate control (U+202A..202E,
+    // U+2066..2069) in a comment or literal: it can make code display in an
+    // order other than the one compiled ("Trojan Source", CVE-2021-42574),
+    // as rustc's text_direction_codepoint lints reject. Arabic text needs
+    // none of them; the marks U+200E, U+200F and U+061C stay allowed.
+    | تحكم_اتجاه
 ;
+
+عام عرف هل_تحكم_اتجاه_ثنائي(القيمة: ط32): منطقي {
+    أرجع ((القيمة >= 0x202A) && (القيمة <= 0x202E)) || ((القيمة >= 0x2066) && (القيمة <= 0x2069));
+}
 
 عام نوع خطأ_معجمي = {
     الفئة: فئة_خطأ_معجمي,
@@ -47,7 +57,7 @@
     الفئة: فئة_حمولة_رمز,
     الحمولة: حمولة_رمز
 ): نتيجة_رمز {
-    لو (فئة_حمولة_الرمز(النوع) != الفئة) {
+    إذا (فئة_حمولة_الرمز(النوع) != الفئة) {
         أرجع رفض_مصنف(معرف_المصدر, البداية, النهاية, فئة_خطأ_معجمي.داخلي());
     };
     دع النطاق: نطاق = نطاق_المسح(معرف_المصدر, البداية, النهاية);

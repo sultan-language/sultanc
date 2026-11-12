@@ -1,0 +1,1 @@
+public def util_value(): int { return 0; }

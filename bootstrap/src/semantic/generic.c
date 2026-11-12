@@ -636,6 +636,27 @@ static __Ast_Statement__ *__Generic_Clone_Statement__(__Semantic_Context__ *__Co
             {
                 __Result__->__As__.__Record__.__Fields__[__Index__] =
                     __Source__->__As__.__Record__.__Fields__[__Index__];
+                if (__Source__->__As__.__Record__.__Fields__[__Index__].__Is_Vector__)
+                {
+                    /* A vector literal field: atoms are shared, as a vector
+                     * initializer's; element expressions are cloned. */
+                    __Ast_Record_Input__ *__Input__ = &__Result__->__As__.__Record__.__Fields__[__Index__];
+                    size_t __Element__;
+                    if (__Input__->__Vector_Expressions__ != NULL)
+                    {
+                        __Ast_Expression__ **__Elements__ = (__Ast_Expression__ **)__Generic_Allocate__(
+                            __Context__, __Input__->__Vector_Count__ * sizeof(__Ast_Expression__ *),
+                            alignof(__Ast_Expression__ *));
+                        if (__Elements__ == NULL)
+                            return NULL;
+                        for (__Element__ = 0U; __Element__ < __Input__->__Vector_Count__; ++__Element__)
+                            __Elements__[__Element__] = __Generic_Clone_Expression__(
+                                __Context__, __Input__->__Vector_Expressions__[__Element__], __Parameters__,
+                                __Arguments__, __Argument_Count__, __Unit__);
+                        __Input__->__Vector_Expressions__ = __Elements__;
+                    }
+                    continue;
+                }
                 __Result__->__As__.__Record__.__Fields__[__Index__].__Value__ =
                     __Generic_Clone_Expression__(
                         __Context__,

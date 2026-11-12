@@ -1,0 +1,55 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// Twin: tests/ar/compiler/c_import_layout/main.sn (no `نظير` header:
+// the pair step interprets both twins, and the interpreter cannot call the
+// functions of an imported .c file).
+// Record layout through Jisr (compiler/c_import/jisr): shapes.h's records
+// become SultanC records whose size and field offsets are the C compiler's
+// (asked at run time from shapes.c) and Jisr's (its sizeof/offsetof
+// constants); a union, a bit-field record and a packed record become opaque
+// storage of the right size; records pass by value (integer, floating
+// and memory classes) and by pointer.
+import "shapes.c";
+import std.meta.reflect;
+
+def main(): int {
+    let corners: (i16, i16, i16) = (0, 0, 0);
+    let origin: point = { x: 0, y: 0 };
+    let s: mutable shape = { tag: 0, scale: 2.0, origin: origin, corners: corners, name: 0 as *u8, next: 0 as *mutable shape };
+    // SultanC's layout of the record, the C compiler's and Jisr's agree.
+    if ((size_of(&s) as u64) != shape_size() || FACT_SHAPE != 48 || SHAPE_SIZE != 48) { return 1; };
+    if (shape_offset(2) != (SHAPE_ORIGIN_OFFSET as u64) || shape_offset(3) != (FACT_CORNERS as u64)) { return 2; };
+    if (shape_offset(4) != (SHAPE_NAME_OFFSET as u64) || shape_offset(5) != (FACT_NEXT as u64)) { return 3; };
+    if ((size_of(&origin) as i32) != FACT_POINT) { return 4; };
+    // C writes the record through a pointer; SultanC reads its fields.
+    shape_fill(&mutable s, 3, 4);
+    if (s.tag != 83 || s.origin.x != 3 || s.origin.y != 4 || s.corners[0] != 1 || s.corners[2] != 3) { return 5; };
+    if (shape_area(&s) != 27.0) { return 6; };
+    // Records by value, both ways.
+    let a: point = { x: 1, y: 2 };
+    let b: point = { x: 10, y: 20 };
+    let sum: point = point_add(a, b);
+    if (sum.x != 11 || sum.y != 22) { return 7; };
+    // Opaque storage keeps size and alignment, and a union of an integer
+    // passes by value.
+    let n: number = number_of(-7);
+    if ((size_of(&n) as u64) != number_size() || (align_of(&n) as i32) != FACT_NUMBER_ALIGN) { return 8; };
+    if (number_bits(n) != -7) { return 9; };
+    let f: flags = { opaque: 0 };
+    if ((size_of(&f) as u64) != flags_size()) { return 10; };
+    let bytes: (u8, u8, u8, u8, u8) = (0, 0, 0, 0, 0);
+    let pp: packed_pair = { opaque: bytes };
+    if (size_of(&pp) != 5) { return 11; };
+    let buffer_head: buffer = { length_: 0 };
+    if (size_of(&buffer_head) != 4) { return 12; };
+    // Records of doubles by value (System V SSE class, AAPCS64 HFA) and a
+    // 24-byte record passed in memory.
+    let v: vec2 = { x: 1.5, y: -2.0 };
+    let scaled: vec2 = vec2_scale(v, 2.0);
+    if (scaled.x != 3.0 || scaled.y != -4.0 || vec2_dot32(v, scaled) != 12.5) { return 13; };
+    let big_in: big = { a: 1, b: 2, c: 3 };
+    let rotated: big = big_rotate(big_in);
+    if (rotated.a != 2 || rotated.b != 3 || rotated.c != 1) { return 14; };
+    return 42;
+}

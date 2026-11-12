@@ -388,6 +388,29 @@ static int __Body_Infer_Lvalue_Access__(__Semantic_Body_Context__ *__Context__,
             return 0;
         }
 
+        if (__Resolved__.__Kind__ == __Resolved_Type_Pointer__ && __Resolved__.__Inner__ != NULL)
+        {
+            /* `(*p).f` through a raw pointer is the place at the pointed
+             * address (docs/en/reference/concurrency.md, std.sync.atomic):
+             * only inside غير_آمن, as indexing a raw pointer is. A write
+             * needs a pointer to mutable storage (`*متغير T`). */
+            __Resolved_Type__ __Pointee__;
+            if (__Context__->__Unsafe_Depth__ == 0U)
+            {
+                return __Body_Fail__(
+                    __Context__, __E0400_Mismatched_Types__, __Lvalue__->__Header__.__Span__);
+            }
+            if (!__Require_Read__ &&
+                (!__Type_Resolve__(__Context__->__Semantic__, __Resolved__.__Inner__, &__Pointee__) ||
+                 !__Pointee__.__Mutable__))
+            {
+                return __Body_Fail__(
+                    __Context__, __E0703_Write_To_Immutable__, __Lvalue__->__Header__.__Span__);
+            }
+            *__Out_Type__ = __Type_Unwrap_Mutable__(__Resolved__.__Inner__);
+            return 1;
+        }
+
         if (__Resolved__.__Kind__ != __Resolved_Type_Reference__ &&
             __Resolved__.__Kind__ != __Resolved_Type_Box__)
         {

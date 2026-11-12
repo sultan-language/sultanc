@@ -1,0 +1,13 @@
+// اختبار: رفض
+// تشخيص: SULTANC-C-SYNTAX
+// نظير: tests/ar/compiler/c_import_errors/include_chain.sn
+// خرج-تشخيص-عربي: include_chain.ar.stderr
+// خرج-تشخيص-إنجليزي: include_chain.en.stderr
+// A C error in a header another header includes: the diagnostic points at
+// the C location with its source line, its facts (the token expected and the
+// one found) are worded by iSpeak in the requested language, and the
+// `#include` that brought the file in follows as a related location. The
+// English and Arabic outputs are the same diagnostic.
+import "include_chain.h";
+
+def main(): int { return 0; }

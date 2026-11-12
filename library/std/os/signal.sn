@@ -1,0 +1,70 @@
+// Shutdown signals (Nahr item 16): SIGINT (Ctrl+C) and SIGTERM, for a
+// graceful stop. As Go's os/signal funnels signals to a channel instead of
+// running code inside a handler, std takes them synchronously:
+//
+//   1. احجب_إشارات_الإيقاف() first in main, before any thread is spawned
+//      (threads inherit the mask, so every thread then leaves the signals
+//      pending instead of being killed by them);
+//   2. one thread calls انتظر_إشارة_إيقاف() and starts the shutdown when it
+//      returns, or an event loop polls إشارة_إيقاف_معلقة() between waits.
+//
+// Supported on Linux, Android, FreeBSD and macOS. Windows (console control
+// events) and WASI answer غير_مدعوم.
+استورد os.process_info;
+استورد os.error;
+
+عام نوع إشارة_إيقاف =
+    | مقاطعة
+    | إنهاء
+;
+عام مرادف stop_signal = إشارة_إيقاف;
+
+عام نوع خطأ_إشارة =
+    | غير_مدعوم
+    | نظام بنوع خطأ_نظام_أصلي
+;
+عام مرادف signal_error = خطأ_إشارة;
+
+عرف إشارة_من_رقم(الرقم: طبيعي): إشارة_إيقاف {
+    إذا (الرقم == 2) { أرجع إشارة_إيقاف.مقاطعة(); };
+    أرجع إشارة_إيقاف.إنهاء();
+}
+
+// Blocks SIGINT and SIGTERM for the calling thread and the threads it spawns.
+عام عرف احجب_إشارات_الإيقاف(): نتيجة منطقي, خطأ_إشارة {
+    إذا (!تدعم_إشارات_الإيقاف_نظام()) { أرجع نتيجة.خطأ(خطأ_إشارة.غير_مدعوم()); };
+    طابق احجب_إشارات_الإيقاف_نظام() مع
+    | نتيجة.خطأ(الأصلي) -> { أرجع نتيجة.خطأ(خطأ_إشارة.نظام(الأصلي)); }
+    | نتيجة.نجح(_) -> { أرجع نتيجة.نجح(صواب); };
+}
+عام مرادف block_stop_signals = احجب_إشارات_الإيقاف;
+
+// Unblocks SIGINT and SIGTERM for the calling thread again, so they stop
+// the process as by default: for a program that blocked them for a
+// watcher thread that then could not start (the interpreter runs one
+// thread).
+عام عرف ارفع_حجب_إشارات_الإيقاف(): نتيجة منطقي, خطأ_إشارة {
+    إذا (!تدعم_إشارات_الإيقاف_نظام()) { أرجع نتيجة.خطأ(خطأ_إشارة.غير_مدعوم()); };
+    طابق ارفع_حجب_إشارات_الإيقاف_نظام() مع
+    | نتيجة.خطأ(الأصلي) -> { أرجع نتيجة.خطأ(خطأ_إشارة.نظام(الأصلي)); }
+    | نتيجة.نجح(_) -> { أرجع نتيجة.نجح(صواب); };
+}
+عام مرادف unblock_stop_signals = ارفع_حجب_إشارات_الإيقاف;
+
+// Waits until SIGINT or SIGTERM arrives and answers which one.
+عام عرف انتظر_إشارة_إيقاف(): نتيجة إشارة_إيقاف, خطأ_إشارة {
+    إذا (!تدعم_إشارات_الإيقاف_نظام()) { أرجع نتيجة.خطأ(خطأ_إشارة.غير_مدعوم()); };
+    طابق خذ_إشارة_إيقاف_نظام(خطأ) مع
+    | نتيجة.خطأ(الأصلي) -> { أرجع نتيجة.خطأ(خطأ_إشارة.نظام(الأصلي)); }
+    | نتيجة.نجح(الرقم) -> { أرجع نتيجة.نجح(إشارة_من_رقم(الرقم)); };
+}
+عام مرادف wait_stop_signal = انتظر_إشارة_إيقاف;
+
+// Takes a SIGINT or SIGTERM that is already pending, without waiting.
+عام عرف إشارة_إيقاف_معلقة(): اختياري إشارة_إيقاف {
+    إذا (!تدعم_إشارات_الإيقاف_نظام()) { أرجع اختياري.لا_شيء(); };
+    طابق خذ_إشارة_إيقاف_نظام(صواب) مع
+    | نتيجة.خطأ(_) -> { أرجع اختياري.لا_شيء(); }
+    | نتيجة.نجح(الرقم) -> { أرجع اختياري.موجود(إشارة_من_رقم(الرقم)); };
+}
+عام مرادف pending_stop_signal = إشارة_إيقاف_معلقة;

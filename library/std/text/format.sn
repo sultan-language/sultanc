@@ -1,6 +1,6 @@
 // Single-value to-text helpers, kept for existing callers. Format strings
 // with width, precision, alignment, bases and Debug output are std.fmt
-// (std.fmt.fmt, docs/FMT.md).
+// (std.fmt.fmt, docs/en/reference/formatting.md).
 استورد text.number;
 استورد text.from_bytes;
 استورد encoding.utf8;
@@ -18,7 +18,7 @@
 }
 
 عام عرف نسق_منطقيا(القيمة: منطقي): نص {
-    لو (القيمة) { أرجع «true»; };
+    إذا (القيمة) { أرجع «true»; };
     أرجع «false»;
 }
 

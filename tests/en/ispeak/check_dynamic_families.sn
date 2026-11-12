@@ -54,7 +54,7 @@ def failure_values(): حقائق_فشل_وقت_الترجمة {
 }
 
 def manifest_values(): حقائق_بيان_حزمة {
-    let values: حقائق_بيان_حزمة = { المسار: "./project.toml", البايت: option.some(8 as uint), السبب: option.some(مفتاح_نص_مترجم.حقل_بيان_مطلوب_مفقود()) };
+    let values: حقائق_بيان_حزمة = { المسار: "./package-graph.toml", البايت: option.some(8 as uint), السبب: option.some(مفتاح_نص_مترجم.حقل_رسم_حزم_مطلوب_مفقود()) };
     return values;
 }
 
@@ -144,7 +144,7 @@ def main(): int {
     if (!with_arguments(لغة_تشخيص.الإنجليزية(), key_14, english_14)) { return 27; };
     let arabic_14: حقائق_رسالة = حقائق_رسالة.فشل_وقت_الترجمة(failure_values());
     if (!with_arguments(لغة_تشخيص.العربية(), key_14, arabic_14)) { return 28; };
-    let key_15: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.بيان_حزمة_غير_صالح());
+    let key_15: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.رسم_حزم_غير_صالح());
     let english_15: حقائق_رسالة = حقائق_رسالة.بيان_حزمة(manifest_values());
     if (!with_arguments(لغة_تشخيص.الإنجليزية(), key_15, english_15)) { return 29; };
     let arabic_15: حقائق_رسالة = حقائق_رسالة.بيان_حزمة(manifest_values());
@@ -159,16 +159,6 @@ def main(): int {
     if (!with_arguments(لغة_تشخيص.الإنجليزية(), key_17, english_17)) { return 33; };
     let arabic_17: حقائق_رسالة = حقائق_رسالة.توقع_نحوي(syntax_values());
     if (!with_arguments(لغة_تشخيص.العربية(), key_17, arabic_17)) { return 34; };
-    let key_18: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.بدائي_مضيف_تفسير_غير_مدعوم());
-    let english_18: حقائق_رسالة = حقائق_رسالة.بدائي_تفسير(primitive_values());
-    if (!with_arguments(لغة_تشخيص.الإنجليزية(), key_18, english_18)) { return 35; };
-    let arabic_18: حقائق_رسالة = حقائق_رسالة.بدائي_تفسير(primitive_values());
-    if (!with_arguments(لغة_تشخيص.العربية(), key_18, arabic_18)) { return 36; };
-    let key_19: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.جسر_نص_مضيف_تفسير_غير_متاح());
-    let english_19: حقائق_رسالة = حقائق_رسالة.بدائي_تفسير(primitive_values());
-    if (!with_arguments(لغة_تشخيص.الإنجليزية(), key_19, english_19)) { return 37; };
-    let arabic_19: حقائق_رسالة = حقائق_رسالة.بدائي_تفسير(primitive_values());
-    if (!with_arguments(لغة_تشخيص.العربية(), key_19, arabic_19)) { return 38; };
     let key_20: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.حجة_بدائي_تفسير_غير_صالحة());
     let english_20: حقائق_رسالة = حقائق_رسالة.بدائي_تفسير(primitive_values());
     if (!with_arguments(لغة_تشخيص.الإنجليزية(), key_20, english_20)) { return 39; };

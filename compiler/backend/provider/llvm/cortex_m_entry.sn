@@ -1,0 +1,80 @@
+استورد compiler.backend.provider.llvm.model;
+استورد compiler.backend.provider.llvm.ffi.core;
+استورد compiler.backend.provider.llvm.ffi.types;
+استورد compiler.backend.provider.llvm.diagnostics;
+استورد compiler.backend.target.target_model;
+استورد std.text.from_bytes;
+
+// The process start of a Cortex-M program (thumbv6m, thumbv7m, thumbv7em
+// none-eabi[hf]): the hardware, not an operating system, enters it. Emitted,
+// like the `_start` of the hosted targets (entry.sn), as module assembly into
+// the object of every program with an entry, since these targets are linked
+// outside the compiler with an explicit linker script
+// (library/std/os/platform/none/arm/cortex_m/cortex_m.ld):
+// - `.vector_table`: the initial stack pointer (`__stack_top`), the reset
+//   handler and the 14 system exceptions, each a weak alias of a
+//   `Default_Handler` that spins;
+// - `Reset_Handler`: copies `.data` from its load address (`__data_load`) to
+//   `__data_start`..`__data_end`, zeroes `__bss_start`..`__bss_end`, gives
+//   CP10/CP11 full access in CPACR on thumbv7em-none-eabihf before any FPU
+//   instruction, runs the `.init_array` entries, calls `main` and passes
+//   the low word of its result to `__sultanc_exit`;
+// - `__sultanc_exit`, weak: stops the core in a WFI loop
+//   (`__sultanc_halt`);
+// - `__sultanc_semihosting_exit` (Arm semihosting SYS_EXIT_EXTENDED with
+//   ADP_Stopped_ApplicationExit and the status) and
+//   `__sultanc_semihosting_fault` (status 132, the status of a hosted
+//   program killed by SIGILL; a SultanC trap is UDF, which escalates to a
+//   HardFault). A debugger or QEMU run selects them with the linker script
+//   semihosting.ld (`__sultanc_exit = __sultanc_semihosting_exit;`,
+//   `HardFault_Handler = __sultanc_semihosting_fault;`); on hardware with
+//   no debugger BKPT would fault, so they are not the default.
+// Only ARMv6-M instructions are used, so one sequence serves every class.
+عرف نص_بدء_ذراع_إم_إل_إل_في_إم(مع_وحدة_عائمة: منطقي): متجه ط8 {
+    دع النص: متغير متجه ط8 = [];
+    ألحق_بايتات_نص(&متغير النص, «.syntax unified;.thumb;.section .vector_table,"a",%progbits;.p2align 2;.globl __sultanc_vector_table;.type __sultanc_vector_table,%object;__sultanc_vector_table:;.word __stack_top;.word Reset_Handler;.word NMI_Handler;.word HardFault_Handler;.word MemManage_Handler;.word BusFault_Handler;.word UsageFault_Handler;.word 0;.word 0;.word 0;.word 0;.word SVC_Handler;.word DebugMon_Handler;.word 0;.word PendSV_Handler;.word SysTick_Handler;.size __sultanc_vector_table,.-__sultanc_vector_table;»);
+    ألحق_بايتات_نص(&متغير النص, «.text;.p2align 1;.globl Reset_Handler;.type Reset_Handler,%function;.thumb_func;Reset_Handler:;ldr r0,=__data_start;ldr r1,=__data_end;ldr r2,=__data_load;1:;cmp r0,r1;bhs 2f;ldr r3,[r2];str r3,[r0];adds r0,r0,#4;adds r2,r2,#4;b 1b;2:;ldr r0,=__bss_start;ldr r1,=__bss_end;movs r3,#0;3:;cmp r0,r1;bhs 4f;str r3,[r0];adds r0,r0,#4;b 3b;4:;»);
+    إذا (مع_وحدة_عائمة) {
+        ألحق_بايتات_نص(&متغير النص, «ldr r0,=0xE000ED88;ldr r1,[r0];ldr r2,=0x00F00000;orrs r1,r1,r2;str r1,[r0];dsb;isb;»);
+    };
+    ألحق_بايتات_نص(&متغير النص, «ldr r4,=__init_array_start;ldr r5,=__init_array_end;5:;cmp r4,r5;bhs 6f;ldr r3,[r4];movs r0,#0;movs r1,#0;movs r2,#0;blx r3;adds r4,r4,#4;b 5b;6:;bl main;bl __sultanc_exit;b __sultanc_halt;.ltorg;.size Reset_Handler,.-Reset_Handler;»);
+    ألحق_بايتات_نص(&متغير النص, «.p2align 1;.globl __sultanc_halt;.type __sultanc_halt,%function;.thumb_func;__sultanc_halt:;wfi;b __sultanc_halt;.size __sultanc_halt,.-__sultanc_halt;.p2align 1;.weak Default_Handler;.type Default_Handler,%function;.thumb_func;Default_Handler:;b Default_Handler;.size Default_Handler,.-Default_Handler;»);
+    ألحق_بايتات_نص(&متغير النص, «.p2align 1;.globl __sultanc_semihosting_exit;.type __sultanc_semihosting_exit,%function;.thumb_func;__sultanc_semihosting_exit:;sub sp,sp,#8;ldr r1,=0x20026;str r1,[sp];str r0,[sp,#4];movs r0,#0x20;mov r1,sp;bkpt 0xab;7:;b 7b;.ltorg;.size __sultanc_semihosting_exit,.-__sultanc_semihosting_exit;.p2align 1;.globl __sultanc_semihosting_fault;.type __sultanc_semihosting_fault,%function;.thumb_func;__sultanc_semihosting_fault:;movs r0,#132;b __sultanc_semihosting_exit;.size __sultanc_semihosting_fault,.-__sultanc_semihosting_fault;»);
+    ألحق_بايتات_نص(&متغير النص, «.weak __sultanc_exit;.thumb_set __sultanc_exit,__sultanc_halt;»);
+    دع المعالجات: متجه نص = [«NMI_Handler», «HardFault_Handler», «MemManage_Handler», «BusFault_Handler», «UsageFault_Handler», «SVC_Handler», «DebugMon_Handler», «PendSV_Handler», «SysTick_Handler»];
+    دع ف: متغير طبيعي = 0;
+    طالما (ف < (الطول(المعالجات) مثل طبيعي)) {
+        ألحق_بايتات_نص(&متغير النص, «.weak »);
+        ألحق_بايتات_نص(&متغير النص, انسخ_نص(&المعالجات[ف]));
+        ألحق_بايتات_نص(&متغير النص, «;.thumb_set »);
+        ألحق_بايتات_نص(&متغير النص, انسخ_نص(&المعالجات[ف]));
+        ألحق_بايتات_نص(&متغير النص, «,Default_Handler;»);
+        ف := ف + 1;
+    }
+    ألحق_بايتات_نص(&متغير النص, «.text»);
+    أرجع النص;
+}
+
+// Adds the start-up to the module of a Cortex-M program whose entry is the
+// external function `main` (the verified MSIR entry keeps that link name on
+// these targets). Nothing is added for other targets or without an entry.
+عام عرف أضف_بدء_ذراع_إم_إل_إل_في_إم(
+    الحالة: &حالة_مزود_إل_إل_في_إم,
+    الهدف: &واصف_هدف,
+    مدخل_اللغة: مرجع_قيمة_إل_إل_في_إم
+): اختياري فشل_مزود_إل_إل_في_إم {
+    طابق صنف_ذراع_إم_للهدف(الهدف) مع
+    | اختياري.لا_شيء -> { أرجع اختياري.لا_شيء(); }
+    | اختياري.موجود(_) -> { };
+    دع اسم_المدخل: متغير متجه ط8 = بايتات_منتهية_بصفر_من_نص(«main»);
+    // `bl main` must reach the verified entry definition itself.
+    إذا (LLVMGetNamedFunction((*الحالة).الوحدة, &متغير اسم_المدخل[0]) != مدخل_اللغة
+        || LLVMCountBasicBlocks(مدخل_اللغة) == 0) {
+        أرجع اختياري.موجود(فشل_مزود_إل_إل_في_إم.واجهة_ثنائية_غير_متاحة());
+    };
+    دع مع_وحدة_عائمة: منطقي = (*الهدف).المنصة.البيئة == هوية_بيئة.إي_إيه_بي_آي_إتش_إف();
+    دع النص: متغير متجه ط8 = نص_بدء_ذراع_إم_إل_إل_في_إم(مع_وحدة_عائمة);
+    دع الطول_الفعلي: طبيعي = الطول(النص) مثل طبيعي;
+    LLVMAppendModuleInlineAsm((*الحالة).الوحدة, &النص[0], الطول_الفعلي);
+    أرجع اختياري.لا_شيء();
+}

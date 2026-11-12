@@ -1,0 +1,87 @@
+# Debugger session for values.sn, run by tools/tests/debugger_tests.sh under gdb
+# and lldb. Commands: break @MARKER | break fn NAME | run | continue | next |
+# step | finish | up | bt | locals | args | print EXPR. Each `expect` (both
+# debuggers), `expect-gdb` or `expect-lldb` line is an extended regular
+# expression that the output of the command before it must match.
+
+# A line inside a called function stops in that function (not at the call
+# in the caller, as an inlined copy without inlined-call debug facts did),
+# with its local and its record parameter (passed by hidden reference), and
+# the backtrace continues past frame 0 into main.
+break @sum_big
+run
+expect sum_big
+expect values\.sn
+print partial
+expect = 3
+print value
+expect a = 1.*b = 2.*c = 3
+print value.c
+expect = 3
+bt
+expect sum_big
+expect main
+
+# A statement line in main: locals of every kind, each with its value.
+break @main_bump
+continue
+expect main.*values\.sn
+print p
+expect x = 3.*y = 4
+print big
+expect a = 1.*b = 2.*c = 3
+expect hello
+print s
+expect Rect
+expect x = 3.*y = 4
+print values
+expect length = 3
+print name
+expect world
+print total
+expect = 6
+print counter_global
+expect = 7
+
+# A breakpoint by function name inside the called function, the reference
+# parameter it writes through, and the caller's frame after the call.
+break fn bump
+continue
+expect bump
+print *target
+expect = 6
+bt
+expect bump
+expect main
+finish
+next
+print total
+expect = 7
+
+# Stepping through a loop stays on the loop's lines, with the loop variable.
+break @loop
+continue
+expect count_up
+print index
+expect = 0
+continue
+print index
+expect = 1
+print total
+expect = 0
+next
+expect total := total \+ index|index := index \+ 1
+
+# A function in another module, by name, with its parameters and a
+# backtrace through both modules.
+break fn scaled_sum
+continue
+expect scaled_sum
+args
+expect first = 25
+expect second = 7
+expect factor = 2
+bt
+expect scaled_sum
+expect math\.sn
+expect main

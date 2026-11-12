@@ -1,0 +1,17 @@
+// يحمَّل مع `-l interp_first -l interp_second` (tools/tests/interp_libs_check.sh):
+// interp_lib_which هي دالة المكتبة الأولى كما في التنفيذي المربوط، وتجد المكتبة
+// الثانية interp_lib_add في الأولى. وبالترتيب المعكوس يخرج البرنامج بـ 43.
+خارجي عرف interp_lib_add(أ: ص32, ب: ص32): ص32;
+خارجي عرف interp_lib_which(): ص32;
+خارجي عرف interp_lib_through_first(س: ص32): ص32;
+
+عرف الرئيسية(): عدد {
+    غير_آمن {
+        إذا (interp_lib_add(1, 2) != 1003) { أرجع 1; };
+        إذا (interp_lib_through_first(5) != 10) { أرجع 2; };
+        دع الأولى: ص32 = interp_lib_which();
+        إذا (الأولى == 1) { أرجع 42; };
+        إذا (الأولى == 2) { أرجع 43; };
+    }
+    أرجع 3;
+}

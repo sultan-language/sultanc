@@ -1,4 +1,5 @@
 استورد std.fs.metadata;
+استورد std.fs.path;
 استورد std.text.from_bytes;
 استورد compiler.backend.target.target_model;
 
@@ -101,17 +102,40 @@
     طالما (د < (الطول(الكل) مثل طبيعي)) {
         دع م: متغير طبيعي = 0;
         طالما (م < (الطول(الملفات) مثل طبيعي)) {
-            دع الأجزاء: متغير متجه نص = [];
-            ألحق(الأجزاء, انسخ_نص(&الكل[د]));
-            ألحق(الأجزاء, «/»);
-            ألحق(الأجزاء, انسخ_نص(&الملفات[م]));
-            دع المسار: نص = ضم_نصوص_بحث(&الأجزاء);
-            لو (ملف_موجود_للبحث(&المسار)) { أرجع اختياري.موجود(المسار); };
+            دع المسار: نص = صل_المسار(&الكل[د], &الملفات[م]);
+            إذا (ملف_موجود_للبحث(&المسار)) { أرجع اختياري.موجود(المسار); };
             م := م + 1;
         }
         د := د + 1;
     }
     أرجع اختياري.لا_شيء();
+}
+
+// The DLL a Windows program loads for -l <name> at run time: <name>.dll in
+// the first -L directory that holds it, else the bare name, which the
+// system's DLL search resolves when it is loaded. (A build links the import
+// library <name>.lib instead.)
+عام عرف مكتبة_ويندوز_للتحميل(الاسم: &نص, الأدلة: &متجه نص): نص {
+    دع الملف: نص = ضم_ثلاثة_بحث(«», الاسم, «.dll»);
+    دع د: متغير طبيعي = 0;
+    طالما (د < (الطول(*الأدلة) مثل طبيعي)) {
+        دع المسار: نص = صل_المسار(&(*الأدلة)[د], &الملف);
+        إذا (ملف_موجود_للبحث(&المسار)) { أرجع المسار; };
+        د := د + 1;
+    }
+    أرجع الملف;
+}
+
+// Whether programs for the target name the C library (and the math library)
+// on their link line: Linux, FreeBSD and Android, where libc is an ordinary
+// -l c library. macOS links libSystem (libc.tbd there is a stub for it that
+// the native Mach-O linker does not read) and Windows its C runtime anyway.
+عام عرف هدف_يسمي_مكتبة_سي(الهدف: &واصف_هدف): منطقي {
+    طابق (*الهدف).المنصة.المنصة مع
+    | هوية_منصة.لينكس -> { أرجع صواب; }
+    | هوية_منصة.فري_بي_إس_دي -> { أرجع صواب; }
+    | هوية_منصة.أندرويد -> { أرجع صواب; }
+    | _ -> { أرجع خطأ; };
 }
 
 // Resolves every -l name to a file, in command-line order, appending each

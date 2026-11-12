@@ -1,0 +1,1 @@
+public def area_value(): int { return 0; }

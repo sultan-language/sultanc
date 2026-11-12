@@ -1,0 +1,35 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/language/optimization/machine_jump_through_folded_branch.sn
+// The machine interpreter's optimizer (compiler/interpreter/machine/machine_optimizer.sn)
+// keeps a jump that other code reaches through a branch on a constant it removed. With
+// keep_or_take inlined for a constant true, the vector's drop flag is a constant false:
+// the block that frees the vector's buffer jumps to the test of that flag, which never
+// jumps and goes, so the jump after it is that block's way to the return. Inverting the
+// branch before the jump (`branch X; jump Y; X:` to `branch-not Y; X:`) dropped that jump,
+// and the block then jumped back to itself and freed the buffer forever.
+
+def consume(v: vector int): int { return length(v) as int; }
+
+def filled(n: int): vector int {
+    let v: mutable vector int = [];
+    let i: mutable int = 0;
+    while (i < n) { append(v, i); i := i + 1; }
+    return v;
+}
+
+def keep_or_take(take: bool, n: int): int {
+    let v: vector int = filled(n);
+    if (take) { return consume(v); };
+    return 1;
+}
+
+def main(): int {
+    let total: mutable int = keep_or_take(true, 10);
+    total := total + keep_or_take(true, 0);
+    let i: mutable int = 0;
+    while (i < 3) { total := total + keep_or_take(true, i + 4); i := i + 1; }
+    return total + keep_or_take(false, 5) + 16;
+}

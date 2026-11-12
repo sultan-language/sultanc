@@ -1352,10 +1352,11 @@ __LLVM_Value__ __LLVM_Emit_Expression__(__LLVM_Emitter__ *emitter,
                 if (left.value == NULL || left.type == NULL ||
                     !__Type_Resolve__(emitter->semantic, left.type, &resolved) ||
                     (resolved.__Kind__ != __Resolved_Type_Reference__ &&
+                     resolved.__Kind__ != __Resolved_Type_Pointer__ &&
                      resolved.__Kind__ != __Resolved_Type_Box__) ||
                     resolved.__Inner__ == NULL)
                 {
-                    __LLVM_Fail__("L2.6 dereference requires canonical reference/box value");
+                    __LLVM_Fail__("L2.6 dereference requires canonical reference/pointer/box value");
                     return result;
                 }
                 inner_type = __LLVM_Type__(emitter, resolved.__Inner__);
@@ -1363,7 +1364,9 @@ __LLVM_Value__ __LLVM_Emit_Expression__(__LLVM_Emitter__ *emitter,
                     return result;
                 result.value =
                     LLVMBuildLoad2(emitter->builder, inner_type, left.value, "dereference.load");
-                result.type = resolved.__Inner__;
+                result.type = resolved.__Kind__ == __Resolved_Type_Pointer__
+                                  ? __Type_Unwrap_Mutable__(resolved.__Inner__)
+                                  : resolved.__Inner__;
                 /* Reading through a Reference is a non-owning view. Moving
                  * an owned payload out of a Box, however, consumes the Box:
                  * release only the now-empty allocation, and disown the

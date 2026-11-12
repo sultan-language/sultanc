@@ -1,0 +1,106 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 0
+// نظير: tests/ar/msir/pipeline_level.sn
+// The optimization pipeline's level (msir_optimization_pipeline.sn,
+// مستوى_تحسين_مسير): at بلا (-O0) no pass runs and the call to a small
+// callee stays; at افتراضي the callee is inlined, the caller is reported
+// changed, and the result verifies.
+import compiler.msir.msir_model;
+import compiler.msir.identifiers;
+import compiler.msir.msir_builder;
+import compiler.msir.msir_verifier;
+import compiler.msir.msir_optimization_pipeline;
+import compiler.msir.debug_contract;
+import compiler.frontend.types.type_identity;
+import compiler.frontend.types.type_context;
+import compiler.frontend.types.type_registry;
+import compiler.frontend.types.builtins_generated;
+
+def test_block(result: نتيجة_بناء_كتلة_مسير): معرف_كتلة_مسير {
+    match result with
+    | نتيجة_بناء_كتلة_مسير.مبنية(id) -> { return id; }
+    | _ -> { return معرف_كتلة_مسير_من(معرف_دالة_مسير_من(9999), 9999); };
+}
+
+def test_value(result: نتيجة_بناء_قيمة_مسير): معرف_قيمة_مسير {
+    match result with
+    | نتيجة_بناء_قيمة_مسير.مبنية(id) -> { return id; }
+    | _ -> { return معرف_قيمة_مسير_من(معرف_دالة_مسير_من(9999), 9999); };
+}
+
+// The start function returns the result of a call to a function returning 42.
+def program_with_call(types: &mutable سجل_أنواع): برنامج_مسير {
+    let int_type: معرف_نوع = قنن_نوعا_بدائيا(types, نوع_بدائي_مقنن.ص64());
+    let program: mutable برنامج_مسير = برنامج_مسير_جديد();
+    let no_parameters: vector معرف_نوع = [];
+    let build: حالة_بناء_مسير = حالة_بناء_مسير_جديدة();
+    let caller: معرف_دالة_مسير = أضف_دالة_مسير(&mutable program, &no_parameters, option.some(int_type));
+    let callee: معرف_دالة_مسير = أضف_دالة_مسير(&mutable program, &no_parameters, option.some(int_type));
+    let caller_block: معرف_كتلة_مسير = test_block(أضف_كتلة_مسير(&mutable program, caller));
+    let callee_block: معرف_كتلة_مسير = test_block(أضف_كتلة_مسير(&mutable program, callee));
+    let constant: معرف_قيمة_مسير = test_value(
+        أصدر_ثابتا_مسير(&mutable program, &build, callee, callee_block, ثابت_مسير.صحيح_موقع(42), int_type)
+    );
+    اختم_بإرجاع_مسير(&mutable program, callee, callee_block, option.some(constant));
+    let no_arguments: vector معرف_قيمة_مسير = [];
+    let result: معرف_قيمة_مسير = test_value(
+        أصدر_نداء_مسير(&mutable program, &build, caller, caller_block, callee, &no_arguments)
+    );
+    اختم_بإرجاع_مسير(&mutable program, caller, caller_block, option.some(result));
+    عين_دالة_بدء_برنامج_مسير(&mutable program, caller);
+    return program;
+}
+
+// The calls to Sultan functions in the function at a position.
+def calls_in(program: &برنامج_مسير, position: uint): uint {
+    let count: mutable uint = 0;
+    let b: mutable uint = 0;
+    while (b < (length((*program).الدوال[position].الكتل) as uint)) {
+        let i: mutable uint = 0;
+        while (i < (length((*program).الدوال[position].الكتل[b].التعليمات) as uint)) {
+            match (*program).الدوال[position].الكتل[b].التعليمات[i].العملية with
+            | عملية_مسير.نداء(call) -> {
+                match call.الهدف with
+                | هدف_نداء_مسير.دالة_سلطان(_) -> { count := count + 1; }
+                | _ -> { };
+            }
+            | _ -> { };
+            i := i + 1;
+        }
+        b := b + 1;
+    }
+    return count;
+}
+
+def accepted(program: &برنامج_مسير, types: &سجل_أنواع): bool {
+    match تحقق_برنامج_مسير(program, types) with
+    | نتيجة_تحقق_مسير.صالح -> { return true; }
+    | نتيجة_تحقق_مسير.مرفوض(_) -> { return false; };
+}
+
+def main(): int {
+    let types: mutable سجل_أنواع = سجل_أنواع_جديد();
+    let program: mutable برنامج_مسير = program_with_call(&mutable types);
+    let debug: mutable بيانات_تصحيح_مسير = بيانات_تصحيح_مسير_جديدة();
+    if (calls_in(&program, 0) != 1) { return 1; };
+    // بلا: nothing runs, nothing changes, the call stays.
+    let none_changed: vector bool = حسن_برنامج_مسير(
+        &mutable program, &types, &mutable debug, نطاق_تحسين_مسير.كل_الدوال(), مستوى_تحسين_مسير.بلا()
+    );
+    if (length(none_changed) != 2 || none_changed[0] || none_changed[1]) { return 2; };
+    if (calls_in(&program, 0) != 1) { return 3; };
+    if (!accepted(&program, &types)) { return 4; };
+    // افتراضي: the callee is inlined and the caller reported changed.
+    let changed: vector bool = حسن_برنامج_مسير(
+        &mutable program, &types, &mutable debug, نطاق_تحسين_مسير.كل_الدوال(), مستوى_تحسين_مسير.افتراضي()
+    );
+    if (length(changed) != 2 || !changed[0]) { return 5; };
+    if (calls_in(&program, 0) != 0) { return 6; };
+    if (!accepted(&program, &types)) { return 7; };
+    // And the masked verification of the changed set agrees with the full one.
+    match تحقق_دوال_برنامج_مسير(&program, &types, &changed) with
+    | نتيجة_تحقق_مسير.صالح -> { }
+    | نتيجة_تحقق_مسير.مرفوض(_) -> { return 8; };
+    return 0;
+}

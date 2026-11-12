@@ -94,3 +94,14 @@
 # The calling thread's exit (not exit_group); FreeBSD's thr_new has no Linux row.
 إنهاء_خيط exit
 إنشاء_خيط -
+# The readiness poller (std.os.poll): epoll. epoll_pwait with a NULL
+# sigmask is epoll_wait on every architecture, including those without it.
+أنشئ_مستطلع_أحداث epoll_create1
+تحكم_مستطلع_أحداث epoll_ctl
+انتظر_مستطلع_أحداث epoll_pwait
+# std.process.id and std.os.terminal (isatty: TCGETS).
+معرف_العملية getpid
+تحكم_جهاز ioctl
+# std.os.poll's ring poller: io_uring.
+إعداد_حلقة_إدخال io_uring_setup
+دخول_حلقة_إدخال io_uring_enter

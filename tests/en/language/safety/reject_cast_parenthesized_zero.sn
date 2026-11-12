@@ -1,0 +1,12 @@
+// اختبار: رفض
+// أهداف: arm64-darwin,x86_64-linux
+// تشخيص: SULTANC-SAFETY-UNSAFE-OPERATION
+// نظير: tests/ar/language/safety/reject_cast_parenthesized_zero.sn
+// Only the bare literal `0 as *T` is exempt: `(0)` is not.
+type First = { value: int };
+type Second = { other: int };
+
+def main(): int {
+    let p: *First = (0) as *First;
+    return 0;
+}

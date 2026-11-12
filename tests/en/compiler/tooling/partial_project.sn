@@ -1,0 +1,119 @@
+// اختبار: تشغيل
+// خروج: 42
+// نظير: tests/ar/compiler/tooling/partial_project.sn
+// A project whose c.sn cannot be bound (an unknown name): a tooling request
+// still binds a.sn and b.sn, so the uses of `f` in b.sn are found, and it
+// reports which sources are incomplete. A compilation of the same project is
+// rejected with the same error count as before.
+import compiler.driver.source_inputs;
+import compiler.frontend.semantic_pipeline;
+import compiler.frontend.tooling_queries;
+import compiler.frontend.tooling_facts;
+import compiler.frontend.cancellation;
+import compiler.frontend.module_loading.logical_environment;
+import compiler.frontend.names.identifiers;
+import compiler.frontend.names.resolved_bindings;
+import compiler.backend.target.target_model;
+import compiler.backend.target.target_registry;
+import compiler.diagnostics.engine;
+import compiler.source.span;
+import std.text.search;
+import std.text.transform;
+
+def host(): اختياري واصف_هدف {
+    match حل_هدف_المضيف_المسجل() with
+    | نتيجة_حل_هدف.غير_مسجل -> { return اختياري.لا_شيء(); }
+    | نتيجة_حل_هدف.محلول(target) -> { return اختياري.موجود(target); };
+}
+
+def directory(): string { return "tests/en/compiler/tooling/partial/"; }
+
+def path_of(name: string): string {
+    let parts: vector string = [directory(), name];
+    let separator: string = "";
+    return صل_النصوص(&parts, &separator);
+}
+
+// The project as the LSP builds it: a.sn is the root, b.sn and c.sn join it.
+def analyse(tooling: bool): نتيجة_بناء_واجهة_قابلة_للإلغاء {
+    let root: string = path_of("a.sn");
+    let extras: vector string = [path_of("b.sn"), path_of("c.sn")];
+    match ابن_إعداد_تجميع_مباشر(&root, &extras) with
+    | نتيجة_إعداد_تجميع_مباشر.غير_صالح -> { return نتيجة_بناء_واجهة_قابلة_للإلغاء.ملغاة(); }
+    | نتيجة_إعداد_تجميع_مباشر.جاهز({ البيئة: env, المفتاح_الجذري: key, المفاتيح_المباشرة: keys }) -> {
+        let more: mutable vector مفتاح_وحدة_مقنن = [];
+        let i: mutable uint = 1;
+        while (i < (length(keys) as uint)) {
+            ألحق(more, انسخ_مفتاح_وحدة_مقنن(&keys[i]));
+            i := i + 1;
+        }
+        let request: طلب_واجهة_وحدة = { البيئة: env, المفتاح_الجذري: key, احتفظ_بحقائق_الأدوات: tooling };
+        let cancel: mutable حالة_إلغاء_واجهة = حالة_إلغاء_واجهة_جديدة();
+        return ابن_واجهة_وحدة_بهدف_قابلة_للإلغاء(request, host(), &more, &mutable cancel);
+    };
+}
+
+def source_named(frontend: &نتيجة_واجهة_وحدة, name: string): uint {
+    let i: mutable uint = 0;
+    while (i < (length((*frontend).الوحدات) as uint)) {
+        let id: uint = (*frontend).الوحدات[i].معرف_المصدر;
+        match اسم_مصدر_واجهة_بمعرف(frontend, id) with
+        | اختياري.موجود(spelled) -> { if (ينتهي_بـ(&spelled, &name)) { return id; } }
+        | اختياري.لا_شيء -> { };
+        i := i + 1;
+    }
+    return 1000000;
+}
+
+def main(): int {
+    let tooling_errors: mutable uint = 0;
+    match analyse(true) with
+    | نتيجة_بناء_واجهة_قابلة_للإلغاء.مكتملة(frontend) -> {
+        let a: uint = source_named(&frontend, "partial/a.sn");
+        let b: uint = source_named(&frontend, "partial/b.sn");
+        let c: uint = source_named(&frontend, "partial/c.sn");
+        if (a == 1000000 || b == 1000000 || c == 1000000) { return 1; }
+        // `f` at its declaration, then its uses everywhere.
+        let text_a: mutable string = "";
+        match مصدر_واجهة_بمعرف(&frontend, a) with
+        | اختياري.موجود(found_source) -> { text_a := استنسخ(&found_source.المحتوى); }
+        | اختياري.لا_شيء -> { return 12; };
+        let needle: string = "f()";
+        let at: mutable uint = 0;
+        match ابحث_نصا(&text_a, &needle) with
+        | اختياري.موجود(offset) -> { at := offset; }
+        | اختياري.لا_شيء -> { return 13; };
+        match ظهور_اسم_واجهة_عند_بايت(&frontend, a, at) with
+        | اختياري.لا_شيء -> { return 2; }
+        | اختياري.موجود(found) -> {
+            match found.الرمز with
+            | اختياري.لا_شيء -> { return 3; }
+            | اختياري.موجود(symbol) -> {
+                let uses: vector ظهور_اسم_محلول = ظهورات_رمز_واجهة(&frontend, symbol);
+                let in_b: mutable uint = 0;
+                let j: mutable uint = 0;
+                while (j < (length(uses) as uint)) {
+                    if ((uses[j].النطاق.البداية.المصدر as uint) == b) { in_b := in_b + 1; }
+                    j := j + 1;
+                }
+                if (in_b != 1) { return 4; }
+            };
+        };
+        let of_a: اكتمال_مصدر_أدوات = اكتمال_مصدر_واجهة(&frontend, a);
+        let of_b: اكتمال_مصدر_أدوات = اكتمال_مصدر_واجهة(&frontend, b);
+        let of_c: اكتمال_مصدر_أدوات = اكتمال_مصدر_واجهة(&frontend, c);
+        if (!of_a.الأسماء || !of_b.الأسماء || of_c.الأسماء) { return 5; }
+        if (!of_a.الأنواع || !of_b.الأنواع || of_c.الأنواع) { return 6; }
+        if (frontend.كاملة_دلاليا) { return 7; }
+        tooling_errors := frontend.تشخيصات_الأدوات.عدد_الأخطاء as uint;
+        if (tooling_errors == 0) { return 8; }
+    }
+    | _ -> { return 9; };
+    // A compilation is still rejected, with the same errors.
+    match analyse(false) with
+    | نتيجة_بناء_واجهة_قابلة_للإلغاء.مرفوضة(diagnostics) -> {
+        if ((diagnostics.عدد_الأخطاء as uint) != tooling_errors) { return 10; }
+    }
+    | _ -> { return 11; };
+    return 42;
+}

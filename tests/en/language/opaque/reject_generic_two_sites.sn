@@ -1,0 +1,20 @@
+// اختبار: رفض
+// أهداف: arm64-darwin,x86_64-linux
+// تشخيص: SULTANC-TYPE-OPAQUE-TYPE-ARGUMENT
+// خرج-تشخيص-إنجليزي: reject_generic_two_sites.en.txt
+// خرج-تشخيص-عربي: reject_generic_two_sites.ar.txt
+// نظير: tests/ar/language/opaque/reject_generic_two_sites.sn
+// One generic called from two sites: with a record argument it is valid; with
+// an opaque argument its by-value use is not. The error is at the second
+// call, with the use inside the generic as related context.
+type Db = opaque;
+type Rec = { x: int };
+def peek<A>(p: *A): int {
+    unsafe { let copy: A = *p; };
+    return 0;
+}
+def main(): int {
+    let r: Rec = { x: 1 };
+    let fine: int = peek((&r) as *Rec);
+    return fine + peek(0 as *Db);
+}

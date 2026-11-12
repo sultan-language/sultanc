@@ -1,0 +1,5 @@
+import json.lib;
+import سجل.lib;
+import تطبيق.أشكال.area;
+
+def main(): int { return json_value() + log_value() + area_value(); }

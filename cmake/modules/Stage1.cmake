@@ -30,9 +30,13 @@ set(SULTANC_STAGE1_OBJECT
 add_custom_command(
     OUTPUT "${SULTANC_STAGE1_OBJECT}"
     COMMAND "${CMAKE_COMMAND}" -E make_directory "${SULTANC_STAGE1_OBJECT_DIRECTORY}"
+    # Stage0 has neither the thread primitives nor closure literals: the
+    # machine interpreter's host threads are its stub in Stage1
+    # (compiler/interpreter/machine/host_threads.sn).
     COMMAND "$<TARGET_FILE:sultanc-stage0-executable>"
         compiler/main.sn
         "--target=${SULTANC_STAGE1_TARGET}"
+        "--module-source=compiler.interpreter.machine.host_threads=compiler/interpreter/machine/host_threads_unavailable.sn"
         -o "${SULTANC_STAGE1_OBJECT}"
     DEPENDS sultanc-stage0-executable ${SULTANC_COMPILER_SOURCES}
         "${CMAKE_CURRENT_BINARY_DIR}/sultanc-stage1-target.txt"

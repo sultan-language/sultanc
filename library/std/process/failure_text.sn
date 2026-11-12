@@ -1,4 +1,4 @@
-// The words of a program's runtime failures (docs/ERRORS.md), rendered by
+// The words of a program's runtime failures (docs/en/reference/errors.md), rendered by
 // iSpeak: the compiler replaces this module's text at every compilation
 // (compiler/driver/program_failure_text.sn) with the same two functions,
 // rendered from its iSpeak tables, and the language of that compilation's
@@ -12,15 +12,15 @@
 
 // The frame of one runtime failure, in English or in Arabic.
 عام عرف إطار_فشل_تشغيل(المفتاح: عدد, الإنجليزية: منطقي): نص {
-    لو (المفتاح == 1) {
-        لو (الإنجليزية) { أرجع «error[SULTANC-RUNTIME-PROGRAM-STOPPED]: the program stopped»; };
+    إذا (المفتاح == 1) {
+        إذا (الإنجليزية) { أرجع «error[SULTANC-RUNTIME-PROGRAM-STOPPED]: the program stopped»; };
         أرجع «خطأ[SULTANC-RUNTIME-PROGRAM-STOPPED]: توقف البرنامج»;
     };
-    لو (المفتاح == 2) {
-        لو (الإنجليزية) { أرجع «error[SULTANC-RUNTIME-PROGRAM-STOPPED]: the program stopped — An assertion failed.»; };
+    إذا (المفتاح == 2) {
+        إذا (الإنجليزية) { أرجع «error[SULTANC-RUNTIME-PROGRAM-STOPPED]: the program stopped — An assertion failed.»; };
         أرجع «خطأ[SULTANC-RUNTIME-PROGRAM-STOPPED]: توقف البرنامج — فشل تأكيد.»;
     };
-    لو (الإنجليزية) { أرجع «error[SULTANC-RUNTIME-PROGRAM-ERROR]: the program ended with an error»; };
+    إذا (الإنجليزية) { أرجع «error[SULTANC-RUNTIME-PROGRAM-ERROR]: the program ended with an error»; };
     أرجع «خطأ[SULTANC-RUNTIME-PROGRAM-ERROR]: انتهى البرنامج بخطأ»;
 }
 

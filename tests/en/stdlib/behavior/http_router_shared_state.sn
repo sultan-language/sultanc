@@ -1,0 +1,50 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 0
+// نظير: tests/ar/stdlib/behavior/http_router_shared_state.sn
+// The router dispatches through its reference (Nahr item 1): a handler's
+// atomic counter in the router state counts every request, because the state
+// is not copied per request. The server's Date header (item 18) is added once,
+// as an IMF-fixdate (29 bytes), and a Date the service set is kept.
+import std.http.model;
+import std.http.headers;
+import std.http.body;
+import std.http.router;
+import std.http.http1.request_parser;
+import std.http.http1.connection;
+import std.http.limits;
+import std.sync.atomic;
+
+public type app_state = { hits: atomic_u64 };
+
+def hit(state: &app_state, request: &buffered_http_request, params: &route_parameters): buffered_http_response {
+    let before: u64 = atomic_u64_fetch_add(&(*state).hits, 1, memory_ordering.seq_cst());
+    let body: string = «ok»;
+    return text_http_response(200, &body);
+}
+
+def main(): int {
+    let state: app_state = { hits: atomic_u64_new(0) };
+    let router: mutable موجه_ويب<app_state> = new_http_router(state);
+    let pattern: string = «/hit»;
+    match http_router_get(&mutable router, &pattern, hit) with
+    | result.err(_) -> { return 1; }
+    | result.ok(_) -> {};
+    let raw: vector u8 = [71, 69, 84, 32, 47, 104, 105, 116, 32, 72, 84, 84, 80, 47, 49, 46, 49, 13, 10, 104, 111, 115, 116, 58, 32, 97, 13, 10, 13, 10];
+    let limits: حدود_ويب = حدود_ويب_افتراضية();
+    match parse_http1_request(&raw, &limits) with
+    | result.err(_) -> { return 2; }
+    | result.ok(parsed) -> {
+        let r1: mutable buffered_http_response = http_router_dispatch(&router, &parsed.الطلب);
+        let r2: buffered_http_response = http_router_dispatch(&router, &parsed.الطلب);
+        if (r1.الحالة != 200 || r2.الحالة != 200) { return 3; };
+        if (atomic_u64_load(&router.الحالة.hits, memory_ordering.seq_cst()) != 2) { return 4; };
+        add_server_date_header(&mutable r1);
+        add_server_date_header(&mutable r1);
+        let date: string = «date»;
+        let dates: vector string = http_header_values(&r1.الرؤوس, &date);
+        if ((length(dates) as uint) != 1) { return 5; };
+        if ((length(dates[0]) as uint) != 29) { return 6; };
+    };
+    return 0;
+}

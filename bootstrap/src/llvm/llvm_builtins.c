@@ -229,8 +229,161 @@ static int __LLVM_Builtin_Vector_Place__(__LLVM_Emitter__ *emitter,
     return 1;
 }
 
+/* Grows the buffer of a vector so that it holds at least length + ADDITIONAL
+ * elements, allocating exactly that many when it grows (Rust's
+ * Vec::reserve_exact): a length overflow traps; DATA and LENGTH are the
+ * loaded header fields, DATA_FIELD and CAPACITY_FIELD their addresses. The
+ * builder is left in the block after the growth. */
+static int __LLVM_Reserve_Vector__(__LLVM_Emitter__ *emitter,
+                                   LLVMValueRef function,
+                                   LLVMValueRef data_field,
+                                   LLVMValueRef capacity_field,
+                                   LLVMValueRef data,
+                                   LLVMValueRef length,
+                                   LLVMValueRef additional,
+                                   LLVMTypeRef element_type,
+                                   size_t element_size)
+{
+    LLVMTypeRef i64 = LLVMIntTypeInContext(emitter->context, 64U);
+    LLVMValueRef capacity = LLVMBuildLoad2(emitter->builder, i64, capacity_field, "vector.capacity");
+    LLVMValueRef required, overflow, grow, bytes_overflow, bytes, grown;
+    LLVMBasicBlockRef grow_block, done_block;
+    required = LLVMBuildAdd(emitter->builder, length, additional, "reserve.required");
+    overflow = LLVMBuildICmp(emitter->builder, LLVMIntULT, required, length, "reserve.overflow");
+    if (!__LLVM_Emit_Trap_If__(emitter, overflow, "vector.length.overflow"))
+        return 0;
+    grow = LLVMBuildICmp(emitter->builder, LLVMIntUGT, required, capacity, "reserve.grow");
+    grow_block = LLVMAppendBasicBlockInContext(emitter->context, function, "reserve.grow");
+    done_block = LLVMAppendBasicBlockInContext(emitter->context, function, "reserve.done");
+    LLVMBuildCondBr(emitter->builder, grow, grow_block, done_block);
+    LLVMPositionBuilderAtEnd(emitter->builder, grow_block);
+    bytes_overflow = LLVMBuildICmp(emitter->builder, LLVMIntUGT, required,
+                                   LLVMConstInt(i64, UINT64_MAX / (unsigned long long)element_size, 0),
+                                   "reserve.bytes.overflow");
+    if (!__LLVM_Emit_Trap_If__(emitter, bytes_overflow, "vector.backing.bytes.overflow"))
+        return 0;
+    bytes = LLVMBuildMul(emitter->builder, required, LLVMConstInt(i64, (unsigned long long)element_size, 0),
+                         "reserve.bytes");
+    grown = __LLVM_Grow_Sequence_Bytes__(
+        emitter, data, capacity,
+        LLVMBuildMul(emitter->builder, length, LLVMConstInt(i64, (unsigned long long)element_size, 0),
+                     "reserve.live.bytes"),
+        bytes, LLVMPointerType(element_type, 0U), "reserve.data");
+    if (grown == NULL)
+        return 0;
+    LLVMBuildStore(emitter->builder, grown, data_field);
+    LLVMBuildStore(emitter->builder, required, capacity_field);
+    LLVMBuildBr(emitter->builder, done_block);
+    LLVMPositionBuilderAtEnd(emitter->builder, done_block);
+    return 1;
+}
+
+/* Emits extend_from (ألحق_من), as the self-hosted LLVM provider does
+ * (اخفض_إلحاق_نطاق_متجه_إل_إل_في_إم): the source range is checked (start +
+ * count must not wrap and must not pass the source length, else trap), the
+ * vector grows once through reserve's lowering, then the range is copied by
+ * a loop of element loads and stores (a variable-length memcpy would be a
+ * libc call, and SultanC programs link none) and the length grows by count.
+ * The source is a reference to a vector header or a text header; both have
+ * the {data, length, capacity} layout. */
+static __LLVM_Value__ __LLVM_Emit_Extend_From__(__LLVM_Emitter__ *emitter, __Ast_Expression__ *expression)
+{
+    __LLVM_Value__ result = __LLVM_Invalid_Value__();
+    __Ast_Expression__ **arguments = expression->__As__.__Call__.__Arguments__;
+    LLVMTypeRef i64 = LLVMIntTypeInContext(emitter->context, 64U);
+    LLVMValueRef function = LLVMGetBasicBlockParent(LLVMGetInsertBlock(emitter->builder));
+    __LLVM_Place__ place;
+    __Resolved_Type__ resolved;
+    __Resolved_Type__ source_resolved;
+    __Ast_Type__ *source_type;
+    LLVMTypeRef element_type;
+    LLVMTypeRef source_header_type;
+    LLVMValueRef data_field, length_field, capacity_field, data, length;
+    LLVMValueRef source_length, end, source_data, destination, origin, counter, index;
+    LLVMBasicBlockRef test_block, body_block, end_block;
+    __LLVM_Value__ source, start, count;
+    size_t element_size = 0U, element_alignment = 1U;
+    if (expression->__As__.__Call__.__Argument_Count__ != 4U || function == NULL ||
+        !__LLVM_Builtin_Vector_Place__(emitter, arguments[0], &place, &resolved) ||
+        (element_type = __LLVM_Type__(emitter, resolved.__Inner__)) == NULL ||
+        !__Layout_Type__(emitter->semantic, resolved.__Inner__, &element_size, &element_alignment) ||
+        element_size == 0U || (source_type = arguments[1]->__Contextual_Type__) == NULL ||
+        !__Type_Resolve__(emitter->semantic, source_type, &source_resolved) ||
+        source_resolved.__Kind__ != __Resolved_Type_Reference__ || source_resolved.__Inner__ == NULL ||
+        (source_header_type = __LLVM_Type__(emitter, source_resolved.__Inner__)) == NULL)
+    {
+        __LLVM_Fail__("extend_from has no verified vector and source operands");
+        return result;
+    }
+    (void)element_alignment;
+    source = __LLVM_Emit_Expression__(emitter, arguments[1], source_type);
+    if (source.value == NULL)
+        return result;
+    start = __LLVM_Emit_Expression__(emitter, arguments[2], &__Body_Builtin_Uint_Type__);
+    if (start.value == NULL || (start = __LLVM_Coerce__(emitter, start, &__Body_Builtin_Uint_Type__)).value == NULL)
+        return result;
+    count = __LLVM_Emit_Expression__(emitter, arguments[3], &__Body_Builtin_Uint_Type__);
+    if (count.value == NULL || (count = __LLVM_Coerce__(emitter, count, &__Body_Builtin_Uint_Type__)).value == NULL)
+        return result;
+    /* The source range: start + count (a wrap traps) <= source length. */
+    source_length = LLVMBuildLoad2(
+        emitter->builder, i64,
+        LLVMBuildStructGEP2(emitter->builder, source_header_type, source.value, 1U, "extend.source.length.field"),
+        "extend.source.length");
+    end = LLVMBuildAdd(emitter->builder, start.value, count.value, "extend.end");
+    if (!__LLVM_Emit_Trap_If__(emitter, LLVMBuildICmp(emitter->builder, LLVMIntULT, end, start.value, "extend.wrap"),
+                               "extend.range.wrap") ||
+        !__LLVM_Emit_Trap_If__(emitter, LLVMBuildICmp(emitter->builder, LLVMIntUGT, end, source_length, "extend.past"),
+                               "extend.range.past.end"))
+        return result;
+    /* Grow once: reserve's lowering, with the count as its additional elements. */
+    data_field = LLVMBuildStructGEP2(emitter->builder, place.llvm_type, place.address, 0U, "vector.data.field");
+    length_field = LLVMBuildStructGEP2(emitter->builder, place.llvm_type, place.address, 1U, "vector.length.field");
+    capacity_field = LLVMBuildStructGEP2(emitter->builder, place.llvm_type, place.address, 2U, "vector.capacity.field");
+    data = LLVMBuildLoad2(emitter->builder, LLVMPointerType(element_type, 0U), data_field, "vector.data");
+    length = LLVMBuildLoad2(emitter->builder, i64, length_field, "vector.length");
+    if (!__LLVM_Reserve_Vector__(emitter, function, data_field, capacity_field, data, length, count.value,
+                                 element_type, element_size))
+        return result;
+    /* The buffers after the growth (the source may be the vector itself). */
+    data = LLVMBuildLoad2(emitter->builder, LLVMPointerType(element_type, 0U), data_field, "extend.data");
+    source_data = LLVMBuildLoad2(
+        emitter->builder, LLVMPointerType(element_type, 0U),
+        LLVMBuildStructGEP2(emitter->builder, source_header_type, source.value, 0U, "extend.source.data.field"),
+        "extend.source.data");
+    destination = LLVMBuildGEP2(emitter->builder, element_type, data, &length, 1U, "extend.destination");
+    origin = LLVMBuildGEP2(emitter->builder, element_type, source_data, &start.value, 1U, "extend.origin");
+    /* for (i = 0; i < count; i++) destination[i] = origin[i]; */
+    counter = __LLVM_Allocate_Stack__(emitter, i64, "extend.index");
+    LLVMBuildStore(emitter->builder, LLVMConstInt(i64, 0U, 0), counter);
+    test_block = LLVMAppendBasicBlockInContext(emitter->context, function, "extend.test");
+    body_block = LLVMAppendBasicBlockInContext(emitter->context, function, "extend.body");
+    end_block = LLVMAppendBasicBlockInContext(emitter->context, function, "extend.end");
+    LLVMBuildBr(emitter->builder, test_block);
+    LLVMPositionBuilderAtEnd(emitter->builder, test_block);
+    index = LLVMBuildLoad2(emitter->builder, i64, counter, "extend.i");
+    LLVMBuildCondBr(emitter->builder, LLVMBuildICmp(emitter->builder, LLVMIntULT, index, count.value, "extend.more"),
+                    body_block, end_block);
+    LLVMPositionBuilderAtEnd(emitter->builder, body_block);
+    LLVMBuildStore(
+        emitter->builder,
+        LLVMBuildLoad2(emitter->builder, element_type,
+                       LLVMBuildGEP2(emitter->builder, element_type, origin, &index, 1U, "extend.read"),
+                       "extend.element"),
+        LLVMBuildGEP2(emitter->builder, element_type, destination, &index, 1U, "extend.write"));
+    LLVMBuildStore(emitter->builder, LLVMBuildAdd(emitter->builder, index, LLVMConstInt(i64, 1U, 0), "extend.next"),
+                   counter);
+    LLVMBuildBr(emitter->builder, test_block);
+    LLVMPositionBuilderAtEnd(emitter->builder, end_block);
+    LLVMBuildStore(emitter->builder, LLVMBuildAdd(emitter->builder, length, count.value, "extend.length"),
+                   length_field);
+    result.value = LLVMConstNull(i64);
+    result.type = &__LLVM_Void_Type__;
+    return result;
+}
+
 /* Emits capacity, reserve_exact, pop and truncate on the vector header
- * {data, length, capacity} (docs/OWNERSHIP_AND_DESTRUCTION.md). */
+ * {data, length, capacity} (docs/en/reference/ownership.md). */
 static __LLVM_Value__ __LLVM_Emit_Vector_Primitive__(__LLVM_Emitter__ *emitter,
                                                     __Ast_Expression__ *expression,
                                                     __Ast_Type__ *expected,
@@ -283,43 +436,16 @@ static __LLVM_Value__ __LLVM_Emit_Vector_Primitive__(__LLVM_Emitter__ *emitter,
 
     if (builtin == __Name_Builtin_Reserve_Exact__)
     {
-        LLVMValueRef capacity = LLVMBuildLoad2(emitter->builder, i64, capacity_field, "vector.capacity");
         __LLVM_Value__ additional = __LLVM_Emit_Expression__(
             emitter, expression->__As__.__Call__.__Arguments__[1], &__Body_Builtin_Uint_Type__);
-        LLVMValueRef required, overflow, grow, bytes_overflow, bytes, grown;
-        LLVMBasicBlockRef grow_block, done_block;
         if (additional.value == NULL)
             return result;
         additional = __LLVM_Coerce__(emitter, additional, &__Body_Builtin_Uint_Type__);
         if (additional.value == NULL)
             return result;
-        required = LLVMBuildAdd(emitter->builder, length, additional.value, "reserve.required");
-        overflow = LLVMBuildICmp(emitter->builder, LLVMIntULT, required, length, "reserve.overflow");
-        if (!__LLVM_Emit_Trap_If__(emitter, overflow, "vector.length.overflow"))
+        if (!__LLVM_Reserve_Vector__(emitter, function, data_field, capacity_field, data, length,
+                                     additional.value, element_type, element_size))
             return result;
-        grow = LLVMBuildICmp(emitter->builder, LLVMIntUGT, required, capacity, "reserve.grow");
-        grow_block = LLVMAppendBasicBlockInContext(emitter->context, function, "reserve.grow");
-        done_block = LLVMAppendBasicBlockInContext(emitter->context, function, "reserve.done");
-        LLVMBuildCondBr(emitter->builder, grow, grow_block, done_block);
-        LLVMPositionBuilderAtEnd(emitter->builder, grow_block);
-        bytes_overflow = LLVMBuildICmp(emitter->builder, LLVMIntUGT, required,
-                                       LLVMConstInt(i64, UINT64_MAX / (unsigned long long)element_size, 0),
-                                       "reserve.bytes.overflow");
-        if (!__LLVM_Emit_Trap_If__(emitter, bytes_overflow, "vector.backing.bytes.overflow"))
-            return result;
-        bytes = LLVMBuildMul(emitter->builder, required,
-                             LLVMConstInt(i64, (unsigned long long)element_size, 0), "reserve.bytes");
-        grown = __LLVM_Grow_Sequence_Bytes__(
-            emitter, data, capacity,
-            LLVMBuildMul(emitter->builder, length, LLVMConstInt(i64, (unsigned long long)element_size, 0),
-                         "reserve.live.bytes"),
-            bytes, LLVMPointerType(element_type, 0U), "reserve.data");
-        if (grown == NULL)
-            return result;
-        LLVMBuildStore(emitter->builder, grown, data_field);
-        LLVMBuildStore(emitter->builder, required, capacity_field);
-        LLVMBuildBr(emitter->builder, done_block);
-        LLVMPositionBuilderAtEnd(emitter->builder, done_block);
         result.value = LLVMConstNull(i64);
         result.type = &__LLVM_Void_Type__;
         return result;
@@ -469,6 +595,438 @@ static __LLVM_Value__ __LLVM_Emit_Wrapping__(__LLVM_Emitter__ *emitter,
                 result.value = LLVMBuildLShr(emitter->builder, left.value, amount, "wrapping.lshr");
             break;
         }
+    }
+    result.type = type;
+    return expected != NULL ? __LLVM_Coerce__(emitter, result, expected) : result;
+}
+
+/* Emits an atomic primitive or the fence, as the self-hosted LLVM provider
+ * does (ابن_بدائي_ذري_إل_إل_في_إم, compiler/backend/provider/llvm/lowering.sn):
+ * every ordering is lowered at sequentially consistent strength, which is
+ * always sound (the ordering operands are still evaluated, then unused).
+ * - load/store: a seq_cst `load atomic` / `store atomic` with the natural
+ *   alignment of the integer (an under-aligned atomic access would become an
+ *   __atomic_* library call std does not link);
+ * - compare-and-swap: `cmpxchg` seq_cst/seq_cst, answering field 0 (the old
+ *   value);
+ * - swap and the fetch operations: `atomicrmw xchg/add/and/or/xor` seq_cst,
+ *   answering the old value;
+ * - the fence: `fence seq_cst`.
+ * The first operand is a reference, already a pointer in LLVM. */
+static __LLVM_Value__ __LLVM_Emit_Atomic__(__LLVM_Emitter__ *emitter,
+                                          __Ast_Expression__ *expression,
+                                          __Ast_Type__ *expected,
+                                          __Name_Builtin_Function__ builtin)
+{
+    __LLVM_Value__ result = __LLVM_Invalid_Value__();
+    __Ast_Expression__ **arguments = expression->__As__.__Call__.__Arguments__;
+    size_t count = expression->__As__.__Call__.__Argument_Count__;
+    size_t expected_count;
+    size_t value_count;
+    size_t index;
+    __Ast_Type__ *reference_type;
+    __Resolved_Type__ reference;
+    LLVMTypeRef cell_type;
+    __LLVM_Value__ place;
+    __LLVM_Value__ values[2];
+    unsigned alignment;
+    if (builtin == __Name_Builtin_Memory_Fence__)
+    {
+        if (count != 1U)
+        {
+            __LLVM_Fail__("memory fence has no verified ordering operand");
+            return result;
+        }
+        if (__LLVM_Emit_Expression__(emitter, arguments[0], &__Body_Builtin_U32_Type__).value == NULL)
+            return result;
+        result.value = LLVMBuildFence(emitter->builder, LLVMAtomicOrderingSequentiallyConsistent, 0, "");
+        result.type = &__LLVM_Void_Type__;
+        return result;
+    }
+    if (builtin == __Name_Builtin_Atomic_Load__)
+    {
+        expected_count = 2U;
+        value_count = 0U;
+    }
+    else if (builtin == __Name_Builtin_Atomic_Compare_Swap__)
+    {
+        expected_count = 5U;
+        value_count = 2U;
+    }
+    else
+    {
+        expected_count = 3U;
+        value_count = 1U;
+    }
+    reference_type = count > 0U ? arguments[0]->__Contextual_Type__ : NULL;
+    if (count != expected_count || reference_type == NULL ||
+        !__Type_Resolve__(emitter->semantic, reference_type, &reference) ||
+        reference.__Kind__ != __Resolved_Type_Reference__ || reference.__Inner__ == NULL ||
+        (cell_type = __LLVM_Type__(emitter, reference.__Inner__)) == NULL ||
+        LLVMGetTypeKind(cell_type) != LLVMIntegerTypeKind)
+    {
+        __LLVM_Fail__("atomic primitive has no verified integer reference operand");
+        return result;
+    }
+    alignment = LLVMGetIntTypeWidth(cell_type) / 8U;
+    place = __LLVM_Emit_Expression__(emitter, arguments[0], reference_type);
+    if (place.value == NULL)
+        return result;
+    if (LLVMGetTypeKind(LLVMTypeOf(place.value)) != LLVMPointerTypeKind)
+    {
+        __LLVM_Fail__("atomic primitive reference operand is not a pointer");
+        return result;
+    }
+    for (index = 0U; index < value_count; ++index)
+    {
+        values[index] = __LLVM_Emit_Expression__(emitter, arguments[index + 1U], reference.__Inner__);
+        if (values[index].value == NULL ||
+            (values[index] = __LLVM_Coerce__(emitter, values[index], reference.__Inner__)).value == NULL)
+            return result;
+    }
+    for (index = value_count + 1U; index < count; ++index)
+    {
+        if (__LLVM_Emit_Expression__(emitter, arguments[index], &__Body_Builtin_U32_Type__).value == NULL)
+            return result;
+    }
+    switch (builtin)
+    {
+        case __Name_Builtin_Atomic_Load__:
+            result.value = LLVMBuildLoad2(emitter->builder, cell_type, place.value, "atomic.load");
+            LLVMSetOrdering(result.value, LLVMAtomicOrderingSequentiallyConsistent);
+            LLVMSetAlignment(result.value, alignment);
+            break;
+        case __Name_Builtin_Atomic_Store__:
+            result.value = LLVMBuildStore(emitter->builder, values[0].value, place.value);
+            LLVMSetOrdering(result.value, LLVMAtomicOrderingSequentiallyConsistent);
+            LLVMSetAlignment(result.value, alignment);
+            result.type = &__LLVM_Void_Type__;
+            return result;
+        case __Name_Builtin_Atomic_Compare_Swap__:
+        {
+            LLVMValueRef pair = LLVMBuildAtomicCmpXchg(
+                emitter->builder, place.value, values[0].value, values[1].value,
+                LLVMAtomicOrderingSequentiallyConsistent, LLVMAtomicOrderingSequentiallyConsistent, 0);
+            result.value = LLVMBuildExtractValue(emitter->builder, pair, 0U, "atomic.previous");
+            break;
+        }
+        default:
+        {
+            LLVMAtomicRMWBinOp operation;
+            if (builtin == __Name_Builtin_Atomic_Swap__)
+                operation = LLVMAtomicRMWBinOpXchg;
+            else if (builtin == __Name_Builtin_Atomic_Fetch_Add__)
+                operation = LLVMAtomicRMWBinOpAdd;
+            else if (builtin == __Name_Builtin_Atomic_Fetch_And__)
+                operation = LLVMAtomicRMWBinOpAnd;
+            else if (builtin == __Name_Builtin_Atomic_Fetch_Or__)
+                operation = LLVMAtomicRMWBinOpOr;
+            else
+                operation = LLVMAtomicRMWBinOpXor;
+            result.value = LLVMBuildAtomicRMW(emitter->builder, operation, place.value, values[0].value,
+                                              LLVMAtomicOrderingSequentiallyConsistent, 0);
+            break;
+        }
+    }
+    result.type = reference.__Inner__;
+    return expected != NULL ? __LLVM_Coerce__(emitter, result, expected) : result;
+}
+
+/* Emits a flat machine-memory primitive, as the self-hosted LLVM provider
+ * does (ابن_بدائي_ذاكرة_آلة_إل_إل_في_إم): the u64 address becomes a pointer
+ * by inttoptr and one 8-byte-aligned i64 load or store accesses it. Only the
+ * 64-bit flat address spaces have it; wasm targets reject the primitive. */
+static __LLVM_Value__ __LLVM_Emit_Machine_Memory__(__LLVM_Emitter__ *emitter,
+                                                  __Ast_Expression__ *expression,
+                                                  __Ast_Type__ *expected,
+                                                  __Name_Builtin_Function__ builtin)
+{
+    __LLVM_Value__ result = __LLVM_Invalid_Value__();
+    size_t count = builtin == __Name_Builtin_Machine_Memory_Read__ ? 1U : 2U;
+    LLVMTypeRef word = LLVMIntTypeInContext(emitter->context, 64U);
+    LLVMTypeRef pointer = LLVMPointerTypeInContext(emitter->context, 0U);
+    __LLVM_Value__ operands[2];
+    LLVMValueRef place;
+    size_t index;
+    if (emitter->target == NULL ||
+        (emitter->target->architecture != __Bootstrap_Target_Architecture_X86_64__ &&
+         emitter->target->architecture != __Bootstrap_Target_Architecture_AArch64__ &&
+         emitter->target->architecture != __Bootstrap_Target_Architecture_RISCV64__) ||
+        expression->__As__.__Call__.__Argument_Count__ != count)
+    {
+        __LLVM_Fail__("machine memory is supported only for 64-bit native targets");
+        return result;
+    }
+    for (index = 0U; index < count; ++index)
+    {
+        operands[index] = __LLVM_Emit_Expression__(emitter, expression->__As__.__Call__.__Arguments__[index],
+                                                   &__Body_Builtin_U64_Type__);
+        if (operands[index].value == NULL ||
+            (operands[index] = __LLVM_Coerce__(emitter, operands[index], &__Body_Builtin_U64_Type__)).value ==
+                NULL)
+            return result;
+        if (LLVMTypeOf(operands[index].value) != word)
+        {
+            __LLVM_Fail__("machine memory operand is not a 64-bit word");
+            return result;
+        }
+    }
+    place = LLVMBuildIntToPtr(emitter->builder, operands[0].value, pointer, "machine.place");
+    if (builtin == __Name_Builtin_Machine_Memory_Write__)
+    {
+        result.value = LLVMBuildStore(emitter->builder, operands[1].value, place);
+        LLVMSetAlignment(result.value, 8U);
+        result.type = &__LLVM_Void_Type__;
+        return result;
+    }
+    result.value = LLVMBuildLoad2(emitter->builder, word, place, "machine.word");
+    LLVMSetAlignment(result.value, 8U);
+    result.type = &__Body_Builtin_U64_Type__;
+    return expected != NULL ? __LLVM_Coerce__(emitter, result, expected) : result;
+}
+
+/* Emits a WebAssembly linear-memory primitive, as the self-hosted LLVM
+ * provider does (ابن_بدائي_ذاكرة_خطية_إل_إل_في_إم): only wasm32, whose one
+ * linear memory is addressed by u32 offsets, has them; elsewhere they are
+ * rejected, never emulated.
+ * - grow: llvm.wasm.memory.grow.i32(memory 0, pages);
+ * - read/write: the offset becomes a pointer by inttoptr and one 4-byte-
+ *   aligned i32 load/store accesses it;
+ * - copy: llvm.memcpy (memory.copy under bulk memory, the default wasm CPU);
+ * - heap base: ptrtoint of the external `__heap_base` the wasm linker defines. */
+static __LLVM_Value__ __LLVM_Emit_Linear_Memory__(__LLVM_Emitter__ *emitter,
+                                                 __Ast_Expression__ *expression,
+                                                 __Ast_Type__ *expected,
+                                                 __Name_Builtin_Function__ builtin)
+{
+    __LLVM_Value__ result = __LLVM_Invalid_Value__();
+    LLVMTypeRef word = LLVMIntTypeInContext(emitter->context, 32U);
+    LLVMTypeRef pointer = LLVMPointerTypeInContext(emitter->context, 0U);
+    size_t count = expression->__As__.__Call__.__Argument_Count__;
+    LLVMValueRef operands[3];
+    size_t index;
+    if (emitter->target == NULL || emitter->target->architecture != __Bootstrap_Target_Architecture_Wasm32__ ||
+        count > 3U)
+    {
+        __LLVM_Fail__("linear memory is supported only for wasm32 targets");
+        return result;
+    }
+    for (index = 0U; index < count; ++index)
+    {
+        __LLVM_Value__ value = __LLVM_Emit_Expression__(
+            emitter, expression->__As__.__Call__.__Arguments__[index], &__Body_Builtin_U32_Type__);
+        if (value.value == NULL || (value = __LLVM_Coerce__(emitter, value, &__Body_Builtin_U32_Type__)).value == NULL)
+            return result;
+        operands[index] = value.value;
+    }
+    switch (builtin)
+    {
+        case __Name_Builtin_Linear_Memory_Grow__:
+        {
+            static const char name[] = "llvm.wasm.memory.grow";
+            unsigned id = LLVMLookupIntrinsicID(name, sizeof(name) - 1U);
+            LLVMValueRef arguments[2];
+            if (id == 0U || count != 1U)
+            {
+                __LLVM_Fail__("linear memory grow has no LLVM intrinsic");
+                return result;
+            }
+            arguments[0] = LLVMConstInt(word, 0U, 0);
+            arguments[1] = operands[0];
+            result.value = LLVMBuildCall2(emitter->builder, LLVMIntrinsicGetType(emitter->context, id, &word, 1U),
+                                          LLVMGetIntrinsicDeclaration(emitter->module, id, &word, 1U),
+                                          arguments, 2U, "linear.grow");
+            break;
+        }
+        case __Name_Builtin_Linear_Memory_Read__:
+            result.value = LLVMBuildLoad2(emitter->builder, word,
+                                          LLVMBuildIntToPtr(emitter->builder, operands[0], pointer, "linear.place"),
+                                          "linear.word");
+            LLVMSetAlignment(result.value, 4U);
+            break;
+        case __Name_Builtin_Linear_Memory_Write__:
+            result.value = LLVMBuildStore(
+                emitter->builder, operands[1],
+                LLVMBuildIntToPtr(emitter->builder, operands[0], pointer, "linear.place"));
+            LLVMSetAlignment(result.value, 4U);
+            result.type = &__LLVM_Void_Type__;
+            return result;
+        case __Name_Builtin_Linear_Memory_Copy__:
+            result.value = LLVMBuildMemCpy(
+                emitter->builder, LLVMBuildIntToPtr(emitter->builder, operands[0], pointer, "linear.destination"),
+                1U, LLVMBuildIntToPtr(emitter->builder, operands[1], pointer, "linear.source"), 1U, operands[2]);
+            result.type = &__LLVM_Void_Type__;
+            return result;
+        default:
+        {
+            LLVMValueRef base = LLVMGetNamedGlobal(emitter->module, "__heap_base");
+            if (base == NULL)
+                base = LLVMAddGlobal(emitter->module, LLVMIntTypeInContext(emitter->context, 8U), "__heap_base");
+            result.value = LLVMBuildPtrToInt(emitter->builder, base, word, "linear.heap.base");
+            break;
+        }
+    }
+    result.type = &__Body_Builtin_U32_Type__;
+    return expected != NULL ? __LLVM_Coerce__(emitter, result, expected) : result;
+}
+
+/* Calls the LLVM float intrinsic NAME overloaded on the operands' float type. */
+static LLVMValueRef __LLVM_Emit_Float_Intrinsic__(__LLVM_Emitter__ *emitter,
+                                                  const char *name,
+                                                  LLVMValueRef *operands,
+                                                  unsigned count)
+{
+    unsigned id = LLVMLookupIntrinsicID(name, strlen(name));
+    LLVMTypeRef type = LLVMTypeOf(operands[0]);
+    if (id == 0U)
+    {
+        __LLVM_Fail__("float primitive has no LLVM intrinsic");
+        return NULL;
+    }
+    return LLVMBuildCall2(emitter->builder, LLVMIntrinsicGetType(emitter->context, id, &type, 1U),
+                          LLVMGetIntrinsicDeclaration(emitter->module, id, &type, 1U), operands, count,
+                          "float.operation");
+}
+
+/* IEEE 754-2019 minimum/maximum spelled with compares and selects, for
+ * targets whose LLVM back end may lower llvm.minimum/llvm.maximum to a libm
+ * call (ابن_أدنى_أقصى_صريح_إل_إل_في_إم): unordered operands give a + b (a
+ * quiet NaN); equal operands (only the sign of a zero can differ) combine
+ * their bits with OR (minimum: -0 wins) or AND (maximum: +0 wins); otherwise
+ * an ordered compare selects. */
+static LLVMValueRef __LLVM_Emit_Explicit_Minimum_Maximum__(__LLVM_Emitter__ *emitter,
+                                                           LLVMValueRef left,
+                                                           LLVMValueRef right,
+                                                           unsigned bits,
+                                                           int maximum)
+{
+    LLVMBuilderRef builder = emitter->builder;
+    LLVMTypeRef type = LLVMTypeOf(left);
+    LLVMTypeRef integer = LLVMIntTypeInContext(emitter->context, bits);
+    LLVMValueRef unordered = LLVMBuildFCmp(builder, LLVMRealUNO, left, right, "float.unordered");
+    LLVMValueRef ordered = LLVMBuildFCmp(builder, maximum ? LLVMRealOGT : LLVMRealOLT, left, right,
+                                         "float.ordered");
+    LLVMValueRef chosen = LLVMBuildSelect(builder, ordered, left, right, "float.chosen");
+    LLVMValueRef equal = LLVMBuildFCmp(builder, LLVMRealOEQ, left, right, "float.equal");
+    LLVMValueRef left_bits = LLVMBuildBitCast(builder, left, integer, "float.left.bits");
+    LLVMValueRef right_bits = LLVMBuildBitCast(builder, right, integer, "float.right.bits");
+    LLVMValueRef zero_bits = maximum ? LLVMBuildAnd(builder, left_bits, right_bits, "float.zero.bits")
+                                     : LLVMBuildOr(builder, left_bits, right_bits, "float.zero.bits");
+    LLVMValueRef zero = LLVMBuildBitCast(builder, zero_bits, type, "float.zero");
+    LLVMValueRef ordered_result = LLVMBuildSelect(builder, equal, zero, chosen, "float.ordered.result");
+    LLVMValueRef nan = LLVMBuildFAdd(builder, left, right, "float.nan");
+    return LLVMBuildSelect(builder, unordered, nan, ordered_result, "float.minmax");
+}
+
+/* Emits a float operation as the LLVM intrinsic rustc emits for f64::sqrt,
+ * abs, floor, ceil, trunc, round_ties_even, minimum, maximum, copysign and
+ * mul_add (ابن_عملية_عائمة_إل_إل_في_إم). The selected target must have the
+ * instruction (يدعم_عملية_عائمة_للهدف): the rounding operations exist only on
+ * AArch64 and wasm32, fused multiply-add only on AArch64 and RISC-V; std
+ * selects its exact software forms elsewhere, so no libm call is ever
+ * emitted. llvm.minimum/llvm.maximum are native on AArch64, WebAssembly and
+ * x86-64; other targets use the explicit compare-and-select form. */
+static __LLVM_Value__ __LLVM_Emit_Float_Operation__(__LLVM_Emitter__ *emitter,
+                                                   __Ast_Expression__ *expression,
+                                                   __Ast_Type__ *expected,
+                                                   __Name_Builtin_Function__ builtin)
+{
+    __LLVM_Value__ result = __LLVM_Invalid_Value__();
+    __Ast_Type__ *type = expression->__Contextual_Type__;
+    __Bootstrap_Target_Architecture__ architecture;
+    __Resolved_Type__ resolved;
+    LLVMValueRef operands[3];
+    size_t count = expression->__As__.__Call__.__Argument_Count__;
+    size_t index;
+    int supported;
+    int native_minimum;
+    if (emitter->target == NULL || type == NULL || !__Type_Resolve__(emitter->semantic, type, &resolved) ||
+        resolved.__Kind__ != __Resolved_Type_Float__ || count == 0U || count > 3U)
+    {
+        __LLVM_Fail__("float primitive has no verified float type");
+        return result;
+    }
+    architecture = emitter->target->architecture;
+    switch (builtin)
+    {
+        case __Name_Builtin_Float_Floor__:
+        case __Name_Builtin_Float_Ceil__:
+        case __Name_Builtin_Float_Trunc__:
+        case __Name_Builtin_Float_Round_Even__:
+            supported = architecture == __Bootstrap_Target_Architecture_AArch64__ ||
+                        architecture == __Bootstrap_Target_Architecture_Wasm32__;
+            break;
+        case __Name_Builtin_Float_Fused_Multiply_Add__:
+            supported = architecture == __Bootstrap_Target_Architecture_AArch64__ ||
+                        architecture == __Bootstrap_Target_Architecture_RISCV64__;
+            break;
+        default:
+            supported = 1;
+            break;
+    }
+    if (!supported)
+    {
+        __LLVM_Fail__("float primitive has no instruction on the selected target");
+        return result;
+    }
+    for (index = 0U; index < count; ++index)
+    {
+        __LLVM_Value__ value = __LLVM_Emit_Expression__(emitter, expression->__As__.__Call__.__Arguments__[index], type);
+        if (value.value == NULL || (value = __LLVM_Coerce__(emitter, value, type)).value == NULL)
+            return result;
+        operands[index] = value.value;
+    }
+    native_minimum = architecture == __Bootstrap_Target_Architecture_AArch64__ ||
+                     architecture == __Bootstrap_Target_Architecture_Wasm32__ ||
+                     architecture == __Bootstrap_Target_Architecture_X86_64__;
+    switch (builtin)
+    {
+        case __Name_Builtin_Float_Sqrt__:
+            result.value = __LLVM_Emit_Float_Intrinsic__(emitter, "llvm.sqrt", operands, 1U);
+            break;
+        case __Name_Builtin_Float_Abs__:
+            result.value = __LLVM_Emit_Float_Intrinsic__(emitter, "llvm.fabs", operands, 1U);
+            break;
+        case __Name_Builtin_Float_Floor__:
+            result.value = __LLVM_Emit_Float_Intrinsic__(emitter, "llvm.floor", operands, 1U);
+            break;
+        case __Name_Builtin_Float_Ceil__:
+            result.value = __LLVM_Emit_Float_Intrinsic__(emitter, "llvm.ceil", operands, 1U);
+            break;
+        case __Name_Builtin_Float_Trunc__:
+            result.value = __LLVM_Emit_Float_Intrinsic__(emitter, "llvm.trunc", operands, 1U);
+            break;
+        case __Name_Builtin_Float_Round_Even__:
+            result.value = __LLVM_Emit_Float_Intrinsic__(emitter, "llvm.roundeven", operands, 1U);
+            break;
+        case __Name_Builtin_Float_Minimum__:
+        case __Name_Builtin_Float_Maximum__:
+            if (count != 2U)
+                break;
+            result.value = native_minimum
+                               ? __LLVM_Emit_Float_Intrinsic__(
+                                     emitter,
+                                     builtin == __Name_Builtin_Float_Minimum__ ? "llvm.minimum" : "llvm.maximum",
+                                     operands, 2U)
+                               : __LLVM_Emit_Explicit_Minimum_Maximum__(
+                                     emitter, operands[0], operands[1], resolved.__Bits__,
+                                     builtin == __Name_Builtin_Float_Maximum__);
+            break;
+        case __Name_Builtin_Float_Copy_Sign__:
+            if (count == 2U)
+                result.value = __LLVM_Emit_Float_Intrinsic__(emitter, "llvm.copysign", operands, 2U);
+            break;
+        case __Name_Builtin_Float_Fused_Multiply_Add__:
+            if (count == 3U)
+                result.value = __LLVM_Emit_Float_Intrinsic__(emitter, "llvm.fma", operands, 3U);
+            break;
+        default:
+            break;
+    }
+    if (result.value == NULL)
+    {
+        __LLVM_Fail__("float primitive has no verified operands");
+        return result;
     }
     result.type = type;
     return expected != NULL ? __LLVM_Coerce__(emitter, result, expected) : result;
@@ -630,7 +1188,12 @@ __LLVM_Value__ __LLVM_Emit_Builtin_Call__(__LLVM_Emitter__ *emitter,
          * (compiler/backend/provider/llvm/lowering.sn): an indirect C call.
          * System V x86-64 passes every word as a variadic argument (the same
          * registers as a prototyped call, plus AL for a variadic callee);
-         * AAPCS64 uses the prototyped (i64 x8, double x8) type. */
+         * Windows x64 passes the eight integer words positionally to a
+         * variadic `ret (...)` type: the first four as double, which the
+         * Win64 variadic convention passes in xmm k and copies to the k-th
+         * integer register (so an integer or a float parameter finds the
+         * same bits), the next four as i64 on the stack; AAPCS64 uses the
+         * prototyped (i64 x8, double x8) type. */
         LLVMTypeRef word = LLVMIntTypeInContext(emitter->context, 64U);
         LLVMTypeRef real = LLVMDoubleTypeInContext(emitter->context);
         LLVMTypeRef pointer = LLVMPointerTypeInContext(emitter->context, 0U);
@@ -643,6 +1206,8 @@ __LLVM_Value__ __LLVM_Emit_Builtin_Call__(__LLVM_Emitter__ *emitter,
         __LLVM_Value__ address;
         size_t index;
         int variadic;
+        int windows_x64 = 0;
+        unsigned operand_count = 16U;
         if (emitter->target == NULL || expression->__As__.__Call__.__Argument_Count__ != 18U ||
             result_ast == NULL)
         {
@@ -650,13 +1215,18 @@ __LLVM_Value__ __LLVM_Emit_Builtin_Call__(__LLVM_Emitter__ *emitter,
             return result;
         }
         if (emitter->target->architecture == __Bootstrap_Target_Architecture_X86_64__ &&
-            emitter->target->platform != __Bootstrap_Target_Platform_Windows__)
+            emitter->target->platform == __Bootstrap_Target_Platform_Windows__)
+        {
+            variadic = 1;
+            windows_x64 = 1;
+        }
+        else if (emitter->target->architecture == __Bootstrap_Target_Architecture_X86_64__)
             variadic = 1;
         else if (emitter->target->architecture == __Bootstrap_Target_Architecture_AArch64__)
             variadic = 0;
         else
         {
-            __LLVM_Fail__("C address call is supported only for 64-bit System V and AAPCS64 targets");
+            __LLVM_Fail__("C address call is supported only for 64-bit System V, Windows x64 and AAPCS64 targets");
             return result;
         }
         result_type = (result_ast == &__Body_Builtin_F64_Type__) ? real : word;
@@ -675,9 +1245,17 @@ __LLVM_Value__ __LLVM_Emit_Builtin_Call__(__LLVM_Emitter__ *emitter,
             parameter_types[index] = index < 8U ? word : real;
             operands[index] = value.value;
         }
+        if (windows_x64)
+        {
+            /* Only the eight integer words, positionally; words 0..3 as double. */
+            for (index = 0U; index < 4U; ++index)
+                operands[index] = LLVMBuildBitCast(emitter->builder, operands[index], real, "c.word.xmm");
+            operand_count = 8U;
+        }
         signature = variadic ? LLVMFunctionType(result_type, parameter_types, 0U, 1)
                              : LLVMFunctionType(result_type, parameter_types, 16U, 0);
-        result.value = LLVMBuildCall2(emitter->builder, signature, callee, operands, 16U, "c.result");
+        result.value =
+            LLVMBuildCall2(emitter->builder, signature, callee, operands, operand_count, "c.result");
         result.type = result_ast;
         return expected != NULL ? __LLVM_Coerce__(emitter, result, expected) : result;
     }
@@ -1038,10 +1616,30 @@ __LLVM_Value__ __LLVM_Emit_Builtin_Call__(__LLVM_Emitter__ *emitter,
     if (builtin == __Name_Builtin_Capacity__ || builtin == __Name_Builtin_Reserve_Exact__ ||
         builtin == __Name_Builtin_Pop__ || builtin == __Name_Builtin_Truncate__)
         return __LLVM_Emit_Vector_Primitive__(emitter, expression, expected, builtin);
+    if (builtin == __Name_Builtin_Extend_From__)
+        return __LLVM_Emit_Extend_From__(emitter, expression);
     if (builtin == __Name_Builtin_Wrapping_Add__ || builtin == __Name_Builtin_Wrapping_Subtract__ ||
         builtin == __Name_Builtin_Wrapping_Multiply__ || builtin == __Name_Builtin_Wrapping_Shift_Left__ ||
         builtin == __Name_Builtin_Wrapping_Shift_Right__)
         return __LLVM_Emit_Wrapping__(emitter, expression, expected, builtin);
+    if (builtin == __Name_Builtin_Atomic_Load__ || builtin == __Name_Builtin_Atomic_Store__ ||
+        builtin == __Name_Builtin_Atomic_Swap__ || builtin == __Name_Builtin_Atomic_Compare_Swap__ ||
+        builtin == __Name_Builtin_Atomic_Fetch_Add__ || builtin == __Name_Builtin_Atomic_Fetch_And__ ||
+        builtin == __Name_Builtin_Atomic_Fetch_Or__ || builtin == __Name_Builtin_Atomic_Fetch_Xor__ ||
+        builtin == __Name_Builtin_Memory_Fence__)
+        return __LLVM_Emit_Atomic__(emitter, expression, expected, builtin);
+    if (builtin == __Name_Builtin_Machine_Memory_Read__ || builtin == __Name_Builtin_Machine_Memory_Write__)
+        return __LLVM_Emit_Machine_Memory__(emitter, expression, expected, builtin);
+    if (builtin == __Name_Builtin_Linear_Memory_Grow__ || builtin == __Name_Builtin_Linear_Memory_Read__ ||
+        builtin == __Name_Builtin_Linear_Memory_Write__ || builtin == __Name_Builtin_Linear_Memory_Copy__ ||
+        builtin == __Name_Builtin_Linear_Heap_Base__)
+        return __LLVM_Emit_Linear_Memory__(emitter, expression, expected, builtin);
+    if (builtin == __Name_Builtin_Float_Sqrt__ || builtin == __Name_Builtin_Float_Abs__ ||
+        builtin == __Name_Builtin_Float_Floor__ || builtin == __Name_Builtin_Float_Ceil__ ||
+        builtin == __Name_Builtin_Float_Trunc__ || builtin == __Name_Builtin_Float_Round_Even__ ||
+        builtin == __Name_Builtin_Float_Minimum__ || builtin == __Name_Builtin_Float_Maximum__ ||
+        builtin == __Name_Builtin_Float_Copy_Sign__ || builtin == __Name_Builtin_Float_Fused_Multiply_Add__)
+        return __LLVM_Emit_Float_Operation__(emitter, expression, expected, builtin);
     if (builtin != __Name_Builtin_None__)
     {
         __LLVM_Fail__("canonical builtin is outside the native runtime lowering boundary");

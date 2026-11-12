@@ -4,10 +4,13 @@
 استورد compiler.link.coff.target_policy;
 
 // Linker families follow object formats, never code-generation providers.
-// Every supported output is produced by SultanC's own linker for that format;
-// no external linker program and no C runtime is part of any link. An output
-// kind a format's linker does not produce is unsupported here, so the Driver
-// reports it before code generation (link.target-output-unsupported).
+// Every supported output is produced by SultanC's own linker for that format,
+// and no C runtime is part of any link. The one exception is
+// يستخدم_رابطا_خارجيا_للربط: static executables of the ELF system targets
+// the target policy still configures for ld.lld. Any other output kind a
+// format's linker does not produce is unsupported here, so the Driver
+// reports it before code generation (link.target-output-unsupported); it is
+// never handed to an external linker instead.
 // Previously ELF targets other than Linux x86_64/AArch64, ELF shared
 // libraries and every WebAssembly and SPIR-V link that needed merging were
 // reported as supported and handed to ld.lld, nld, avr-ld, msp430-ld,
@@ -43,7 +46,7 @@
         | _ -> { أرجع خطأ; };
     }
     | هوية_مزود_ربط.إلف -> {
-        أرجع يستخدم_رابط_إلف_الداخلي(الهدف);
+        أرجع يستخدم_رابط_إلف_الداخلي(الهدف) || رابط_إلف_بسكربت_للهدف(الهدف);
     }
     | هوية_مزود_ربط.كوف -> {
         أرجع يدعم_كوف_للهدف(الهدف);
@@ -57,7 +60,7 @@
 }
 
 عرف يدعم_إلف_وحدة_هدف(الهدف: &واصف_هدف): منطقي {
-    لو (!هدف_إلف_ليس_تنفيذيا_نظاميا(الهدف)) { أرجع خطأ; };
+    إذا (!هدف_إلف_ليس_تنفيذيا_نظاميا(الهدف)) { أرجع خطأ; };
     طابق سياسة_إلف_للهدف(الهدف) مع
     | اختياري.موجود(_) -> { أرجع صواب; }
     | اختياري.لا_شيء -> { أرجع خطأ; };
@@ -81,6 +84,21 @@
 عرف يدعم_ويب_أسمبلي_مكتبة_مشتركة(الهدف: &واصف_هدف): منطقي {
     أرجع (*الهدف).نموذج_البيانات.عرض_المؤشر == 32
         && (*الهدف).مزود_التشغيل == مزود_تشغيل_هدف.واسي();
+}
+
+// Whether this link is delegated to ld.lld (driver/external_linker.sn): an
+// executable that SultanC's ELF linker does not lay out for the target and
+// that the target policy explicitly names for the external linker
+// (elf/target_policy.sn يستخدم_رابط_إلف_خارجي). Never a fallback: a target
+// the internal linker supports is always linked by it, and its link errors
+// (an unsupported relocation, for one) are reported.
+عام عرف يستخدم_رابطا_خارجيا_للربط(
+    الهدف: &واصف_هدف,
+    الخرج: نوع_خرج_ربط
+): منطقي {
+    أرجع الخرج == نوع_خرج_ربط.تنفيذي()
+        && !يدعم_مزود_الربط(الهدف, الخرج)
+        && يستخدم_رابط_إلف_خارجي(الهدف);
 }
 
 // Report only concrete serializers that exist in source. Adding a Target to
@@ -118,8 +136,8 @@
             أرجع يستخدم_رابط_إلف_الداخلي(الهدف);
         }
         | هوية_مزود_ربط.ماتشو -> {
-            لو ((*الهدف).نموذج_البيانات.عرض_المؤشر != 64) { أرجع خطأ; };
-            لو ((*الهدف).نموذج_البيانات.ترتيب_البايت
+            إذا ((*الهدف).نموذج_البيانات.عرض_المؤشر != 64) { أرجع خطأ; };
+            إذا ((*الهدف).نموذج_البيانات.ترتيب_البايت
                 != ترتيب_بايت.صغير()) {
                 أرجع خطأ;
             };

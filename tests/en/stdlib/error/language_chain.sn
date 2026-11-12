@@ -3,7 +3,7 @@
 // خروج: 42
 // تفاضلي: نعم
 // نظير: tests/ar/stdlib/error/language_chain.sn
-// std.error (docs/ERRORS.md): error_describe_in resolves every error of a
+// std.error (docs/en/reference/errors.md): error_describe_in resolves every error of a
 // cause chain with the same locale, writes the connector words in the
 // locale's language (fixed std text) and isolates a message or note whose
 // direction differs from the connectors'. For Arabic, or a locale without a

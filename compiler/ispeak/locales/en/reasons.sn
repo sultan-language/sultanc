@@ -38,6 +38,7 @@
 عرف نص_سبب_سبب_مسير_بدائي_نوع_عقد_غير_متاح(): نص { أرجع «The primitive type contract is unavailable to MSIR verification»; }
 عرف نص_سبب_سبب_مسير_غير_آمن_قبل_رئيسي_وحدة_مهيئ(): نص { أرجع «A module initializer performs an unsafe operation before the main entry point»; }
 عرف نص_سبب_سبب_اسم_تصريح_جمع_ربط_اسم_تعارض(): نص { أرجع «Conflicting name bindings were found while collecting declarations»; }
+عرف نص_سبب_سبب_اسم_مرادف_منشئ_أب_غير_مطابق(): نص { أرجع «a variant alias must name the same type on both sides: write `alias A.variant = T.variant` where `A` is an alias of `T`»; }
 عرف نص_سبب_سبب_اسم_تصريح_جمع_خاص_اسم(): نص { أرجع «Declaration collection encountered a name that is private to another scope»; }
 عرف نص_سبب_سبب_اسم_حل_مكرر_تصريح(): نص { أرجع «Name resolution found multiple declarations for the same name»; }
 عرف نص_سبب_سبب_اسم_جذر_وحدة_حقيقة_مفقود(): نص { أرجع «The root module identity needed by name resolution is missing»; }
@@ -184,6 +185,10 @@
     | سبب_تشخيص.سبب_محلل_معجمي_إنشاء -> { أرجع نص_سبب_سبب_محلل_معجمي_إنشاء(); }
     | سبب_تشخيص.سبب_محلل_معجمي_داخلي -> { أرجع «The lexer failed internally»; }
     | سبب_تشخيص.سبب_محلل_معجمي_يوتيف8 -> { أرجع «The source contains a byte sequence that is not valid UTF-8»; }
+    | سبب_تشخيص.سبب_محلل_معجمي_تحكم_اتجاه -> { أرجع «The source contains a bidirectional text control character (U+202A–U+202E, U+2066–U+2069), which can make code display in a different order than it compiles»; }
+    | سبب_تشخيص.سبب_محلل_نحوي_تعشيش_عميق -> { أرجع «The source nests brackets, prefix operators or else-if links more than 256 levels deep; split the expression, the block or the chain (a match, or a table, instead of a long else-if chain)»; }
+    | سبب_تشخيص.سبب_محلل_نحوي_ملف_مضمن_غير_مقروء -> { أرجع «The file named by embed_file cannot be read; a relative path is resolved from the source file's directory»; }
+    | سبب_تشخيص.سبب_محلل_نحوي_تهيئة_قيمة_عليا_غير_مدعومة -> { أرجع «A top-level value cannot be initialized with a record, tuple or box literal»; }
     | سبب_تشخيص.سبب_ربط_كوف_غير_صحيح_كائن -> { أرجع «The COFF input object has an invalid structure»; }
     | سبب_تشخيص.سبب_ربط_كوف_غير_صحيح_تخطيط_صورة -> { أرجع «The layout of the COFF output image is inconsistent»; }
     | سبب_تشخيص.سبب_ربط_كوف_غير_قابل_للترميز_ستب_استيراد -> { أرجع «The import thunk of a function cannot address its import address table slot»; }
@@ -194,7 +199,16 @@
     | سبب_تشخيص.سبب_ربط_إلف_غير_صحيح_كائن -> { أرجع «An ELF input to the linker is not a valid object file»; }
     | سبب_تشخيص.سبب_ربط_إلف_مفقود_دخول_رمز -> { أرجع «The ELF link has no entry-point symbol»; }
     | سبب_تشخيص.سبب_ربط_إلف_مجهول_خارجي_رمز -> { أرجع «The ELF link refers to an external symbol that no input defines»; }
+    | سبب_تشخيص.سبب_ربط_إلف_غير_مدعوم_إعادة_توطين -> { أرجع «The ELF linker does not support this relocation type for the target»; }
+    | سبب_تشخيص.سبب_ربط_إلف_إعادة_توطين_خارج_من_نطاق -> { أرجع «An ELF relocation value does not fit its field»; }
     | سبب_تشخيص.سبب_ربط_مدخل_قراءة_فشل -> { أرجع «The linker could not read one of its input files»; }
+    | سبب_تشخيص.سبب_ربط_إلف_منطقة_ذاكرة_فائضة -> { أرجع «The image does not fit in the linker script's memory region»; }
+    | سبب_تشخيص.سبب_ربط_إلف_سكربت_تخطيط_مفقود -> { أرجع «A bare-metal executable needs a linker script with the board's memory layout»; }
+    | سبب_تشخيص.سبب_ربط_رابط_خارجي_غير_موجود -> { أرجع «Executables for this target are linked by ld.lld, which was not found (set SULTANC_LINKER or put ld.lld on PATH)»; }
+    | سبب_تشخيص.سبب_ربط_رابط_خارجي_فشل -> { أرجع «ld.lld, which links executables for this target, failed; its messages are above»; }
+    | سبب_تشخيص.سبب_ربط_مدخل_صيغة_غير_معروفة -> { أرجع «The file is not an object file, archive, library or linker script»; }
+    | سبب_تشخيص.سبب_ربط_مدخل_مكتبة_نصية_خارج_ماتشو -> { أرجع «The file is a text-based dylib stub (.tbd), which only a macOS or iOS link reads»; }
+    | سبب_تشخيص.سبب_ربط_مدخل_مكتبة_نصية_تالفة -> { أرجع «The text-based dylib stub (.tbd) names no install name»; }
     | سبب_تشخيص.سبب_ربط_ماك_أو_غير_صحيح_كائن -> { أرجع «The Mach-O linker rejected the object file»; }
     | سبب_تشخيص.سبب_ربط_ماك_أو_مفقود_دخول_رمز -> { أرجع «The Mach-O entry-point symbol is missing»; }
     | سبب_تشخيص.سبب_ربط_ماك_أو_إعادة_توطين_خارج_من_نطاق -> { أرجع نص_سبب_سبب_ربط_ماك_أو_إعادة_توطين_خارج_من_نطاق(); }
@@ -281,6 +295,7 @@
     | سبب_تشخيص.سبب_مسير_خفض_غير_مدعوم_تعبير -> { أرجع «This expression cannot be lowered to MSIR yet»; }
     | سبب_تشخيص.سبب_مسير_خفض_غير_مدعوم_تعبير_نوع -> { أرجع «This expression's type cannot be lowered to MSIR yet»; }
     | سبب_تشخيص.سبب_مسير_خفض_غير_مدعوم_خارجي_دالة -> { أرجع «This external function cannot be lowered to MSIR yet»; }
+    | سبب_تشخيص.سبب_مسير_خفض_خارجي_رمز_بتوقيعين -> { أرجع «Another external declaration binds the same linker symbol with different parameter or result types»; }
     | سبب_تشخيص.سبب_مسير_خفض_غير_مدعوم_عبارة -> { أرجع «This statement cannot be lowered to MSIR yet»; }
     | سبب_تشخيص.سبب_مسير_مركب_عضو_نوع_عدم_تطابق -> { أرجع «An MSIR aggregate member has a different type than its declaration»; }
     | سبب_تشخيص.سبب_مسير_حسابي_معامل_نوع_عدم_تطابق -> { أرجع «An MSIR arithmetic operand has a type mismatch»; }
@@ -355,6 +370,7 @@
     | سبب_تشخيص.سبب_مسير_قيمة_من_آخر_دالة -> { أرجع «An MSIR instruction uses a value defined in a different function»; }
     | سبب_تشخيص.سبب_مسير_قيمة_مستخدم_بوصفه_موضع -> { أرجع «An MSIR value was used where a storage place is required»; }
     | سبب_تشخيص.سبب_اسم_تصريح_جمع_ربط_اسم_تعارض -> { أرجع نص_سبب_سبب_اسم_تصريح_جمع_ربط_اسم_تعارض(); }
+    | سبب_تشخيص.سبب_اسم_مرادف_منشئ_أب_غير_مطابق -> { أرجع نص_سبب_سبب_اسم_مرادف_منشئ_أب_غير_مطابق(); }
     | سبب_تشخيص.سبب_اسم_تصريح_جمع_مفقود_اسم -> { أرجع «A declaration name is missing during declaration collection»; }
     | سبب_تشخيص.سبب_اسم_تصريح_جمع_خاص_اسم -> { أرجع نص_سبب_سبب_اسم_تصريح_جمع_خاص_اسم(); }
     | سبب_تشخيص.سبب_اسم_تصريح_جمع_مصدر_عدم_تطابق -> { أرجع «Declarations were collected from a different source than the module being resolved»; }
@@ -487,6 +503,10 @@
     | سبب_تشخيص.سبب_نوع_غير_صحيح_نمط -> { أرجع «The pattern does not fit the type of the value being matched»; }
     | سبب_تشخيص.سبب_نوع_غير_صحيح_بدائي_حجة_نوع -> { أرجع «A built-in operation received an argument of a type it does not accept»; }
     | سبب_تشخيص.سبب_نوع_غير_صحيح_نوع_تعريف -> { أرجع «The type definition violates type-declaration requirements»; }
+    | سبب_تشخيص.سبب_نوع_معتم_يحجب_نوعا_مرئيا -> { أرجع «A type with this name is visible here, so this declaration would stop aliasing it and declare an opaque type»; }
+    | سبب_تشخيص.سبب_أمان_عدد_إلى_مؤشر_خام -> { أرجع «An integer converted to a raw pointer names memory the program never checked»; }
+    | سبب_تشخيص.سبب_أمان_مؤشر_خام_إلى_نوع_آخر -> { أرجع «A raw pointer converted to a pointer of another pointee type (or to or from *void) reads its memory as a type it may not hold»; }
+    | سبب_تشخيص.سبب_أمان_إضافة_متغير_لمؤشر_خام -> { أرجع «A cast from *T to *mutable T allows writes through a pointer that only allowed reads»; }
     | سبب_تشخيص.سبب_نوع_مفقود_اسم_ربط_اسم -> { أرجع «The required name binding is missing during type checking»; }
     | سبب_تشخيص.سبب_نوع_مفقود_اسم_هوية -> { أرجع «The required name identity is missing during type checking»; }
     | سبب_تشخيص.سبب_نوع_مفقود_رمز_نوع -> { أرجع «Type checking could not find the type of a symbol»; }
@@ -580,4 +600,161 @@
     | سبب_تشخيص.سبب_مفسر_وقت_تشغيل_مكتبة_خارجية_غير_محملة -> { أرجع «The library the external function names could not be loaded»; }
     | سبب_تشخيص.سبب_مفسر_وقت_تشغيل_رمز_خارجي_غير_موجود -> { أرجع «The external function was not found in its library»; }
     | سبب_تشخيص.سبب_مفسر_وقت_تشغيل_توقيع_خارجي_غير_مدعوم -> { أرجع «The interpreter cannot call a C function with this signature: a record passed or returned by value, or more than eight integer or eight floating-point arguments»; }
+    | سبب_تشخيص.سبب_سي_نحوي_متوقع_رمز -> { أرجع «A different token was expected here»; }
+    | سبب_تشخيص.سبب_سي_نحوي_متوقع_اسم_نوع -> { أرجع «A type name was expected»; }
+    | سبب_تشخيص.سبب_سي_نحوي_متوقع_تعبير -> { أرجع «An expression was expected»; }
+    | سبب_تشخيص.سبب_سي_نحوي_متوقع_تصريح -> { أرجع «A declaration was expected»; }
+    | سبب_تشخيص.سبب_سي_نحوي_متوقع_معرف_تصريح -> { أرجع «An identifier was expected in the declaration»; }
+    | سبب_تشخيص.سبب_سي_نحوي_متوقع_تصريح_معامل -> { أرجع «A parameter declaration was expected»; }
+    | سبب_تشخيص.سبب_سي_نحوي_متوقع_اسم_وسم -> { أرجع «A `{` or a tag name was expected»; }
+    | سبب_تشخيص.سبب_سي_نحوي_متوقع_تصريح_عضو -> { أرجع «A member declaration was expected»; }
+    | سبب_تشخيص.سبب_سي_نحوي_متوقع_اسم_تعداد -> { أرجع «A `{` or an enum name was expected»; }
+    | سبب_تشخيص.سبب_سي_نحوي_متوقع_اسم_عنصر_تعداد -> { أرجع «An enumerator name was expected»; }
+    | سبب_تشخيص.سبب_سي_نحوي_متوقع_لافتة_بعد_قفز -> { أرجع «A label was expected after `goto`»; }
+    | سبب_تشخيص.سبب_سي_نحوي_خيطي_في_كتلة -> { أرجع «A thread-local object in block scope must be `static` or `extern`»; }
+    | سبب_تشخيص.سبب_سي_يوتيف8_غير_صالح -> { أرجع «The C source has a byte sequence that is not valid UTF-8 (overlong, a surrogate, above U+10FFFF, truncated or a stray continuation byte)»; }
+    | سبب_تشخيص.سبب_سي_محرف_معرف_غير_صالح -> { أرجع «This character is not allowed in a C identifier (C23 XID_Start and XID_Continue)»; }
+    | سبب_تشخيص.سبب_سي_محرف_عالمي_ممنوع -> { أرجع «The universal character name names a code point that a C identifier may not contain»; }
+    | سبب_تشخيص.سبب_سي_غير_قابل_للإسناد -> { أرجع «The left side of the assignment is not a modifiable object»; }
+    | سبب_تشخيص.سبب_سي_معاملات_إسناد_مركب -> { أرجع «The operands do not fit the compound assignment»; }
+    | سبب_تشخيص.سبب_سي_معاملات_حساب_مؤشرات -> { أرجع «The operands do not fit pointer arithmetic»; }
+    | سبب_تشخيص.سبب_سي_معاملات_إزاحة -> { أرجع «The operands of the shift are not integers»; }
+    | سبب_تشخيص.سبب_سي_معاملات_ثنائية -> { أرجع «The operands do not fit the binary operator»; }
+    | سبب_تشخيص.سبب_سي_تحويل_غير_عددي -> { أرجع «Only scalar types convert»; }
+    | سبب_تشخيص.سبب_سي_حجم_نوع_ناقص -> { أرجع «`sizeof` was applied to an incomplete type»; }
+    | سبب_تشخيص.سبب_سي_معامل_نفي -> { أرجع «The operand of `!` is not scalar»; }
+    | سبب_تشخيص.سبب_سي_معامل_أحادي -> { أرجع «The operand does not fit the unary operator»; }
+    | سبب_تشخيص.سبب_سي_عنوان_قيمة_غير_يسرى -> { أرجع «The address of a value that is not an object cannot be taken»; }
+    | سبب_تشخيص.سبب_سي_عنوان_حقل_بتي -> { أرجع «The address of a bit-field cannot be taken»; }
+    | سبب_تشخيص.سبب_سي_فك_مرجع_غير_مؤشر -> { أرجع «Indirection requires a pointer operand»; }
+    | سبب_تشخيص.سبب_سي_فهرسة_غير_مصفوفة -> { أرجع «The subscripted value is neither an array nor a pointer»; }
+    | سبب_تشخيص.سبب_سي_سهم_عبر_غير_مؤشر -> { أرجع «The member is referenced through a value that is not a pointer»; }
+    | سبب_تشخيص.سبب_سي_أساس_عضو_غير_سجل -> { أرجع «The base of the member reference is neither a struct nor a union»; }
+    | سبب_تشخيص.سبب_سي_شرط_غير_عددي -> { أرجع «A condition must have a scalar type»; }
+    | سبب_تشخيص.سبب_سي_قيمة_تبديل_غير_صحيحة -> { أرجع «A `switch` value must have an integer type»; }
+    | سبب_تشخيص.سبب_سي_قفز_محسوب_بلا_مؤشر -> { أرجع «A computed `goto` needs a pointer»; }
+    | سبب_تشخيص.سبب_سي_عضو_غير_موجود -> { أرجع «The struct or union has no member of this name»; }
+    | سبب_تشخيص.سبب_سي_غير_قابل_للنداء -> { أرجع «The called object is neither a function nor a function pointer»; }
+    | سبب_تشخيص.سبب_سي_عدد_حجج_نداء -> { أرجع «The call does not pass as many arguments as the function takes»; }
+    | سبب_تشخيص.سبب_سي_عدد_غير_صالح -> { أرجع «The numeric constant is not valid C»; }
+    | سبب_تشخيص.سبب_سي_غير_مصرح -> { أرجع «The identifier is used without a declaration»; }
+    | سبب_تشخيص.سبب_سي_لافتة_غير_معرفة -> { أرجع «The label is used but not defined in this function»; }
+    | سبب_تشخيص.سبب_سي_لا_ارتباط_عام -> { أرجع «No `_Generic` association matches the type of the controlling expression»; }
+    | سبب_تشخيص.سبب_سي_مهيئ_مصفوفة_غير_قائمة -> { أرجع «An array initializer must be a list or a string literal»; }
+    | سبب_تشخيص.سبب_سي_مهيئ_سجل_بنوع_آخر -> { أرجع «A struct or union is initialized with a value of another type»; }
+    | سبب_تشخيص.سبب_سي_عناصر_زائدة_مصفوفة -> { أرجع «The array initializer has more elements than the array»; }
+    | سبب_تشخيص.سبب_سي_عناصر_زائدة_سجل -> { أرجع «The struct initializer has more elements than the struct has members»; }
+    | سبب_تشخيص.سبب_سي_مصمم_مصفوفة_غير_ثابت -> { أرجع «An array designator must be an integer constant»; }
+    | سبب_تشخيص.سبب_سي_وسم_حالة_غير_ثابت -> { أرجع «A `case` label must be an integer constant»; }
+    | سبب_تشخيص.سبب_سي_قيمة_عنصر_تعداد_غير_ثابتة -> { أرجع «The enumerator's value is not an integer constant expression»; }
+    | سبب_تشخيص.سبب_سي_تأكيد_ساكن_غير_ثابت -> { أرجع «The static assertion's expression is not an integer constant expression»; }
+    | سبب_تشخيص.سبب_سي_استمرار_خارج_حلقة -> { أرجع «`continue` is outside a loop»; }
+    | سبب_تشخيص.سبب_سي_كسر_خارج_حلقة -> { أرجع «`break` is outside a loop or `switch`»; }
+    | سبب_تشخيص.سبب_سي_حالة_خارج_تبديل -> { أرجع «`case` is outside a `switch`»; }
+    | سبب_تشخيص.سبب_سي_افتراضي_خارج_تبديل -> { أرجع «`default` is outside a `switch`»; }
+    | سبب_تشخيص.سبب_سي_قيمة_طويل_مزدوج -> { أرجع «A `long double` value is wider than `double` on this target (the size in bytes is given)»; }
+    | سبب_تشخيص.سبب_سي_قيمة_نوع_بلا_صيغة -> { أرجع «A value of this type has no SultanC form and is not compiled»; }
+    | سبب_تشخيص.سبب_سي_تعبير_عبارات_تجميعي -> { أرجع «A statement expression whose value is an aggregate is not compiled»; }
+    | سبب_تشخيص.سبب_سي_نوع_حجة_متغيرة -> { أرجع «`va_arg` of a type that is not a scalar of at most 8 bytes is not compiled»; }
+    | سبب_تشخيص.سبب_سي_مصفوفة_محلية_متغيرة -> { أرجع «A variable-length or incomplete local array is not compiled»; }
+    | سبب_تشخيص.سبب_سي_عبارة_تجميع -> { أرجع «An `asm` statement is not compiled»; }
+    | سبب_تشخيص.سبب_سي_تعريف_قديم -> { أرجع «An old-style (K&R) function definition is not compiled»; }
+    | سبب_تشخيص.سبب_سي_شفرة_سي_بلس -> { أرجع «This is C++ code: Jisr reads C, not C++»; }
+    | سبب_تشخيص.سبب_سي_صيغة_تعبير -> { أرجع «This expression form is not compiled»; }
+    | سبب_تشخيص.سبب_سي_تحويل_بلا_صيغة -> { أرجع «A conversion between types with no SultanC form is not compiled»; }
+    | سبب_تشخيص.سبب_سي_عنوان_متغير_سجلي -> { أرجع «The address of a register local is not compiled»; }
+    | سبب_تشخيص.سبب_سي_عنوان_غير_كائن -> { أرجع «The address of an expression that is not an object is not compiled»; }
+    | سبب_تشخيص.سبب_سي_قيمة_كائن_غير_عددي -> { أرجع «The value of an object with no scalar form is not compiled»; }
+    | سبب_تشخيص.سبب_سي_كائن_ملف_آخر_غير_عددي -> { أرجع «The value of a non-scalar object of another file is not compiled»; }
+    | سبب_تشخيص.سبب_سي_خيطي_ملف_آخر -> { أرجع «A thread-local object of another file is used by compiled C code»; }
+    | سبب_تشخيص.سبب_سي_عنوان_دالة_غير_مترجمة -> { أرجع «The address of a function that is not compiled here is taken»; }
+    | سبب_تشخيص.سبب_سي_نداء_بتوقيع_بلا_صيغة -> { أرجع «A parameter or result type of the called function has no SultanC form»; }
+    | سبب_تشخيص.سبب_سي_نداء_بحجة_بلا_صيغة -> { أرجع «An argument type of the call has no SultanC form»; }
+    | سبب_تشخيص.سبب_سي_نداء_بناتج_بلا_صيغة -> { أرجع «The result type of the called function has no SultanC form»; }
+    | سبب_تشخيص.سبب_سي_سجل_حجة_متغيرة -> { أرجع «A struct or union passed as a variadic argument is not compiled»; }
+    | سبب_تشخيص.سبب_سي_بدء_حجج_متغيرة -> { أرجع «`va_start` on this target's `va_list` is not compiled»; }
+    | سبب_تشخيص.سبب_سي_حالة_داخل_عبارة -> { أرجع «A `case` label inside another statement of its `switch` is not compiled»; }
+    | سبب_تشخيص.سبب_سي_قفز_غير_منظم -> { أرجع «This `goto` cannot be lowered to structured control flow»; }
+    | سبب_تشخيص.سبب_سي_محلي_نوع_ناقص -> { أرجع «A local of incomplete type is not compiled»; }
+    | سبب_تشخيص.سبب_سي_كائن_نوع_ناقص -> { أرجع «An object of incomplete type is not compiled»; }
+    | سبب_تشخيص.سبب_سي_إعادة_تعريف -> { أرجع «The name is defined again in the same scope»; }
+    | سبب_تشخيص.سبب_سي_إعادة_تعريف_بصنف_آخر -> { أرجع «The name is defined again as a different kind of symbol»; }
+    | سبب_تشخيص.سبب_سي_إعادة_تعريف_عنصر_تعداد -> { أرجع «The enumerator is defined again»; }
+    | سبب_تشخيص.سبب_سي_إعادة_تعريف_لافتة -> { أرجع «The label is defined again in this function»; }
+    | سبب_تشخيص.سبب_سي_أنواع_متعارضة -> { أرجع «The declaration's type conflicts with an earlier declaration of the same name»; }
+    | سبب_تشخيص.سبب_سي_نوع_مستعار_متعارض -> { أرجع «The `typedef` is defined again with a different type»; }
+    | سبب_تشخيص.سبب_سي_صنف_وسم_مختلف -> { أرجع «The tag is used with a kind (`struct`, `union`, `enum`) other than its previous declaration's»; }
+    | سبب_تشخيص.سبب_سي_اسم_نوع_مجهول -> { أرجع «No type of this name is declared»; }
+    | سبب_تشخيص.سبب_سي_نوع_مفقود -> { أرجع «A type specifier is missing (implicit `int` is not C17)»; }
+    | سبب_تشخيص.سبب_سي_حجم_مصفوفة_سالب -> { أرجع «The array has a negative size»; }
+    | سبب_تشخيص.سبب_سي_حقل_بتي_غير_صحيح -> { أرجع «A bit-field must have an integer type»; }
+    | سبب_تشخيص.سبب_سي_حقل_بتي_عريض -> { أرجع «The width of the bit-field exceeds its type»; }
+    | سبب_تشخيص.سبب_سي_مصفوفة_مرنة_ليست_أخيرة -> { أرجع «A flexible array member must be the last member»; }
+    | سبب_تشخيص.سبب_سي_عضو_نوع_ناقص -> { أرجع «A member has an incomplete type»; }
+    | سبب_تشخيص.سبب_سي_تأكيد_ساكن_خاطئ -> { أرجع «The static assertion is false (its message is given)»; }
+    | سبب_تشخيص.سبب_سي_تعليق_غير_منته -> { أرجع «A `/*` comment is not closed before the end of the file»; }
+    | سبب_تشخيص.سبب_سي_شرطي_غير_منته -> { أرجع «A conditional directive has no matching `#endif`»; }
+    | سبب_تشخيص.سبب_سي_نداء_ماكرو_غير_منته -> { أرجع «The argument list of the macro call is not closed»; }
+    | سبب_تشخيص.سبب_سي_عدد_حجج_ماكرو -> { أرجع «The macro is called with the wrong number of arguments»; }
+    | سبب_تشخيص.سبب_سي_لصق_غير_صالح -> { أرجع «Pasting with `##` does not give a valid preprocessing token»; }
+    | سبب_تشخيص.سبب_سي_لصق_في_طرف -> { أرجع «`##` cannot appear at either end of a macro expansion»; }
+    | سبب_تشخيص.سبب_سي_عامل_براغما_غير_صالح -> { أرجع «`_Pragma` takes a parenthesized string literal»; }
+    | سبب_تشخيص.سبب_سي_توجيه_غير_صالح -> { أرجع «This is not a valid preprocessing directive»; }
+    | سبب_تشخيص.سبب_سي_معامل_تضمين_مفقود -> { أرجع «`#embed` expects a parameter name»; }
+    | سبب_تشخيص.سبب_سي_معامل_تضمين_مجهول -> { أرجع «The `#embed` parameter is not known»; }
+    | سبب_تشخيص.سبب_سي_إلغاء_تعريف_المعرف_المحجوز -> { أرجع «`defined` cannot be undefined»; }
+    | سبب_تشخيص.سبب_سي_اسم_ماكرو_ليس_معرفا -> { أرجع «A macro name must be an identifier»; }
+    | سبب_تشخيص.سبب_سي_المعرف_المحجوز_اسم_ماكرو -> { أرجع «`defined` cannot be a macro name»; }
+    | سبب_تشخيص.سبب_سي_وإلا_بلا_إذا -> { أرجع «`#else` or `#elif` has no `#if`»; }
+    | سبب_تشخيص.سبب_سي_وإلا_بعد_وإلا -> { أرجع «`#else` follows another `#else`»; }
+    | سبب_تشخيص.سبب_سي_وإلا_إذا_بعد_وإلا -> { أرجع «`#elif` follows `#else`»; }
+    | سبب_تشخيص.سبب_سي_نهاية_بلا_إذا -> { أرجع «`#endif` has no `#if`»; }
+    | سبب_تشخيص.سبب_سي_توجيه_خطأ -> { أرجع «The source stops the build with `#error` (its text is given)»; }
+    | سبب_تشخيص.سبب_سي_توجيه_تحذير -> { أرجع «The source gives a `#warning` (its text is given)»; }
+    | سبب_تشخيص.سبب_سي_معامل_ماكرو_مكرر -> { أرجع «The macro parameter is named twice»; }
+    | سبب_تشخيص.سبب_سي_معاملات_ماكرو_غير_صالحة -> { أرجع «The parameter list of the macro definition is not valid»; }
+    | سبب_تشخيص.سبب_سي_تنصيص_بلا_معامل -> { أرجع «`#` is not followed by a macro parameter»; }
+    | سبب_تشخيص.سبب_سي_تضمين_بصيغة_خاطئة -> { أرجع «`#include` expects `"FILENAME"` or `<FILENAME>`»; }
+    | سبب_تشخيص.سبب_سي_إدراج_بصيغة_خاطئة -> { أرجع «`#embed` expects `"FILENAME"` or `<FILENAME>`»; }
+    | سبب_تشخيص.سبب_سي_تضمين_عميق -> { أرجع «`#include` is nested too deeply»; }
+    | سبب_تشخيص.سبب_سي_ملف_تضمين_مفقود -> { أرجع «No include directory has this file»; }
+    | سبب_تشخيص.سبب_سي_ترويسة_سي_بلس_مفقودة -> { أرجع «This is a C++ standard header: Jisr reads C, not C++»; }
+    | سبب_تشخيص.سبب_سي_ملف_تضمين_غير_مقروء -> { أرجع «The included file cannot be read»; }
+    | سبب_تشخيص.سبب_سي_شرط_بلا_تعبير -> { أرجع «`#if` has no expression»; }
+    | سبب_تشخيص.سبب_سي_رمز_في_شرط -> { أرجع «This token is not valid in a preprocessor expression»; }
+    | سبب_تشخيص.سبب_سي_المعرف_المحجوز_بلا_معرف -> { أرجع «`defined` expects an identifier»; }
+    | سبب_تشخيص.سبب_سي_قسمة_على_صفر_في_شرط -> { أرجع «The preprocessor expression divides by zero»; }
+    | سبب_تشخيص.سبب_سي_قوس_مفقود_في_شرط -> { أرجع «A `)` was expected in the preprocessor expression»; }
+    | سبب_تشخيص.سبب_سي_نقطتان_مفقودتان_في_شرط -> { أرجع «A `:` was expected in the conditional expression»; }
+    | سبب_تشخيص.سبب_سي_ثابت_حرفي_في_شرط -> { أرجع «The character constant is not valid»; }
+    | سبب_تشخيص.سبب_سي_ثابت_صحيح_في_شرط -> { أرجع «The integer constant is not valid»; }
+    | سبب_تشخيص.سبب_سي_معامل_مفقود_في_شرط -> { أرجع «An operand is missing in the preprocessor expression»; }
+    | سبب_تشخيص.سبب_سي_معالج_غير_صالح -> { أرجع «`SULTANC_C_PREPROCESSOR` must be `jisr` or `cc`»; }
+    | سبب_تشخيص.سبب_سي_ترويسات_المضيف -> { أرجع «No C headers of the target are installed (set `SULTANC_C_SYSROOT`): the host's system headers stand in for them, read with the host's predefined macros and the target's data model»; }
+    | سبب_تشخيص.سبب_سي_بلا_ترويسات_نظام -> { أرجع «No C headers of the target are installed (set `SULTANC_C_SYSROOT`): only the freestanding headers are available»; }
+    | سبب_تشخيص.سبب_سي_مخطى_غير_متاح -> { أرجع «The declaration is marked unavailable, so it is not imported»; }
+    | سبب_تشخيص.سبب_سي_مخطى_بلا_نموذج -> { أرجع «The function is declared without a prototype, so its parameters are unknown and it is not imported»; }
+    | سبب_تشخيص.سبب_سي_مخطى_نوع_بلا_صيغة -> { أرجع «A type of the declaration has no SultanC form, so it is not imported»; }
+    | سبب_تشخيص.سبب_سي_مخطى_ناتج_بلا_صيغة -> { أرجع «The function's result type has no SultanC form, so it is not imported»; }
+    | سبب_تشخيص.سبب_سي_مخطى_نوع_دالة -> { أرجع «A function type has no SultanC form (a pointer to a function is an address word), so it is not imported»; }
+    | سبب_تشخيص.سبب_سي_مترجمة_غير_قابلة_للنداء -> { أرجع «The function is compiled, but a parameter or result type has no SultanC form, so SultanC cannot call it»; }
+    | سبب_تشخيص.سبب_سي_مخطى_لافتة_ربط -> { أرجع «Its `asm` label lacks the platform's symbol prefix, so it is not imported»; }
+    | سبب_تشخيص.سبب_سي_مخطى_كائن_خيطي -> { أرجع «A thread-local object is not imported (external data is one per process)»; }
+    | سبب_تشخيص.سبب_سي_مخطى_كائن_بلا_صيغة -> { أرجع «The object's type has no SultanC form, so it is not imported»; }
+    | سبب_تشخيص.سبب_سي_مخطى_ماكرو_دالي -> { أرجع «A function-like macro is not a constant, so it is not imported»; }
+    | سبب_تشخيص.سبب_سي_مخطى_ماكرو_نص_غير_صالح -> { أرجع «The macro's string is not UTF-8 text without NUL, so it is not imported»; }
+    | سبب_تشخيص.سبب_سي_مخطى_ماكرو_غير_ثابت -> { أرجع «The macro does not expand to a constant, so it is not imported»; }
+    | سبب_تشخيص.سبب_سي_مخطى_اسم_مستعمل -> { أرجع «The name is already used by another declaration, so this one is not imported»; }
+    | سبب_تشخيص.سبب_سي_مخطى_اسم_مستعمل_كائن_خاص -> { أرجع «The name is already used by another declaration; the object stays private to the C code»; }
+    | سبب_تشخيص.سبب_سي_تعارض_اسم -> { أرجع «The name is already used by another declaration»; }
+    | سبب_تشخيص.سبب_سي_متغيرة_غير_قابلة_للنداء -> { أرجع «A variadic function is not callable on this target, so it is not imported»; }
+    | سبب_تشخيص.سبب_سي_نداء_متغير -> { أرجع «A call of a variadic function is not supported on this target»; }
+    | سبب_تشخيص.سبب_سي_حالة_مكررة -> { أرجع «Another `case` of this `switch` has the same value»; }
+    | سبب_تشخيص.سبب_سي_مخطى_اسم_بلا_تهجئة -> { أرجع «The declaration is left out of the module: its name has a character that SultanC identifiers do not have (the character is given)»; }
+    | سبب_تشخيص.سبب_سي_هروب_غير_صالح -> { أرجع «The literal has an escape sequence that C does not define (the escape is given)»; }
+    | سبب_تشخيص.سبب_سي_ترويسة_مقروءة_غير_مترجمة -> { أرجع «The import only reads this header and writes none of its declarations, so the import still succeeds; the C error it met is given as a note»; }
+    | سبب_تشخيص.سبب_مترجم_سي_تعذر_تشغيله -> { أرجع «The system C compiler could not be started»; }
+    | سبب_تشخيص.سبب_مترجم_سي_خرج_بحالة -> { أرجع «The system C compiler exited with a failure status (the status is given)»; }
+    | سبب_تشخيص.سبب_مترجم_سي_أنهته_إشارة -> { أرجع «The system C compiler was ended by a signal (the signal number is given)»; }
+    | سبب_تشخيص.سبب_جسون_نوع_حقل_غير_قابل_للاشتقاق -> { أرجع «JSON derivation supports integers, floats, booleans, characters, strings, named types without type arguments, and vectors and options of these»; }
 }

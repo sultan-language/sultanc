@@ -1,0 +1,9 @@
+// اختبار: قبول
+// تشخيص: SULTANC-C-NAME-CONFLICT-SKIPPED
+// نظير: tests/ar/compiler/c_import_warnings/unspellable.sn
+// A C name SultanC identifiers cannot spell (`café`, U+00E9) is left out of
+// the module with the warning SULTANC-C-NAME-CONFLICT-SKIPPED at its C
+// location; the rest of the header is imported and `check` exits 0.
+import "unspellable.h";
+
+def main(): int { return 0; }

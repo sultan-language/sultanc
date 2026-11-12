@@ -110,7 +110,7 @@
         | موضع_جزء_واجهة.مكدس(_) -> { أرجع خطأ; };
     }
     | موقع_تمرير_واجهة.مجزأ(المواضع) -> {
-        لو ((الطول(المواضع) مثل طبيعي) == 0) { أرجع خطأ; };
+        إذا ((الطول(المواضع) مثل طبيعي) == 0) { أرجع خطأ; };
         طابق المواضع[0] مع
         | موضع_جزء_واجهة.سجل(_) -> { أرجع صواب; }
         | موضع_جزء_واجهة.مكدس(_) -> { أرجع خطأ; };
@@ -130,9 +130,14 @@
     // splits between registers and the stack (AAPCS64 composites and HFAs,
     // ELFv2 aggregates): the code generator passes them as one array value.
     كتلة_متصلة: منطقي,
-    // An indirect argument points to a copy owned by the caller for this call
-    // (foreign C ABIs: the callee may modify it). SultanC's own indirect
-    // arguments pass the address of an immutable value instead.
+    // For an indirect argument: whether the callee may write the storage it
+    // points to. True at the foreign boundary (C ABIs: the callee owns the
+    // pointed-to object), so the caller always passes a private copy made
+    // for the call. False for SultanC's internal convention: the callee only
+    // reads its parameter there, and the caller may point at the argument's
+    // own storage instead of copying it when that storage cannot change
+    // during the call (حجج_بلا_نسخ_مسير, compiler/msir/msir_copies.sn), and
+    // passes a copy made for the call otherwise.
     نسخة_للمستدعى: منطقي,
     // The register parts share doubleword argument slots: a 32-bit part
     // occupies the half of its slot its offset selects (SPARC V9 structures
@@ -188,6 +193,25 @@
     الموقع: موقع_تمرير_واجهة,
     أشكال_الأجزاء: متجه شكل_جزء_واجهة
 };
+
+// The calling convention of a call boundary, decided per call target in one
+// place (اتفاقية_هدف_نداء_مسير and اتفاقية_دالة_مسير_للواجهة in
+// compiler/backend/target/selection_query_context.sn) for every backend:
+// - داخلية: a call between SultanC functions, direct or through a function
+//   value. The target's register convention, with SultanC's own rule for
+//   aggregate arguments: one larger than the target's hidden-reference
+//   threshold (عتبة_مرجع_خفي_للهدف) is passed as the address of storage the
+//   caller keeps unchanged for the call (a hidden reference); the callee
+//   reads it in place and never writes it.
+// - منصة: the target's registered register convention unchanged (runtime
+//   primitives, kernel calls, and functions compiled from imported C, whose
+//   calls keep the C placement of their records).
+// - خارجية: the platform C ABI of an external function (foreign boundary).
+عام نوع اتفاقية_نداء_واجهة =
+    | داخلية
+    | منصة
+    | خارجية
+;
 
 عام نوع خطة_دالة_واجهة = {
     المعاملات: متجه خطة_معامل_واجهة,

@@ -3,6 +3,52 @@
 #include "semantic/body_internal.h"
 #include "semantic/generic.h"
 
+/* Whether an expression is built only from integer literals with integer
+ * arithmetic or bitwise operators (`0xFFFFFFFFFFFFFFFF - 4`). Such an
+ * expression has no Type of its own: like a literal, it takes the Type of
+ * the other operand, and the emitter evaluates it in that Type. */
+static int __Body_Is_Integer_Literal_Tree__(__Ast_Expression__ *__Expression__)
+{
+    int64_t __Value__ = 0;
+    if (__Expression__ == NULL)
+    {
+        return 0;
+    }
+    if (__Semantic_Integer_Literal_Expression_Value__(__Expression__, &__Value__) ||
+        __Semantic_Integer_Literal_Expression_Is_Unsigned_Wide__(__Expression__))
+    {
+        return 1;
+    }
+    if (__Expression__->__Kind__ == __Ast_Expression_Unary__)
+    {
+        return (__Expression__->__As__.__Unary__.__Operation__ == __Unary_Negate__ ||
+                __Expression__->__As__.__Unary__.__Operation__ == __Unary_Bitwise_Not__) &&
+               __Body_Is_Integer_Literal_Tree__(__Expression__->__As__.__Unary__.__Operand__);
+    }
+    if (__Expression__->__Kind__ == __Ast_Expression_Binary__)
+    {
+        switch (__Expression__->__As__.__Binary__.__Operation__)
+        {
+            case __Binary_Or__:
+            case __Binary_And__:
+            case __Binary_Xor__:
+            case __Binary_Shift_Left_Logical__:
+            case __Binary_Shift_Right_Logical__:
+            case __Binary_Shift_Right_Arithmetic__:
+            case __Binary_Add__:
+            case __Binary_Subtract__:
+            case __Binary_Multiply__:
+            case __Binary_Divide__:
+            case __Binary_Modulo__:
+                return __Body_Is_Integer_Literal_Tree__(__Expression__->__As__.__Binary__.__Left__) &&
+                       __Body_Is_Integer_Literal_Tree__(__Expression__->__As__.__Binary__.__Right__);
+            default:
+                return 0;
+        }
+    }
+    return 0;
+}
+
 /* Infers the body binary. */
 int __Body_Infer_Binary__(__Semantic_Body_Context__ *__Context__,
                           __Ast_Expression__ *__Expression__,
@@ -157,6 +203,16 @@ int __Body_Infer_Binary__(__Semantic_Body_Context__ *__Context__,
                      __Expression__->__As__.__Binary__.__Left__, &__Literal_Value__) &&
                  __Type_Integer_Literal_Fits__(
                      __Context__->__Semantic__, __Literal_Value__, __Right__))
+        {
+            __Left__ = __Right__;
+        }
+        else if (__Body_Is_Integer_Literal_Tree__(__Expression__->__As__.__Binary__.__Right__) &&
+                 __Body_Is_Integer_Like__(__Context__, __Left__, NULL))
+        {
+            __Right__ = __Left__;
+        }
+        else if (__Body_Is_Integer_Literal_Tree__(__Expression__->__As__.__Binary__.__Left__) &&
+                 __Body_Is_Integer_Like__(__Context__, __Right__, NULL))
         {
             __Left__ = __Right__;
         }

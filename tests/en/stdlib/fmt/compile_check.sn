@@ -4,7 +4,7 @@
 // تفاضلي: نعم
 // نظير: tests/ar/stdlib/fmt/compile_check.sn
 // A literal format string is checked against its arguments at compile time,
-// as Rust's format! does (docs/FMT.md, "Compile-time check"); the arguments
+// as Rust's format! does (docs/en/reference/formatting.md, "Compile-time check"); the arguments
 // go in one call as a vector literal. Arguments that are not constructor
 // calls are counted but not type-checked, an argument vector bound with
 // `let` leaves only the format string's syntax to the compile-time check,

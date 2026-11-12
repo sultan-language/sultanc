@@ -4,7 +4,7 @@
 // تفاضلي: نعم
 // خطأ-قياسي: <فارغ>
 // نظير: tests/ar/runtime/failure/main_ok.sn
-// `main` returning `result int, Error` (docs/ERRORS.md): on success the
+// `main` returning `result int, Error` (docs/en/reference/errors.md): on success the
 // program exits with the value, as an entry returning `int` does.
 import std.error.failure;
 

@@ -21,7 +21,7 @@
     قناع_المعلومات: ط32
 };
 
-لو (الهدف.المنصة == «linux» || الهدف.المنصة == «android») {
+إذا (الهدف.المنصة == «linux» || الهدف.المنصة == «android») {
     // statx(AT_FDCWD, path, AT_SYMLINK_NOFOLLOW, STATX_BASIC_STATS, &out).
     // Do not follow symlinks when answering a filesystem path-type query.
     // The output's stx_mask is mandatory: do not claim optional fields exist.
@@ -47,13 +47,13 @@
             | نتيجة.نجح(_) -> {
                 دع القناع: ط32 = ط32_من_كلمات_لينكس(&السجل, 0); // stx_mask
                 // Require S_IFMT (STATX_TYPE), size and mtime, no fabricated data.
-                لو ((القناع & 0x241) != 0x241) {
+                إذا ((القناع & 0x241) != 0x241) {
                     أرجع نتيجة.خطأ(خطأ_معلومات_لينكس.معلومات_غير_متاحة());
                 };
                 // stx_mode at offset 28; stx_size at 40; mtime at 112 and 120.
                 دع النمط: ط16 = ط16_من_كلمات_لينكس(&السجل, 28); // stx_mode
                 دع نانو: ط32 = ط32_من_كلمات_لينكس(&السجل, 120); // stx_mtime.tv_nsec
-                لو (نانو >= 1000000000) {
+                إذا (نانو >= 1000000000) {
                     أرجع نتيجة.خطأ(خطأ_معلومات_لينكس.معلومات_غير_متاحة());
                 };
                 دع المعلومات: معلومات_مسار_لينكس = {
@@ -72,7 +72,7 @@
 // fills struct stat (ino64 layout, 224 bytes on amd64, arm64 and riscv;
 // offsets generated from sys/sys/stat.h into freebsd/uapi.sn). Every field
 // std reads is always valid there, so the statx mask is reported complete.
-لو (الهدف.المنصة == «freebsd») {
+إذا (الهدف.المنصة == «freebsd») {
     استورد os.platform.unix.freebsd.uapi;
 
     // The caller's statx number is not FreeBSD's: fstatat is issued instead.
@@ -98,7 +98,7 @@
             | نتيجة.نجح(_) -> {
                 دع التعديل: طبيعي = إزاحة_تعديل_معلومات_فري_بي_إس_دي();
                 دع نانو: ط64 = السجل[(التعديل + 8) / 8];
-                لو (نانو >= 1000000000) {
+                إذا (نانو >= 1000000000) {
                     أرجع نتيجة.خطأ(خطأ_معلومات_لينكس.معلومات_غير_متاحة());
                 };
                 دع النمط: ط16 = ط16_من_كلمات_لينكس(&السجل, إزاحة_نمط_معلومات_فري_بي_إس_دي());

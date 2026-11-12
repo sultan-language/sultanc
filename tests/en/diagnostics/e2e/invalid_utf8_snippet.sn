@@ -1,0 +1,10 @@
+// اختبار: رفض
+// تشخيص: SULTANC-LEX-INVALID-UTF8
+// نظير: tests/ar/diagnostics/e2e/invalid_utf8_snippet.sn
+// خرج-تشخيص-عربي: invalid_utf8_snippet.ar.stderr
+// خرج-تشخيص-إنجليزي: invalid_utf8_snippet.en.stderr
+// A byte that is not UTF-8 is rejected at that byte and shown as \xFF.
+def main(): i32 {
+    let value: i32 = 1 �+ 2;
+    return value;
+}

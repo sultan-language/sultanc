@@ -1,0 +1,7 @@
+خطأ[SULTANC-PARSE-ITEM]: تعذر تحليل صياغة التصريح أو العنصر البرمجي — لا تهيأ قيمة عليا بحرفي سجل أو صف أو صندوق.
+  --> tests/en/diagnostics/e2e/top_level_record_initializer.sn:9:20..9:44
+   |
+ 9 | let origin: size = { width: 3, label: "x" };
+   |                    ^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+  = مساعدة: صرح بالقيمة داخل الدالة التي تستعملها

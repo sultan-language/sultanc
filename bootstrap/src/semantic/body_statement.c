@@ -198,7 +198,7 @@ static int __Body_Check_Statement__(__Semantic_Body_Context__ *__Context__,
                                                     __Statement__->__Header__.__Span__);
             }
             /* A call statement of the stop primitive ends the path: a function
-             * returning a value needs no return after it (docs/ERRORS.md). */
+             * returning a value needs no return after it (docs/en/reference/errors.md). */
             if (__Statement__->__As__.__Copy__.__Destination__->__Kind__ == __Ast_Lvalue_Base__ &&
                 __Statement__->__As__.__Copy__.__Destination__->__As__.__Base__.__Kind__ ==
                     __Ast_Lvalue_Base_Temporary__ &&

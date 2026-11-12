@@ -1,0 +1,38 @@
+استورد compiler.diagnostics.record;
+استورد compiler.diagnostics.schema;
+استورد compiler.diagnostics.output.terminal;
+استورد compiler.diagnostics.output.json;
+
+// The one way a set of diagnostics is written to stderr: the driver's
+// rendering of every failure it reports, and the interpreter's rendering of
+// a failure on a thread of the program (compiler/interpreter/machine/
+// thread_failure.sn), which cannot return to the driver.
+
+// --diagnostic-format: the full terminal frame (with the source excerpt),
+// one line per diagnostic, or JSON.
+عام نوع صيغة_عرض_تشخيص =
+    | طرفي
+    | مختصر
+    | جيسون
+;
+
+// Writes المجموعة in اللغة and الصيغة; أنسي colours the terminal forms.
+عام عرف اعرض_مجموعة_تشخيصات_بصيغة(
+    المجموعة: &مجموعة_تشخيصات,
+    اللغة: لغة_تشخيص,
+    الصيغة: صيغة_عرض_تشخيص,
+    أنسي: منطقي
+): فراغ {
+    طابق الصيغة مع
+    | صيغة_عرض_تشخيص.طرفي -> {
+        دع النمط: نمط_طرفية_تشخيص = { أنسي: أنسي, اعرض_المصدر: صواب };
+        اعرض_مجموعة_تشخيصات_طرفيا(المجموعة, اللغة, النمط);
+    }
+    | صيغة_عرض_تشخيص.مختصر -> {
+        دع النمط: نمط_طرفية_تشخيص = { أنسي: أنسي, اعرض_المصدر: خطأ };
+        اعرض_مجموعة_تشخيصات_مختصرة(المجموعة, اللغة, النمط);
+    }
+    | صيغة_عرض_تشخيص.جيسون -> {
+        اعرض_مجموعة_تشخيصات_جيسون(المجموعة, اللغة);
+    };
+}

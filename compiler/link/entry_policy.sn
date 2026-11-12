@@ -89,7 +89,7 @@
     // The WebAssembly linker resolves the entry itself over the objects'
     // symbol tables (wasm/linker.sn): the context keeps whole modules as
     // sections, so there is no section to root here.
-    لو (مزود_ربط_للهدف(&(*السياق).الهدف) == هوية_مزود_ربط.ويب_أسمبلي()) {
+    إذا (مزود_ربط_للهدف(&(*السياق).الهدف) == هوية_مزود_ربط.ويب_أسمبلي()) {
         أرجع نتيجة_تهيئة_دخول_ربط.نجح();
     };
 

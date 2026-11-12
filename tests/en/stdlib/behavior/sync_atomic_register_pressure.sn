@@ -4,7 +4,7 @@
 // Atomics reached through closures and call chains while many values are
 // live: each thread runs a closure that calls down three functions, each
 // holding several locals across the atomic read-modify-writes, so the
-// register allocator must spill around them (the pattern docs/CONCURRENCY.md
+// register allocator must spill around them (the pattern docs/en/reference/concurrency.md
 // once listed as miscompiled). 4 threads x 5 000 rounds of fetch_add,
 // compare_exchange and swap must leave exact totals. Counterpart:
 // tests/ar/stdlib/behavior/sync_atomic_register_pressure.sn. No pair

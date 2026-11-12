@@ -130,7 +130,7 @@ def main():
         triple, guard = ARCHES[arch]
         table = macros(triple, dirs.split(":"))
         lines.append(f"// {triple}")
-        lines.append(f"لو ((الهدف.المنصة == «linux» || الهدف.المنصة == «android») && الهدف.المعمارية == «{guard}») {{")
+        lines.append(f"إذا ((الهدف.المنصة == «linux» || الهدف.المنصة == «android») && الهدف.المعمارية == «{guard}») {{")
         for func, macro, meaning in CONSTANTS:
             value = evaluate(macro, table)
             if value is None:

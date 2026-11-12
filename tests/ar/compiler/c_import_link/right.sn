@@ -1,0 +1,8 @@
+// جزء من tests/ar/compiler/c_import_link/main.sn: الوحدة التي تستورد right.c
+// (وright.c وحده).
+استورد "right.c";
+
+عام عرف من_اليمين(): ص32 {
+    دع النقطة: pt_t = make_pt(2, 3);
+    أرجع right_total() + sum_pt(النقطة);
+}

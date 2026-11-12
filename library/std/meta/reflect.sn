@@ -33,8 +33,18 @@
     بدائي_فشل_وقت_الترجمة(الرسالة);
 }
 
+// Sets the instructions the enclosing compile-time evaluation may still run
+// (its default is --comptime-budget, $SULTANC_COMPTIME_BUDGET or ten
+// million), for one block that knowingly does more work. Call it first in
+// the comptime block, or in a function the block calls. Outside compile-time
+// evaluation it does nothing.
+عام عرف ميزانية_وقت_الترجمة(التعليمات: طبيعي): فراغ {
+    بدائي_ميزانية_وقت_الترجمة(التعليمات);
+}
+
 عام مرادف size_of = حجم_النوع;
 عام مرادف align_of = محاذاة_النوع;
 عام مرادف field_count = عدد_حقول_النوع;
 عام مرادف constructor_count = عدد_منشئات_النوع;
 عام مرادف compile_error = فشل_وقت_الترجمة;
+عام مرادف comptime_budget = ميزانية_وقت_الترجمة;

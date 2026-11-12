@@ -9,3 +9,4 @@ error[SULTANC-MUTABILITY-WRITE-TO-IMMUTABLE]: cannot write to an immutable value
  7 |     let count: i32 = 1;
    |     ^^^^^^^^^^^^^^^^^^^ declared here without `mutable`
    |
+  = help: declare the variable `mutable` to write to it

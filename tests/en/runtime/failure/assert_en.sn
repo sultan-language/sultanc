@@ -6,7 +6,7 @@
 // خرج-قياسي: <فارغ>
 // خطأ-قياسي-ملف: assert_en.stderr
 // نظير: tests/ar/runtime/failure/assert_en.sn
-// A failed assertion (std.debug.assert, docs/ERRORS.md) stops the program
+// A failed assertion (std.debug.assert, docs/en/reference/errors.md) stops the program
 // through the same path as panic: the iSpeak frame "the program stopped"
 // with the reason "an assertion failed", then the optional message, exit
 // status 1. A passing assertion prints nothing.

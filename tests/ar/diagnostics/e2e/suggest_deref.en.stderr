@@ -1,0 +1,7 @@
+error[SULTANC-TYPE-MISMATCH]: expected `i32`, found `&i32` — The value does not match the declared type of its destination.
+  --> tests/ar/diagnostics/e2e/suggest_deref.sn:10:22..10:28
+    |
+ 10 |     دع القيمة: ص32 = المرجع;
+    |                      ^^^^^^
+    |
+  = help: read the referenced value with `*`

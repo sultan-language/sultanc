@@ -51,7 +51,7 @@ def failure_values(): حقائق_فشل_وقت_الترجمة {
 }
 
 def manifest_values(): حقائق_بيان_حزمة {
-    let values: حقائق_بيان_حزمة = { المسار: "./project.toml", البايت: option.some(8 as uint), السبب: option.some(مفتاح_نص_مترجم.حقل_بيان_مطلوب_مفقود()) };
+    let values: حقائق_بيان_حزمة = { المسار: "./package-graph.toml", البايت: option.some(8 as uint), السبب: option.some(مفتاح_نص_مترجم.حقل_رسم_حزم_مطلوب_مفقود()) };
     return values;
 }
 
@@ -265,7 +265,7 @@ def main(): int {
     if (!check(key_14, keyword_suggestion_payload(), keyword_suggestion_payload(), false)) { return 44; };
     if (!check(key_14, syntax_expectation_payload(), syntax_expectation_payload(), false)) { return 44; };
     if (!check(key_14, interpreter_primitive_payload(), interpreter_primitive_payload(), false)) { return 44; };
-    let key_15: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.بيان_حزمة_غير_صالح());
+    let key_15: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.رسم_حزم_غير_صالح());
     if (!check(key_15, unknown_name_payload(), unknown_name_payload(), false)) { return 45; };
     if (!check(key_15, incompatible_types_payload(), incompatible_types_payload(), false)) { return 45; };
     if (!check(key_15, argument_count_mismatch_payload(), argument_count_mismatch_payload(), false)) { return 45; };
@@ -298,28 +298,6 @@ def main(): int {
     if (!check(key_17, keyword_suggestion_payload(), keyword_suggestion_payload(), false)) { return 47; };
     if (!check(key_17, syntax_expectation_payload(), syntax_expectation_payload(), true)) { return 47; };
     if (!check(key_17, interpreter_primitive_payload(), interpreter_primitive_payload(), false)) { return 47; };
-    let key_18: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.بدائي_مضيف_تفسير_غير_مدعوم());
-    if (!check(key_18, unknown_name_payload(), unknown_name_payload(), false)) { return 48; };
-    if (!check(key_18, incompatible_types_payload(), incompatible_types_payload(), false)) { return 48; };
-    if (!check(key_18, argument_count_mismatch_payload(), argument_count_mismatch_payload(), false)) { return 48; };
-    if (!check(key_18, specific_text_payload(), specific_text_payload(), false)) { return 48; };
-    if (!check(key_18, llvm_link_payload(), llvm_link_payload(), false)) { return 48; };
-    if (!check(key_18, comptime_failure_payload(), comptime_failure_payload(), false)) { return 48; };
-    if (!check(key_18, package_manifest_payload(), package_manifest_payload(), false)) { return 48; };
-    if (!check(key_18, keyword_suggestion_payload(), keyword_suggestion_payload(), false)) { return 48; };
-    if (!check(key_18, syntax_expectation_payload(), syntax_expectation_payload(), false)) { return 48; };
-    if (!check(key_18, interpreter_primitive_payload(), interpreter_primitive_payload(), true)) { return 48; };
-    let key_19: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.جسر_نص_مضيف_تفسير_غير_متاح());
-    if (!check(key_19, unknown_name_payload(), unknown_name_payload(), false)) { return 49; };
-    if (!check(key_19, incompatible_types_payload(), incompatible_types_payload(), false)) { return 49; };
-    if (!check(key_19, argument_count_mismatch_payload(), argument_count_mismatch_payload(), false)) { return 49; };
-    if (!check(key_19, specific_text_payload(), specific_text_payload(), false)) { return 49; };
-    if (!check(key_19, llvm_link_payload(), llvm_link_payload(), false)) { return 49; };
-    if (!check(key_19, comptime_failure_payload(), comptime_failure_payload(), false)) { return 49; };
-    if (!check(key_19, package_manifest_payload(), package_manifest_payload(), false)) { return 49; };
-    if (!check(key_19, keyword_suggestion_payload(), keyword_suggestion_payload(), false)) { return 49; };
-    if (!check(key_19, syntax_expectation_payload(), syntax_expectation_payload(), false)) { return 49; };
-    if (!check(key_19, interpreter_primitive_payload(), interpreter_primitive_payload(), true)) { return 49; };
     let key_20: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.حجة_بدائي_تفسير_غير_صالحة());
     if (!check(key_20, unknown_name_payload(), unknown_name_payload(), false)) { return 50; };
     if (!check(key_20, incompatible_types_payload(), incompatible_types_payload(), false)) { return 50; };

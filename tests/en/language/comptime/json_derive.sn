@@ -1,0 +1,82 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/language/comptime/json_derive.sn
+// Derived JSON (`@@json`): the compiler generates an encoder, a decoder and a
+// schema from the type's declaration. Encoding and schema run at compile
+// time, so any mistake fails the compilation (a nested record, vectors, an
+// absent option as null, enums with and without payloads, string escapes);
+// decoding runs at run time: a round trip gives the same text, and a
+// missing field names its path in the error.
+import std.meta.reflect;
+import std.text.compare;
+import std.text.from_bytes;
+
+@@json
+type Shape = | Circle of int | Square | Rect of (int, int);
+
+@@json
+type Address = { city: string, code: u32 };
+
+@@json
+type User = {
+    name: string,
+    age: int,
+    active: bool,
+    address: Address,
+    tags: vector string,
+    phone: option string,
+    shapes: vector Shape
+};
+
+@@json
+type Measure = { value: f64 };
+
+def sample(): string {
+    let tags: mutable vector string = [];
+    append(tags, "a");
+    let shapes: mutable vector Shape = [];
+    append(shapes, Shape.Circle(3));
+    append(shapes, Shape.Square());
+    append(shapes, Shape.Rect(2, 5));
+    let u: User = {
+        name: "Sara", age: 31, active: true,
+        address: { city: "Riyadh", code: 12345 },
+        tags: tags, phone: option.none(), shapes: shapes
+    };
+    return to_json__User(&u);
+}
+
+def check(): int {
+    let j: string = sample();
+    let expected: string = "{\"name\":\"Sara\",\"age\":31,\"active\":true,\"address\":{\"city\":\"Riyadh\",\"code\":12345},\"tags\":[\"a\"],\"phone\":null,\"shapes\":[{\"tag\":\"Circle\",\"values\":[3]},\"Square\",{\"tag\":\"Rect\",\"values\":[2,5]}]}";
+    if (!texts_equal(&j, &expected)) { compile_error(copy_text(&j)); };
+    let schema: vector json_schema_field = json_schema__User();
+    if ((length(schema) as int) != 7 || schema[5].مطلوب || !texts_equal(&schema[3].النوع, &"object")) { compile_error("schema"); };
+    return 42;
+}
+
+def stop(message: string): void { let z: int = 0; let x: int = 1 / z; }
+
+def decode(j: &string): int {
+    match from_json__User(j) with
+    | result.ok(u) -> {
+        if (u.age != 31 || !texts_equal(&u.address.city, &"Riyadh") || (length(u.shapes) as int) != 3) { stop("roundtrip"); };
+        let again: string = to_json__User(&u);
+        if (!texts_equal(j, &again)) { stop(again); };
+    }
+    | result.err(e) -> { stop(e); };
+    match from_json__User(&"{\"name\":\"x\"}") with
+    | result.ok(_) -> { stop("missing accepted"); }
+    | result.err(e) -> { if (!texts_equal(&e, &"age: missing")) { stop(e); }; };
+    return 0;
+}
+
+def main(): int {
+    let n: int = comptime { check() };
+    let j: string = comptime { sample() };
+    let m: Measure = { value: 1.5 };
+    if (!texts_equal(&to_json__Measure(&m), &"{\"value\":1.5}")) { return 1; };
+    return n + decode(&j);
+}

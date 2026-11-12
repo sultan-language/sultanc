@@ -6,17 +6,17 @@
     |
 
 تحذير[SULTANC-SYNTAX-DEPRECATED-SPELLING]: التهجئة ⁨`اختيار`⁩ مهجورة؛ استخدم ⁨`اختياري`⁩
-  --> tests/ar/diagnostics/deprecated/option_old_spelling.sn:11:23..11:29
+  --> tests/ar/diagnostics/deprecated/option_old_spelling.sn:11:24..11:30
     |
- 11 |     لو (س > 0) { أرجع اختيار.بعض(س); };
-    |                       ^^^^^^
+ 11 |     إذا (س > 0) { أرجع اختيار.بعض(س); };
+    |                        ^^^^^^
     |
 
 تحذير[SULTANC-SYNTAX-DEPRECATED-SPELLING]: التهجئة ⁨`بعض`⁩ مهجورة؛ استخدم ⁨`موجود`⁩
-  --> tests/ar/diagnostics/deprecated/option_old_spelling.sn:11:30..11:33
+  --> tests/ar/diagnostics/deprecated/option_old_spelling.sn:11:31..11:34
     |
- 11 |     لو (س > 0) { أرجع اختيار.بعض(س); };
-    |                              ^^^
+ 11 |     إذا (س > 0) { أرجع اختيار.بعض(س); };
+    |                               ^^^
     |
 
 تحذير[SULTANC-SYNTAX-DEPRECATED-SPELLING]: التهجئة ⁨`اختيار`⁩ مهجورة؛ استخدم ⁨`اختياري`⁩

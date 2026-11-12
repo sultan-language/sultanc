@@ -1,7 +1,7 @@
 // اختبار: رفض
 // تشخيص: SULTANC-THREAD-CAPTURE-REFERENCE
 // نظير: tests/ar/diagnostics/safety/thread_capture_reference.sn
-// The spawn capture check (docs/TYPE_SYSTEM.md, "Thread capture rules"): a
+// The spawn capture check (docs/en/reference/type-system.md, "Thread capture rules"): a
 // closure handed to another thread may not capture a borrowed reference,
 // because the thread may outlive the storage it borrows (Rust's 'static
 // bound on spawn). Move an owned value in, or share it through an Arc.

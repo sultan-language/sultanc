@@ -1,0 +1,24 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// Twin: tests/ar/compiler/c_import_compile/main.sn (no `نظير` header: the
+// pair step interprets both twins, and the interpreter of a static compiler
+// cannot call the C library functions this file uses).
+// The C code of compile.c is compiled by Jisr (compiler/jisr/lower.sn)
+// into this program, through the ordinary pipeline (no C compiler): integer
+// and floating arithmetic, pointers and arrays, structs, unions and
+// bit-fields by value and in memory, loops, switch fallthrough and case
+// ranges, goto, Duff's device, static locals, initialized globals,
+// function pointers, variadic definitions (va_list handed to vsnprintf)
+// and variadic calls (snprintf). run_all returns 0 when every part
+// behaves as C defines it, else the part and the line that failed.
+import "compile.c";
+
+def main(): int {
+    let failure: i32 = run_all();
+    if (failure != 0) { return 1; };
+    // A C object written by the C code, read here.
+    if (counter_value != 101) { return 2; };
+    if (add_points({ x: 1, y: 2 }, { x: 3, y: 4 }).y != 6) { return 3; };
+    return 42;
+}

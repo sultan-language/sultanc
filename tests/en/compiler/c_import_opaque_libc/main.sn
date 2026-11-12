@@ -1,0 +1,22 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// نظير: tests/ar/compiler/c_import_opaque_libc/main.sn
+// A C library's handle through a system header: glibc's dirent.h declares
+// `typedef struct __dirstream DIR;` and never defines the struct, so DIR is an
+// opaque type and opendir/readdir/closedir take and return `*mutable DIR`
+// (natively, through LLVM and in the interpreter, which passes it as a
+// pointer). A NULL handle compares equal to `0 as *mutable DIR`.
+import "dirent.h";
+
+def main(): int {
+    let here: vector u8 = [46, 0];
+    let dir: *mutable DIR = opendir(&here[0]);
+    if (dir == 0 as *mutable DIR) { return 1; };
+    let entry: *mutable dirent = readdir(dir);
+    if (entry == 0 as *mutable dirent) { return 2; };
+    if (closedir(dir) != 0) { return 3; };
+    let missing: vector u8 = [47, 110, 111, 45, 115, 117, 99, 104, 45, 100, 105, 114, 0];
+    if (opendir(&missing[0]) != 0 as *mutable DIR) { return 4; };
+    return 42;
+}

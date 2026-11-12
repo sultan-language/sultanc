@@ -1,0 +1,75 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// نظير: tests/en/language/safety/global_constant_borrow.sn
+// A borrow of an immutable text or scalar global (a constant: each read is a
+// fresh copy) borrows a temporary holding its value, as `&` of any other value
+// without storage does: passed to a library or user function, bound to a
+// reference, inside a loop, of an Arabic text, shadowed by a local; a vector
+// global (static storage) is borrowed in place.
+استورد std.text.from_bytes;
+استورد std.text.compare;
+
+دع الاسم: نص = «Sultan»;
+دع الاسم_العربي: نص = «السلطان»;
+دع الجواب: عدد = 6 * 7;
+دع الصغير: ط8 = 7;
+دع الأوليات: متجه عدد = [2, 3, 5, 7];
+
+عرف طول_النص(القيمة: &نص): عدد {
+    أرجع الطول(*القيمة) مثل عدد;
+}
+
+عرف اقرأ_عددا(القيمة: &عدد): عدد {
+    أرجع *القيمة;
+}
+
+عرف اقرأ_بايتا(القيمة: &ط8): ط8 {
+    أرجع *القيمة;
+}
+
+عرف مجموع_المتجه(القيم: &متجه عدد): عدد {
+    دع المجموع: متغير عدد = 0;
+    دع ف: متغير عدد = 0;
+    طالما (ف < (الطول(*القيم) مثل عدد)) {
+        المجموع := المجموع + (*القيم)[ف];
+        ف := ف + 1;
+    }
+    أرجع المجموع;
+}
+
+عرف الرئيسية(): عدد {
+    // The reported case: a library copy of a borrowed text global.
+    دع النسخة: نص = انسخ_نص(&الاسم);
+    إذا (!نصان_متساويان(&النسخة, &الاسم) || طول_النص(&النسخة) != 6) { أرجع 1; };
+
+    // A user function, and a borrow bound to a reference first.
+    إذا (طول_النص(&الاسم) != 6) { أرجع 2; };
+    دع العرض: &نص = &الاسم;
+    إذا (طول_النص(العرض) != 6 || (*العرض)[0] != 83) { أرجع 3; };
+
+    // Arabic text: 7 letters, 14 bytes of UTF-8.
+    دع النسخة_العربية: نص = انسخ_نص(&الاسم_العربي);
+    إذا (طول_النص(&الاسم_العربي) != 14 || !نصان_متساويان(&النسخة_العربية, &الاسم_العربي)) { أرجع 4; };
+
+    // Scalars.
+    إذا (اقرأ_عددا(&الجواب) != 42 || اقرأ_بايتا(&الصغير) != 7) { أرجع 5; };
+
+    // Many borrows: each temporary is released with its block.
+    دع المجموع: متغير عدد = 0;
+    دع ف: متغير عدد = 0;
+    طالما (ف < 10000) {
+        المجموع := المجموع + طول_النص(&الاسم);
+        ف := ف + 1;
+    }
+    إذا (المجموع != 60000) { أرجع 6; };
+
+    // A local of the same name is borrowed, not the global.
+    دع الاسم: نص = «local»;
+    إذا (طول_النص(&الاسم) != 5) { أرجع 7; };
+
+    // A vector global has static storage and is borrowed in place.
+    إذا (مجموع_المتجه(&الأوليات) != 17) { أرجع 8; };
+
+    أرجع اقرأ_عددا(&الجواب);
+}

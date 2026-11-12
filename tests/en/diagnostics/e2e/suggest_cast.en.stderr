@@ -1,0 +1,7 @@
+error[SULTANC-TYPE-MISMATCH]: expected `u8`, found `i32` — The value does not match the declared type of its destination.
+  --> tests/en/diagnostics/e2e/suggest_cast.sn:10:21..10:26
+    |
+ 10 |     let small: u8 = count;
+    |                     ^^^^^
+    |
+  = help: convert the value explicitly with `as`

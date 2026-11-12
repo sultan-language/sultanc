@@ -34,7 +34,7 @@
  * host-native Stage2 there needs an LLVM-enabled compiler.
  *
  * The compilers are Native-only: compiler/main.sn is compiled with the LLVM
- * provider boundary bound to unavailable.sn (docs/SULTANC_KERNEL_ARCHITECTURE.md).
+ * provider boundary bound to unavailable.sn (docs/en/internals/compiler-architecture.md).
  */
 #if defined(_WIN32)
 #define _CRT_SECURE_NO_WARNINGS

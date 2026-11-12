@@ -1,0 +1,67 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux,aarch64-linux-gnu,x86_64-darwin,x86_64-windows-msvc,aarch64-windows-msvc,x86_64-android,aarch64-android,armv7-android,x86_64-freebsd,aarch64-freebsd,riscv64-freebsd,i686-linux-gnu,armv7-linux-gnueabihf,riscv64-linux-gnu,loongarch64-linux-gnu,mips64el-linux-gnuabi64,powerpc64le-linux-gnu,s390x-linux-gnu,sparcv9-linux-gnu,wasm32-wasi
+// خروج: 42
+// خرج-قياسي: args|env|clocks|sleep|cwd|exit
+// تفاضلي: نعم
+// نظير: tests/en/target/std_process_time.sn
+// The process start and the process services std reads on every hosted
+// target: the argument vector and environment block the process start
+// passes (_start's stack layout differs per architecture), the process
+// environment table, both clocks (64-bit times on 32-bit targets), sleeping,
+// the working directory and the exit status.
+استورد std.io.print;
+استورد std.text.transform;
+استورد std.text.compare;
+استورد std.process.arguments;
+استورد std.process.exit;
+استورد std.env.environment;
+استورد std.env.variables;
+استورد std.time.time;
+
+عرف الرئيسية(): عدد {
+    دع السطر: متغير متجه نص = [];
+    دع الوسائط_: متجه نص = الوسائط();
+    إذا (الطول(الوسائط_) < 1) { أرجع 1; };
+    ألحق(السطر, "args");
+
+    دع الاسم: نص = "SULTANC_TARGET_TEST";
+    دع القيمة: نص = "قيمة";
+    طابق اضبط_متغير_بيئة(&الاسم, &القيمة) مع
+    | نتيجة.خطأ(_) -> { أرجع 2; }
+    | نتيجة.نجح(_) -> { };
+    طابق متغير_بيئة(&الاسم) مع
+    | نتيجة.نجح(اختياري.موجود(المقروء)) -> { إذا (!نصان_متساويان(&المقروء, &القيمة)) { أرجع 3; }; }
+    | _ -> { أرجع 4; };
+    ألحق(السطر, "env");
+
+    دع قبل: عدد;
+    طابق وقت_رتيب_نانو() مع
+    | نتيجة.نجح(ز) -> { قبل := ز; }
+    | نتيجة.خطأ(_) -> { أرجع 5; };
+    طابق وقت_نظام_نانو() مع
+    | نتيجة.نجح(ز) -> {
+        // After 2020-01-01: the value needs all 64 bits on every target.
+        إذا (ز < 1577836800000000000) { أرجع 6; };
+    }
+    | نتيجة.خطأ(_) -> { أرجع 7; };
+    ألحق(السطر, "clocks");
+
+    طابق نم_نانو(2000000) مع
+    | نتيجة.خطأ(_) -> { أرجع 8; }
+    | نتيجة.نجح(_) -> { };
+    طابق وقت_رتيب_نانو() مع
+    | نتيجة.نجح(بعد) -> { إذا (بعد - قبل < 2000000) { أرجع 9; }; }
+    | نتيجة.خطأ(_) -> { أرجع 10; };
+    ألحق(السطر, "sleep");
+
+    طابق دليل_العمل() مع
+    | نتيجة.نجح(المسار) -> { إذا (الطول(المسار) == 0) { أرجع 11; }; }
+    | نتيجة.خطأ(_) -> { أرجع 12; };
+    ألحق(السطر, "cwd");
+    ألحق(السطر, "exit");
+
+    دع الخط: نص = "|";
+    اطبع(صل_النصوص(&السطر, &الخط));
+    اخرج(42);
+    أرجع 13;
+}

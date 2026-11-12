@@ -1,0 +1,12 @@
+// Fixture of tests/en/compiler/tooling/refactoring_queries.sn (not a test).
+import "helper.sn";
+import std.text.compare;
+import std.text.search;
+import std.text.compare;
+
+def main(): int {
+    let first: string = "a";
+    let second: string = "a";
+    if (نصان_متساويان(&first, &second)) { return twice(21); }
+    return 0;
+}

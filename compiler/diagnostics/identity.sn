@@ -43,6 +43,7 @@
     | فشل_كتابة_مخرج_مترجم
     | فشل_مترجم_داخلي
     | ملف_إدخال_مفقود
+    // Retired (SULTANC-PACKAGE-MANIFEST-INVALID): public codes are never reused.
     | بيان_حزمة_غير_صالح
     | نوع_ملف_إدخال_غير_معروف
     | وحدة_مصدر_غير_موجودة
@@ -76,7 +77,6 @@
     | تعبير_نوعي_غير_مدعوم
     | تعبير_غير_قابل_للاستدعاء
     | حقل_سجل_غير_معروف
-    | منشئ_نوع_غير_صالح
     | عدد_حمولات_نمط_غير_مطابق
     | نمط_غير_صالح
     | تعبير_وقت_الترجمة_غير_ثابت
@@ -105,7 +105,7 @@
     | نمط_غير_قابل_للوصول
     | إرجاع_مفقود
     // Runtime failures a compiled or interpreted program prints itself
-    // (docs/ERRORS.md): `main` returned an error, or the program stopped
+    // (docs/en/reference/errors.md): `main` returned an error, or the program stopped
     // (إنهيار, a failed assertion).
     | انتهى_البرنامج_بخطأ
     | توقف_البرنامج
@@ -123,8 +123,6 @@
     | نص_تفسير_غير_صالح
     | عدد_حجج_بدائي_تفسير_غير_مطابق
     | حجة_بدائي_تفسير_غير_صالحة
-    | جسر_نص_مضيف_تفسير_غير_متاح
-    | بدائي_مضيف_تفسير_غير_مدعوم
     | فشل_تفسير_وقت_تشغيل
     | فخ_تفسير
     | هدف_لا_يدعم_الميزة
@@ -136,11 +134,13 @@
     | موفر_وقت_تشغيل_مفقود
     | نفاد_ذاكرة_المترجم
     | رمز_ربط_بنوع_غير_متطابق
+    | رمز_خارجي_بتوقيعين
     | رمز_خارجي_غير_مدعوم
     | إعادة_توطين_غير_مدعومة
     | صيغة_كائن_غير_مدعومة_للهدف
     | مخرج_ربط_غير_مدعوم
     | مكتبة_ربط_غير_موجودة
+    | مدخل_ربط_غير_مدعوم
     | واجهة_استدعاء_غير_متاحة_للهدف
     | حد_صيغة_كائن_متجاوز
     | حد_وقت_الترجمة_متجاوز
@@ -153,7 +153,112 @@
     | عدد_حجج_وقت_الترجمة_غير_مطابق
     | نداء_خارجي_تفسير_غير_مدعوم
     | بدائي_آلة_تفسير_غير_مدعوم
-    | تحذير_عام
+    // C diagnostics of Jisr (compiler/jisr), at the C file's line and column.
+    | سي_خطأ_نحوي
+    | سي_أنواع_متعارضة
+    | سي_معامل_ماكرو_مكرر
+    | سي_توجيه_خطأ
+    | سي_عمق_تضمين
+    | سي_تضمين_غير_موجود
+    | سي_عضو_ناقص
+    | سي_حقل_بتي_غير_صالح
+    | سي_شرط_غير_صالح
+    | سي_توجيه_غير_صالح
+    | سي_مصفوفة_مرنة_غير_صالحة
+    | سي_تضمين_غير_صالح
+    | سي_اسم_ماكرو_غير_صالح
+    | سي_معاملات_ماكرو_غير_صالحة
+    | سي_عدد_غير_صالح
+    | سي_لصق_غير_صالح
+    | سي_عامل_براغما_غير_صالح
+    | سي_معالج_غير_صالح
+    | سي_تنصيص_غير_صالح
+    | سي_عدد_حجج_ماكرو
+    | سي_نداء_ماكرو_غير_منته
+    | سي_نوع_مفقود
+    | سي_تعارض_اسم
+    | سي_حجم_مصفوفة_سالب
+    | سي_عضو_غير_موجود
+    | سي_ليس_ثابتا
+    | سي_إعادة_تعريف
+    | سي_تأكيد_ساكن
+    | سي_صنف_وسم_مختلف
+    | سي_غير_مصرح
+    | سي_اسم_نوع_مجهول
+    | سي_شرطي_بلا_مقابل
+    | سي_تعليق_غير_منته
+    | سي_شرطي_غير_منته
+    | سي_معاملات_عملية_غير_صالحة
+    | سي_أنواع_غير_متوافقة
+    | سي_غير_قابل_للإسناد
+    | سي_عدد_حجج_نداء
+    | سي_غير_قابل_للنداء
+    | سي_لافتة_غير_معرفة
+    | سي_قفز_غير_صالح
+    | سي_حالة_مكررة
+    | سي_مهيئ_غير_صالح
+    | سي_بناء_غير_مدعوم
+    | سي_نوع_غير_مدعوم
+    | سي_متغير_غير_مدعوم
+    | سي_متغيرة_غير_مدعومة
+    | سي_لافتة_ربط_غير_مدعومة
+    | سي_غير_متاح
+    | سي_بلا_نموذج
+    | سي_ماكرو_غير_ثابت
+    | سي_توجيه_تحذير
+    | سي_ترويسات_المضيف
+    | سي_بلا_ترويسات_نظام
+    | سي_نداء_متغير_غير_مدعوم
+    | سي_نص_يوتيف8_غير_صالح
+    | سي_محرف_معرف_غير_صالح
+    | سي_تعارض_اسم_متخطى
+    | سي_ترويسة_مقروءة_غير_مترجمة
+    // A `@@json` type with a field type the derivation cannot encode.
+    | اشتقاق_جسون_نوع_حقل_غير_مدعوم
+    // A -l library of `run`/`interpret` found only as a static archive.
+    | مكتبة_تفسير_ساكنة_فقط
+    // A -l library of `run`/`interpret` whose macOS `.tbd` stub names no install name.
+    | مكتبة_تفسير_بلا_اسم_تثبيت
+    // Retired: no longer emitted. Supax reports manifest and dependency
+    // errors (SULTANC-PACKAGE-GIT-DEPENDENCY-UNRESOLVED,
+    // SULTANC-PACKAGE-DEPENDENCY-MAP-INVALID; see بيان_حزمة_غير_صالح).
+    | اعتمادية_جت_غير_محلولة
+    | خريطة_اعتماديات_غير_صالحة
+    // A -l library of `run`/`interpret` the host's dynamic loader could not load.
+    | مكتبة_تفسير_غير_محملة
+    // The system C compiler (SULTANC_C_COMPILER=cc) asked for a target other than the host.
+    | مترجم_سي_لغير_المضيف
+    // The system C compiler failed on an imported C translation unit.
+    | فشل_مترجم_سي
+    // The C library a C import's target names was found in no library directory (a warning).
+    | مكتبة_سي_غير_موجودة
+    // An environment variable the compiler reads holds a value it does not accept.
+    | قيمة_متغير_بيئة_غير_مقبولة
+    // An opaque type used by value: a local, field, payload, parameter, result, reference or element.
+    | نوع_معتم_بالقيمة
+    // An opaque type as a type argument, written (`f<T>`, `G<T>`) or inferred.
+    | نوع_معتم_حجة_نوع
+    // `*p` where p points at an opaque type, inside unsafe too.
+    | فك_مؤشر_معتم
+    // A field access on an opaque type, through a pointer or not.
+    | حقل_عبر_مؤشر_معتم
+    // `p[i]` where p points at an opaque type: it has no element size.
+    | حساب_مؤشر_معتم
+    // A --package-graph file that cannot be used (driver/package_graph.sn),
+    // reported at its place in that file.
+    | رسم_حزم_غير_صالح
+    // No standard library where the compiler looks (driver/std_location.sn).
+    | مكتبة_قياسية_غير_موجودة
+    // A source file `sultanc fmt --check` would change.
+    | ملف_غير_منسق
+    // Module spellings (frontend/module_loading/module_spellings.sn): a
+    // `module` declaration naming no child of its folder, a spelling two
+    // children share, a reserved word as a spelling, and `module` outside a
+    // folder's root file.
+    | وحدة_معلنة_بلا_ابن
+    | تهجئة_وحدة_مشتركة
+    | تهجئة_وحدة_محجوزة
+    | تصريح_وحدة_خارج_ملف_الجذر
 ;
 
 // Diagnostic classification is stable metadata, independent of presentation.

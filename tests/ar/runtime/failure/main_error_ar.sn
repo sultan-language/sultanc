@@ -6,7 +6,7 @@
 // خرج-قياسي: <فارغ>
 // خطأ-قياسي-ملف: main_error_ar.stderr
 // نظير: tests/en/runtime/failure/main_error_ar.sn
-// `main` returning `نتيجة عدد, فشل` (docs/ERRORS.md): its error goes through
+// `main` returning `نتيجة عدد, فشل` (docs/en/reference/errors.md): its error goes through
 // the one runtime-failure path, the iSpeak frame "the program ended with an
 // error" in the program's language (SULTANC_LANG=ar) and the error's صف_فشل
 // text, exit status 1; native and interpreter agree.

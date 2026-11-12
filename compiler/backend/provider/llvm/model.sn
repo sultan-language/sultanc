@@ -5,6 +5,8 @@
 استورد compiler.msir.msir_model;
 استورد compiler.runtime.primitive_identity;
 استورد compiler.backend.target.runtime_service_model;
+استورد compiler.backend.target.target_model;
+استورد compiler.diagnostics.record;
 
 // حالة LLVM مؤقتة تخص مزود الخلفية فقط. لا تعيد امتلاك Type/MSIR/Target/Layout.
 عام نوع تمثيل_قيمة_إل_إل_في_إم =
@@ -49,7 +51,10 @@
     القيم: متجه اختياري تمثيل_قيمة_إل_إل_في_إم,
     فاي_الكتل: متجه متجه اختياري مرجع_قيمة_إل_إل_في_إم,
     بيئة_الإغلاق: اختياري مرجع_قيمة_إل_إل_في_إم,
-    عنوان_الناتج_غير_المباشر: اختياري مرجع_قيمة_إل_إل_في_إم
+    عنوان_الناتج_غير_المباشر: اختياري مرجع_قيمة_إل_إل_في_إم,
+    // مخازن_ثابتة_للنداء_مسير (compiler/msir/msir_copies.sn): the values a
+    // hidden reference may pass by the address of their own storage.
+    الثابتة: متجه منطقي
 };
 
 
@@ -76,7 +81,8 @@
     // True when the target has no double-width integer multiply (WebAssembly):
     // LLVM legalizes llvm.*mul.with.overflow there into compiler-rt calls
     // (__multi3), which no SultanC link provides, so the checked product is
-    // expanded with native division instead (lowering.sn).
+    // expanded instead: 64-bit from 32-bit halves (wide_division.sn, also
+    // after optimization), narrower widths with native division (lowering.sn).
     ضرب_التجاوز_بالقسمة: منطقي,
     // True where the stack is aligned to less than the largest scalar (XCore
     // 4, MSP430 2, AVR 1): frame slots then take the datalayout's ABI
@@ -98,6 +104,9 @@
     // (SDIVX/UDIVX). The 32-bit SDIV/UDIV read the dividend's high word from
     // the Y register and are deprecated by SPARC V9.
     قسمة_ضيقة_بعرض_64: منطقي,
+    // True on BPF: before ISA v4 there is no signed divide or modulo, and
+    // LLVM rejects sdiv/srem. Signed division divides the magnitudes unsigned.
+    قسمة_موقعة_بالمقادير: منطقي,
     // The program's std allocation-service providers (MSIR program fact), used
     // for storage services where the target has no C allocator (wasm32).
     مزودات_تخصيص_الذاكرة: اختياري مزودات_تخصيص_ذاكرة_مسير
@@ -129,7 +138,23 @@
     // The target's declared machine output is assembly (e.g. NVPTX PTX, XCore),
     // so a binary object cannot be produced for it.
     | مخرج_كائن_غير_مدعوم
+    // An operation the target's instruction set lacks that LLVM would lower
+    // to a run-time routine SultanC does not provide (freestanding_check.sn).
+    | روتين_تشغيل_غير_متاح بنوع روتين_تشغيل_غير_متاح_إل_إل_في_إم
 ;
+
+// The facts of that failure: the target, the operation (an LLVM opcode or
+// intrinsic name such as `fmul` or `atomicrmw`) and its type (`f64`,
+// `i64`), the source name of the function it is in (empty when the MSIR
+// debug contract has none) and the source location: the operation's own,
+// else its function's.
+عام نوع روتين_تشغيل_غير_متاح_إل_إل_في_إم = {
+    الهدف: معرف_هدف,
+    العملية: متجه ط8,
+    النوع: متجه ط8,
+    الدالة: متجه ط8,
+    الموقع: اختياري نطاق_مصدر_تشخيص
+};
 
 
 // Selection vector from compiler/msir/msir_consumer.sn
@@ -138,7 +163,7 @@
     المطلوبة: &متجه منطقي,
     المعرف: معرف_دالة_مسير
 ): منطقي {
-    لو (المعرف.القيمة >= (الطول(*المطلوبة) مثل طبيعي)) { أرجع خطأ; };
+    إذا ((المعرف.القيمة مثل طبيعي) >= (الطول(*المطلوبة) مثل طبيعي)) { أرجع خطأ; };
     أرجع (*المطلوبة)[المعرف.القيمة];
 }
 
@@ -146,7 +171,7 @@
     الحالة: &حالة_مزود_إل_إل_في_إم,
     المعرف: معرف_دالة_مسير
 ): نتيجة قيد_دالة_إل_إل_في_إم, فشل_مزود_إل_إل_في_إم {
-    لو (المعرف.القيمة >= (الطول((*الحالة).الدوال) مثل طبيعي)) {
+    إذا ((المعرف.القيمة مثل طبيعي) >= (الطول((*الحالة).الدوال) مثل طبيعي)) {
         أرجع نتيجة.خطأ(فشل_مزود_إل_إل_في_إم.دالة_مفقودة(المعرف));
     };
     طابق (*الحالة).الدوال[المعرف.القيمة] مع
@@ -158,7 +183,7 @@
     الحالة: &حالة_مزود_إل_إل_في_إم,
     المعرف: معرف_دالة_خارجية_مسير
 ): نتيجة قيد_دالة_خارجية_إل_إل_في_إم, فشل_مزود_إل_إل_في_إم {
-    لو (المعرف.القيمة >= (الطول((*الحالة).الدوال_الخارجية) مثل طبيعي)) {
+    إذا ((المعرف.القيمة مثل طبيعي) >= (الطول((*الحالة).الدوال_الخارجية) مثل طبيعي)) {
         أرجع نتيجة.خطأ(فشل_مزود_إل_إل_في_إم.دالة_خارجية_مفقودة(المعرف));
     };
     طابق (*الحالة).الدوال_الخارجية[المعرف.القيمة] مع
@@ -182,8 +207,11 @@
     | خطأ بنوع فشل_مزود_إل_إل_في_إم
 ;
 
+// -O0 (none), -O1 (low), -O2 (the default) and -O3 (high): the new pass
+// manager's default<On> pipeline and the matching code-generation level.
 عام نوع مستوى_تحسين_مزود_إل_إل_في_إم =
     | بلا
+    | منخفض
     | افتراضي
     | عال
 ;

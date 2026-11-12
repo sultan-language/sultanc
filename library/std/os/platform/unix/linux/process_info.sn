@@ -1,0 +1,57 @@
+// The process id and terminal checks on Linux, Android and FreeBSD, on raw
+// system calls with no libc (Nahr items 17): getpid, and isatty(3) the way
+// musl and Go's x/term test a descriptor, an ioctl that reads the terminal
+// attributes (Linux TCGETS, FreeBSD TIOCGETA) and fails with ENOTTY on
+// anything that is not a terminal.
+استورد os.platform.unix.linux.syscalls.kernel_result;
+استورد os.platform.unix.linux.syscalls.operations;
+استورد os.platform.unix.linux.syscalls.selection;
+استورد os.error;
+
+// getpid() cannot fail.
+عام عرف معرف_العملية_لينكس(): ط64 {
+    دع الخام: ط64;
+    غير_آمن {
+        الخام := بدائي_نداء_نواة_خام(
+            رقم_نداء_نواة_لينكس(عملية_نداء_نواة_لينكس.معرف_العملية()),
+            0 مثل ط64, 0 مثل ط64, 0 مثل ط64, 0 مثل ط64, 0 مثل ط64, 0 مثل ط64
+        );
+    }
+    أرجع الخام & 0xFFFFFFFF;
+}
+
+// The ioctl request that reads a terminal's attributes. The value is the
+// kernel's own (asm-generic/ioctls.h, arch/*/include/uapi/asm/ioctls.h,
+// FreeBSD sys/ttycom.h): _IOR encodings on powerpc, sparc and FreeBSD.
+إذا (الهدف.المنصة == «freebsd») {
+    عرف أمر_قراءة_طرفية_لينكس(): ط64 { أرجع 0x402c7413 مثل ط64; } // TIOCGETA
+}
+إذا ((الهدف.المنصة == «linux» || الهدف.المنصة == «android») && الهدف.المعمارية == «powerpc64») {
+    عرف أمر_قراءة_طرفية_لينكس(): ط64 { أرجع 0x402c7413 مثل ط64; } // TCGETS
+}
+إذا ((الهدف.المنصة == «linux» || الهدف.المنصة == «android») && الهدف.المعمارية == «mips64») {
+    عرف أمر_قراءة_طرفية_لينكس(): ط64 { أرجع 0x540d مثل ط64; } // TCGETS
+}
+إذا ((الهدف.المنصة == «linux» || الهدف.المنصة == «android») && الهدف.المعمارية == «sparcv9») {
+    عرف أمر_قراءة_طرفية_لينكس(): ط64 { أرجع 0x40245408 مثل ط64; } // TCGETS
+}
+إذا ((الهدف.المنصة == «linux» || الهدف.المنصة == «android») && الهدف.المعمارية != «powerpc64» && الهدف.المعمارية != «mips64» && الهدف.المعمارية != «sparcv9») {
+    عرف أمر_قراءة_طرفية_لينكس(): ط64 { أرجع 0x5401 مثل ط64; } // TCGETS
+}
+
+// Whether the descriptor is a terminal. The 64-byte buffer holds the
+// largest kernel termios (44 bytes on powerpc and FreeBSD).
+عام عرف هل_طرفية_لينكس(الواصف: ط64): منطقي {
+    دع المخزن: متغير متجه ط64 = [0, 0, 0, 0, 0, 0, 0, 0];
+    دع الخام: ط64;
+    غير_آمن {
+        الخام := بدائي_نداء_نواة_خام(
+            رقم_نداء_نواة_لينكس(عملية_نداء_نواة_لينكس.تحكم_جهاز()),
+            الواصف, أمر_قراءة_طرفية_لينكس(), &متغير المخزن[0],
+            0 مثل ط64, 0 مثل ط64, 0 مثل ط64
+        );
+    }
+    طابق حلل_نتيجة_نداء_نواة_لينكس(الخام) مع
+    | نتيجة.خطأ(_) -> { أرجع خطأ; }
+    | نتيجة.نجح(_) -> { أرجع صواب; };
+}

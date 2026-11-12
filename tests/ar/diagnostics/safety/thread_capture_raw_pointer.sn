@@ -1,7 +1,7 @@
 // اختبار: رفض
 // تشخيص: SULTANC-THREAD-CAPTURE-RAW-POINTER
 // نظير: tests/en/diagnostics/safety/thread_capture_raw_pointer.sn
-// فحص التقاطات الإطلاق (docs/TYPE_SYSTEM.md، «قواعد الالتقاط في الخيوط»): لا
+// فحص التقاطات الإطلاق (docs/en/reference/type-system.md، «قواعد الالتقاط في الخيوط»): لا
 // يجوز لإغلاق يُسلَّم إلى خيط آخر أن يلتقط مؤشرا خاما، فهو غير آمن للإرسال
 // (‎*mut T في Rust ليس Send)، إلا إن كان الإطلاق داخل كتلة غير آمنة. شارك حالة
 // الكومة عبر std.sync بدلا من ذلك.

@@ -5,7 +5,7 @@
 // مرحلة0: نعم
 // نظير: tests/ar/language/stage0/features.sn
 // The language the C Stage0 compiles since it learned the self-hosted
-// frontend's later features (docs/OWNERSHIP_AND_DESTRUCTION.md, "Bootstrap
+// frontend's later features (docs/en/reference/ownership.md, "Bootstrap
 // constraints"): module constants and variables, break/continue/for, calls in
 // vector literals, literal/range/alternative patterns (also nested), floats
 // and float casts, wrapping arithmetic, pop/truncate/capacity/reserve,

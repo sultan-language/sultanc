@@ -1,4 +1,4 @@
-// The stop primitive إنهيار / panic (docs/ERRORS.md, layer 1c): a program
+// The stop primitive إنهيار / panic (docs/en/reference/errors.md, layer 1c): a program
 // that cannot go on prints why and ends. It writes the iSpeak frame "the
 // program stopped" in the program's language with the message under it to
 // standard error (std.process.failure, the one runtime-failure path), then

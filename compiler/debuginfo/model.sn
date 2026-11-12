@@ -46,7 +46,11 @@
     الأبناء: متجه معرف_نطاق_تصحيح,
     المحليات: متجه معرف_متغير_تصحيح,
     الدالة: معرف_دالة_تصحيح,
-    مضمن_عند: اختياري معرف_موقع_تصحيح
+    مضمن_عند: اختياري معرف_موقع_تصحيح,
+    // An inlined call's scope: the function whose body was inlined here (the
+    // scope's الدالة is the function it was inlined into) and, in مضمن_عند,
+    // the call's location (compiler/debuginfo/inlining.sn).
+    الدالة_المضمنة: اختياري معرف_دالة_تصحيح
 };
 
 عام نوع صنف_متغير_تصحيح =

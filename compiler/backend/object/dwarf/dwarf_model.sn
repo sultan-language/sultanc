@@ -32,6 +32,12 @@
     | غير_متاح
     | سجل بنوع طبيعي
     | مكدس بنوع (طبيعي, طبيعي)
+    // Memory whose address is stored at (register + offset).
+    | مكدس_غير_مباشر بنوع (طبيعي, طبيعي)
+    // Memory at an offset from DW_AT_frame_base (the CFA), and memory whose
+    // address is stored there.
+    | إطار بنوع عدد
+    | إطار_غير_مباشر بنوع عدد
     // A WebAssembly local (index); true when it holds the value's address.
     | محلي_ويب_أسمبلي بنوع (طبيعي, منطقي)
 ;
@@ -47,11 +53,18 @@
 عام نوع وصف_نطاق_دوارف = {
     المعرف: طبيعي,
     الأصل: معرف_أصل_مصدر,
-    الأب: اختياري طبيعي
+    الأب: اختياري طبيعي,
+    // An inlined call's scope (compiler/debuginfo/inlining.sn): the inlined
+    // function's debug identity and the call's debug location.
+    المضمنة: اختياري طبيعي,
+    موقع_الاستدعاء: اختياري طبيعي
 };
 
 عام نوع وصف_متغير_دوارف = {
     المتغير: معرف_متغير_تصحيح,
+    // A parameter of an inlined call (the function's own parameters are
+    // وصف_دالة_دوارف.المعاملات).
+    معامل: منطقي,
     الاسم: متجه ط8,
     الأصل: معرف_أصل_مصدر,
     نطاق_الإحاطة: طبيعي,
@@ -91,6 +104,9 @@
     | اسم_مستعار بنوع طبيعي
     | دالة بنوع (متجه طبيعي, اختياري طبيعي)
     | مركب بنوع (متجه وصف_عضو_دوارف, اختياري وصف_مميز_بدائل_دوارف, متجه وصف_بديل_دوارف)
+    // A tag's values named by their constructors (underlying integer Type,
+    // constructors with their tag values; their payloads are unused here).
+    | تعداد_وسم بنوع (طبيعي, متجه وصف_بديل_دوارف)
     | غير_محدد
 ;
 
@@ -107,6 +123,7 @@
 
 عام نوع وصف_دالة_دوارف = {
     الدالة: معرف_دالة_منتقاة,
+    معرف_التصحيح: طبيعي,
     الاسم: متجه ط8,
     اسم_الربط: متجه ط8,
     الأصل: معرف_أصل_مصدر,

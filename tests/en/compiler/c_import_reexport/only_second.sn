@@ -1,0 +1,4 @@
+// Part of tests/en/compiler/c_import_reexport/main.sn: imports second.h only.
+import "second.h";
+
+public def total(it: &item_t): i32 { return item_total(it); }

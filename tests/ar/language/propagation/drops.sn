@@ -2,7 +2,7 @@
 // أهداف: arm64-darwin,x86_64-linux
 // خروج: 42
 // An early return through `؟` releases each owned local exactly once
-// (docs/ERRORS.md): a function holding three owned locals (text, vector,
+// (docs/en/reference/errors.md): a function holding three owned locals (text, vector,
 // box) and the owned error leaves through the expansion's return 10^5 times,
 // and as often through its ok path. A missed drop grows the allocator's live
 // bytes; a second drop traps in the allocator. Valgrind sees the same
@@ -12,7 +12,7 @@
 استورد std.os.allocation;
 
 عرف افحص(س: طبيعي): نتيجة طبيعي, نص {
-    لو ((س % 2) == 0) { أرجع نتيجة.خطأ(«عدد زوجي مرفوض»); };
+    إذا ((س % 2) == 0) { أرجع نتيجة.خطأ(«عدد زوجي مرفوض»); };
     أرجع نتيجة.نجح(س);
 }
 
@@ -38,7 +38,7 @@
         ف := ف + 1;
     }
     دع بعد: ط64 = بايتات_حية_مخصص_النظام();
-    لو (أخطاء != 100000) { أرجع 1; };
-    لو (بعد != قبل) { أرجع 2; };
+    إذا (أخطاء != 100000) { أرجع 1; };
+    إذا (بعد != قبل) { أرجع 2; };
     أرجع 42;
 }

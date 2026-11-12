@@ -1,7 +1,7 @@
 استورد os.error;
 استورد os.platform.unix.apple.darwin.file_descriptors;
 
-// macOS OS threads (docs/CONCURRENCY.md) through libSystem's documented
+// macOS OS threads (docs/en/reference/concurrency.md) through libSystem's documented
 // POSIX thread API, as Rust's std (library/std/src/sys/pal/unix/thread.rs)
 // and Go's runtime (runtime/os_darwin.go, newosproc) start threads there:
 // pthread_create with a 2 MiB stack (pthread_attr_setstacksize; Darwin's own
@@ -20,6 +20,9 @@
 خارجي «/usr/lib/libSystem.B.dylib» عرف pthread_join(المقبض: ط64, الناتج: ط64): ص32;
 خارجي «/usr/lib/libSystem.B.dylib» عرف pthread_attr_init(السمات: *متغير ط64): ص32;
 خارجي «/usr/lib/libSystem.B.dylib» عرف pthread_attr_setstacksize(السمات: *متغير ط64, الحجم: ط64): ص32;
+// int pthread_attr_setstack(pthread_attr_t *, void *stackaddr, size_t):
+// the thread runs on [stackaddr, stackaddr + size), both page-aligned.
+خارجي «/usr/lib/libSystem.B.dylib» عرف pthread_attr_setstack(السمات: *متغير ط64, العنوان: ط64, الحجم: ط64): ص32;
 خارجي «/usr/lib/libSystem.B.dylib» عرف pthread_attr_destroy(السمات: *متغير ط64): ص32;
 // int pthread_threadid_np(pthread_t, uint64_t *): the system-wide unique
 // id of a thread (NULL: the calling thread), Rust's ThreadId source on Apple.
@@ -40,11 +43,20 @@
 // reference the caller keeps until join.
 عام نوع خيط_داروين = { المقبض: ط64, عنوان_الإغلاق: ط64 };
 
-عام عرف ابدأ_خيط_داروين(العمل: دالة(): فراغ): نتيجة خيط_داروين, خطأ_نظام_أصلي {
+// المكدس / الحجم: a stack the caller owns (the allocator's thread-stack
+// slot, so the thread has a per-thread allocation cache), or 0 for a 2 MiB
+// stack libpthread maps itself.
+عام عرف ابدأ_خيط_داروين(العمل: دالة(): فراغ, المكدس: ط64, الحجم: ط64): نتيجة خيط_داروين, خطأ_نظام_أصلي {
     دع السمات: متغير متجه ط64 = [0, 0, 0, 0, 0, 0, 0, 0];
     دع الرمز: متغير ص32 = pthread_attr_init(&متغير السمات[0]);
-    لو (الرمز != 0) { أرجع نتيجة.خطأ(أنشئ_خطأ_نظام_أصلي(مصدر_خطأ_نظام.يونكس(), الرمز مثل عدد)); };
-    دع تجاهل_الحجم: ص32 = pthread_attr_setstacksize(&متغير السمات[0], 2097152);
+    إذا (الرمز != 0) { أرجع نتيجة.خطأ(أنشئ_خطأ_نظام_أصلي(مصدر_خطأ_نظام.يونكس(), الرمز مثل عدد)); };
+    دع المكدس_مضبوط: متغير منطقي = خطأ;
+    إذا (المكدس != 0 && الحجم != 0) {
+        المكدس_مضبوط := pthread_attr_setstack(&متغير السمات[0], المكدس, الحجم) == 0;
+    };
+    إذا (!المكدس_مضبوط) {
+        دع تجاهل_الحجم: ص32 = pthread_attr_setstacksize(&متغير السمات[0], 2097152);
+    };
     دع العنوان: ط64;
     دع المدخل: ط64;
     غير_آمن {
@@ -54,7 +66,7 @@
     دع المقبض: متغير متجه ط64 = [0];
     الرمز := pthread_create(&متغير المقبض[0], &متغير السمات[0], المدخل, العنوان);
     دع تجاهل_الإتلاف: ص32 = pthread_attr_destroy(&متغير السمات[0]);
-    لو (الرمز != 0) {
+    إذا (الرمز != 0) {
         حرر_إغلاق_خيط_داروين(العنوان);
         أرجع نتيجة.خطأ(أنشئ_خطأ_نظام_أصلي(مصدر_خطأ_نظام.يونكس(), الرمز مثل عدد));
     };
@@ -86,9 +98,9 @@
     دع الاسم: متجه ط8 = [104, 119, 46, 108, 111, 103, 105, 99, 97, 108, 99, 112, 117, 0];
     دع القيمة: متغير متجه ص32 = [0];
     دع الطول: متغير متجه ط64 = [4];
-    لو (sysctlbyname(&الاسم[0], &متغير القيمة[0], &متغير الطول[0], 0, 0) != 0) {
+    إذا (sysctlbyname(&الاسم[0], &متغير القيمة[0], &متغير الطول[0], 0, 0) != 0) {
         أرجع نتيجة.خطأ(خطأ_داروين_الحالي());
     };
-    لو (القيمة[0] <= 0) { أرجع نتيجة.خطأ(أنشئ_خطأ_نظام_أصلي(مصدر_خطأ_نظام.يونكس(), 22)); };
+    إذا (القيمة[0] <= 0) { أرجع نتيجة.خطأ(أنشئ_خطأ_نظام_أصلي(مصدر_خطأ_نظام.يونكس(), 22)); };
     أرجع نتيجة.نجح(القيمة[0] مثل ط64);
 }

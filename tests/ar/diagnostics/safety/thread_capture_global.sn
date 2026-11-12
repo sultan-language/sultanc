@@ -1,7 +1,7 @@
 // اختبار: رفض
 // تشخيص: SULTANC-THREAD-CAPTURE-NON-ATOMIC-SHARED
 // نظير: tests/en/diagnostics/safety/thread_capture_global.sn
-// فحص التقاطات الإطلاق (docs/TYPE_SYSTEM.md، «قواعد الالتقاط في الخيوط»): متغير
+// فحص التقاطات الإطلاق (docs/en/reference/type-system.md، «قواعد الالتقاط في الخيوط»): متغير
 // الوحدة القابل للكتابة مشترك بين كل الخيوط وليس ذريا، فلا يجوز لإغلاق يُسلَّم
 // إلى خيط آخر أن يستخدمه خارج كتلة غير آمنة (static mut في Rust). استخدم ذرة أو
 // قفلا أو مشتركا.

@@ -40,7 +40,7 @@ __Ast_Expression__ *__Parser_Call_After_Lvalue__(__Parser__ *__Parser_State__,
 /* Parses the parser lvalue statement. */
 int __Parser_Parse_Lvalue_Statement__(__Parser__ *__Parser_State__, __Vector__ *__Statements__);
 
-/* Defines the propagation statement form values (`EXPR؟`, docs/ERRORS.md). */
+/* Defines the propagation statement form values (`EXPR؟`, docs/en/reference/errors.md). */
 typedef enum
 {
     /* Represents the assign form (`let x: T = EXPR؟;`, `x := EXPR؟;`). */

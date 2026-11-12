@@ -1,0 +1,33 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// نظير: tests/ar/language/comptime/function_values.sn
+// Function values at compile time: a route table of handler functions is
+// built and dispatched inside a comptime block (the closures live in the
+// evaluation's own storage), and a function name passed as an argument of a
+// compile-time call is that function.
+type route = { path: string, handler: fn(int): int };
+def double(x: int): int { return x * 2; }
+def tenfold(x: int): int { return x * 10; }
+def apply(f: fn(int): int, x: int): int { return f(x); }
+def dispatch(path: string, x: int): int {
+    let routes: mutable vector route = [];
+    let first: route = { path: "/double", handler: double };
+    let second: route = { path: "/ten", handler: tenfold };
+    append(routes, first);
+    append(routes, second);
+    let i: mutable int = 0;
+    while (i < length(routes) as int) {
+        if (length(routes[i as uint].path) == length(path)) {
+            let f: fn(int): int = routes[i as uint].handler;
+            return f(x);
+        };
+        i := i + 1;
+    }
+    return -1;
+}
+def main(): int {
+    let routed: int = comptime { dispatch("/ten", 4) };
+    let applied: int = comptime { apply(double, 1) };
+    return routed + applied;
+}

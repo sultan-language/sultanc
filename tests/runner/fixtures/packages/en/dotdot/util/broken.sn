@@ -1,0 +1,2 @@
+// An unknown name, reported at util/broken.sn with no `..` in the path.
+public def broken_value(): int { return missing_value; }

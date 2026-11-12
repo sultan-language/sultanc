@@ -83,7 +83,7 @@
 
     طابق حل_مسار_عام_مسجل(البيئة, أصل_المستورد.الجذر, المرجع) مع
     | اختياري.موجود(المفتاح) -> {
-        لو (!معرفا_جذر_مكتبة_متساويان(المفتاح.الجذر, الجذر)) {
+        إذا (!معرفا_جذر_مكتبة_متساويان(المفتاح.الجذر, الجذر)) {
             أرجع نتيجة_حل_استيراد.خطأ(خطأ_حل_استيراد.تعارض_مسار_عام());
         };
         أرجع نتيجة_حل_استيراد.محلول(المفتاح);
@@ -95,18 +95,13 @@
     // `compiler.frontend.lexer.token`). In that case the root spelling is part
     // of the canonical project path, so preserve the full reference. External
     // library roots (for example `std`) use the path after the root spelling.
-    لو (
+    إذا (
         معرفا_جذر_مكتبة_متساويان(الجذر, أصل_المستورد.الجذر)
         && !يستهلك_التهجئة
     ) {
-        // Package aliases are valid inside their owning package as well as
-        // through an external root spelling. Canonicalize the complete local
-        // path once before constructing the ModuleKey. With no declared alias
-        // this is an identity operation, preserving manifest-free projects.
-        دع المرجع_المقنن: متجه ط8 = قنن_تهجئة_حزمة(
-            البيئة, الجذر, المرجع
-        );
-        طابق قنن_مسار_وحدة_منطقي(&المرجع_المقنن) مع
+        // Module spellings were replaced by canonical names before
+        // resolution (module_spellings.sn, through the loader).
+        طابق قنن_مسار_وحدة_منطقي(المرجع) مع
         | نتيجة_مسار_وحدة_منطقي.غير_صالح -> {
             أرجع نتيجة_حل_استيراد.خطأ(خطأ_حل_استيراد.مسار_منطقي_غير_صالح());
         }
@@ -121,10 +116,7 @@
         أرجع نتيجة_حل_استيراد.خطأ(خطأ_حل_استيراد.مرجع_غير_صالح());
     }
     | اختياري.موجود(الباقي) -> {
-        // Package aliases canonicalize the path spelling only. They never own
-        // package membership or create a second module identity.
-        دع الباقي_المقنن: متجه ط8 = قنن_تهجئة_حزمة(البيئة, الجذر, &الباقي);
-        طابق قنن_مسار_وحدة_منطقي(&الباقي_المقنن) مع
+        طابق قنن_مسار_وحدة_منطقي(&الباقي) مع
         | نتيجة_مسار_وحدة_منطقي.غير_صالح -> {
             أرجع نتيجة_حل_استيراد.خطأ(خطأ_حل_استيراد.مسار_منطقي_غير_صالح());
         }

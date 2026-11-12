@@ -1,0 +1,8 @@
+// اختبار: رفض
+// تشخيص: SULTANC-C-CONFLICTING-TYPES
+// نظير: tests/ar/compiler/c_import_errors/conflicting_types.sn
+// Jisr reports conflicting declarations of one function in an imported header as SULTANC-C-CONFLICTING-TYPES, with the
+// header's file:line:column, and the import fails at compile time.
+import "conflicting_types.h";
+
+def main(): int { return 0; }

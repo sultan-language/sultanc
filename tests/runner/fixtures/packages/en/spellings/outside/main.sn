@@ -1,0 +1,3 @@
+import lib.x;
+
+def main(): int { return x_value(); }

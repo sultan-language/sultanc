@@ -1,0 +1,6 @@
+error[SULTANC-JSON-DERIVE-UNSUPPORTED-FIELD-TYPE]: `@@json` cannot derive this field type — The type is `(i32, i32)`. JSON derivation supports integers, floats, booleans, characters, strings, named types without type arguments, and vectors and options of these.
+  --> tests/en/diagnostics/e2e/json_derive_field.sn:11:11..11:21
+    |
+ 11 |     pair: (i32, i32)
+    |           ^^^^^^^^^^
+    |

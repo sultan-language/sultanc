@@ -189,7 +189,7 @@ __Type_Conversion_Class__ __Type_Conversion_Classify__(__Semantic_Context__ *__C
     {
         return __Type_Conversion_Explicit_Safe__;
     }
-    /* Float casts (docs/TYPE_SYSTEM.md, "Numeric casts"): float <-> integer
+    /* Float casts (docs/en/reference/type-system.md, "Numeric casts"): float <-> integer
      * and f32 <-> f64, as Rust's `as`. */
     if ((__Source_Type__.__Kind__ == __Resolved_Type_Float__ &&
          (__Target_Type__.__Kind__ == __Resolved_Type_Float__ ||

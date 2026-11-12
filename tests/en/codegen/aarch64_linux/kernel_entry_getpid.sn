@@ -1,0 +1,38 @@
+// اختبار: تشغيل
+// أهداف: x86_64-linux,aarch64-linux-gnu
+// خروج: 42
+// نظير: tests/ar/codegen/aarch64_linux/kernel_entry_getpid.sn
+// Direct kernel entry: getpid (39 on x86-64, 172 in the AArch64 asm-generic
+// table) returns the positive process id, the same one std reports. The
+// native AArch64 Linux backend lowers raw_kernel_call to svc #0 with the
+// number in x8 and the arguments in x0..x5.
+import std.process.id;
+
+// Elsewhere (the runner also compiles every test for arm64-darwin) the
+// kernel is not entered directly and std's id stands in.
+if (target.platform == "linux" && target.architecture == "aarch64") {
+    def kernel_getpid(): u64 { return getpid_call(172); }
+}
+if (target.platform == "linux" && target.architecture == "x86_64") {
+    def kernel_getpid(): u64 { return getpid_call(39); }
+}
+if (target.platform != "linux") {
+    def kernel_getpid(): u64 { return process_id(); }
+}
+
+if (target.platform == "linux") {
+    def getpid_call(number: u64): u64 {
+        let result: u64;
+        unsafe {
+            result := raw_kernel_call(number, 0 as u64, 0 as u64, 0 as u64, 0 as u64, 0 as u64, 0 as u64);
+        }
+        return result;
+    }
+}
+
+def main(): int {
+    let result: u64 = kernel_getpid();
+    if (result == 0 || result > 4194304) { return 1; };
+    if (result != process_id()) { return 2; };
+    return 42;
+}

@@ -20,7 +20,7 @@ def arg(i: uint): string {
 def request(method: string, path: string, body: vector u8): buffered_http_request {
     let headers: vector http_header = [];
     let trailers: vector http_header = [];
-    let r: buffered_http_request = { الطريقة: method, الهدف: path, الإصدار: http_version.http_2(), الرؤوس: headers, الرؤوس_اللاحقة: trailers, الجسم: body };
+    let r: buffered_http_request = { الطريقة: method, الهدف: path, الإصدار: http_version.http_2(), الرؤوس: headers, الرؤوس_اللاحقة: trailers, الجسم: body, العنوان_البعيد: «», السياق: http_request_context_empty() };
     return r;
 }
 

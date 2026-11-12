@@ -3,7 +3,7 @@
 // خروج: 42
 // تفاضلي: نعم
 // نظير: tests/ar/stdlib/error/convert_language.sn
-// std.error converters (docs/ERRORS.md): every variant of every pilot enum
+// std.error converters (docs/en/reference/errors.md): every variant of every pilot enum
 // gives an Arabic message with an English language version; an Arabic
 // locale, or one without a version, gets the Arabic message.
 import std.error.failure;

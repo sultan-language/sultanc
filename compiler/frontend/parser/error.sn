@@ -13,6 +13,12 @@
     | عنصر
     | شرط_هدف_غير_صالح
     | شرط_هدف_بلا_هدف
+    // Brackets and prefix operators nested past حد_تعشيش_المحلل.
+    | تعشيش_عميق_جدا
+    // `ضمن_ملف(«path»)` names a file that cannot be read.
+    | ملف_مضمن_غير_مقروء
+    // A top-level `let` initialized with a record, tuple or box literal.
+    | تهيئة_قيمة_عليا_غير_مدعومة
     | داخلي
 ;
 

@@ -1,11 +1,15 @@
+استورد compiler.source.span;
+
 // Canonical Type identity is independently consumable by representation layers.
 // Aggregate Name/Symbol identities remain owned by Name and live outside this boundary.
+// 32-bit: a Type ID is a registry position, made only by معرف_نوع_من,
+// which checks it (ط32_متحقق).
 عام نوع معرف_نوع = {
-    القيمة: طبيعي
+    القيمة: ط32
 };
 
 عام عرف معرف_نوع_من(القيمة: طبيعي): معرف_نوع {
-    دع المعرف: معرف_نوع = { القيمة: القيمة };
+    دع المعرف: معرف_نوع = { القيمة: ط32_متحقق(القيمة) };
     أرجع المعرف;
 }
 

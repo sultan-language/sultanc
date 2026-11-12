@@ -20,6 +20,36 @@
     أرجع الاسم;
 }
 
+// Canonical spelling of the std.async task context switch
+// `(الحفظ: ط64, المكدس_الجديد: ط64): ط64`. MSIR binds its unique public
+// definition as a program fact; the native and LLVM backends that can switch
+// stacks (x86_64 System V, arm64 AAPCS) replace its body with a fixed routine:
+// with a zero stack it answers the address of the task trampoline, otherwise
+// it pushes the callee-saved registers, stores the stack pointer at `الحفظ`,
+// loads `المكدس_الجديد` and pops the registers saved there. Every other
+// target keeps the source body, which answers 0 (no task switching).
+// Canonical spellings of std's allocation counters: the process's
+// allocations, frees, reallocations and requested bytes, then the calling
+// thread's. MSIR binds each unique public definition as a program fact
+// (دوال_عدادات_التخصيص) for an interpreter that serves storage itself.
+عام عرف أسماء_عدادات_التخصيص_أساسية(): متجه متجه ط8 {
+    دع الناتج: متغير متجه متجه ط8 = [];
+    ألحق(الناتج, بايتات_من_نص(«عدد_تخصيصات_النظام»));
+    ألحق(الناتج, بايتات_من_نص(«عدد_تحريرات_النظام»));
+    ألحق(الناتج, بايتات_من_نص(«عدد_إعادات_تخصيص_النظام»));
+    ألحق(الناتج, بايتات_من_نص(«بايتات_مطلوبة_النظام»));
+    ألحق(الناتج, بايتات_من_نص(«عدد_تخصيصات_الخيط»));
+    ألحق(الناتج, بايتات_من_نص(«عدد_تحريرات_الخيط»));
+    ألحق(الناتج, بايتات_من_نص(«عدد_إعادات_تخصيص_الخيط»));
+    ألحق(الناتج, بايتات_من_نص(«بايتات_مطلوبة_الخيط»));
+    أرجع الناتج;
+}
+
+عام عرف اسم_تبديل_سياق_المهام_أساسي(): متجه ط8 {
+    دع الاسم: متجه ط8 = بايتات_من_نص(«بدل_سياق_المهام_التشغيل»);
+    أرجع الاسم;
+}
+
 // ELF startup boundaries are linker-defined addresses, not STD services.
 // The executable entry walks these linker-owned ranges before الرئيسية.
 عام عرف اسم_بداية_منشئات_إلف_أساسي(): متجه ط8 {
@@ -67,23 +97,25 @@
 // ABI spellings, not OS code. The operands and result are pointer-width
 // unsigned integers (linear-memory offsets); 0 means allocation failure.
 عام عرف اسم_مزود_تخصيص_ذاكرة_أساسي(): متجه ط8 {
-    دع الاسم: متجه ط8 = بايتات_من_نص(«خصص_ذاكرة_التشغيل»);
+    دع الاسم: متجه ط8 = بايتات_من_نص(«خصص_ذاكرة_التشغيل_المخبأ»);
     أرجع الاسم;
 }
 
 عام عرف اسم_مزود_إعادة_تخصيص_ذاكرة_أساسي(): متجه ط8 {
-    دع الاسم: متجه ط8 = بايتات_من_نص(«أعد_تخصيص_ذاكرة_التشغيل»);
+    دع الاسم: متجه ط8 = بايتات_من_نص(«أعد_تخصيص_ذاكرة_التشغيل_المخبأ»);
     أرجع الاسم;
 }
 
 عام عرف اسم_مزود_تحرير_ذاكرة_أساسي(): متجه ط8 {
-    دع الاسم: متجه ط8 = بايتات_من_نص(«حرر_ذاكرة_التشغيل»);
+    دع الاسم: متجه ط8 = بايتات_من_نص(«حرر_ذاكرة_التشغيل_المخبأ»);
     أرجع الاسم;
 }
 
 // Import reference, relative to the trusted std root, of the module defining
-// the allocation providers above: `os/allocation.sn`.
+// the allocation providers above: `os/allocation_cache.sn` (the allocator of
+// os/allocation.sn with per-thread caches; an older compiler binds that
+// module's plain, locked entry points by their names without the suffix).
 عام عرف مسار_وحدة_مزودات_الذاكرة_أساسي(): متجه ط8 {
-    دع المسار: متجه ط8 = بايتات_من_نص(«os/allocation.sn»);
+    دع المسار: متجه ط8 = بايتات_من_نص(«os/allocation_cache.sn»);
     أرجع المسار;
 }

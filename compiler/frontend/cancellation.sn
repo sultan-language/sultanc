@@ -1,20 +1,27 @@
+استورد std.sync.atomic;
+
 // Cooperative frontend cancellation owned by the compiler boundary.
 // The LSP/runtime may request cancellation; semantic phases only observe this
 // canonical token at deterministic checkpoints and never know protocol request IDs.
+// The flag is atomic: a running analysis reads the token through a shared
+// reference while another thread (an editor's reader thread) sets it through
+// its own shared reference, as with std.sync.cancel. Put the token in a
+// shared owner (std.sync.arc مشترك) to hand it to that thread; a token used
+// by one thread needs nothing more. A request is never undone.
 عام نوع حالة_إلغاء_واجهة = {
-    ملغاة: منطقي
+    العلم: ذرة_ط32
 };
 
 عام عرف حالة_إلغاء_واجهة_جديدة(): حالة_إلغاء_واجهة {
-    دع الحالة: حالة_إلغاء_واجهة = { ملغاة: خطأ };
+    دع الحالة: حالة_إلغاء_واجهة = { العلم: أنشئ_ذرة_ط32(0 مثل ط32) };
     أرجع الحالة;
 }
 
-عام عرف اطلب_إلغاء_واجهة(الحالة: &متغير حالة_إلغاء_واجهة): فراغ {
-    (*الحالة).ملغاة := صواب;
+// Safe from any thread that holds a reference to the token.
+عام عرف اطلب_إلغاء_واجهة(الحالة: &حالة_إلغاء_واجهة): فراغ {
+    اخزن_ط32(&(*الحالة).العلم, 1 مثل ط32, ترتيب_ذاكرة.إطلاق());
 }
 
 عام عرف هل_واجهة_ملغاة(الحالة: &حالة_إلغاء_واجهة): منطقي {
-    دع الحالية: حالة_إلغاء_واجهة = *الحالة;
-    أرجع الحالية.ملغاة;
+    أرجع احمل_ط32(&(*الحالة).العلم, ترتيب_ذاكرة.اكتساب()) != (0 مثل ط32);
 }

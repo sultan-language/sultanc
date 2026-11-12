@@ -1,0 +1,37 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// بيئة: SULTANC_INTERPRETER=checked
+// نظير: tests/ar/language/safety/raw_pointer_addresses.sn
+// A raw pointer read as its address (`p as u64`) and an address taken back as a pointer
+// (`a as *T`), in the checked interpreter (SULTANC_INTERPRETER=checked), whose storage has
+// no addresses: each local gets a stable, distinct, nonzero one that names it again. The
+// interpreter stopped with an internal error (SULTANC-ICE-INTERPRETER-UNEXPECTED-VALUE-KIND)
+// at the first use of such an address, e.g. std's allocator comparing the address of a local
+// with its thread-stack range (library/std/os/allocation.sn).
+def main(): int {
+    let first: mutable u64 = 7;
+    let second: mutable u64 = 9;
+    let a: u64;
+    let b: u64;
+    let again: u64;
+    unsafe {
+        a := ((&mutable first) as *mutable u64) as u64;
+        b := ((&mutable second) as *mutable u64) as u64;
+        again := ((&mutable first) as *mutable u64) as u64;
+    }
+    if (a == 0 || b == 0) { return 1; };
+    if (a == b) { return 2; };
+    if (a != again) { return 3; };
+    if (a % 8 != 0) { return 4; };
+    let p: *mutable u64;
+    let v: u64;
+    unsafe {
+        p := a as *mutable u64;
+        v := *p;
+    }
+    if (v != 7) { return 5; };
+    if (a < 4096) { return 6; };
+    return 42;
+}

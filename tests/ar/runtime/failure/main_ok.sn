@@ -4,12 +4,12 @@
 // تفاضلي: نعم
 // خطأ-قياسي: <فارغ>
 // نظير: tests/en/runtime/failure/main_ok.sn
-// `main` returning `نتيجة عدد, فشل` (docs/ERRORS.md): on success the program
+// `main` returning `نتيجة عدد, فشل` (docs/en/reference/errors.md): on success the program
 // exits with the value, as an entry returning `عدد` does.
 استورد المكتبة.أخطاء.failure;
 
 عرف نصف(س: عدد): نتيجة عدد, فشل {
-    لو ((س % 2) != 0) { أرجع نتيجة.خطأ(فشل_من(«عدد فردي»)); };
+    إذا ((س % 2) != 0) { أرجع نتيجة.خطأ(فشل_من(«عدد فردي»)); };
     أرجع نتيجة.نجح(س / 2);
 }
 

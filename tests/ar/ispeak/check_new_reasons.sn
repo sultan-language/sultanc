@@ -18,100 +18,100 @@
 
 عرف الرئيسية(): عدد {
     // link.wasm.undefined-symbol, compiler/link/diagnostic_translation.sn:277
-    لو (!تحقق_سبب(سبب_تشخيص.سبب_ربط_واسم_رمز_غير_معرف(), «WebAssembly link has an undefined symbol», «الربط بصيغة WebAssembly يحتوي رمزا غير معرف»)) { أرجع 1; };
+    إذا (!تحقق_سبب(سبب_تشخيص.سبب_ربط_واسم_رمز_غير_معرف(), «WebAssembly link has an undefined symbol», «الربط بصيغة WebAssembly يحتوي رمزا غير معرف»)) { أرجع 1; };
     // link.wasm.symbol-type-mismatch, compiler/link/diagnostic_translation.sn:286
-    لو (!تحقق_سبب(سبب_تشخيص.سبب_ربط_واسم_نوع_رمز_غير_متطابق(), «WebAssembly link has a symbol type mismatch», «نوع الرمز غير متطابق أثناء ربط WebAssembly»)) { أرجع 2; };
+    إذا (!تحقق_سبب(سبب_تشخيص.سبب_ربط_واسم_نوع_رمز_غير_متطابق(), «WebAssembly link has a symbol type mismatch», «نوع الرمز غير متطابق أثناء ربط WebAssembly»)) { أرجع 2; };
     // link.wasm.unsupported-relocation, compiler/link/diagnostic_translation.sn:295
-    لو (!تحقق_سبب(سبب_تشخيص.سبب_ربط_واسم_إزاحة_غير_مدعومة(), «WebAssembly link does not support this relocation», «ربط WebAssembly لا يدعم نوع إعادة التوطين هذا»)) { أرجع 3; };
+    إذا (!تحقق_سبب(سبب_تشخيص.سبب_ربط_واسم_إزاحة_غير_مدعومة(), «WebAssembly link does not support this relocation», «ربط WebAssembly لا يدعم نوع إعادة التوطين هذا»)) { أرجع 3; };
     // link.wasm.unsupported-feature, compiler/link/diagnostic_translation.sn:298
-    لو (!تحقق_سبب(سبب_تشخيص.سبب_ربط_واسم_ميزة_غير_مدعومة(), «WebAssembly link does not support this feature», «ربط WebAssembly لا يدعم هذه الميزة»)) { أرجع 4; };
+    إذا (!تحقق_سبب(سبب_تشخيص.سبب_ربط_واسم_ميزة_غير_مدعومة(), «WebAssembly link does not support this feature», «ربط WebAssembly لا يدعم هذه الميزة»)) { أرجع 4; };
     // link.wasm.address-space-overflow, compiler/link/diagnostic_translation.sn:301
-    لو (!تحقق_سبب(سبب_تشخيص.سبب_ربط_واسم_فيض_مساحة_العناوين(), «WebAssembly link exceeds its address space», «ربط WebAssembly يتجاوز مساحة العناوين المتاحة»)) { أرجع 5; };
+    إذا (!تحقق_سبب(سبب_تشخيص.سبب_ربط_واسم_فيض_مساحة_العناوين(), «WebAssembly link exceeds its address space», «ربط WebAssembly يتجاوز مساحة العناوين المتاحة»)) { أرجع 5; };
     // link.wasm.non-pic-relocation, compiler/link/diagnostic_translation.sn:304
-    لو (!تحقق_سبب(سبب_تشخيص.سبب_ربط_واسم_إزاحة_غير_مستقلة_عن_الموضع(), «WebAssembly link contains a non-PIC relocation», «ربط WebAssembly يحتوي إعادة توطين غير مستقلة عن الموضع»)) { أرجع 6; };
+    إذا (!تحقق_سبب(سبب_تشخيص.سبب_ربط_واسم_إزاحة_غير_مستقلة_عن_الموضع(), «WebAssembly link contains a non-PIC relocation», «ربط WebAssembly يحتوي إعادة توطين غير مستقلة عن الموضع»)) { أرجع 6; };
     // object.wasm.unrepresentable-debug-relocation, compiler/backend/diagnostic_translation.sn:641
-    لو (!تحقق_سبب(سبب_تشخيص.سبب_كائن_واسم_إزاحة_تنقيح_غير_قابلة_للتمثيل(), «WebAssembly debug relocation cannot be represented», «تعذر تمثيل إعادة توطين بيانات التنقيح في WebAssembly»)) { أرجع 7; };
+    إذا (!تحقق_سبب(سبب_تشخيص.سبب_كائن_واسم_إزاحة_تنقيح_غير_قابلة_للتمثيل(), «WebAssembly debug relocation cannot be represented», «تعذر تمثيل إعادة توطين بيانات التنقيح في WebAssembly»)) { أرجع 7; };
     // object.wasm.unrepresentable-pic-address, compiler/backend/diagnostic_translation.sn:642
-    لو (!تحقق_سبب(سبب_تشخيص.سبب_كائن_واسم_عنوان_مستقل_غير_قابل_للتمثيل(), «WebAssembly PIC address cannot be represented», «تعذر تمثيل عنوان مستقل عن الموضع في WebAssembly»)) { أرجع 8; };
+    إذا (!تحقق_سبب(سبب_تشخيص.سبب_كائن_واسم_عنوان_مستقل_غير_قابل_للتمثيل(), «WebAssembly PIC address cannot be represented», «تعذر تمثيل عنوان مستقل عن الموضع في WebAssembly»)) { أرجع 8; };
     // native.backend-not-included, compiler/backend/diagnostic_translation.sn:846
-    لو (!تحقق_سبب(سبب_تشخيص.سبب_خلفية_أصلية_غير_مضمنة(), «Native backend is not included in this compiler», «الخلفية الأصلية غير مضمنة في هذا المترجم»)) { أرجع 9; };
+    إذا (!تحقق_سبب(سبب_تشخيص.سبب_خلفية_أصلية_غير_مضمنة(), «Native backend is not included in this compiler», «الخلفية الأصلية غير مضمنة في هذا المترجم»)) { أرجع 9; };
     // llvm.backend-not-included, compiler/backend/diagnostic_translation.sn:847
-    لو (!تحقق_سبب(سبب_تشخيص.سبب_خلفية_إل_إل_في_إم_غير_مضمنة(), «LLVM backend is not included in this compiler», «خلفية LLVM غير مضمنة في هذا المترجم»)) { أرجع 10; };
+    إذا (!تحقق_سبب(سبب_تشخيص.سبب_خلفية_إل_إل_في_إم_غير_مضمنة(), «LLVM backend is not included in this compiler», «خلفية LLVM غير مضمنة في هذا المترجم»)) { أرجع 10; };
     // comptime.instruction-budget-exhausted, compiler/interpreter/diagnostic_translation.sn:234
-    لو (!تحقق_سبب(سبب_تشخيص.سبب_وقت_الترجمة_نفاد_ميزانية_التعليمات(), «Compile-time instruction budget was exhausted», «نفدت ميزانية التعليمات المسموحة وقت الترجمة»)) { أرجع 11; };
+    إذا (!تحقق_سبب(سبب_تشخيص.سبب_وقت_الترجمة_نفاد_ميزانية_التعليمات(), «Compile-time instruction budget was exhausted», «نفدت ميزانية التعليمات المسموحة وقت الترجمة»)) { أرجع 11; };
     // comptime.prohibited-effect, compiler/interpreter/diagnostic_translation.sn:237
-    لو (!تحقق_سبب(سبب_تشخيص.سبب_وقت_الترجمة_أثر_ممنوع(), «Compile-time evaluation attempted a prohibited effect», «حاول التقييم وقت الترجمة تنفيذ أثر محظور»)) { أرجع 12; };
+    إذا (!تحقق_سبب(سبب_تشخيص.سبب_وقت_الترجمة_أثر_ممنوع(), «Compile-time evaluation attempted a prohibited effect», «حاول التقييم وقت الترجمة تنفيذ أثر محظور»)) { أرجع 12; };
     // comptime.argument-not-constant, compiler/interpreter/diagnostic_translation.sn:240
-    لو (!تحقق_سبب(سبب_تشخيص.سبب_وقت_الترجمة_حجة_غير_ثابتة(), «Compile-time argument is not constant», «إحدى الحجج غير ثابتة وقت الترجمة»)) { أرجع 13; };
+    إذا (!تحقق_سبب(سبب_تشخيص.سبب_وقت_الترجمة_حجة_غير_ثابتة(), «Compile-time argument is not constant», «إحدى الحجج غير ثابتة وقت الترجمة»)) { أرجع 13; };
     // comptime.result-escapes-evaluator, compiler/interpreter/diagnostic_translation.sn:243
-    لو (!تحقق_سبب(سبب_تشخيص.سبب_وقت_الترجمة_نتيجة_تهرب_من_المقيم(), «Compile-time result escapes its evaluator», «نتيجة وقت الترجمة تتجاوز نطاق المقيم»)) { أرجع 14; };
+    إذا (!تحقق_سبب(سبب_تشخيص.سبب_وقت_الترجمة_نتيجة_تهرب_من_المقيم(), «Compile-time result escapes its evaluator», «نتيجة وقت الترجمة تتجاوز نطاق المقيم»)) { أرجع 14; };
     // comptime.call-depth-exceeded, compiler/interpreter/diagnostic_translation.sn:246
-    لو (!تحقق_سبب(سبب_تشخيص.سبب_وقت_الترجمة_تجاوز_عمق_الاستدعاء(), «Compile-time call depth limit was exceeded», «تجاوز التقييم وقت الترجمة حد عمق الاستدعاءات»)) { أرجع 15; };
+    إذا (!تحقق_سبب(سبب_تشخيص.سبب_وقت_الترجمة_تجاوز_عمق_الاستدعاء(), «Compile-time call depth limit was exceeded», «تجاوز التقييم وقت الترجمة حد عمق الاستدعاءات»)) { أرجع 15; };
     // comptime.compile-error, compiler/interpreter/diagnostic_translation.sn:249
-    لو (!تحقق_سبب(سبب_تشخيص.سبب_وقت_الترجمة_فشل_مطلوب(), «Compile-time code explicitly requested an error», «طلبت الشفرة المنفذة وقت الترجمة خطأ صريحا»)) { أرجع 16; };
+    إذا (!تحقق_سبب(سبب_تشخيص.سبب_وقت_الترجمة_فشل_مطلوب(), «Compile-time code explicitly requested an error», «طلبت الشفرة المنفذة وقت الترجمة خطأ صريحا»)) { أرجع 16; };
     // msir.switch-selector-not-integer, compiler/msir/diagnostic_translation.sn:192
-    لو (!تحقق_سبب(سبب_تشخيص.سبب_مسير_مميز_فرع_متعدد_غير_صحيح(), «MSIR switch selector is not an integer», «مميز الفرع المتعدد في MSIR ليس عددا صحيحا»)) { أرجع 17; };
+    إذا (!تحقق_سبب(سبب_تشخيص.سبب_مسير_مميز_فرع_متعدد_غير_صحيح(), «MSIR switch selector is not an integer», «مميز الفرع المتعدد في MSIR ليس عددا صحيحا»)) { أرجع 17; };
     // msir.duplicate-switch-case, compiler/msir/diagnostic_translation.sn:198
-    لو (!تحقق_سبب(سبب_تشخيص.سبب_مسير_وسم_حالة_مكرر(), «MSIR switch contains duplicate case tags», «الفرع المتعدد في MSIR يحتوي أوسمة حالات مكررة»)) { أرجع 18; };
+    إذا (!تحقق_سبب(سبب_تشخيص.سبب_مسير_وسم_حالة_مكرر(), «MSIR switch contains duplicate case tags», «الفرع المتعدد في MSIR يحتوي أوسمة حالات مكررة»)) { أرجع 18; };
     // comptime.argument-count-mismatch, compiler/driver/compile_time.sn:985
-    لو (!تحقق_سبب(سبب_تشخيص.سبب_وقت_الترجمة_عدد_حجج_غير_مطابق(), «The call passes a different number of arguments than the function's compile-time parameters», «عدد الحجج في النداء لا يطابق معاملات وقت الترجمة في الدالة»)) { أرجع 19; };
+    إذا (!تحقق_سبب(سبب_تشخيص.سبب_وقت_الترجمة_عدد_حجج_غير_مطابق(), «The call passes a different number of arguments than the function's compile-time parameters», «عدد الحجج في النداء لا يطابق معاملات وقت الترجمة في الدالة»)) { أرجع 19; };
     // comptime.argument-not-closed, compiler/driver/compile_time.sn:204
-    لو (!تحقق_سبب(سبب_تشخيص.سبب_وقت_الترجمة_حجة_غير_مغلقة(), «A compile-time argument is not a closed constant value», «إحدى حجج وقت الترجمة ليست قيمة ثابتة مستقلة عن وقت التشغيل»)) { أرجع 20; };
+    إذا (!تحقق_سبب(سبب_تشخيص.سبب_وقت_الترجمة_حجة_غير_مغلقة(), «A compile-time argument is not a closed constant value», «إحدى حجج وقت الترجمة ليست قيمة ثابتة مستقلة عن وقت التشغيل»)) { أرجع 20; };
     // comptime.call-depth-exhausted, compiler/driver/compile_time.sn:202
-    لو (!تحقق_سبب(سبب_تشخيص.سبب_وقت_الترجمة_نفاد_عمق_الاستدعاء(), «Compile-time evaluation reached the maximum call depth», «بلغ التقييم وقت الترجمة الحد الأقصى لعمق الاستدعاءات»)) { أرجع 21; };
+    إذا (!تحقق_سبب(سبب_تشخيص.سبب_وقت_الترجمة_نفاد_عمق_الاستدعاء(), «Compile-time evaluation reached the maximum call depth», «بلغ التقييم وقت الترجمة الحد الأقصى لعمق الاستدعاءات»)) { أرجع 21; };
     // comptime.execution-failed, compiler/driver/compile_time.sn:206
-    لو (!تحقق_سبب(سبب_تشخيص.سبب_وقت_الترجمة_فشل_التنفيذ(), «Compile-time evaluation failed while running the code», «فشل تنفيذ الشفرة أثناء التقييم وقت الترجمة»)) { أرجع 22; };
+    إذا (!تحقق_سبب(سبب_تشخيص.سبب_وقت_الترجمة_فشل_التنفيذ(), «Compile-time evaluation failed while running the code», «فشل تنفيذ الشفرة أثناء التقييم وقت الترجمة»)) { أرجع 22; };
     // comptime.execution-trapped, compiler/driver/compile_time.sn:208
-    لو (!تحقق_سبب(سبب_تشخيص.سبب_وقت_الترجمة_فخ_التنفيذ(), «The code trapped during compile-time evaluation», «توقف تنفيذ الشفرة بفخ أثناء التقييم وقت الترجمة»)) { أرجع 23; };
+    إذا (!تحقق_سبب(سبب_تشخيص.سبب_وقت_الترجمة_فخ_التنفيذ(), «The code trapped during compile-time evaluation», «توقف تنفيذ الشفرة بفخ أثناء التقييم وقت الترجمة»)) { أرجع 23; };
     // comptime.interpreter-failure, compiler/driver/compile_time.sn:209
-    لو (!تحقق_سبب(سبب_تشخيص.سبب_وقت_الترجمة_خلل_المفسر(), «The interpreter failed internally during compile-time evaluation», «حدث خلل داخلي في المفسر أثناء التقييم وقت الترجمة»)) { أرجع 24; };
+    إذا (!تحقق_سبب(سبب_تشخيص.سبب_وقت_الترجمة_خلل_المفسر(), «The interpreter failed internally during compile-time evaluation», «حدث خلل داخلي في المفسر أثناء التقييم وقت الترجمة»)) { أرجع 24; };
     // comptime.invalid-msir, compiler/driver/compile_time.sn:265
-    لو (!تحقق_سبب(سبب_تشخيص.سبب_وقت_الترجمة_مسير_غير_صالح(), «The MSIR prepared for compile-time evaluation failed verification», «فشل التحقق من MSIR المعد للتقييم وقت الترجمة»)) { أرجع 25; };
+    إذا (!تحقق_سبب(سبب_تشخيص.سبب_وقت_الترجمة_مسير_غير_صالح(), «The MSIR prepared for compile-time evaluation failed verification», «فشل التحقق من MSIR المعد للتقييم وقت الترجمة»)) { أرجع 25; };
     // comptime.layout-not-fixed, compiler/driver/compile_time.sn:1126
-    لو (!تحقق_سبب(سبب_تشخيص.سبب_وقت_الترجمة_تخطيط_غير_مثبت(), «The type's size or alignment is not fixed yet at compile time», «حجم النوع أو محاذاته لم يثبت بعد وقت الترجمة»)) { أرجع 26; };
+    إذا (!تحقق_سبب(سبب_تشخيص.سبب_وقت_الترجمة_تخطيط_غير_مثبت(), «The type's size or alignment is not fixed yet at compile time», «حجم النوع أو محاذاته لم يثبت بعد وقت الترجمة»)) { أرجع 26; };
     // comptime.layout-unavailable, compiler/driver/compile_time.sn:1129
-    لو (!تحقق_سبب(سبب_تشخيص.سبب_وقت_الترجمة_تخطيط_غير_متاح(), «The type's layout is not available for the selected target», «تخطيط النوع غير متاح للهدف المحدد»)) { أرجع 27; };
+    إذا (!تحقق_سبب(سبب_تشخيص.سبب_وقت_الترجمة_تخطيط_غير_متاح(), «The type's layout is not available for the selected target», «تخطيط النوع غير متاح للهدف المحدد»)) { أرجع 27; };
     // comptime.missing-result, compiler/driver/compile_time.sn:254
-    لو (!تحقق_سبب(سبب_تشخيص.سبب_وقت_الترجمة_ناتج_مفقود(), «Compile-time evaluation finished without producing a value», «انتهى التقييم وقت الترجمة دون أن ينتج قيمة»)) { أرجع 28; };
+    إذا (!تحقق_سبب(سبب_تشخيص.سبب_وقت_الترجمة_ناتج_مفقود(), «Compile-time evaluation finished without producing a value», «انتهى التقييم وقت الترجمة دون أن ينتج قيمة»)) { أرجع 28; };
     // comptime.nonconstant-argument, compiler/driver/compile_time.sn:231
-    لو (!تحقق_سبب(سبب_تشخيص.سبب_وقت_الترجمة_حجة_نداء_غير_معروفة(), «A call argument is not known at compile time», «إحدى حجج النداء غير معروفة وقت الترجمة»)) { أرجع 29; };
+    إذا (!تحقق_سبب(سبب_تشخيص.سبب_وقت_الترجمة_حجة_نداء_غير_معروفة(), «A call argument is not known at compile time», «إحدى حجج النداء غير معروفة وقت الترجمة»)) { أرجع 29; };
     // comptime.nonconstant-or-prohibited-effect, compiler/driver/compile_time.sn:636
-    لو (!تحقق_سبب(سبب_تشخيص.سبب_وقت_الترجمة_قيمة_غير_ثابتة_أو_أثر_ممنوع(), «A value depends on runtime data or on an effect that is not allowed at compile time», «إحدى القيم تعتمد على بيانات وقت التشغيل أو على أثر غير مسموح وقت الترجمة»)) { أرجع 30; };
+    إذا (!تحقق_سبب(سبب_تشخيص.سبب_وقت_الترجمة_قيمة_غير_ثابتة_أو_أثر_ممنوع(), «A value depends on runtime data or on an effect that is not allowed at compile time», «إحدى القيم تعتمد على بيانات وقت التشغيل أو على أثر غير مسموح وقت الترجمة»)) { أرجع 30; };
     // comptime.result-not-closed, compiler/driver/compile_time.sn:205
-    لو (!تحقق_سبب(سبب_تشخيص.سبب_وقت_الترجمة_نتيجة_غير_مغلقة(), «The compile-time result is not a closed constant value», «ناتج وقت الترجمة ليس قيمة ثابتة مستقلة عن وقت التشغيل»)) { أرجع 31; };
+    إذا (!تحقق_سبب(سبب_تشخيص.سبب_وقت_الترجمة_نتيجة_غير_مغلقة(), «The compile-time result is not a closed constant value», «ناتج وقت الترجمة ليس قيمة ثابتة مستقلة عن وقت التشغيل»)) { أرجع 31; };
     // comptime.specialization-limit-exceeded, compiler/driver/compile_time.sn:1023
-    لو (!تحقق_سبب(سبب_تشخيص.سبب_وقت_الترجمة_تجاوز_حد_التخصيصات(), «The number of compile-time specializations exceeded its limit», «تجاوز عدد تخصيصات وقت الترجمة الحد المسموح»)) { أرجع 32; };
+    إذا (!تحقق_سبب(سبب_تشخيص.سبب_وقت_الترجمة_تجاوز_حد_التخصيصات(), «The number of compile-time specializations exceeded its limit», «تجاوز عدد تخصيصات وقت الترجمة الحد المسموح»)) { أرجع 32; };
     // comptime.unexpected-result, compiler/driver/compile_time.sn:508
-    لو (!تحقق_سبب(سبب_تشخيص.سبب_وقت_الترجمة_ناتج_غير_متوقع(), «Compile-time evaluation returned an unexpected result», «أعاد التقييم وقت الترجمة نتيجة غير متوقعة»)) { أرجع 33; };
+    إذا (!تحقق_سبب(سبب_تشخيص.سبب_وقت_الترجمة_ناتج_غير_متوقع(), «Compile-time evaluation returned an unexpected result», «أعاد التقييم وقت الترجمة نتيجة غير متوقعة»)) { أرجع 33; };
     // comptime.unknown-target, compiler/driver/compile_time.sn:260
-    لو (!تحقق_سبب(سبب_تشخيص.سبب_وقت_الترجمة_هدف_غير_معروف(), «Compile-time evaluation does not recognize the selected target», «لا يتعرف التقييم وقت الترجمة على الهدف المحدد»)) { أرجع 34; };
+    إذا (!تحقق_سبب(سبب_تشخيص.سبب_وقت_الترجمة_هدف_غير_معروف(), «Compile-time evaluation does not recognize the selected target», «لا يتعرف التقييم وقت الترجمة على الهدف المحدد»)) { أرجع 34; };
     // comptime.unrepresentable-result, compiler/driver/compile_time.sn:252
-    لو (!تحقق_سبب(سبب_تشخيص.سبب_وقت_الترجمة_ناتج_غير_قابل_للتمثيل(), «The compile-time result cannot be represented as a constant of the expected type», «لا يمكن تمثيل ناتج وقت الترجمة ثابتا من النوع المتوقع»)) { أرجع 35; };
+    إذا (!تحقق_سبب(سبب_تشخيص.سبب_وقت_الترجمة_ناتج_غير_قابل_للتمثيل(), «The compile-time result cannot be represented as a constant of the expected type», «لا يمكن تمثيل ناتج وقت الترجمة ثابتا من النوع المتوقع»)) { أرجع 35; };
     // comptime.unsupported-callee, compiler/driver/compile_time.sn:225
-    لو (!تحقق_سبب(سبب_تشخيص.سبب_وقت_الترجمة_مستدعى_غير_مدعوم(), «Only SultanC functions can be called at compile time», «يسمح التقييم وقت الترجمة باستدعاء دوال سلطان سي فقط»)) { أرجع 36; };
+    إذا (!تحقق_سبب(سبب_تشخيص.سبب_وقت_الترجمة_مستدعى_غير_مدعوم(), «Only SultanC functions can be called at compile time», «يسمح التقييم وقت الترجمة باستدعاء دوال السلطان فقط»)) { أرجع 36; };
     // comptime.unsupported-operation, compiler/driver/compile_time.sn:495
-    لو (!تحقق_سبب(سبب_تشخيص.سبب_وقت_الترجمة_عملية_غير_مدعومة(), «This operation is not supported at compile time», «هذه العملية غير مدعومة وقت الترجمة»)) { أرجع 37; };
+    إذا (!تحقق_سبب(سبب_تشخيص.سبب_وقت_الترجمة_عملية_غير_مدعومة(), «This operation is not supported at compile time», «هذه العملية غير مدعومة وقت الترجمة»)) { أرجع 37; };
     // annotation.processing-not-implemented, compiler/frontend/semantic_pipeline.sn:850
-    لو (!تحقق_سبب(سبب_تشخيص.سبب_سمة_معالجة_غير_منفذة(), «Declaration annotation processing is not implemented yet», «معالجة سمات التصريحات غير منفذة بعد»)) { أرجع 38; };
+    إذا (!تحقق_سبب(سبب_تشخيص.سبب_سمة_معالجة_غير_منفذة(), «Declaration annotation processing is not implemented yet», «معالجة سمات التصريحات غير منفذة بعد»)) { أرجع 38; };
     // ssf.move-out-of-reference, compiler/frontend/semantic_pipeline.sn:1534
-    لو (!تحقق_سبب(سبب_تشخيص.سبب_تدفق_سلامة_نقل_من_مرجع(), «An owned value is moved out of borrowed storage», «جرت محاولة نقل قيمة مملوكة من تخزين مستعار»)) { أرجع 39; };
+    إذا (!تحقق_سبب(سبب_تشخيص.سبب_تدفق_سلامة_نقل_من_مرجع(), «An owned value is moved out of borrowed storage», «جرت محاولة نقل قيمة مملوكة من تخزين مستعار»)) { أرجع 39; };
     // format.unclosed-brace, compiler/driver/compiler_driver.sn
-    لو (!تحقق_سبب(سبب_تشخيص.سبب_تنسيق_قوس_غير_مغلق(), «A `{` in the format string is not closed by a `}`», «قوس `{` في سلسلة التنسيق لا يغلقه قوس `}`»)) { أرجع 40; };
+    إذا (!تحقق_سبب(سبب_تشخيص.سبب_تنسيق_قوس_غير_مغلق(), «A `{` in the format string is not closed by a `}`», «قوس `{` في سلسلة التنسيق لا يغلقه قوس `}`»)) { أرجع 40; };
     // format.unmatched-close-brace, compiler/driver/compiler_driver.sn
-    لو (!تحقق_سبب(سبب_تشخيص.سبب_تنسيق_قوس_إغلاق_منفرد(), «A `}` in the format string closes no `{`; write `}}` for a literal brace», «قوس `}` في سلسلة التنسيق لا يغلق قوس `{`؛ اكتب `}}` لقوس حرفي»)) { أرجع 41; };
+    إذا (!تحقق_سبب(سبب_تشخيص.سبب_تنسيق_قوس_إغلاق_منفرد(), «A `}` in the format string closes no `{`; write `}}` for a literal brace», «قوس `}` في سلسلة التنسيق لا يغلق قوس `{`؛ اكتب `}}` لقوس حرفي»)) { أرجع 41; };
     // format.invalid-spec, compiler/driver/compiler_driver.sn
-    لو (!تحقق_سبب(سبب_تشخيص.سبب_تنسيق_مواصفة_غير_صالحة(), «The placeholder's format spec is not valid», «مواصفة التنسيق في الموضع غير صالحة»)) { أرجع 42; };
+    إذا (!تحقق_سبب(سبب_تشخيص.سبب_تنسيق_مواصفة_غير_صالحة(), «The placeholder's format spec is not valid», «مواصفة التنسيق في الموضع غير صالحة»)) { أرجع 42; };
     // format.unknown-type, compiler/driver/compiler_driver.sn
-    لو (!تحقق_سبب(سبب_تشخيص.سبب_تنسيق_نوع_غير_معروف(), «The placeholder names an unknown format type», «يذكر الموضع نوع تنسيق غير معروف»)) { أرجع 43; };
+    إذا (!تحقق_سبب(سبب_تشخيص.سبب_تنسيق_نوع_غير_معروف(), «The placeholder names an unknown format type», «يذكر الموضع نوع تنسيق غير معروف»)) { أرجع 43; };
     // format.named-argument, compiler/driver/compiler_driver.sn
-    لو (!تحقق_سبب(سبب_تشخيص.سبب_تنسيق_وسيط_مسمى(), «Named arguments are not supported; refer to the argument by its position», «الوسائط المسماة غير مدعومة؛ أشر إلى الوسيط بموضعه»)) { أرجع 44; };
+    إذا (!تحقق_سبب(سبب_تشخيص.سبب_تنسيق_وسيط_مسمى(), «Named arguments are not supported; refer to the argument by its position», «الوسائط المسماة غير مدعومة؛ أشر إلى الوسيط بموضعه»)) { أرجع 44; };
     // format.missing-argument, compiler/driver/compiler_driver.sn
-    لو (!تحقق_سبب(سبب_تشخيص.سبب_تنسيق_وسيط_مفقود(), «The format string refers to an argument the call does not pass», «تشير سلسلة التنسيق إلى وسيط لا يمرره النداء»)) { أرجع 45; };
+    إذا (!تحقق_سبب(سبب_تشخيص.سبب_تنسيق_وسيط_مفقود(), «The format string refers to an argument the call does not pass», «تشير سلسلة التنسيق إلى وسيط لا يمرره النداء»)) { أرجع 45; };
     // format.unused-argument, compiler/driver/compiler_driver.sn
-    لو (!تحقق_سبب(سبب_تشخيص.سبب_تنسيق_وسيط_غير_مستخدم(), «The call passes an argument the format string never uses», «يمرر النداء وسيطا لا تستخدمه سلسلة التنسيق»)) { أرجع 46; };
+    إذا (!تحقق_سبب(سبب_تشخيص.سبب_تنسيق_وسيط_غير_مستخدم(), «The call passes an argument the format string never uses», «يمرر النداء وسيطا لا تستخدمه سلسلة التنسيق»)) { أرجع 46; };
     // format.mismatched-type, compiler/driver/compiler_driver.sn
-    لو (!تحقق_سبب(سبب_تشخيص.سبب_تنسيق_نوع_غير_مناسب(), «The placeholder's format type does not apply to the argument it formats», «نوع التنسيق في الموضع لا يناسب الوسيط الذي ينسقه»)) { أرجع 47; };
+    إذا (!تحقق_سبب(سبب_تشخيص.سبب_تنسيق_نوع_غير_مناسب(), «The placeholder's format type does not apply to the argument it formats», «نوع التنسيق في الموضع لا يناسب الوسيط الذي ينسقه»)) { أرجع 47; };
     // format.invalid-count, compiler/driver/compiler_driver.sn
-    لو (!تحقق_سبب(سبب_تشخيص.سبب_تنسيق_عدد_غير_صالح(), «A width or precision taken from an argument needs an integer argument», «العرض أو الدقة المأخوذان من وسيط يتطلبان وسيطا صحيحا»)) { أرجع 48; };
+    إذا (!تحقق_سبب(سبب_تشخيص.سبب_تنسيق_عدد_غير_صالح(), «A width or precision taken from an argument needs an integer argument», «العرض أو الدقة المأخوذان من وسيط يتطلبان وسيطا صحيحا»)) { أرجع 48; };
     أرجع 0;
 }

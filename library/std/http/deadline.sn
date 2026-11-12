@@ -1,0 +1,90 @@
+// Per-request deadlines and cancellation (Go's Request.Context with
+// http.TimeoutHandler, axum/tower's TimeoutLayer). A server whose limits set
+// أقصى_زمن_معالج_بالمللي gives each request a deadline in its context and,
+// when the handler returns after it, answers 503 instead (with "connection:
+// close"). Nothing interrupts a handler: it checks هل_ألغي_الطلب_ويب between
+// steps, or passes رمز_إلغاء_الطلب_ويب to the work it starts (a database
+// query, an upstream request), and stops. A request is also cancelled once a
+// graceful shutdown's grace period is over.
+استورد text.from_bytes;
+استورد time.time;
+استورد sync.cancel;
+استورد http.model;
+استورد http.headers;
+استورد http.shutdown;
+
+عرف الآن_رتيبا_ويب(): عدد {
+    طابق وقت_رتيب_نانو() مع
+    | نتيجة.نجح(الآن) -> { أرجع الآن; }
+    | نتيجة.خطأ(_) -> { أرجع 0; };
+}
+
+// Past its deadline, or the server's shutdown grace period is over.
+عام عرف هل_ألغي_الطلب_ويب<B>(الطلب: &طلب_ويب<B>): منطقي {
+    إذا (هل_انتهت_مهلة_إيقاف_الويب()) { أرجع صواب; };
+    دع المهلة: عدد = (*الطلب).السياق.المهلة_النانوية;
+    أرجع المهلة != 0 && الآن_رتيبا_ويب() >= المهلة;
+}
+عام مرادف http_request_cancelled = هل_ألغي_الطلب_ويب;
+
+// Milliseconds left before the request's deadline (0 once passed); none
+// without a deadline.
+عام عرف المتبقي_لمهلة_الطلب_بالمللي<B>(الطلب: &طلب_ويب<B>): اختياري عدد {
+    دع المهلة: عدد = (*الطلب).السياق.المهلة_النانوية;
+    إذا (المهلة == 0) { أرجع اختياري.لا_شيء(); };
+    دع الباقي: عدد = المهلة - الآن_رتيبا_ويب();
+    إذا (الباقي <= 0) { أرجع اختياري.موجود(0); };
+    أرجع اختياري.موجود(الباقي / 1000000);
+}
+عام مرادف http_request_remaining_ms = المتبقي_لمهلة_الطلب_بالمللي;
+
+// A cancellation token (sync.cancel) at the request's deadline, for work the
+// handler starts on its behalf.
+عام عرف رمز_إلغاء_الطلب_ويب<B>(الطلب: &طلب_ويب<B>): رمز_إلغاء {
+    أرجع رمز_إلغاء_حتى((*الطلب).السياق.المهلة_النانوية);
+}
+عام مرادف http_request_cancel_token = رمز_إلغاء_الطلب_ويب;
+
+// Sets the request's deadline المللي milliseconds from now (0 removes it).
+عام عرف ضع_مهلة_طلب_ويب<B>(الطلب: &متغير طلب_ويب<B>, المللي: طبيعي): فراغ {
+    إذا (المللي == 0) { (*الطلب).السياق.المهلة_النانوية := 0; أرجع; };
+    (*الطلب).السياق.المهلة_النانوية := الآن_رتيبا_ويب() + (المللي مثل عدد) * 1000000;
+}
+عام مرادف set_http_request_deadline = ضع_مهلة_طلب_ويب;
+
+// The 503 a server sends for a handler that ran past its deadline.
+عام عرف استجابة_تجاوز_المهلة_ويب(الإصدار: إصدار_ويب): استجابة_ويب_مخزنة {
+    دع الرؤوس: متغير متجه رأس_ويب = [];
+    دع نوع_المحتوى: نص = «content-type»;
+    دع قيمة_النوع: نص = «text/plain; charset=utf-8»;
+    دع رأس_الاتصال: نص = «connection»;
+    دع قيمة_الاتصال: نص = «close»;
+    دع أ: منطقي = أضف_رأس_ويب(&متغير الرؤوس, &نوع_المحتوى, &قيمة_النوع);
+    دع ب: منطقي = أضف_رأس_ويب(&متغير الرؤوس, &رأس_الاتصال, &قيمة_الاتصال);
+    دع النص: نص = "Service Unavailable: the handler ran past its deadline\n";
+    دع الجسم: متجه ط8 = بايتات_من_نص(النص);
+    دع اللاحقة: متجه رأس_ويب = [];
+    دع الاستجابة: استجابة_ويب_مخزنة = {
+        الإصدار: الإصدار, الحالة: 503, الرؤوس: الرؤوس, الرؤوس_اللاحقة: اللاحقة, الجسم: الجسم
+    };
+    أرجع الاستجابة;
+}
+عام مرادف http_deadline_exceeded_response = استجابة_تجاوز_المهلة_ويب;
+
+// Runs الخدمة on الطلب under a deadline of المللي milliseconds (0 none):
+// the servers call every handler through this.
+عام عرف نفذ_خدمة_بمهلة_ويب<S>(
+    الحالة: &S,
+    الخدمة: خدمة_ويب<S, متجه ط8, متجه ط8>,
+    الطلب: &متغير طلب_ويب_مخزن,
+    المللي: طبيعي
+): استجابة_ويب_مخزنة {
+    إذا (المللي == 0) { أرجع الخدمة(الحالة, &(*الطلب)); };
+    ضع_مهلة_طلب_ويب(الطلب, المللي);
+    دع الاستجابة: استجابة_ويب_مخزنة = الخدمة(الحالة, &(*الطلب));
+    إذا (هل_ألغي_الطلب_ويب(&(*الطلب))) {
+        أرجع استجابة_تجاوز_المهلة_ويب((*الطلب).الإصدار);
+    };
+    أرجع الاستجابة;
+}
+عام مرادف serve_with_http_deadline = نفذ_خدمة_بمهلة_ويب;

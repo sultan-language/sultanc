@@ -3,7 +3,7 @@
 // خروج: 42
 // تفاضلي: نعم
 // نظير: tests/en/stdlib/error/language_chain.sn
-// std.error (docs/ERRORS.md): صف_فشل_بلغة resolves every error of a cause
+// std.error (docs/en/reference/errors.md): صف_فشل_بلغة resolves every error of a cause
 // chain with the same locale, writes the connector words in the locale's
 // language (fixed std text) and isolates a message or note whose direction
 // differs from the connectors'. For Arabic, or a locale without a tag, it is
@@ -64,14 +64,14 @@
     ألحق(الإنجليزية, معزول(«الحجم 0 بايت»));
     دع متوقع_الإنجليزية: نص = صل(&الإنجليزية);
     دع بالإنجليزية: نص = وصف_بوسم(&الأعلى, «en-US»);
-    لو (!نصان_متساويان(&بالإنجليزية, &متوقع_الإنجليزية)) { أرجع 1; };
+    إذا (!نصان_متساويان(&بالإنجليزية, &متوقع_الإنجليزية)) { أرجع 1; };
 
     // The same through an Accept-Language priority list whose first match is
     // English.
     دع الترويسة: نص = «de, en;q=0.9, fr;q=0.8»;
     دع من_ترويسة: لغة = لغة_من_قبول_اللغة(&الترويسة);
     دع بالترويسة: نص = صف_فشل_بلغة(&الأعلى, &من_ترويسة);
-    لو (!نصان_متساويان(&بالترويسة, &متوقع_الإنجليزية)) { أرجع 2; };
+    إذا (!نصان_متساويان(&بالترويسة, &متوقع_الإنجليزية)) { أرجع 2; };
 
     // French: the middle error has no French version, so its author's
     // Arabic message is used, isolated after the English connector.
@@ -84,17 +84,17 @@
     ألحق(الفرنسية, معزول(«الحجم 0 بايت»));
     دع متوقع_الفرنسية: نص = صل(&الفرنسية);
     دع بالفرنسية: نص = وصف_بوسم(&الأعلى, «fr-CH»);
-    لو (!نصان_متساويان(&بالفرنسية, &متوقع_الفرنسية)) { أرجع 3; };
+    إذا (!نصان_متساويان(&بالفرنسية, &متوقع_الفرنسية)) { أرجع 3; };
 
     // Arabic: no Arabic version, so the authors' messages; the same text as
     // صف_فشل. A locale without a tag gives it too.
     دع متوقع_العربية: نص = "أثناء بدء الخادم\nملاحظة: المنفذ 8080\nبسبب: تعذر قراءة الإعدادات\nبسبب: ملف الإعدادات فارغ\nملاحظة: الحجم 0 بايت";
     دع بالعربية: نص = وصف_بوسم(&الأعلى, «ar-SA»);
-    لو (!نصان_متساويان(&بالعربية, &متوقع_العربية)) { أرجع 4; };
+    إذا (!نصان_متساويان(&بالعربية, &متوقع_العربية)) { أرجع 4; };
     دع الوصف: نص = صف_فشل(&الأعلى);
-    لو (!نصان_متساويان(&الوصف, &متوقع_العربية)) { أرجع 5; };
+    إذا (!نصان_متساويان(&الوصف, &متوقع_العربية)) { أرجع 5; };
     دع بلا_وسم: نص = وصف_بوسم(&الأعلى, «»);
-    لو (!نصان_متساويان(&بلا_وسم, &متوقع_العربية)) { أرجع 6; };
+    إذا (!نصان_متساويان(&بلا_وسم, &متوقع_العربية)) { أرجع 6; };
 
     // The same texts on standard output; native and interpreter must agree.
     دع تجاهل: نتيجة عدد, عدد = اطبع_سطر(وصف_بوسم(&الأعلى, «en»));

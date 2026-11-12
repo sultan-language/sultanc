@@ -3,6 +3,6 @@
 // نظير: tests/en/diagnostics/semantic/logical_operand_not_bool.sn
 عرف الرئيسية(): ص32 {
     دع العدد: ص32 = 1;
-    لو (!العدد) { أرجع 1; };
+    إذا (!العدد) { أرجع 1; };
     أرجع 0;
 }

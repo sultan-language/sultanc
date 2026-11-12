@@ -1,0 +1,8 @@
+// اختبار: رفض
+// أهداف: arm64-darwin,x86_64-linux
+// تشخيص: SULTANC-TYPE-OPAQUE-BY-VALUE
+// نظير: tests/en/language/opaque/reject_parameter_by_value.sn
+// معامل من نوع معتم.
+نوع قاعدة = معتم;
+عرف أغلق(ق: قاعدة): عدد { أرجع 0; }
+عرف الرئيسية(): عدد { أرجع 0; }

@@ -1,0 +1,12 @@
+// اختبار: رفض
+// تشخيص: SULTANC-EXTERN-SYMBOL-CONFLICT
+// نظير: tests/ar/diagnostics/semantic/extern_symbol_conflict.sn
+// Two externs bound to one linker symbol with different signatures are
+// rejected at the second declaration, before any backend (macOS std once
+// declared C `open` twice and failed only in the LLVM provider).
+extern def close(fd: i32): i32;
+extern def close_wide(fd: i64, flags: i32): i32 = «close»;
+
+def main(): int {
+    return 0;
+}

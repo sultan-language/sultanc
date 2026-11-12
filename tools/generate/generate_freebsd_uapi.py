@@ -197,7 +197,7 @@ def main():
                 raise SystemExit(f"{arch}: {expr} is {got}, std assumes {want}")
         values = layouts(args.src, arch, [e for _, e, _ in LAYOUT])
         lines.append(f"// {arch}-unknown-freebsd (sys/{machine})")
-        lines.append(f"لو (الهدف.المنصة == «freebsd» && الهدف.المعمارية == «{arch}») {{")
+        lines.append(f"إذا (الهدف.المنصة == «freebsd» && الهدف.المعمارية == «{arch}») {{")
         lines.append("    // The direct-kernel provider's constants.")
 
         def const(func, macro, kind, meaning):
@@ -242,7 +242,7 @@ def main():
             value = evaluate(macro, table)
             if value is None:
                 raise SystemExit(f"{arch}: {macro} not found")
-            lines.append(f"        لو (الرمز == {value}) {{ أرجع صنف_خطأ_نظام.{cls}(); }}; // {macro}")
+            lines.append(f"        إذا (الرمز == {value}) {{ أرجع صنف_خطأ_نظام.{cls}(); }}; // {macro}")
         lines.append("        أرجع صنف_خطأ_نظام.غير_معروف();")
         lines.append("    }")
         lines.append("}")

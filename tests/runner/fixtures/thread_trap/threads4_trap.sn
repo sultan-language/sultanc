@@ -1,0 +1,24 @@
+// Four threads trap at once: the run reports one failure.
+import std.thread.thread;
+import "trap_site.sn";
+
+def work(): void {
+    let ignored: int = element_at(7);
+}
+
+def main(): int {
+    let handles: mutable vector join_handle = [];
+    let i: mutable uint = 0;
+    while (i < 4) {
+        match spawn(work) with
+        | result.ok(h) -> { append(handles, h); }
+        | result.err(_) -> { return 2; };
+        i := i + 1;
+    }
+    i := 0;
+    while (i < 4) {
+        join(&mutable handles[i]);
+        i := i + 1;
+    }
+    return 0;
+}

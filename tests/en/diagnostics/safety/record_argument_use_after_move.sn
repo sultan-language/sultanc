@@ -1,0 +1,16 @@
+// اختبار: رفض
+// تشخيص: SULTANC-OWNERSHIP-USE-AFTER-MOVE
+// نظير: tests/ar/diagnostics/safety/record_argument_use_after_move.sn
+// An owning record passed by value moves into the callee, even when the
+// backends pass it as a hidden reference (the address of the caller's
+// storage): reading it after the call reads a moved value.
+type Owned = { name: string, tags: vector string, n: int };
+
+def consume(p: Owned): int { return p.n; }
+
+def main(): int {
+    let tags: vector string = [];
+    let r: Owned = { name: "record", tags: tags, n: 40 };
+    let first: int = consume(r);
+    return first + r.n;
+}

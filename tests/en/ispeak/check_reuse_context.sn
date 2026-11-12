@@ -114,7 +114,7 @@ def main(): int {
         count := count + 1;
         number_value := number_value + 1;
     }
-    if (count != (645 as uint)) { return 3; };
+    if (count != (900 as uint)) { return 3; };
     let empty_key: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.مسير_غير_صالح());
     if (!check(&mutable builder, لغة_تشخيص.الإنجليزية(), empty_key, empty_full_context(), حقائق_رسالة.سياق_تشخيص(empty_full_context()))) { return 4; };
     if (!check(&mutable builder, لغة_تشخيص.العربية(), empty_key, empty_full_context(), حقائق_رسالة.سياق_تشخيص(empty_full_context()))) { return 5; };

@@ -80,5 +80,12 @@
     | عملية_نداء_نواة_لينكس.معرف_الخيط -> { أرجع 432; } // SYS_thr_self: int thr_self(long *id)
     | عملية_نداء_نواة_لينكس.ألفة_المعالج -> { أرجع 487; } // SYS_cpuset_getaffinity: int cpuset_getaffinity(cpulevel_t level, cpuwhich_t which, id_t id, size_t cpusetsize, cpuset_t *mask)
     | عملية_نداء_نواة_لينكس.إنهاء_خيط -> { أرجع 431; } // SYS_thr_exit: void thr_exit(long *state)
-    | عملية_نداء_نواة_لينكس.إنشاء_خيط -> { أرجع 455; }; // SYS_thr_new: int thr_new(struct thr_param *param, int param_size)
+    | عملية_نداء_نواة_لينكس.إنشاء_خيط -> { أرجع 455; } // SYS_thr_new: int thr_new(struct thr_param *param, int param_size)
+    | عملية_نداء_نواة_لينكس.أنشئ_مستطلع_أحداث -> { أرجع 362; } // SYS_kqueue: int kqueue(void)
+    | عملية_نداء_نواة_لينكس.تحكم_مستطلع_أحداث -> { أرجع 4294967295; } // none: never issued on FreeBSD
+    | عملية_نداء_نواة_لينكس.معرف_العملية -> { أرجع 20; } // SYS_getpid
+    | عملية_نداء_نواة_لينكس.تحكم_جهاز -> { أرجع 54; } // SYS_ioctl
+    | عملية_نداء_نواة_لينكس.إعداد_حلقة_إدخال -> { أرجع 4294967295; } // none: never issued on FreeBSD
+    | عملية_نداء_نواة_لينكس.دخول_حلقة_إدخال -> { أرجع 4294967295; } // none: never issued on FreeBSD
+    | عملية_نداء_نواة_لينكس.انتظر_مستطلع_أحداث -> { أرجع 560; }; // SYS_kevent: int kevent(int fd, const struct kevent *changelist, int nchanges, struct kevent *eventlist, int nevents, const struct timespec *timeout)
 }

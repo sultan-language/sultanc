@@ -30,7 +30,7 @@ def main() -> None:
         "// passed here holds at least one byte. The raw kernel call is the one",
         "// operation here the compiler cannot prove safe, so it sits in an",
         "// explicit unsafe scope after the interpreter's checks.",
-        f"لو {GUARD} {{",
+        f"إذا {GUARD} {{",
         "    عام عرف نفذ_نداء_نواة_مضيف(",
         PARAMS.replace("\n    ", "\n        ").replace("    القناع", "        القناع", 1).rstrip("\n"),
         "    ): ط64 {",
@@ -38,13 +38,13 @@ def main() -> None:
     ]
     for mask in range(64):
         args = ", ".join(slot(mask, i) for i in range(1, 7))
-        lines.append(f"        لو (القناع == {mask}) {{ غير_آمن {{ الناتج := بدائي_نداء_نواة_خام(الرقم, {args}); }} أرجع الناتج; }};")
+        lines.append(f"        إذا (القناع == {mask}) {{ غير_آمن {{ الناتج := بدائي_نداء_نواة_خام(الرقم, {args}); }} أرجع الناتج; }};")
     lines += [
         "        أرجع 0 مثل ط64;",
         "    }",
         "}",
         "",
-        f"لو (!{GUARD}) {{",
+        f"إذا (!{GUARD}) {{",
         "    عام عرف نفذ_نداء_نواة_مضيف(",
         PARAMS.replace("\n    ", "\n        ").replace("    القناع", "        القناع", 1).rstrip("\n"),
         "    ): ط64 {",
@@ -54,13 +54,13 @@ def main() -> None:
         "",
         "// The interpreted target must use the host's syscall numbering.",
         "// 1 = x86_64, 2 = aarch64, 0 = no host kernel bridge.",
-        'لو (الهدف.المنصة == «linux» && الهدف.المعمارية == «x86_64») {',
+        'إذا (الهدف.المنصة == «linux» && الهدف.المعمارية == «x86_64») {',
         "    عام عرف معمارية_نواة_المضيف(): طبيعي { أرجع 1; }",
         "}",
-        'لو (الهدف.المنصة == «linux» && الهدف.المعمارية == «aarch64») {',
+        'إذا (الهدف.المنصة == «linux» && الهدف.المعمارية == «aarch64») {',
         "    عام عرف معمارية_نواة_المضيف(): طبيعي { أرجع 2; }",
         "}",
-        f"لو (!{GUARD}) {{",
+        f"إذا (!{GUARD}) {{",
         "    عام عرف معمارية_نواة_المضيف(): طبيعي { أرجع 0; }",
         "}",
         "",

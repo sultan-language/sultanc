@@ -1,0 +1,2 @@
+// Fixture of tests/en/compiler/tooling/partial_project.sn (not a test).
+def g(): int { return missing_name; }

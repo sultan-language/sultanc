@@ -2,7 +2,7 @@
 // أهداف: arm64-darwin,x86_64-linux
 // خروج: 42
 // An early return through `?` releases each owned local exactly once
-// (docs/ERRORS.md): a function holding three owned locals (text, vector,
+// (docs/en/reference/errors.md): a function holding three owned locals (text, vector,
 // box) and the owned error leaves through the expansion's return 10^5 times,
 // and as often through its ok path. A missed drop grows the allocator's live
 // bytes; a second drop traps in the allocator. Valgrind sees the same

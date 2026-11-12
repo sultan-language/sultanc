@@ -1,0 +1,8 @@
+// اختبار: رفض
+// تشخيص: SULTANC-C-SYNTAX
+// نظير: tests/ar/compiler/c_import_errors/body_syntax.sn
+// Jisr reports a syntax error inside a function body in an imported header as SULTANC-C-SYNTAX, with the
+// header's file:line:column, and the import fails at compile time.
+import "body_syntax.h";
+
+def main(): int { return 0; }

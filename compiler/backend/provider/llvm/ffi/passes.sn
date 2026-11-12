@@ -65,10 +65,17 @@
 
 عام عرف تحقق_وحدة_إل_إل_في_إم(و: مرجع_وحدة_إل_إل_في_إم, ر: *متغير مؤشر_محرف_متغير_إل_إل_في_إم): منطق_إل_إل_في_إم
     { أرجع LLVMVerifyModule(و, 2, ر); }
+// التحقق_بعد_كل_تمريرة re-verifies the module after every pass (opt
+// -verify-each); a compiler-debugging aid that makes O2 builds tens of
+// times slower. The caller verifies the module once before and after.
 عام عرف شغل_تمريرات_إل_إل_في_إم(و: مرجع_وحدة_إل_إل_في_إم, ت: مؤشر_محرف_ثابت_إل_إل_في_إم, آ:
-    مرجع_آلة_هدف_إل_إل_في_إم): مرجع_خطأ_إل_إل_في_إم {
+    مرجع_آلة_هدف_إل_إل_في_إم, التحقق_بعد_كل_تمريرة: منطقي): مرجع_خطأ_إل_إل_في_إم {
     دع خ: مرجع_خيارات_باني_تمريرات_إل_إل_في_إم = LLVMCreatePassBuilderOptions();
-    LLVMPassBuilderOptionsSetVerifyEach(خ, 1);
+    إذا (التحقق_بعد_كل_تمريرة) {
+        LLVMPassBuilderOptionsSetVerifyEach(خ, 1);
+    } وإلا {
+        LLVMPassBuilderOptionsSetVerifyEach(خ, 0);
+    };
     دع ر: مرجع_خطأ_إل_إل_في_إم = LLVMRunPasses(و, ت, آ, خ);
     LLVMDisposePassBuilderOptions(خ);
     أرجع ر;

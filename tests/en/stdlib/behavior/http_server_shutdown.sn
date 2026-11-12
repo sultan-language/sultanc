@@ -1,0 +1,43 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 0
+// نظير: tests/ar/stdlib/behavior/http_server_shutdown.sn
+// Graceful shutdown (std.http.shutdown): a thread requests it after 300 ms,
+// and the sequential server and then the evented server stop accepting and
+// return successfully. No pair directive: the interpreter runs one thread.
+import std.http.server;
+import std.http.shutdown;
+import std.http.model;
+import std.http.body;
+import std.sync.arc;
+import std.thread.thread;
+import std.time.time;
+
+def service(state: &int, request: &buffered_http_request): buffered_http_response {
+    let body: string = «ok»;
+    return text_http_response(200, &body);
+}
+
+def stop_soon(): void {
+    let ignored: result int, int = sleep_ns(300000000);
+    request_http_shutdown();
+}
+
+def main(): int {
+    if (http_shutdown_requested()) { return 1; };
+    match spawn(fn(): void -> stop_soon()) with
+    | result.err(_) -> { return 2; }
+    | result.ok(_) -> { };
+    let address: string = «127.0.0.1:0»;
+    let config: http_server_config = default_http_server_config(&address);
+    let state: int = 0;
+    match run_http_server(&config, &state, service) with
+    | result.err(_) -> { return 3; }
+    | result.ok(_) -> { };
+    let shared: مشترك<int> = أنشئ_مشترك(0);
+    match run_http_server_evented(&config, shared, service, 2) with
+    | result.err(_) -> { return 4; }
+    | result.ok(_) -> { };
+    if (!http_shutdown_requested()) { return 5; };
+    return 0;
+}

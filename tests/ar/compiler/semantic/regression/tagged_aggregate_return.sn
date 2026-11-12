@@ -16,7 +16,7 @@
 }
 
 عرف choose(flag: منطقي, value: عدد): اختياري Node {
-    لو (flag) { أرجع make(value); } وإلا { أرجع اختياري.لا_شيء(); };
+    إذا (flag) { أرجع make(value); } وإلا { أرجع اختياري.لا_شيء(); };
 }
 
 عرف consume(value: اختياري Node): عدد {
@@ -44,29 +44,29 @@
 
 عرف الرئيسية(): عدد {
     دع direct: اختياري Node = اختياري.موجود(node(10));
-    لو (consume(direct) != 25) { أرجع 1; };
+    إذا (consume(direct) != 25) { أرجع 1; };
 
     دع one: اختياري Node = make(11);
-    لو (consume(one) != 26) { أرجع 2; };
+    إذا (consume(one) != 26) { أرجع 2; };
 
     دع two: اختياري Node = forward(12);
-    لو (consume(two) != 27) { أرجع 3; };
+    إذا (consume(two) != 27) { أرجع 3; };
 
     طابق make(13) مع
-    | اختياري.موجود(n) -> { لو (n.a + n.f != 18) { أرجع 4; }; }
+    | اختياري.موجود(n) -> { إذا (n.a + n.f != 18) { أرجع 4; }; }
     | اختياري.لا_شيء() -> { أرجع 5; };
 
-    لو (consume(make(14)) != 29) { أرجع 6; };
+    إذا (consume(make(14)) != 29) { أرجع 6; };
 
     دع first: اختياري Node = make(15);
     دع second: اختياري Node = make(25);
-    لو (consume(first) != 30) { أرجع 7; };
-    لو (consume(second) != 40) { أرجع 8; };
+    إذا (consume(first) != 30) { أرجع 7; };
+    إذا (consume(second) != 40) { أرجع 8; };
 
-    لو (consume(choose(صواب, 16)) != 31) { أرجع 9; };
-    لو (consume(choose(خطأ, 16)) != 0) { أرجع 10; };
+    إذا (consume(choose(صواب, 16)) != 31) { أرجع 9; };
+    إذا (consume(choose(خطأ, 16)) != 0) { أرجع 10; };
 
-    لو (consume_result(make_result(37)) != 42) { أرجع 11; };
+    إذا (consume_result(make_result(37)) != 42) { أرجع 11; };
 
     دع owned: اختياري Holder = make_owned();
     طابق owned مع

@@ -1,0 +1,10 @@
+// اختبار: رفض
+// أهداف: arm64-darwin,x86_64-linux
+// تشخيص: SULTANC-TYPE-OPAQUE-BY-VALUE
+// نظير: tests/ar/language/opaque/reject_construct.sn
+// Constructing a value of an opaque type.
+type Db = opaque;
+def main(): int {
+    let db: Db = {};
+    return 0;
+}

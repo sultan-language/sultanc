@@ -1,0 +1,8 @@
+// اختبار: رفض
+// تشخيص: SULTANC-C-CONFLICTING-TYPES
+// نظير: tests/en/compiler/c_import_errors/conflicting_types.sn
+// يبلغ جسر عن تصريحان متعارضان لدالة واحدة في ترويسة مستوردة بالرمز SULTANC-C-CONFLICTING-TYPES مع
+// ملف الترويسة وسطرها وعمودها، ويفشل الاستيراد وقت الترجمة.
+استورد "conflicting_types.h";
+
+عرف الرئيسية(): عدد { أرجع 0; }

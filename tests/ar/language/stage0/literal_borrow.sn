@@ -1,0 +1,19 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// مرحلة0: نعم
+// نظير: tests/en/language/stage0/literal_borrow.sn
+// A shared borrow of a text literal, `&"text"` and `&«text»`, is a borrow of a
+// temporary holding it for the call, in the C Stage0 as in the self-hosted
+// compiler, so no adapter function is needed to pass a literal to a `&نص`
+// parameter. Native, the interpreter and Stage0 agree.
+
+عرف الحجم(النص: &نص): عدد { أرجع الطول(*النص) مثل عدد; }
+
+عرف الرئيسية(): عدد {
+    دع المقتبس: عدد = الحجم(&"forty");
+    دع المزدوج: عدد = الحجم(&«ab»);
+    دع الاثنان: عدد = الحجم(&"abc") + الحجم(&«»);
+    أرجع المقتبس + المزدوج + الاثنان + 32;
+}

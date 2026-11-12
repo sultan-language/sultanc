@@ -1,0 +1,11 @@
+// اختبار: رفض
+// تشخيص: SULTANC-LEX-INVALID-TOKEN
+// نظير: tests/en/diagnostics/e2e/bidi_control_snippet.sn
+// خرج-تشخيص-عربي: bidi_control_snippet.ar.stderr
+// خرج-تشخيص-إنجليزي: bidi_control_snippet.en.stderr
+// A right-to-left override (U+202E) in a string literal is rejected at that
+// character, and the snippet shows it escaped instead of reordering the line.
+عرف الرئيسية(): ص32 {
+    دع النص: نص = "abc‮def";
+    أرجع 0;
+}

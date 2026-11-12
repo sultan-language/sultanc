@@ -1,0 +1,10 @@
+// اختبار: رفض
+// تشخيص: SULTANC-MUTABILITY-WRITE-TO-IMMUTABLE
+// نظير: tests/ar/diagnostics/semantic/mutable_borrow_text_byte.sn
+// A byte of a text is borrowed shared only: `&mutable s[i]` is rejected,
+// even in a mutable text.
+def main(): i32 {
+    let word: mutable string = "abc";
+    let b: &mutable u8 = &mutable word[0];
+    return 0;
+}

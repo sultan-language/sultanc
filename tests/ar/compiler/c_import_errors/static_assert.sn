@@ -1,0 +1,8 @@
+// اختبار: رفض
+// تشخيص: SULTANC-C-STATIC-ASSERT
+// نظير: tests/en/compiler/c_import_errors/static_assert.sn
+// يبلغ جسر عن تأكيد ساكن فاشل في ترويسة مستوردة بالرمز SULTANC-C-STATIC-ASSERT مع
+// ملف الترويسة وسطرها وعمودها، ويفشل الاستيراد وقت الترجمة.
+استورد "static_assert.h";
+
+عرف الرئيسية(): عدد { أرجع 0; }

@@ -1,4 +1,4 @@
-// Linux OS threads (docs/CONCURRENCY.md), on raw system calls with no libc,
+// Linux OS threads (docs/en/reference/concurrency.md), on raw system calls with no libc,
 // the way Go's runtime and musl start a thread. A thread is a `clone` with a
 // shared address space, file table, signal handlers and thread group, onto a
 // stack std maps itself with a guard page; `join` is a futex wait on the tid
@@ -15,8 +15,9 @@
 استورد os.platform.unix.linux.syscalls.selection;
 استورد os.platform.unix.linux.virtual_memory;
 استورد os.error;
-لو ((الهدف.المنصة == «linux» || الهدف.المنصة == «android») && الهدف.المعمارية != «ve») { استورد os.platform.unix.linux.uapi; }
-لو (الهدف.المنصة == «freebsd») { استورد os.platform.unix.freebsd.uapi; }
+استورد os.allocation;
+إذا ((الهدف.المنصة == «linux» || الهدف.المنصة == «android») && الهدف.المعمارية != «ve») { استورد os.platform.unix.linux.uapi; }
+إذا (الهدف.المنصة == «freebsd») { استورد os.platform.unix.freebsd.uapi; }
 
 // Compiler intrinsics bind only through private aliases.
 مرادف اقرأ_كلمة_آلة_خيط = بدائي_اقرأ_ذاكرة_الآلة;
@@ -38,7 +39,18 @@
 
 عرف حجم_حارس_مكدس_خيط(): ط64 { أرجع 65536; }
 
+// A thread stack is a slot of the allocator's stack range when one is free
+// (os.allocation خذ_خانة_مكدس_خيط_مخصص: the thread then has a per-thread
+// allocation cache at the slot's top), else a mapping of its own.
 عام عرف خصص_مكدس_خيط_لينكس(): نتيجة مكدس_خيط_لينكس, خطأ_نظام_أصلي {
+    دع الخانة: ط64 = خذ_خانة_مكدس_خيط_مخصص();
+    إذا (الخانة != 0) {
+        دع مكدس_الخانة: مكدس_خيط_لينكس = {
+            القاعدة: الخانة, الحجم: حجم_خانة_مكدس_الخيط(), القمة: الخانة + حجم_خانة_مكدس_الخيط()
+        };
+        غير_آمن { اكتب_كلمة_آلة_خيط(خلية_خيط_لينكس(&مكدس_الخانة), 0 مثل ط64); }
+        أرجع نتيجة.نجح(مكدس_الخانة);
+    };
     دع الحجم: ط64 = 2097152;
     // PROT_READ|WRITE (3), MAP_PRIVATE|ANONYMOUS, fd -1.
     دع الأعلام: ط64 = ربط_ذاكرة_خاص_لينكس() | ربط_ذاكرة_مجهول_لينكس();
@@ -64,6 +76,10 @@
 }
 
 عام عرف حرر_مكدس_خيط_لينكس(المكدس: &مكدس_خيط_لينكس): فراغ {
+    إذا (هل_خانة_مكدس_خيط_مخصص((*المكدس).القاعدة)) {
+        أعد_خانة_مكدس_خيط_مخصص((*المكدس).القاعدة);
+        أرجع;
+    };
     دع منطقة: متغير منطقة_ذاكرة_لينكس = { العنوان: (*المكدس).القاعدة, الطول: (*المكدس).الحجم, نشطة: صواب };
     دع تجاهل: نتيجة ط64, خطأ_ذاكرة_لينكس = ألغ_ربط_ذاكرة_لينكس(
         رقم_نداء_نواة_لينكس(عملية_نداء_نواة_لينكس.إلغاء_ربط_ذاكرة()), &متغير منطقة
@@ -72,7 +88,10 @@
 
 // The bookkeeping word at the top of the mapping, and the stack top below it.
 عام عرف خلية_خيط_لينكس(المكدس: &مكدس_خيط_لينكس): ط64 { أرجع (*المكدس).القمة - 64; }
-عام عرف أعلى_المكدس_القابل_للاستعمال_لينكس(المكدس: &مكدس_خيط_لينكس): ط64 { أرجع (*المكدس).القمة - 64; }
+// The stack starts under the cell and the allocation cache (os.allocation).
+عام عرف أعلى_المكدس_القابل_للاستعمال_لينكس(المكدس: &مكدس_خيط_لينكس): ط64 {
+    أرجع مخبأ_خانة_مكدس((*المكدس).القمة);
+}
 
 // The whole machine word of the bookkeeping cell.
 عام عرف اقرأ_خلية_خيط_لينكس(الخلية: ط64): ط64 {
@@ -124,7 +143,7 @@
 }
 
 // Linux only: the clone, the tid join, gettid and sched_getaffinity.
-لو ((الهدف.المنصة == «linux» || الهدف.المنصة == «android») && الهدف.المعمارية != «ve») {
+إذا ((الهدف.المنصة == «linux» || الهدف.المنصة == «android») && الهدف.المعمارية != «ve») {
     مرادف استنسخ_خيط_نواة = بدائي_استنسخ_خيط_نواة;
 
     // CLONE flags for a thread (linux/sched.h). Together they make the child
@@ -221,7 +240,7 @@
                 }
                 ق := ق + 1;
             }
-            لو (العدد == 0) { أرجع نتيجة.خطأ(أنشئ_خطأ_نظام_أصلي(مصدر_خطأ_نظام.يونكس(), 22)); };
+            إذا (العدد == 0) { أرجع نتيجة.خطأ(أنشئ_خطأ_نظام_أصلي(مصدر_خطأ_نظام.يونكس(), 22)); };
             أرجع نتيجة.نجح(العدد);
         };
     }
@@ -230,9 +249,9 @@
 // The kernel writes the 32-bit tid at the start of the cell: the low half of
 // the machine word on little-endian targets, the high half on big-endian
 // ones (s390x, SPARC V9).
-لو ((الهدف.المنصة == «linux» || الهدف.المنصة == «android») && الهدف.المعمارية != «ve» && الهدف.المعمارية != «systemz» && الهدف.المعمارية != «sparcv9») {
+إذا ((الهدف.المنصة == «linux» || الهدف.المنصة == «android») && الهدف.المعمارية != «ve» && الهدف.المعمارية != «systemz» && الهدف.المعمارية != «sparcv9») {
     عرف معرف_خلية_لينكس(الخلية: ط64): ط64 { أرجع اقرأ_خلية_خيط_لينكس(الخلية) & 0xFFFFFFFF; }
 }
-لو ((الهدف.المنصة == «linux» || الهدف.المنصة == «android») && (الهدف.المعمارية == «systemz» || الهدف.المعمارية == «sparcv9»)) {
+إذا ((الهدف.المنصة == «linux» || الهدف.المنصة == «android») && (الهدف.المعمارية == «systemz» || الهدف.المعمارية == «sparcv9»)) {
     عرف معرف_خلية_لينكس(الخلية: ط64): ط64 { أرجع اقرأ_خلية_خيط_لينكس(الخلية) >> 32; }
 }

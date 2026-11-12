@@ -1,0 +1,11 @@
+// اختبار: رفض
+// أهداف: arm64-darwin,x86_64-linux
+// تشخيص: SULTANC-TYPE-OPAQUE-TYPE-ARGUMENT
+// نظير: tests/ar/language/opaque/reject_generic_size_of.sn
+// size_of of an opaque type argument inside a generic: it has no size.
+import std.meta.reflect;
+type Db = opaque;
+def measure<A>(p: *A): u64 {
+    unsafe { return size_of(p as &A); };
+}
+def main(): int { return measure(0 as *Db) as int; }

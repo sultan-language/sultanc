@@ -1,0 +1,4 @@
+// Fixture of tests/en/compiler/tooling/isolation.sn (not a test).
+import "dependent.sn";
+import "independent.sn";
+def main(): int { return independent_value() + kept_value(); }

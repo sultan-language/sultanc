@@ -1,0 +1,90 @@
+// Shutdown signals (SIGINT, SIGTERM) on Linux, Android and FreeBSD, on raw
+// system calls (Nahr item 16). There is no signal handler: as Go's runtime
+// funnels signals to one goroutine and signal-hook's sigwait mode does, the
+// signals are blocked (rt_sigprocmask, FreeBSD sigprocmask) and then taken
+// synchronously (rt_sigtimedwait, FreeBSD sigtimedwait) by whichever thread
+// waits for them. A blocked signal stays pending until it is taken, so none
+// is lost. Threads inherit the mask of the thread that spawns them, so the
+// block must happen before any thread is spawned.
+استورد os.platform.unix.linux.syscalls.kernel_result;
+استورد os.platform.unix.linux.syscalls.operations;
+استورد os.platform.unix.linux.syscalls.selection;
+استورد os.error;
+إذا ((الهدف.المنصة == «linux» || الهدف.المنصة == «android») && الهدف.المعمارية != «ve») { استورد os.platform.unix.linux.uapi; }
+إذا (الهدف.المنصة == «freebsd») { استورد os.platform.unix.freebsd.uapi; }
+
+// SIGINT is 2 and SIGTERM 15 on every Linux architecture and on FreeBSD;
+// signal n is bit n - 1 of the set.
+عام عرف إشارة_المقاطعة_لينكس(): ط64 { أرجع 2; }
+عام عرف إشارة_الإنهاء_لينكس(): ط64 { أرجع 15; }
+
+عرف مجموعة_إشارات_الإيقاف_لينكس(): متجه ط64 {
+    دع المجموعة: متغير متجه ط64 = [0, 0];
+    المجموعة[0] := ((1 مثل ط64) << 1) | ((1 مثل ط64) << 14);
+    أرجع المجموعة;
+}
+
+// Adds SIGINT and SIGTERM to the calling thread's blocked set.
+عام عرف احجب_إشارات_الإيقاف_لينكس(): نتيجة طبيعي, خطأ_نظام_أصلي {
+    دع الحجم: ط64 = حجم_مجموعة_إشارات_لينكس() مثل ط64;
+    دع المجموعة: متجه ط64 = مجموعة_إشارات_الإيقاف_لينكس();
+    دع القديمة: متغير متجه ط64 = [0, 0];
+    دع الحجب: ط64;
+    غير_آمن { الحجب := بدائي_نداء_نواة_خام(
+        رقم_نداء_نواة_لينكس(عملية_نداء_نواة_لينكس.حجب_إشارات()), أمر_حجب_إشارات_لينكس(),
+        &المجموعة[0], &متغير القديمة[0], الحجم, 0 مثل ط64, 0 مثل ط64
+    ); }
+    أرجع حلل_نتيجة_نداء_نواة_لينكس(الحجب);
+}
+
+// Removes SIGINT and SIGTERM from the calling thread's blocked set: the
+// current mask (read with a null set) without them is set back.
+عام عرف ارفع_حجب_إشارات_الإيقاف_لينكس(): نتيجة طبيعي, خطأ_نظام_أصلي {
+    دع الحجم: ط64 = حجم_مجموعة_إشارات_لينكس() مثل ط64;
+    دع الحالية: متغير متجه ط64 = [0, 0];
+    دع القراءة: ط64;
+    غير_آمن { القراءة := بدائي_نداء_نواة_خام(
+        رقم_نداء_نواة_لينكس(عملية_نداء_نواة_لينكس.حجب_إشارات()), أمر_حجب_إشارات_لينكس(),
+        0 مثل ط64, &متغير الحالية[0], الحجم, 0 مثل ط64, 0 مثل ط64
+    ); }
+    طابق حلل_نتيجة_نداء_نواة_لينكس(القراءة) مع
+    | نتيجة.خطأ(الخطأ) -> { أرجع نتيجة.خطأ(الخطأ); }
+    | نتيجة.نجح(_) -> { };
+    دع الإيقاف: متجه ط64 = مجموعة_إشارات_الإيقاف_لينكس();
+    الحالية[0] := الحالية[0] & ~الإيقاف[0];
+    دع القديمة: متغير متجه ط64 = [0, 0];
+    دع الضبط: ط64;
+    غير_آمن { الضبط := بدائي_نداء_نواة_خام(
+        رقم_نداء_نواة_لينكس(عملية_نداء_نواة_لينكس.حجب_إشارات()), أمر_ضبط_قناع_إشارات_لينكس(),
+        &الحالية[0], &متغير القديمة[0], الحجم, 0 مثل ط64, 0 مثل ط64
+    ); }
+    أرجع حلل_نتيجة_نداء_نواة_لينكس(الضبط);
+}
+
+// Takes one pending SIGINT or SIGTERM and answers its number. Without a
+// timeout it waits until one arrives; with فوري it only takes one already
+// pending and fails (EAGAIN) when there is none. EINTR (another signal
+// delivered meanwhile) waits again.
+عام عرف خذ_إشارة_إيقاف_لينكس(فوري: منطقي): نتيجة طبيعي, خطأ_نظام_أصلي {
+    دع الحجم: ط64 = حجم_مجموعة_إشارات_لينكس() مثل ط64;
+    دع المجموعة: متجه ط64 = مجموعة_إشارات_الإيقاف_لينكس();
+    دع الصفر: متغير متجه ط64 = [0, 0];
+    دع الخام: متغير ط64 = 0;
+    دع مستمر: متغير منطقي = صواب;
+    طالما (مستمر) {
+        إذا (فوري) {
+            غير_آمن { الخام := بدائي_نداء_نواة_خام(
+                رقم_نداء_نواة_لينكس(عملية_نداء_نواة_لينكس.انتظر_إشارة()),
+                &المجموعة[0], 0 مثل ط64, &متغير الصفر[0], الحجم, 0 مثل ط64, 0 مثل ط64
+            ); }
+        } وإلا {
+            غير_آمن { الخام := بدائي_نداء_نواة_خام(
+                رقم_نداء_نواة_لينكس(عملية_نداء_نواة_لينكس.انتظر_إشارة()),
+                &المجموعة[0], 0 مثل ط64, 0 مثل ط64, الحجم, 0 مثل ط64, 0 مثل ط64
+            ); }
+        };
+        // EINTR: no signal was taken; wait again.
+        إذا (الخام != (~(0 مثل ط64)) - 3) { مستمر := خطأ; };
+    }
+    أرجع حلل_نتيجة_نداء_نواة_لينكس(الخام);
+}

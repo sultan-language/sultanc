@@ -1,0 +1,72 @@
+// اختبار: تفاضلي
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/stdlib/behavior/unicode_package.sn
+// The std.unicode package imported as a whole (a selective import of the
+// directory) and its std.unicode.unicode module: one name from each module,
+// scalar, general_category, properties, case_mapping, case_folding,
+// normalization, grapheme, word_boundary, sentence_boundary, version and
+// code_point_text.
+from std.unicode import
+    is_unicode_scalar, unicode_category_of, فئة_يونيكود, is_unicode_alphabetic,
+    unicode_to_upper, unicode_case_fold, unicode_normalize, صورة_تطبيع_يونيكود,
+    unicode_grapheme_boundaries, unicode_word_boundaries, unicode_sentence_boundaries,
+    unicode_data_version, unicode_code_point_text;
+import std.unicode.unicode;
+import std.text.compare;
+import std.text.from_bytes;
+
+def same_uints(actual: &vector uint, expected: &vector uint): bool {
+    if (length(*actual) != length(*expected)) { return false; };
+    let i: mutable uint = 0;
+    while (i < (length(*actual) as uint)) {
+        if ((*actual)[i] != (*expected)[i]) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+
+def main(): int {
+    // scalar
+    if (is_unicode_scalar(0xD800) || !is_unicode_scalar(0x41)) { return 1; };
+    // general_category
+    match unicode_category_of(0x41) with
+    | فئة_يونيكود.حرف_كبير -> { }
+    | _ -> { return 2; };
+    // properties: ARABIC LETTER BEH
+    if (!is_unicode_alphabetic(0x0628)) { return 3; };
+    // case_mapping and case_folding
+    let upper: vector u32 = unicode_to_upper(0x61);
+    if (length(upper) != 1 || upper[0] != 0x41) { return 4; };
+    let folded: vector u32 = unicode_case_fold(0x41);
+    if (length(folded) != 1 || folded[0] != 0x61) { return 5; };
+    // normalization: "e" + U+0301 composes to U+00E9 under NFC.
+    let decomposed: string = from_bytes(&[0x65, 0xCC, 0x81]);
+    let composed: string = from_bytes(&[0xC3, 0xA9]);
+    match unicode_normalize(&decomposed, صورة_تطبيع_يونيكود.إن_إف_سي()) with
+    | result.err(_) -> { return 6; }
+    | result.ok(t) -> { if (!texts_equal(&t, &composed)) { return 7; }; };
+    // grapheme: "a" + U+0301 is one cluster, then "b".
+    let marks: vector u32 = [0x61, 0x301, 0x62];
+    let clusters: vector uint = unicode_grapheme_boundaries(&marks);
+    let cluster_bounds: vector uint = [0, 2, 3];
+    if (!same_uints(&clusters, &cluster_bounds)) { return 8; };
+    // word_boundary: "ab cd"
+    let words_in: vector u32 = [0x61, 0x62, 0x20, 0x63, 0x64];
+    let words: vector uint = unicode_word_boundaries(&words_in);
+    let word_bounds: vector uint = [0, 2, 3, 5];
+    if (!same_uints(&words, &word_bounds)) { return 9; };
+    // sentence_boundary: "ab" is one sentence.
+    let sentence_in: vector u32 = [0x61, 0x62];
+    let sentences: vector uint = unicode_sentence_boundaries(&sentence_in);
+    let sentence_bounds: vector uint = [0, 2];
+    if (!same_uints(&sentences, &sentence_bounds)) { return 10; };
+    // version
+    let version: string = unicode_data_version();
+    if (length(version) == 0) { return 11; };
+    // code_point_text
+    let spelled: string = unicode_code_point_text(0x0628);
+    let expected: string = "U+0628";
+    if (!texts_equal(&spelled, &expected)) { return 12; };
+    return 42;
+}

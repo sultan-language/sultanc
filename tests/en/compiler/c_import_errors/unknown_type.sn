@@ -1,0 +1,8 @@
+// اختبار: رفض
+// تشخيص: SULTANC-C-UNKNOWN-TYPE-NAME
+// نظير: tests/ar/compiler/c_import_errors/unknown_type.sn
+// Jisr reports a declaration with an unknown type name in an imported header as SULTANC-C-UNKNOWN-TYPE-NAME, with the
+// header's file:line:column, and the import fails at compile time.
+import "unknown_type.h";
+
+def main(): int { return 0; }

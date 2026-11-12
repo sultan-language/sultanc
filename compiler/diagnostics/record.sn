@@ -1,6 +1,7 @@
 استورد std.text.from_bytes;
 استورد compiler.source.span;
 استورد compiler.source.source_file;
+استورد std.encoding.positions;
 استورد compiler.diagnostics.identity;
 استورد compiler.diagnostics.schema;
 استورد compiler.diagnostics.reason;
@@ -32,7 +33,13 @@
     اسم_المصدر: اختياري نص,
     المقتطف: اختياري نص,
     بداية_العرض: اختياري إحداثي_مصدر,
-    نهاية_العرض: اختياري إحداثي_مصدر
+    نهاية_العرض: اختياري إحداثي_مصدر,
+    // The same two ends as editors count them (LSP positions): the 0-based
+    // line and the 0-based column in UTF-16 code units, derived from the
+    // source when the span is built from it. None without the source, or on
+    // a line that is not valid UTF-8.
+    بداية_يوتيف16: اختياري موضع_نصي_يوتيف16,
+    نهاية_يوتيف16: اختياري موضع_نصي_يوتيف16
 };
 
 عام نوع نطاق_مرتبط_بتشخيص = {
@@ -142,7 +149,9 @@
         اسم_المصدر: انسخ_اختيار_نص(&(*القيمة).اسم_المصدر),
         المقتطف: انسخ_اختيار_نص(&(*القيمة).المقتطف),
         بداية_العرض: (*القيمة).بداية_العرض,
-        نهاية_العرض: (*القيمة).نهاية_العرض
+        نهاية_العرض: (*القيمة).نهاية_العرض,
+        بداية_يوتيف16: (*القيمة).بداية_يوتيف16,
+        نهاية_يوتيف16: (*القيمة).نهاية_يوتيف16
     };
     أرجع الناتج;
 }

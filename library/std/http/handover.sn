@@ -1,0 +1,65 @@
+// Handing a connection to the program (Nahr item 14), as Go's http.Hijacker
+// and hyper's upgrade hand the socket over. The std servers call a
+// مسلم_اتصال_ويب after they wrote the response head when:
+//
+//   - the response switches protocols: status 101 (WebSocket) or a 2xx answer
+//     to CONNECT (a tunnel); the callback then speaks the new protocol;
+//   - the response is a stream: transfer-encoding "chunked" with an empty
+//     body (server-sent events, long downloads); the callback writes the body
+//     with اكتب_جزءا_متدفقا_ويب1 and ends it with أنه_استجابة_متدفقة_ويب1.
+//
+// The callback receives the transport and the bytes the server had already
+// read past the request; the connection is its own from then on (it closes
+// it). Without a callback, a 101 or CONNECT answer closes the connection
+// and a chunked empty body is sent as an empty body.
+استورد text.compare;
+استورد io.writer;
+استورد http.model;
+استورد http.headers;
+استورد http.transport;
+استورد http.http1.chunked;
+استورد http.http1.common;
+
+عام نوع مسلم_اتصال_ويب<S> = دالة(&S, &طلب_ويب_مخزن, &استجابة_ويب_مخزنة, ناقل_ويب, متجه ط8): فراغ;
+عام مرادف connection_handover = مسلم_اتصال_ويب;
+
+// A streamed response: 2xx, transfer-encoding chunked, nothing in the body.
+عام عرف هل_استجابة_متدفقة_ويب(الاستجابة: &استجابة_ويب_مخزنة): منطقي {
+    إذا ((*الاستجابة).الحالة < 200 || (*الاستجابة).الحالة >= 300 || (*الاستجابة).الحالة == 204) { أرجع خطأ; };
+    إذا ((الطول((*الاستجابة).الجسم) مثل طبيعي) != 0) { أرجع خطأ; };
+    دع الاسم: نص = «transfer-encoding»;
+    دع القيم: متجه نص = قيم_رأس_ويب(&(*الاستجابة).الرؤوس, &الاسم);
+    إذا ((الطول(القيم) مثل طبيعي) != 1) { أرجع خطأ; };
+    دع المجزأ: نص = «chunked»;
+    أرجع نصان_متساويان(&القيم[0], &المجزأ);
+}
+عام مرادف is_streamed_http_response = هل_استجابة_متدفقة_ويب;
+
+// The response switches protocols (101) or opens a CONNECT tunnel.
+عام عرف هل_انتقال_بروتوكول_ويب(الطلب: &طلب_ويب_مخزن, الاستجابة: &استجابة_ويب_مخزنة): منطقي {
+    إذا ((*الاستجابة).الحالة == 101) { أرجع صواب; };
+    دع connect: نص = «CONNECT»;
+    أرجع نصان_متساويان(&(*الطلب).الطريقة, &connect) && (*الاستجابة).الحالة >= 200 && (*الاستجابة).الحالة < 300;
+}
+عام مرادف is_http_protocol_switch = هل_انتقال_بروتوكول_ويب;
+
+// One chunk of a streamed HTTP/1.1 body (an empty one is skipped, since a
+// zero-size chunk ends the body).
+عام عرف اكتب_جزءا_متدفقا_ويب1(الناقل: &ناقل_ويب, البيانات: &متجه ط8): نتيجة طبيعي, عدد {
+    دع الحجم: طبيعي = الطول(*البيانات) مثل طبيعي;
+    إذا (الحجم == 0) { أرجع نتيجة.نجح(0); };
+    دع الإطار: متغير متجه ط8 = [];
+    ألحق_طبيعي_سداسي_ويب(&متغير الإطار, الحجم);
+    ألحق(الإطار, 0x0D); ألحق(الإطار, 0x0A);
+    ألحق_بايتات_ويب(&متغير الإطار, البيانات, 0, الحجم);
+    ألحق(الإطار, 0x0D); ألحق(الإطار, 0x0A);
+    أرجع اكتب_الكل(الناقل, اكتب_ناقل_ويب, &الإطار);
+}
+عام مرادف write_http1_stream_chunk = اكتب_جزءا_متدفقا_ويب1;
+
+// The last chunk: "0\r\n\r\n".
+عام عرف أنه_استجابة_متدفقة_ويب1(الناقل: &ناقل_ويب): نتيجة طبيعي, عدد {
+    دع النهاية: متجه ط8 = [0x30, 0x0D, 0x0A, 0x0D, 0x0A];
+    أرجع اكتب_الكل(الناقل, اكتب_ناقل_ويب, &النهاية);
+}
+عام مرادف finish_http1_stream = أنه_استجابة_متدفقة_ويب1;

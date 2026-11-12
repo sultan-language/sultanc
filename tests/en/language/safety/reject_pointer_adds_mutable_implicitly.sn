@@ -1,0 +1,12 @@
+// اختبار: رفض
+// أهداف: arm64-darwin,x86_64-linux
+// تشخيص: SULTANC-CALL-ARGUMENT-TYPE-MISMATCH
+// نظير: tests/ar/language/safety/reject_pointer_adds_mutable_implicitly.sn
+// The coercion only drops `mutable`: a `*T` is not accepted where a
+// `*mutable T` is expected.
+type Handle = opaque;
+def close(handle: *mutable Handle): int { return 0; }
+def main(): int {
+    let handle: *Handle = 0 as *Handle;
+    return close(handle);
+}

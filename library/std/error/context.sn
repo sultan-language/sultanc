@@ -1,4 +1,4 @@
-// std.error.context: helpers for a result in passing (docs/ERRORS.md), made
+// std.error.context: helpers for a result in passing (docs/en/reference/errors.md), made
 // to be used with the propagation operator `؟`, which converts no error:
 //
 //   دع البايتات: متجه ط8 = إلى_فشل(اقرأ_الملف(&المسار), فشل_من_خطأ_ملف)؟;

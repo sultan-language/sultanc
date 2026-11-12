@@ -1,14 +1,14 @@
 // Ask for a larger main-thread stack for deeply recursive programs (the
 // compiler itself on deeply nested source). Where the platform cannot raise
 // it for the running process this returns false and changes nothing.
-لو ((الهدف.المنصة == «linux» || الهدف.المنصة == «android» || الهدف.المنصة == «freebsd») && الهدف.المعمارية != «ve») {
+إذا ((الهدف.المنصة == «linux» || الهدف.المنصة == «android» || الهدف.المنصة == «freebsd») && الهدف.المعمارية != «ve») {
     استورد os.platform.unix.linux.resource_limits;
     عام عرف اطلب_مكدسا_بحجم_نظام(البايتات: ط64): منطقي {
         أرجع ارفع_حد_المكدس_لينكس(البايتات);
     }
 }
 
-لو (!((الهدف.المنصة == «linux» || الهدف.المنصة == «android» || الهدف.المنصة == «freebsd») && الهدف.المعمارية != «ve»)) {
+إذا (!((الهدف.المنصة == «linux» || الهدف.المنصة == «android» || الهدف.المنصة == «freebsd») && الهدف.المعمارية != «ve»)) {
     عام عرف اطلب_مكدسا_بحجم_نظام(البايتات: ط64): منطقي {
         أرجع خطأ;
     }

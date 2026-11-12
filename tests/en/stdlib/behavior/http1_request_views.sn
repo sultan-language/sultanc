@@ -1,0 +1,57 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 0
+// نظير: tests/ar/stdlib/behavior/http1_request_views.sn
+// Zero-copy HTTP/1 request views (std.http.http1.views): the method,
+// target, headers and body are ranges of the decoder's buffer compared in
+// place (header names case-insensitively), two pipelined requests in one
+// buffer are consumed in order, the conversion to a buffered request agrees
+// with the buffered parser, and the method and common header names are
+// static texts.
+import std.http.model;
+import std.http.limits;
+import std.http.http1.common;
+import std.http.http1.views;
+import std.http.http1.request_parser;
+import std.text.from_bytes;
+import std.text.compare;
+
+def main(): int {
+    let decoder: mutable http1_decoder = new_http1_decoder(default_http_limits());
+    let text: string = "GET /a?x=1 HTTP/1.1\r\nHost: example.com\r\nX-Token: abc \r\n\r\nPOST /b HTTP/1.1\r\nhost: h\r\nContent-Length: 3\r\n\r\nxyz";
+    let bytes: vector u8 = bytes_from_text(text);
+    http1_decoder_feed(&mutable decoder, &bytes);
+
+    let first: http1_request_view;
+    match http1_decoder_next_view(&decoder) with
+    | result.ok(option.some(r)) -> { first := r; }
+    | _ -> { return 1; };
+    if (!byte_view_equals(&decoder.المخزن, first.الطريقة, &"GET")) { return 2; };
+    if (!byte_view_equals(&decoder.المخزن, first.الهدف, &"/a?x=1")) { return 3; };
+    match http1_request_view_header(&decoder.المخزن, &first, &"x-token") with
+    | option.some(v) -> { if (!byte_view_equals(&decoder.المخزن, v, &"abc")) { return 4; }; }
+    | option.none -> { return 5; };
+    let as_buffered: buffered_http_request = http1_request_from_view(&decoder.المخزن, &first);
+    if (!texts_equal(&as_buffered.الرؤوس[0].الاسم, &"host")) { return 6; };
+    http1_decoder_consume_view(&mutable decoder, &first);
+
+    let second: http1_request_view;
+    match http1_decoder_next_view(&decoder) with
+    | result.ok(option.some(r)) -> { second := r; }
+    | _ -> { return 7; };
+    if (!byte_view_equals(&decoder.المخزن, second.الطريقة, &"POST")) { return 8; };
+    if (!byte_view_equals(&decoder.المخزن, second.الجسم, &"xyz")) { return 9; };
+    http1_decoder_consume_view(&mutable decoder, &second);
+    if (http1_decoder_pending_bytes(&decoder) != 0) { return 10; };
+
+    // The buffered parser agrees.
+    http1_decoder_feed(&mutable decoder, &bytes);
+    match http1_decoder_next(&mutable decoder) with
+    | result.ok(option.some(parsed)) -> {
+        let request: buffered_http_request = take_parsed_http_request(parsed);
+        if (!texts_equal(&request.الطريقة, &"GET") || !texts_equal(&request.الهدف, &"/a?x=1")) { return 11; };
+        if (!texts_equal(&request.الرؤوس[1].الاسم, &"x-token") || !texts_equal(&request.الرؤوس[1].القيمة, &"abc")) { return 12; };
+    }
+    | _ -> { return 13; };
+    return 0;
+}

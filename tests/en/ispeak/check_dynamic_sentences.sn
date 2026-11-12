@@ -107,9 +107,6 @@ def main(): int {
     if (!check(لغة_تشخيص.الإنجليزية(), escaping_import_key, specific_context(option.none(), option.some(قيمة_حجة_رسالة.نصية(انسخ_نص(&path))), option.none(), option.none(), option.none(), option.none(), option.none()), "import escapes its library root — The import escapes the library root through `./lost.sn`.")) { return 19; };
     if (!check(لغة_تشخيص.العربية(), escaping_import_key, specific_context(option.none(), option.some(قيمة_حجة_رسالة.نصية(انسخ_نص(&path))), option.none(), option.none(), option.none(), option.none(), option.none()), "الاستيراد يخرج عن جذر مكتبته — مسار الاستيراد الخارج عن جذر المكتبة هو `./lost.sn`.")) { return 20; };
 
-    let warning_key: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.تحذير_عام());
-    if (!check(لغة_تشخيص.الإنجليزية(), warning_key, specific_context(option.some(قيمة_حجة_رسالة.نصية(انسخ_نص(&option_text))), option.none(), option.none(), option.none(), option.none(), option.none(), option.none()), "compiler warning — The warning detail is `--bad`.")) { return 21; };
-    if (!check(لغة_تشخيص.العربية(), warning_key, specific_context(option.some(قيمة_حجة_رسالة.نصية(انسخ_نص(&option_text))), option.none(), option.none(), option.none(), option.none(), option.none(), option.none()), "تحذير من المترجم — تفصيل التحذير هو `--bad`.")) { return 22; };
 
     let arguments_key: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.عدد_حجج_غير_مطابق());
     if (!check(لغة_تشخيص.الإنجليزية(), arguments_key, specific_context(option.none(), option.none(), option.none(), option.none(), option.none(), option.some(قيمة_حجة_رسالة.طبيعية(3 as uint)), option.none()), "call argument count does not match — The expected argument count is 3.")) { return 23; };

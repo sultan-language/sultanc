@@ -1,0 +1,8 @@
+// اختبار: رفض
+// أهداف: arm64-darwin,x86_64-linux
+// تشخيص: SULTANC-TYPE-OPAQUE-BY-VALUE
+// نظير: tests/ar/language/opaque/reject_result_by_value.sn
+// A function result of an opaque type.
+type Db = opaque;
+def read(p: *Db): Db { unsafe { return *p; }; }
+def main(): int { return 0; }

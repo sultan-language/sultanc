@@ -1,0 +1,141 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 0
+// نظير: tests/ar/msir/verifier_masked.sn
+// Masked verification (msir_verifier.sn, تحقق_دوال_برنامج_مسير) checks the
+// program-level facts once and only the functions its mask marks: it catches
+// a corrupted function in the mask, and with every function marked it gives
+// what the full verifier gives.
+import compiler.msir.msir_model;
+import compiler.msir.identifiers;
+import compiler.msir.msir_builder;
+import compiler.msir.msir_verifier;
+import compiler.frontend.types.type_identity;
+import compiler.frontend.types.type_context;
+import compiler.frontend.types.type_registry;
+import compiler.frontend.types.builtins_generated;
+
+def test_block(result: نتيجة_بناء_كتلة_مسير): معرف_كتلة_مسير {
+    match result with
+    | نتيجة_بناء_كتلة_مسير.مبنية(id) -> { return id; }
+    | _ -> { return معرف_كتلة_مسير_من(معرف_دالة_مسير_من(9999), 9999); };
+}
+
+def test_value(result: نتيجة_بناء_قيمة_مسير): معرف_قيمة_مسير {
+    match result with
+    | نتيجة_بناء_قيمة_مسير.مبنية(id) -> { return id; }
+    | _ -> { return معرف_قيمة_مسير_من(معرف_دالة_مسير_من(9999), 9999); };
+}
+
+// The number of errors (0 for an accepted program).
+def error_count(result: نتيجة_تحقق_مسير): uint {
+    match result with
+    | نتيجة_تحقق_مسير.صالح -> { return 0; }
+    | نتيجة_تحقق_مسير.مرفوض(errors) -> { return length(errors) as uint; };
+}
+
+// Three functions, each returning a constant; the first is the program start.
+def three_functions(types: &mutable سجل_أنواع): برنامج_مسير {
+    let int_type: معرف_نوع = قنن_نوعا_بدائيا(types, نوع_بدائي_مقنن.ص64());
+    let program: mutable برنامج_مسير = برنامج_مسير_جديد();
+    let no_parameters: vector معرف_نوع = [];
+    let build: حالة_بناء_مسير = حالة_بناء_مسير_جديدة();
+    let i: mutable int = 0;
+    while (i < 3) {
+        let function: معرف_دالة_مسير = أضف_دالة_مسير(&mutable program, &no_parameters, option.some(int_type));
+        let block: معرف_كتلة_مسير = test_block(أضف_كتلة_مسير(&mutable program, function));
+        let value: معرف_قيمة_مسير = test_value(
+            أصدر_ثابتا_مسير(&mutable program, &build, function, block, ثابت_مسير.صحيح_موقع(40 + i), int_type)
+        );
+        اختم_بإرجاع_مسير(&mutable program, function, block, option.some(value));
+        if (i == 0) { عين_دالة_بدء_برنامج_مسير(&mutable program, function); };
+        i := i + 1;
+    }
+    return program;
+}
+
+// Corrupts the function at the given position: it returns an undefined value.
+def corrupt(program: &mutable برنامج_مسير, position: uint): void {
+    let function: معرف_دالة_مسير = (*program).الدوال[position].المعرف;
+    (*program).الدوال[position].الكتل[0].المنهي := option.some(
+        منهي_مسير.إرجاع(option.some(معرف_قيمة_مسير_من(function, 99)))
+    );
+}
+
+// The start function calls the second and returns its result; the second returns 42.
+def program_with_call(types: &mutable سجل_أنواع): برنامج_مسير {
+    let int_type: معرف_نوع = قنن_نوعا_بدائيا(types, نوع_بدائي_مقنن.ص64());
+    let program: mutable برنامج_مسير = برنامج_مسير_جديد();
+    let no_parameters: vector معرف_نوع = [];
+    let build: حالة_بناء_مسير = حالة_بناء_مسير_جديدة();
+    let caller: معرف_دالة_مسير = أضف_دالة_مسير(&mutable program, &no_parameters, option.some(int_type));
+    let callee: معرف_دالة_مسير = أضف_دالة_مسير(&mutable program, &no_parameters, option.some(int_type));
+    let caller_block: معرف_كتلة_مسير = test_block(أضف_كتلة_مسير(&mutable program, caller));
+    let callee_block: معرف_كتلة_مسير = test_block(أضف_كتلة_مسير(&mutable program, callee));
+    let constant: معرف_قيمة_مسير = test_value(
+        أصدر_ثابتا_مسير(&mutable program, &build, callee, callee_block, ثابت_مسير.صحيح_موقع(42), int_type)
+    );
+    اختم_بإرجاع_مسير(&mutable program, callee, callee_block, option.some(constant));
+    let no_arguments: vector معرف_قيمة_مسير = [];
+    let result: معرف_قيمة_مسير = test_value(
+        أصدر_نداء_مسير(&mutable program, &build, caller, caller_block, callee, &no_arguments)
+    );
+    اختم_بإرجاع_مسير(&mutable program, caller, caller_block, option.some(result));
+    عين_دالة_بدء_برنامج_مسير(&mutable program, caller);
+    return program;
+}
+
+// A changed function breaks what only an unchanged function's check sees: the
+// callee loses its result (it still verifies alone), so the caller's call no
+// longer matches its declaration.
+def test_changed_declaration(): int {
+    let types: mutable سجل_أنواع = سجل_أنواع_جديد();
+    let program: mutable برنامج_مسير = program_with_call(&mutable types);
+    let second: vector bool = [false, true];
+    let first: vector bool = [true, false];
+    if (error_count(تحقق_برنامج_مسير(&program, &types)) != 0) { return 21; };
+    program.الدوال[1].الناتج := option.none();
+    program.الدوال[1].الكتل[0].المنهي := option.some(منهي_مسير.إرجاع(option.none()));
+    let full: uint = error_count(تحقق_برنامج_مسير(&program, &types));
+    if (full == 0) { return 22; };
+    // The callee alone is sound; the error is at the caller's call.
+    if (error_count(تحقق_دوال_برنامج_مسير(&program, &types, &first)) != full) { return 23; };
+    // Marking only the changed callee catches it as the full verifier does.
+    if (error_count(تحقق_دوال_برنامج_مسير(&program, &types, &second)) != full) { return 24; };
+    return 0;
+}
+
+def main(): int {
+    let declaration: int = test_changed_declaration();
+    if (declaration != 0) { return declaration; };
+    let types: mutable سجل_أنواع = سجل_أنواع_جديد();
+    let program: mutable برنامج_مسير = three_functions(&mutable types);
+    let all: vector bool = [true, true, true];
+    let second: vector bool = [false, true, false];
+    let third: vector bool = [false, false, true];
+    let none: vector bool = [];
+    // The sound program is accepted under every mask.
+    if (error_count(تحقق_برنامج_مسير(&program, &types)) != 0) { return 1; };
+    if (error_count(تحقق_دوال_برنامج_مسير(&program, &types, &all)) != 0) { return 2; };
+    if (error_count(تحقق_دوال_برنامج_مسير(&program, &types, &none)) != 0) { return 3; };
+    // A corrupted function in the mask is caught.
+    corrupt(&mutable program, 1);
+    let full: uint = error_count(تحقق_برنامج_مسير(&program, &types));
+    if (full == 0) { return 4; };
+    if (error_count(تحقق_دوال_برنامج_مسير(&program, &types, &second)) != full) { return 5; };
+    // A mask that marks every function gives what the full verifier gives.
+    if (error_count(تحقق_دوال_برنامج_مسير(&program, &types, &all)) != full) { return 6; };
+    // Functions outside the mask are not checked.
+    if (error_count(تحقق_دوال_برنامج_مسير(&program, &types, &third)) != 0) { return 7; };
+    // Two corrupted functions: full and all-marked agree, each partial mask sees its own.
+    corrupt(&mutable program, 2);
+    let full_two: uint = error_count(تحقق_برنامج_مسير(&program, &types));
+    if (error_count(تحقق_دوال_برنامج_مسير(&program, &types, &all)) != full_two) { return 8; };
+    if (error_count(تحقق_دوال_برنامج_مسير(&program, &types, &third)) == 0) { return 9; };
+    if (error_count(تحقق_دوال_برنامج_مسير(&program, &types, &second))
+        + error_count(تحقق_دوال_برنامج_مسير(&program, &types, &third)) != full_two) { return 10; };
+    // The program-level facts are checked under any mask: a missing program start.
+    program.دالة_بدء_البرنامج := option.some(معرف_دالة_مسير_من(7));
+    if (error_count(تحقق_دوال_برنامج_مسير(&program, &types, &none)) == 0) { return 11; };
+    return 0;
+}

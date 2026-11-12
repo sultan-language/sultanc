@@ -1,0 +1,86 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 0
+// نظير: tests/ar/compiler/link/text_stub.sn
+import std.text.compare;
+import std.text.from_bytes;
+import compiler.link.macho.text_stub;
+
+// The one reader of text-based dylib stubs (.tbd, compiler/link/macho/
+// text_stub.sn): the install name the driver resolves `-l X` to, and the
+// symbols a Mach-O link binds to that dylib for one architecture.
+
+def bytes_of(text: string): vector u8 {
+    let result: mutable vector u8 = [];
+    let index: mutable uint = 0;
+    while (index < (length(text) as uint)) {
+        append(result, text[index]);
+        index := index + 1;
+    }
+    return result;
+}
+
+def install_name_of_bytes_is(stub_bytes: &vector u8, expected: string): bool {
+    match اسم_تثبيت_مكتبة_نصية(stub_bytes) with
+    | option.none -> { return false; }
+    | option.some(name) -> { return texts_equal(&name, &expected); };
+}
+
+def install_name_is(stub: string, expected: string): bool {
+    let stub_bytes: vector u8 = bytes_of(stub);
+    return install_name_of_bytes_is(&stub_bytes, expected);
+}
+
+def has_symbol(library: &مكتبة_نصية_ماتشو, name: string): bool {
+    let index: mutable uint = 0;
+    while (index < (length((*library).الرموز) as uint)) {
+        let symbol: string = من_بايتات(&(*library).الرموز[index]);
+        if (texts_equal(&symbol, &name)) { return true; };
+        index := index + 1;
+    }
+    return false;
+}
+
+def main(): int {
+    // A v4 stub as an Apple SDK ships it: the umbrella's install name, the
+    // re-exported library as a second document, flow lists over lines.
+    let sdk_stub: string = "--- !tapi-tbd\ntbd-version:     4\ntargets:         [ x86_64-macos, arm64-macos,\n                   arm64e-macos ]\ninstall-name:    '/usr/lib/libSystem.B.dylib'\nexports:\n  - targets:         [ x86_64-macos, arm64e-macos,\n                       arm64-macos ]\n    symbols:         [ _malloc,\n                       _printf ]\n    objc-classes:    [ Widget ]\n  - targets:         [ x86_64-macos ]\n    symbols:         [ _x86_only ]\nundefineds:\n  - targets:         [ arm64-macos ]\n    symbols:         [ _not_exported ]\n--- !tapi-tbd\ntbd-version:     4\ntargets:         [ arm64-macos ]\ninstall-name:    '/usr/lib/system/libsystem_c.dylib'\nexports:\n  - targets:         [ arm64-macos ]\n    symbols:         [ _abs ]\n...\n";
+    let stub_bytes: vector u8 = bytes_of(sdk_stub);
+    if (!install_name_of_bytes_is(&stub_bytes, "/usr/lib/libSystem.B.dylib")) { return 1; };
+    // An unquoted install name (tests/runner/fixtures/darwin_libc/libc.tbd).
+    if (!install_name_is("--- !tapi-tbd\ntbd-version: 4\ntargets: [ arm64-macos ]\ninstall-name: /usr/lib/libsqlite3.dylib\n...\n", "/usr/lib/libsqlite3.dylib")) { return 2; };
+    // A v1 stub has no tag.
+    if (!install_name_is("---\narchs: [ x86_64 ]\nplatform: macosx\ninstall-name: /usr/lib/libold.dylib\nexports:\n  - archs: [ x86_64 ]\n    symbols: [ _old ]\n...\n", "/usr/lib/libold.dylib")) { return 3; };
+
+    // Not a stub: an ELF header, a GNU linker script, no install name.
+    let elf: vector u8 = [0x7F, 0x45, 0x4C, 0x46, 2, 1, 1, 0];
+    match اسم_تثبيت_مكتبة_نصية(&elf) with
+    | option.some(_) -> { return 4; }
+    | option.none -> { };
+    let script: vector u8 = bytes_of("GROUP ( /lib/libc.so.6 )\n");
+    if (مكتبة_نصية_تابي(&script)) { return 5; };
+    let nameless: vector u8 = bytes_of("--- !tapi-tbd\ntbd-version: 4\ntargets: [ arm64-macos ]\n...\n");
+    if (!مكتبة_نصية_تابي(&nameless)) { return 6; };
+    match اسم_تثبيت_مكتبة_نصية(&nameless) with
+    | option.some(_) -> { return 7; }
+    | option.none -> { };
+
+    // What arm64 macOS binds: every document's exports for arm64-macos,
+    // Objective-C classes under their symbol names, nothing of x86_64 only
+    // and no undefineds.
+    let arch: vector u8 = bytes_of("arm64");
+    let platform: vector u8 = bytes_of("macos");
+    match اقرأ_مكتبة_نصية_ماتشو(&stub_bytes, &arch, &platform) with
+    | option.none -> { return 8; }
+    | option.some(library) -> {
+        if (!has_symbol(&library, "_malloc")) { return 9; };
+        if (!has_symbol(&library, "_printf")) { return 10; };
+        if (!has_symbol(&library, "_abs")) { return 11; };
+        if (!has_symbol(&library, "_OBJC_CLASS_$_Widget")) { return 12; };
+        if (!has_symbol(&library, "_OBJC_METACLASS_$_Widget")) { return 13; };
+        if (has_symbol(&library, "_x86_only")) { return 14; };
+        if (has_symbol(&library, "_not_exported")) { return 15; };
+        if ((length(library.الرموز) as uint) != 5) { return 16; };
+    };
+    return 0;
+}

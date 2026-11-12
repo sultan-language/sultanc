@@ -1,0 +1,12 @@
+// اختبار: رفض
+// تشخيص: SULTANC-TYPE-MISMATCH
+// نظير: tests/en/diagnostics/e2e/suggest_cast.sn
+// خرج-تشخيص-عربي: suggest_cast.ar.stderr
+// خرج-تشخيص-إنجليزي: suggest_cast.en.stderr
+// Two numbers an explicit `as` joins: a help and a fix that wraps the
+// value (maybe-incorrect: i32 to u8 can change the value).
+عرف الرئيسية(): ص32 {
+    دع العدد: ص32 = 3;
+    دع الصغير: ط8 = العدد;
+    أرجع 0;
+}

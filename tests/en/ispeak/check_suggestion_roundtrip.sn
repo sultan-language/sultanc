@@ -1,0 +1,207 @@
+// اختبار: تشغيل
+// أهداف: x86_64-linux
+// خروج: 0
+// نظير: tests/ar/ispeak/check_suggestion_roundtrip.sn
+import std.text.compare;
+import std.text.from_bytes;
+import std.io.print;
+import std.fs.temporary;
+import std.fs.write_file;
+import std.fs.walk;
+import std.encoding.positions;
+import compiler.driver.source_inputs;
+import compiler.frontend.semantic_pipeline;
+import compiler.frontend.cancellation;
+import compiler.backend.target.target_model;
+import compiler.backend.target.target_registry;
+import compiler.frontend.module_loading.logical_environment;
+import compiler.diagnostics.identity;
+import compiler.diagnostics.registry;
+import compiler.diagnostics.record;
+import compiler.diagnostics.engine;
+import compiler.diagnostics.schema;
+import compiler.diagnostics.suggestions;
+
+// The structured suggestions an editor reads (diagnostics/suggestions.sn):
+// each case is compiled by the frontend the LSP server uses, the diagnostic
+// must carry a suggestion of the expected kind and applicability, worded in
+// both languages; a machine-applicable suggestion is applied to the file,
+// which then compiles without an error. Positions are checked as byte
+// offsets and as LSP positions (UTF-16), on a line with a character outside
+// the Basic Multilingual Plane.
+
+def fail(code: int, text: string): int {
+    let a: result int, int = اطبع_خطأ(text);
+    let b: result int, int = اطبع_خطأ("\n");
+    return code;
+}
+
+// The diagnostics of a compilation of the file, or none when it succeeds.
+def errors_of(path: &string): option مجموعة_تشخيصات {
+    let extras: vector string = [];
+    match ابن_إعداد_تجميع_مباشر(path, &extras) with
+    | نتيجة_إعداد_تجميع_مباشر.غير_صالح -> { return option.some(مجموعة_تشخيصات_جديدة()); }
+    | نتيجة_إعداد_تجميع_مباشر.جاهز(setup) -> {
+        match setup with
+        | { البيئة: env, المفتاح_الجذري: key, المفاتيح_المباشرة: _ } -> {
+            let req: طلب_واجهة_وحدة = { البيئة: env, المفتاح_الجذري: key, احتفظ_بحقائق_الأدوات: false };
+            // For the host target, as the LSP server analyses: std.io is
+            // target-conditional.
+            let target: mutable option واصف_هدف = option.none();
+            match حل_هدف_المضيف_المسجل() with
+            | نتيجة_حل_هدف.محلول(descriptor) -> { target := option.some(descriptor); }
+            | نتيجة_حل_هدف.غير_مسجل -> { };
+            let more: vector مفتاح_وحدة_مقنن = [];
+            let cancel: mutable حالة_إلغاء_واجهة = حالة_إلغاء_واجهة_جديدة();
+            match ابن_واجهة_وحدة_بهدف_قابلة_للإلغاء(req, target, &more, &mutable cancel) with
+            | نتيجة_بناء_واجهة_قابلة_للإلغاء.ملغاة -> { return option.some(مجموعة_تشخيصات_جديدة()); }
+            | نتيجة_بناء_واجهة_قابلة_للإلغاء.مرفوضة(found) -> { return option.some(found); }
+            | نتيجة_بناء_واجهة_قابلة_للإلغاء.مكتملة(frontend) -> {
+                if (frontend.تشخيصات_الأدوات.عدد_الأخطاء > 0) { return option.some(انسخ_مملوكا_مجموعة_تشخيصات(&frontend.تشخيصات_الأدوات)); };
+                return option.none();
+            };
+        };
+    };
+}
+
+def has_code(found: &مجموعة_تشخيصات, code: &string): bool {
+    let i: mutable uint = 0;
+    while (i < (length((*found).التشخيصات) as uint)) {
+        let definition: تعريف_تشخيص = تعريف_التشخيص((*found).التشخيصات[i].المعرف);
+        if (texts_equal(&definition.الكود, code)) { return true; };
+        i := i + 1;
+    }
+    return false;
+}
+
+// Checks one case. The source is written to dir/name.sn; the first
+// diagnostic with code must carry a suggestion of kind, with applicability;
+// a machine-applicable one is applied and the file must then compile.
+// line/character, when line is at least 0, is the LSP start of the first edit.
+def check_case(dir: &string, name: string, source: string, code: string, kind: string,
+               applicability: string, line: int, character: int): int {
+    let bytes: mutable vector u8 = [];
+    ألحق_بايتات_نص(&mutable bytes, انسخ_نص(dir));
+    append(bytes, 0x2F);
+    ألحق_بايتات_نص(&mutable bytes, انسخ_نص(&name));
+    append(bytes, 0x2E);
+    append(bytes, 0x73);
+    append(bytes, 0x6E);
+    let path: string = bytes as string;
+    match اكتب_الملف(&path, &source) with
+    | result.err(_) -> { return fail(10, path); }
+    | result.ok(_) -> { };
+    match errors_of(&path) with
+    | option.none -> { return fail(11, name); }
+    | option.some(found) -> {
+        let i: mutable uint = 0;
+        while (i < (length(found.التشخيصات) as uint)) {
+            let definition: تعريف_تشخيص = تعريف_التشخيص(found.التشخيصات[i].المعرف);
+            if (texts_equal(&definition.الكود, &code)) {
+                let english: vector اقتراح_تشخيص = اقتراحات_تشخيص(&found.التشخيصات[i], لغة_تشخيص.الإنجليزية());
+                let arabic: vector اقتراح_تشخيص = اقتراحات_تشخيص(&found.التشخيصات[i], لغة_تشخيص.العربية());
+                let j: mutable uint = 0;
+                while (j < (length(english) as uint)) {
+                    match english[j].النوع_الآلي with
+                    | option.some(machine) -> {
+                        if (texts_equal(&machine, &kind)) {
+                            if (!texts_equal(&english[j].القابلية_الآلية, &applicability)) { return fail(13, name); };
+                            if ((length(english[j].الرسالة) as uint) == 0 || (length(arabic[j].الرسالة) as uint) == 0) { return fail(14, name); };
+                            if (texts_equal(&english[j].الرسالة, &arabic[j].الرسالة)) { return fail(15, name); };
+                            if (line >= 0) {
+                                match english[j].التعديلات[0].البداية with
+                                | option.some(start) -> {
+                                    if ((start.السطر as int) != line || (start.العمود as int) != character) { return fail(16, name); };
+                                }
+                                | option.none -> { return fail(16, name); };
+                            };
+                            let machine_applicable: string = "machine-applicable";
+                            if (!texts_equal(&applicability, &machine_applicable)) { return 0; };
+                            // Apply it: the file compiles.
+                            match طبق_اقتراحا_على_نص(&source, &english[j]) with
+                            | option.none -> { return fail(17, name); }
+                            | option.some(fixed) -> {
+                                match اكتب_الملف(&path, &fixed) with
+                                | result.err(_) -> { return fail(18, path); }
+                                | result.ok(_) -> { };
+                                match errors_of(&path) with
+                                | option.none -> { return 0; }
+                                | option.some(after) -> {
+                                    let k: mutable uint = 0;
+                                    while (k < (length(after.التشخيصات) as uint)) {
+                                        let d: تعريف_تشخيص = تعريف_التشخيص(after.التشخيصات[k].المعرف);
+                                        let m: result int, int = اطبع_خطأ(انسخ_نص(&d.الكود));
+                                        k := k + 1;
+                                    }
+                                    return fail(19, fixed);
+                                };
+                            };
+                        };
+                    }
+                    | option.none -> { };
+                    j := j + 1;
+                }
+                return fail(12, name);
+            };
+            i := i + 1;
+        }
+        let z: mutable uint = 0;
+        while (z < (length(found.التشخيصات) as uint)) {
+            let other: تعريف_تشخيص = تعريف_التشخيص(found.التشخيصات[z].المعرف);
+            let shown: result int, int = اطبع_خطأ(انسخ_نص(&other.الكود));
+            z := z + 1;
+        }
+        return fail(20, name);
+    };
+}
+
+def main(): int {
+    let prefix: string = "sultanc-suggest-";
+    let dir: mutable string = "";
+    match أنشئ_دليلا_مؤقتا(&prefix) with
+    | result.err(_) -> { return 1; }
+    | result.ok(made) -> { dir := made; };
+    let r: mutable int = 0;
+    // `mutable` for a written `let` (insertion before its Type).
+    r := check_case(&dir, "mutable", "def main(): i32 {\n    let count: i32 = 3;\n    count := 4;\n    return count;\n}\n",
+        "SULTANC-MUTABILITY-WRITE-TO-IMMUTABLE", "declare-mutable", "machine-applicable", 1, 15);
+    // The import of the one std module that declares the name.
+    if (r == 0) { r := check_case(&dir, "import", "import std.text.format;\ndef main(): i32 {\n    let text: string = طبيعي_إلى_نص(3);\n    return 0;\n}\n",
+        "SULTANC-NAME-UNKNOWN", "import-module", "machine-applicable", 1, 0); };
+    // `*` through a reference to a number.
+    if (r == 0) { r := check_case(&dir, "deref", "def main(): i32 {\n    let count: i32 = 3;\n    let r: &i32 = &count;\n    let d: i32 = r;\n    return d;\n}\n",
+        "SULTANC-TYPE-MISMATCH", "dereference", "machine-applicable", 3, 17); };
+    // `&` for a reference parameter.
+    if (r == 0) { r := check_case(&dir, "borrow", "def take(value: &i32): i32 {\n    return *value;\n}\ndef main(): i32 {\n    let count: i32 = 3;\n    return take(count);\n}\n",
+        "SULTANC-CALL-ARGUMENT-TYPE-MISMATCH", "borrow", "maybe-incorrect", 5, 16); };
+    // `as` after a character outside the BMP: byte, scalar and UTF-16
+    // columns differ (the emoji is 4 bytes, 1 scalar, 2 UTF-16 units).
+    if (r == 0) { r := check_case(&dir, "cast", "def main(): i32 {\n    let count: i32 = 3;\n    let s: string = \"😀\"; let small: u8 = count;\n    return 0;\n}\n",
+        "SULTANC-TYPE-MISMATCH", "explicit-cast", "maybe-incorrect", 2, 42); };
+    // Existing parser fixes: insert `;`, replace a misspelled keyword.
+    if (r == 0) { r := check_case(&dir, "semicolon", "def main(): i32 {\n    let first: i32 = 3\n    return first;\n}\n",
+        "SULTANC-PARSE-SYNTAX", "insert-semicolon", "machine-applicable", 1, 22); };
+    if (r == 0) { r := check_case(&dir, "keyword", "def main(): i32 {\n    let a: i32 = 3;\n    retrun a;\n}\n",
+        "SULTANC-PARSE-KEYWORD-TYPO", "replace-keyword-spelling", "machine-applicable", 2, 4); };
+    let removed: result int, int = احذف_الشجرة(&dir);
+    if (r != 0) { return r; };
+    // Every help key has a distinct machine kind.
+    let keys: vector مفتاح_صياغة = كل_مفاتيح_الصياغة();
+    let kinds: mutable vector string = [];
+    let n: mutable uint = 0;
+    while (n < (length(keys) as uint)) {
+        match نوع_اقتراح_آلي(keys[n]) with
+        | option.some(machine) -> {
+            let q: mutable uint = 0;
+            while (q < (length(kinds) as uint)) {
+                if (texts_equal(&kinds[q], &machine)) { return fail(30, machine); };
+                q := q + 1;
+            }
+            append(kinds, machine);
+        }
+        | option.none -> { };
+        n := n + 1;
+    }
+    if ((length(kinds) as uint) != 22) { return 31; };
+    return 0;
+}

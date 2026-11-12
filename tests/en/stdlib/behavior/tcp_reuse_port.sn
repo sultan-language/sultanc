@@ -1,0 +1,34 @@
+// اختبار: تشغيل
+// أهداف: x86_64-linux
+// خروج: 0
+// نظير: tests/ar/stdlib/behavior/tcp_reuse_port.sn
+// SO_REUSEPORT (std.net.options): two listeners bind one address when both
+// ask for it, as each worker of the sharded evented server does
+// (std.http.server); a third bind without it is refused.
+import std.net.options;
+import std.net.socket_address;
+import std.net.tcp;
+
+def main(): int {
+    let address: socket_addr;
+    match parse_socket_addr(&"127.0.0.1:38918") with
+    | result.err(_) -> { return 1; }
+    | result.ok(a) -> { address := a; };
+    let options: mutable vector socket_option = [];
+    append(options, reuse_port(true));
+    let first: tcp_listener;
+    match tcp_bind_with_options(&address, 16, &options) with
+    | result.err(_) -> { return 2; }
+    | result.ok(l) -> { first := l; };
+    let second: tcp_listener;
+    match tcp_bind_with_options(&address, 16, &options) with
+    | result.err(_) -> { return 3; }
+    | result.ok(l) -> { second := l; };
+    let none: vector socket_option = [];
+    match tcp_bind_with_options(&address, 16, &none) with
+    | result.err(_) -> { }
+    | result.ok(l) -> { let c: result int, int = tcp_listener_close(l); return 4; };
+    let a: result int, int = tcp_listener_close(first);
+    let b: result int, int = tcp_listener_close(second);
+    return 0;
+}

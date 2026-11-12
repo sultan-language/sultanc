@@ -1,5 +1,6 @@
 استورد compiler.frontend.lexer.keywords.matching;
 استورد compiler.frontend.lexer.keywords.keyword_registry;
+استورد compiler.frontend.identifier_identity;
 
 // واجهة صغيرة مستقرة فوق السجل المولد؛ لا تملك أي تهجئة keyword بنفسها.
 عام عرف الكلمة_المحجوزة(
@@ -8,4 +9,14 @@
     النهاية: طبيعي
 ): مطابقة_كلمة {
     أرجع كلمة_مسجلة(النص, البداية, النهاية);
+}
+
+// The same with the slice's identity descriptor already computed.
+عام عرف الكلمة_المحجوزة_بوصف(
+    النص: &نص,
+    البداية: طبيعي,
+    النهاية: طبيعي,
+    الوصف: &وصف_هوية_معرف
+): مطابقة_كلمة {
+    أرجع كلمة_مسجلة_بوصف(النص, البداية, النهاية, الوصف);
 }

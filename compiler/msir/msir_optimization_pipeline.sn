@@ -1,0 +1,156 @@
+استورد compiler.msir.msir_model;
+استورد compiler.msir.identifiers;
+استورد compiler.msir.msir_consumer;
+استورد compiler.msir.msir_promotion;
+استورد compiler.msir.msir_inlining;
+استورد compiler.msir.msir_flow;
+استورد compiler.msir.debug_contract;
+استورد compiler.frontend.types.type_context;
+
+// The one MSIR optimization pipeline. The driver runs it once on lowered
+// MSIR, right before the canonical verification (driver/compiler_driver.sn),
+// for every request: `check`, `run` (the machine interpreter and the checked
+// interpreter), and Native and LLVM code generation for every output. Every
+// consumer therefore receives the same optimized, verified program; only what
+// consumes it differs (and which functions it keeps, below). The passes, in order:
+//
+// 1. scalar promotion (msir_promotion.sn): scalar local places become SSA
+//    values, single-store locals of any Type become their stored value;
+// 2. inlining of small functions (msir_inlining.sn), a few rounds;
+// 3. control-flow simplification (msir_flow.sn): constant compares and
+//    branches fold, jumps thread, single-predecessor blocks merge,
+//    unreachable blocks go, trivial and dead block parameters go, repeated
+//    pure expressions are computed once.
+//
+// LLVM receives the same program, inlined, although its -O1 and above inline
+// on their own: leaving inlining to LLVM made executables larger (functions
+// only inlined calls reached stay defined) and programs no faster, for a few
+// percent less compile time on the largest program
+// (docs/en/internals/msir-and-codegen.md, "Optimization pipeline").
+//
+// Inlining needs promoted callees (the copy is promoted code) and flow
+// simplification is what folds a callee's tests of the constants its caller
+// passes, so the order is fixed. Each pass keeps the semantics MSIR states:
+// checked arithmetic and conversions still trap (no pass folds or drops an
+// operation that may trap), functions holding compile-time work are left as
+// lowered for the compile-time evaluator, a kernel call's selector,
+// the allocation providers, std's allocation counters (the machine
+// interpreter answers calls to them) and the program-fact functions are never inlined,
+// the module initializer is neither inlined into nor simplified, and debug
+// variables follow the values they are bound to.
+//
+// Only the functions that will run are optimized: those the consumer keeps
+// and those compile-time evaluation runs. An executable and `run` keep the
+// closure msir_consumer.sn computes for executables (the entry, the
+// process-exit and allocation providers, function-valued globals and
+// everything they call); objects and libraries keep every function; `check`
+// keeps none. The functions compile-time instructions call, and everything
+// those reach, are added for every request, so compile-time evaluation runs
+// the same optimized functions under `check`, `run` and code generation. The
+// rest of the program (most of std for a small program) stays as lowered and
+// still verifies.
+
+// The functions a request's consumer keeps.
+عام نوع نطاق_تحسين_مسير =
+    // `check`: compile-time evaluation is all that runs.
+    | وقت_الترجمة_فقط
+    // `run` and executables.
+    | ما_يبلغه_البدء
+    // Objects, shared libraries, relocatable objects and target modules.
+    | كل_الدوال
+;
+
+// How much the pipeline does. بلا (LLVM's and the native backend's -O0) runs
+// no pass: every consumer handles MSIR as lowered (the locals whose address
+// is taken stay places at every level), named locals stay in their frame
+// slots for a debugger, and each call stays a call. افتراضي (every other
+// request) runs the passes above.
+عام نوع مستوى_تحسين_مسير =
+    | بلا
+    | افتراضي
+;
+
+// Which functions (by position) the pipeline optimizes.
+عرف دوال_محسنة_مسير(البرنامج: &برنامج_مسير, النطاق: نطاق_تحسين_مسير): متجه منطقي {
+    دع العدد: طبيعي = الطول((*البرنامج).الدوال) مثل طبيعي;
+    دع الناتج: متغير متجه منطقي = [];
+    طابق النطاق مع
+    | نطاق_تحسين_مسير.ما_يبلغه_البدء -> {
+        الناتج := دوال_برنامج_مسير_تنفيذية_مطلوبة(البرنامج, معرف_دالة_بدء_برنامج_مسير(البرنامج));
+    }
+    | نطاق_تحسين_مسير.كل_الدوال -> {
+        دع ف: متغير طبيعي = 0;
+        طالما (ف < العدد) { ألحق(الناتج, صواب); ف := ف + 1; }
+        أرجع الناتج;
+    }
+    | نطاق_تحسين_مسير.وقت_الترجمة_فقط -> {
+        دع ف: متغير طبيعي = 0;
+        طالما (ف < العدد) { ألحق(الناتج, خطأ); ف := ف + 1; }
+    };
+    // Compile-time evaluation's roots: the functions its calls name.
+    دع أي_جذر: متغير منطقي = خطأ;
+    دع د: متغير طبيعي = 0;
+    طالما (د < العدد) {
+        دع ك: متغير طبيعي = 0;
+        طالما (ك < (الطول((*البرنامج).الدوال[د].الكتل) مثل طبيعي)) {
+            دع ت: متغير طبيعي = 0;
+            طالما (ت < (الطول((*البرنامج).الدوال[د].الكتل[ك].التعليمات) مثل طبيعي)) {
+                إذا ((*البرنامج).الدوال[د].الكتل[ك].التعليمات[ت].تقييم_وقت_الترجمة) {
+                    طابق (*البرنامج).الدوال[د].الكتل[ك].التعليمات[ت].العملية مع
+                    | عملية_مسير.نداء(النداء) -> {
+                        طابق النداء.الهدف مع
+                        | هدف_نداء_مسير.دالة_سلطان(الهدف) -> {
+                            إذا ((الهدف.القيمة مثل طبيعي) < العدد && !الناتج[الهدف.القيمة]) {
+                                الناتج[الهدف.القيمة] := صواب;
+                                أي_جذر := صواب;
+                            };
+                        }
+                        | _ -> { };
+                    }
+                    | _ -> { };
+                };
+                ت := ت + 1;
+            }
+            ك := ك + 1;
+        }
+        د := د + 1;
+    }
+    إذا (أي_جذر) { أغلق_دوال_مسير_مطلوبة(البرنامج, &متغير الناتج); };
+    أرجع الناتج;
+}
+
+// Runs the pipeline at المستوى and returns, by position, the functions it
+// changed: a program the verifier accepted before still verifies outside
+// them, so the verification after it need check only those
+// (msir_verifier.sn, تحقق_دوال_برنامج_مسير). No pass changes a function's
+// declaration, a global or a program fact.
+عام عرف حسن_برنامج_مسير(
+    البرنامج: &متغير برنامج_مسير,
+    الأنواع: &سجل_أنواع,
+    التصحيح: &متغير بيانات_تصحيح_مسير,
+    النطاق: نطاق_تحسين_مسير,
+    المستوى: مستوى_تحسين_مسير
+): متجه منطقي {
+    طابق المستوى مع
+    | مستوى_تحسين_مسير.بلا -> {
+        دع لا_شيء: متغير متجه منطقي = [];
+        دع د: متغير طبيعي = 0;
+        طالما (د < (الطول((*البرنامج).الدوال) مثل طبيعي)) { ألحق(لا_شيء, خطأ); د := د + 1; }
+        أرجع لا_شيء;
+    }
+    | مستوى_تحسين_مسير.افتراضي -> { };
+    دع المحسنة: متجه منطقي = دوال_محسنة_مسير(البرنامج, النطاق);
+    دع المرقاة: متجه منطقي = رقّ_محليات_برنامج_مسير(البرنامج, الأنواع, التصحيح, &المحسنة);
+    دع المضمن_فيها: متجه منطقي = ضمّن_الدوال_الصغيرة_مسير(البرنامج, &المحسنة, التصحيح);
+    دع المبسطة: متجه منطقي = بسط_تدفق_برنامج_مسير(البرنامج, التصحيح, &المحسنة, &المضمن_فيها);
+    // Flow simplification can leave a local stored once before its loads
+    // (a drop flag's test or a dead path gone): promote those too.
+    دع المرقاة_ثانية: متجه منطقي = رقّ_محليات_برنامج_مسير(البرنامج, الأنواع, التصحيح, &المبسطة);
+    دع المتغيرة: متغير متجه منطقي = [];
+    دع د: متغير طبيعي = 0;
+    طالما (د < (الطول((*البرنامج).الدوال) مثل طبيعي)) {
+        ألحق(المتغيرة, المرقاة[د] || المضمن_فيها[د] || المبسطة[د] || المرقاة_ثانية[د]);
+        د := د + 1;
+    }
+    أرجع المتغيرة;
+}

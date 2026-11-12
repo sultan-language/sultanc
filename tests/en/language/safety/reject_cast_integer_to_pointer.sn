@@ -1,0 +1,13 @@
+// اختبار: رفض
+// أهداف: arm64-darwin,x86_64-linux
+// تشخيص: SULTANC-SAFETY-UNSAFE-OPERATION
+// نظير: tests/ar/language/safety/reject_cast_integer_to_pointer.sn
+// An address word taken as a raw pointer needs unsafe.
+type First = { value: int };
+type Second = { other: int };
+
+def main(): int {
+    let word: u64 = 4096;
+    let p: *First = word as *First;
+    return 0;
+}

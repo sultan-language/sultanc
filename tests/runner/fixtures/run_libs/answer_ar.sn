@@ -1,0 +1,7 @@
+// تستدعي answer() من libanswer.so التي يربطها `run -L <دليل> -l answer`
+// (tests/runner/suites/cli.sn)؛ ويفشل الربط بدون -l.
+خارجي عرف answer(): ص32 = "answer";
+
+عرف الرئيسية(): عدد {
+    أرجع answer() مثل عدد;
+}

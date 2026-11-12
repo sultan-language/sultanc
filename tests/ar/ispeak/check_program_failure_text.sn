@@ -9,7 +9,7 @@
 استورد compiler.diagnostics.identity;
 استورد compiler.driver.program_failure_text;
 
-// The words of a program's runtime failures (docs/ERRORS.md): the text of
+// The words of a program's runtime failures (docs/en/reference/errors.md): the text of
 // library/std/process/failure_text.sn is exactly the compiler's rendering for
 // a program compiled in Arabic, which the compiler writes over it at every
 // compilation; the English rendering differs only in the compiled language.
@@ -20,13 +20,13 @@
     | نتيجة.نجح(النص) -> { المكتوب := النص; }
     | نتيجة.خطأ(_) -> { أرجع 1; };
     دع العربي: نص = نص_وحدة_كلمات_فشل_البرنامج(لغة_تشخيص.العربية());
-    لو (!نصان_متساويان(&المكتوب, &العربي)) { أرجع 2; };
+    إذا (!نصان_متساويان(&المكتوب, &العربي)) { أرجع 2; };
     دع الإنجليزي: نص = نص_وحدة_كلمات_فشل_البرنامج(لغة_تشخيص.الإنجليزية());
-    لو (نصان_متساويان(&الإنجليزي, &العربي)) { أرجع 3; };
+    إذا (نصان_متساويان(&الإنجليزي, &العربي)) { أرجع 3; };
     دع الإطار_العربي: نص = إطار_فشل_برنامج(
         لغة_تشخيص.العربية(), معرف_تشخيص.انتهى_البرنامج_بخطأ(), اختياري.لا_شيء()
     );
     دع المتوقع_العربي: نص = «خطأ[SULTANC-RUNTIME-PROGRAM-ERROR]: انتهى البرنامج بخطأ»;
-    لو (!نصان_متساويان(&الإطار_العربي, &المتوقع_العربي)) { أرجع 4; };
+    إذا (!نصان_متساويان(&الإطار_العربي, &المتوقع_العربي)) { أرجع 4; };
     أرجع 0;
 }

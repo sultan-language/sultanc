@@ -9,7 +9,7 @@ import compiler.diagnostics.schema;
 import compiler.diagnostics.identity;
 import compiler.driver.program_failure_text;
 
-// The words of a program's runtime failures (docs/ERRORS.md): the text of
+// The words of a program's runtime failures (docs/en/reference/errors.md): the text of
 // library/std/process/failure_text.sn is exactly the compiler's rendering for
 // a program compiled in Arabic, which the compiler writes over it at every
 // compilation; the English rendering differs only in the compiled language.

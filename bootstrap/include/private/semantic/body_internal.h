@@ -157,6 +157,14 @@ int __Body_Report_Borrow_Conflict__(__Semantic_Body_Context__ *,
                                     __Semantic_Local__ *,
                                     __Source_Span__);
 
+/* Checks the elements of a vector literal against its element Type. */
+int __Body_Check_Vector_Elements__(__Semantic_Body_Context__ *,
+                                   __Ast_Type__ *,
+                                   __Ast_Atom__ *,
+                                   __Ast_Expression__ **,
+                                   size_t,
+                                   __Source_Span__);
+
 /* Returns the body synthetic named type. */
 __Ast_Type__ *__Body_Synthetic_Named_Type__(__Semantic_Body_Context__ *, __Text_Slice__);
 __Ast_Type__ *__Body_Synthetic_Function_Type__(__Semantic_Body_Context__ *,

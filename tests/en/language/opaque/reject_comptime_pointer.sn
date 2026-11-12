@@ -1,0 +1,15 @@
+// اختبار: رفض
+// أهداف: arm64-darwin,x86_64-linux
+// تشخيص: SULTANC-COMPTIME-PROHIBITED-EFFECT
+// نظير: tests/ar/language/opaque/reject_comptime_pointer.sn
+// Compile-time evaluation makes no raw pointers, opaque or not: a clean
+// diagnostic, as for any other pointer.
+type Db = opaque;
+def none(): *Db { return 0 as *Db; }
+def main(): int {
+    let n: int = comptime {
+        let p: *Db = none();
+        1
+    };
+    return n;
+}

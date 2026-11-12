@@ -1,0 +1,12 @@
+// اختبار: رفض
+// تشخيص: SULTANC-TYPE-MISMATCH
+// نظير: tests/en/diagnostics/e2e/suggest_deref.sn
+// خرج-تشخيص-عربي: suggest_deref.ar.stderr
+// خرج-تشخيص-إنجليزي: suggest_deref.en.stderr
+// A reference where its number is expected: a help and a fix with `*`.
+عرف الرئيسية(): ص32 {
+    دع العدد: ص32 = 3;
+    دع المرجع: &ص32 = &العدد;
+    دع القيمة: ص32 = المرجع;
+    أرجع القيمة;
+}

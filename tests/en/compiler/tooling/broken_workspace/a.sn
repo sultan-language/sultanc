@@ -1,0 +1,2 @@
+// Fixture of tests/en/compiler/tooling/broken_workspace.sn (not a test).
+public def shared_value(): int { return 1; }

@@ -1,0 +1,31 @@
+// The canonical spelling of a code point, "U+" and at least four uppercase
+// hex digits (U+0041, U+FFFF, U+1F600, U+10FFFF), as the Unicode Standard
+// writes them (Appendix A, Notational Conventions). Values above U+10FFFF
+// are not code points; they are written the same way, with as many digits
+// as they need.
+استورد encoding.hex;
+استورد text.from_bytes;
+
+عام عرف نص_نقطة_يونيكود(القيمة: ط32): نص {
+    دع البايتات: متجه ط8 = [
+        ((القيمة >> 24) & 0xFF) مثل ط8,
+        ((القيمة >> 16) & 0xFF) مثل ط8,
+        ((القيمة >> 8) & 0xFF) مثل ط8,
+        (القيمة & 0xFF) مثل ط8
+    ];
+    // Eight digits; the leading zeros past the last four are dropped.
+    دع السداسي: نص = رمز_سداسي_كبير(&البايتات);
+    دع البداية: متغير طبيعي = 0;
+    طالما ((البداية < 4) && (السداسي[البداية] == (0x30 مثل ط8))) {
+        البداية := البداية + 1;
+    }
+    // "U+"
+    دع الناتج: متغير متجه ط8 = [0x55, 0x2B];
+    دع ف: متغير طبيعي = البداية;
+    طالما (ف < 8) {
+        ألحق(الناتج, السداسي[ف]);
+        ف := ف + 1;
+    }
+    أرجع من_بايتات(&الناتج);
+}
+عام مرادف unicode_code_point_text = نص_نقطة_يونيكود;

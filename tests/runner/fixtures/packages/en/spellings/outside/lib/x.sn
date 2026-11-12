@@ -1,0 +1,2 @@
+module y { ar: ص };
+public def x_value(): int { return 0; }

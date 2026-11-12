@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# CI entry for the SultanC test suites (.github/ci/contracts.json "tests").
+# CI entry for the SultanC test suites (run by .github/ci/linux.sh, macos.sh and windows.ps1).
 # Builds and runs the SultanC-native runner (tests/runner) and the iSpeak suite
 # (tools/tests/ispeak_test.sh), then writes build/tests-result.json:
 #   {"executed": N, "passed": P, "failed": F, "skipped": S, "compile_only": C,

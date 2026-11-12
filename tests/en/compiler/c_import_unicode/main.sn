@@ -1,0 +1,22 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// Twin: tests/ar/compiler/c_import_unicode/main.sn (no `نظير` header: the
+// pair step interprets both twins, and the interpreter cannot call the
+// functions of an imported .c file).
+// Jisr reads C source as validated UTF-8 and applies C23's identifier
+// rules (XID_Start/XID_Continue, compiler/jisr/lexer.sn): `café` and
+// `café` are one C name, an Arabic parameter name is a C identifier, a
+// skipped `#if 0` group and a comment may hold bytes that are not UTF-8.
+// `u"..."` is UTF-16 (U+1F600 is a surrogate pair) and `u8"..."` UTF-8.
+// `café` has no SultanC spelling, so its public declaration is left out
+// (SULTANC-C-NAME-CONFLICT-SKIPPED); the compiled code still uses it.
+import "unicode.c";
+
+def main(): int {
+    if (get() != 42) { return 1; };
+    if (twice(21) != 42) { return 2; };
+    if (wide_length() != 3) { return 3; };
+    if (utf8_length() != 2) { return 4; };
+    return 42;
+}

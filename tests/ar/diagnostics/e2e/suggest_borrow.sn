@@ -1,0 +1,13 @@
+// اختبار: رفض
+// تشخيص: SULTANC-CALL-ARGUMENT-TYPE-MISMATCH
+// نظير: tests/en/diagnostics/e2e/suggest_borrow.sn
+// خرج-تشخيص-عربي: suggest_borrow.ar.stderr
+// خرج-تشخيص-إنجليزي: suggest_borrow.en.stderr
+// A reference parameter given the value: a help and a fix that borrows it.
+عرف خذ(القيمة: &ص32): ص32 {
+    أرجع *القيمة;
+}
+عرف الرئيسية(): ص32 {
+    دع العدد: ص32 = 3;
+    أرجع خذ(العدد);
+}

@@ -62,6 +62,6 @@
     طابق make(9).inner.n مع
     | 9 -> { total := total + 1; }
     | _ -> { };
-    لو (total != 50) { أرجع total; };
+    إذا (total != 50) { أرجع total; };
     أرجع 42;
 }

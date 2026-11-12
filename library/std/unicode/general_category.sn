@@ -70,3 +70,7 @@
     | _ -> { أرجع فئة_يونيكود.غير_معين(); };
 }
 عام نوع unicode_category = فئة_يونيكود;
+
+// English names (declared with their Arabic declarations: an alias names
+// a declaration of its own module).
+عام مرادف unicode_category_of = فئة_محرف_يونيكود;

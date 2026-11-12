@@ -27,7 +27,7 @@
     | فك
     | عنوان
     | عنوان_متغير
-    // `EXPR؟` (docs/ERRORS.md): a parser marker on the right-hand side of a
+    // `EXPR؟` (docs/en/reference/errors.md): a parser marker on the right-hand side of a
     // let, an assignment, a return or an expression statement. The frontend
     // expansion (frontend/desugar/propagation.sn) replaces every such
     // statement before name resolution, so no later phase sees it.

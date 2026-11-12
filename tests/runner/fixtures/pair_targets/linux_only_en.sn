@@ -1,0 +1,11 @@
+// اختبار: تشغيل
+// أهداف: x86_64-linux
+// خروج: 0
+// نظير: tests/runner/fixtures/pair_targets/linux_only_ar.sn
+// Runner fixture (tests/runner/execute.sn, اختبر_أهداف_زوج_السطح): a pair
+// for x86_64-linux only. It exits 3 where the header expects 0, so an
+// interpreted pair step reports a status mismatch; on another host the
+// pair step must only build it.
+def main(): int {
+    return 3;
+}

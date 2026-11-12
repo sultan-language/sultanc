@@ -7,6 +7,7 @@
 #include "frontend/parser/initializer.h"
 
 #include <stdalign.h>
+#include <string.h>
 
 /* Parses the parser record initializer. */
 int __Parser_Parse_Record_Initializer__(__Parser__ *__Parser_State__,
@@ -26,12 +27,38 @@ int __Parser_Parse_Record_Initializer__(__Parser__ *__Parser_State__,
             __Vector_Destroy__(&__Fields__);
             return __Parser_Fail__(__Parser_State__, __Diag_Word_Syntax_Expected_Record_Field__);
         }
+        memset(&__Field__, 0, sizeof(__Field__));
         __Field__.__Name__ = __Parser_State__->__Current__.__Lexeme__;
         if (!__Parser_Advance__(__Parser_State__) ||
             !__Parser_Expect__(__Parser_State__, __Token_COLON_OPERATOR__))
         {
             __Vector_Destroy__(&__Fields__);
             return 0;
+        }
+        if (__Parser_Accept__(__Parser_State__, __Token_LEFT_BRACKET_OPERATOR__))
+        {
+            /* A vector literal field value: its elements, as in `دع x = [...]`. */
+            __Field__.__Is_Vector__ = 1;
+            if (!__Parser_Parse_Aggregate_Elements__(__Parser_State__,
+                                                     __Token_RIGHT_BRACKET_OPERATOR__,
+                                                     NULL,
+                                                     &__Field__.__Vector_Values__,
+                                                     &__Field__.__Vector_Expressions__,
+                                                     &__Field__.__Vector_Count__))
+            {
+                __Vector_Destroy__(&__Fields__);
+                return 0;
+            }
+            if (__Vector_Push__(&__Fields__, &__Field__) == NULL)
+            {
+                __Vector_Destroy__(&__Fields__);
+                return __Parser_Fail_Internal__(__Parser_State__, __Diag_Word_Syntax_Internal_Oom__);
+            }
+            if (!__Parser_Accept__(__Parser_State__, __Token_COMMA_OPERATOR__))
+            {
+                break;
+            }
+            continue;
         }
         __Field__.__Value__ = __Parser_Parse_Expression__(__Parser_State__);
         if (__Field__.__Value__ == NULL || __Vector_Push__(&__Fields__, &__Field__) == NULL)

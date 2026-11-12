@@ -427,6 +427,29 @@ __Ast_Type__ *__LLVM_Expression_Integer_Type__(__LLVM_Emitter__ *emitter,
                 case __Name_Builtin_Wrapping_Shift_Right__:
                 case __Name_Builtin_Pop__:
                 case __Name_Builtin_C_Address_Call__:
+                /* Atomics and machine memory: semantic analysis records the
+                 * verified result Type on the call. */
+                case __Name_Builtin_Atomic_Load__:
+                case __Name_Builtin_Atomic_Swap__:
+                case __Name_Builtin_Atomic_Compare_Swap__:
+                case __Name_Builtin_Atomic_Fetch_Add__:
+                case __Name_Builtin_Atomic_Fetch_And__:
+                case __Name_Builtin_Atomic_Fetch_Or__:
+                case __Name_Builtin_Atomic_Fetch_Xor__:
+                case __Name_Builtin_Machine_Memory_Read__:
+                case __Name_Builtin_Linear_Memory_Grow__:
+                case __Name_Builtin_Linear_Memory_Read__:
+                case __Name_Builtin_Linear_Heap_Base__:
+                case __Name_Builtin_Float_Sqrt__:
+                case __Name_Builtin_Float_Abs__:
+                case __Name_Builtin_Float_Floor__:
+                case __Name_Builtin_Float_Ceil__:
+                case __Name_Builtin_Float_Trunc__:
+                case __Name_Builtin_Float_Round_Even__:
+                case __Name_Builtin_Float_Minimum__:
+                case __Name_Builtin_Float_Maximum__:
+                case __Name_Builtin_Float_Copy_Sign__:
+                case __Name_Builtin_Float_Fused_Multiply_Add__:
                     return expression->__Contextual_Type__;
                 case __Name_Builtin_Capacity__:
                 case __Name_Builtin_Length__:
@@ -531,6 +554,29 @@ __Ast_Type__ *__LLVM_Expression_Type__(__LLVM_Emitter__ *emitter,
                 case __Name_Builtin_Wrapping_Shift_Right__:
                 case __Name_Builtin_Pop__:
                 case __Name_Builtin_C_Address_Call__:
+                /* Atomics and machine memory: semantic analysis records the
+                 * verified result Type on the call. */
+                case __Name_Builtin_Atomic_Load__:
+                case __Name_Builtin_Atomic_Swap__:
+                case __Name_Builtin_Atomic_Compare_Swap__:
+                case __Name_Builtin_Atomic_Fetch_Add__:
+                case __Name_Builtin_Atomic_Fetch_And__:
+                case __Name_Builtin_Atomic_Fetch_Or__:
+                case __Name_Builtin_Atomic_Fetch_Xor__:
+                case __Name_Builtin_Machine_Memory_Read__:
+                case __Name_Builtin_Linear_Memory_Grow__:
+                case __Name_Builtin_Linear_Memory_Read__:
+                case __Name_Builtin_Linear_Heap_Base__:
+                case __Name_Builtin_Float_Sqrt__:
+                case __Name_Builtin_Float_Abs__:
+                case __Name_Builtin_Float_Floor__:
+                case __Name_Builtin_Float_Ceil__:
+                case __Name_Builtin_Float_Trunc__:
+                case __Name_Builtin_Float_Round_Even__:
+                case __Name_Builtin_Float_Minimum__:
+                case __Name_Builtin_Float_Maximum__:
+                case __Name_Builtin_Float_Copy_Sign__:
+                case __Name_Builtin_Float_Fused_Multiply_Add__:
                     return expression->__Contextual_Type__;
                 case __Name_Builtin_Capacity__:
                 case __Name_Builtin_Length__:
@@ -550,6 +596,7 @@ __Ast_Type__ *__LLVM_Expression_Type__(__LLVM_Emitter__ *emitter,
                 case __Name_Builtin_Append__:
                 case __Name_Builtin_Swap__:
                 case __Name_Builtin_Release__:
+                case __Name_Builtin_Extend_From__:
                     return &__LLVM_Void_Type__;
                 case __Name_Builtin_None__:
                 {

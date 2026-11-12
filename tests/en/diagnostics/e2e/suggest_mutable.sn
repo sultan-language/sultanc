@@ -1,0 +1,12 @@
+// اختبار: رفض
+// تشخيص: SULTANC-MUTABILITY-WRITE-TO-IMMUTABLE
+// نظير: tests/ar/diagnostics/e2e/suggest_mutable.sn
+// خرج-تشخيص-عربي: suggest_mutable.ar.stderr
+// خرج-تشخيص-إنجليزي: suggest_mutable.en.stderr
+// A write to a `let` without `mutable`: a help, and a machine-applicable
+// fix that inserts `mutable` before the Type (JSON "fixes").
+def main(): i32 {
+    let count: i32 = 3;
+    count := 4;
+    return count;
+}

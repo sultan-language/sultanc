@@ -1,0 +1,2 @@
+// مُثبّت tests/ar/compiler/tooling/partial_project.sn (ليس اختبارا).
+عرف ل(): عدد { أرجع غير_موجود; }

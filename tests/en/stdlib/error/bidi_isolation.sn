@@ -3,7 +3,7 @@
 // خروج: 42
 // تفاضلي: نعم
 // نظير: tests/ar/stdlib/error/bidi_isolation.sn
-// std.text.bidi (docs/ERRORS.md): the direction of a text's first strong
+// std.text.bidi (docs/en/reference/errors.md): the direction of a text's first strong
 // character, isolates U+2068 … U+2069, isolation only where the directions
 // differ; and error_describe_in isolating a Latin message inside Arabic
 // text. Patterns use the canonical Arabic variant names.

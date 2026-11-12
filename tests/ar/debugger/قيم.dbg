@@ -1,0 +1,75 @@
+# جلسة المنقح لـ`قيم.sn`، يشغلها tools/tests/debugger_tests.sh تحت gdb وlldb.
+# الصيغة موصوفة في tests/en/debugger/values.dbg. الأسماء والمسارات عربية
+# بترميز UTF-8: الدوال والمتغيرات والأنواع، والوحدة `أدوات/حساب.sn`.
+
+break @sum_big
+run
+expect مجموع_الكبير
+expect قيم\.sn
+print الجزئي
+expect = 3
+print القيمة
+expect أ = 1.*ب = 2.*ج = 3
+print القيمة.ج
+expect = 3
+bt
+expect مجموع_الكبير
+expect الرئيسية
+
+break @main_bump
+continue
+expect الرئيسية.*قيم\.sn
+print ن
+expect س = 3.*ص = 4
+print الكبير
+expect أ = 1.*ب = 2.*ج = 3
+expect مرحبا
+print ش
+expect مستطيل
+expect س = 3.*ص = 4
+print القيم
+expect length = 3
+print الاسم
+expect عالم
+print الإجمالي
+expect = 6
+print العداد_العام
+expect = 7
+
+break fn زد
+continue
+expect زد
+print *الهدف
+expect = 6
+bt
+expect زد
+expect الرئيسية
+finish
+next
+print الإجمالي
+expect = 7
+
+break @loop
+continue
+expect عد_تصاعديا
+print الفهرس
+expect = 0
+continue
+print الفهرس
+expect = 1
+print المجموع
+expect = 0
+next
+expect المجموع := المجموع \+ الفهرس|الفهرس := الفهرس \+ 1
+
+break fn المجموع_المضاعف
+continue
+expect المجموع_المضاعف
+args
+expect الأول = 25
+expect الثاني = 7
+expect المعامل = 2
+bt
+expect المجموع_المضاعف
+expect حساب\.sn
+expect الرئيسية

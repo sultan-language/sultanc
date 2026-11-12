@@ -1,5 +1,6 @@
 // سياسة نمو المتجه جزء من ميكانيكا Runtime المقننة، وليست قرار ISA أو نظام تشغيل.
-// هذه القيم تطابق سياسة Memory في bootstrap/C وتستهلكها الخلفيات من مالك واحد.
+// سياسة_نمو_المتجه تطابق سياسة Memory في bootstrap/C؛ وتستهلك الخلفيات والمفسر
+// سياسة_نمو_المتجه_لعنصر أدناه من مالك واحد.
 عام نوع سياسة_نمو_متجه = {
     السعة_الدنيا: طبيعي,
     عامل_النمو: طبيعي
@@ -11,4 +12,38 @@
         عامل_النمو: 2
     };
     أرجع السياسة;
+}
+
+// The policy for elements of حجم_العنصر bytes: the first non-zero capacity is
+// Rust's RawVec::MIN_NON_ZERO_CAP: 8 elements of 1 byte (text, byte
+// buffers), 4 elements of up to 1 KiB, 1 element above that. Growth then
+// doubles (append) or takes max(2 x capacity, needed) (extend_from, through
+// سعة_نمو_المتجه below); reserve_exact and a clone stay exact.
+عام عرف سياسة_نمو_المتجه_لعنصر(حجم_العنصر: طبيعي): سياسة_نمو_متجه {
+    دع الدنيا: متغير طبيعي = 1;
+    إذا (حجم_العنصر == 1) {
+        الدنيا := 8;
+    } وإلا {
+        إذا (حجم_العنصر <= 1024) { الدنيا := 4; };
+    };
+    دع السياسة: سياسة_نمو_متجه = {
+        السعة_الدنيا: الدنيا,
+        عامل_النمو: 2
+    };
+    أرجع السياسة;
+}
+
+// The capacity a vector holding السعة elements grows to when it must hold
+// المطلوب (more than السعة): the larger of المطلوب and the policy's next step
+// (السعة × عامل_النمو, at least السعة_الدنيا), as Rust's RawVec::grow_amortized.
+// Append is the case المطلوب = length + 1; extend_from (إلحاق_نطاق_متجه) grows
+// by it too, so appending ranges in a loop stays amortized O(1) per element.
+// reserve_exact (حجز_سعة_متجه) does not use it: it grows to المطلوب exactly.
+// The backends emit this rule as code from the policy's two numbers; the
+// interpreters call it.
+عام عرف سعة_نمو_المتجه(السياسة: &سياسة_نمو_متجه, السعة: طبيعي, المطلوب: طبيعي): طبيعي {
+    دع الناتج: متغير طبيعي = السعة * (*السياسة).عامل_النمو;
+    إذا (الناتج < (*السياسة).السعة_الدنيا) { الناتج := (*السياسة).السعة_الدنيا; };
+    إذا (الناتج < المطلوب) { الناتج := المطلوب; };
+    أرجع الناتج;
 }

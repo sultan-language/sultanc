@@ -1,0 +1,49 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 0
+// نظير: tests/ar/stdlib/behavior/vector_extend_allocations.sn
+// #40, Nahr's GET /large: repeat_text builds a 64 KiB body by appending a
+// 16-byte unit 4,096 times with extend_from. std's allocation counters
+// (process-wide; the machine interpreter answers them under `run`) check that
+// the buffer grows by the amortized rule (سعة_نمو_المتجه in
+// compiler/runtime/vector_memory_policy.sn), not by exactly length + count.
+//
+// Expected per body:
+//   - the first extend into the empty byte buffer: max(16, 2 * 0, 8) = 16
+//     bytes, one allocation;
+//   - then the capacity doubles: 32, 64, ..., 65,536 bytes, 12 reallocations
+//     requesting 131,040 bytes;
+//   - from_bytes copies the 65,536 bytes into the text: one allocation.
+//   That is 2 allocations, 12 reallocations and 196,592 requested bytes
+//   (measured: 12 reallocations and 196,600 bytes per body, natively and
+//   under `run`). The bounds below leave room for a few small allocations.
+// When extend_from grew to exactly length + count, the same body took 4,095
+// reallocations and 134,316,040 requested bytes.
+import std.os.allocation;
+import std.text.transform;
+import std.io.print;
+import std.io.println;
+
+def check(label: string, ok: bool): int {
+    print(label);
+    if (ok) { println(": yes"); return 0; };
+    println(": no");
+    return 1;
+}
+
+def main(): int {
+    let unit: string = "0123456789abcdef";
+    let a0: u64 = allocation_count();
+    let r0: u64 = reallocation_count();
+    let b0: u64 = requested_bytes();
+    let body: string = repeat_text(&unit, 4096);
+    let allocations: u64 = allocation_count() - a0;
+    let reallocations: u64 = reallocation_count() - r0;
+    let bytes: u64 = requested_bytes() - b0;
+    let failed: mutable int = 0;
+    failed := failed + check("the body is 64 KiB", length(body) == 65536);
+    failed := failed + check("at most 4 allocations", allocations <= 4);
+    failed := failed + check("at most 12 reallocations", reallocations <= 12);
+    failed := failed + check("at most 200000 requested bytes", bytes <= 200000);
+    return failed;
+}

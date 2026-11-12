@@ -1,0 +1,119 @@
+// اختبار: تشغيل
+// أهداف: x86_64-linux
+// خروج: 0
+// std.os.poll over loopback TCP on one thread: a connecting client makes the
+// non-blocking listener readable (token 0); the accepted stream is armed
+// one-shot with token 7 and becomes readable when the client writes; after
+// the event it stays disarmed (a wait times out) until it is re-armed for
+// writing, which an idle socket satisfies at once; a read with nothing
+// pending answers would-block. Counterpart:
+// tests/ar/stdlib/behavior/os_poll_tcp.sn. No pair directive: the
+// native and interpreted runs would bind the same fixed loopback port one
+// after the other (the interpreter polls with epoll).
+import std.os.poll;
+import std.net.socket_address;
+import std.net.tcp;
+
+def zeros(n: uint): vector u8 {
+    let out: mutable vector u8 = [];
+    let i: mutable uint = 0;
+    while (i < n) { append(out, 0); i := i + 1; }
+    return out;
+}
+
+def main(): int {
+    if (!poll_supported()) { return 1; };
+    let text: string = "127.0.0.1:38491";
+    let addr: mutable socket_addr;
+    match parse_socket_addr(&text) with
+    | result.err(_) -> { return 2; }
+    | result.ok(a) -> { addr := a; };
+    let listener: tcp_listener;
+    match tcp_bind(&addr, 16) with
+    | result.err(_) -> { return 3; }
+    | result.ok(l) -> { listener := l; };
+    match tcp_listener_set_nonblocking(&listener, true) with
+    | result.err(_) -> { return 4; }
+    | result.ok(_) -> { };
+    let p: poller;
+    match poller_new() with
+    | result.err(_) -> { return 5; }
+    | result.ok(v) -> { p := v; };
+    let events: mutable poll_events = poll_events_new(8);
+
+    // Nothing is ready yet: a short wait times out with no event.
+    match poller_register(&p, tcp_listener_raw_descriptor(&listener), 0 as u64, poll_interest.read()) with
+    | result.err(_) -> { return 6; }
+    | result.ok(_) -> { };
+    match poller_wait(&p, &mutable events, 10) with
+    | result.err(_) -> { return 7; }
+    | result.ok(n) -> { if (n != 0) { return 8; }; };
+
+    let client: tcp_stream;
+    match tcp_connect(&addr) with
+    | result.err(_) -> { return 9; }
+    | result.ok(c) -> { client := c; };
+    match poller_wait(&p, &mutable events, 1000) with
+    | result.err(_) -> { return 10; }
+    | result.ok(n) -> { if (n != 1) { return 11; }; };
+    let first: poll_event = poll_event_at(&events, 0);
+    if (first.الرمز != (0 as u64) || !first.قابل_للقراءة) { return 12; };
+
+    let server: tcp_stream;
+    match tcp_accept(&listener) with
+    | result.err(_) -> { return 13; }
+    | result.ok(s) -> { server := s; };
+    match tcp_stream_set_nonblocking(&server, true) with
+    | result.err(_) -> { return 14; }
+    | result.ok(_) -> { };
+
+    // Nothing to read yet: would-block, not a wait.
+    let buffer: mutable vector u8 = zeros(16);
+    match tcp_read(&server, &mutable buffer, 0, 16) with
+    | result.ok(_) -> { return 15; }
+    | result.err(code) -> { if (!is_would_block(code)) { return 16; }; };
+
+    let fd: int = tcp_stream_raw_descriptor(&server);
+    match poller_register(&p, fd, 7 as u64, poll_interest.read()) with
+    | result.err(_) -> { return 17; }
+    | result.ok(_) -> { };
+    let hello: vector u8 = [0x68, 0x69];
+    match tcp_write(&client, &hello, 0, 2) with
+    | result.err(_) -> { return 18; }
+    | result.ok(n) -> { if (n != 2) { return 19; }; };
+    match poller_wait(&p, &mutable events, 1000) with
+    | result.err(_) -> { return 20; }
+    | result.ok(n) -> { if (n != 1) { return 21; }; };
+    let ready: poll_event = poll_event_at(&events, 0);
+    if (ready.الرمز != (7 as u64) || !ready.قابل_للقراءة) { return 22; };
+
+    // One-shot: the unread bytes do not report again until re-armed.
+    match poller_wait(&p, &mutable events, 10) with
+    | result.err(_) -> { return 23; }
+    | result.ok(n) -> { if (n != 0) { return 24; }; };
+    match tcp_read(&server, &mutable buffer, 0, 16) with
+    | result.err(_) -> { return 25; }
+    | result.ok(n) -> { if (n != 2 || buffer[0] != 0x68 || buffer[1] != 0x69) { return 26; }; };
+
+    match poller_rearm(&p, fd, 7 as u64, poll_interest.write()) with
+    | result.err(_) -> { return 27; }
+    | result.ok(_) -> { };
+    match poller_wait(&p, &mutable events, 1000) with
+    | result.err(_) -> { return 28; }
+    | result.ok(n) -> { if (n != 1) { return 29; }; };
+    let writable: poll_event = poll_event_at(&events, 0);
+    if (writable.الرمز != (7 as u64) || !writable.قابل_للكتابة) { return 30; };
+
+    match poller_deregister(&p, fd) with
+    | result.err(_) -> { return 31; }
+    | result.ok(_) -> { };
+    // The client closes first: TIME_WAIT then stays on its ephemeral port,
+    // not on the fixed listening port the next run binds.
+    let c2: result int, int = tcp_stream_close(client);
+    let c1: result int, int = tcp_stream_close(server);
+    let c3: result int, int = tcp_listener_close(listener);
+    match poller_close(p) with
+    | result.err(_) -> { return 32; }
+    | result.ok(_) -> { };
+    return 0;
+}

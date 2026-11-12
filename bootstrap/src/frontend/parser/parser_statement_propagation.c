@@ -1,4 +1,4 @@
-/* Expands the propagation operator `؟` / `?` (docs/ERRORS.md).
+/* Expands the propagation operator `؟` / `?` (docs/en/reference/errors.md).
  *
  * Stage0 counterpart of compiler/frontend/desugar/propagation.sn: the same
  * four statement forms and the same expansion, built directly as AST. EXPR is

@@ -35,8 +35,8 @@ def main(): int {
     let title: string = نص_المترجم(لغة_تشخيص.الإنجليزية(), مفتاح_نص_مترجم.عنوان_المساعدة());
     let expected: string = "SultanC compiler\n\n";
     if (!texts_equal(&title, &expected)) { return 2; };
-    let reason_text: string = نص_المترجم(لغة_تشخيص.الإنجليزية(), مفتاح_نص_مترجم.حقل_بيان_مطلوب_مفقود());
-    let expected_reason: string = "required manifest field is missing";
+    let reason_text: string = نص_المترجم(لغة_تشخيص.الإنجليزية(), مفتاح_نص_مترجم.حقل_رسم_حزم_مطلوب_مفقود());
+    let expected_reason: string = "required package graph field is missing";
     if (!texts_equal(&reason_text, &expected_reason)) { return 3; };
     let label: string = نص_المترجم(لغة_تشخيص.العربية(), مفتاح_نص_مترجم.وصف_نهاية_الملف());
     let expected_label: string = "نهاية الملف";
@@ -58,6 +58,6 @@ def main(): int {
         | _ -> { };
         number_value := number_value + 1;
     }
-    if (explanation_count != 142) { return 6; };
+    if (explanation_count != 221) { return 6; };
     return 0;
 }

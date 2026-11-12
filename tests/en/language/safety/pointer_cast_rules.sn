@@ -1,0 +1,33 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/language/safety/pointer_cast_rules.sn
+// Pointer casts: what is safe and what needs unsafe. Safe: the same type, a
+// reference to a raw pointer, dropping `mutable`, a raw pointer to its address
+// word, and the bare literal `0 as *T` (null). Inside unsafe: an address word
+// to a pointer, another pointee, to and from *void, adding `mutable`.
+type First = { value: int };
+type Second = { other: int };
+
+def main(): int {
+    let record: mutable First = { value: 30 };
+    let none: *First = 0 as *First;
+    let readable: *First = (&record) as *First;
+    let writable: *mutable First = (&mutable record) as *mutable First;
+    let dropped: *First = writable as *First;
+    let same: *First = readable as *First;
+    let word: u64 = readable as u64;
+    let total: mutable int = 0;
+    if (none == 0 as *First && dropped == same && word != 0) { total := total + 2; };
+    unsafe {
+        let from_word: *First = word as *First;
+        let untyped: *void = from_word as *void;
+        let back: *First = untyped as *First;
+        let other: *Second = back as *Second;
+        let again: *First = other as *First;
+        let gained: *mutable First = again as *mutable First;
+        total := total + (*gained).value + 10;
+    };
+    return total;
+}

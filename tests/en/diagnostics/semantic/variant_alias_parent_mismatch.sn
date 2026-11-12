@@ -1,0 +1,12 @@
+// اختبار: رفض
+// تشخيص: SULTANC-NAME-UNRESOLVED
+// نظير: tests/ar/diagnostics/semantic/variant_alias_parent_mismatch.sn
+// A variant alias whose parent is a distinct type, not an alias of the
+// variant's type, is a user error (it was SULTANC-ICE-CONTEXT).
+public type colour = | red | blue;
+public type shade = colour;
+public alias shade.dark = colour.red;
+
+def main(): int {
+    return 0;
+}

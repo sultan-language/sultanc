@@ -1,0 +1,44 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// نظير: tests/ar/compiler/tooling/cancel_from_thread.sn
+// (no interpreter run: the interpreter runs one OS thread and stops at a spawn).
+// A second thread cancels a running Frontend analysis of the whole compiler
+// through a shared token (an Arc): the analysis stops at its next checkpoint
+// and reports ملغاة, not a diagnostic.
+import compiler.driver.source_inputs;
+import compiler.frontend.semantic_pipeline;
+import compiler.frontend.cancellation;
+import compiler.frontend.module_loading.logical_environment;
+import std.thread.thread;
+import std.sync.arc;
+
+def cancel_later(token: &arc<حالة_إلغاء_واجهة>): void {
+    sleep(0, 200000000);
+    اطلب_إلغاء_واجهة(arc_get(token));
+}
+
+def main(): int {
+    let path: string = "compiler/main.sn";
+    let extras: vector string = [];
+    match ابن_إعداد_تجميع_مباشر(&path, &extras) with
+    | نتيجة_إعداد_تجميع_مباشر.غير_صالح -> { return 1; }
+    | نتيجة_إعداد_تجميع_مباشر.جاهز({ البيئة: env, المفتاح_الجذري: key, المفاتيح_المباشرة: _ }) -> {
+        let request: طلب_واجهة_وحدة = { البيئة: env, المفتاح_الجذري: key, احتفظ_بحقائق_الأدوات: true };
+        let token: arc<حالة_إلغاء_واجهة> = arc_new(حالة_إلغاء_واجهة_جديدة());
+        let reader: arc<حالة_إلغاء_واجهة> = arc_clone(&token);
+        match spawn(fn(): void -> cancel_later(&reader)) with
+        | result.err(_) -> { return 2; }
+        | result.ok(handle) -> {
+            let joined: mutable join_handle = handle;
+            let outcome: int = 3;
+            match ابن_واجهة_وحدة_قابلة_للإلغاء(request, arc_get(&token)) with
+            | نتيجة_بناء_واجهة_قابلة_للإلغاء.ملغاة -> {
+                join(&mutable joined);
+                if (!هل_واجهة_ملغاة(arc_get(&token))) { return 4; }
+                return 42;
+            }
+            | _ -> { join(&mutable joined); return outcome; };
+        };
+    };
+}

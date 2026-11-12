@@ -1,0 +1,24 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// نظير: tests/ar/compiler/c_import_bodies/main.sn
+// Jisr parses function bodies (compiler/jisr/parser.sn, C17 6.8):
+// for/while/do/switch with GNU case ranges, labels, computed goto,
+// statement expressions, asm statements, assignments in conditions, and
+// block-scope declarations that shadow file-scope names until the block
+// ends. Static inline functions are not written (no symbol); what follows
+// them still sees the file scope: count_t is int and struct node is the
+// file's, not the block's.
+import "bodies.h";
+import std.meta.reflect;
+
+// Type-checks the file-scope struct node (a pointer and an int field).
+def make_node(next: *mutable node): node { return { next: next, value: 5 }; }
+
+def main(): int {
+    let c: count_t = 2147483647;
+    if (size_of(&c) != 4) { return 1; };
+    if (NODE_SIZE != 16) { return 2; };
+    if (AFTER_BODIES != 20) { return 3; };
+    return 42;
+}

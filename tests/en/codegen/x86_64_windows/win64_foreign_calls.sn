@@ -1,0 +1,41 @@
+// اختبار: تشغيل
+// أهداف: x86_64-linux,x86_64-windows-msvc
+// خروج: 42
+// نظير: tests/ar/codegen/x86_64_windows/win64_foreign_calls.sn
+// Native x86-64 Windows calls declared foreign functions with the Microsoft
+// x64 convention: arguments by position in RCX/RDX/R8/R9 or XMM0-XMM3
+// (ldexp's double and int take XMM0 and RDX), the fifth and sixth arguments
+// in the stack slots above the 32-byte home area (MultiByteToWideChar), the
+// result in RAX or XMM0. Elsewhere the program checks the same values
+// without the calls.
+if (target.platform == "windows") {
+    extern "msvcrt.dll" def ldexp(value: f64, exponent: i32): f64;
+    extern "kernel32.dll" def MultiByteToWideChar(
+        code_page: u32, flags: u32, text: *u8, length: i32, wide: *mutable u16, wide_length: i32
+    ): i32;
+
+    def scaled(): f64 {
+        let result: mutable f64 = 0.0;
+        unsafe { result := ldexp(0.75, 4); }
+        return result;
+    }
+
+    def widened(): int {
+        let text: mutable vector u8 = [72, 105, 33];
+        let wide: mutable vector u16 = [0, 0, 0, 0, 0, 0, 0, 0];
+        let count: mutable i32 = 0;
+        unsafe { count := MultiByteToWideChar(65001, 0, &mutable text[0], 3, &mutable wide[0], 8); }
+        if (wide[0] != 72 || wide[2] != 33) { return 0; };
+        return count as int;
+    }
+}
+if (target.platform != "windows") {
+    def scaled(): f64 { return 12.0; }
+    def widened(): int { return 3; }
+}
+
+def main(): int {
+    if (scaled() != 12.0) { return 1; };
+    if (widened() != 3) { return 2; };
+    return 42;
+}

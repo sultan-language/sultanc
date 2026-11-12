@@ -1,0 +1,332 @@
+// اختبار: تشغيل
+// أهداف: x86_64-linux
+// خروج: 0
+// نظير: tests/ar/format/formatter.sn
+import std.text.compare;
+import std.text.from_bytes;
+import compiler.format.format;
+import compiler.format.edits;
+import std.fs.temporary;
+import std.fs.write_file;
+import std.fs.path;
+import std.fs.walk;
+
+// The canonical formatter (compiler/format): layout, comments in every
+// position, Arabic and mixed-direction text, both keyword languages,
+// idempotence, edits and range edits, and rejection of sources that do not
+// lex or parse. Each case is checked three ways: the input formats to the
+// expected text, the expected text formats to itself, and the edits applied
+// to the input give the expected text. The formatter is deterministic and
+// formats the text it is given (an unsaved editor buffer), never the file at
+// its path.
+
+def path(): string { return "case.sn"; }
+
+def format_text(text: &string): option string {
+    let name: string = path();
+    match نسق_نص_مصدر(&name, text) with
+    | نتيجة_تنسيق.منسق(out) -> { return option.some(out); }
+    | نتيجة_تنسيق.مرفوض(_) -> { return option.none(); };
+}
+
+def apply_edits(text: &string, edits: &vector تعديل_تنسيق): string {
+    let out: mutable vector u8 = [];
+    let at: mutable uint = 0;
+    let i: mutable uint = 0;
+    while (i < (length(*edits) as uint)) {
+        let edit: &تعديل_تنسيق = &(*edits)[i];
+        extend_from(out, text, at, (*edit).البداية - at);
+        extend_from(out, &(*edit).النص, 0, length((*edit).النص) as uint);
+        at := (*edit).النهاية;
+        i := i + 1;
+    }
+    extend_from(out, text, at, (length(*text) as uint) - at);
+    return out as string;
+}
+
+def edited(text: &string): option string {
+    let name: string = path();
+    match تعديلات_تنسيق_نص(&name, text) with
+    | نتيجة_تعديلات_تنسيق.تعديلات(edits) -> { return option.some(apply_edits(text, &edits)); }
+    | نتيجة_تعديلات_تنسيق.مرفوضة(_) -> { return option.none(); };
+}
+
+def same(a: &option string, expected: &string): bool {
+    match *a with
+    | option.some(v) -> { return texts_equal(&v, expected); }
+    | option.none -> { return false; };
+}
+
+// 0 when the case holds, else which check failed.
+def check_case(input: string, expected: string): int {
+    let once: option string = format_text(&input);
+    if (!same(&once, &expected)) { return 1; };
+    let twice: option string = format_text(&expected);
+    if (!same(&twice, &expected)) { return 2; };
+    let by_edits: option string = edited(&input);
+    if (!same(&by_edits, &expected)) { return 3; };
+    let no_edits: option string = edited(&expected);
+    if (!same(&no_edits, &expected)) { return 4; };
+    return 0;
+}
+
+def rejected(input: string): bool {
+    let once: option string = format_text(&input);
+    match once with
+    | option.some(_) -> { return false; }
+    | option.none -> { };
+    let name: string = path();
+    match تعديلات_تنسيق_نص(&name, &input) with
+    | نتيجة_تعديلات_تنسيق.تعديلات(_) -> { return false; }
+    | نتيجة_تعديلات_تنسيق.مرفوضة(diagnostics) -> { return length(diagnostics.التشخيصات) > 0; };
+}
+
+def main(): int {
+    // Indentation and spacing.
+    if (check_case(«def f(  x: int ):int{
+return x+1;
+}», «def f(x: int): int {
+    return x + 1;
+}
+») != 0) { return 10; };
+    // Continuation lines, brackets, match arms and type variants.
+    if (check_case(«type shape =
+| circle of int
+      | square of int
+;
+def area(s: shape): int {
+let a: int = 1
++ 2;
+match s with
+    | shape.circle(r) -> {
+    return r*r*3;
+    }
+    | shape.square(x) -> { return x * x; };
+}
+def g(a: int,
+b: int): int { return f(
+a,
+b); }
+», «type shape =
+    | circle of int
+    | square of int
+;
+def area(s: shape): int {
+    let a: int = 1
+        + 2;
+    match s with
+    | shape.circle(r) -> {
+        return r * r * 3;
+    }
+    | shape.square(x) -> { return x * x; };
+}
+def g(a: int,
+    b: int): int { return f(
+        a,
+        b); }
+») != 0) { return 11; };
+    // Comments in every position: file head, own line, trailing (aligned),
+    // before a closing brace, inside a parameter list, between continuation
+    // lines, in match arms, in a record literal, at the end of the file.
+    if (check_case(«// head comment
+import std.io.println;   // trailing after import
+
+
+// before a declaration
+def f(
+    // inside parameters
+    x: int, // after a parameter
+    y: int
+): int {
+        // first in a block
+    let z: int = x   // trailing in a continuation
+    // between continuation lines
+        + y;
+    match z with
+    // before an arm
+    | 0 -> { return 0; } // after an arm
+    | _ -> {
+        return z;
+        // before a closing brace
+    };
+}
+type point = { a: int, b: int };
+def p(): point {
+    let q: point = {
+        a: 1, // field comment
+        // own-line field comment
+        b: 2
+    };
+    return q;
+}
+// last comment   », «// head comment
+import std.io.println;   // trailing after import
+
+// before a declaration
+def f(
+    // inside parameters
+    x: int, // after a parameter
+    y: int
+): int {
+    // first in a block
+    let z: int = x   // trailing in a continuation
+        // between continuation lines
+        + y;
+    match z with
+    // before an arm
+    | 0 -> { return 0; } // after an arm
+    | _ -> {
+        return z;
+        // before a closing brace
+    };
+}
+type point = { a: int, b: int };
+def p(): point {
+    let q: point = {
+        a: 1, // field comment
+        // own-line field comment
+        b: 2
+    };
+    return q;
+}
+// last comment
+») != 0) { return 12; };
+    // Arabic identifiers, mixed-direction text, direction marks (RLM
+    // between tokens and in a comment, LRM in a literal) and an isolate
+    // control written as an escape: all byte for byte.
+    if (check_case(«def اسم_عربي(قيمة: int): string {
+    let نص_مختلط: string = "Hello مرحبا ‎x‎ 123";   // تعليق ‏mixed‏ text ؜ALM
+    let escaped: string = "\u2067عزل\u2069";
+    let ‏mark: int = قيمة;
+    return نص_مختلط;
+}», «def اسم_عربي(قيمة: int): string {
+    let نص_مختلط: string = "Hello مرحبا ‎x‎ 123";   // تعليق ‏mixed‏ text ؜ALM
+    let escaped: string = "\u2067عزل\u2069";
+    let ‏mark: int = قيمة;
+    return نص_مختلط;
+}
+») != 0) { return 13; };
+    // Both keyword languages in one source, each kept as written, and a
+    // deprecated spelling kept.
+    if (check_case(«عرف د(س: عدد): عدد {
+    بينما (س>0) { أرجع س; }
+    أرجع 0;
+}
+def e(x: int): int { return د(x); }
+», «عرف د(س: عدد): عدد {
+    بينما (س > 0) { أرجع س; }
+    أرجع 0;
+}
+def e(x: int): int { return د(x); }
+») != 0) { return 14; };
+    // A multi-line literal is not touched, inside or after its first line;
+    // CRLF line ends become LF; trailing spaces go.
+    let crlf: mutable vector u8 = bytes_from_text("def h(): string {  \r\n");
+    append_text_bytes(&mutable crlf, "return «a\r\n    b  \r\n  c»;\r\n}\r\n");
+    let crlf_expected: mutable vector u8 = bytes_from_text("def h(): string {\n");
+    append_text_bytes(&mutable crlf_expected, "    return «a\r\n    b  \r\n  c»;\n}\n");
+    if (check_case(crlf as string, crlf_expected as string) != 0) { return 15; };
+    // Spacing the author chose where tokens cannot decide: type arguments,
+    // a prefix after a name, aligned trailing comments.
+    if (check_case(«def k(m: &map<int, vector *u8>): int {
+    if (a<b && c > d && e<1) { return 1; };
+    return -x*2+&y;
+}», «def k(m: &map<int, vector *u8>): int {
+    if (a<b && c > d && e < 1) { return 1; };
+    return -x * 2 + &y;
+}
+») != 0) { return 16; };
+    // Range edits: only the edits that touch the range.
+    let ranged_input: string = «def r(): int {
+return 1;
+}
+def s(): int {
+return 2;
+}»;
+    let name: string = path();
+    match تعديلات_تنسيق_مدى(&name, &ranged_input, 0, 16) with
+    | نتيجة_تعديلات_تنسيق.تعديلات(edits) -> {
+        let partial: string = apply_edits(&ranged_input, &edits);
+        let expected: string = «def r(): int {
+    return 1;
+}
+def s(): int {
+return 2;
+}»;
+        if (!texts_equal(&partial, &expected)) { return 17; };
+    }
+    | نتيجة_تعديلات_تنسيق.مرفوضة(_) -> { return 18; };
+    // An empty source stays empty.
+    if (check_case(«», «») != 0) { return 19; };
+    // Opaque type declarations, `&«literal»` arguments and `*mutable T`.
+    if (check_case(«type handle =opaque;
+def f(p: * mutable u8, q: vector *mutable u8): int {
+return g( & «text», &mutable p);
+}», «type handle = opaque;
+def f(p: *mutable u8, q: vector *mutable u8): int {
+    return g(&«text», &mutable p);
+}
+») != 0) { return 31; };
+    // Module declarations (a folder's root file): one line each, single
+    // spaces, and what follows a declaration's `;` starts a new line.
+    if (check_case(«module io {ar:دخ,
+    fr: entree_sortie};module fs { ar: ملفات };
+», «module io { ar: دخ, fr: entree_sortie };
+module fs { ar: ملفات };
+») != 0) { return 32; };
+    // Sources that do not lex or parse are rejected, with diagnostics and
+    // no output: a syntax error, an unterminated literal, and a raw
+    // isolate control (U+2067) in a comment.
+    if (!rejected(«def f( { »)) { return 20; };
+    if (!rejected("def f(): string { return \"open; }")) { return 21; };
+    let isolate: mutable vector u8 = bytes_from_text("// before ");
+    append(isolate, 0xE2 as u8);
+    append(isolate, 0x81 as u8);
+    append(isolate, 0xA7 as u8);
+    append_text_bytes(&mutable isolate, " after\ndef f(): int { return 0; }\n");
+    if (!rejected(isolate as string)) { return 22; };
+    // Deterministic: the same input gives the same bytes on every run.
+    let sample: string = «def f(  x: int ):int{ // comment
+return x+1;
+}»;
+    let first: string;
+    match format_text(&sample) with
+    | option.some(v) -> { first := v; }
+    | option.none -> { return 23; };
+    let run: mutable int = 0;
+    while (run < 20) {
+        let again: option string = format_text(&sample);
+        if (!same(&again, &first)) { return 24; };
+        run := run + 1;
+    }
+    // An unsaved buffer: the text given is formatted, not the file on disk at
+    // its path, and a path that does not exist works the same.
+    let prefix: string = "fmt-buffer";
+    match create_temp_dir(&prefix) with
+    | result.err(_) -> { return 25; }
+    | result.ok(dir) -> {
+        let file_name: string = "buffer.sn";
+        let file: string = join(&dir, &file_name);
+        let on_disk: string = "def on_disk(): int { return 0; }\n";
+        match write_file(&file, &on_disk) with
+        | result.err(_) -> { return 26; }
+        | result.ok(_) -> { };
+        let buffer: string = «def buffer( ):int{
+return 1;
+}»;
+        let expected: string = «def buffer(): int {
+    return 1;
+}
+»;
+        match نسق_نص_مصدر(&file, &buffer) with
+        | نتيجة_تنسيق.منسق(out) -> { if (!texts_equal(&out, &expected)) { return 27; }; }
+        | نتيجة_تنسيق.مرفوض(_) -> { return 28; };
+        let missing_name: string = "never_written.sn";
+        let missing: string = join(&dir, &missing_name);
+        match نسق_نص_مصدر(&missing, &buffer) with
+        | نتيجة_تنسيق.منسق(out) -> { if (!texts_equal(&out, &expected)) { return 29; }; }
+        | نتيجة_تنسيق.مرفوض(_) -> { return 30; };
+        let removed: result int, int = remove_tree(&dir);
+    };
+    return 0;
+}

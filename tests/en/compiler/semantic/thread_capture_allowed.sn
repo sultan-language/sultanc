@@ -4,7 +4,7 @@
 // The spawn capture check accepts what may cross threads: an Arc (its count
 // is atomic), an owned value moved into the closure, plain numbers, and a
 // raw pointer when the spawn sits inside an unsafe block, where the
-// programmer vouches for the pointee (docs/TYPE_SYSTEM.md).
+// programmer vouches for the pointee (docs/en/reference/type-system.md).
 import std.thread.thread;
 import std.sync.arc;
 import std.sync.atomic;
