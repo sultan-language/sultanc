@@ -84,16 +84,6 @@
     أرجع اجمع_نصوص(&أجزاء);
 }
 
-// Whether the compiler under test includes the LLVM backend.
-عرف المترجم_بإل_إل_في_إم(): منطقي {
-    دع المترجم: نص = مسار_المترجم();
-    دع الوسائط: متجه نص = [«--lang», «en», «--version»];
-    دع الاسم: نص = «وضع الاختبار إصدار المترجم»;
-    دع النتيجة: نتيجة_أمر = نفذ_أمرا(&المترجم, &الوسائط, &الاسم);
-    دع العلامة: نص = « llvm»;
-    أرجع يحتوي_نصا(&النتيجة.الخرج, &العلامة);
-}
-
 // العلامات: the markers of the failing run (main.sn), of the passing run,
 // of --filter and of a foreign target, in the language ل.
 عرف اختبر_وضع_الاختبار_لغة(
