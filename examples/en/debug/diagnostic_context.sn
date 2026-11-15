@@ -1,0 +1,11 @@
+// Self-checking example: diagnostic_context.
+import std.io.println;
+import std.text.number;
+
+
+def main(): int {
+    let expected: int = 10;
+    let actual: int = 7 + 3;
+    if (expected == actual) { println("expected and actual match"); } else { return 1; };
+    return 0;
+}

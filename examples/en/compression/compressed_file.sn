@@ -1,0 +1,15 @@
+// Compress and decompress bytes: compressed_file.
+import std.io.println;
+import std.text.number;
+import std.text.from_bytes;
+import std.compression.gzip;
+
+
+def main(): int {
+    let source: vector u8 = bytes_from_text("aaaaaaaaaaaaaaa4");
+    let packed: vector u8 = gzip_compress(&source);
+    match gzip_decompress(&packed) with
+    | result.ok(restored) -> { println(uint_to_text(length(restored) as uint)); }
+    | result.err(_) -> { return 1; };
+    return 0;
+}

@@ -1,0 +1,15 @@
+// Bottom-up Fibonacci dynamic programming.
+import std.io.println;
+import std.text.number;
+
+def fib(n: int): int {
+    let a: mutable int = 0; let b: mutable int = 1;
+    let i: mutable int = 0;
+    while (i < n) { let next: int = a + b; a := b; b := next; i := i + 1; };
+    return a;
+}
+
+def main(): int {
+    println(int_to_text(fib(18)));
+    return 0;
+}

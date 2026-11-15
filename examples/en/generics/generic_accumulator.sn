@@ -1,0 +1,10 @@
+// Generic type/function instantiation: generic_accumulator.
+import std.io.println;
+import std.text.number;
+
+def identity<T>(x: T): T { return x; }
+
+def main(): int {
+    println(int_to_text(identity(7)));
+    return 0;
+}

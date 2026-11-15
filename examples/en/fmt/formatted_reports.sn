@@ -1,0 +1,8 @@
+// Format a value with explicit specifiers: formatted_reports.
+import std.fmt.fmt;
+
+
+def main(): int {
+    let r: result uint, fmt_error = println_fmt("{0:06}", [fmt_arg.int(170)]);
+    return 0;
+}

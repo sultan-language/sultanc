@@ -1,0 +1,16 @@
+// Control flow: nested loops.
+import std.io.println;
+import std.text.number;
+
+
+def main(): int {
+    let count: mutable int = 0;
+    for (let i: mutable int = 0; i < 3; i := i + 1) {
+        for (let j: mutable int = 0; j < 4; j := j + 1) {
+            if (i == j) { continue; };
+            count := count + 1;
+        }
+    }
+    println(int_to_text(count));
+    return 0;
+}

@@ -1,0 +1,13 @@
+// Arithmetic mean of a sample.
+import std.io.println;
+import std.text.number;
+import std.math.float;
+
+
+def main(): int {
+    let data: vector f64 = [2.0, 4.0, 6.0, 8.0];
+    match mean_f64(&data) with
+    | option.some(n) -> { if (n > 0.0) { println("mean positive"); }; }
+    | option.none -> { return 1; };
+    return 0;
+}

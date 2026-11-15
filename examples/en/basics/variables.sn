@@ -1,0 +1,11 @@
+// Basic variables example.
+import std.io.println;
+import std.text.number;
+
+
+def main(): int {
+    let x: int = 11;
+    let y: int = 14;
+    println(int_to_text(x + y));
+    return 0;
+}

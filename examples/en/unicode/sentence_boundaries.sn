@@ -1,0 +1,13 @@
+// Unicode processing: sentence_boundaries.
+import std.io.println;
+import std.text.number;
+import std.unicode.sentence_boundary;
+
+
+def main(): int {
+    let text: string = "Hello. How are you?";
+    match حدود_جمل_بايتات_يونيكود(&text) with
+    | result.ok(boundaries) -> { println(uint_to_text(length(boundaries) as uint)); }
+    | result.err(_) -> { return 1; };
+    return 0;
+}

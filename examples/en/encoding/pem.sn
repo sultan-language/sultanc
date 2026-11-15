@@ -1,0 +1,13 @@
+// Decode a PEM block from UTF-8 bytes.
+import std.io.println;
+import std.text.number;
+import std.text.from_bytes;
+import std.encoding.pem;
+
+def main(): int {
+    let text: string = "-----BEGIN DATA-----\nYQ==\n-----END DATA-----\n";
+    let data: vector u8 = bytes_from_text(text);
+    let blocks: vector pem_block = pem_decode(&data);
+    println(uint_to_text(length(blocks) as uint));
+    return 0;
+}

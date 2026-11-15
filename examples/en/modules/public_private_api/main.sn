@@ -1,0 +1,8 @@
+import "helper.sn";
+import std.io.println;
+import std.text.number;
+
+def main(): int {
+    println(int_to_text(module_value(48)));
+    return 0;
+}

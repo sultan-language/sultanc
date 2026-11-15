@@ -1,0 +1,17 @@
+// OS thread example: many_threads.
+import std.io.println;
+import std.text.number;
+import std.thread.thread;
+
+def worker(): void { println("worker running"); }
+def main(): int {
+    let i: mutable int = 0;
+    while (i < 3) {
+    match spawn(fn(): void -> worker()) with
+    | result.err(_) -> { return 1; }
+    | result.ok(handle) -> { let h: mutable join_handle = handle; join(&mutable h); };
+    i := i + 1;
+    };
+    println("workers joined");
+    return 0;
+}

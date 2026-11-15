@@ -1,0 +1,14 @@
+// Start and join an OS thread: spawn_join.
+import std.io.println;
+import std.text.number;
+import std.thread.thread;
+
+def report_worker(): void { println("worker 1"); }
+
+def main(): int {
+    match spawn(fn(): void -> report_worker()) with
+    | result.ok(handle) -> { let h: mutable join_handle = handle; join(&mutable h); }
+    | result.err(_) -> { return 1; };
+    println("joined");
+    return 0;
+}

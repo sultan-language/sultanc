@@ -1,0 +1,13 @@
+// Self-checking example: failure_messages.
+import std.io.println;
+import std.text.number;
+import std.debug.assert;
+
+
+def main(): int {
+    let message: string = "expected exactly three items";
+    let items: vector int = [10, 20, 30];
+    assert_with_message(length(items) == 3, &message);
+    println("size verified");
+    return 0;
+}

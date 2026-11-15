@@ -1,0 +1,15 @@
+// Compress and decompress bytes: stream_compress.
+import std.io.println;
+import std.text.number;
+import std.text.from_bytes;
+import std.compression.deflate;
+
+
+def main(): int {
+    let source: vector u8 = bytes_from_text("aaaaaaaaaaaaaaa5");
+    let packed: vector u8 = deflate_compress(&source);
+    match deflate_decompress(&packed) with
+    | result.ok(restored) -> { println(uint_to_text(length(restored) as uint)); }
+    | result.err(_) -> { return 1; };
+    return 0;
+}

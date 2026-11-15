@@ -1,0 +1,31 @@
+// Actual quick sort implementation over an in-memory graph/vector.
+import std.io.println;
+import std.text.number;
+
+def quicksort(values: &mutable vector int, low: int, high: int): void {
+    if (low >= high) { return; };
+    let pivot: int = (*values)[high];
+    let i: mutable int = low;
+    let j: mutable int = low;
+    while (j < high) {
+        if ((*values)[j] <= pivot) {
+            let temp: int = (*values)[i];
+            (*values)[i] := (*values)[j];
+            (*values)[j] := temp;
+            i := i + 1;
+        };
+        j := j + 1;
+    }
+    let temp: int = (*values)[i];
+    (*values)[i] := (*values)[high];
+    (*values)[high] := temp;
+    if (i > low) { quicksort(values, low, i - 1); };
+    quicksort(values, i + 1, high);
+}
+
+def main(): int {
+    let numbers: mutable vector int = [9, 2, 7, 1, 5, 3];
+    quicksort(&mutable numbers, 0, 5);
+    println(int_to_text(numbers[0] * 100 + numbers[5]));
+    return 0;
+}

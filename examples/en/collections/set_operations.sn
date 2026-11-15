@@ -1,0 +1,25 @@
+// A hash set keeps each value once.
+import std.io.println;
+import std.text.number;
+import std.collections.set;
+
+def hash_int(value: &int): uint { return ((*value) as uint) * 2654435761; }
+def same_int(left: &int, right: &int): bool { return *left == *right; }
+
+def main(): int {
+    let seen: mutable set<int> = new_set(hash_int, same_int);
+    let values: vector int = [4, 8, 4, 15, 8, 16, 4];
+    let i: mutable uint = 0;
+    while (i < (length(values) as uint)) {
+        match set_insert(&mutable seen, values[i]) with
+        | result.ok(_) -> { }
+        | result.err(_) -> { return 1; };
+        i := i + 1;
+    }
+    println(uint_to_text(set_length(&seen)));
+    let fifteen: int = 15;
+    let twenty_three: int = 23;
+    if (set_contains(&seen, &fifteen)) { println("has 15"); };
+    if (!set_contains(&seen, &twenty_three)) { println("no 23"); };
+    return 0;
+}

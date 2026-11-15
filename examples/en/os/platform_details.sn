@@ -1,0 +1,12 @@
+// OS API example: platform_details.
+import std.io.println;
+import std.text.number;
+import std.thread.thread;
+
+
+def main(): int {
+    match available_parallelism() with
+    | result.ok(cores) -> { println(uint_to_text(cores)); }
+    | result.err(_) -> { return 1; };
+    return 0;
+}

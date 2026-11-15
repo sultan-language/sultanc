@@ -1,0 +1,14 @@
+// Text is UTF-8: `length` counts bytes, and characters can be Arabic.
+import std.io.println;
+import std.text.number;
+
+def main(): int {
+    let latin: string = "salam";
+    let arabic: string = "سلام";
+    println(uint_to_text(length(latin) as uint));
+    println(uint_to_text(length(arabic) as uint));
+    println(arabic);
+    let letter: char = 'س';
+    println(uint_to_text(letter as uint));
+    return 0;
+}

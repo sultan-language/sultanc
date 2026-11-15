@@ -1,0 +1,16 @@
+// CLI-style calculator with default sample arguments.
+import std.io.println;
+import std.text.number;
+
+def calculate(a: int, b: int, op: int): int {
+ if (op == 0) { return a + b; };
+ if (op == 1) { return a * b; };
+ if (op == 2) { return a - b; };
+ return 0;
+}
+def main(): int {
+    let action: int = 1;
+    let value: int = calculate(12, 7, action);
+    println(int_to_text(value));
+    return 0;
+}

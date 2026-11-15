@@ -1,0 +1,12 @@
+// SHA-512 digest: sha512.
+import std.io.println;
+import std.text.from_bytes;
+import std.encoding.hex;
+import std.crypto.sha512;
+
+
+def main(): int {
+    let data: vector u8 = bytes_from_text("SultanC");
+    println(hex_encode(&sha512(&data)));
+    return 0;
+}

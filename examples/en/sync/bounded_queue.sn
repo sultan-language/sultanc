@@ -1,0 +1,13 @@
+// Synchronization primitive: bounded_queue.
+import std.io.println;
+import std.text.number;
+import std.sync.channel;
+
+
+def main(): int {
+    let ends: channel_ends<int> = sync_channel<int>(2 as uint);
+    match send(&ends.المرسل, 7) with | result.ok(_) -> { } | result.err(_) -> { return 1; };
+    match send(&ends.المرسل, 9) with | result.ok(_) -> { } | result.err(_) -> { return 2; };
+    match recv(&ends.المستلم) with | result.ok(value) -> { println(int_to_text(value)); } | result.err(_) -> { return 3; };
+    return 0;
+}

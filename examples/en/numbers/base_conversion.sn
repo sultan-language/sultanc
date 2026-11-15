@@ -1,0 +1,10 @@
+// Numbers: base conversion.
+import std.io.println;
+import std.text.number;
+
+
+def main(): int {
+    let n: int = 0x45;
+    println(int_to_text(n));
+    return 0;
+}

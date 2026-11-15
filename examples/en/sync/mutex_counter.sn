@@ -1,0 +1,12 @@
+// Synchronization primitive: mutex_counter.
+import std.io.println;
+import std.text.number;
+import std.sync.mutex;
+
+def add_ten(v: &mutable i64): i64 { *v := *v + 10; return *v; }
+def main(): int {
+    let lock: mutex<i64> = mutex_new(4 as i64);
+    let next: i64 = with_lock(&lock, fn(v: &mutable i64): i64 -> add_ten(v));
+    println(int_to_text(next as int));
+    return 0;
+}

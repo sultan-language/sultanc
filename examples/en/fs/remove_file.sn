@@ -1,0 +1,21 @@
+// File create/read/remove lifecycle: remove_file.
+import std.io.println;
+import std.fs.write_file;
+import std.fs.read_file;
+import std.fs.mutation;
+
+
+def main(): int {
+    let path: string = "sultanc-new-remove_file.tmp";
+    let text: string = "stored by SultanC";
+    match write_file(&path, &text) with
+    | result.ok(_) -> { }
+    | result.err(_) -> { return 1; };
+    match read_file(&path) with
+    | result.ok(value) -> { println(value); }
+    | result.err(_) -> { return 2; };
+    match remove_file(&path) with
+    | result.ok(_) -> { }
+    | result.err(_) -> { return 3; };
+    return 0;
+}

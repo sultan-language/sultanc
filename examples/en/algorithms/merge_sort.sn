@@ -1,0 +1,35 @@
+// Actual merge sort implementation over an in-memory graph/vector.
+import std.io.println;
+import std.text.number;
+
+def merge_sort(values: vector int): vector int {
+    if (length(values) <= 1) { return values; };
+    let middle: int = length(values) / 2;
+    let left: mutable vector int = [];
+    let right: mutable vector int = [];
+    let i: mutable int = 0;
+    while (i < length(values)) {
+        if (i < middle) { append(left, values[i]); }
+        else { append(right, values[i]); };
+        i := i + 1;
+    }
+    let a: vector int = merge_sort(left);
+    let b: vector int = merge_sort(right);
+    let result_value: mutable vector int = [];
+    let x: mutable int = 0;
+    let y: mutable int = 0;
+    while (x < length(a) && y < length(b)) {
+        if (a[x] <= b[y]) { append(result_value, a[x]); x := x + 1; }
+        else { append(result_value, b[y]); y := y + 1; };
+    }
+    while (x < length(a)) { append(result_value, a[x]); x := x + 1; }
+    while (y < length(b)) { append(result_value, b[y]); y := y + 1; }
+    return result_value;
+}
+
+def main(): int {
+    let numbers: vector int = [9, 2, 7, 1, 5, 3];
+    let sorted: vector int = merge_sort(numbers);
+    println(int_to_text(sorted[0] * 100 + sorted[5]));
+    return 0;
+}

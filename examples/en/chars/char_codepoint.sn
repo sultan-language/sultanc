@@ -1,0 +1,10 @@
+// ASCII character classification: char_codepoint.
+import std.io.println;
+import std.text.number;
+import std.chars.ascii;
+
+
+def main(): int {
+    if (is_ascii(69 as u8)) { println("yes"); } else { println("no"); };
+    return 0;
+}

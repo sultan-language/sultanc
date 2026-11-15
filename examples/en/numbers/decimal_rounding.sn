@@ -1,0 +1,11 @@
+// Floating-point decimal rounding.
+import std.io.println;
+import std.text.number;
+
+
+def main(): int {
+    let a: f64 = 25.5;
+    let b: f64 = 25.25;
+    if (a > b) { println("greater"); };
+    return 0;
+}

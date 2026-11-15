@@ -1,0 +1,11 @@
+// Numbers: numeric limits.
+import std.io.println;
+import std.text.number;
+
+
+def main(): int {
+    let low: i8 = -128;
+    let high: u8 = 255;
+    println(int_to_text((low as int) + (high as int)));
+    return 0;
+}

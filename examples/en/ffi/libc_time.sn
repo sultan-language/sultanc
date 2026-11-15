@@ -1,0 +1,12 @@
+// Call the actual C library function time; link with -l c.
+import std.io.println;
+import std.text.number;
+
+extern def time(output: *mutable i64): i64;
+def main(): int {
+    let timestamp: mutable i64 = 0;
+    let answer: mutable i64 = 0;
+    unsafe { answer := time(&mutable timestamp); }
+    if (answer > 0 && timestamp == answer) { println(int_to_text(timestamp as int)); } else { return 1; };
+    return 0;
+}

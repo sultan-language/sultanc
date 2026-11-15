@@ -1,0 +1,8 @@
+// Format a value with explicit specifiers: number_bases.
+import std.fmt.fmt;
+
+
+def main(): int {
+    let r: result uint, fmt_error = println_fmt("{0:#x}", [fmt_arg.int(68)]);
+    return 0;
+}

@@ -1,0 +1,14 @@
+// Count words and Unicode characters in supplied text.
+import std.io.println;
+import std.text.number;
+import std.text.transform;
+import std.text.search;
+
+
+def main(): int {
+    let text: string = "One two three. Four!";
+    let words: vector string = قسم_بالفراغات(&text);
+    println(uint_to_text(length(words) as uint));
+    println(uint_to_text(char_count(&text)));
+    return 0;
+}

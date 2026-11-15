@@ -1,0 +1,10 @@
+// ASCII character classification: ascii_digits.
+import std.io.println;
+import std.text.number;
+import std.chars.ascii;
+
+
+def main(): int {
+    if (is_decimal_digit(66 as u8)) { println("yes"); } else { println("no"); };
+    return 0;
+}

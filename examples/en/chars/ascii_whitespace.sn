@@ -1,0 +1,10 @@
+// ASCII character classification: ascii_whitespace.
+import std.io.println;
+import std.text.number;
+import std.chars.ascii;
+
+
+def main(): int {
+    if (is_ascii_whitespace(67 as u8)) { println("yes"); } else { println("no"); };
+    return 0;
+}

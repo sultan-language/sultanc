@@ -1,0 +1,12 @@
+// Worked web example: mime_lookup.
+import std.io.println;
+import std.text.number;
+import std.mime.mime;
+
+
+def main(): int {
+    let path: string = "photo.png";
+    let media: mime_type = mime_type_from_path_or_default(&path);
+    println(mime_type_text(&media));
+    return 0;
+}

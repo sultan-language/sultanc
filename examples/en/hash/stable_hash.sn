@@ -1,0 +1,10 @@
+// Combine component hashes: stable_hash.
+import std.io.println;
+import std.text.number;
+import std.hash.combine;
+
+
+def main(): int {
+    println(uint_to_text(hash_combine2(32 as uint, 33 as uint)));
+    return 0;
+}

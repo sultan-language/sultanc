@@ -1,0 +1,15 @@
+// Execute a child and report its status: process_pipeline.
+import std.io.println;
+import std.text.number;
+import std.process.child;
+
+
+def main(): int {
+    let program: string = "/bin/sh";
+    let args: vector string = ["-c", "exit 0"];
+    match run_and_wait(&program, &args) with
+    | result.ok(حالة_إنهاء.خرج(code)) -> { println(int_to_text(code)); }
+    | result.ok(_) -> { return 1; }
+    | result.err(_) -> { return 2; };
+    return 0;
+}

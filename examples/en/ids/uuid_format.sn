@@ -1,0 +1,11 @@
+// Worked ids example: uuid_format.
+import std.io.println;
+import std.text.number;
+import std.uuid.uuid;
+
+
+def main(): int {
+    let id: uuid = nil_uuid();
+    println(uuid_to_text(&id));
+    return 0;
+}

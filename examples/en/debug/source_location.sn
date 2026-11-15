@@ -1,0 +1,12 @@
+// Self-checking example: source_location.
+import std.io.println;
+import std.text.number;
+import std.debug.location;
+
+
+def main(): int {
+    let file: string = "example.sn";
+    let loc: source_location = { الملف: &file, السطر: 42 as uint, العمود: 7 as uint };
+    println(source_location_text(&loc));
+    return 0;
+}

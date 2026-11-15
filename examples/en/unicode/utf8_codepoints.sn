@@ -1,0 +1,12 @@
+// Unicode processing: utf8_codepoints.
+import std.io.println;
+import std.text.number;
+import std.unicode.case_folding;
+
+
+def main(): int {
+    let letter: u32 = 65 as u32;
+    let folded: vector u32 = unicode_case_fold(letter);
+    println(uint_to_text(folded[0] as uint));
+    return 0;
+}

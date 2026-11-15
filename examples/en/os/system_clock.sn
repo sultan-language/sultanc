@@ -1,0 +1,14 @@
+// OS API example: system_clock.
+import std.io.println;
+import std.text.number;
+import std.os.clock;
+
+
+def main(): int {
+    let earlier: os_monotonic_instant = أنشئ_لحظة_رتيبة_نظام(125);
+    let later: os_monotonic_instant = أنشئ_لحظة_رتيبة_نظام(300);
+    match os_monotonic_elapsed_checked(&earlier, &later) with
+    | option.some(ns) -> { println(int_to_text(ns)); }
+    | option.none -> { return 1; };
+    return 0;
+}

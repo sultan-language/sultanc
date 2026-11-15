@@ -1,0 +1,20 @@
+// Cooperative task scheduler: async_pipeline.
+import std.io.println;
+import std.text.number;
+import std.async.runtime;
+
+def do_job(n: int): int { yield_task(); return n * 2; }
+
+def main(): int {
+    let first: mutable task<int> = spawn_task(fn(): int -> do_job(7));
+    let second: mutable task<int> = spawn_task(fn(): int -> do_job(8));
+    let total: mutable int = 0;
+    match await_task(&mutable first) with
+    | option.some(n) -> { total := total + n; }
+    | option.none -> { return 1; };
+    match await_task(&mutable second) with
+    | option.some(n) -> { total := total + n; }
+    | option.none -> { return 2; };
+    println(int_to_text(total));
+    return 0;
+}

@@ -1,0 +1,10 @@
+// Output to the standard stream: file_stream.
+import std.io.println;
+import std.text.number;
+
+
+def main(): int {
+    println("output 5");
+    println(int_to_text(7));
+    return 0;
+}

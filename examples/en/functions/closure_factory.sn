@@ -1,0 +1,11 @@
+// A closure captures a value (closure_factory).
+import std.io.println;
+import std.text.number;
+
+def add_offset(offset: int): fn(int): int { return fn(x: int): int -> x + offset; }
+
+def main(): int {
+    let addition: fn(int): int = add_offset(6);
+    println(int_to_text(addition(10)));
+    return 0;
+}

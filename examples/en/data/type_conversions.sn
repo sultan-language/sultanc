@@ -1,0 +1,11 @@
+// Data structures and types: type_conversions.
+import std.io.println;
+import std.text.number;
+
+type Points = int;
+
+def main(): int {
+    let points: Points = 10;
+    println(int_to_text(points));
+    return 0;
+}

@@ -1,0 +1,13 @@
+// Validate required configuration keys in a small text configuration.
+import std.io.println;
+import std.text.number;
+import std.text.search;
+
+
+def main(): int {
+    let required: string = "port=8080;enabled=true";
+    let prefix: string = "port=";
+    let enabled: string = "enabled=true";
+    if (starts_with(&required,&prefix) && contains(&required,&enabled)) { println("config valid"); } else { return 1; };
+    return 0;
+}

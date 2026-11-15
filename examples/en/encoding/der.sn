@@ -1,0 +1,13 @@
+// Parse a real DER SEQUENCE containing one ASN.1 INTEGER.
+import std.io.println;
+import std.text.number;
+import std.encoding.der;
+
+
+def main(): int {
+    let der: vector u8 = [48 as u8, 3 as u8, 2 as u8, 1 as u8, 5 as u8];
+    match der_read_root(&der) with
+    | option.none -> { return 1; }
+    | option.some(element) -> { println("DER root decoded"); };
+    return 0;
+}

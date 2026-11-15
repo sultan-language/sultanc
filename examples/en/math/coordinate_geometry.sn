@@ -1,0 +1,11 @@
+// Integer math exercise: coordinate_geometry.
+import std.io.println;
+import std.text.number;
+
+type Point = { x: int, y: int };
+def area(w: int, h: int): int { return w * h; }
+
+def main(): int {
+    println(int_to_text(area(13, 16)));
+    return 0;
+}

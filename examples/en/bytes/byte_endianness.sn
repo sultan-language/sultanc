@@ -1,0 +1,14 @@
+// Read little-endian binary data: byte_endianness.
+import std.io.println;
+import std.text.number;
+import std.bytes.cursor;
+
+
+def main(): int {
+    let data: vector u8 = [60 as u8, 12, 44, 7];
+    let cursor: mutable byte_cursor = new_byte_cursor(&data);
+    match byte_cursor_read_u16_le(&mutable cursor) with
+    | option.some(n) -> { println(uint_to_text(n as uint)); }
+    | option.none -> { println("missing bytes"); };
+    return 0;
+}

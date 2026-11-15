@@ -1,0 +1,17 @@
+// OS thread example: thread_batches.
+import std.io.println;
+import std.text.number;
+import std.thread.thread;
+
+
+def main(): int {
+    match spawn_value(fn(): int -> 21 * 2) with
+    | result.err(_) -> { return 1; }
+    | result.ok(handle) -> {
+        let thread: mutable value_join_handle<int> = handle;
+        match join_value(&mutable thread) with
+        | option.some(value) -> { println(int_to_text(value)); }
+        | option.none -> { return 2; };
+    };
+    return 0;
+}

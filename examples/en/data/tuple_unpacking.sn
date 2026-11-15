@@ -1,0 +1,11 @@
+// Data structures and types: tuple_unpacking.
+import std.io.println;
+import std.text.number;
+
+
+def main(): int {
+    let tuple: (int, int) = (6, 7);
+    match tuple with
+    | (a, b) -> { println(int_to_text(a + b)); };
+    return 0;
+}

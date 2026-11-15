@@ -1,0 +1,10 @@
+// Observe process arguments.
+import std.io.println;
+import std.text.number;
+import std.process.argument_count;
+
+
+def main(): int {
+    println(uint_to_text(argument_count()));
+    return 0;
+}

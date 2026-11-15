@@ -1,0 +1,15 @@
+// Ownership via borrowed/mutable record: nested_borrows.
+import std.io.println;
+import std.text.number;
+
+type Account = { balance: int };
+def read_account(a: &Account): int { return (*a).balance; }
+def deposit(a: &mutable Account, delta: int): void { (*a).balance := (*a).balance + delta; }
+
+def main(): int {
+    let original: mutable Account = { balance: 50 };
+    deposit(&mutable original, 5);
+    let borrowed: &Account = &original;
+    println(int_to_text(read_account(borrowed)));
+    return 0;
+}

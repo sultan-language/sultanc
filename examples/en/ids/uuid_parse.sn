@@ -1,0 +1,13 @@
+// Worked ids example: uuid_parse.
+import std.io.println;
+import std.text.number;
+import std.uuid.uuid;
+
+
+def main(): int {
+    let input: string = "550e8400-e29b-41d4-a716-446655440000";
+    match parse_uuid(&input) with
+    | result.ok(id) -> { println(uint_to_text(uuid_version(&id))); }
+    | result.err(_) -> { return 1; };
+    return 0;
+}

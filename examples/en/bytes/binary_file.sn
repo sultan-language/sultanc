@@ -1,0 +1,13 @@
+// Construct a binary buffer: binary_file.
+import std.io.println;
+import std.text.number;
+import std.bytes.builder;
+
+
+def main(): int {
+    let builder: mutable byte_builder = new_byte_builder();
+    let inserted: bool = byte_builder_append_byte(&mutable builder, 74 as u8);
+    let data: vector u8 = byte_builder_bytes(&builder);
+    println(uint_to_text(length(data) as uint));
+    return 0;
+}

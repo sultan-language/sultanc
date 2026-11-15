@@ -1,0 +1,14 @@
+// Data structures and types: record_updates.
+import std.io.println;
+import std.text.number;
+
+type Point = { x: int, y: int };
+type Box2D = { start: Point, end: Point };
+
+def main(): int {
+    let start: Point = { x: 4, y: 2 };
+    let end: Point = { x: 10, y: 8 };
+    let rect: Box2D = { start: start, end: end };
+    println(int_to_text(rect.end.x - rect.start.x));
+    return 0;
+}

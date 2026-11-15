@@ -1,0 +1,10 @@
+// ASCII character classification: case_mapping.
+import std.io.println;
+import std.text.number;
+import std.chars.ascii;
+
+
+def main(): int {
+    println(uint_to_text(to_ascii_uppercase(97) as uint));
+    return 0;
+}

@@ -1,0 +1,11 @@
+// Self-checking example: debug_format.
+import std.io.println;
+import std.text.number;
+import std.fmt.fmt;
+
+
+def main(): int {
+    let value: int = 404;
+    println_fmt("debug code: {0:?}", [fmt_arg.int(value)]);
+    return 0;
+}

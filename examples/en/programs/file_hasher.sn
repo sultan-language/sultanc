@@ -1,0 +1,14 @@
+// Compute a SHA-256 content fingerprint, without touching disk.
+import std.io.println;
+import std.text.number;
+import std.crypto.sha256;
+import std.encoding.hex;
+import std.text.from_bytes;
+
+
+def main(): int {
+    let message: vector u8 = bytes_from_text("contents to hash");
+    let digest: vector u8 = sha256(&message);
+    println(hex_encode(&digest));
+    return 0;
+}

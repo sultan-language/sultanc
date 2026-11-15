@@ -1,0 +1,11 @@
+// Basic compound assignments example.
+import std.io.println;
+import std.text.number;
+
+
+def main(): int {
+    let x: mutable int = 25;
+    x := (x * 2) + 1;
+    println(int_to_text(x));
+    return 0;
+}

@@ -1,0 +1,11 @@
+// Generic type/function instantiation: generic_tree.
+import std.io.println;
+import std.text.number;
+
+type Box<T> = { value: T };
+
+def main(): int {
+    let box_value: Box<int> = { value: 9 };
+    println(int_to_text(box_value.value));
+    return 0;
+}

@@ -1,0 +1,8 @@
+// Format a value with explicit specifiers: log_prefixes.
+import std.fmt.fmt;
+
+
+def main(): int {
+    let r: result uint, fmt_error = println_fmt("{0:+}", [fmt_arg.int(153)]);
+    return 0;
+}

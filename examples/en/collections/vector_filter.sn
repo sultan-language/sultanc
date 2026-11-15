@@ -1,0 +1,10 @@
+// Vector aggregation: vector_filter.
+import std.io.println;
+import std.text.number;
+
+def sum_even(values: &vector int): int { let total: mutable int = 0; let i: mutable int = 0; while (i < length(*values)) { if ((*values)[i] % 2 == 0) { total := total + (*values)[i]; }; i := i + 1; }; return total; }
+
+def main(): int {
+    println(int_to_text(sum_even(&[4, 2, 4, 7, 10])));
+    return 0;
+}

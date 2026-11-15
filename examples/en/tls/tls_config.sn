@@ -1,0 +1,13 @@
+// TLS client configuration, offline (tls_config); does not open a TLS socket.
+import std.io.println;
+import std.text.number;
+import std.tls.config;
+
+
+def main(): int {
+    let domain: string = "example.test";
+    let cfg: mutable tls_client_config = tls_client_config_default(&domain);
+    tls_client_config_set_verify(&mutable cfg, true);
+    if (tls_client_config_verifies_peer(&cfg)) { println("peer verification enabled"); } else { return 1; };
+    return 0;
+}

@@ -1,0 +1,11 @@
+// Numbers: signed unsigned.
+import std.io.println;
+import std.text.number;
+
+
+def main(): int {
+    let a: int = -11;
+    let b: uint = 11 as uint;
+    println(int_to_text(a + (b as int)));
+    return 0;
+}

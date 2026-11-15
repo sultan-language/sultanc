@@ -1,0 +1,10 @@
+// Combine component hashes: bucket_distribution.
+import std.io.println;
+import std.text.number;
+import std.hash.combine;
+
+
+def main(): int {
+    println(uint_to_text(hash_combine2(60 as uint, 61 as uint)));
+    return 0;
+}

@@ -1,0 +1,10 @@
+// Basic boolean logic example.
+import std.io.println;
+import std.text.number;
+
+
+def main(): int {
+    let valid: bool = (32 > 0) && (32 < 100);
+    if (valid) { println("true"); } else { println("false"); };
+    return 0;
+}

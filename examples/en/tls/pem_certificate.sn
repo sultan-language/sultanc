@@ -1,0 +1,13 @@
+// TLS certificate validation: pem_certificate; rejects malformed DER input.
+import std.io.println;
+import std.text.number;
+import std.tls.x509;
+
+
+def main(): int {
+    let bytes: vector u8 = [48 as u8, 1 as u8, 2 as u8];
+    match x509_parse_certificate(&bytes) with
+    | option.some(_) -> { return 1; }
+    | option.none -> { println("malformed certificate rejected"); };
+    return 0;
+}

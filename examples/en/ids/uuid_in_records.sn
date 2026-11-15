@@ -1,0 +1,12 @@
+// Worked ids example: uuid_in_records.
+import std.io.println;
+import std.text.number;
+import std.uuid.uuid;
+
+type Account = { id: uuid, name: string };
+def main(): int {
+    let account: Account = { id: nil_uuid(), name: "Example" };
+    println(clone(&account.name));
+    println(uuid_to_text(&account.id));
+    return 0;
+}

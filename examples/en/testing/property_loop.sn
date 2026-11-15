@@ -1,0 +1,12 @@
+// Self-checking example: property_loop.
+import std.io.println;
+import std.text.number;
+import std.debug.assert;
+
+
+def main(): int {
+    let i: mutable int = 0;
+    while (i < 100) { assert(i + 1 > i); i := i + 1; };
+    println("property holds for 100 values");
+    return 0;
+}

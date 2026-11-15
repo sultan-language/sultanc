@@ -1,0 +1,10 @@
+// ASCII character classification: unicode_character.
+import std.io.println;
+import std.text.number;
+import std.chars.ascii;
+
+
+def main(): int {
+    if (is_ascii_printable(71 as u8)) { println("yes"); } else { println("no"); };
+    return 0;
+}

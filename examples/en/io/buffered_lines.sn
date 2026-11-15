@@ -1,0 +1,10 @@
+// Output to the standard stream: buffered_lines.
+import std.io.println;
+import std.text.number;
+
+
+def main(): int {
+    println("output 3");
+    println(int_to_text(5));
+    return 0;
+}

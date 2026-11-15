@@ -1,0 +1,15 @@
+// Pass a callback and compose two transformations (callback_pipeline).
+import std.io.println;
+import std.text.number;
+
+def double(x: int): int { return x * 2; }
+def increment(x: int): int { return x + 1; }
+def apply(f: fn(int): int, x: int): int { return f(x); }
+
+def main(): int {
+    let callback: fn(int): int = double;
+    let first: int = apply(callback, 4);
+    let second: int = apply(increment, first);
+    println(int_to_text(second));
+    return 0;
+}

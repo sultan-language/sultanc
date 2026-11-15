@@ -1,0 +1,12 @@
+// OS thread example: thread_error.
+import std.io.println;
+import std.text.number;
+import std.thread.thread;
+
+
+def main(): int {
+    match available_parallelism() with
+    | result.err(_) -> { println("threads unavailable"); }
+    | result.ok(n) -> { println(uint_to_text(n)); };
+    return 0;
+}

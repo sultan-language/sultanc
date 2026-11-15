@@ -1,0 +1,29 @@
+// Actual breadth first search implementation over an in-memory graph/vector.
+import std.io.println;
+import std.text.number;
+
+def bfs(graph: &vector vector int, start: int): vector int {
+    let visited: mutable vector bool = [false, false, false, false, false];
+    let queue: mutable vector int = [start];
+    let order: mutable vector int = [];
+    visited[start] := true;
+    let head: mutable int = 0;
+    while (head < length(queue)) {
+        let node: int = queue[head]; head := head + 1;
+        append(order, node);
+        let i: mutable int = 0;
+        while (i < length((*graph)[node])) {
+            let neighbor: int = (*graph)[node][i];
+            if (!visited[neighbor]) { visited[neighbor] := true; append(queue, neighbor); };
+            i := i + 1;
+        }
+    }
+    return order;
+}
+
+def main(): int {
+    let graph: vector vector int = [[1, 2], [3], [4], [], []];
+    let result_value: vector int = bfs(&graph, 0);
+    println(int_to_text(length(result_value)));
+    return 0;
+}

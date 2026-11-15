@@ -1,0 +1,13 @@
+// Read an optional environment variable: env_get_default.
+import std.io.println;
+import std.env.environment;
+
+
+def main(): int {
+    let key: string = "PATH";
+    match get_environment_variable(&key) with
+    | result.ok(option.some(_)) -> { println("present"); }
+    | result.ok(option.none) -> { println("unset"); }
+    | result.err(_) -> { println("unavailable"); };
+    return 0;
+}

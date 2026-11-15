@@ -1,0 +1,11 @@
+// Compile-time type introspection: reflect_primitives.
+import std.io.println;
+import std.text.number;
+import std.meta.reflect;
+
+
+def main(): int {
+    let number: i32 = 7 as i32;
+    println(uint_to_text(size_of(&number) as uint));
+    return 0;
+}

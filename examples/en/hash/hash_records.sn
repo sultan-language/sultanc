@@ -1,0 +1,11 @@
+// Stable noncryptographic text hash: hash_records.
+import std.io.println;
+import std.text.number;
+import std.hash.fnv;
+
+
+def main(): int {
+    let value: string = "hash sample 2";
+    println(uint_to_text(hash_text_fnv1a(&value)));
+    return 0;
+}

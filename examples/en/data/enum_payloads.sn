@@ -1,0 +1,13 @@
+// Data structures and types: enum_payloads.
+import std.io.println;
+import std.text.number;
+
+type Event = | Empty | Count of int;
+
+def main(): int {
+    let event: Event = Event.Count(5);
+    match event with
+    | Event.Empty -> { println("empty"); }
+    | Event.Count(n) -> { println(int_to_text(n)); };
+    return 0;
+}

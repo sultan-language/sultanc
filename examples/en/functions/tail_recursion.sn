@@ -1,0 +1,10 @@
+// Tail-position recursive sum.
+import std.io.println;
+import std.text.number;
+
+def sum_tail(n: int, acc: int): int { if (n == 0) { return acc; }; return sum_tail(n - 1, acc + n); }
+
+def main(): int {
+    println(int_to_text(sum_tail(12, 0)));
+    return 0;
+}

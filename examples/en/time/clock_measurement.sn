@@ -1,0 +1,11 @@
+// Month lengths and leap years: clock_measurement.
+import std.io.println;
+import std.text.number;
+import std.time.calendar;
+
+
+def main(): int {
+    println(uint_to_text(days_in_month(2029, 2)));
+    if (is_leap_year(2029)) { println("leap"); };
+    return 0;
+}

@@ -1,0 +1,8 @@
+// Format a value with explicit specifiers: debug_nested.
+import std.fmt.fmt;
+
+
+def main(): int {
+    let r: result uint, fmt_error = println_fmt("{0:?}", [fmt_arg.int(119)]);
+    return 0;
+}

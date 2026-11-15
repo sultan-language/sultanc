@@ -1,0 +1,11 @@
+// OS thread example: thread_worker.
+import std.io.println;
+import std.text.number;
+import std.thread.thread;
+
+
+def main(): int {
+    println(uint_to_text(current_id() as uint));
+    yield_now();
+    return 0;
+}

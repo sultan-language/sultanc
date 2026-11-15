@@ -1,0 +1,11 @@
+// Basic assignments example.
+import std.io.println;
+import std.text.number;
+
+
+def main(): int {
+    let x: mutable int = 18;
+    x := x + 7;
+    println(int_to_text(x));
+    return 0;
+}

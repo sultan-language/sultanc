@@ -1,0 +1,12 @@
+// Synchronization primitive: cancellation_token.
+import std.io.println;
+import std.text.number;
+import std.sync.atomic;
+
+
+def main(): int {
+    let cancelled: atomic_u32 = atomic_u32_new(0 as u32);
+    atomic_u32_store(&cancelled, 1 as u32, ترتيب_ذاكرة.إطلاق());
+    if (atomic_u32_load(&cancelled, ترتيب_ذاكرة.اكتساب()) == (1 as u32)) { println("cancel requested"); } else { return 1; };
+    return 0;
+}

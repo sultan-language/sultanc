@@ -1,0 +1,15 @@
+// Worked web example: uri_encoding.
+import std.io.println;
+import std.text.number;
+import std.uri.uri;
+
+
+def main(): int {
+    let input: string = "hello world!";
+    let encoded: string = percent_encode(&input);
+    println(clone(&encoded));
+    match percent_decode(&encoded) with
+    | result.err(_) -> { return 1; }
+    | result.ok(decoded) -> { println(decoded); };
+    return 0;
+}
