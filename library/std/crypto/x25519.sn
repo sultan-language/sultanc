@@ -2,8 +2,8 @@
 // ladder runs a fixed 255 steps and swaps with masks, so timing does not
 // depend on the scalar.
 
-استورد crypto.field25519;
-استورد crypto.words;
+استورد تشفير.حقل25519;
+استورد تشفير.كلمات;
 
 // X25519(k, u) for a 32-byte scalar and a 32-byte u-coordinate.
 عام عرف إكس25519(العددي: &متجه ط8, النقطة: &متجه ط8): متجه ط8 {

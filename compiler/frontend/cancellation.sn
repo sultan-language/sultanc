@@ -1,4 +1,4 @@
-استورد std.sync.atomic;
+استورد المكتبة.تزامن.ذري;
 
 // Cooperative frontend cancellation owned by the compiler boundary.
 // The LSP/runtime may request cancellation; semantic phases only observe this

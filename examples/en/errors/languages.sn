@@ -1,4 +1,4 @@
-// Phase 3 of the error system (docs/ERRORS.md), optional: an author may give
+// Phase 3 of the error system (docs/en/reference/errors.md), optional: an author may give
 // an error's message in other languages. The program chooses a language
 // from a locale value it passes in, never from global state: here the
 // locale of its environment (SULTANC_LANG, LC_ALL, LC_MESSAGES, LANG) and

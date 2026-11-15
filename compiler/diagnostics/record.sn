@@ -1,7 +1,7 @@
-استورد std.text.from_bytes;
+استورد المكتبة.نصوص.من_بايتات;
 استورد compiler.source.span;
 استورد compiler.source.source_file;
-استورد std.encoding.positions;
+استورد المكتبة.ترميز.مواضع;
 استورد compiler.diagnostics.identity;
 استورد compiler.diagnostics.schema;
 استورد compiler.diagnostics.reason;

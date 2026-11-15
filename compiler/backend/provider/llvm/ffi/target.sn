@@ -80,31 +80,31 @@
 // بدائي_نداء_نواة_خام to it). NVPTX and XCore have no LLVM assembly parser.
 عام عرف هيئ_هدف_إكس_إل_إل_في_إم(): فراغ {
     LLVMInitializeX86TargetInfo(); LLVMInitializeX86Target(); LLVMInitializeX86TargetMC();
-        LLVMInitializeX86AsmPrinter(); LLVMInitializeX86AsmParser();
+    LLVMInitializeX86AsmPrinter(); LLVMInitializeX86AsmParser();
 }
 عام عرف هيئ_هدف_ذراع64_إل_إل_في_إم(): فراغ {
     LLVMInitializeAArch64TargetInfo(); LLVMInitializeAArch64Target(); LLVMInitializeAArch64TargetMC();
-        LLVMInitializeAArch64AsmPrinter(); LLVMInitializeAArch64AsmParser();
+    LLVMInitializeAArch64AsmPrinter(); LLVMInitializeAArch64AsmParser();
 }
 عام عرف هيئ_هدف_ذراع_إل_إل_في_إم(): فراغ {
     LLVMInitializeARMTargetInfo(); LLVMInitializeARMTarget(); LLVMInitializeARMTargetMC();
-        LLVMInitializeARMAsmPrinter(); LLVMInitializeARMAsmParser();
+    LLVMInitializeARMAsmPrinter(); LLVMInitializeARMAsmParser();
 }
 عام عرف هيئ_هدف_بي_بي_إف_إل_إل_في_إم(): فراغ {
     LLVMInitializeBPFTargetInfo(); LLVMInitializeBPFTarget(); LLVMInitializeBPFTargetMC();
-        LLVMInitializeBPFAsmPrinter(); LLVMInitializeBPFAsmParser();
+    LLVMInitializeBPFAsmPrinter(); LLVMInitializeBPFAsmParser();
 }
 عام عرف هيئ_هدف_إن_في_بي_تي_إكس_إل_إل_في_إم(): فراغ {
     LLVMInitializeNVPTXTargetInfo(); LLVMInitializeNVPTXTarget(); LLVMInitializeNVPTXTargetMC();
-        LLVMInitializeNVPTXAsmPrinter();
+    LLVMInitializeNVPTXAsmPrinter();
 }
 عام عرف هيئ_هدف_رايسك_في_إل_إل_في_إم(): فراغ {
     LLVMInitializeRISCVTargetInfo(); LLVMInitializeRISCVTarget(); LLVMInitializeRISCVTargetMC();
-        LLVMInitializeRISCVAsmPrinter(); LLVMInitializeRISCVAsmParser();
+    LLVMInitializeRISCVAsmPrinter(); LLVMInitializeRISCVAsmParser();
 }
 عام عرف هيئ_هدف_ويب_أسمبلي_إل_إل_في_إم(): فراغ {
     LLVMInitializeWebAssemblyTargetInfo(); LLVMInitializeWebAssemblyTarget();
-        LLVMInitializeWebAssemblyTargetMC(); LLVMInitializeWebAssemblyAsmPrinter(); LLVMInitializeWebAssemblyAsmParser();
+    LLVMInitializeWebAssemblyTargetMC(); LLVMInitializeWebAssemblyAsmPrinter(); LLVMInitializeWebAssemblyAsmParser();
 }
 // LLVM backends that LLVM's Windows C API library (`LLVM-C.dll`, imported by
 // name on Windows: runtime_symbol_query_context.sn
@@ -184,66 +184,66 @@
     عام خارجي عرف LLVMInitializeSPIRVAsmPrinter(): فراغ;
     عام عرف هيئ_هدف_سبير_في_إل_إل_في_إم(): فراغ {
         LLVMInitializeSPIRVTargetInfo(); LLVMInitializeSPIRVTarget(); LLVMInitializeSPIRVTargetMC();
-            LLVMInitializeSPIRVAsmPrinter();
+        LLVMInitializeSPIRVAsmPrinter();
     }
     عام عرف هيئ_هدف_إيه_إم_دي_جي_بي_يو_إل_إل_في_إم(): فراغ {
         LLVMInitializeAMDGPUTargetInfo(); LLVMInitializeAMDGPUTarget(); LLVMInitializeAMDGPUTargetMC();
-            LLVMInitializeAMDGPUAsmPrinter(); LLVMInitializeAMDGPUAsmParser();
+        LLVMInitializeAMDGPUAsmPrinter(); LLVMInitializeAMDGPUAsmParser();
     }
 
     عام عرف هيئ_هدف_إيه_في_آر_إل_إل_في_إم(): فراغ {
         LLVMInitializeAVRTargetInfo(); LLVMInitializeAVRTarget(); LLVMInitializeAVRTargetMC();
-            LLVMInitializeAVRAsmPrinter(); LLVMInitializeAVRAsmParser();
+        LLVMInitializeAVRAsmPrinter(); LLVMInitializeAVRAsmParser();
     }
 
     عام عرف هيئ_هدف_هيكساغون_إل_إل_في_إم(): فراغ {
         LLVMInitializeHexagonTargetInfo(); LLVMInitializeHexagonTarget(); LLVMInitializeHexagonTargetMC();
-            LLVMInitializeHexagonAsmPrinter(); LLVMInitializeHexagonAsmParser();
+        LLVMInitializeHexagonAsmPrinter(); LLVMInitializeHexagonAsmParser();
     }
 
     عام عرف هيئ_هدف_لاناي_إل_إل_في_إم(): فراغ {
         LLVMInitializeLanaiTargetInfo(); LLVMInitializeLanaiTarget(); LLVMInitializeLanaiTargetMC();
-            LLVMInitializeLanaiAsmPrinter(); LLVMInitializeLanaiAsmParser();
+        LLVMInitializeLanaiAsmPrinter(); LLVMInitializeLanaiAsmParser();
     }
 
     عام عرف هيئ_هدف_لونغ_آرتش_إل_إل_في_إم(): فراغ {
         LLVMInitializeLoongArchTargetInfo(); LLVMInitializeLoongArchTarget(); LLVMInitializeLoongArchTargetMC();
-            LLVMInitializeLoongArchAsmPrinter(); LLVMInitializeLoongArchAsmParser();
+        LLVMInitializeLoongArchAsmPrinter(); LLVMInitializeLoongArchAsmParser();
     }
 
     عام عرف هيئ_هدف_ميبس_إل_إل_في_إم(): فراغ {
         LLVMInitializeMipsTargetInfo(); LLVMInitializeMipsTarget(); LLVMInitializeMipsTargetMC();
-            LLVMInitializeMipsAsmPrinter(); LLVMInitializeMipsAsmParser();
+        LLVMInitializeMipsAsmPrinter(); LLVMInitializeMipsAsmParser();
     }
 
     عام عرف هيئ_هدف_إم_إس_بي_أربعمئة_وثلاثون_إل_إل_في_إم(): فراغ {
         LLVMInitializeMSP430TargetInfo(); LLVMInitializeMSP430Target(); LLVMInitializeMSP430TargetMC();
-            LLVMInitializeMSP430AsmPrinter(); LLVMInitializeMSP430AsmParser();
+        LLVMInitializeMSP430AsmPrinter(); LLVMInitializeMSP430AsmParser();
     }
 
     عام عرف هيئ_هدف_باور_بي_سي_إل_إل_في_إم(): فراغ {
         LLVMInitializePowerPCTargetInfo(); LLVMInitializePowerPCTarget(); LLVMInitializePowerPCTargetMC();
-            LLVMInitializePowerPCAsmPrinter(); LLVMInitializePowerPCAsmParser();
+        LLVMInitializePowerPCAsmPrinter(); LLVMInitializePowerPCAsmParser();
     }
 
     عام عرف هيئ_هدف_سبارك_إل_إل_في_إم(): فراغ {
         LLVMInitializeSparcTargetInfo(); LLVMInitializeSparcTarget(); LLVMInitializeSparcTargetMC();
-            LLVMInitializeSparcAsmPrinter(); LLVMInitializeSparcAsmParser();
+        LLVMInitializeSparcAsmPrinter(); LLVMInitializeSparcAsmParser();
     }
 
     عام عرف هيئ_هدف_سيستم_زد_إل_إل_في_إم(): فراغ {
         LLVMInitializeSystemZTargetInfo(); LLVMInitializeSystemZTarget(); LLVMInitializeSystemZTargetMC();
-            LLVMInitializeSystemZAsmPrinter(); LLVMInitializeSystemZAsmParser();
+        LLVMInitializeSystemZAsmPrinter(); LLVMInitializeSystemZAsmParser();
     }
 
     عام عرف هيئ_هدف_في_إي_إل_إل_في_إم(): فراغ {
         LLVMInitializeVETargetInfo(); LLVMInitializeVETarget(); LLVMInitializeVETargetMC();
-            LLVMInitializeVEAsmPrinter(); LLVMInitializeVEAsmParser();
+        LLVMInitializeVEAsmPrinter(); LLVMInitializeVEAsmParser();
     }
 
     عام عرف هيئ_هدف_إكس_كور_إل_إل_في_إم(): فراغ {
         LLVMInitializeXCoreTargetInfo(); LLVMInitializeXCoreTarget(); LLVMInitializeXCoreTargetMC();
-            LLVMInitializeXCoreAsmPrinter();
+        LLVMInitializeXCoreAsmPrinter();
     }
 }
 
@@ -264,7 +264,7 @@
 }
 
 عام عرف طبع_ثلاثي_إل_إل_في_إم(الثلاثي: مؤشر_محرف_ثابت_إل_إل_في_إم): مؤشر_محرف_متغير_إل_إل_في_إم { أرجع
-    LLVMNormalizeTargetTriple(الثلاثي); }
+        LLVMNormalizeTargetTriple(الثلاثي); }
 عام عرف ابحث_هدف_إل_إل_في_إم(الثلاثي: مؤشر_محرف_ثابت_إل_إل_في_إم, الهدف: *متغير مرجع_هدف_إل_إل_في_إم, الرسالة:
     *متغير مؤشر_محرف_متغير_إل_إل_في_إم): منطق_إل_إل_في_إم { أرجع LLVMGetTargetFromTriple(الثلاثي, الهدف,
-    الرسالة); }
+        الرسالة); }

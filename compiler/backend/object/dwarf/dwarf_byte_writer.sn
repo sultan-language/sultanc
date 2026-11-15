@@ -1,4 +1,4 @@
-استورد std.encoding.binary;
+استورد المكتبة.ترميز.ثنائي;
 استورد compiler.backend.object.dwarf.dwarf_model;
 استورد compiler.backend.object.dwarf.dwarf_policy;
 استورد compiler.backend.object.dwarf.dwarf_constants;

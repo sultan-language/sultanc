@@ -1,4 +1,4 @@
-استورد os.error;
+استورد نظام_التشغيل.أخطاء;
 
 // Windows thread-last-error is separate from Winsock's WSAGetLastError().
 خارجي «kernel32.dll» عرف GetLastError(): ط32;

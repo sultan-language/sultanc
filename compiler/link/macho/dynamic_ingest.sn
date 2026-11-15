@@ -1,7 +1,7 @@
 استورد compiler.link.context;
 استورد compiler.link.model;
 استورد compiler.link.resolution;
-استورد std.fs.path;
+استورد المكتبة.ملفات.مسار;
 استورد compiler.backend.target.target_model;
 استورد compiler.link.macho.text_stub;
 

@@ -1,7 +1,7 @@
-استورد os.error;
-استورد encoding.utf16;
-استورد text.from_bytes;
-استورد os.platform.windows.win32.error;
+استورد نظام_التشغيل.أخطاء;
+استورد ترميز.يوتيف16;
+استورد نصوص.من_بايتات;
+استورد نظام_التشغيل.منصات.ويندوز.وين32.أخطاء;
 
 // The whole environment block (MSDN): GetEnvironmentStringsW returns
 // "NAME=VALUE\0" UTF-16 strings ended by an empty string; the block is

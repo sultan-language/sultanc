@@ -1,5 +1,5 @@
-استورد unicode.algorithms.lookup;
-استورد unicode.data.categories;
+استورد يونيكود.خوارزميات.بحث;
+استورد يونيكود.بيانات.فئات;
 
 // UCD 18.0.0 general category, including surrogate and private-use code points.
 عام نوع فئة_يونيكود =

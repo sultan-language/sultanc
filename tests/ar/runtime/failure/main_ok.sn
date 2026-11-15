@@ -6,7 +6,7 @@
 // نظير: tests/en/runtime/failure/main_ok.sn
 // `main` returning `نتيجة عدد, فشل` (docs/en/reference/errors.md): on success the program
 // exits with the value, as an entry returning `عدد` does.
-استورد المكتبة.أخطاء.failure;
+استورد المكتبة.أخطاء.فشل;
 
 عرف نصف(س: عدد): نتيجة عدد, فشل {
     إذا ((س % 2) != 0) { أرجع نتيجة.خطأ(فشل_من(«عدد فردي»)); };

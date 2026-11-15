@@ -9,7 +9,7 @@
 استورد compiler.frontend.names.name_context;
 استورد compiler.frontend.lexer.token;
 استورد compiler.frontend.lexer.token_identity;
-استورد std.text.from_bytes;
+استورد المكتبة.نصوص.من_بايتات;
 استورد compiler.diagnostics.schema;
 
 // One type printer for tooling and diagnostics. Spelling follows the requested

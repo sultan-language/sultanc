@@ -4,11 +4,11 @@
 // async TCP transport (std.async.net) suspends the task serving the
 // connection instead of the thread whenever the socket is not ready.
 
-استورد net.tcp;
-استورد tls.stream;
-استورد net.socket_names;
-استورد net.socket_address;
-استورد async.net;
+استورد شبكة.تي_سي_بي;
+استورد تي_إل_إس.مجرى;
+استورد شبكة.أسماء_المقابس;
+استورد شبكة.عنوان_مقبس;
+استورد غير_متزامن.شبكة;
 
 عام نوع ناقل_ويب =
     | تي_سي_بي بنوع تدفق_تي_سي_بي

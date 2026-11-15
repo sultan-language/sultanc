@@ -4,9 +4,9 @@
 استورد compiler.jisr.jisr;
 استورد compiler.driver.library_search;
 استورد compiler.backend.target.target_model;
-استورد std.fs.mutation;
-استورد std.fs.path;
-استورد std.text.from_bytes;
+استورد المكتبة.ملفات.تعديل;
+استورد المكتبة.ملفات.مسار;
+استورد المكتبة.نصوص.من_بايتات;
 
 // C translation units imported with `import "x.c"` are compiled by Jisr
 // into their SultanC module (compiler/jisr/lower.sn); with

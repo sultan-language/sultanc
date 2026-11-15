@@ -7,8 +7,8 @@
 // without storage does: passed to a library or user function, bound to a
 // reference, inside a loop, of an Arabic text, shadowed by a local; a vector
 // global (static storage) is borrowed in place.
-استورد std.text.from_bytes;
-استورد std.text.compare;
+استورد المكتبة.نصوص.من_بايتات;
+استورد المكتبة.نصوص.مقارنة;
 
 دع الاسم: نص = «Sultan»;
 دع الاسم_العربي: نص = «السلطان»;

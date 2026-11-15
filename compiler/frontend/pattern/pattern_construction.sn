@@ -1,4 +1,4 @@
-استورد std.text.from_bytes;
+استورد المكتبة.نصوص.من_بايتات;
 استورد compiler.frontend.pattern.pattern_model;
 استورد compiler.frontend.pattern.pattern_registry;
 استورد compiler.frontend.ast.name;
@@ -41,7 +41,6 @@
         أرجع نتيجة.خطأ(خطأ_بناء_نمط.هوية_اسم_مفقودة(الاسم.النطاق));
     };
 }
-
 
 عرف قنن_قيمة_نمط_حرفي(الحرفي: &حرفي): اختياري قيمة_نمط_حرفي {
     دع القيمة: حرفي = *الحرفي;

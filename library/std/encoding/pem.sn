@@ -3,10 +3,10 @@
 // a block with mismatched labels or invalid base64 is skipped, and the caller
 // decides whether that is acceptable (a CA bundle may contain other blocks).
 
-استورد bytes.compare;
-استورد chars.ascii;
-استورد encoding.base64;
-استورد text.from_bytes;
+استورد بايتات.مقارنة;
+استورد حروف.أسكي;
+استورد ترميز.قاعدة64;
+استورد نصوص.من_بايتات;
 
 عام نوع كتلة_بي_إي_إم = {
     الوصف: متجه ط8,

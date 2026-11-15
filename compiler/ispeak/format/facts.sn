@@ -52,7 +52,6 @@
     الموجود: اختياري طبيعي
 };
 
-
 // The diagnostic record's 22 established named argument keys. A context is
 // a presentation payload, not a second diagnostic record or identity registry.
 // Fields are directly addressed; formatting cost is bounded by this fixed shape.

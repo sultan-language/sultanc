@@ -6,8 +6,8 @@
 // نواتج النداءات تترك البايتات الحية في المخصص كما كانت.
 // النظير: tests/en/language/surface/temporary_members_rss_flat.sn. لا توجيه
 // نظير له: المفسر لا يستعمل مخصص std الذي تقرأ هذه الشفرة عداداته.
-استورد std.os.allocation;
-استورد std.text.number;
+استورد المكتبة.نظام_التشغيل.تخصيص;
+استورد المكتبة.نصوص.أعداد;
 
 نوع Inner = { name: نص, n: عدد };
 نوع Rec = { name: نص, id: عدد, callback: دالة(عدد): عدد, inner: Inner, items: متجه نص };

@@ -23,8 +23,8 @@
 استورد compiler.backend.target.target_registry;
 استورد compiler.diagnostics.engine;
 استورد compiler.source.span;
-استورد std.text.search;
-استورد std.text.transform;
+استورد المكتبة.نصوص.بحث;
+استورد المكتبة.نصوص.تحويل;
 
 عرف المضيف(): اختياري واصف_هدف {
     طابق حل_هدف_المضيف_المسجل() مع

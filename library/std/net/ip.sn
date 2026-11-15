@@ -1,4 +1,4 @@
-استورد text.from_bytes;
+استورد نصوص.من_بايتات;
 
 // Portable IP address values. These types contain no native sockaddr/AF_* state.
 عام نوع عنوان_آيبي4 = {

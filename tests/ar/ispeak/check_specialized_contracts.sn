@@ -3,7 +3,7 @@
 // خروج: 0
 // نظير: tests/en/ispeak/check_specialized_contracts.sn
 استورد compiler.ispeak.keys.surface;
-استورد std.text.from_bytes;
+استورد المكتبة.نصوص.من_بايتات;
 استورد compiler.diagnostics.schema;
 استورد compiler.ispeak.ispeak;
 استورد compiler.diagnostics.identity;

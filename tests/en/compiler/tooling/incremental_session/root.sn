@@ -1,0 +1,7 @@
+// Fixture of tests/en/compiler/tooling/incremental_session.sn (not a test).
+import "lib.sn";
+import "user.sn";
+import "other.sn";
+import "width.sn";
+import std.text.number;
+def main(): int { return scale(2) + use_scale() + other_value() + width_value() + (length(uint_to_text(7)) as int); }

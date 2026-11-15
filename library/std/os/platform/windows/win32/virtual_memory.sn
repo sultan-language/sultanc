@@ -1,5 +1,5 @@
-استورد os.error;
-استورد os.platform.windows.win32.error;
+استورد نظام_التشغيل.أخطاء;
+استورد نظام_التشغيل.منصات.ويندوز.وين32.أخطاء;
 
 // Win32 virtual memory has distinct reserve/commit and release semantics.
 // These kernel32 interfaces are not CRT allocators or POSIX mmap wrappers.

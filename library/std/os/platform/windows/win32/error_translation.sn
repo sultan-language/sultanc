@@ -1,4 +1,4 @@
-استورد os.error;
+استورد نظام_التشغيل.أخطاء;
 
 // Win32 system-error codes: WinError.h, Microsoft System Error Codes (0-499).
 // Classification never changes the original GetLastError identity.

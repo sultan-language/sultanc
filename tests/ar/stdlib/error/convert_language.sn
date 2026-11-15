@@ -6,18 +6,18 @@
 // std.error converters (docs/en/reference/errors.md): every variant of every pilot enum
 // gives an Arabic message with an English language version; an Arabic
 // locale, or one without a version, gets the Arabic message.
-استورد المكتبة.أخطاء.failure;
-استورد المكتبة.أخطاء.from_os;
-استورد المكتبة.أخطاء.from_number;
-استورد المكتبة.أخطاء.from_json;
-استورد المكتبة.أخطاء.from_net;
-استورد المكتبة.ملفات.error;
-استورد المكتبة.نصوص.number;
-استورد المكتبة.json.value;
-استورد المكتبة.شبكة.ip;
-استورد المكتبة.شبكة.socket_address;
-استورد المكتبة.نصوص.language;
-استورد المكتبة.نصوص.compare;
+استورد المكتبة.أخطاء.فشل;
+استورد المكتبة.أخطاء.من_نظام;
+استورد المكتبة.أخطاء.من_عدد;
+استورد المكتبة.أخطاء.من_جسون;
+استورد المكتبة.أخطاء.من_شبكة;
+استورد المكتبة.ملفات.أخطاء;
+استورد المكتبة.نصوص.أعداد;
+استورد المكتبة.جسون.قيمة;
+استورد المكتبة.شبكة.آيبي;
+استورد المكتبة.شبكة.عنوان_مقبس;
+استورد المكتبة.نصوص.لغة;
+استورد المكتبة.نصوص.مقارنة;
 
 // An English version that differs from the Arabic message, which Arabic and
 // French locales still get.

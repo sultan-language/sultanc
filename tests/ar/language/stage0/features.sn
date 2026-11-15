@@ -11,8 +11,8 @@
 // and float casts, wrapping arithmetic, pop/truncate/capacity/reserve,
 // members of call results, `؟`, and إنهيار ending its path. Native, the
 // interpreter and Stage0 agree.
-استورد std.math.wrapping;
-استورد std.process.panic;
+استورد المكتبة.رياضيات.التفاف;
+استورد المكتبة.عمليات.انهيار;
 
 دع الحد: عدد = 6 * 7;
 دع الأرقام: متجه ط32 = [3, 1, 4];

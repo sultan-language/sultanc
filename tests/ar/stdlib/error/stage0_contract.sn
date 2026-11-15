@@ -9,15 +9,15 @@
 // Stage0 too. from_json and from_net are left out: std.json and
 // std.net.socket_address themselves are beyond Stage0.
 // Imports use std paths: Stage0 does not resolve Arabic package aliases.
-استورد std.error.failure;
-استورد std.error.from_os;
-استورد std.error.from_number;
-استورد std.error.context;
-استورد std.fs.error;
-استورد std.text.number;
-استورد std.text.language;
-استورد std.text.bidi;
-استورد std.text.system_language;
+استورد المكتبة.أخطاء.فشل;
+استورد المكتبة.أخطاء.من_نظام;
+استورد المكتبة.أخطاء.من_عدد;
+استورد المكتبة.أخطاء.سياق;
+استورد المكتبة.ملفات.أخطاء;
+استورد المكتبة.نصوص.أعداد;
+استورد المكتبة.نصوص.لغة;
+استورد المكتبة.نصوص.اتجاه;
+استورد المكتبة.نصوص.لغة_النظام;
 
 عرف الرئيسية(): عدد {
     دع الجذر: فشل = فشل_بهوية(«std.fs», «غير_موجود», «الملف غير موجود»);

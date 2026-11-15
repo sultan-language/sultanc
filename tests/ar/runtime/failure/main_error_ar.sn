@@ -10,10 +10,10 @@
 // the one runtime-failure path, the iSpeak frame "the program ended with an
 // error" in the program's language (SULTANC_LANG=ar) and the error's صف_فشل
 // text, exit status 1; native and interpreter agree.
-استورد المكتبة.أخطاء.failure;
-استورد المكتبة.أخطاء.context;
-استورد المكتبة.أخطاء.from_number;
-استورد المكتبة.نصوص.number;
+استورد المكتبة.أخطاء.فشل;
+استورد المكتبة.أخطاء.سياق;
+استورد المكتبة.أخطاء.من_عدد;
+استورد المكتبة.نصوص.أعداد;
 
 عرف اقرأ_المنفذ(النص: نص): نتيجة عدد, فشل {
     دع المنفذ: عدد = إلى_فشل(حلل_عدد(&النص), فشل_من_خطأ_تحليل_عدد)؟;

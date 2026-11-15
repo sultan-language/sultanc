@@ -1,6 +1,6 @@
-استورد std.json.escape;
-استورد std.text.from_bytes;
-استورد std.text.number;
+استورد المكتبة.جسون.هروب;
+استورد المكتبة.نصوص.من_بايتات;
+استورد المكتبة.نصوص.أعداد;
 استورد compiler.source.span;
 استورد compiler.diagnostics.identity;
 استورد compiler.diagnostics.reason;
@@ -11,10 +11,10 @@
 استورد compiler.diagnostics.output.writer;
 استورد compiler.diagnostics.schema;
 استورد compiler.source.source_file;
-استورد std.encoding.utf8;
+استورد المكتبة.ترميز.يوتيف8;
 استورد compiler.ispeak.ispeak;
 استورد compiler.diagnostics.suggestions;
-استورد std.encoding.positions;
+استورد المكتبة.ترميز.مواضع;
 
 // JSON output is the stable structured diagnostic transport for tools and LSP bridges.
 

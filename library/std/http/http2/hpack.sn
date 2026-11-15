@@ -15,8 +15,8 @@
 // (authorization, cookies) which use never-indexed literals (6.2.3), and
 // Huffman-codes a string when that is shorter.
 
-استورد text.from_bytes;
-استورد http.model;
+استورد نصوص.من_بايتات;
+استورد ويب.نموذج;
 
 عام نوع خطأ_إتش_باك =
     | نهاية_غير_متوقعة

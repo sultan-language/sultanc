@@ -1,4 +1,4 @@
-استورد std.collections.map;
+استورد المكتبة.مجموعات.خريطة;
 استورد compiler.source.span;
 استورد compiler.frontend.names.identifiers;
 

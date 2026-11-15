@@ -1,8 +1,8 @@
-استورد os.environment_validation;
-استورد os.path;
-استورد os.error;
-استورد os.platform.windows.win32.error;
-استورد encoding.utf16;
+استورد نظام_التشغيل.تحقق_البيئة;
+استورد نظام_التشغيل.مسار;
+استورد نظام_التشغيل.أخطاء;
+استورد نظام_التشغيل.منصات.ويندوز.وين32.أخطاء;
+استورد ترميز.يوتيف16;
 
 // Kernel32 uses UTF-16 environment entries. Never interpret these as Unix
 // byte strings, and do not access the CRT's getenv or environ variables.

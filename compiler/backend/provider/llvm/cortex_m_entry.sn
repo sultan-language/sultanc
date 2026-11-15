@@ -3,7 +3,7 @@
 استورد compiler.backend.provider.llvm.ffi.types;
 استورد compiler.backend.provider.llvm.diagnostics;
 استورد compiler.backend.target.target_model;
-استورد std.text.from_bytes;
+استورد المكتبة.نصوص.من_بايتات;
 
 // The process start of a Cortex-M program (thumbv6m, thumbv7m, thumbv7em
 // none-eabi[hf]): the hardware, not an operating system, enters it. Emitted,

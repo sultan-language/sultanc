@@ -4,9 +4,9 @@
 // own safe points (between rows, chunks, retries) and stops; nothing is
 // interrupted from outside. Copies made with استنسخ_رمز_إلغاء share the
 // flag, so cancelling one cancels all; a child may carry an earlier deadline.
-استورد sync.arc;
-استورد sync.atomic;
-استورد time.time;
+استورد تزامن.مشترك;
+استورد تزامن.ذري;
+استورد وقت.الوقت;
 
 عام نوع رمز_إلغاء = {
     العلم: مشترك<ذرة_ط32>,

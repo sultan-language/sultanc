@@ -1,5 +1,5 @@
-استورد std.text.from_bytes;
-استورد std.fs.read_file;
+استورد المكتبة.نصوص.من_بايتات;
+استورد المكتبة.ملفات.قراءة_ملف;
 استورد compiler.interpreter.execution.host_memory;
 استورد compiler.interpreter.runtime_failures;
 

@@ -10,9 +10,9 @@
 // liblzma and xz-embedded do. The encoder writes one stream with one LZMA2
 // block and a CRC64 check, as `xz --format=xz --check=crc64` does.
 
-استورد compression.lzma;
-استورد checksum.checksum;
-استورد crypto.sha256;
+استورد ضغط.إل_زد_إم_إيه;
+استورد مجاميع_تحقق.مجاميع_تحقق;
+استورد تشفير.شا256;
 
 عام نوع خطأ_إكس_زد =
     | نهاية_غير_متوقعة

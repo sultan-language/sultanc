@@ -10,8 +10,8 @@
 // result to a `&نص` or `&متجه` parameter. Nested borrows work, and a borrow
 // in a loop releases each result: the allocator's live bytes are the same
 // after a thousand of them. Native, the interpreter and Stage0 agree.
-استورد std.os.allocation;
-استورد std.text.number;
+استورد المكتبة.نظام_التشغيل.تخصيص;
+استورد المكتبة.نصوص.أعداد;
 
 عرف الحجم(النص: &نص): عدد { أرجع الطول(*النص) مثل عدد; }
 

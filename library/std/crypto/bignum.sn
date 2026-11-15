@@ -9,7 +9,7 @@
 // operations for every value, so private keys and nonces are not exposed
 // through timing. Only lengths (public) shape the control flow.
 
-استورد crypto.words;
+استورد تشفير.كلمات;
 
 عام نوع سياق_مونتغمري = {
     المعامل: متجه طبيعي,

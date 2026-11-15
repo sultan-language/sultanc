@@ -3,8 +3,8 @@
 استورد compiler.link.symbol_table;
 استورد compiler.link.resolution;
 استورد compiler.link.coff.reader;
-استورد std.fs.path;
-استورد std.text.from_bytes;
+استورد المكتبة.ملفات.مسار;
+استورد المكتبة.نصوص.من_بايتات;
 
 عرف بايت_ديناميكي_كوف_عند(البايتات: &متجه ط8, الموضع: طبيعي): ط8 {
     أرجع (*البايتات)[الموضع];

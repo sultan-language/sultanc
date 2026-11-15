@@ -2,9 +2,9 @@
 // Domain «std.net», kind = the variant name. Both enums name an invalid
 // syntax صيغة_غير_صالحة, so that identity covers either one. The message is
 // Arabic, with an English language version («en»).
-استورد error.failure;
-استورد net.ip;
-استورد net.socket_address;
+استورد أخطاء.فشل;
+استورد شبكة.آيبي;
+استورد شبكة.عنوان_مقبس;
 
 // An error with an identity in std.net and an English language version.
 عرف فشل_شبكة(النوع: نص, الرسالة: نص, الإنجليزية: نص): فشل {

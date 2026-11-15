@@ -7,7 +7,7 @@
 استورد compiler.msir.identifiers;
 استورد compiler.source.source_map;
 استورد compiler.source.provenance;
-استورد std.text.from_bytes;
+استورد المكتبة.نصوص.من_بايتات;
 
 // LLVM provider inclusion boundary of a compiler built WITHOUT LLVM.
 //

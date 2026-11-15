@@ -1,4 +1,4 @@
-استورد collections.btree_map;
+استورد مجموعات.خريطة_شجرية;
 
 // Ordered set implemented by the canonical B-tree map so ordering, balancing,
 // node reuse, and ownership behavior have one implementation.

@@ -12,19 +12,19 @@
 // Windows and Java write, are normalized to DER first (encoding.der).
 // Previously only RSA keys and DER containers were accepted.
 
-استورد crypto.aes;
-استورد crypto.des;
-استورد crypto.digest;
-استورد crypto.ecdsa;
-استورد crypto.ed25519;
-استورد crypto.rc2;
-استورد crypto.rsa;
-استورد crypto.words;
-استورد encoding.der;
-استورد encoding.utf16;
-استورد text.from_bytes;
-استورد tls.errors;
-استورد tls.x509;
+استورد تشفير.أيس;
+استورد تشفير.دي_إي_إس;
+استورد تشفير.ملخص;
+استورد تشفير.إي_سي_دي_إس_إيه;
+استورد تشفير.إد25519;
+استورد تشفير.آر_سي2;
+استورد تشفير.آر_إس_إيه;
+استورد تشفير.كلمات;
+استورد ترميز.دي_إي_آر;
+استورد ترميز.يوتيف16;
+استورد نصوص.من_بايتات;
+استورد تي_إل_إس.أخطاء;
+استورد تي_إل_إس.إكس509;
 
 // An ECDSA private scalar: big-endian bytes of the curve size.
 عام نوع مفتاح_إي_سي_خاص_تي_إل_إس = {

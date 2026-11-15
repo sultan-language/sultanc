@@ -4,7 +4,7 @@
 استورد compiler.backend.provider.llvm.ffi.types;
 استورد compiler.backend.provider.llvm.ffi.target_machine;
 استورد compiler.backend.target.target_model;
-استورد std.text.from_bytes;
+استورد المكتبة.نصوص.من_بايتات;
 
 عرف انسخ_مخزن_إل_إل_في_إم(المخزن: مرجع_مخزن_ذاكرة_إل_إل_في_إم): متجه ط8 {
     دع البداية: مؤشر_محرف_ثابت_إل_إل_في_إم = بداية_مخزن_إل_إل_في_إم(المخزن);

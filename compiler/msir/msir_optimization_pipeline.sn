@@ -133,12 +133,22 @@
 ): متجه منطقي {
     طابق المستوى مع
     | مستوى_تحسين_مسير.بلا -> {
+        // Locals kept in frame slots are read from them (debug_contract.sn).
+        اربط_أماكن_محليات_تصحيح_مسير(التصحيح);
         دع لا_شيء: متغير متجه منطقي = [];
         دع د: متغير طبيعي = 0;
         طالما (د < (الطول((*البرنامج).الدوال) مثل طبيعي)) { ألحق(لا_شيء, خطأ); د := د + 1; }
         أرجع لا_شيء;
     }
     | مستوى_تحسين_مسير.افتراضي -> { };
+    // The same binding before promotion: a slot it turns back into values
+    // passes its variables to the values stored in it and to the block
+    // parameters it adds (a loop-carried local's value in the loop), and a
+    // slot it keeps (an address taken) stays the variable's memory.
+    اربط_أماكن_محليات_تصحيح_مسير(التصحيح);
+    // A parameter kept in a frame slot is the slot where its incoming value
+    // is gone (debug_contract.sn, مكان_معامل_تصحيح_مسير).
+    اربط_أماكن_معاملات_تصحيح_مسير(التصحيح);
     دع المحسنة: متجه منطقي = دوال_محسنة_مسير(البرنامج, النطاق);
     دع المرقاة: متجه منطقي = رقّ_محليات_برنامج_مسير(البرنامج, الأنواع, التصحيح, &المحسنة);
     دع المضمن_فيها: متجه منطقي = ضمّن_الدوال_الصغيرة_مسير(البرنامج, &المحسنة, التصحيح);

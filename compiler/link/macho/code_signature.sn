@@ -1,6 +1,6 @@
 استورد compiler.link.macho.encoding;
-استورد std.text.from_bytes;
-استورد std.crypto.sha256;
+استورد المكتبة.نصوص.من_بايتات;
+استورد المكتبة.تشفير.شا256;
 
 // Modern Darwin kernels expect an executable CodeDirectory carrying exec-segment
 // facts. This is an ad-hoc signature: one SHA-256 CodeDirectory in one SuperBlob.

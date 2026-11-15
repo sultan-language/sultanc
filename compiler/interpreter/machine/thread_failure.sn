@@ -1,6 +1,6 @@
-استورد std.text.from_bytes;
-استورد std.io.print;
-استورد std.process.exit;
+استورد المكتبة.نصوص.من_بايتات;
+استورد المكتبة.دخ.اطبع;
+استورد المكتبة.عمليات.اخرج;
 استورد compiler.interpreter.runtime_failures;
 استورد compiler.interpreter.diagnostic_translation;
 استورد compiler.source.provenance;

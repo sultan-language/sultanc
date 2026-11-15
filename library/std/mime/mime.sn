@@ -1,6 +1,10 @@
-استورد chars.ascii;
-استورد text.compare;
-استورد text.from_bytes;
+// Arabic spellings of this folder's modules (docs/en/reference/modules-and-imports.md,
+// "Module spellings"): `استورد المكتبة....` names the same modules as `import std....`.
+module mime { ar: أنواع_وسائط };
+
+استورد حروف.أسكي;
+استورد نصوص.مقارنة;
+استورد نصوص.من_بايتات;
 
 عام نوع نوع_وسائط = {
     النوع: نص,

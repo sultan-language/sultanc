@@ -1,8 +1,8 @@
-استورد os.error;
-استورد os.platform.windows.win32.error;
-استورد os.platform.windows.win32.file_handles;
-استورد os.platform.windows.win32.process_control;
-استورد os.platform.windows.win32.file_paths;
+استورد نظام_التشغيل.أخطاء;
+استورد نظام_التشغيل.منصات.ويندوز.وين32.أخطاء;
+استورد نظام_التشغيل.منصات.ويندوز.وين32.مقابض_الملفات;
+استورد نظام_التشغيل.منصات.ويندوز.وين32.التحكم_بالعملية;
+استورد نظام_التشغيل.منصات.ويندوز.وين32.مسارات_الملفات;
 
 // Kernel32 time facilities: system FILETIME counts 100 ns units since
 // 1601-01-01 UTC; QPC counts monotonic high-resolution counter ticks.

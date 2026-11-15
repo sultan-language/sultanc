@@ -1,8 +1,8 @@
-استورد text.compare;
-استورد text.from_bytes;
-استورد hash.fnv;
-استورد collections.map;
-استورد collections.set;
+استورد نصوص.مقارنة;
+استورد نصوص.من_بايتات;
+استورد تجزئة.فنڤ;
+استورد مجموعات.خريطة;
+استورد مجموعات.مجموعة;
 
 // Text-specialized compatibility surface backed by the canonical generic map/set engine.
 عام نوع خانة_خريطة_نص_فهرس = خانة_الخريطة<نص, طبيعي>;

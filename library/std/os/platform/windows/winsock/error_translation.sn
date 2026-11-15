@@ -1,4 +1,4 @@
-استورد os.error;
+استورد نظام_التشغيل.أخطاء;
 
 // WSA error codes from Winsock2.h, not Win32 GetLastError or Unix errno.
 عام عرف صنف_خطأ_وينسوك(الرمز: ص32): صنف_خطأ_نظام {

@@ -1,4 +1,4 @@
-استورد std.text.from_bytes;
+استورد المكتبة.نصوص.من_بايتات;
 // Mach-O ABI spellings are centralized here so normal linker logic never
 // carries raw external byte names inline.
 عام عرف اسم_رمز_دخول_ماتشو_الافتراضي(): متجه ط8 {
@@ -37,7 +37,7 @@
     طالما (فهرس_البايت < (الطول(*الاسم_الأول) مثل طبيعي)) {
         إذا (
             (*الاسم_الأول)[فهرس_البايت]
-                != (*الاسم_الثاني)[فهرس_البايت]
+            != (*الاسم_الثاني)[فهرس_البايت]
         ) {
             أرجع خطأ;
         };
@@ -45,7 +45,6 @@
     }
     أرجع صواب;
 }
-
 
 // Convert a Mach-O external C ABI spelling back to its canonical linker name.
 // Mach-O object symbols carry exactly one leading underscore for C ABI names.

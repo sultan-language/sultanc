@@ -1,4 +1,4 @@
-استورد bytes.cursor;
+استورد بايتات.مؤشر;
 
 // Deterministic fuzz-data provider. Coverage instrumentation and corpus
 // scheduling belong to compiler/tooling; this module only maps an input byte
@@ -62,7 +62,6 @@
     دع العدد: طبيعي = متبقي_مؤشر_بايتات(&الحالة.المؤشر);
     أرجع فز_بايتات(المدخل, العدد);
 }
-
 
 عام عرف فز_اقلب_بتا(البايتات: &متجه ط8, موضع_البت: طبيعي): متجه ط8 {
     دع المصدر: متجه ط8 = *البايتات;

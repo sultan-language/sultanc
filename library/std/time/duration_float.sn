@@ -2,7 +2,7 @@
 // try_from_secs_f64; Go Duration.Seconds). Kept apart from std.time.duration,
 // which the compiler imports and the C Stage0 builds: these use the
 // language's float <-> integer conversions.
-استورد time.duration;
+استورد وقت.مدة;
 
 // Whole seconds plus the remaining nanoseconds, each converted exactly
 // (|whole seconds| < 2^34, nanoseconds < 10^9), then one rounding.

@@ -1,5 +1,5 @@
 // std.error: one common error value with an identity, a message, a cause
-// chain and notes (docs/ERRORS.md). Code decides by identity, never by text.
+// chain and notes (docs/en/reference/errors.md). Code decides by identity, never by text.
 import std.error.failure;
 import std.error.from_number;
 import std.error.from_os;

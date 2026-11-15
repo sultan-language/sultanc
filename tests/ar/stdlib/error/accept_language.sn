@@ -8,9 +8,9 @@
 // a tag, and HTTP Accept-Language with q-values: ranges ordered by weight,
 // equal weights in the order written; weight 0, «*», ill-formed ranges and
 // malformed weights left out.
-استورد المكتبة.نصوص.language;
-استورد المكتبة.نصوص.compare;
-استورد المكتبة.نصوص.transform;
+استورد المكتبة.نصوص.لغة;
+استورد المكتبة.نصوص.مقارنة;
+استورد المكتبة.نصوص.تحويل;
 
 عرف صالح(الوسم: نص): منطقي {
     أرجع وسم_لغة_صالح(&الوسم);

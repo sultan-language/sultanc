@@ -8,6 +8,8 @@
 عام عرف نص_خطأ_مكتبة_إل_إل_في_إم_للهدف_مفقودة(): نص { أرجع «the output calls the LLVM C API and no libLLVM for its target was supplied»; }
 عام عرف نص_خطأ_رمز_إل_إل_في_إم_غير_محلول(): نص { أرجع «the supplied libLLVM does not define an LLVM C API symbol»; }
 عام عرف نص_خطأ_فشل_وقت_الترجمة_مطلوب(): نص { أرجع «compile-time evaluation failed»; }
+عام عرف نص_خطأ_توقيع_يتتبع_المستدعي_غير_صالح(): نص { أرجع «`@@track_caller` needs an ordinary function whose last parameter is a `source_location` (std.debug.location)»; }
+عام عرف نص_خطأ_حجة_موقع_المستدعي_صريحة(): نص { أرجع «this location is filled by the call: a `@@track_caller` function takes every argument but its last»; }
 عام عرف نص_خطأ_سمة_تصريح_غير_مدعومة(): نص { أرجع «this annotation cannot be applied: declaration decorator processing is not yet supported»; }
 
 عام عرف رسالة_خطأ_إنجليزية(المفتاح: معرف_تشخيص): نص {
@@ -114,6 +116,11 @@
     | معرف_تشخيص.تهجئة_وحدة_مشتركة -> { أرجع «two children of one folder share a spelling»; }
     | معرف_تشخيص.تهجئة_وحدة_محجوزة -> { أرجع «a reserved word cannot be a module spelling»; }
     | معرف_تشخيص.تصريح_وحدة_خارج_ملف_الجذر -> { أرجع «`module` is allowed only in a folder's root file»; }
+    | معرف_تشخيص.اختبار_بمعاملات -> { أرجع «a test takes no parameters»; }
+    | معرف_تشخيص.ناتج_اختبار_غير_صالح -> { أرجع «a test returns nothing or `result int, Error`»; }
+    | معرف_تشخيص.اختبار_ليس_دالة_عادية -> { أرجع «`@@test` marks only an ordinary function»; }
+    | معرف_تشخيص.اختبار_غير_موجود -> { أرجع «no test has this name»; }
+    | معرف_تشخيص.ملف_اختبارات_خارج_البرنامج -> { أرجع «the file is not a source of the program»; }
     | معرف_تشخيص.خريطة_اعتماديات_غير_صالحة -> { أرجع «dependency map is invalid»; }
     | معرف_تشخيص.مكتبة_تفسير_بلا_اسم_تثبيت -> { أرجع «the library's `.tbd` stub names no install name»; }
     | معرف_تشخيص.مكتبة_تفسير_غير_محملة -> { أرجع «a -l library could not be loaded into the running program»; }
@@ -203,6 +210,8 @@
     | معرف_تشخيص.رمز_إل_إل_في_إم_غير_محلول -> { أرجع نص_خطأ_رمز_إل_إل_في_إم_غير_محلول(); }
     | معرف_تشخيص.فشل_وقت_الترجمة_مطلوب -> { أرجع نص_خطأ_فشل_وقت_الترجمة_مطلوب(); }
     | معرف_تشخيص.سمة_تصريح_غير_مدعومة -> { أرجع نص_خطأ_سمة_تصريح_غير_مدعومة(); }
+    | معرف_تشخيص.توقيع_يتتبع_المستدعي_غير_صالح -> { أرجع نص_خطأ_توقيع_يتتبع_المستدعي_غير_صالح(); }
+    | معرف_تشخيص.حجة_موقع_المستدعي_صريحة -> { أرجع نص_خطأ_حجة_موقع_المستدعي_صريحة(); }
     | معرف_تشخيص.نقل_من_مرجع -> { أرجع «cannot move an owned value out of borrowed storage»; }
     | معرف_تشخيص.هدف_لا_يدعم_الميزة -> { أرجع «the selected target does not support a feature this program needs»; }
     | معرف_تشخيص.بناء_غير_مدعوم_في_الخلفية -> { أرجع «the selected backend cannot generate code for this construct yet»; }

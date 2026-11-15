@@ -5,8 +5,8 @@
 استورد compiler.backend.provider.llvm.ffi.core;
 استورد compiler.backend.provider.llvm.ffi.types;
 استورد compiler.backend.provider.llvm.ffi.debuginfo;
-استورد std.text.from_bytes;
-استورد std.env.system;
+استورد المكتبة.نصوص.من_بايتات;
+استورد المكتبة.بيئة.نظام;
 استورد compiler.backend.target.target_model;
 
 عرف اسم_خط_تمريرات_إل_إل_في_إم(المستوى: مستوى_تحسين_مزود_إل_إل_في_إم): متجه ط8 {
@@ -57,7 +57,22 @@
 // frames and find a caller's variables. Only for targets with an operating
 // system: bare-metal images (Cortex-M) and WebAssembly have no unwinder, and
 // their linker scripts place no unwind sections.
-عام عرف علّم_جداول_فك_المكدس_إل_إل_في_إم(الحالة: &حالة_مزود_إل_إل_في_إم, الهدف: &واصف_هدف): فراغ {
+//
+// ELF images included: the linker keeps .eh_frame, pruned to the kept code,
+// with .eh_frame_hdr and PT_GNU_EH_FRAME, so gdb and lldb walk SultanC
+// frames from it with or without debug information, as with Clang's output.
+//
+// Unoptimised code keeps the frame pointer ("frame-pointer"="all"), as
+// Clang's -O0 does. GDB steps into a function past its prologue by reading
+// the code (amd64_analyze_prologue), trusting prologue_end only from Clang's
+// own producer string: without `push %rbp; mov %rsp,%rbp` it took a
+// function as frameless and stopped at its first instruction, before the
+// parameters reached their slots, and read them unset.
+عام عرف علّم_جداول_فك_المكدس_إل_إل_في_إم(
+    الحالة: &حالة_مزود_إل_إل_في_إم,
+    الهدف: &واصف_هدف,
+    محسن: منطقي
+): فراغ {
     دع له_نظام: متغير منطقي = خطأ;
     طابق (*الهدف).المنصة.المنصة مع
     | هوية_منصة.ماك_أو_إس -> { له_نظام := صواب; }
@@ -69,14 +84,25 @@
     | _ -> { };
     إذا (!له_نظام) { أرجع; };
     دع الاسم_خام: متجه ط8 = بايتات_من_نص(«uwtable»);
+    // UWTableKind::Async.
+    دع القيمة: ط64 = 2;
     دع الاسم: متغير متجه ط8 = اجعل_اسما_سي_لإل_إل_في_إم(&الاسم_خام);
     دع المعرف: ط32 = LLVMGetEnumAttributeKindForName(مؤشر_اسم_سي_لإل_إل_في_إم(&متغير الاسم), الطول(الاسم_خام) مثل طبيعي);
-    // UWTableKind::Async.
-    دع الصفة: مرجع_صفة_إل_إل_في_إم = LLVMCreateEnumAttribute((*الحالة).السياق, المعرف, 2);
+    دع الصفة: مرجع_صفة_إل_إل_في_إم = LLVMCreateEnumAttribute((*الحالة).السياق, المعرف, القيمة);
+    دع مفتاح_الإطار_خام: متجه ط8 = بايتات_من_نص(«frame-pointer»);
+    دع مفتاح_الإطار: متغير متجه ط8 = اجعل_اسما_سي_لإل_إل_في_إم(&مفتاح_الإطار_خام);
+    دع قيمة_الإطار_خام: متجه ط8 = بايتات_من_نص(«all»);
+    دع قيمة_الإطار: متغير متجه ط8 = اجعل_اسما_سي_لإل_إل_في_إم(&قيمة_الإطار_خام);
+    دع صفة_الإطار: مرجع_صفة_إل_إل_في_إم = LLVMCreateStringAttribute(
+        (*الحالة).السياق,
+        مؤشر_اسم_سي_لإل_إل_في_إم(&متغير مفتاح_الإطار), (الطول(مفتاح_الإطار_خام) مثل طبيعي) مثل ط32,
+        مؤشر_اسم_سي_لإل_إل_في_إم(&متغير قيمة_الإطار), (الطول(قيمة_الإطار_خام) مثل طبيعي) مثل ط32
+    );
     دع الدالة: متغير مرجع_قيمة_إل_إل_في_إم = LLVMGetFirstFunction((*الحالة).الوحدة);
     طالما (الدالة != الفارغ) {
         إذا (LLVMIsDeclaration(الدالة) == 0) {
             LLVMAddAttributeAtIndex(الدالة, 4294967295, الصفة);
+            إذا (!محسن) { LLVMAddAttributeAtIndex(الدالة, 4294967295, صفة_الإطار); };
         };
         الدالة := LLVMGetNextFunction(الدالة);
     }

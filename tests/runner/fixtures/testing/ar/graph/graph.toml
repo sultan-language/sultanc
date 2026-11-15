@@ -1,0 +1,18 @@
+version = 1
+root = "app"
+
+[[package]]
+id = "app"
+source_root = "app/src"
+name = "app"
+
+[[package]]
+id = "lib"
+source_root = "lib/src"
+name = "lib"
+entry = "lib"
+
+[[edge]]
+from = "app"
+to = "lib"
+name = "lib"

@@ -1,0 +1,8 @@
+// The root file of std.os.platform.windows.winsock: the Arabic spellings of its modules
+// (docs/en/reference/modules-and-imports.md, "Module spellings"). An import may
+// use either name; both name one module.
+
+module error_translation { ar: ترجمة_الأخطاء };
+module name_resolution { ar: تحليل_الأسماء };
+module socket_address { ar: عنوان_مقبس };
+module sockets { ar: مقابس };

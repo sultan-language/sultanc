@@ -1,0 +1,21 @@
+// The root file of std.os.platform.unix.apple.darwin: the Arabic spellings of its modules
+// (docs/en/reference/modules-and-imports.md, "Module spellings"). An import may
+// use either name; both name one module.
+
+module child_stdio { ar: قنوات_العملية_الابن };
+module clocks { ar: ساعات };
+module directories { ar: مجلدات };
+module dynamic_loader { ar: المحمل_الديناميكي };
+module entropy { ar: عشوائية };
+module error_translation { ar: ترجمة_الأخطاء };
+module executable_path { ar: مسار_البرنامج };
+module file_attributes { ar: سمات_الملفات };
+module file_descriptors { ar: واصفات_الملفات };
+module file_locks { ar: أقفال_الملفات };
+module process_control { ar: التحكم_بالعملية };
+module process_info { ar: معلومات_العملية };
+module socket_names { ar: أسماء_المقابس };
+module sockets { ar: مقابس };
+module threads { ar: خيوط };
+module virtual_memory { ar: ذاكرة_افتراضية };
+module wait_address { ar: انتظار_العنوان };

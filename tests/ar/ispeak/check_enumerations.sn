@@ -2,11 +2,11 @@
 // أهداف: arm64-darwin,x86_64-linux
 // خروج: 0
 // نظير: tests/en/ispeak/check_enumerations.sn
-استورد std.fs.read_file;
-استورد std.text.builder;
-استورد std.text.from_bytes;
-استورد std.text.search;
-استورد std.io.print;
+استورد المكتبة.ملفات.قراءة_ملف;
+استورد المكتبة.نصوص.باني;
+استورد المكتبة.نصوص.من_بايتات;
+استورد المكتبة.نصوص.بحث;
+استورد المكتبة.دخ.اطبع;
 استورد compiler.diagnostics.identity;
 استورد compiler.diagnostics.reason;
 استورد compiler.diagnostics.registry;

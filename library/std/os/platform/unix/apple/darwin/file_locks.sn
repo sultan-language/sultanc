@@ -1,5 +1,5 @@
-استورد os.error;
-استورد os.platform.unix.apple.darwin.file_descriptors;
+استورد نظام_التشغيل.أخطاء;
+استورد نظام_التشغيل.منصات.يونكس.آبل.داروين.واصفات_الملفات;
 
 // Whole-file locks through libSystem (std.os.file_lock): int flock(int fd,
 // int operation) (<sys/file.h>), LOCK_SH 1, LOCK_EX 2, LOCK_NB 4, LOCK_UN 8.

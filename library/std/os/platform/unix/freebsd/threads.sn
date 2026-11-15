@@ -17,12 +17,12 @@
 // passes arg (the closure's environment) in the first argument register, as
 // a C caller would. A closure that returns would return to no caller, so the
 // thread runs a std wrapper that calls the user closure and then thr_exit.
-استورد os.platform.unix.linux.syscalls.kernel_result;
-استورد os.platform.unix.linux.syscalls.operations;
-استورد os.platform.unix.linux.syscalls.selection;
-استورد os.platform.unix.linux.threads;
-استورد os.platform.unix.freebsd.system_parameters;
-استورد os.error;
+استورد نظام_التشغيل.منصات.يونكس.لينكس.نداءات_النظام.نتيجة_النواة;
+استورد نظام_التشغيل.منصات.يونكس.لينكس.نداءات_النظام.عمليات;
+استورد نظام_التشغيل.منصات.يونكس.لينكس.نداءات_النظام.اختيار;
+استورد نظام_التشغيل.منصات.يونكس.لينكس.خيوط;
+استورد نظام_التشغيل.منصات.يونكس.فري_بي_إس_دي.معاملات_النظام;
+استورد نظام_التشغيل.أخطاء;
 
 مرادف إغلاق_من_عنوان_فري = بدائي_دالة_من_عنوان;
 مرادف عنوان_إغلاق_فري = بدائي_عنوان_دالة;

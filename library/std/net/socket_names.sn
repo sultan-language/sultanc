@@ -1,11 +1,11 @@
-استورد net.ip;
-استورد net.socket_address;
-استورد net.udp;
-استورد net.tcp;
+استورد شبكة.آيبي;
+استورد شبكة.عنوان_مقبس;
+استورد شبكة.يو_دي_بي;
+استورد شبكة.تي_سي_بي;
 
-استورد os.socket;
-استورد os.socket_names;
-استورد os.error;
+استورد نظام_التشغيل.مقبس;
+استورد نظام_التشغيل.أسماء_المقابس;
+استورد نظام_التشغيل.أخطاء;
 
 // Local and peer addresses of sockets, and datagrams to and from any
 // address on an unconnected UDP socket (Rust UdpSocket::send_to,

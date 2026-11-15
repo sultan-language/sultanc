@@ -1,6 +1,6 @@
-استورد os.path;
-استورد os.error;
-استورد os.platform.windows.winsock.sockets;
+استورد نظام_التشغيل.مسار;
+استورد نظام_التشغيل.أخطاء;
+استورد نظام_التشغيل.منصات.ويندوز.وين_سوك.مقابس;
 
 // GetAddrInfoW/FreeAddrInfoW are native Winsock functions from Ws2_32,
 // not C-runtime getaddrinfo. ADDRINFOW (ws2def.h) is 48 bytes on both

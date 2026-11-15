@@ -1,6 +1,6 @@
-استورد std.text.from_bytes;
-استورد std.chars.ascii;
-استورد std.fs.read_file;
+استورد المكتبة.نصوص.من_بايتات;
+استورد المكتبة.حروف.أسكي;
+استورد المكتبة.ملفات.قراءة_ملف;
 
 // GNU linker scripts that lay out an image (ld manual "Linker Scripts";
 // LLD's ScriptParser), the subset a bare-metal image is described with, as

@@ -1,6 +1,6 @@
-استورد os.path;
-استورد os.error;
-استورد os.platform.wasi.preview1.file_descriptors;
+استورد نظام_التشغيل.مسار;
+استورد نظام_التشغيل.أخطاء;
+استورد نظام_التشغيل.منصات.واسي.معاينة1.واصفات_الملفات;
 
 // Links, file sizes and file times through WASI preview 1 (witx). Paths are
 // resolved against the preopened directories (حل_مسار_واسي). WASI has no

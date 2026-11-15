@@ -1,6 +1,6 @@
-استورد os.buffer;
-استورد os.error;
-استورد os.path;
+استورد نظام_التشغيل.مخزن;
+استورد نظام_التشغيل.أخطاء;
+استورد نظام_التشغيل.مسار;
 
 // Owned kernel file descriptors (Linux) and native HANDLEs (Windows) are
 // stored as machine words, not signed runtime statuses. A close consumes the
@@ -27,9 +27,9 @@
 إذا ((الهدف.المنصة == «linux» || الهدف.المنصة == «android») && الهدف.المعمارية != «ve») { استورد os.platform.unix.linux.uapi; }
 إذا (الهدف.المنصة == «freebsd») { استورد os.platform.unix.freebsd.uapi; }
 إذا ((الهدف.المنصة == «linux» || الهدف.المنصة == «android» || الهدف.المنصة == «freebsd») && الهدف.المعمارية != «ve») {
-    استورد os.platform.unix.linux.file_descriptors;
-    استورد os.platform.unix.linux.syscalls.operations;
-    استورد os.platform.unix.linux.syscalls.selection;
+    استورد نظام_التشغيل.منصات.يونكس.لينكس.واصفات_الملفات;
+    استورد نظام_التشغيل.منصات.يونكس.لينكس.نداءات_النظام.عمليات;
+    استورد نظام_التشغيل.منصات.يونكس.لينكس.نداءات_النظام.اختيار;
 
     عرف حول_خطأ_واصف_للنظام(الخطأ: خطأ_واصف_لينكس): خطأ_حد_نظام {
         طابق الخطأ مع
@@ -98,7 +98,7 @@
 }
 
 إذا (الهدف.المنصة == «windows») {
-    استورد os.platform.windows.win32.file_handles;
+    استورد نظام_التشغيل.منصات.ويندوز.وين32.مقابض_الملفات;
 
     عرف حول_خطأ_مقبض_للنظام(الخطأ: خطأ_مقبض_ملف_ويندوز): خطأ_حد_نظام {
         طابق الخطأ مع
@@ -150,8 +150,7 @@
 }
 
 إذا (الهدف.المنصة == «macos») {
-    استورد os.platform.unix.apple.darwin.file_descriptors;
-
+    استورد نظام_التشغيل.منصات.يونكس.آبل.داروين.واصفات_الملفات;
 
     عرف افتح_ملف_داروين_للنظام(المسار: &نص, للكتابة: منطقي): نتيجة ملف_نظام, خطأ_حد_نظام {
         دع البايتات: متجه ط8 = بايتات_مسار_نص_نظام(المسار);
@@ -297,7 +296,7 @@
 // WASI preview 1: every path is opened relative to a preopened directory
 // (os.platform.wasi.preview1.file_descriptors resolves it).
 إذا (الهدف.المنصة == «wasi») {
-    استورد os.platform.wasi.preview1.file_descriptors;
+    استورد نظام_التشغيل.منصات.واسي.معاينة1.واصفات_الملفات;
 
     عرف افتح_ملف_واسي_للنظام(المسار: &نص, للكتابة: منطقي): نتيجة ملف_نظام, خطأ_حد_نظام {
         دع البايتات: متجه ط8 = بايتات_مسار_نص_نظام(المسار);
@@ -436,9 +435,9 @@
 // Filesystem mutation operations use the selected native path ABI; these
 // signatures preserve the existing portable typed-error contract.
 إذا ((الهدف.المنصة == «linux» || الهدف.المنصة == «android» || الهدف.المنصة == «freebsd») && الهدف.المعمارية != «ve») {
-    استورد os.platform.unix.linux.path_operations;
-    استورد os.platform.unix.linux.syscalls.operations;
-    استورد os.platform.unix.linux.syscalls.selection;
+    استورد نظام_التشغيل.منصات.يونكس.لينكس.عمليات_المسارات;
+    استورد نظام_التشغيل.منصات.يونكس.لينكس.نداءات_النظام.عمليات;
+    استورد نظام_التشغيل.منصات.يونكس.لينكس.نداءات_النظام.اختيار;
 
     عرف خطأ_مسار_لينكس_للنظام(الخطأ: خطأ_مسارات_لينكس): خطأ_حد_نظام {
         طابق الخطأ مع
@@ -464,7 +463,7 @@
     }
 }
 إذا (الهدف.المنصة == «windows») {
-    استورد os.platform.windows.win32.file_paths;
+    استورد نظام_التشغيل.منصات.ويندوز.وين32.مسارات_الملفات;
 
     عرف خطأ_مسار_ويندوز_للنظام(الخطأ: خطأ_مسارات_ويندوز): خطأ_حد_نظام {
         طابق الخطأ مع
@@ -487,9 +486,9 @@
 // codes. The portable type classification is regular=1, directory=2,
 // symbolic/reparse=3, other=4.
 إذا ((الهدف.المنصة == «linux» || الهدف.المنصة == «android» || الهدف.المنصة == «freebsd») && الهدف.المعمارية != «ve») {
-    استورد os.platform.unix.linux.metadata;
-    استورد os.platform.unix.linux.syscalls.operations;
-    استورد os.platform.unix.linux.syscalls.selection;
+    استورد نظام_التشغيل.منصات.يونكس.لينكس.بيانات_وصفية;
+    استورد نظام_التشغيل.منصات.يونكس.لينكس.نداءات_النظام.عمليات;
+    استورد نظام_التشغيل.منصات.يونكس.لينكس.نداءات_النظام.اختيار;
 
     عرف حول_خطأ_معلومات_لينكس(الخطأ: خطأ_معلومات_لينكس): خطأ_حد_نظام {
         طابق الخطأ مع
@@ -542,8 +541,8 @@
     }
 }
 إذا (الهدف.المنصة == «windows») {
-    استورد os.platform.windows.win32.file_paths;
-    استورد os.platform.windows.win32.clocks;
+    استورد نظام_التشغيل.منصات.ويندوز.وين32.مسارات_الملفات;
+    استورد نظام_التشغيل.منصات.ويندوز.وين32.ساعات;
 
     عرف معلومات_ويندوز_للنظام(المسار: &نص): نتيجة معلومات_مسار_ويندوز, خطأ_حد_نظام {
         طابق اقرأ_معلومات_مسار_ويندوز(المسار) مع

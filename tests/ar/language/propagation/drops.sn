@@ -9,7 +9,7 @@
 // program clean. Counterpart: tests/en/language/propagation/drops.sn; no pair
 // directive: the interpreter does not use the std allocator whose counters
 // this reads.
-استورد std.os.allocation;
+استورد المكتبة.نظام_التشغيل.تخصيص;
 
 عرف افحص(س: طبيعي): نتيجة طبيعي, نص {
     إذا ((س % 2) == 0) { أرجع نتيجة.خطأ(«عدد زوجي مرفوض»); };

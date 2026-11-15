@@ -1,6 +1,6 @@
-استورد os.directory;
-استورد os.file;
-استورد os.error;
+استورد نظام_التشغيل.مجلد;
+استورد نظام_التشغيل.ملف;
+استورد نظام_التشغيل.أخطاء;
 
 // Keep the established signed-error public contract while native providers
 // retain the source namespace and code in std.os.

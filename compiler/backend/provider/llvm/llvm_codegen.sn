@@ -7,7 +7,7 @@
 استورد compiler.msir.identifiers;
 استورد compiler.source.source_map;
 استورد compiler.source.provenance;
-استورد std.text.from_bytes;
+استورد المكتبة.نصوص.من_بايتات;
 استورد compiler.backend.provider.llvm.target;
 استورد compiler.backend.provider.llvm.module;
 استورد compiler.backend.provider.llvm.lowering;
@@ -130,7 +130,7 @@
     }
     | اختياري.لا_شيء -> { };
     اختم_حالة_تصحيح_إل_إل_في_إم(&متغير حالة_التصحيح);
-    علّم_جداول_فك_المكدس_إل_إل_في_إم(&الحالة, الهدف);
+    علّم_جداول_فك_المكدس_إل_إل_في_إم(&الحالة, الهدف, محسن);
     طابق تحقق_وحسن_وحدة_إل_إل_في_إم(&الحالة, المستوى) مع
     | اختياري.موجود(خ) -> {
         حرر_حالة_تصحيح_إل_إل_في_إم(&متغير حالة_التصحيح);

@@ -16,10 +16,10 @@
 // are declared there with `module` (module_spellings.sn). Without any
 // candidate, the answer is ./library, whose missing std/ the package setup
 // then reports (SULTANC-STD-NOT-FOUND).
-استورد std.env.environment;
-استورد std.env.executable;
-استورد std.fs.path;
-استورد std.fs.directory;
+استورد المكتبة.بيئة.بيئة_العمل;
+استورد المكتبة.بيئة.البرنامج_الحالي;
+استورد المكتبة.ملفات.مسار;
+استورد المكتبة.ملفات.مجلد;
 استورد compiler.driver.package_graph;
 
 // The one table of std's names: its canonical name, which is also its

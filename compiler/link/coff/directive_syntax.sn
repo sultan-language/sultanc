@@ -1,6 +1,6 @@
 استورد compiler.link.section_model;
-استورد std.text.from_bytes;
-استورد std.chars.ascii;
+استورد المكتبة.نصوص.من_بايتات;
+استورد المكتبة.حروف.أسكي;
 
 // Syntax of COFF linker directives (the `.drectve` section, flagged
 // IMAGE_SCN_LNK_INFO). MSVC and Clang record there the options an object

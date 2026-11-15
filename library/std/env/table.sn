@@ -20,10 +20,10 @@
 // futex lock of std.sync.mutex. A program that never spawns a thread pays
 // one branch (std.os.allocation's thread flag) and takes no lock.
 
-استورد os.environment_list;
-استورد os.allocation;
-استورد os.wait_address;
-استورد text.from_bytes;
+استورد نظام_التشغيل.قائمة_البيئة;
+استورد نظام_التشغيل.تخصيص;
+استورد نظام_التشغيل.انتظار_العنوان;
+استورد نصوص.من_بايتات;
 
 عام نوع مدخل_جدول_بيئة = { الاسم: متجه ط8, القيمة: متجه ط8 };
 
@@ -51,7 +51,7 @@
 }
 
 إذا (الهدف.المنصة == «windows») {
-    استورد os.platform.windows.win32.environment;
+    استورد نظام_التشغيل.منصات.ويندوز.وين32.بيئة;
     عرف بايت_بحالة_صغيرة_للبيئة(البايت: ط8): ط8 {
         إذا (البايت >= 0x41 && البايت <= 0x5A) { أرجع البايت + 32; };
         أرجع البايت;

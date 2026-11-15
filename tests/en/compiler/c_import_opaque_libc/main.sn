@@ -2,6 +2,7 @@
 // أهداف: arm64-darwin,x86_64-linux
 // خروج: 42
 // نظير: tests/ar/compiler/c_import_opaque_libc/main.sn
+// ربط: c
 // A C library's handle through a system header: glibc's dirent.h declares
 // `typedef struct __dirstream DIR;` and never defines the struct, so DIR is an
 // opaque type and opendir/readdir/closedir take and return `*mutable DIR`

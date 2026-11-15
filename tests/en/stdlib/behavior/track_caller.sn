@@ -1,0 +1,30 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 1
+// تفاضلي: نعم
+// بيئة: SULTANC_LANG=en
+// خرج-قياسي: <فارغ>
+// خطأ-قياسي-ملف: track_caller.stderr
+// نظير: tests/ar/stdlib/behavior/track_caller.sn
+// @@track_caller (docs/en/reference/testing.md): a call passes the place of
+// the call, a marked helper forwards the place it was called from, and a
+// function value passes its definition's place. A failed assertion shows the
+// assertion's place under the frame. Status 2, 3 or 4 is a wrong place.
+import std.debug.assert;
+import std.debug.location;
+import std.process.exit;
+@@track_caller
+def line_here(location: source_location): uint { return source_location_line(&location); }
+@@track_caller
+def line_of_caller(location: source_location): uint { return line_here(); }
+def check(condition: bool, status: int): void { if (!condition) { exit(status); }; }
+
+def main(): int {
+    check(line_here() == 23, 2);
+    check(line_of_caller() == 24, 3);
+    let f: fn(): uint = line_here;
+    check(f() == 17, 4);
+    assert(1 + 1 == 2);
+    assert(1 + 1 == 3);
+    return 0;
+}

@@ -1,6 +1,6 @@
-استورد std.fs.metadata;
-استورد std.fs.path;
-استورد std.text.from_bytes;
+استورد المكتبة.ملفات.بيانات_وصفية;
+استورد المكتبة.ملفات.مسار;
+استورد المكتبة.نصوص.من_بايتات;
 استورد compiler.backend.target.target_model;
 
 // cc-style library search for -l <name>. For each -L directory, then the

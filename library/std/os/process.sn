@@ -1,5 +1,5 @@
-استورد os.error;
-استورد os.path;
+استورد نظام_التشغيل.أخطاء;
+استورد نظام_التشغيل.مسار;
 
 // On Linux the identifier is a child PID; on Windows it is an owned
 // process HANDLE. The issuer selects and owns the corresponding OS API.
@@ -20,9 +20,9 @@
 }
 
 إذا (الهدف.المنصة == «windows») {
-    استورد os.platform.windows.win32.process_control;
-    استورد os.platform.windows.win32.error;
-    استورد os.platform.windows.win32.file_handles;
+    استورد نظام_التشغيل.منصات.ويندوز.وين32.التحكم_بالعملية;
+    استورد نظام_التشغيل.منصات.ويندوز.وين32.أخطاء;
+    استورد نظام_التشغيل.منصات.ويندوز.وين32.مقابض_الملفات;
     عرف خطأ_عملية_ويندوز_للنظام(الخطأ: خطأ_عملية_ويندوز): خطأ_حد_نظام {
         طابق الخطأ مع
         | خطأ_عملية_ويندوز.وسيط_غير_صالح -> { أرجع خطأ_حد_نظام.وسيط_غير_صالح(); }
@@ -57,7 +57,7 @@
                     دع الانتظار: نتيجة اختياري ط32, خطأ_عملية_ويندوز =
                         انتظر_عملية_ويندوز_بمهلة(&العملية, 5000 مثل ط32);
                 }
-                | نتيجة.خطأ(_) -> {};
+                | نتيجة.خطأ(_) -> { };
                 // Attempt both HANDLE closes even if the first one fails;
                 // the original close error remains the reported failure.
                 دع التنظيف: نتيجة عدد, خطأ_عملية_ويندوز = أغلق_عملية_ويندوز(&متغير العملية);
@@ -132,7 +132,7 @@
         طابق تفقد_عملية_نظام(العملية) مع
         | نتيجة.خطأ(الخطأ) -> { أرجع نتيجة.خطأ(الخطأ); }
         | نتيجة.نجح(اختياري.موجود(الرمز)) -> { أرجع نتيجة.نجح(اختياري.موجود(الرمز)); }
-        | نتيجة.نجح(اختياري.لا_شيء) -> {};
+        | نتيجة.نجح(اختياري.لا_شيء) -> { };
         دع المصدر: عملية_ويندوز = {
             مقبض_العملية: (*العملية).المعرف مثل ط64,
             مقبض_الخيط: 0 مثل ط64,
@@ -143,7 +143,7 @@
             إذا (الأصلي.الرمز != 5) { أرجع نتيجة.خطأ(خطأ_حد_نظام.نظام(الأصلي)); };
         }
         | نتيجة.خطأ(الخطأ) -> { أرجع نتيجة.خطأ(خطأ_عملية_ويندوز_للنظام(الخطأ)); }
-        | نتيجة.نجح(_) -> {};
+        | نتيجة.نجح(_) -> { };
         أرجع نتيجة.نجح(اختياري.لا_شيء());
     }
 
@@ -162,7 +162,7 @@
 }
 
 إذا ((الهدف.المنصة == «linux» || الهدف.المنصة == «android» || الهدف.المنصة == «freebsd») && الهدف.المعمارية != «ve») {
-    استورد os.platform.unix.linux.process_control;
+    استورد نظام_التشغيل.منصات.يونكس.لينكس.التحكم_بالعملية;
     // waitid is independently usable for a child PID acquired from a
     // supported spawn provider. It cannot create a child by itself.
     عام عرف انتظر_عملية_نظام(
@@ -255,9 +255,9 @@
 // The frontend chooses the native provider at compile time. Foreign targets
 // deliberately have no implementation instead of an invalid runtime fallback.
 إذا ((الهدف.المنصة == «linux» || الهدف.المنصة == «android» || الهدف.المنصة == «freebsd») && الهدف.المعمارية != «ve») {
-    استورد os.platform.unix.linux.process_control;
-    استورد os.platform.unix.linux.syscalls.operations;
-    استورد os.platform.unix.linux.syscalls.selection;
+    استورد نظام_التشغيل.منصات.يونكس.لينكس.التحكم_بالعملية;
+    استورد نظام_التشغيل.منصات.يونكس.لينكس.نداءات_النظام.عمليات;
+    استورد نظام_التشغيل.منصات.يونكس.لينكس.نداءات_النظام.اختيار;
     عام عرف اخرج_من_عملية_النظام(الرمز: عدد): فراغ {
         اخرج_من_مجموعة_عملية_لينكس(
             رقم_نداء_نواة_لينكس(عملية_نداء_نواة_لينكس.خروج_جماعي()),
@@ -267,7 +267,7 @@
 }
 
 إذا (الهدف.المنصة == «windows») {
-    استورد os.platform.windows.win32.process_control;
+    استورد نظام_التشغيل.منصات.ويندوز.وين32.التحكم_بالعملية;
     عام عرف اخرج_من_عملية_النظام(الرمز: عدد): فراغ {
         اخرج_من_عملية_ويندوز(الرمز مثل ط32);
     }
@@ -278,7 +278,7 @@
 // supported") as a native WASI error, so callers fail with the real reason
 // instead of a fabricated child.
 إذا (الهدف.المنصة == «wasi») {
-    استورد os.platform.wasi.preview1.process_control;
+    استورد نظام_التشغيل.منصات.واسي.معاينة1.التحكم_بالعملية;
     عام عرف اخرج_من_عملية_النظام(الرمز: عدد): فراغ {
         اخرج_من_عملية_واسي(الرمز مثل ط32);
     }
@@ -334,9 +334,9 @@
 // data was not yet available; it is never satisfied with an empty
 // environment. An unavailable or invalid startup environment is an error.
 إذا ((الهدف.المنصة == «linux» || الهدف.المنصة == «android» || الهدف.المنصة == «freebsd») && الهدف.المعمارية != «ve») {
-    استورد os.platform.unix.linux.process_control;
-    استورد os.platform.unix.linux.file_descriptors;
-    استورد os.platform.unix.process_startup;
+    استورد نظام_التشغيل.منصات.يونكس.لينكس.التحكم_بالعملية;
+    استورد نظام_التشغيل.منصات.يونكس.لينكس.واصفات_الملفات;
+    استورد نظام_التشغيل.منصات.يونكس.بدء_العملية;
 
     عرف خطأ_تشغيل_لينكس_للنظام(الخطأ: خطأ_تشغيل_طفل_لينكس): خطأ_حد_نظام {
         طابق الخطأ مع
@@ -432,8 +432,8 @@
 // Darwin: posix_spawn with the current startup environment (shared Unix
 // startup envp contract) or explicit NAME=VALUE entries, waitpid, and _exit.
 إذا (الهدف.المنصة == «macos») {
-    استورد os.platform.unix.apple.darwin.process_control;
-    استورد os.platform.unix.process_startup;
+    استورد نظام_التشغيل.منصات.يونكس.آبل.داروين.التحكم_بالعملية;
+    استورد نظام_التشغيل.منصات.يونكس.بدء_العملية;
 
     عرف خطأ_تشغيل_داروين_للنظام(الخطأ: خطأ_تشغيل_طفل_داروين): خطأ_حد_نظام {
         طابق الخطأ مع

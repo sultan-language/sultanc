@@ -1,9 +1,9 @@
 // Converter to فشل for std.text.number parse errors.
 // Domain «std.text.number», kind = the variant name of خطأ_تحليل_عدد. The
 // message is Arabic, with an English language version («en»).
-استورد error.failure;
-استورد text.number;
-استورد text.from_bytes;
+استورد أخطاء.فشل;
+استورد نصوص.أعداد;
+استورد نصوص.من_بايتات;
 
 // The note «<prefix><value>»; Stage0-compatible text concatenation.
 عرف نص_ملاحظة_تحليل_عدد(البادئة: نص, القيمة: نص): نص {

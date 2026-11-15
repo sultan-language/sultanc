@@ -1,12 +1,12 @@
-استورد env.environment;
-استورد fs.error;
-استورد fs.attributes;
-استورد text.from_bytes;
-استورد os.error;
-استورد os.environment_list;
-استورد os.file_attributes;
-استورد os.environment_validation;
-استورد env.table;
+استورد بيئة.بيئة_العمل;
+استورد ملفات.أخطاء;
+استورد ملفات.سمات;
+استورد نصوص.من_بايتات;
+استورد نظام_التشغيل.أخطاء;
+استورد نظام_التشغيل.قائمة_البيئة;
+استورد نظام_التشغيل.سمات_الملف;
+استورد نظام_التشغيل.تحقق_البيئة;
+استورد بيئة.جدول;
 
 // The whole environment, setting and removing variables, the home directory
 // and changing the working directory (Rust env::vars, env::set_var,

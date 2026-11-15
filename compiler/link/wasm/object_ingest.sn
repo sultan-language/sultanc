@@ -6,7 +6,7 @@
 استورد compiler.link.resolution;
 استورد compiler.link.symbol_model;
 استورد compiler.backend.target.target_model;
-استورد std.text.from_bytes;
+استورد المكتبة.نصوص.من_بايتات;
 
 عام نوع خطأ_استيعاب_ويب_أسمبلي =
     | وحدة_غير_صالحة

@@ -9,8 +9,8 @@
 استورد compiler.frontend.semantic_pipeline;
 استورد compiler.frontend.cancellation;
 استورد compiler.frontend.module_loading.logical_environment;
-استورد std.thread.thread;
-استورد std.sync.arc;
+استورد المكتبة.خيوط.خيط;
+استورد المكتبة.تزامن.مشترك;
 
 عرف ألغ_لاحقا(الرمز: &مشترك<حالة_إلغاء_واجهة>): فراغ {
     نم(0, 200000000);

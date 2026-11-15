@@ -1,5 +1,5 @@
-استورد math.integer;
-استورد os.error;
+استورد رياضيات.صحيح;
+استورد نظام_التشغيل.أخطاء;
 
 // Arithmetic at a virtual-memory API boundary must not overflow SultanC's
 // 64-bit unsigned lengths. The platform binding must additionally check
@@ -51,7 +51,6 @@
 عام مرادف os_region_contains_range = نطاق_ذاكرة_ضمن_منطقة;
 عام مرادف os_page_aligned_address = عنوان_محاذى_للصفحة;
 
-
 // Raw mapping addresses are 64-bit words on the supported Linux ABIs;
 // no signed-status reinterpretation is performed on successful mmap results.
 عام نوع ربط_ذاكرة_نظام = { العنوان: ط64, الطول: ط64, نشط: منطقي };
@@ -60,10 +59,10 @@
 إذا ((الهدف.المنصة == «linux» || الهدف.المنصة == «android») && الهدف.المعمارية != «ve») { استورد os.platform.unix.linux.uapi; }
 إذا (الهدف.المنصة == «freebsd») { استورد os.platform.unix.freebsd.uapi; }
 إذا ((الهدف.المنصة == «linux» || الهدف.المنصة == «android» || الهدف.المنصة == «freebsd») && الهدف.المعمارية != «ve») {
-    استورد os.platform.unix.linux.virtual_memory;
-    استورد os.platform.unix.linux.file_descriptors;
-    استورد os.platform.unix.linux.syscalls.operations;
-    استورد os.platform.unix.linux.syscalls.selection;
+    استورد نظام_التشغيل.منصات.يونكس.لينكس.ذاكرة_افتراضية;
+    استورد نظام_التشغيل.منصات.يونكس.لينكس.واصفات_الملفات;
+    استورد نظام_التشغيل.منصات.يونكس.لينكس.نداءات_النظام.عمليات;
+    استورد نظام_التشغيل.منصات.يونكس.لينكس.نداءات_النظام.اختيار;
 
     عرف خطأ_ذاكرة_لينكس_للنظام(الخطأ: خطأ_ذاكرة_لينكس): خطأ_حد_نظام {
         طابق الخطأ مع
@@ -167,8 +166,8 @@
 
 // Linux: the page size from the auxiliary vector (procfs view).
 إذا ((الهدف.المنصة == «linux» || الهدف.المنصة == «android») && الهدف.المعمارية != «ve») {
-    استورد os.platform.unix.linux.file_descriptors;
-    استورد os.platform.unix.linux.auxiliary_vector;
+    استورد نظام_التشغيل.منصات.يونكس.لينكس.واصفات_الملفات;
+    استورد نظام_التشغيل.منصات.يونكس.لينكس.المتجه_المساعد;
 
     // Optional procfs auxiliary-vector reader. A sandbox without procfs
     // returns the kernel's error; it must not invent a 4096-byte page size.
@@ -201,7 +200,7 @@
 
 // FreeBSD: hw.pagesize, the value the kernel also passes as AT_PAGESZ.
 إذا (الهدف.المنصة == «freebsd») {
-    استورد os.platform.unix.freebsd.system_parameters;
+    استورد نظام_التشغيل.منصات.يونكس.فري_بي_إس_دي.معاملات_النظام;
 
     عام عرف حجم_صفحة_تشغيل_نظام(): نتيجة عدد, خطأ_حد_نظام {
         طابق اقرأ_حجم_صفحة_فري_بي_إس_دي() مع
@@ -216,7 +215,7 @@
 }
 
 إذا (الهدف.المنصة == «windows») {
-    استورد os.platform.windows.win32.virtual_memory;
+    استورد نظام_التشغيل.منصات.ويندوز.وين32.ذاكرة_افتراضية;
     عام عرف حجم_صفحة_تشغيل_نظام(): نتيجة عدد, خطأ_حد_نظام {
         دع المعلومات: معلومات_صفحات_ويندوز = اقرأ_معلومات_صفحات_ويندوز();
         إذا (المعلومات.حجم_الصفحة == 0) {
@@ -313,10 +312,10 @@
 // are the supported kernel interface (Apple supports no direct system calls).
 // Failures are -1 with the reason in errno, captured right after the call.
 إذا (الهدف.المنصة == «macos») {
-    استورد os.platform.unix.apple.darwin.file_descriptors;
+    استورد نظام_التشغيل.منصات.يونكس.آبل.داروين.واصفات_الملفات;
     // The libSystem declarations (and their library) live in the Darwin
     // provider, once for std.
-    استورد os.platform.unix.apple.darwin.virtual_memory;
+    استورد نظام_التشغيل.منصات.يونكس.آبل.داروين.ذاكرة_افتراضية;
 
     عرف نتيجة_نداء_ذاكرة_داروين(الحالة: ص32): نتيجة عدد, خطأ_حد_نظام {
         إذا (الحالة == (-1 مثل ص32)) {

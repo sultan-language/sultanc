@@ -1,4 +1,4 @@
-استورد math.integer;
+استورد رياضيات.صحيح;
 
 // Dense dynamic bit set backed by machine-independent 64-bit words.
 عام نوع مجموعة_بتات = {

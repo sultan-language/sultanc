@@ -8,7 +8,7 @@
 استورد compiler.frontend.semantic_pipeline;
 استورد compiler.msir.msir_builder;
 استورد compiler.msir.debug_contract;
-استورد std.collections.map;
+استورد المكتبة.مجموعات.خريطة;
 استورد compiler.frontend.ssf.ownership_facts;
 
 // مفردات داخلية موحدة لمحرك خفض MSIR. لا يملك هذا الملف Diagnostics المقننة.
@@ -124,8 +124,6 @@
     | داخلية بنوع معرف_دالة_مسير
     | خارجية بنوع معرف_دالة_خارجية_مسير
 ;
-
-
 
 // Canonical concrete function-instance identity used by monomorphization and
 // MSIR function lookup. The complete substitution set is part of the key.
@@ -275,7 +273,31 @@
     رموز_لا_تعود: متجه معرف_رمز,
     // std.fmt's compile-time checker, then the format functions whose literal
     // format strings it checks (frontend/semantic_pipeline.sn).
-    رموز_التنسيق: متجه معرف_رمز
+    رموز_التنسيق: متجه معرف_رمز,
+    // `@@track_caller` (caller_location.sn): the marked functions with their
+    // function-value shims, the place of each call that passes a location,
+    // and the global holding each such file's path.
+    دوال_تتبع_المستدعي: متجه دالة_تتبع_مستدع_خفض,
+    مواقع_المستدعين: متجه موقع_مستدع_خفض,
+    ملفات_المواقع: متجه ملف_موقع_خفض
+};
+
+عام نوع دالة_تتبع_مستدع_خفض = {
+    الدالة: معرف_دالة_مسير,
+    الغلاف: معرف_دالة_مسير
+};
+
+// A call's place: its span's start, its 1-based line and column.
+عام نوع موقع_مستدع_خفض = {
+    المصدر: ط32,
+    البايت: ط32,
+    السطر: طبيعي,
+    العمود: طبيعي
+};
+
+عام نوع ملف_موقع_خفض = {
+    المصدر: ط32,
+    العام: معرف_عام_مسير
 };
 
 عام نوع وصف_صحيح_خفض = {

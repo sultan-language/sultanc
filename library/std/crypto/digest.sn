@@ -2,10 +2,10 @@
 // PKCS#1, X.509, PKCS#12): one dispatch point over the std implementations,
 // with generic HMAC (RFC 2104) and HKDF (RFC 5869) built on it.
 
-استورد crypto.sha1;
-استورد crypto.sha256;
-استورد crypto.sha512;
-استورد crypto.words;
+استورد تشفير.شا1;
+استورد تشفير.شا256;
+استورد تشفير.شا512;
+استورد تشفير.كلمات;
 
 عام نوع خوارزمية_تجزئة =
     | تجزئة_شا1

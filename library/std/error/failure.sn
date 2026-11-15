@@ -15,11 +15,11 @@
 // one for a locale (text.language) and صف_فشل_بلغة renders the whole chain
 // in it. Nothing else reads them: the identity, صف_فشل and every other
 // function work on the author's message alone.
-استورد text.from_bytes;
-استورد text.compare;
-استورد text.language;
-استورد text.bidi;
-استورد io.println;
+استورد نصوص.من_بايتات;
+استورد نصوص.مقارنة;
+استورد نصوص.لغة;
+استورد نصوص.اتجاه;
+استورد دخ.اطبع_سطر;
 
 // One language version of the message: a BCP 47 tag in canonical case and
 // the message in that language.

@@ -5,8 +5,8 @@
 // نظير: tests/en/stdlib/error/notes_order.sn
 // std.error: notes keep the order they were added in, and adding a note
 // changes neither the identity nor the message.
-استورد المكتبة.أخطاء.failure;
-استورد المكتبة.نصوص.compare;
+استورد المكتبة.أخطاء.فشل;
+استورد المكتبة.نصوص.مقارنة;
 
 عرف الرئيسية(): عدد {
     دع الفشل: متغير فشل = فشل_بهوية(«config», «فارغ», «ملف الإعدادات فارغ»);

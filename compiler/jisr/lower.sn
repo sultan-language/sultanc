@@ -30,16 +30,16 @@
 //     (System V and AAPCS64 with their register areas marked used).
 // Public wrappers with the C signature (typed pointers, records by value)
 // are written for the functions with external linkage.
-استورد std.text.transform;
-استورد std.text.search;
-استورد std.text.compare;
-استورد std.text.from_bytes;
-استورد std.text.number;
-استورد std.math.wrapping;
+استورد المكتبة.نصوص.تحويل;
+استورد المكتبة.نصوص.بحث;
+استورد المكتبة.نصوص.مقارنة;
+استورد المكتبة.نصوص.من_بايتات;
+استورد المكتبة.نصوص.أعداد;
+استورد المكتبة.رياضيات.التفاف;
 استورد compiler.diagnostics.reason;
 استورد compiler.diagnostics.foreign_c;
-استورد std.text.radix;
-استورد std.text.substring;
+استورد المكتبة.نصوص.أساس;
+استورد المكتبة.نصوص.مقطع;
 استورد compiler.jisr.core;
 استورد compiler.jisr.target;
 استورد compiler.jisr.literals;
@@ -279,7 +279,6 @@
     إذا (نصان_متساويان(التمثيل, &«i8»)) { أرجع «ص8»; };
     أرجع «ط8»;
 }
-
 
 // The C arithmetic operation الرمز (body.sn: 1 + 2 - 3 * 4 / 5 % 6 & 7 | 8 ^
 // 9 << 10 >>) on two values of representation التمثيل, as C computes it.
@@ -2389,7 +2388,6 @@
     };
     علق_تخطيا_جسر(م, ك, (*ع).الاسم, الملف, السطر, العمود, سبب_تشخيص.سبب_سي_مخطى_اسم_مستعمل_كائن_خاص(), «»);
 }
-
 
 عرف انسخ_تعريفات_جسر(التعريفات: &متجه تعريف_جسر): متجه تعريف_جسر {
     دع الناتج: متغير متجه تعريف_جسر = [];

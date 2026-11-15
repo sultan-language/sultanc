@@ -1,4 +1,4 @@
-استورد std.text.from_bytes;
+استورد المكتبة.نصوص.من_بايتات;
 استورد compiler.diagnostics.reason;
 استورد compiler.source.span;
 استورد compiler.frontend.names.identifiers;

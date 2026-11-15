@@ -1,4 +1,4 @@
-استورد io.print;
+استورد دخ.اطبع;
 
 // Public line output is real std behavior built on print.
 عام عرف اطبع_سطر(النص: نص): نتيجة عدد, عدد {

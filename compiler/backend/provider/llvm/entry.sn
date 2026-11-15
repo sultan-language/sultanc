@@ -8,7 +8,7 @@
 استورد compiler.runtime.primitive_runtime_abi;
 استورد compiler.msir.msir_consumer;
 استورد compiler.msir.msir_model;
-استورد std.text.from_bytes;
+استورد المكتبة.نصوص.من_بايتات;
 
 // The source may already have declared the executable's startup symbols as
 // external data. Reuse the existing LLVM value so LLVMAddGlobal cannot rename
@@ -104,8 +104,8 @@
     // other outputs keep the language entry named `_start` unchanged.
     دع بلا_وسائط_إقلاع: منطقي =
         (*الهدف).مزود_التشغيل == مزود_تشغيل_هدف.واسي()
-            || ((*الهدف).صيغة_الكائن == صيغة_كائن_هدف.كوف()
-                && (*الهدف).المنصة.المنصة == هوية_منصة.ويندوز());
+        || ((*الهدف).صيغة_الكائن == صيغة_كائن_هدف.كوف()
+            && (*الهدف).المنصة.المنصة == هوية_منصة.ويندوز());
     إذا (بلا_وسائط_إقلاع) {
         إذا (!بدء_عملية_ذاتي) { أرجع اختياري.لا_شيء(); };
         طابق أضف_بدء_عملية_بلا_وسائط_إل_إل_في_إم(الحالة, دالة_الدخول, المسير) مع
@@ -183,6 +183,19 @@
         أرجع اختياري.موجود(فشل_مزود_إل_إل_في_إم.واجهة_ثنائية_غير_متاحة());
     };
     LLVMSetLinkage(مدخل_اللغة, ربط_داخلي_إل_إل_في_إم());
+    // The language entry stays a function of its own at every optimisation
+    // level. Inlined into this generated `main`, which has no source and so
+    // no subprogram, its code (and every call inlined into it) would lose its
+    // line rows: LLVM emits no line table for a function without one. As a
+    // function it keeps its subprogram, its frame and `break <entry>`; the
+    // cost is one call per process.
+    دع اسم_بلا_تضمين_خام: متجه ط8 = بايتات_من_نص(«noinline»);
+    دع اسم_بلا_تضمين: متغير متجه ط8 = اجعل_اسما_سي_لإل_إل_في_إم(&اسم_بلا_تضمين_خام);
+    دع معرف_بلا_تضمين: ط32 = LLVMGetEnumAttributeKindForName(
+        مؤشر_اسم_سي_لإل_إل_في_إم(&متغير اسم_بلا_تضمين), الطول(اسم_بلا_تضمين_خام) مثل طبيعي
+    );
+    LLVMAddAttributeAtIndex(مدخل_اللغة, 4294967295,
+        LLVMCreateEnumAttribute(السياق, معرف_بلا_تضمين, 0));
     دع عدد_صحيح64: مرجع_نوع_إل_إل_في_إم = LLVMInt64TypeInContext(السياق);
     // The canonical runtime startup count is u64 even on 32-bit targets;
     // only argv and envp use the target's pointer width.

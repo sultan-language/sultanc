@@ -3,13 +3,13 @@
 // خروج: 0
 // نظير: tests/en/ispeak/bench/bench_dynamic_reused.sn
 استورد compiler.diagnostics.identity;
-استورد std.text.from_bytes;
+استورد المكتبة.نصوص.من_بايتات;
 استورد compiler.diagnostics.reason;
 استورد compiler.ispeak.format.facts;
 استورد compiler.diagnostics.schema;
 استورد compiler.ispeak.ispeak;
-استورد std.text.compare;
-استورد std.text.builder;
+استورد المكتبة.نصوص.مقارنة;
+استورد المكتبة.نصوص.باني;
 
 // Same source, target, locale and 200,000 operations for each backend.
 // Check every returned length; do not benchmark a result discarded by the caller.

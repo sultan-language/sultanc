@@ -3,8 +3,8 @@
 // writes them (Appendix A, Notational Conventions). Values above U+10FFFF
 // are not code points; they are written the same way, with as many digits
 // as they need.
-استورد encoding.hex;
-استورد text.from_bytes;
+استورد ترميز.سداسي;
+استورد نصوص.من_بايتات;
 
 عام عرف نص_نقطة_يونيكود(القيمة: ط32): نص {
     دع البايتات: متجه ط8 = [

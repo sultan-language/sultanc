@@ -1,4 +1,4 @@
-استورد std.text.compare;
+استورد المكتبة.نصوص.مقارنة;
 
 // Kernel operations required by std.os. This identifies OS services, not
 // compilation targets; architecture-specific syscall numbers are kept in

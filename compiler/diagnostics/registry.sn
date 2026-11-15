@@ -1,4 +1,4 @@
-استورد std.text.compare;
+استورد المكتبة.نصوص.مقارنة;
 استورد compiler.diagnostics.identity;
 استورد compiler.diagnostics.schema;
 
@@ -394,6 +394,21 @@
     | معرف_تشخيص.تصريح_وحدة_خارج_ملف_الجذر -> {
         أرجع تعريف_خطأ(المعرف, «SULTANC-MODULE-OUTSIDE-ROOT-FILE», «module-declaration-outside-root-file»);
     }
+    | معرف_تشخيص.اختبار_بمعاملات -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-TEST-PARAMETERS», «test-has-parameters»);
+    }
+    | معرف_تشخيص.ناتج_اختبار_غير_صالح -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-TEST-RESULT-TYPE», «test-result-type»);
+    }
+    | معرف_تشخيص.اختبار_ليس_دالة_عادية -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-TEST-NOT-A-FUNCTION», «test-not-a-function»);
+    }
+    | معرف_تشخيص.اختبار_غير_موجود -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-TEST-NOT-FOUND», «test-not-found»);
+    }
+    | معرف_تشخيص.ملف_اختبارات_خارج_البرنامج -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-TEST-FILE-NOT-IN-PROGRAM», «test-file-not-in-program»);
+    }
     | معرف_تشخيص.مكتبة_تفسير_غير_محملة -> {
         أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-RUN-LIBRARY-LOAD-FAILED», «run-library-load-failed», شدة_تشخيص.خطأ(), فئة_تشخيص.بيئة());
     }
@@ -528,6 +543,12 @@
     }
     | معرف_تشخيص.سمة_تصريح_غير_مدعومة -> {
         أرجع تعريف_خطأ(المعرف, «SULTANC-ANNOTATION-UNSUPPORTED», «annotation-processing-unavailable»);
+    }
+    | معرف_تشخيص.توقيع_يتتبع_المستدعي_غير_صالح -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-TRACK-CALLER-SIGNATURE», «track-caller-signature»);
+    }
+    | معرف_تشخيص.حجة_موقع_المستدعي_صريحة -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-TRACK-CALLER-EXPLICIT-LOCATION», «track-caller-explicit-location»);
     }
     | معرف_تشخيص.خفض_تعبير_غير_مدعوم -> {
         أرجع تعريف_خطأ_داخلي(المعرف, «SULTANC-ICE-LOWERING-UNSUPPORTED-EXPRESSION», «unsupported-expression-lowering»);
@@ -740,8 +761,6 @@
         أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-INTERPRETER-UNSUPPORTED-MACHINE-PRIMITIVE», «interpreter-unsupported-machine-primitive», شدة_تشخيص.خطأ(), فئة_تشخيص.مستخدم());
     };
 }
-
-
 
 عام عرف كل_معرفات_التشخيص(): متجه معرف_تشخيص {
     دع الناتج: متغير متجه معرف_تشخيص = [];
@@ -966,6 +985,15 @@
     ألحق(الناتج, معرف_تشخيص.تهجئة_وحدة_مشتركة());
     ألحق(الناتج, معرف_تشخيص.تهجئة_وحدة_محجوزة());
     ألحق(الناتج, معرف_تشخيص.تصريح_وحدة_خارج_ملف_الجذر());
+    ألحق(الناتج, معرف_تشخيص.اختبار_بمعاملات());
+    ألحق(الناتج, معرف_تشخيص.ناتج_اختبار_غير_صالح());
+    ألحق(الناتج, معرف_تشخيص.اختبار_ليس_دالة_عادية());
+    ألحق(الناتج, معرف_تشخيص.اختبار_غير_موجود());
+    ألحق(الناتج, معرف_تشخيص.ملف_اختبارات_خارج_البرنامج());
+    // New public codes go at the end: their order is part of the wire
+    // identity (tests/{en,ar}/ispeak/check_public_codes.sn).
+    ألحق(الناتج, معرف_تشخيص.توقيع_يتتبع_المستدعي_غير_صالح());
+    ألحق(الناتج, معرف_تشخيص.حجة_موقع_المستدعي_صريحة());
     أرجع الناتج;
 }
 

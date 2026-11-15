@@ -1,4 +1,4 @@
-استورد os.error;
+استورد نظام_التشغيل.أخطاء;
 
 // Argument vectors belong to process startup, not to a kernel syscall.
 // Validate a zero-based index before converting to an unsigned vector offset.
@@ -10,8 +10,8 @@
 }
 
 إذا (الهدف.المنصة == «windows») {
-    استورد os.platform.windows.win32.process_control;
-    استورد text.from_bytes;
+    استورد نظام_التشغيل.منصات.ويندوز.وين32.التحكم_بالعملية;
+    استورد نصوص.من_بايتات;
 
     عرف خطأ_وسائط_ويندوز_للنظام(الخطأ: خطأ_عملية_ويندوز): خطأ_حد_نظام {
         طابق الخطأ مع
@@ -59,11 +59,10 @@
     }
 }
 
-
 // Linux and Darwin share the Unix process-startup argv contract.
 إذا (((الهدف.المنصة == «linux» || الهدف.المنصة == «android» || الهدف.المنصة == «freebsd») && الهدف.المعمارية != «ve») || الهدف.المنصة == «macos») {
-    استورد os.platform.unix.process_startup;
-    استورد text.from_bytes;
+    استورد نظام_التشغيل.منصات.يونكس.بدء_العملية;
+    استورد نصوص.من_بايتات;
 
     عام عرف عدد_وسائط_النظام(): نتيجة عدد, خطأ_حد_نظام {
         طابق اقرأ_عدد_وسائط_إقلاع_يونكس() مع
@@ -81,9 +80,9 @@
 
 // WASI hosts supply arguments through args_sizes_get/args_get.
 إذا (الهدف.المنصة == «wasi») {
-    استورد os.platform.wasi.preview1.file_descriptors;
-    استورد os.platform.wasi.preview1.process_startup;
-    استورد text.from_bytes;
+    استورد نظام_التشغيل.منصات.واسي.معاينة1.واصفات_الملفات;
+    استورد نظام_التشغيل.منصات.واسي.معاينة1.بدء_العملية;
+    استورد نصوص.من_بايتات;
 
     عام عرف عدد_وسائط_النظام(): نتيجة عدد, خطأ_حد_نظام {
         طابق اقرأ_وسائط_واسي() مع

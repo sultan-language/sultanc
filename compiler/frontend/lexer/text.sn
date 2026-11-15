@@ -5,9 +5,9 @@
 استورد compiler.frontend.lexer.values;
 استورد compiler.frontend.lexer.cursor;
 استورد compiler.frontend.lexer.result;
-استورد std.chars.ascii;
-استورد std.text.compare;
-استورد std.encoding.utf8;
+استورد المكتبة.حروف.أسكي;
+استورد المكتبة.نصوص.مقارنة;
+استورد المكتبة.ترميز.يوتيف8;
 // مسح النصوص والمحارف فقط؛ ملكية البايتات المفكوكة تنتقل إلى حمولة الرمز.
 
 نوع هروب_سداسي =

@@ -1,0 +1,26 @@
+استورد compiler.frontend.types.semantic_pipeline;
+استورد compiler.frontend.types.type_identity;
+استورد compiler.frontend.pattern.semantic_pipeline;
+استورد compiler.frontend.ssf.ownership_facts;
+
+// The facts of the phases after Name binding for the modules analysed so far,
+// and the Type parameters SSF gave an inferred plain bound
+// (قيد_معامل_نوع_عاديا), which a later stage applies again after it rebuilds
+// the Memory facts (semantic_pipeline.sn).
+عام نوع حقائق_لاحقة_مرحلية = {
+    سياقات_الأنواع: سياقات_أنواع_وحدة,
+    سياق_الأنماط: سياق_أنماط_وحدة,
+    حقائق_الملكية: حقائق_ملكية_تدفق,
+    المعاملات_العادية: متجه معرف_نوع
+};
+
+عام عرف حقائق_لاحقة_مرحلية_فارغة(): حقائق_لاحقة_مرحلية {
+    دع العادية: متجه معرف_نوع = [];
+    دع الفارغة: حقائق_لاحقة_مرحلية = {
+        سياقات_الأنواع: سياقات_أنواع_وحدة_فارغة(),
+        سياق_الأنماط: سياق_أنماط_وحدة_فارغ(),
+        حقائق_الملكية: حقائق_ملكية_تدفق_جديدة(),
+        المعاملات_العادية: العادية
+    };
+    أرجع الفارغة;
+}

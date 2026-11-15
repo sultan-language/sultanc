@@ -1,4 +1,4 @@
-استورد os.error;
+استورد نظام_التشغيل.أخطاء;
 
 // Advisory whole-file locks on an open file (Rust 1.89 File::lock,
 // lock_shared, try_lock, try_lock_shared, unlock), one guarded branch per
@@ -20,9 +20,9 @@
 إذا ((الهدف.المنصة == «linux» || الهدف.المنصة == «android») && الهدف.المعمارية != «ve») { استورد os.platform.unix.linux.uapi; }
 إذا (الهدف.المنصة == «freebsd») { استورد os.platform.unix.freebsd.uapi; }
 إذا ((الهدف.المنصة == «linux» || الهدف.المنصة == «android» || الهدف.المنصة == «freebsd») && الهدف.المعمارية != «ve») {
-    استورد os.platform.unix.linux.syscalls.operations;
-    استورد os.platform.unix.linux.syscalls.selection;
-    استورد os.platform.unix.linux.syscalls.kernel_result;
+    استورد نظام_التشغيل.منصات.يونكس.لينكس.نداءات_النظام.عمليات;
+    استورد نظام_التشغيل.منصات.يونكس.لينكس.نداءات_النظام.اختيار;
+    استورد نظام_التشغيل.منصات.يونكس.لينكس.نداءات_النظام.نتيجة_النواة;
 
     // flock, retried on EINTR (a blocking lock is interruptible).
     عرف نفذ_قفل_ملف_لينكس(المقبض: ط64, العملية: ط64): نتيجة عدد, خطأ_نظام_أصلي {
@@ -61,7 +61,7 @@
 }
 
 إذا (الهدف.المنصة == «macos») {
-    استورد os.platform.unix.apple.darwin.file_locks;
+    استورد نظام_التشغيل.منصات.يونكس.آبل.داروين.أقفال_الملفات;
 
     // EWOULDBLOCK is 35.
     عام عرف اقفل_ملف_نظام(المقبض: ط64, حصري: منطقي, بلا_انتظار: منطقي): نتيجة منطقي, خطأ_حد_نظام {
@@ -84,7 +84,7 @@
 }
 
 إذا (الهدف.المنصة == «windows») {
-    استورد os.platform.windows.win32.file_locks;
+    استورد نظام_التشغيل.منصات.ويندوز.وين32.أقفال_الملفات;
 
     // A lock held elsewhere makes a LOCKFILE_FAIL_IMMEDIATELY request fail
     // with ERROR_LOCK_VIOLATION (33), or ERROR_IO_PENDING (997) on a handle

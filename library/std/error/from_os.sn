@@ -6,10 +6,10 @@
 // domain, and keep the numeric status as a note. Every converter takes its
 // error by reference, the shape a converter function value needs. The
 // message is Arabic, with an English language version («en»).
-استورد error.failure;
-استورد fs.error;
-استورد text.number;
-استورد text.from_bytes;
+استورد أخطاء.فشل;
+استورد ملفات.أخطاء;
+استورد نصوص.أعداد;
+استورد نصوص.من_بايتات;
 
 // The note «<prefix><value>»; Stage0-compatible text concatenation.
 عرف نص_ملاحظة_حالة_نظام(البادئة: نص, القيمة: نص): نص {

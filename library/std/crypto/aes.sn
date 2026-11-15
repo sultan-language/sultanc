@@ -8,7 +8,7 @@
 // plane-wise. MixColumns uses masked xtime. Every step runs the same
 // operations for every key and block.
 
-استورد crypto.words;
+استورد تشفير.كلمات;
 
 عام نوع مفتاح_أيس = {
     الكلمات: متجه طبيعي,

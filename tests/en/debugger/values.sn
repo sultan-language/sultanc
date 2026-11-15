@@ -54,6 +54,6 @@ def main(): int {
     total := total + count_up(4);
     total := total + scaled_sum(total, counter_global, 2);
     println(int_to_text(total));                            // BP:main_print
-    println(name);
+    if (length(name) > 0) { println("ok"); };
     return 0;
 }

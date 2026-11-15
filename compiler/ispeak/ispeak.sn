@@ -1,4 +1,4 @@
-استورد std.text.builder;
+استورد المكتبة.نصوص.باني;
 استورد compiler.diagnostics.identity;
 استورد compiler.diagnostics.reason;
 استورد compiler.diagnostics.registry;

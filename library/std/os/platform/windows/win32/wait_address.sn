@@ -10,8 +10,8 @@
 //                      SIZE_T AddressSize, DWORD dwMilliseconds);
 //   VOID WakeByAddressSingle(PVOID Address);
 //   VOID WakeByAddressAll(PVOID Address);
-استورد os.error;
-استورد os.platform.windows.win32.error;
+استورد نظام_التشغيل.أخطاء;
+استورد نظام_التشغيل.منصات.ويندوز.وين32.أخطاء;
 
 خارجي «api-ms-win-core-synch-l1-2-0.dll» عرف WaitOnAddress(العنوان: &ط32, المقارنة: &ط32, الحجم: ط64, المهلة: ط32): ص32;
 خارجي «api-ms-win-core-synch-l1-2-0.dll» عرف WakeByAddressSingle(العنوان: &ط32): فراغ;

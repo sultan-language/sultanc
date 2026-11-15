@@ -1,4 +1,4 @@
-استورد std.text.from_bytes;
+استورد المكتبة.نصوص.من_بايتات;
 استورد compiler.interpreter.execution.execution_state;
 استورد compiler.interpreter.execution.task_switch;
 استورد compiler.interpreter.execution.frame;
@@ -23,8 +23,7 @@
 استورد compiler.interpreter.execution.host_kernel_generated;
 استورد compiler.interpreter.execution.host_calls;
 استورد compiler.interpreter.operations.float_software;
-استورد std.encoding.utf16;
-
+استورد المكتبة.ترميز.يوتيف16;
 
 // This is the single Interpreter-owned boundary from canonical primitive identity
 // to semantic runtime behavior. It owns no source spellings and no platform ABI facts.

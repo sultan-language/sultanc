@@ -2,7 +2,7 @@
 // libSystem as Rust's std and Go's runtime call it there (Nahr items 16
 // and 17). pthread_sigmask and sigwait return an error number instead of
 // setting errno. SIGINT is 2, SIGTERM 15; SIG_BLOCK is 1.
-استورد os.error;
+استورد نظام_التشغيل.أخطاء;
 
 خارجي «/usr/lib/libSystem.B.dylib» عرف getpid(): ص32;
 خارجي «/usr/lib/libSystem.B.dylib» عرف isatty(الواصف: ص32): ص32;

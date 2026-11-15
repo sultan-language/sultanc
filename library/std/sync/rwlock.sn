@@ -13,9 +13,9 @@
 // preference: a steady stream of readers can delay a writer. Like Mutex,
 // the value is reached only inside a closure that runs with the lock held,
 // and nothing is poisoned (a panic ends the process).
-استورد sync.atomic;
-استورد sync.arc;
-استورد os.wait_address;
+استورد تزامن.ذري;
+استورد تزامن.مشترك;
+استورد نظام_التشغيل.انتظار_العنوان;
 
 عام نوع قفل_قراءة_كتابة<ق> = {
     الحالة: ذرة_ط32,

@@ -1,6 +1,6 @@
-استورد std.text.from_bytes;
+استورد المكتبة.نصوص.من_بايتات;
 استورد compiler.link.model;
-استورد std.collections.map;
+استورد المكتبة.مجموعات.خريطة;
 
 // Archive parsing belongs to the selected object-format provider. The generic
 // linker only owns member identity and the extraction state required by symbol
@@ -282,4 +282,3 @@
     }
     أرجع اختياري.لا_شيء();
 }
-

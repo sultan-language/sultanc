@@ -1,5 +1,5 @@
-استورد text.from_bytes;
-استورد text.number;
+استورد نصوص.من_بايتات;
+استورد نصوص.أعداد;
 
 // Semantic Versioning 2.0.0 value. Build metadata does not participate in
 // precedence; prerelease identifiers are compared according to SemVer rules.

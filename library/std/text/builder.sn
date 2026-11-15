@@ -1,6 +1,6 @@
-استورد bytes.builder;
-استورد text.from_bytes;
-استورد encoding.utf8;
+استورد بايتات.باني;
+استورد نصوص.من_بايتات;
+استورد ترميز.يوتيف8;
 
 // Text builder reuses the byte builder so repeated text concatenation does not
 // repeatedly materialize intermediate Text values.

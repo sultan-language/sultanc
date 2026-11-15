@@ -5,7 +5,7 @@
 // environment through its kernel32 externs, which the foreign-call bridge
 // runs), so this returns لا_شيء there.
 إذا (((الهدف.المنصة == «linux» || الهدف.المنصة == «android» || الهدف.المنصة == «freebsd») && الهدف.المعمارية != «ve») || الهدف.المنصة == «macos») {
-    استورد std.os.platform.unix.process_startup;
+    استورد المكتبة.نظام_التشغيل.منصات.يونكس.بدء_العملية;
 
     عام عرف بيئة_المضيف_لمفسر(): اختياري متجه متجه ط8 {
         أرجع اجمع_بيئة_إقلاع_يونكس();

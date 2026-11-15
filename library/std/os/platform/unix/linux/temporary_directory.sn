@@ -1,5 +1,5 @@
-استورد os.environment_validation;
-استورد os.path;
+استورد نظام_التشغيل.تحقق_البيئة;
+استورد نظام_التشغيل.مسار;
 
 // Linux temporary-directory policy is derived from process environment,
 // not a kernel syscall. An absent TMPDIR must be handled by a separately

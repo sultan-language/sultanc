@@ -1,5 +1,5 @@
-استورد std.text.from_bytes;
-استورد std.encoding.utf8;
+استورد المكتبة.نصوص.من_بايتات;
+استورد المكتبة.ترميز.يوتيف8;
 استورد compiler.frontend.names.identifiers;
 استورد compiler.frontend.names.module_identity;
 استورد compiler.frontend.names.symbols;

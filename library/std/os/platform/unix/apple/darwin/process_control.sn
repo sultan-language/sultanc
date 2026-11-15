@@ -1,6 +1,6 @@
-استورد os.error;
-استورد os.path;
-استورد os.platform.unix.apple.darwin.file_descriptors;
+استورد نظام_التشغيل.أخطاء;
+استورد نظام_التشغيل.مسار;
+استورد نظام_التشغيل.منصات.يونكس.آبل.داروين.واصفات_الملفات;
 
 // Darwin process provider through libSystem. posix_spawn is the supported
 // Darwin process-creation interface (fork in a multithreaded process is not).

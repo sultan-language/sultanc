@@ -1,9 +1,9 @@
-استورد net.ip;
-استورد net.options;
-استورد net.socket_address;
+استورد شبكة.آيبي;
+استورد شبكة.خيارات;
+استورد شبكة.عنوان_مقبس;
 
-استورد os.socket;
-استورد os.error;
+استورد نظام_التشغيل.مقبس;
+استورد نظام_التشغيل.أخطاء;
 
 // UDP datagram sockets on the same OS socket layer as std.net.tcp: a socket
 // is bound to a local address, then connected to one peer to send and

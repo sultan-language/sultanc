@@ -1,7 +1,7 @@
 استورد compiler.source.source_file;
 استورد compiler.source.span;
-استورد std.text.from_bytes;
-استورد std.encoding.positions;
+استورد المكتبة.نصوص.من_بايتات;
+استورد المكتبة.ترميز.مواضع;
 
 // Compiler-wide source registry. It is the canonical owner of SourceID allocation
 // and source lookup used by frontend, diagnostics, tooling and debug provenance.
@@ -113,7 +113,6 @@
     };
     أرجع صواب;
 }
-
 
 عام عرف اسم_مصدر_من_الخريطة(
     الخريطة: &خريطة_مصادر,

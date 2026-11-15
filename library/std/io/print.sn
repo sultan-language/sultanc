@@ -1,6 +1,6 @@
-استورد os.io;
-استورد os.error;
-استورد io.writer;
+استورد نظام_التشغيل.دخل_خرج;
+استورد نظام_التشغيل.أخطاء;
+استورد دخ.كاتب;
 
 // Private standard-stream selection; native descriptors and handles stay in os.io.
 نوع وجهة_تيار_قياسي =

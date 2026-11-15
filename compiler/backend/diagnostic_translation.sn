@@ -1,4 +1,4 @@
-استورد std.text.from_bytes;
+استورد المكتبة.نصوص.من_بايتات;
 استورد compiler.diagnostics.reason;
 استورد compiler.diagnostics.identity;
 استورد compiler.diagnostics.record;
@@ -543,7 +543,6 @@
     | خطأ_ترميز_إكس_ستة_وثمانون_أربعة_وستون.فوري_خارج_مدى_32(القيمة) -> { أضف_سبب_فشل_أصلي(التشخيص, سبب_تشخيص.سبب_ترميز_حسابي_فوري_خارج_من_نطاق()); أضف_عدد_فشل_أصلي(التشخيص, مفتاح_حجة_تشخيص.القيمة(), القيمة); };
 }
 
-
 عرف أضف_فشل_دخول_أصلي(
     التشخيص: &متغير تشخيص,
     الفشل: فشل_حل_دخول_أصلي
@@ -741,7 +740,6 @@
     أصدر_تشخيصا(&متغير المجموعة, &التشخيص);
     أرجع المجموعة;
 }
-
 
 // The first line of an LLVM message (verifier, pass pipeline, emitter) as
 // the diagnostic's value fact; nothing is added for an empty message.

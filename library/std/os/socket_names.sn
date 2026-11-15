@@ -1,5 +1,5 @@
-استورد os.error;
-استورد os.socket;
+استورد نظام_التشغيل.أخطاء;
+استورد نظام_التشغيل.مقبس;
 
 // Socket names (getsockname, getpeername) and datagrams to and from a given
 // address, one guarded branch per OS. A sockaddr is decoded into its family
@@ -33,9 +33,9 @@
 }
 
 إذا ((الهدف.المنصة == «linux» || الهدف.المنصة == «android» || الهدف.المنصة == «freebsd») && الهدف.المعمارية != «ve») {
-    استورد os.platform.unix.linux.socket_names;
-    استورد os.platform.unix.linux.sockets;
-    استورد os.platform.unix.linux.file_descriptors;
+    استورد نظام_التشغيل.منصات.يونكس.لينكس.أسماء_المقابس;
+    استورد نظام_التشغيل.منصات.يونكس.لينكس.مقابس;
+    استورد نظام_التشغيل.منصات.يونكس.لينكس.واصفات_الملفات;
     إذا (الهدف.المنصة == «linux» || الهدف.المنصة == «android») { استورد os.platform.unix.linux.uapi; }
     إذا (الهدف.المنصة == «freebsd») { استورد os.platform.unix.freebsd.uapi; }
 
@@ -115,8 +115,8 @@
 }
 
 إذا (الهدف.المنصة == «macos») {
-    استورد os.platform.unix.apple.darwin.socket_names;
-    استورد os.platform.unix.apple.darwin.sockets;
+    استورد نظام_التشغيل.منصات.يونكس.آبل.داروين.أسماء_المقابس;
+    استورد نظام_التشغيل.منصات.يونكس.آبل.داروين.مقابس;
 
     عرف خطأ_اسم_مقبس_داروين_للنظام(الخطأ: خطأ_مقبس_داروين): خطأ_حد_نظام {
         طابق الخطأ مع
@@ -185,7 +185,7 @@
 }
 
 إذا (الهدف.المنصة == «windows») {
-    استورد os.platform.windows.winsock.sockets;
+    استورد نظام_التشغيل.منصات.ويندوز.وين_سوك.مقابس;
 
     عرف خطأ_اسم_مقبس_وينسوك_للنظام(الخطأ: خطأ_مقبس_وينسوك): خطأ_حد_نظام {
         طابق الخطأ مع

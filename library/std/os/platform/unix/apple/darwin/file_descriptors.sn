@@ -1,6 +1,6 @@
-استورد os.buffer;
-استورد os.path;
-استورد os.error;
+استورد نظام_التشغيل.مخزن;
+استورد نظام_التشغيل.مسار;
+استورد نظام_التشغيل.أخطاء;
 
 // Darwin file-descriptor provider. On macOS the supported kernel interface is
 // libSystem (libsystem_kernel); the raw syscall ABI is private and unstable,

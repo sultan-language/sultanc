@@ -3,7 +3,7 @@
 استورد compiler.link.section_model;
 استورد compiler.link.spirv.reader;
 استورد compiler.backend.target.target_model;
-استورد std.text.from_bytes;
+استورد المكتبة.نصوص.من_بايتات;
 
 عام نوع خطأ_استيعاب_سبير_في =
     | وحدة_غير_صالحة

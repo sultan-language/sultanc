@@ -1,0 +1,12 @@
+// The root file of std.os.platform.wasi.preview1: the Arabic spellings of its modules
+// (docs/en/reference/modules-and-imports.md, "Module spellings"). An import may
+// use either name; both name one module.
+
+module clocks { ar: ساعات };
+module error_translation { ar: ترجمة_الأخطاء };
+module file_attributes { ar: سمات_الملفات };
+module file_descriptors { ar: واصفات_الملفات };
+module process_control { ar: التحكم_بالعملية };
+module process_startup { ar: بدء_العملية };
+module random { ar: عشوائي };
+module sockets { ar: مقابس };

@@ -1,7 +1,7 @@
-استورد os.platform.unix.linux.file_descriptors;
-استورد os.platform.unix.linux.syscalls.operations;
-استورد os.platform.unix.linux.syscalls.selection;
-استورد os.platform.unix.linux.uapi;
+استورد نظام_التشغيل.منصات.يونكس.لينكس.واصفات_الملفات;
+استورد نظام_التشغيل.منصات.يونكس.لينكس.نداءات_النظام.عمليات;
+استورد نظام_التشغيل.منصات.يونكس.لينكس.نداءات_النظام.اختيار;
+استورد نظام_التشغيل.منصات.يونكس.لينكس.واجهة_النواة;
 
 // ELF auxiliary entries are 2 machine words (uapi.sn حجم_كلمة_لينكس).
 // AT_PAGESZ=6, AT_NULL=0. This is kernel process-startup information,

@@ -23,11 +23,11 @@
 //
 // Ends are not copyable (Rust's Receiver is not Clone; a Sender is cloned
 // explicitly), so a spawned closure moves the end it captures.
-استورد sync.atomic;
-استورد sync.arc;
-استورد sync.mutex;
-استورد os.wait_address;
-استورد time.duration;
+استورد تزامن.ذري;
+استورد تزامن.مشترك;
+استورد تزامن.قفل;
+استورد نظام_التشغيل.انتظار_العنوان;
+استورد وقت.مدة;
 
 نوع داخل_قناة<ق> = {
     القفل: ذرة_ط32,

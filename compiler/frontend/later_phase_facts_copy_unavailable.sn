@@ -1,0 +1,9 @@
+استورد compiler.frontend.later_phase_facts;
+
+// later_phase_facts_copy.sn for the C Stage0 (bootstrap/), which has no
+// `استنسخ` (cmake/modules/Stage1.cmake binds this file in that module's
+// place). The Stage1 it builds only compiles, in one stage from module 0, and
+// never copies kept facts; the empty facts below are never asked for.
+عام عرف انسخ_حقائق_لاحقة_مرحلية(الحقائق: &حقائق_لاحقة_مرحلية): حقائق_لاحقة_مرحلية {
+    أرجع حقائق_لاحقة_مرحلية_فارغة();
+}

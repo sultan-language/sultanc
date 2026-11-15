@@ -1,4 +1,4 @@
-استورد encoding.utf16;
+استورد ترميز.يوتيف16;
 
 // Native paths are not a single encoding: Unix passes opaque bytes, while
 // Win32's W APIs consume UTF-16 code units. These constructors only prepare

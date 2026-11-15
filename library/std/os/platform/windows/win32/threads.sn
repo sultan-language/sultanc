@@ -1,6 +1,6 @@
-استورد os.error;
-استورد os.platform.windows.win32.error;
-استورد os.platform.windows.win32.file_handles;
+استورد نظام_التشغيل.أخطاء;
+استورد نظام_التشغيل.منصات.ويندوز.وين32.أخطاء;
+استورد نظام_التشغيل.منصات.ويندوز.وين32.مقابض_الملفات;
 
 // Windows OS threads (docs/en/reference/concurrency.md) through kernel32, as Rust's std
 // does (library/std/src/sys/pal/windows/thread.rs): CreateThread with a

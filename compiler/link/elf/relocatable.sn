@@ -6,7 +6,7 @@
 استورد compiler.link.elf.reader;
 استورد compiler.link.elf.target_policy;
 استورد compiler.backend.target.target_model;
-استورد std.text.from_bytes;
+استورد المكتبة.نصوص.من_بايتات;
 
 عام نوع خطأ_كائن_مترابط_إلف =
     | هدف_غير_مدعوم

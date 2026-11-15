@@ -1,7 +1,7 @@
-استورد fs.error;
-استورد fs.attributes;
-استورد os.error;
-استورد os.file_attributes;
+استورد ملفات.أخطاء;
+استورد ملفات.سمات;
+استورد نظام_التشغيل.أخطاء;
+استورد نظام_التشغيل.سمات_الملف;
 
 // Permission bits: the low twelve bits of a Unix mode (0o7777: set-user-ID,
 // set-group-ID, sticky, and rwx for owner, group and others). On Windows the

@@ -9,17 +9,17 @@
 استورد compiler.diagnostics.schema;
 استورد compiler.format.format;
 استورد compiler.format.edits;
-استورد std.fs.read_file;
-استورد std.fs.write_bytes;
-استورد std.fs.mutation;
-استورد std.fs.metadata;
-استورد std.fs.walk;
-استورد std.fs.directory;
-استورد std.io.read_line;
-استورد std.io.print;
-استورد std.text.from_bytes;
-استورد std.text.compare;
-استورد std.collections.sort;
+استورد المكتبة.ملفات.قراءة_ملف;
+استورد المكتبة.ملفات.كتابة_بايتات;
+استورد المكتبة.ملفات.تعديل;
+استورد المكتبة.ملفات.بيانات_وصفية;
+استورد المكتبة.ملفات.اجتياز;
+استورد المكتبة.ملفات.مجلد;
+استورد المكتبة.دخ.اقرأ_سطر;
+استورد المكتبة.دخ.اطبع;
+استورد المكتبة.نصوص.من_بايتات;
+استورد المكتبة.نصوص.مقارنة;
+استورد المكتبة.مجموعات.ترتيب;
 
 // `sultanc fmt`: formats files in place, or standard input to standard
 // output. The driver parses the command line into طلب_تنسيق and renders the

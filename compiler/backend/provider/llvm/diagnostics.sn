@@ -1,6 +1,6 @@
 استورد compiler.backend.provider.llvm.ffi.types;
 استورد compiler.backend.provider.llvm.ffi.core;
-استورد std.text.from_bytes;
+استورد المكتبة.نصوص.من_بايتات;
 
 عام عرف انسخ_بايتات_إل_إل_في_إم(المصدر: &متجه ط8): متجه ط8 {
     دع الناتج: متغير متجه ط8 = [];

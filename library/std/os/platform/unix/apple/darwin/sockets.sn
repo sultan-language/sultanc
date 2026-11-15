@@ -1,6 +1,6 @@
-استورد os.error;
-استورد os.buffer;
-استورد os.platform.unix.apple.darwin.file_descriptors;
+استورد نظام_التشغيل.أخطاء;
+استورد نظام_التشغيل.مخزن;
+استورد نظام_التشغيل.منصات.يونكس.آبل.داروين.واصفات_الملفات;
 
 // Darwin sockets use libSystem's public POSIX entry points, not private
 // Darwin kernel syscall numbers.  socklen_t is u32; size_t/ssize_t are 64-bit

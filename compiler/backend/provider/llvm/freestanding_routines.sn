@@ -3,7 +3,7 @@
 استورد compiler.backend.provider.llvm.ffi.core;
 استورد compiler.backend.provider.llvm.ffi.types;
 استورد compiler.backend.target.target_model;
-استورد std.text.from_bytes;
+استورد المكتبة.نصوص.من_بايتات;
 
 // Operations the Cortex-M instruction sets lack, which LLVM would lower to
 // calls of run-time routines (the Arm run-time ABI's __aeabi_* functions,

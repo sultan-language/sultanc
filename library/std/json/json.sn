@@ -1,0 +1,9 @@
+// The root file of std.json: the Arabic spellings of its modules
+// (docs/en/reference/modules-and-imports.md, "Module spellings"). An import may
+// use either name; both name one module.
+
+module derive { ar: اشتقاق };
+module escape { ar: هروب };
+module parse { ar: تحليل };
+module stringify { ar: إلى_نص };
+module value { ar: قيمة };

@@ -1,4 +1,4 @@
-استورد text.from_bytes;
+استورد نصوص.من_بايتات;
 // Bounds-checked byte cursor for binary protocols and parsers. It owns no I/O;
 // callers provide an already available byte vector.
 عام نوع مؤشر_بايتات = {

@@ -1,4 +1,4 @@
-استورد std.encoding.binary;
+استورد المكتبة.ترميز.ثنائي;
 // Mach-O executable serialization helpers owned by the linker. Relocatable
 // object serialization remains under compiler/backend/object.
 

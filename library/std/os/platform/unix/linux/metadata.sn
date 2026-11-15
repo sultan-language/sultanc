@@ -1,9 +1,9 @@
-استورد os.platform.unix.linux.syscalls.operations;
-استورد os.platform.unix.linux.syscalls.selection;
-استورد os.path;
-استورد os.error;
-استورد os.platform.unix.linux.syscalls.kernel_result;
-استورد os.platform.unix.linux.kernel_records;
+استورد نظام_التشغيل.منصات.يونكس.لينكس.نداءات_النظام.عمليات;
+استورد نظام_التشغيل.منصات.يونكس.لينكس.نداءات_النظام.اختيار;
+استورد نظام_التشغيل.مسار;
+استورد نظام_التشغيل.أخطاء;
+استورد نظام_التشغيل.منصات.يونكس.لينكس.نداءات_النظام.نتيجة_النواة;
+استورد نظام_التشغيل.منصات.يونكس.لينكس.سجلات_النواة;
 
 // Linux statx(2) uses the same 256-byte UAPI record on every architecture
 // (unlike newfstatat); only the byte order of its fields follows the target. Reference: include/uapi/linux/stat.h (struct statx).
@@ -73,7 +73,7 @@
 // offsets generated from sys/sys/stat.h into freebsd/uapi.sn). Every field
 // std reads is always valid there, so the statx mask is reported complete.
 إذا (الهدف.المنصة == «freebsd») {
-    استورد os.platform.unix.freebsd.uapi;
+    استورد نظام_التشغيل.منصات.يونكس.فري_بي_إس_دي.واجهة_النواة;
 
     // The caller's statx number is not FreeBSD's: fstatat is issued instead.
     عام عرف اقرأ_معلومات_مسار_لينكس(

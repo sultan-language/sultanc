@@ -1,5 +1,15 @@
-استورد os.clock;
-استورد os.error;
+// Arabic spellings of this folder's modules (docs/en/reference/modules-and-imports.md,
+// "Module spellings"): `استورد المكتبة....` names the same modules as `import std....`.
+module calendar { ar: تقويم };
+module date { ar: تاريخ };
+module duration { ar: مدة };
+module duration_float { ar: مدة_عشرية };
+module duration_text { ar: نص_المدة };
+module time { ar: الوقت };
+module timezone { ar: منطقة_زمنية };
+
+استورد نظام_التشغيل.ساعة;
+استورد نظام_التشغيل.أخطاء;
 
 عرف وقت_رتيب_داخليا(): نتيجة لحظة_رتيبة_نظام, خطأ_حد_نظام {
     أرجع اقرأ_وقت_رتيب_النظام();

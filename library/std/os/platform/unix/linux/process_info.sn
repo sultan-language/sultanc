@@ -3,10 +3,10 @@
 // musl and Go's x/term test a descriptor, an ioctl that reads the terminal
 // attributes (Linux TCGETS, FreeBSD TIOCGETA) and fails with ENOTTY on
 // anything that is not a terminal.
-استورد os.platform.unix.linux.syscalls.kernel_result;
-استورد os.platform.unix.linux.syscalls.operations;
-استورد os.platform.unix.linux.syscalls.selection;
-استورد os.error;
+استورد نظام_التشغيل.منصات.يونكس.لينكس.نداءات_النظام.نتيجة_النواة;
+استورد نظام_التشغيل.منصات.يونكس.لينكس.نداءات_النظام.عمليات;
+استورد نظام_التشغيل.منصات.يونكس.لينكس.نداءات_النظام.اختيار;
+استورد نظام_التشغيل.أخطاء;
 
 // getpid() cannot fail.
 عام عرف معرف_العملية_لينكس(): ط64 {

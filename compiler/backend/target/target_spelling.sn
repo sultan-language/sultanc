@@ -1,7 +1,7 @@
-استورد std.text.from_bytes;
+استورد المكتبة.نصوص.من_بايتات;
 استورد compiler.backend.target.target_model;
 استورد compiler.backend.target.target_registry;
-استورد std.text.compare;
+استورد المكتبة.نصوص.مقارنة;
 // هذه البوابة وحدها تقبل التهجئات الخارجية. الناتج دائما هوية داخلية عربية مقننة.
 عام نوع نتيجة_تهجئة_معمارية =
     | معروفة بنوع هوية_معمارية
@@ -90,7 +90,6 @@
     };
     أرجع نتيجة_تهجئة_بيئة.غير_معروفة();
 }
-
 
 // Canonical external spelling of registered complete targets lives in Target,
 // never in Driver/CLI. Registry remains the owner of which targets exist.
@@ -215,7 +214,6 @@
     | هوية_بيئة.إي_إيه_بي_آي_إتش_إف -> { أرجع «eabihf»; }
     | هوية_بيئة.غير_محددة -> { أرجع «unknown»; };
 }
-
 
 عام عرف تهجئة_واجهة_ثنائية_شرط_هدف(القيمة: هوية_واجهة_ثنائية_هدف): نص {
     طابق القيمة مع

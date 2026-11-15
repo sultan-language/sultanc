@@ -271,18 +271,6 @@
     أرجع (*الذاكرة).عدادات_التخزين[النوع % 4];
 }
 
-// The capacity native code gives a vector built from العدد elements: a
-// vector literal is built by appends, so its capacity follows the growth
-// policy (vector_memory_policy.sn), as in the native and LLVM backends.
-عرف سعة_نمو_لعدد_مفسر(العدد: طبيعي, حجم_العنصر: طبيعي): طبيعي {
-    إذا (العدد == 0) { أرجع 0; };
-    دع السياسة: سياسة_نمو_متجه = سياسة_نمو_المتجه_لعنصر(حجم_العنصر);
-    دع السعة: متغير طبيعي = السياسة.السعة_الدنيا;
-    إذا (السعة == 0) { السعة := 1; };
-    طالما (السعة < العدد) { السعة := السعة * السياسة.عامل_النمو; }
-    أرجع السعة;
-}
-
 // The capacity an append that needs room for المطلوب elements grows a buffer
 // of capacity القديمة to, as compiled code does (Rust's RawVec rule): at least
 // double, at least what is needed, and never below the policy's minimum.
@@ -305,7 +293,9 @@
     (*الذاكرة).المخازن_الحية := (*الذاكرة).المخازن_الحية + 1;
     دع العدد: متغير طبيعي = الطول(القيم) مثل طبيعي;
     إذا (بايتات) { العدد := الطول(البايتات) مثل طبيعي; };
-    دع السعة: طبيعي = سعة_نمو_لعدد_مفسر(العدد, حجم_العنصر);
+    // A new buffer (a literal, a clone, a copy) holds exactly its elements,
+    // as compiled code allocates it (Rust's vec![...] and clone).
+    دع السعة: طبيعي = العدد;
     إذا (!ثابت) { عد_سعة_مخزن_مفسر(الذاكرة, 0, السعة, حجم_العنصر); };
     طابق (*الذاكرة).رأس_المخازن_الحرة مع
     | اختياري.لا_شيء -> {

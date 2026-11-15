@@ -11,10 +11,10 @@
 // stays valid because the lock is held again. Waits may wake spuriously, so
 // callers loop on their condition, or use `انتظر_طالما` / wait_while, which
 // loops for them (Rust's Condvar::wait_while).
-استورد sync.atomic;
-استورد sync.mutex;
-استورد os.wait_address;
-استورد time.duration;
+استورد تزامن.ذري;
+استورد تزامن.قفل;
+استورد نظام_التشغيل.انتظار_العنوان;
+استورد وقت.مدة;
 
 عام نوع شرط_انتظار = {
     التسلسل: ذرة_ط32,

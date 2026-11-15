@@ -7,7 +7,7 @@
 // indices (below); derived types (pointers, arrays, functions, qualified
 // copies) are appended as they are built. Struct, union and enum types point
 // at a tag record, which holds the members and the computed layout.
-استورد std.text.from_bytes;
+استورد المكتبة.نصوص.من_بايتات;
 استورد compiler.backend.layout.alignment;
 استورد compiler.jisr.core;
 استورد compiler.jisr.target;

@@ -1,5 +1,5 @@
-استورد os.error;
-استورد os.platform.wasi.preview1.file_descriptors;
+استورد نظام_التشغيل.أخطاء;
+استورد نظام_التشغيل.منصات.واسي.معاينة1.واصفات_الملفات;
 
 // WASI preview 1 clocks: clock_time_get(realtime 0 | monotonic 1) returns
 // nanoseconds. Sleeping is poll_oneoff with one relative clock subscription

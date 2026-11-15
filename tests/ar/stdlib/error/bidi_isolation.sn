@@ -6,11 +6,11 @@
 // std.text.bidi (docs/en/reference/errors.md): the direction of a text's first strong
 // character, isolates U+2068 … U+2069, isolation only where the directions
 // differ; and صف_فشل_بلغة isolating a Latin message inside Arabic text.
-استورد المكتبة.أخطاء.failure;
-استورد المكتبة.نصوص.language;
-استورد المكتبة.نصوص.bidi;
-استورد المكتبة.نصوص.compare;
-استورد المكتبة.نصوص.from_bytes;
+استورد المكتبة.أخطاء.فشل;
+استورد المكتبة.نصوص.لغة;
+استورد المكتبة.نصوص.اتجاه;
+استورد المكتبة.نصوص.مقارنة;
+استورد المكتبة.نصوص.من_بايتات;
 
 // U+2068, the text, U+2069, written out byte by byte.
 عرف معزول(النص: نص): نص {

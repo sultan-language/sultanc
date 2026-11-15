@@ -1,7 +1,7 @@
-استورد unicode.data.segmentation;
-استورد unicode.algorithms.lookup;
-استورد unicode.algorithms.text_offsets;
-استورد unicode.algorithms.segmentation_engine;
+استورد يونيكود.بيانات.تقطيع;
+استورد يونيكود.خوارزميات.بحث;
+استورد يونيكود.خوارزميات.إزاحات_النص;
+استورد يونيكود.خوارزميات.محرك_التقطيع;
 
 // Extended grapheme boundaries, Unicode 18.0 (UAX #29).
 // Index is a Unicode scalar offset rather than a UTF-8 byte offset.

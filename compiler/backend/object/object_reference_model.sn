@@ -1,4 +1,4 @@
-استورد std.text.from_bytes;
+استورد المكتبة.نصوص.من_بايتات;
 استورد compiler.backend.codegen.selected_code_core;
 استورد compiler.backend.target.runtime_service_model;
 استورد compiler.runtime.primitive_identity;

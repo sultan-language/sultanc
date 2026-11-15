@@ -1,0 +1,13 @@
+// A module of tests/runner/fixtures/testing/en/main.sn and passing.sn: its
+// own tests are discovered with the importing module's.
+import std.error.failure;
+
+public def double(x: int): int { return x * 2; }
+
+@@test
+def double_is_even(): result int, Error {
+    if (double(21) % 2 != 0) {
+        return result.err(error_with_kind("test", "helpers", "double(21) is odd"));
+    };
+    return result.ok(0);
+}

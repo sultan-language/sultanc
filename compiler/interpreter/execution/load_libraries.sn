@@ -1,4 +1,4 @@
-استورد std.text.from_bytes;
+استورد المكتبة.نصوص.من_بايتات;
 استورد compiler.interpreter.execution.host_dynamic;
 استورد compiler.interpreter.runtime_failures;
 

@@ -19,24 +19,24 @@
 // selects the system C compiler instead (host target only): its object is
 // linked (driver/c_sources.sn via كائنات_مصادر_سي) and the file's
 // non-static functions become externs.
-استورد std.env.system;
-استورد std.fs.metadata;
-استورد std.fs.read_file;
-استورد std.fs.write_file;
-استورد std.fs.mutation;
-استورد std.fs.path;
-استورد std.text.transform;
-استورد std.text.search;
-استورد std.process.child;
-استورد std.text.from_bytes;
-استورد std.text.compare;
-استورد std.text.number;
-استورد std.os.entropy;
+استورد المكتبة.بيئة.نظام;
+استورد المكتبة.ملفات.بيانات_وصفية;
+استورد المكتبة.ملفات.قراءة_ملف;
+استورد المكتبة.ملفات.كتابة_ملف;
+استورد المكتبة.ملفات.تعديل;
+استورد المكتبة.ملفات.مسار;
+استورد المكتبة.نصوص.تحويل;
+استورد المكتبة.نصوص.بحث;
+استورد المكتبة.عمليات.عملية_ابن;
+استورد المكتبة.نصوص.من_بايتات;
+استورد المكتبة.نصوص.مقارنة;
+استورد المكتبة.نصوص.أعداد;
+استورد المكتبة.نظام_التشغيل.عشوائية;
 استورد compiler.backend.target.target_model;
 استورد compiler.backend.target.target_registry;
 استورد compiler.diagnostics.reason;
 استورد compiler.diagnostics.foreign_c;
-استورد std.text.substring;
+استورد المكتبة.نصوص.مقطع;
 استورد compiler.jisr.core;
 استورد compiler.jisr.target;
 استورد compiler.jisr.headers;
@@ -45,10 +45,6 @@
 استورد compiler.jisr.units;
 
 // ---- text helpers ----
-
-
-
-
 
 // Whether المسار names a C source the import reads (.h or .c).
 عام عرف هل_مصدر_سي(المسار: &نص): منطقي {
@@ -66,7 +62,6 @@
     | نتيجة.نجح(نوع_مسار.وصلة_رمزية) -> { أرجع صواب; }
     | _ -> { أرجع خطأ; };
 }
-
 
 // The directories a header import is looked up in: $SULTANC_C_INCLUDE,
 // then the target's system include directories.
@@ -246,7 +241,6 @@
         | نتيجة.خطأ(الخطأ) -> { أرجع نتيجة.خطأ(فشل_كائن_سي.تشغيل_فاشل(الخطأ)); };
     };
 }
-
 
 // ---- the module ----
 

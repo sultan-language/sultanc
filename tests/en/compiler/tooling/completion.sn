@@ -1,0 +1,200 @@
+// اختبار: تشغيل
+// أهداف: x86_64-linux
+// خروج: 42
+// نظير: tests/ar/compiler/tooling/completion.sn
+// Completion at the cursor (compiler/frontend/tooling_completion.sn) on lines
+// that do not parse yet: members of a record value (English and Arabic
+// sources), an import path through Arabic spellings, the names in scope with
+// their distance, the constructors of an enum, and nothing inside a string.
+// Each source is patched (رقع_مصدر_للإكمال), the patched text is analysed as
+// the file, and the candidates are read from the analysis or the environment.
+import compiler.driver.source_inputs;
+import compiler.frontend.semantic_pipeline;
+import compiler.frontend.tooling_completion;
+import compiler.frontend.cancellation;
+import compiler.frontend.module_loading.logical_environment;
+import compiler.backend.target.target_model;
+import compiler.backend.target.target_registry;
+import std.text.search;
+import std.text.compare;
+import std.fs.temporary;
+import std.fs.write_file;
+import std.fs.path;
+
+def host(): اختياري واصف_هدف {
+    match حل_هدف_المضيف_المسجل() with
+    | نتيجة_حل_هدف.غير_مسجل -> { return اختياري.لا_شيء(); }
+    | نتيجة_حل_هدف.محلول(target) -> { return اختياري.موجود(target); };
+}
+
+def build(path: string): اختياري نتيجة_واجهة_وحدة {
+    let extras: vector string = [];
+    match ابن_إعداد_تجميع_مباشر(&path, &extras) with
+    | نتيجة_إعداد_تجميع_مباشر.غير_صالح -> { return اختياري.لا_شيء(); }
+    | نتيجة_إعداد_تجميع_مباشر.جاهز({ البيئة: env, المفتاح_الجذري: key, المفاتيح_المباشرة: _ }) -> {
+        let request: طلب_واجهة_وحدة = { البيئة: env, المفتاح_الجذري: key, احتفظ_بحقائق_الأدوات: true };
+        let more: vector مفتاح_وحدة_مقنن = [];
+        let cancel: mutable حالة_إلغاء_واجهة = حالة_إلغاء_واجهة_جديدة();
+        match ابن_واجهة_وحدة_بهدف_قابلة_للإلغاء(request, host(), &more, &mutable cancel) with
+        | نتيجة_بناء_واجهة_قابلة_للإلغاء.مكتملة(frontend) -> { return اختياري.موجود(frontend); }
+        | _ -> { return اختياري.لا_شيء(); };
+    };
+}
+
+// The byte right after the first `needle`.
+def cursor_after(text: &string, needle: string): uint {
+    match ابحث_نصا_من(text, &needle, 0) with
+    | اختياري.موجود(at) -> { return at + (length(needle) as uint); }
+    | اختياري.لا_شيء -> { return 0; };
+}
+
+// The source of the analysis whose name ends with `name`.
+def source_named(frontend: &نتيجة_واجهة_وحدة, name: &string): اختياري uint {
+    let i: mutable uint = 0;
+    while (i < 100000) {
+        match اسم_مصدر_واجهة_بمعرف(frontend, i) with
+        | اختياري.لا_شيء -> { return اختياري.لا_شيء(); }
+        | اختياري.موجود(found) -> {
+            if (ينتهي_بـ(&found, name)) { return اختياري.موجود(i); };
+        };
+        i := i + 1;
+    }
+    return اختياري.لا_شيء();
+}
+
+// Writes the patched text as the file `name` and completes in its analysis.
+def complete(dir: &string, name: string, patch: &رقعة_إكمال): اختياري نتيجة_إكمال_أدوات {
+    let file: string = join(dir, &name);
+    match write_file(&file, &(*patch).النص) with
+    | result.err(_) -> { return اختياري.لا_شيء(); }
+    | result.ok(_) -> { };
+    match build(file) with
+    | اختياري.لا_شيء -> { return اختياري.لا_شيء(); }
+    | اختياري.موجود(frontend) -> {
+        match source_named(&frontend, &name) with
+        | اختياري.لا_شيء -> { return اختياري.لا_شيء(); }
+        | اختياري.موجود(source) -> {
+            return اختياري.موجود(إكمال_عند_رقعة_واجهة(&frontend, source, patch));
+        };
+    };
+}
+
+def position_of(found: &نتيجة_إكمال_أدوات, name: string): uint {
+    let i: mutable uint = 0;
+    while (i < (length((*found).المرشحات) as uint)) {
+        if (نصان_متساويان(&(*found).المرشحات[i].الاسم, &name)) { return i; };
+        i := i + 1;
+    }
+    return 1000000;
+}
+
+def distance_of(found: &نتيجة_إكمال_أدوات, name: string): uint {
+    let at: uint = position_of(found, name);
+    if (at >= (length((*found).المرشحات) as uint)) { return 1000000; };
+    return (*found).المرشحات[at].البعد;
+}
+
+def main(): int {
+    let prefix: string = "completion";
+    match create_temp_dir(&prefix) with
+    | result.err(_) -> { return 1; }
+    | result.ok(dir) -> {
+        // T1: a record value, the line unfinished.
+        let t1: string = «type Point = { x: int, y: int };
+def main(): int {
+    let p: Point = { x: 1, y: 2 };
+    return p.
+}
+»;
+        let p1: رقعة_إكمال = رقع_مصدر_للإكمال(&t1, cursor_after(&t1, "return p."));
+        if (p1.السياق != سياق_إكمال.عضو_قيمة()) { return 2; };
+        match complete(&dir, "t1.sn", &p1) with
+        | اختياري.لا_شيء -> { return 3; }
+        | اختياري.موجود(found) -> {
+            if (found.السياق != سياق_إكمال.عضو_قيمة()) { return 4; };
+            if ((length(found.المرشحات) as uint) != 2) { return 5; };
+            if (position_of(&found, "x") != 0 || position_of(&found, "y") != 1) { return 6; };
+        };
+        // T2: the same in an Arabic source.
+        let t2: string = «نوع نقطة = { س: عدد, ص: عدد };
+عرف الرئيسية(): عدد {
+    دع ن: نقطة = { س: 1, ص: 2 };
+    أرجع ن.
+}
+»;
+        let p2: رقعة_إكمال = رقع_مصدر_للإكمال(&t2, cursor_after(&t2, "أرجع ن."));
+        match complete(&dir, "t2.sn", &p2) with
+        | اختياري.لا_شيء -> { return 7; }
+        | اختياري.موجود(found) -> {
+            if ((length(found.المرشحات) as uint) != 2) { return 8; };
+            if (position_of(&found, "س") != 0 || position_of(&found, "ص") != 1) { return 9; };
+        };
+        // T3: an import path through std's Arabic spellings.
+        let t3: string = «استورد المكتبة.دخ.
+»;
+        let p3: رقعة_إكمال = رقع_مصدر_للإكمال(&t3, cursor_after(&t3, "دخ."));
+        if (p3.السياق != سياق_إكمال.مسار_استيراد()) { return 10; };
+        let t3_name: string = "t3.sn";
+        let t3_file: string = join(&dir, &t3_name);
+        match write_file(&t3_file, &p3.النص) with
+        | result.err(_) -> { return 11; }
+        | result.ok(_) -> { };
+        let extras: vector string = [];
+        match ابن_إعداد_تجميع_مباشر(&t3_file, &extras) with
+        | نتيجة_إعداد_تجميع_مباشر.غير_صالح -> { return 12; }
+        | نتيجة_إعداد_تجميع_مباشر.جاهز({ البيئة: env, المفتاح_الجذري: _, المفاتيح_المباشرة: _ }) -> {
+            let found: نتيجة_إكمال_أدوات = إكمال_مسار_بيئة(&env, &p3);
+            if (position_of(&found, "println") >= 1000000) { return 13; };
+            if (position_of(&found, "print") >= 1000000) { return 14; };
+            if (position_of(&found, "read_line") >= 1000000) { return 15; };
+            if (position_of(&found, "buffered_writer") >= 1000000) { return 16; };
+            if (distance_of(&found, "println") != 4) { return 17; };
+            // `import std.`: a spelling carries its language and module.
+            let t3b: string = «import std.
+»;
+            let p3b: رقعة_إكمال = رقع_مصدر_للإكمال(&t3b, cursor_after(&t3b, "std."));
+            let roots: نتيجة_إكمال_أدوات = إكمال_مسار_بيئة(&env, &p3b);
+            let at: uint = position_of(&roots, "دخ");
+            if (at >= 1000000 || position_of(&roots, "io") >= 1000000) { return 28; };
+            match roots.المرشحات[at].الأصلي with
+            | اختياري.موجود(canonical) -> { if (!نصان_متساويان(&canonical, &"io")) { return 29; }; }
+            | اختياري.لا_شيء -> { return 29; };
+            match roots.المرشحات[at].اللغة with
+            | اختياري.موجود(language) -> { if (!نصان_متساويان(&language, &"ar")) { return 30; }; }
+            | اختياري.لا_شيء -> { return 30; };
+        };
+        // T4: the names in scope, the line unfinished.
+        let t4: string = «def helper(a: int): int { return a; }
+def main(): int {
+    let total: int = 1;
+    return he
+}
+»;
+        let p4: رقعة_إكمال = رقع_مصدر_للإكمال(&t4, cursor_after(&t4, "return he"));
+        if (p4.السياق != سياق_إكمال.اسم()) { return 18; };
+        match complete(&dir, "t4.sn", &p4) with
+        | اختياري.لا_شيء -> { return 19; }
+        | اختياري.موجود(found) -> {
+            if (distance_of(&found, "total") != 0) { return 20; };
+            if (distance_of(&found, "helper") != 2) { return 21; };
+            if (distance_of(&found, "main") != 2) { return 22; };
+            // helper's parameter is not visible in main.
+            if (position_of(&found, "a") < 1000000) { return 23; };
+        };
+        // T5: the constructors of an enum.
+        let t5: string = «type Color = | Red | Green;
+def main(): int { let c: Color = Color.»;
+        let p5: رقعة_إكمال = رقع_مصدر_للإكمال(&t5, length(t5) as uint);
+        match complete(&dir, "t5.sn", &p5) with
+        | اختياري.لا_شيء -> { return 24; }
+        | اختياري.موجود(found) -> {
+            if (found.السياق != سياق_إكمال.عضو_نوع()) { return 25; };
+            if (position_of(&found, "Red") != 0 || position_of(&found, "Green") != 1) { return 26; };
+        };
+        // T6: inside a string nothing completes.
+        let t6: string = "def main(): int { let s: string = \"p.";
+        let p6: رقعة_إكمال = رقع_مصدر_للإكمال(&t6, length(t6) as uint);
+        if (p6.السياق != سياق_إكمال.لا_شيء()) { return 27; };
+    };
+    return 42;
+}

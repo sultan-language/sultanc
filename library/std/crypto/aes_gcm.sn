@@ -3,8 +3,8 @@
 // not depend on the hash key or the data. Tags are compared in constant time
 // and no plaintext is released before the tag verifies.
 
-استورد crypto.aes;
-استورد crypto.words;
+استورد تشفير.أيس;
+استورد تشفير.كلمات;
 
 عام نوع قيمة128_تشفير = {
     العليا: طبيعي,

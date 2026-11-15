@@ -1,5 +1,5 @@
-استورد math.integer;
-استورد time.time;
+استورد رياضيات.صحيح;
+استورد وقت.الوقت;
 
 // Signed nanosecond duration with checked scaling/arithmetic helpers.
 عام نوع مدة = { النانوثواني: عدد };

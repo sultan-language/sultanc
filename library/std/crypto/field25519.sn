@@ -6,7 +6,7 @@
 // depend on secret values. Previously these functions were private to
 // crypto/x25519.sn.
 
-استورد crypto.words;
+استورد تشفير.كلمات;
 
 عام عرف صفر_حقل25519(): متجه ص64 {
     دع ع: متجه ص64 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];

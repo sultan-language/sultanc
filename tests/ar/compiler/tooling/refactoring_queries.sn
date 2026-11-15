@@ -24,9 +24,9 @@
 استورد compiler.diagnostics.schema;
 استورد compiler.source.span;
 استورد compiler.source.source_file;
-استورد std.text.search;
-استورد std.text.substring;
-استورد std.text.compare;
+استورد المكتبة.نصوص.بحث;
+استورد المكتبة.نصوص.مقطع;
+استورد المكتبة.نصوص.مقارنة;
 
 عرف المضيف(): اختياري واصف_هدف {
     طابق حل_هدف_المضيف_المسجل() مع

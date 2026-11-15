@@ -9,7 +9,6 @@
 // code whose relocatable fields are fixed 5-byte LEB128 slots recorded here;
 // the module type table is one registry of distinct signatures.
 
-
 عام نوع نوع_إزاحة_ويب_أسمبلي =
     | فهرس_دالة
     | فهرس_جدول_موقع

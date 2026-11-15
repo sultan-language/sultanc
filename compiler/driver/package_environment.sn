@@ -1,4 +1,4 @@
-استورد std.text.from_bytes;
+استورد المكتبة.نصوص.من_بايتات;
 استورد compiler.driver.package_graph;
 استورد compiler.frontend.module_loading.library_root_identity;
 استورد compiler.frontend.module_loading.module_paths;

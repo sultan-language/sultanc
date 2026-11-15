@@ -1,4 +1,4 @@
-استورد os.error;
+استورد نظام_التشغيل.أخطاء;
 
 // ProcessPrng (bcryptprimitives) is the Windows system CSPRNG entry point
 // used by mature runtimes (Go 1.22+, Rust std). It always fills the whole

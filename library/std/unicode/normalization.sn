@@ -1,11 +1,11 @@
-استورد unicode.scalar;
-استورد unicode.data.normalization;
-استورد unicode.algorithms.lookup;
-استورد unicode.algorithms.hangul;
-استورد unicode.algorithms.canonical_order;
-استورد unicode.algorithms.normalization_engine;
-استورد encoding.utf8;
-استورد text.from_bytes;
+استورد يونيكود.قيم_قياسية;
+استورد يونيكود.بيانات.تطبيع;
+استورد يونيكود.خوارزميات.بحث;
+استورد يونيكود.خوارزميات.هانغول;
+استورد يونيكود.خوارزميات.ترتيب_قانوني;
+استورد يونيكود.خوارزميات.محرك_التطبيع;
+استورد ترميز.يوتيف8;
+استورد نصوص.من_بايتات;
 
 // UAX #15: this is an explicit transformation, never an implicit string rule.
 عام نوع صورة_تطبيع_يونيكود = | إن_إف_سي | إن_إف_دي | إن_إف_كي_سي | إن_إف_كي_دي;

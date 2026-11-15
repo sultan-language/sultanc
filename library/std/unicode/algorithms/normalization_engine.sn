@@ -1,4 +1,4 @@
-استورد unicode.algorithms.hangul;
+استورد يونيكود.خوارزميات.هانغول;
 
 // Unicode UAX #15 canonical composition of an ALREADY fully decomposed,
 // canonically ordered sequence. No compatibility/canonical decomposition is

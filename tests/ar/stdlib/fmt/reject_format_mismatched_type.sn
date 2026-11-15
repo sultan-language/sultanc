@@ -4,7 +4,7 @@
 // نظير: tests/en/stdlib/fmt/reject_format_mismatched_type.sn
 // خرج-تشخيص-عربي: reject_format_mismatched_type.ar.txt
 // النوع X لا يناسب نصا.
-استورد المكتبة.تنسيق.fmt;
+استورد المكتبة.تنسيق.تنسيق;
 
 عرف الرئيسية(): عدد {
     دع الاسم: نص = «سلطان»;

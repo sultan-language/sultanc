@@ -3,7 +3,7 @@
 // 32-bit words, and Poly1305 in 26-bit limbs (the poly1305-donna layout) with
 // a masked final reduction. Tags are compared in constant time.
 
-استورد crypto.words;
+استورد تشفير.كلمات;
 
 عرف ربع_جولة_تشاتشا(س: &متغير متجه طبيعي, أ: طبيعي, ب: طبيعي, ج: طبيعي, د: طبيعي): فراغ {
     (*س)[أ] := جمع32_تشفير((*س)[أ], (*س)[ب]);

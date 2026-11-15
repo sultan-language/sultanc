@@ -6,7 +6,7 @@
 استورد compiler.backend.provider.llvm.ffi.target_machine;
 استورد compiler.backend.target.target_model;
 استورد compiler.backend.target.target_registry;
-استورد std.text.from_bytes;
+استورد المكتبة.نصوص.من_بايتات;
 
 // macOS objects carry the same minimum deployment target as the native
 // Mach-O writer (LC_BUILD_VERSION minos 11.0): LLVM emits the platform load
@@ -191,7 +191,7 @@
     دع المتوقع: طبيعي = الهدف.نموذج_البيانات.عرض_المؤشر / 8;
     إذا (حجم_المؤشر != المتوقع) {
         حرر_بيانات_هدف_إل_إل_في_إم(البيانات); حرر_آلة_إل_إل_في_إم(الآلة); حرر_وحدة_إل_إل_في_إم(الوحدة);
-            حرر_سياق_إل_إل_في_إم(السياق);
+        حرر_سياق_إل_إل_في_إم(السياق);
         أرجع نتيجة_تهيئة_هدف_إل_إل_في_إم.خطأ(فشل_مزود_إل_إل_في_إم.عدم_تطابق_حجم_المؤشر(المتوقع, حجم_المؤشر));
     };
     // Byte order is just as fundamental as pointer width. In particular,

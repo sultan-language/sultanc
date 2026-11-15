@@ -1,5 +1,5 @@
-استورد os.error;
-استورد os.platform.unix.apple.darwin.file_descriptors;
+استورد نظام_التشغيل.أخطاء;
+استورد نظام_التشغيل.منصات.يونكس.آبل.داروين.واصفات_الملفات;
 
 // getentropy(2) is the libSystem (libsystem_kernel) entry point to the
 // kernel CSPRNG, in the same role as the other Darwin system-call entry

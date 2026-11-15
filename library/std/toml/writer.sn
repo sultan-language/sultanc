@@ -1,5 +1,5 @@
-استورد toml.parser;
-استورد text.from_bytes;
+استورد تومل.محلل;
+استورد نصوص.من_بايتات;
 
 // TOML serialization of a parsed or built document (TOML 1.0). The root's
 // plain values come first; each nested table follows as a [a.b] section and

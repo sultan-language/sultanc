@@ -26,9 +26,10 @@
 // a mutated-place call argument or any other use keeps it in storage). Block
 // parameters are added at the iterated dominance frontier of the blocks that
 // store it, the dominator tree is walked once to replace each load by the
-// reaching value, and parameters nothing reads are removed (pruned SSA)
-// unless a debug variable is bound to them: that parameter is the local's
-// location in its block, so it is kept with the values that feed it. An
+// reaching value, and parameters nothing reads are removed (pruned SSA),
+// whether or not a debug variable is bound to them: debug information never
+// changes the code, and a variable whose parameter is gone is unavailable
+// there, as in any optimizing compiler. An
 // edge where the local holds no value yet (a parameter on a path that never
 // stored) passes the Type's zero, as LLVM passes undef. The debug variables
 // of a promoted place are bound to the values stored into it and to its
@@ -44,7 +45,6 @@
 //
 // The pass runs once on lowered MSIR, before the one canonical verification
 // (driver/compiler_driver.sn), so the verifier checks its result.
-
 
 نوع مرشح_ترقية_مسير = {
     المكان: معرف_قيمة_مسير,
@@ -897,13 +897,9 @@
     ف := 0;
     طالما (ف < عدد_القيم) {
         دع مضاف: منطقي = كتلة_المعامل[ف] != 0;
-        // A parameter bound to a debug variable is the variable's location
-        // from its block on: pruning it would leave the local without one
-        // while it is in scope. It stays, with the edge values that feed it
-        // (the worklist below), as LLVM keeps every local at -O0.
-        دع له_ربط_تصحيح: منطقي = مضاف
-            && (الطول(متغيرات_تصحيح_لقيمة(&(*التصحيح).العقد, معرف_قيمة_مسير_من((*الدالة).المعرف, ف))) مثل طبيعي) > 0;
-        دع حي_مباشرة: منطقي = مضاف && (الكل[ف] > على_الحواف[ف] || له_ربط_تصحيح);
+        // Only what the code reads keeps a parameter; a debug binding does
+        // not (debug information never changes the code).
+        دع حي_مباشرة: منطقي = مضاف && الكل[ف] > على_الحواف[ف];
         ألحق(حي, حي_مباشرة);
         إذا (حي_مباشرة) { ألحق(العمل, ف); };
         ف := ف + 1;

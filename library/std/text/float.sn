@@ -20,9 +20,9 @@
 // two bounds); the comparisons and rounding then work on digit vectors. This needs no tables, unlike Ryu, and gives the same
 // digits.
 
-استورد math.float;
-استورد text.from_bytes;
-استورد text.compare;
+استورد رياضيات.عشري;
+استورد نصوص.من_بايتات;
+استورد نصوص.مقارنة;
 
 // ---- Exact decimals: digits (most significant first) and the number of
 // digits before the point.
@@ -30,7 +30,6 @@
     الأرقام: متجه ط8,
     النقطة: عدد
 };
-
 
 // ---- Exact parsing with binary big integers -----------------------------
 // A decimal D * 10^E (D an integer of the input's digits) is rounded to the

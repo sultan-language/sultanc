@@ -2,7 +2,7 @@
 // أهداف: arm64-darwin,x86_64-linux
 // خروج: 0
 // نظير: tests/en/ispeak/check_messages.sn
-استورد std.text.compare;
+استورد المكتبة.نصوص.مقارنة;
 استورد compiler.diagnostics.identity;
 استورد compiler.diagnostics.reason;
 استورد compiler.diagnostics.schema;
@@ -58,6 +58,6 @@
         | _ -> { };
         رقم := رقم + 1;
     }
-    إذا (عدد_الشروح != 221) { أرجع 6; };
+    إذا (عدد_الشروح != 228) { أرجع 6; };
     أرجع 0;
 }

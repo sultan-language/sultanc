@@ -1,8 +1,8 @@
 // Converter to فشل for std.time.duration_text's خطأ_مدة.
 // Domain «std.time», kind = the variant name. The message is Arabic, with
 // an English language version («en»).
-استورد error.failure;
-استورد time.duration_text;
+استورد أخطاء.فشل;
+استورد وقت.نص_المدة;
 
 عرف فشل_مدة(النوع: نص, الرسالة: نص, الإنجليزية: نص): فشل {
     دع الناتج: متغير فشل = فشل_بهوية(«std.time», النوع, الرسالة);

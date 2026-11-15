@@ -5,9 +5,9 @@
 // نظير: tests/en/stdlib/error/describe.sn
 // std.error: the exact text of صف_فشل: the message, its notes, then one
 // «بسبب: » line per cause followed by that cause's notes.
-استورد المكتبة.أخطاء.failure;
-استورد المكتبة.نصوص.compare;
-استورد المكتبة.دخ.println;
+استورد المكتبة.أخطاء.فشل;
+استورد المكتبة.نصوص.مقارنة;
+استورد المكتبة.دخ.اطبع_سطر;
 
 عرف الرئيسية(): عدد {
     دع وحيد: فشل = فشل_من(«رسالة وحيدة»);

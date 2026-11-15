@@ -17,7 +17,7 @@
 // output is cut into chunks of at most 2 MiB uncompressed and 64 KiB
 // compressed; a chunk that does not shrink is stored uncompressed.
 
-استورد process.panic;
+استورد عمليات.انهيار;
 
 عام نوع خطأ_إل_زد_إم_إيه =
     | نهاية_غير_متوقعة

@@ -1,6 +1,6 @@
-استورد text.from_bytes;
-استورد text.substring;
-استورد text.compare;
+استورد نصوص.من_بايتات;
+استورد نصوص.مقطع;
+استورد نصوص.مقارنة;
 
 // A path flavor is explicit where a path belongs to another system (the
 // compiler may name target paths on a different host): the _بصيغة forms.
@@ -55,7 +55,7 @@
 
 عرف هل_حرف_قرص(الحرف: ط8): منطقي {
     أرجع ((الحرف >= 0x41) && (الحرف <= 0x5A)) ||
-          ((الحرف >= 0x61) && (الحرف <= 0x7A));
+        ((الحرف >= 0x61) && (الحرف <= 0x7A));
 }
 
 عرف تطابق_حرف_لاتيني(الحرف: ط8, الحرف_الكبير: ط8): منطقي {

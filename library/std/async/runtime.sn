@@ -28,12 +28,12 @@
 //
 // A closure given to أطلق_مهمة may capture only what a thread's closure may
 // (the spawn capture check): the task outlives the caller's frame.
-استورد os.allocation;
-استورد os.poll;
-استورد time.time;
-استورد sync.arc;
-استورد sync.mutex;
-استورد process.panic;
+استورد نظام_التشغيل.تخصيص;
+استورد نظام_التشغيل.استطلاع;
+استورد وقت.الوقت;
+استورد تزامن.مشترك;
+استورد تزامن.قفل;
+استورد عمليات.انهيار;
 
 مرادف عنوان_إغلاق_مهمة = بدائي_عنوان_دالة;
 مرادف إغلاق_من_عنوان_مهمة = بدائي_دالة_من_عنوان;

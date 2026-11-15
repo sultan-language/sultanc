@@ -1,4 +1,4 @@
-استورد os.error;
+استورد نظام_التشغيل.أخطاء;
 
 // Unix domain socket addresses: the platform's struct sockaddr_un, so
 // std.net.unix never reads a platform layout. Every layout starts with a

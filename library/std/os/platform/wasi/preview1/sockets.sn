@@ -1,6 +1,6 @@
-استورد os.buffer;
-استورد os.error;
-استورد os.platform.wasi.preview1.file_descriptors;
+استورد نظام_التشغيل.مخزن;
+استورد نظام_التشغيل.أخطاء;
+استورد نظام_التشغيل.منصات.واسي.معاينة1.واصفات_الملفات;
 
 // WASI preview 1 sockets. The interface has no socket creation, connect,
 // bind, listen or name resolution: an instance only receives sockets the

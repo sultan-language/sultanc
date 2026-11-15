@@ -16,13 +16,13 @@
 // Two declarations are the same when their SultanC text is the same; for
 // records that is C's own rule for types of separate translation units
 // (same tag, same members: C11 6.2.7).
-استورد std.text.search;
-استورد std.text.transform;
-استورد std.fs.path;
-استورد std.text.from_bytes;
-استورد std.text.compare;
-استورد std.fs.canonical;
-استورد std.text.substring;
+استورد المكتبة.نصوص.بحث;
+استورد المكتبة.نصوص.تحويل;
+استورد المكتبة.ملفات.مسار;
+استورد المكتبة.نصوص.من_بايتات;
+استورد المكتبة.نصوص.مقارنة;
+استورد المكتبة.ملفات.مسار_قانوني;
+استورد المكتبة.نصوص.مقطع;
 استورد compiler.jisr.core;
 
 نوع تصريح_مشترك_جسر = {
@@ -201,7 +201,6 @@
     أرجع خطأ;
 }
 
-
 // The declarations of the module being written (whole lines), with those
 // another C import exports left to it: the
 // imports of those modules first, then the declarations this module
@@ -299,4 +298,3 @@
         ألحق(تصريحات_مشتركة_جسر, الجديد);
     }
 }
-

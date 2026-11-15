@@ -14,7 +14,7 @@
 استورد compiler.format.layout;
 استورد compiler.format.edits;
 استورد compiler.format.verify;
-استورد std.text.from_bytes;
+استورد المكتبة.نصوص.من_بايتات;
 
 // The canonical SultanC formatter: source text in, formatted text (or the
 // edits that make it) out. The compiler's `fmt` command and the language

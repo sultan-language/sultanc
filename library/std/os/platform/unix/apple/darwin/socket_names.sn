@@ -1,7 +1,7 @@
-استورد os.buffer;
-استورد os.error;
-استورد os.platform.unix.apple.darwin.file_descriptors;
-استورد os.platform.unix.apple.darwin.sockets;
+استورد نظام_التشغيل.مخزن;
+استورد نظام_التشغيل.أخطاء;
+استورد نظام_التشغيل.منصات.يونكس.آبل.داروين.واصفات_الملفات;
+استورد نظام_التشغيل.منصات.يونكس.آبل.داروين.مقابس;
 
 // Socket names and address-bearing datagrams through libSystem
 // (<sys/socket.h>; socklen_t is u32, ssize_t i64). Sockets are created with

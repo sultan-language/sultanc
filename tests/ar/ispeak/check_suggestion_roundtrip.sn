@@ -2,13 +2,13 @@
 // أهداف: x86_64-linux
 // خروج: 0
 // نظير: tests/en/ispeak/check_suggestion_roundtrip.sn
-استورد std.text.compare;
-استورد std.text.from_bytes;
-استورد std.io.print;
-استورد std.fs.temporary;
-استورد std.fs.write_file;
-استورد std.fs.walk;
-استورد std.encoding.positions;
+استورد المكتبة.نصوص.مقارنة;
+استورد المكتبة.نصوص.من_بايتات;
+استورد المكتبة.دخ.اطبع;
+استورد المكتبة.ملفات.مؤقت;
+استورد المكتبة.ملفات.كتابة_ملف;
+استورد المكتبة.ملفات.اجتياز;
+استورد المكتبة.ترميز.مواضع;
 استورد compiler.driver.source_inputs;
 استورد compiler.frontend.semantic_pipeline;
 استورد compiler.frontend.cancellation;

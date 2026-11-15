@@ -550,7 +550,6 @@
     };
 }
 
-
 عام عرف حل_تخطيط_حمولات_منشئ(
     الأنواع: &سجل_أنواع,
     الهدف: &واصف_هدف,
@@ -594,4 +593,3 @@
 }
 // Deep copies of owned values (one per Type; read the source through a
 // reference and allocate independent storage).
-

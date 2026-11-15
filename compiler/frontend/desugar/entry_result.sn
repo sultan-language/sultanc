@@ -11,7 +11,7 @@
 استورد compiler.frontend.lexer.values;
 استورد compiler.frontend.parser.parser;
 استورد compiler.frontend.parser.result;
-استورد std.text.from_bytes;
+استورد المكتبة.نصوص.من_بايتات;
 
 // `main` returning `نتيجة …, فشل` (docs/en/reference/errors.md). In the root module, an
 // entry function (الرئيسية / main) without parameters whose result is written

@@ -31,7 +31,6 @@
     أرجع الناتج;
 }
 
-
 // Canonical per-function unwind facts produced by machine encoders. This is
 // deliberately independent from source/machine variable debug state so the
 // same facts can feed .debug_frame now and .eh_frame later.

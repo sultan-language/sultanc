@@ -6,9 +6,9 @@
 // target; <stdint.h> and <limits.h> defer to the C library's own header
 // when there is one, as Clang's do. The search directory "<jisr>" names
 // them; it comes right after /usr/local/include, where GCC's own is.
-استورد std.text.compare;
-استورد std.text.from_bytes;
-استورد std.text.transform;
+استورد المكتبة.نصوص.مقارنة;
+استورد المكتبة.نصوص.من_بايتات;
+استورد المكتبة.نصوص.تحويل;
 استورد compiler.jisr.core;
 
 عرف أسطر_رأس_جسر(الأسطر: &متجه نص): نص {
@@ -321,4 +321,3 @@
     إذا (نصان_متساويان(الاسم, &«iso646.h»)) { أرجع اختياري.موجود(رأس_iso646_جسر()); };
     أرجع اختياري.لا_شيء();
 }
-

@@ -2,6 +2,7 @@
 // أهداف: arm64-darwin,x86_64-linux
 // خروج: 42
 // نظير: tests/en/compiler/c_import_opaque_libc/main.sn
+// ربط: c
 // مقبض مكتبة سي عبر ترويسة نظام: يصرح dirent.h في glibc بـ
 // `typedef struct __dirstream DIR;` ولا يعرّف البنية أبدا، فـDIR نوع معتم
 // وopendir وreaddir وclosedir تأخذ `*متغير DIR` وتُرجعه (أصليا، وعبر LLVM، وفي

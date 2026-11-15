@@ -2,9 +2,9 @@
 // and HTTP/2 header lists (RFC 9113 8.2-8.3): pseudo-header fields,
 // lowercase field names and the connection-specific fields HTTP/2 forbids.
 
-استورد text.from_bytes;
-استورد text.number;
-استورد http.model;
+استورد نصوص.من_بايتات;
+استورد نصوص.أعداد;
+استورد ويب.نموذج;
 
 عرف نصان_متساويان_مشترك_ويب2(أ: &نص, ب: &نص): منطقي {
     إذا (الطول(*أ) != الطول(*ب)) { أرجع خطأ; };

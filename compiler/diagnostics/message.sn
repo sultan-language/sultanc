@@ -1,4 +1,4 @@
-استورد std.text.from_bytes;
+استورد المكتبة.نصوص.من_بايتات;
 استورد compiler.diagnostics.identity;
 استورد compiler.diagnostics.schema;
 استورد compiler.diagnostics.reason;

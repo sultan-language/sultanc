@@ -9,8 +9,8 @@
 // return after it. The process ends at once (abort semantics, Rust's
 // panic=abort): owned values that are still alive are not dropped, and the
 // operating system reclaims the process's memory.
-استورد process.exit;
-استورد process.failure;
+استورد عمليات.اخرج;
+استورد عمليات.فشل;
 
 عام عرف إنهيار(الرسالة: نص): فراغ {
     اطبع_فشل_تشغيل(1, &الرسالة);

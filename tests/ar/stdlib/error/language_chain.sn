@@ -8,11 +8,11 @@
 // language (fixed std text) and isolates a message or note whose direction
 // differs from the connectors'. For Arabic, or a locale without a tag, it is
 // صف_فشل when no version applies.
-استورد المكتبة.أخطاء.failure;
-استورد المكتبة.نصوص.language;
-استورد المكتبة.نصوص.compare;
-استورد المكتبة.نصوص.from_bytes;
-استورد المكتبة.دخ.println;
+استورد المكتبة.أخطاء.فشل;
+استورد المكتبة.نصوص.لغة;
+استورد المكتبة.نصوص.مقارنة;
+استورد المكتبة.نصوص.من_بايتات;
+استورد المكتبة.دخ.اطبع_سطر;
 
 // U+2068, the text, U+2069, written out byte by byte.
 عرف معزول(النص: نص): نص {

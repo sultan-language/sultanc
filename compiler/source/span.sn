@@ -1,4 +1,4 @@
-استورد std.process.panic;
+استورد المكتبة.عمليات.انهيار;
 
 // Canonical compiler-wide source position is byte based.
 // Human line/column and LSP UTF-16 coordinates are derived from SourceMap.

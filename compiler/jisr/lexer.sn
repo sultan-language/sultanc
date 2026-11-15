@@ -7,12 +7,12 @@
 // any other character. Each token records its file, line and column and
 // whether it starts a line or follows white space, which the preprocessor
 // needs for directives, stringizing and function-like macro calls.
-استورد std.text.from_bytes;
-استورد std.chars.ascii;
-استورد std.encoding.utf8;
-استورد std.unicode.properties;
+استورد المكتبة.نصوص.من_بايتات;
+استورد المكتبة.حروف.أسكي;
+استورد المكتبة.ترميز.يوتيف8;
+استورد المكتبة.يونيكود.خصائص;
 استورد compiler.diagnostics.reason;
-استورد std.text.substring;
+استورد المكتبة.نصوص.مقطع;
 استورد compiler.jisr.core;
 استورد compiler.jisr.literals;
 

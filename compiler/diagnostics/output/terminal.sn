@@ -1,4 +1,4 @@
-استورد std.text.from_bytes;
+استورد المكتبة.نصوص.من_بايتات;
 استورد compiler.source.span;
 استورد compiler.source.source_file;
 استورد compiler.diagnostics.identity;
@@ -8,8 +8,8 @@
 استورد compiler.diagnostics.message;
 استورد compiler.diagnostics.output.writer;
 استورد compiler.diagnostics.schema;
-استورد std.encoding.utf8;
-استورد std.unicode.grapheme;
+استورد المكتبة.ترميز.يوتيف8;
+استورد المكتبة.يونيكود.عناقيد;
 
 // Terminal output owns rich and compact terminal layout only.
 
@@ -579,4 +579,3 @@
         ف := ف + 1;
     }
 }
-

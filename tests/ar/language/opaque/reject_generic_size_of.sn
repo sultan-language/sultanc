@@ -3,7 +3,7 @@
 // تشخيص: SULTANC-TYPE-OPAQUE-TYPE-ARGUMENT
 // نظير: tests/en/language/opaque/reject_generic_size_of.sn
 // حجم_النوع لحجة نوع معتمة داخل دالة عامة: لا حجم لها.
-استورد std.meta.reflect;
+استورد المكتبة.انعكاس.انعكاس_الأنواع;
 نوع قاعدة = معتم;
 عرف قس<أ>(م: *أ): ط64 {
     غير_آمن { أرجع حجم_النوع(م مثل &أ); };

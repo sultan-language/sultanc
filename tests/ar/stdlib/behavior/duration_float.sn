@@ -5,8 +5,8 @@
 // نظير: tests/en/stdlib/behavior/duration_float.sn
 // std.time.duration_float: المدة بالثواني العائمة (Rust as_secs_f64 وtry_from_secs_f64،
 // وGo Duration.Seconds)، بالتقريب إلى أقرب نانوثانية ورفض NaN واللانهاية والقيم خارج المدى.
-استورد std.time.duration;
-استورد std.time.duration_float;
+استورد المكتبة.وقت.مدة;
+استورد المكتبة.وقت.مدة_عشرية;
 
 عرف الرئيسية(): عدد {
     طابق مدة_من_مليثواني(1500) مع

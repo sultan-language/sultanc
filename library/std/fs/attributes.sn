@@ -1,8 +1,8 @@
-استورد fs.error;
-استورد fs.handle;
-استورد os.error;
-استورد os.file;
-استورد os.file_attributes;
+استورد ملفات.أخطاء;
+استورد ملفات.مقبض;
+استورد نظام_التشغيل.أخطاء;
+استورد نظام_التشغيل.ملف;
+استورد نظام_التشغيل.سمات_الملف;
 
 // File sizes and file times, and the conversion every newer std.fs function
 // uses for its typed error: the std.os boundary error, classified into

@@ -1,4 +1,4 @@
-استورد std.archive.ar;
+استورد المكتبة.أرشيف.آر;
 استورد compiler.link.macho.text_stub;
 
 // Input classification is based on container bytes, not filename spelling.

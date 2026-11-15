@@ -1,0 +1,9 @@
+// The root file of std.os.platform.unix: the Arabic spellings of its modules
+// (docs/en/reference/modules-and-imports.md, "Module spellings"). An import may
+// use either name; both name one module.
+
+module process_startup { ar: بدء_العملية };
+module apple { ar: آبل };
+module bsd { ar: بي_إس_دي };
+module freebsd { ar: فري_بي_إس_دي };
+module linux { ar: لينكس };

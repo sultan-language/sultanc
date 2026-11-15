@@ -20,7 +20,6 @@
     أرجع السياق;
 }
 
-
 عام نوع خطأ_حل_واجهة_اختيار =
     | فشل_واجهة_هدف بنوع خطأ_حل_واجهة_هدف
     | معامل_دالة_مفقود بنوع (معرف_دالة_مسير, طبيعي)
@@ -111,7 +110,6 @@
     }
     | نتيجة.نجح(الخطة) -> { أرجع نتيجة.نجح(الخطة); };
 }
-
 
 // Argument and result Types of an MSIR call, shared by both call boundaries.
 عرف أنواع_نداء_قيم_مسير(
@@ -339,7 +337,6 @@
     };
 }
 
-
 // Target-neutral layout queries used by ISA selection for composite/place lowering.
 عام عرف تخطيط_نوع_للاختيار(
     السياق: &سياق_استعلام_اختيار_خلفية,
@@ -421,7 +418,6 @@
     };
 }
 
-
 // Backends may need canonical target layout for metadata-owned types (for
 // example lexical-closure capture slots) that are not represented by an
 // ordinary MSIR Value at the query point.
@@ -434,7 +430,6 @@
     دع حقائق: سياق_استعلام_اختيار_خلفية = *السياق;
     أرجع حل_تخطيط_نوع(&حقائق.الأنواع, الهدف, سجل_التخطيط, النوع);
 }
-
 
 عام نوع تخطيط_بيئة_إغلاق_اختيار = {
     إزاحات_الالتقاطات: متجه طبيعي,

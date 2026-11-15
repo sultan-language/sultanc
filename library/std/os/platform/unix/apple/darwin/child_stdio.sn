@@ -1,5 +1,5 @@
-استورد os.error;
-استورد os.platform.unix.apple.darwin.file_descriptors;
+استورد نظام_التشغيل.أخطاء;
+استورد نظام_التشغيل.منصات.يونكس.آبل.داروين.واصفات_الملفات;
 
 // Descriptors for a child's standard streams through libSystem: pipe(2),
 // the null device and poll(2) (<unistd.h>, <poll.h>; nfds_t is u32). The
@@ -90,7 +90,7 @@
             };
         };
     }
-    | _ -> {};
+    | _ -> { };
     دع الاستعادة: ص32 = pthread_sigmask(3, &القديمة, الفارغ);
     أرجع الناتج;
 }

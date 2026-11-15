@@ -1,6 +1,6 @@
-استورد os.path;
-استورد os.error;
-استورد os.platform.windows.win32.error;
+استورد نظام_التشغيل.مسار;
+استورد نظام_التشغيل.أخطاء;
+استورد نظام_التشغيل.منصات.ويندوز.وين32.أخطاء;
 
 // Native Win32 Unicode paths. The W APIs consume UTF-16, not UTF-8.
 // These symbols are from kernel32; linking that system library belongs

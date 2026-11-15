@@ -6,10 +6,10 @@
 // waits for them. A blocked signal stays pending until it is taken, so none
 // is lost. Threads inherit the mask of the thread that spawns them, so the
 // block must happen before any thread is spawned.
-استورد os.platform.unix.linux.syscalls.kernel_result;
-استورد os.platform.unix.linux.syscalls.operations;
-استورد os.platform.unix.linux.syscalls.selection;
-استورد os.error;
+استورد نظام_التشغيل.منصات.يونكس.لينكس.نداءات_النظام.نتيجة_النواة;
+استورد نظام_التشغيل.منصات.يونكس.لينكس.نداءات_النظام.عمليات;
+استورد نظام_التشغيل.منصات.يونكس.لينكس.نداءات_النظام.اختيار;
+استورد نظام_التشغيل.أخطاء;
 إذا ((الهدف.المنصة == «linux» || الهدف.المنصة == «android») && الهدف.المعمارية != «ve») { استورد os.platform.unix.linux.uapi; }
 إذا (الهدف.المنصة == «freebsd») { استورد os.platform.unix.freebsd.uapi; }
 

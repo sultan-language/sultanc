@@ -1,4 +1,4 @@
-// Phase 2 of the error system (docs/ERRORS.md): the operator ? passes an
+// Phase 2 of the error system (docs/en/reference/errors.md): the operator ? passes an
 // error up to the caller, the context helpers convert typed errors and wrap
 // them, and main itself returns a result: on an error the program prints the
 // frame "the program ended with an error" in its language and the error's

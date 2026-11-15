@@ -1,0 +1,11 @@
+// The root file of std.io: the Arabic spellings of its modules
+// (docs/en/reference/modules-and-imports.md, "Module spellings"). An import may
+// use either name; both name one module.
+
+module buffered_writer { ar: كاتب_مؤقت };
+module log { ar: سجل };
+module print { ar: اطبع };
+module println { ar: اطبع_سطر };
+module read_line { ar: اقرأ_سطر };
+module reader { ar: قارئ };
+module writer { ar: كاتب };

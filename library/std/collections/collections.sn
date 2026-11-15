@@ -1,0 +1,14 @@
+// The root file of std.collections: the Arabic spellings of its modules
+// (docs/en/reference/modules-and-imports.md, "Module spellings"). An import may
+// use either name; both name one module.
+
+module bitset { ar: مجموعة_بتات };
+module btree_map { ar: خريطة_شجرية };
+module btree_set { ar: مجموعة_شجرية };
+module deque { ar: رتل_مزدوج };
+module heap { ar: كومة };
+module map { ar: خريطة };
+module set { ar: مجموعة };
+module sort { ar: ترتيب };
+module text_index_map { ar: خريطة_نص_فهرس };
+module vector { ar: متجهات };

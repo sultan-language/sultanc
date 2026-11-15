@@ -5,14 +5,31 @@
 // `from std.unicode import unicode_category_of, is_unicode_scalar;`, or one
 // module, `import std.unicode.general_category;`. The nested data and
 // algorithms directories are separate packages.
-استورد unicode.scalar;
-استورد unicode.general_category;
-استورد unicode.properties;
-استورد unicode.case_mapping;
-استورد unicode.case_folding;
-استورد unicode.normalization;
-استورد unicode.grapheme;
-استورد unicode.word_boundary;
-استورد unicode.sentence_boundary;
-استورد unicode.version;
-استورد unicode.code_point_text;
+// Arabic spellings of this folder's modules (docs/en/reference/modules-and-imports.md,
+// "Module spellings"): `استورد المكتبة....` names the same modules as `import std....`.
+module case_folding { ar: طي_الحالة };
+module case_mapping { ar: تحويل_الحالة };
+module code_point_text { ar: نص_نقطة };
+module general_category { ar: الفئة_العامة };
+module grapheme { ar: عناقيد };
+module normalization { ar: تطبيع };
+module properties { ar: خصائص };
+module scalar { ar: قيم_قياسية };
+module sentence_boundary { ar: حدود_الجمل };
+module unicode { ar: يونيكود };
+module version { ar: إصدار };
+module word_boundary { ar: حدود_الكلمات };
+module data { ar: بيانات };
+module algorithms { ar: خوارزميات };
+
+استورد يونيكود.قيم_قياسية;
+استورد يونيكود.الفئة_العامة;
+استورد يونيكود.خصائص;
+استورد يونيكود.تحويل_الحالة;
+استورد يونيكود.طي_الحالة;
+استورد يونيكود.تطبيع;
+استورد يونيكود.عناقيد;
+استورد يونيكود.حدود_الكلمات;
+استورد يونيكود.حدود_الجمل;
+استورد يونيكود.إصدار;
+استورد يونيكود.نص_نقطة;

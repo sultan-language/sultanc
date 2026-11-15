@@ -1,7 +1,7 @@
-استورد uuid.uuid;
-استورد os.entropy;
-استورد os.error;
-استورد time.time;
+استورد معرف_فريد.معرف_فريد;
+استورد نظام_التشغيل.عشوائية;
+استورد نظام_التشغيل.أخطاء;
+استورد وقت.الوقت;
 
 // UUID generation (RFC 9562). Kept apart from uuid.sn so parsing and
 // formatting stay usable on targets with no entropy or clock source.

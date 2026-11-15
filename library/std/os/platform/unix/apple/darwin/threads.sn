@@ -1,5 +1,5 @@
-استورد os.error;
-استورد os.platform.unix.apple.darwin.file_descriptors;
+استورد نظام_التشغيل.أخطاء;
+استورد نظام_التشغيل.منصات.يونكس.آبل.داروين.واصفات_الملفات;
 
 // macOS OS threads (docs/en/reference/concurrency.md) through libSystem's documented
 // POSIX thread API, as Rust's std (library/std/src/sys/pal/unix/thread.rs)

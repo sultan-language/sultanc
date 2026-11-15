@@ -1,7 +1,7 @@
 استورد compiler.backend.provider.llvm.model;
-استورد std.env.system;
-استورد std.text.from_bytes;
-استورد std.text.number;
+استورد المكتبة.بيئة.نظام;
+استورد المكتبة.نصوص.من_بايتات;
+استورد المكتبة.نصوص.أعداد;
 استورد compiler.backend.target.target_model;
 استورد compiler.diagnostics.identity;
 استورد compiler.diagnostics.record;
@@ -95,6 +95,17 @@
 
 // The settings own the --package-graph path, so a second user of them takes
 // a copy.
+عام عرف انسخ_اختيار_اختبارات(الاختيار: &اختيار_اختبارات): اختيار_اختبارات {
+    دع الأسماء: متغير متجه نص = [];
+    دع ف: متغير طبيعي = 0;
+    طالما (ف < (الطول((*الاختيار).الأسماء) مثل طبيعي)) { ألحق(الأسماء, انسخ_نص(&(*الاختيار).الأسماء[ف])); ف := ف + 1; }
+    دع الملفات: متغير متجه نص = [];
+    ف := 0;
+    طالما (ف < (الطول((*الاختيار).الملفات) مثل طبيعي)) { ألحق(الملفات, انسخ_نص(&(*الاختيار).الملفات[ف])); ف := ف + 1; }
+    دع النسخة: اختيار_اختبارات = { المرشح: انسخ_نص(&(*الاختيار).المرشح), الأسماء: الأسماء, الملفات: الملفات };
+    أرجع النسخة;
+}
+
 عام عرف انسخ_إعداد_عرض_عملية(الإعداد: &إعداد_عرض_عملية): إعداد_عرض_عملية {
     دع الناتج: إعداد_عرض_عملية = {
         اللغة: (*الإعداد).اللغة,
@@ -207,20 +218,45 @@
     | تحقق بنوع معرف_هدف
     // The libraries to load, in command-line order (none without -l), and
     // how a failure during the run is written.
-    | تفسير بنوع (معرف_هدف, متجه مكتبة_تحميل_تفسير, عرض_فشل_تفسير)
+    | تفسير بنوع (معرف_هدف, متجه مكتبة_تحميل_تفسير, عرض_فشل_تفسير, وضع_اختبار_تفسير)
     // The last field asks for target assembly text or LLVM IR instead of an object.
     | كائن بنوع (معرف_هدف, هوية_مزود_خلفية, نص_مخرج_كائن_مترجم)
     // The link inputs (files, the -l libraries already resolved), the -L
     // directories (searched again for libraries the program itself needs:
     // c_sources.sn), and a shared library's own name.
+    // The last field builds the executable of `sultanc test` with the tests
+    // it selects: its entry is the test harness (compiler/test_mode/), and
+    // the result names the tests.
     | ربط بنوع (
         معرف_هدف,
         هوية_مزود_خلفية,
         نوع_خرج_ربط_مترجم,
         متجه نص,
         متجه نص,
-        اختياري نص
+        اختياري نص,
+        اختياري اختيار_اختبارات
     )
+;
+
+// Which tests `sultanc test` builds and runs (all must match): --filter
+// (a text every selected test's name, in some spelling, contains; «» for
+// any), --test (names one of which a selected test's name, in some
+// spelling, equals; none for any), --tests-in (the source files a selected
+// test is declared in; none for any). The tests of the root package only.
+عام نوع اختيار_اختبارات = {
+    المرشح: نص,
+    الأسماء: متجه نص,
+    الملفات: متجه نص
+};
+
+// `sultanc test --interpret` (process_driver.sn): an interpretation either
+// runs the program as written, or builds the test harness
+// (test_mode/harness.sn) and answers the tests' names without running, or
+// runs the harness (its first argument selects the test).
+عام نوع وضع_اختبار_تفسير =
+    | بلا
+    | أسماء بنوع اختيار_اختبارات
+    | تشغيل بنوع اختيار_اختبارات
 ;
 
 عام نوع نتيجة_تجميع_مترجم =
@@ -232,6 +268,10 @@
     | فشل_تفسير بنوع مجموعة_تشخيصات
     | كائن_مكتمل بنوع متجه ط8
     | تنفيذي_مكتمل بنوع متجه ط8
+    // `sultanc test`: the test executable, its selected tests' names and
+    // declaration places in harness order (the executable runs test i when
+    // its argument is i), and how many tests the selection left out.
+    | اختبارات_مبنية بنوع (متجه ط8, متجه نص, متجه نص, طبيعي)
     | مكتبة_مشتركة_مكتملة بنوع متجه ط8
     | كائن_مترابط_مكتمل بنوع متجه ط8
     | وحدة_هدف_مكتملة بنوع متجه ط8
@@ -295,6 +335,26 @@
         // backends have one level.
         مستوى_تحسين_مزود_إل_إل_في_إم
     )
+    // `sultanc test`: the source and further sources, the target and
+    // backend choices, the module source bindings, the -l names and -L
+    // directories, the -O level, the selection (--filter, --test,
+    // --tests-in), --list, --interpret, and --test-index (run only that
+    // test, in this process: what the driver runs in each child of an
+    // interpreted run).
+    | اختبار بنوع (
+        نص,
+        متجه نص,
+        اختيار_هدف_عملية,
+        اختيار_مزود_خلفية_عملية,
+        متجه ربط_مصدر_وحدة_عملية,
+        متجه نص,
+        متجه نص,
+        مستوى_تحسين_مزود_إل_إل_في_إم,
+        اختيار_اختبارات,
+        منطقي,
+        منطقي,
+        اختياري طبيعي
+    )
 ;
 
 عام نوع نتيجة_عملية_مترجم =
@@ -316,6 +376,13 @@
     | تنسيق_مطلوب بنوع مجموعة_تشخيصات
     // `fmt` could not read, parse or write an input.
     | فشل_تنسيق بنوع مجموعة_تشخيصات
+    // `sultanc test` ran (or listed, or built for a foreign target) and
+    // reported; its exit status: 0 every selected test passed, 1 a test
+    // failed.
+    | اختبارات_منتهية بنوع طبيعي
+    // `sultanc test` could not build the program (or a test is invalid):
+    // the compilation's failure; exit status 2 for the program's own errors.
+    | فشل_بناء_اختبارات بنوع نتيجة_تجميع_مترجم
 ;
 
 عام نوع نتيجة_تحليل_استدعاء_مترجم =

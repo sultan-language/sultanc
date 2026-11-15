@@ -10,9 +10,9 @@
 استورد compiler.link.elf.final_image;
 استورد compiler.link.elf.symbol_output;
 استورد compiler.backend.target.target_model;
-استورد std.text.from_bytes;
-استورد std.collections.map;
-استورد std.hash.fnv;
+استورد المكتبة.نصوص.من_بايتات;
+استورد المكتبة.مجموعات.خريطة;
+استورد المكتبة.تجزئة.فنڤ;
 
 // Bare-metal ELF32 images laid out by a linker script (elf/layout_script.sn),
 // as LLD's LinkerScript lays out a Cortex-M program

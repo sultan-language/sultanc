@@ -1,8 +1,7 @@
-استورد std.text.from_bytes;
+استورد المكتبة.نصوص.من_بايتات;
 // Low-level diagnostic output writer. No diagnostic meaning lives here.
-استورد std.io.print;
-استورد std.text.number;
-
+استورد المكتبة.دخ.اطبع;
+استورد المكتبة.نصوص.أعداد;
 
 // Diagnostic text is collected here and written to standard error once per
 // diagnostic (اصرف_كتابة_التشخيص, called by every renderer when it ends),

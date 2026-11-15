@@ -18,23 +18,23 @@
 // selected explicitly with SULTANC_C_PREPROCESSOR=cc): line markers name
 // the file of what follows, #define lines fill the macro table, and the
 // text is not expanded again.
-استورد std.text.search;
+استورد المكتبة.نصوص.بحث;
 استورد compiler.diagnostics.reason;
 استورد compiler.diagnostics.foreign_c;
-استورد std.chars.ascii;
-استورد std.encoding.utf8;
-استورد std.text.transform;
-استورد std.text.radix;
-استورد std.text.from_bytes;
-استورد std.text.number;
-استورد std.text.compare;
-استورد std.fs.metadata;
-استورد std.fs.read_file;
-استورد std.fs.path;
-استورد std.math.wrapping;
-استورد std.encoding.hex;
-استورد std.unicode.code_point_text;
-استورد std.text.substring;
+استورد المكتبة.حروف.أسكي;
+استورد المكتبة.ترميز.يوتيف8;
+استورد المكتبة.نصوص.تحويل;
+استورد المكتبة.نصوص.أساس;
+استورد المكتبة.نصوص.من_بايتات;
+استورد المكتبة.نصوص.أعداد;
+استورد المكتبة.نصوص.مقارنة;
+استورد المكتبة.ملفات.بيانات_وصفية;
+استورد المكتبة.ملفات.قراءة_ملف;
+استورد المكتبة.ملفات.مسار;
+استورد المكتبة.رياضيات.التفاف;
+استورد المكتبة.ترميز.سداسي;
+استورد المكتبة.يونيكود.نص_نقطة;
+استورد المكتبة.نصوص.مقطع;
 استورد compiler.jisr.core;
 استورد compiler.jisr.lexer;
 استورد compiler.jisr.literals;
@@ -1493,7 +1493,6 @@
     أرجع اختياري.لا_شيء();
 }
 
-
 // ---- #embed (C23) ----
 
 // The path of the resource an #embed names: next to the current file for
@@ -1645,7 +1644,6 @@
     };
     أرجع الاسم;
 }
-
 
 // __has_embed: 0 not found, 1 found with data, 2 found and empty.
 عرف حال_بيانات_جسر(ع: &متغير معالج_جسر, الرموز: &متجه رمز_جسر, الحالي: طبيعي): طبيعي {

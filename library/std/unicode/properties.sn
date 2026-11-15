@@ -1,5 +1,5 @@
-استورد unicode.algorithms.lookup;
-استورد unicode.data.properties;
+استورد يونيكود.خوارزميات.بحث;
+استورد يونيكود.بيانات.خصائص;
 
 // The numeric property identifiers are fixed by the pinned generator.
 عرف خاصية_محرف_يونيكود(القيمة: ط32, المعرف: ط32): منطقي {

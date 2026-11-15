@@ -1,0 +1,21 @@
+// The root file of std.crypto: the Arabic spellings of its modules
+// (docs/en/reference/modules-and-imports.md, "Module spellings"). An import may
+// use either name; both name one module.
+
+module aes { ar: أيس };
+module aes_gcm { ar: أيس_جي_سي_إم };
+module bignum { ar: أعداد_كبيرة };
+module chacha20_poly1305 { ar: تشاتشا20_بولي1305 };
+module des { ar: دي_إي_إس };
+module digest { ar: ملخص };
+module ecdsa { ar: إي_سي_دي_إس_إيه };
+module ed25519 { ar: إد25519 };
+module field25519 { ar: حقل25519 };
+module rc2 { ar: آر_سي2 };
+module rsa { ar: آر_إس_إيه };
+module sha1 { ar: شا1 };
+module sha256 { ar: شا256 };
+module sha512 { ar: شا512 };
+module words { ar: كلمات };
+module words64 { ar: كلمات64 };
+module x25519 { ar: إكس25519 };

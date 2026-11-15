@@ -1,7 +1,7 @@
-استورد std.text.from_bytes;
-استورد std.text.range;
-استورد std.encoding.positions;
-استورد std.encoding.utf8;
+استورد المكتبة.نصوص.من_بايتات;
+استورد المكتبة.نصوص.نطاق;
+استورد المكتبة.ترميز.مواضع;
+استورد المكتبة.ترميز.يوتيف8;
 استورد compiler.source.span;
 
 // Canonical source file owned by compiler/source.
@@ -33,7 +33,6 @@
     };
     أرجع الناتج;
 }
-
 
 عام عرف متاح_في_المصدر(
     المصدر: &مصدر,

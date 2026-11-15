@@ -3,7 +3,7 @@
 // pbeWithSHAAnd128BitRC2-CBC. PITABLE and expanded-key reads scan the whole
 // table with masks, so the access pattern does not depend on key or data.
 
-استورد crypto.words;
+استورد تشفير.كلمات;
 
 عرف جدول_باي_آر_سي2(): متجه طبيعي {
     دع الجدول: متجه طبيعي = [

@@ -9,14 +9,14 @@
 // passes (_start's stack layout differs per architecture), the process
 // environment table, both clocks (64-bit times on 32-bit targets), sleeping,
 // the working directory and the exit status.
-استورد std.io.print;
-استورد std.text.transform;
-استورد std.text.compare;
-استورد std.process.arguments;
-استورد std.process.exit;
-استورد std.env.environment;
-استورد std.env.variables;
-استورد std.time.time;
+استورد المكتبة.دخ.اطبع;
+استورد المكتبة.نصوص.تحويل;
+استورد المكتبة.نصوص.مقارنة;
+استورد المكتبة.عمليات.الوسائط;
+استورد المكتبة.عمليات.اخرج;
+استورد المكتبة.بيئة.بيئة_العمل;
+استورد المكتبة.بيئة.متغيرات;
+استورد المكتبة.وقت.الوقت;
 
 عرف الرئيسية(): عدد {
     دع السطر: متغير متجه نص = [];

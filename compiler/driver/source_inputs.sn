@@ -1,4 +1,4 @@
-استورد std.text.from_bytes;
+استورد المكتبة.نصوص.من_بايتات;
 استورد compiler.frontend.module_loading.module_paths;
 استورد compiler.frontend.module_loading.library_root_identity;
 استورد compiler.frontend.module_loading.logical_environment;
@@ -9,15 +9,16 @@
 استورد compiler.driver.package_graph;
 استورد compiler.driver.package_environment;
 استورد compiler.driver.std_location;
-استورد std.fs.read_file;
+استورد المكتبة.ملفات.قراءة_ملف;
 استورد compiler.source.source_kind;
-استورد std.bytes.compare;
-استورد std.fs.directory;
-استورد std.fs.path;
-استورد std.fs.canonical;
-استورد std.env.environment;
-استورد std.text.compare;
+استورد المكتبة.بايتات.مقارنة;
+استورد المكتبة.ملفات.مجلد;
+استورد المكتبة.ملفات.مسار;
+استورد المكتبة.ملفات.مسار_قانوني;
+استورد المكتبة.بيئة.بيئة_العمل;
+استورد المكتبة.نصوص.مقارنة;
 استورد compiler.ispeak.keys.surface;
+استورد المكتبة.دخ.اقرأ_سطر;
 // Driver source-input ownership only: filesystem paths -> canonical Frontend module environment.
 // Canonical module identity/loading semantics remain in Frontend.
 // Direct/bootstrap source-file paths are configuration input only. They are reduced
@@ -369,7 +370,6 @@
     };
 }
 
-
 // Without a package graph: the file, its relative imports and std. The
 // configured root is the common directory of the inputs (the working
 // directory for relative ones); no manifest is looked for.
@@ -513,7 +513,6 @@
     };
     أرجع نتيجة_إعداد_تجميع_مباشر_مفصلة.جاهز(الإعداد);
 }
-
 
 عرف مسار_مصدر_نسبة_إلى_جذر_بيان(
     مسار_المصدر: &نص,
@@ -684,8 +683,60 @@
     };
 }
 
-// The same with the package graph in the file مسار_الرسم (--package-graph);
-// «» compiles without one.
+// `--package-graph=-`: the graph is read from standard input, once per
+// process (a process that compiles twice, as `run` falling back to an
+// executable does, reads it once), and kept here. Its relative paths resolve
+// against the current directory: «-» has no directory.
+دع رسم_الحزم_من_الدخل: متغير متجه ط8 = [];
+دع رسم_الحزم_من_الدخل_صالح: متغير منطقي = خطأ;
+دع رسم_الحزم_من_الدخل_مقروء: متغير منطقي = خطأ;
+
+// The package graph's text on standard input (لا_شيء when it cannot be read).
+عام عرف نص_رسم_الحزم_من_الدخل(): اختياري نص {
+    دع مقروء: متغير منطقي = خطأ;
+    غير_آمن { مقروء := رسم_الحزم_من_الدخل_مقروء; }
+    إذا (!مقروء) {
+        دع البايتات: متغير متجه ط8 = [];
+        دع صالح: متغير منطقي = خطأ;
+        دع مستمر: متغير منطقي = صواب;
+        طالما (مستمر) {
+            طابق اقرأ_حتى(65536) مع
+            | نتيجة.خطأ(_) -> { مستمر := خطأ; }
+            | نتيجة.نجح(المقروء) -> {
+                إذا (المقروء.نهاية_المدخل) {
+                    صالح := صواب;
+                    مستمر := خطأ;
+                } وإلا {
+                    دع ف: متغير طبيعي = 0;
+                    طالما (ف < (الطول(المقروء.البايتات) مثل طبيعي)) { ألحق(البايتات, المقروء.البايتات[ف]); ف := ف + 1; }
+                };
+            };
+        }
+        غير_آمن {
+            دع ف: متغير طبيعي = 0;
+            طالما (ف < (الطول(البايتات) مثل طبيعي)) { ألحق(رسم_الحزم_من_الدخل, البايتات[ف]); ف := ف + 1; }
+            رسم_الحزم_من_الدخل_صالح := صالح;
+            رسم_الحزم_من_الدخل_مقروء := صواب;
+        }
+    };
+    دع صالح_الآن: متغير منطقي = خطأ;
+    دع النسخة: متغير متجه ط8 = [];
+    غير_آمن {
+        صالح_الآن := رسم_الحزم_من_الدخل_صالح;
+        دع ف: متغير طبيعي = 0;
+        طالما (ف < (الطول(رسم_الحزم_من_الدخل) مثل طبيعي)) { ألحق(النسخة, رسم_الحزم_من_الدخل[ف]); ف := ف + 1; }
+    }
+    إذا (!صالح_الآن) { أرجع اختياري.لا_شيء(); };
+    أرجع اختياري.موجود(من_بايتات(&النسخة));
+}
+
+// Whether مسار_الرسم names standard input (`--package-graph=-`).
+عام عرف رسم_الحزم_من_الدخل_القياسي(مسار_الرسم: &نص): منطقي {
+    أرجع (الطول(*مسار_الرسم) مثل طبيعي) == 1 && (*مسار_الرسم)[0] == 0x2D;
+}
+
+// The same with the package graph in the file مسار_الرسم (--package-graph),
+// or on standard input for «-»; «» compiles without one.
 عام عرف ابن_إعداد_تجميع_مباشر_مفصل_برسم(
     مسار_ملف_الدخول: &نص,
     مسارات_ملفات_المصدر_الإضافية: &متجه نص,
@@ -693,6 +744,19 @@
 ): نتيجة_إعداد_تجميع_مباشر_مفصلة {
     إذا ((الطول(*مسار_الرسم) مثل طبيعي) == 0) {
         أرجع ابن_إعداد_تجميع_مباشر_مفصل(مسار_ملف_الدخول, مسارات_ملفات_المصدر_الإضافية);
+    };
+    إذا (رسم_الحزم_من_الدخل_القياسي(مسار_الرسم)) {
+        طابق نص_رسم_الحزم_من_الدخل() مع
+        | اختياري.لا_شيء -> {
+            أرجع نتيجة_إعداد_تجميع_مباشر_مفصلة.رسم_غير_صالح(خطأ_رسم_بلا_موقع(
+                مسار_الرسم, مفتاح_نص_مترجم.تعذر_قراءة_رسم_حزم()
+            ));
+        }
+        | اختياري.موجود(النص) -> {
+            أرجع ابن_إعداد_تجميع_مباشر_مفصل_برسم_نصي(
+                مسار_ملف_الدخول, مسارات_ملفات_المصدر_الإضافية, مسار_الرسم, &النص
+            );
+        };
     };
     طابق اقرأ_الملف(مسار_الرسم) مع
     | نتيجة.خطأ(_) -> {
@@ -719,7 +783,6 @@
     }
     | _ -> { أرجع نتيجة_إعداد_تجميع_مباشر.غير_صالح(); };
 }
-
 
 // Explicit module sources (--module-source=<module>=<file>).
 //
@@ -840,4 +903,3 @@
     };
     أرجع الناتج;
 }
-

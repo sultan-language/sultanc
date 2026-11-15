@@ -9,10 +9,10 @@
 استورد compiler.link.wasm.object_ingest;
 استورد compiler.link.wasm.dynamic_ingest;
 استورد compiler.link.wasm.names;
-استورد std.collections.map;
-استورد std.hash.fnv;
-استورد std.bytes.compare;
-استورد std.text.from_bytes;
+استورد المكتبة.مجموعات.خريطة;
+استورد المكتبة.تجزئة.فنڤ;
+استورد المكتبة.بايتات.مقارنة;
+استورد المكتبة.نصوص.من_بايتات;
 
 // The SultanC WebAssembly linker (wasm32). It links the relocatable objects
 // of the WebAssembly tool conventions (Linking.md), as written by the native

@@ -6,12 +6,12 @@
 // steps, or passes رمز_إلغاء_الطلب_ويب to the work it starts (a database
 // query, an upstream request), and stops. A request is also cancelled once a
 // graceful shutdown's grace period is over.
-استورد text.from_bytes;
-استورد time.time;
-استورد sync.cancel;
-استورد http.model;
-استورد http.headers;
-استورد http.shutdown;
+استورد نصوص.من_بايتات;
+استورد وقت.الوقت;
+استورد تزامن.إلغاء;
+استورد ويب.نموذج;
+استورد ويب.ترويسات;
+استورد ويب.إيقاف;
 
 عرف الآن_رتيبا_ويب(): عدد {
     طابق وقت_رتيب_نانو() مع

@@ -1,9 +1,9 @@
-استورد os.path;
-استورد os.error;
-استورد os.platform.windows.win32.error;
-استورد os.platform.windows.win32.file_paths;
-استورد encoding.utf16;
-استورد text.compare;
+استورد نظام_التشغيل.مسار;
+استورد نظام_التشغيل.أخطاء;
+استورد نظام_التشغيل.منصات.ويندوز.وين32.أخطاء;
+استورد نظام_التشغيل.منصات.ويندوز.وين32.مسارات_الملفات;
+استورد ترميز.يوتيف16;
+استورد نصوص.مقارنة;
 
 // FindFirstFileW/FindNextFileW return WIN32_FIND_DATAW, not a Unix dirent.
 // Windows SDK minwinbase.h: DWORD attributes at offset 0; cFileName WCHAR

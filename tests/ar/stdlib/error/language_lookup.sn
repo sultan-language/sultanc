@@ -8,9 +8,9 @@
 // shorter forms down to the primary language (ar-SA → ar); then the author's
 // message (an unknown tag); then, when that is empty, the first version.
 // Versions change neither the identity nor صف_فشل, and copies keep them.
-استورد المكتبة.أخطاء.failure;
-استورد المكتبة.نصوص.language;
-استورد المكتبة.نصوص.compare;
+استورد المكتبة.أخطاء.فشل;
+استورد المكتبة.نصوص.لغة;
+استورد المكتبة.نصوص.مقارنة;
 
 عرف نص_بوسم(الفشل: &فشل, الوسم: نص): نص {
     دع اللغة: لغة = لغة_من_وسم(&الوسم);

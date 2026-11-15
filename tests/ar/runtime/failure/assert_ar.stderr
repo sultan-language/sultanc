@@ -1,2 +1,3 @@
 خطأ[SULTANC-RUNTIME-PROGRAM-STOPPED]: توقف البرنامج — فشل تأكيد.
+  --> tests/ar/runtime/failure/assert_ar.sn:18:5
 يجب أن يكون الحجم موجبا

@@ -1,4 +1,4 @@
-استورد std.text.from_bytes;
+استورد المكتبة.نصوص.من_بايتات;
 استورد compiler.link.context;
 استورد compiler.link.provider;
 استورد compiler.link.reachability;
@@ -15,7 +15,6 @@
     | رمز_دخول_غير_موجود
     | مزود_غير_مدعوم
 ;
-
 
 عرف اسم_رمز_دخول_افتراضي_للربط(
     السياق: &سياق_ربط

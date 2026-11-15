@@ -16,8 +16,8 @@
 استورد compiler.frontend.parser.precedence;
 استورد compiler.frontend.parser.types;
 استورد compiler.frontend.parser.literals;
-استورد std.fs.read_file;
-استورد std.text.from_bytes;
+استورد المكتبة.ملفات.قراءة_ملف;
+استورد المكتبة.نصوص.من_بايتات;
 
 // تبنى التعبيرات من هويات الرموز نفسها بغض النظر عن سطح source.
 
@@ -212,7 +212,6 @@
     }
     أرجع اختياري.موجود(الحالي);
 }
-
 
 عرف حلل_إغلاق(
     المصدر: &مصدر,

@@ -1,5 +1,5 @@
-استورد std.text.from_bytes;
-استورد std.encoding.utf16;
+استورد المكتبة.نصوص.من_بايتات;
+استورد المكتبة.ترميز.يوتيف16;
 استورد compiler.interpreter.execution.execution_state;
 استورد compiler.interpreter.execution.frame;
 استورد compiler.interpreter.execution.primitives;

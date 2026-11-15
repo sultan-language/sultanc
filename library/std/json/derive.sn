@@ -6,12 +6,12 @@
 // when absent and may be missing on input; vectors are arrays; enum
 // constructors without payloads are strings, others {"tag": name, "values":
 // [payloads]}. Decoding names the failing field path in its error.
-استورد text.from_bytes;
-استورد text.number;
-استورد text.float;
-استورد json.value;
-استورد json.escape;
-استورد json.parse;
+استورد نصوص.من_بايتات;
+استورد نصوص.أعداد;
+استورد نصوص.عشري;
+استورد جسون.قيمة;
+استورد جسون.هروب;
+استورد جسون.تحليل;
 
 // ---- Encoding ----
 

@@ -2,7 +2,7 @@
 // أهداف: arm64-darwin,x86_64-linux
 // خروج: 0
 // نظير: tests/en/ispeak/check_arabic_tables.sn
-استورد std.io.print;
+استورد المكتبة.دخ.اطبع;
 استورد compiler.diagnostics.identity;
 استورد compiler.diagnostics.reason;
 استورد compiler.diagnostics.registry;

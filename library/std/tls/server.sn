@@ -19,22 +19,22 @@
 // enabled a CertificateRequest is sent and the client chain is validated for
 // clientAuth against the configured client roots (or the system anchors).
 
-استورد crypto.digest;
-استورد crypto.ecdsa;
-استورد crypto.ed25519;
-استورد crypto.rsa;
-استورد crypto.words;
-استورد text.from_bytes;
-استورد tls.client;
-استورد tls.config;
-استورد tls.errors;
-استورد tls.key_exchange;
-استورد tls.pkcs12;
-استورد tls.record;
-استورد tls.signature;
-استورد tls.verify;
-استورد tls.wire;
-استورد tls.x509;
+استورد تشفير.ملخص;
+استورد تشفير.إي_سي_دي_إس_إيه;
+استورد تشفير.إد25519;
+استورد تشفير.آر_إس_إيه;
+استورد تشفير.كلمات;
+استورد نصوص.من_بايتات;
+استورد تي_إل_إس.عميل;
+استورد تي_إل_إس.إعداد;
+استورد تي_إل_إس.أخطاء;
+استورد تي_إل_إس.تبادل_المفاتيح;
+استورد تي_إل_إس.بي_كي_سي_إس12;
+استورد تي_إل_إس.سجل;
+استورد تي_إل_إس.توقيع;
+استورد تي_إل_إس.تحقق;
+استورد تي_إل_إس.سلك;
+استورد تي_إل_إس.إكس509;
 
 نوع ترحيب_عميل_تي_إل_إس = {
     معرف_الجلسة: متجه ط8,

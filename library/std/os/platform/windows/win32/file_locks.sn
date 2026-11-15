@@ -1,5 +1,5 @@
-استورد os.error;
-استورد os.platform.windows.win32.error;
+استورد نظام_التشغيل.أخطاء;
+استورد نظام_التشغيل.منصات.ويندوز.وين32.أخطاء;
 
 // Whole-file locks through kernel32 (std.os.file_lock). MSDN:
 // BOOL LockFileEx(HANDLE, DWORD dwFlags, DWORD dwReserved,

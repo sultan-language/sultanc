@@ -4,7 +4,7 @@
 // The caller comparator must define a stable total ordering: zero exactly for
 // equivalent keys, and a consistent sign for each ordered pair of keys.
 
-استورد process.panic;
+استورد عمليات.انهيار;
 
 عام نوع مدخل_خريطة_شجرة_بي<م, ق> = {
     المفتاح: م,

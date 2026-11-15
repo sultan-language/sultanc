@@ -234,6 +234,13 @@ def pinned_codes(): vector string {
     append(result, "SULTANC-MODULE-SPELLING-SHARED");
     append(result, "SULTANC-MODULE-SPELLING-RESERVED");
     append(result, "SULTANC-MODULE-OUTSIDE-ROOT-FILE");
+    append(result, "SULTANC-TEST-PARAMETERS");
+    append(result, "SULTANC-TEST-RESULT-TYPE");
+    append(result, "SULTANC-TEST-NOT-A-FUNCTION");
+    append(result, "SULTANC-TEST-NOT-FOUND");
+    append(result, "SULTANC-TEST-FILE-NOT-IN-PROGRAM");
+    append(result, "SULTANC-TRACK-CALLER-SIGNATURE");
+    append(result, "SULTANC-TRACK-CALLER-EXPLICIT-LOCATION");
     return result;
 }
 
@@ -460,6 +467,13 @@ def pinned_kinds(): vector string {
     append(result, "module-spelling-shared");
     append(result, "module-spelling-reserved-word");
     append(result, "module-declaration-outside-root-file");
+    append(result, "test-has-parameters");
+    append(result, "test-result-type");
+    append(result, "test-not-a-function");
+    append(result, "test-not-found");
+    append(result, "test-file-not-in-program");
+    append(result, "track-caller-signature");
+    append(result, "track-caller-explicit-location");
     return result;
 }
 

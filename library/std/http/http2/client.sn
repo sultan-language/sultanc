@@ -5,16 +5,16 @@
 // streams on one connection, within the peer's SETTINGS_MAX_CONCURRENT_STREAMS
 // and both flow-control windows.
 
-استورد io.writer;
-استورد text.from_bytes;
-استورد text.number;
-استورد http.model;
-استورد http.client;
-استورد tls.config;
-استورد http.transport;
-استورد http.http2.frame;
-استورد http.http2.connection;
-استورد http.http2.common;
+استورد دخ.كاتب;
+استورد نصوص.من_بايتات;
+استورد نصوص.أعداد;
+استورد ويب.نموذج;
+استورد ويب.عميل;
+استورد تي_إل_إس.إعداد;
+استورد ويب.ناقل;
+استورد ويب.ويب2.إطار;
+استورد ويب.ويب2.اتصال;
+استورد ويب.ويب2.مشترك;
 
 عام نوع خطأ_عميل_ويب2 =
     | عميل بنوع خطأ_عميل_ويب

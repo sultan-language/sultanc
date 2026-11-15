@@ -1,5 +1,5 @@
-استورد std.text.builder;
-استورد std.text.number;
+استورد المكتبة.نصوص.باني;
+استورد المكتبة.نصوص.أعداد;
 استورد compiler.diagnostics.schema;
 استورد compiler.ispeak.format.quote;
 استورد compiler.ispeak.grammar.plural;

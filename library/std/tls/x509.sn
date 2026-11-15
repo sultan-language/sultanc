@@ -1,16 +1,16 @@
-استورد text.from_bytes;
+استورد نصوص.من_بايتات;
 // X.509 v3 certificate parsing (RFC 5280 section 4) for TLS peer
 // authentication. Parsing is strict DER through std.encoding.der. Only the
 // fields that path validation and TLS use are extracted; extensions that are
 // marked critical and are not understood here make the certificate unusable
 // (RFC 5280 4.2), so validation fails closed.
 
-استورد crypto.digest;
-استورد crypto.ecdsa;
-استورد crypto.ed25519;
-استورد crypto.rsa;
-استورد crypto.words;
-استورد encoding.der;
+استورد تشفير.ملخص;
+استورد تشفير.إي_سي_دي_إس_إيه;
+استورد تشفير.إد25519;
+استورد تشفير.آر_إس_إيه;
+استورد تشفير.كلمات;
+استورد ترميز.دي_إي_آر;
 
 عام نوع خوارزمية_توقيع_إكس509 =
     | توقيع_بي_كي_سي_إس1_إكس509 بنوع خوارزمية_تجزئة

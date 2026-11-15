@@ -1,5 +1,5 @@
-استورد os.buffer;
-استورد os.error;
+استورد نظام_التشغيل.مخزن;
+استورد نظام_التشغيل.أخطاء;
 
 // Socket identities are target-specific. Linux descriptors and Windows
 // SOCKETs never pass through the same platform implementation.
@@ -9,11 +9,11 @@
 إذا ((الهدف.المنصة == «linux» || الهدف.المنصة == «android») && الهدف.المعمارية != «ve») { استورد os.platform.unix.linux.uapi; }
 إذا (الهدف.المنصة == «freebsd») { استورد os.platform.unix.freebsd.uapi; }
 إذا ((الهدف.المنصة == «linux» || الهدف.المنصة == «android» || الهدف.المنصة == «freebsd») && الهدف.المعمارية != «ve») {
-    استورد os.platform.unix.linux.sockets;
-    استورد os.platform.unix.linux.name_resolution;
-    استورد os.platform.unix.linux.file_descriptors;
-    استورد os.platform.unix.linux.syscalls.operations;
-    استورد os.platform.unix.linux.syscalls.selection;
+    استورد نظام_التشغيل.منصات.يونكس.لينكس.مقابس;
+    استورد نظام_التشغيل.منصات.يونكس.لينكس.تحليل_الأسماء;
+    استورد نظام_التشغيل.منصات.يونكس.لينكس.واصفات_الملفات;
+    استورد نظام_التشغيل.منصات.يونكس.لينكس.نداءات_النظام.عمليات;
+    استورد نظام_التشغيل.منصات.يونكس.لينكس.نداءات_النظام.اختيار;
 
     عرف خطأ_مقبس_لينكس_للنظام(الخطأ: خطأ_مقبس_لينكس): خطأ_حد_نظام {
         طابق الخطأ مع
@@ -245,7 +245,7 @@
 }
 
 إذا (الهدف.المنصة == «macos») {
-    استورد os.platform.unix.apple.darwin.sockets;
+    استورد نظام_التشغيل.منصات.يونكس.آبل.داروين.مقابس;
 
     عرف خطأ_مقبس_داروين_للنظام(الخطأ: خطأ_مقبس_داروين): خطأ_حد_نظام {
         طابق الخطأ مع
@@ -402,8 +402,8 @@
 }
 
 إذا (الهدف.المنصة == «windows») {
-    استورد os.platform.windows.winsock.sockets;
-    استورد os.platform.windows.winsock.name_resolution;
+    استورد نظام_التشغيل.منصات.ويندوز.وين_سوك.مقابس;
+    استورد نظام_التشغيل.منصات.ويندوز.وين_سوك.تحليل_الأسماء;
 
     عرف خطأ_مقبس_وينسوك_للنظام(الخطأ: خطأ_مقبس_وينسوك): خطأ_حد_نظام {
         طابق الخطأ مع
@@ -594,7 +594,7 @@
 }
 
 إذا ((الهدف.المنصة == «linux» || الهدف.المنصة == «android» || الهدف.المنصة == «freebsd») && الهدف.المعمارية != «ve») {
-    استورد os.platform.unix.linux.socket_address;
+    استورد نظام_التشغيل.منصات.يونكس.لينكس.عنوان_مقبس;
     // sa_family (and sin6_scope_id) are host-order fields: big-endian on
     // s390x and SPARC (uapi.sn); the port and address are network order.
     عام عرف رمز_عنوان_مقبس_النظام(
@@ -621,7 +621,7 @@
 }
 
 إذا (الهدف.المنصة == «macos») {
-    استورد os.platform.unix.bsd.socket_address;
+    استورد نظام_التشغيل.منصات.يونكس.بي_إس_دي.عنوان_مقبس;
     عام عرف رمز_عنوان_مقبس_النظام(
         العائلة: عدد, المنفذ: عدد, العنوان: &متجه ط8,
         الخارج: &متغير متجه ط8
@@ -646,9 +646,9 @@
 }
 
 إذا (الهدف.المنصة == «windows») {
-    استورد os.platform.windows.winsock.socket_address;
-    استورد os.platform.windows.winsock.sockets;
-    استورد os.platform.windows.winsock.name_resolution;
+    استورد نظام_التشغيل.منصات.ويندوز.وين_سوك.عنوان_مقبس;
+    استورد نظام_التشغيل.منصات.ويندوز.وين_سوك.مقابس;
+    استورد نظام_التشغيل.منصات.ويندوز.وين_سوك.تحليل_الأسماء;
     عام عرف رمز_عنوان_مقبس_النظام(
         العائلة: عدد, المنفذ: عدد, العنوان: &متجه ط8,
         الخارج: &متغير متجه ط8
@@ -670,7 +670,6 @@
         };
         أرجع نتيجة.خطأ(خطأ_حد_نظام.وسيط_غير_صالح());
     }
-
 
     // The native Winsock resolver owns its linked native results. Copy an
     // IPv4/IPv6 address before its allocation and startup reference expire.
@@ -739,8 +738,8 @@
 // connecting, binding, listening, options and name resolution are not part
 // of the interface and fail with ENOTSUP.
 إذا (الهدف.المنصة == «wasi») {
-    استورد os.platform.wasi.preview1.sockets;
-    استورد os.platform.wasi.preview1.file_descriptors;
+    استورد نظام_التشغيل.منصات.واسي.معاينة1.مقابس;
+    استورد نظام_التشغيل.منصات.واسي.معاينة1.واصفات_الملفات;
 
     عرف غير_مدعوم_مقبس_واسي(): خطأ_حد_نظام {
         أرجع خطأ_واصف_واسي_للنظام(خطأ_رقم_واسي(رمز_غير_مدعوم_واسي()));

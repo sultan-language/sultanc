@@ -1,7 +1,7 @@
-استورد os.error;
-استورد os.platform.unix.linux.syscalls.kernel_result;
-استورد os.platform.unix.linux.syscalls.operations;
-استورد os.platform.unix.linux.syscalls.selection;
+استورد نظام_التشغيل.أخطاء;
+استورد نظام_التشغيل.منصات.يونكس.لينكس.نداءات_النظام.نتيجة_النواة;
+استورد نظام_التشغيل.منصات.يونكس.لينكس.نداءات_النظام.عمليات;
+استورد نظام_التشغيل.منصات.يونكس.لينكس.نداءات_النظام.اختيار;
 
 // Kernel CSPRNG through getrandom(2) with flags 0: the call blocks only until
 // the kernel pool is first initialized and never returns predictable data.

@@ -1,5 +1,5 @@
-استورد os.error;
-استورد os.buffer;
+استورد نظام_التشغيل.أخطاء;
+استورد نظام_التشغيل.مخزن;
 
 // Win64 Winsock: SOCKET is UINT_PTR (64 bits on registered Windows targets).
 // It is NOT a POSIX fd or a Win32 HANDLE. This binding requires successful

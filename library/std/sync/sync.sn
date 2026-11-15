@@ -1,0 +1,12 @@
+// The root file of std.sync: the Arabic spellings of its modules
+// (docs/en/reference/modules-and-imports.md, "Module spellings"). An import may
+// use either name; both name one module.
+
+module arc { ar: مشترك };
+module atomic { ar: ذري };
+module cancel { ar: إلغاء };
+module channel { ar: قناة };
+module condvar { ar: شرط_انتظار };
+module mutex { ar: قفل };
+module once { ar: مرة };
+module rwlock { ar: قفل_قراءة_كتابة };

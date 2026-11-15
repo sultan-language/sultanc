@@ -12,7 +12,7 @@
 استورد compiler.frontend.lexer.values;
 استورد compiler.frontend.parser.parser;
 استورد compiler.frontend.parser.result;
-استورد std.text.from_bytes;
+استورد المكتبة.نصوص.من_بايتات;
 
 // Function decorators (AT-01..AT-04). A decorator is an ordinary function
 // applied to the decorated function at its definition, as in Python

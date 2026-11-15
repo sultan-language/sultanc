@@ -7,10 +7,10 @@
 // Counterpart: tests/en/stdlib/error/rss_flat.sn. It has no pair directive:
 // the pair check interprets both files, the interpreter takes minutes for
 // this loop, and it does not use the std allocator whose counters this reads.
-استورد المكتبة.أخطاء.failure;
-استورد المكتبة.أخطاء.from_number;
-استورد المكتبة.نصوص.number;
-استورد std.os.allocation;
+استورد المكتبة.أخطاء.فشل;
+استورد المكتبة.أخطاء.من_عدد;
+استورد المكتبة.نصوص.أعداد;
+استورد المكتبة.نظام_التشغيل.تخصيص;
 
 عرف اصنع_سلسلة(ف: طبيعي): فشل {
     دع الجذر: فشل = فشل_بهوية(«std.fs», «غير_موجود», «الملف غير موجود»);

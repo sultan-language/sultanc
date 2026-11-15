@@ -10,8 +10,8 @@
 //
 // Supported on Linux, Android, FreeBSD and macOS. Windows (console control
 // events) and WASI answer غير_مدعوم.
-استورد os.process_info;
-استورد os.error;
+استورد نظام_التشغيل.معلومات_العملية;
+استورد نظام_التشغيل.أخطاء;
 
 عام نوع إشارة_إيقاف =
     | مقاطعة

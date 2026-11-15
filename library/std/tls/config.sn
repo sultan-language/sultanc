@@ -1,4 +1,4 @@
-استورد text.from_bytes;
+استورد نصوص.من_بايتات;
 
 // TLS configuration values. Trust roots are DER certificates; an empty root
 // list means the system trust anchors (std.tls.trust). Server identities

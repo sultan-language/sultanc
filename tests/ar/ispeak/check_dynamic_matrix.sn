@@ -2,15 +2,15 @@
 // أهداف: arm64-darwin,x86_64-linux
 // خروج: 0
 // نظير: tests/en/ispeak/check_dynamic_matrix.sn
-استورد std.text.search;
-استورد std.text.from_bytes;
+استورد المكتبة.نصوص.بحث;
+استورد المكتبة.نصوص.من_بايتات;
 استورد compiler.diagnostics.identity;
 استورد compiler.diagnostics.reason;
 استورد compiler.ispeak.format.facts;
 استورد compiler.diagnostics.schema;
 استورد compiler.ispeak.ispeak;
 
-// Every one of the 900 active identities must preserve each of the 22
+// Every one of the 907 active identities must preserve each of the 22
 // named context facts in both languages, without falling back to fixed text.
 عرف تحقق(اللغة: لغة_تشخيص, المفتاح: مفتاح_رسالة_تشخيص, الحمولة: حقائق_رسالة): منطقي {
     طابق رسالة_تشخيص_بحجج(اللغة, المفتاح, الحمولة) مع
@@ -127,6 +127,6 @@
         العدد := العدد + 1;
         رقم := رقم + 1;
     }
-    إذا (العدد != (900 مثل طبيعي)) { أرجع 3; };
+    إذا (العدد != (907 مثل طبيعي)) { أرجع 3; };
     أرجع 0;
 }

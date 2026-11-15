@@ -1,10 +1,10 @@
-استورد os.buffer;
-استورد os.error;
+استورد نظام_التشغيل.مخزن;
+استورد نظام_التشغيل.أخطاء;
 
 // Process environment and process paths have target-specific storage.
 // A Linux kernel syscall cannot supply the current mutable environment;
 // the Unix startup/runtime owner must make environ available to std.os.
-استورد os.environment_validation;
+استورد نظام_التشغيل.تحقق_البيئة;
 
 // Copy an owned text's bytes into a caller-owned slice. The caller chooses
 // the capacity; this routine does not truncate or discard an overflow.
@@ -27,7 +27,7 @@
 }
 
 إذا (الهدف.المنصة == «windows») {
-    استورد os.platform.windows.win32.environment;
+    استورد نظام_التشغيل.منصات.ويندوز.وين32.بيئة;
 
     عرف خطأ_بيئة_ويندوز_للنظام(الخطأ: خطأ_بيئة_ويندوز): خطأ_حد_نظام {
         طابق الخطأ مع
@@ -72,10 +72,10 @@
 }
 
 إذا ((الهدف.المنصة == «linux» || الهدف.المنصة == «android» || الهدف.المنصة == «freebsd») && الهدف.المعمارية != «ve») {
-    استورد os.platform.unix.linux.path_operations;
-    استورد os.platform.unix.linux.temporary_directory;
-    استورد os.platform.unix.linux.syscalls.operations;
-    استورد os.platform.unix.linux.syscalls.selection;
+    استورد نظام_التشغيل.منصات.يونكس.لينكس.عمليات_المسارات;
+    استورد نظام_التشغيل.منصات.يونكس.لينكس.المجلد_المؤقت;
+    استورد نظام_التشغيل.منصات.يونكس.لينكس.نداءات_النظام.عمليات;
+    استورد نظام_التشغيل.منصات.يونكس.لينكس.نداءات_النظام.اختيار;
 
     // The compiler startup ABI must supply TMPDIR; do not guess an envp
     // pointer or fabricate a platform-wide fallback directory here.
@@ -117,12 +117,11 @@
     }
 }
 
-
 // Darwin: the working directory comes from libSystem getcwd; TMPDIR is set
 // per user by launchd and must be an absolute path without embedded NUL.
 إذا (الهدف.المنصة == «macos») {
-    استورد os.platform.unix.apple.darwin.file_descriptors;
-    استورد os.path;
+    استورد نظام_التشغيل.منصات.يونكس.آبل.داروين.واصفات_الملفات;
+    استورد نظام_التشغيل.مسار;
 
     عام عرف اختر_دليل_مؤقت_نظام_من_البيئة(
         قيمة_البيئة: اختياري نص
@@ -160,8 +159,8 @@
 
 // Linux and Darwin share the Unix process-startup envp contract.
 إذا (((الهدف.المنصة == «linux» || الهدف.المنصة == «android» || الهدف.المنصة == «freebsd») && الهدف.المعمارية != «ve») || الهدف.المنصة == «macos») {
-    استورد os.platform.unix.process_startup;
-    استورد text.from_bytes;
+    استورد نظام_التشغيل.منصات.يونكس.بدء_العملية;
+    استورد نصوص.من_بايتات;
 
     // Match NAME=VALUE exactly. The startup provider returns owned bytes;
     // no mutable environment pointer escapes into safe STD interfaces.
@@ -225,9 +224,9 @@
 // preopened directories, and "/" names the root they are mounted under (the
 // convention wasi-libc uses for its initial working directory).
 إذا (الهدف.المنصة == «wasi») {
-    استورد os.platform.wasi.preview1.file_descriptors;
-    استورد os.platform.wasi.preview1.process_startup;
-    استورد text.from_bytes;
+    استورد نظام_التشغيل.منصات.واسي.معاينة1.واصفات_الملفات;
+    استورد نظام_التشغيل.منصات.واسي.معاينة1.بدء_العملية;
+    استورد نصوص.من_بايتات;
 
     عرف ابحث_قيمة_بيئة_واسي_للنظام(الاسم: &نص): نتيجة متجه ط8, خطأ_حد_نظام {
         إذا (!اسم_متغير_بيئة_نظام_صالح(الاسم)) {

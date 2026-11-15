@@ -12,13 +12,13 @@
 // directory apply, otherwise verification fails with
 // خطأ_مخزن_الثقة_تي_إل_إس. Certificates that do not parse are skipped.
 
-استورد encoding.pem;
-استورد env.environment;
-استورد fs.read_file;
-استورد fs.directory;
-استورد text.from_bytes;
-استورد tls.errors;
-استورد tls.x509;
+استورد ترميز.بي_إي_إم;
+استورد بيئة.بيئة_العمل;
+استورد ملفات.قراءة_ملف;
+استورد ملفات.مجلد;
+استورد نصوص.من_بايتات;
+استورد تي_إل_إس.أخطاء;
+استورد تي_إل_إس.إكس509;
 
 إذا (الهدف.المنصة == «linux») {
     عرف مسارات_جذور_النظام_تي_إل_إس(): متجه نص {
@@ -88,7 +88,7 @@
 // Windows: the DER certificates of the CryptoAPI ROOT system store
 // (os/platform/windows/win32/certificates.sn).
 إذا (الهدف.المنصة == «windows») {
-    استورد os.platform.windows.win32.certificates;
+    استورد نظام_التشغيل.منصات.ويندوز.وين32.شهادات;
     عرف جذور_مخزن_ويندوز_تي_إل_إس(): متجه شهادة_إكس509 {
         دع الشهادات: متغير متجه شهادة_إكس509 = [];
         دع الكتل: متجه متجه ط8 = شهادات_مخزن_الجذور_ويندوز();

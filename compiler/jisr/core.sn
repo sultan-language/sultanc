@@ -6,15 +6,15 @@
 // and named by a dense id, as Clang's IdentifierTable does; a token is then a
 // record of scalars, cheap to copy, and identifiers compare by id. Tables
 // keyed by a name (macros, typedefs, tags) are vectors indexed by that id.
-استورد std.text.from_bytes;
-استورد std.text.compare;
-استورد std.text.search;
-استورد std.text.substring;
-استورد std.text.transform;
-استورد std.fs.path;
-استورد std.text.number;
-استورد std.math.wrapping;
-استورد std.fs.read_file;
+استورد المكتبة.نصوص.من_بايتات;
+استورد المكتبة.نصوص.مقارنة;
+استورد المكتبة.نصوص.بحث;
+استورد المكتبة.نصوص.مقطع;
+استورد المكتبة.نصوص.تحويل;
+استورد المكتبة.ملفات.مسار;
+استورد المكتبة.نصوص.أعداد;
+استورد المكتبة.رياضيات.التفاف;
+استورد المكتبة.ملفات.قراءة_ملف;
 استورد compiler.diagnostics.foreign_c;
 استورد compiler.diagnostics.identity;
 استورد compiler.diagnostics.reason;

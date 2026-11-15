@@ -6,9 +6,9 @@
 استورد compiler.link.symbol_table;
 استورد compiler.link.elf.reader;
 استورد compiler.backend.target.target_model;
-استورد std.text.from_bytes;
-استورد std.collections.map;
-استورد std.hash.fnv;
+استورد المكتبة.نصوص.من_بايتات;
+استورد المكتبة.مجموعات.خريطة;
+استورد المكتبة.تجزئة.فنڤ;
 
 // .symtab and .strtab of a linked ELF executable, as LLD writes them by
 // default: the input objects' function, object and untyped symbols (local

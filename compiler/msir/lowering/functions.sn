@@ -1,4 +1,4 @@
-استورد std.text.from_bytes;
+استورد المكتبة.نصوص.من_بايتات;
 استورد compiler.source.span;
 استورد compiler.source.provenance;
 استورد compiler.frontend.semantic_pipeline;
@@ -497,6 +497,19 @@
         // A parameter passed by value is owned by the callee.
         طابق سجل_مالكا_خفض(البرنامج, &متغير الحالة, رمز_المعامل, الأنواع, دوال_الخفض) مع
         | اختياري.موجود(الخطأ) -> { أرجع اختياري.موجود(الخطأ); }
+        | اختياري.لا_شيء -> { };
+        ف := ف + 1;
+    }
+    // A parameter kept in a frame slot (an owned aggregate's owner slot,
+    // which the parameter's bytes are copied into) is that slot's variable
+    // for the debugger once the incoming value is gone
+    // above -O0 (debug_contract.sn, مكان_معامل_تصحيح_مسير).
+    ف := 0;
+    طالما (ف < (الطول(الحالة.المحليات) مثل طبيعي) && ف < (الطول(التصريح.المعاملات) مثل طبيعي)) {
+        طابق الحالة.المحليات[ف].المكان مع
+        | اختياري.موجود(المكان) -> {
+            سجل_مكان_معامل_تصحيح_مسير(التصحيح, معرف_قيمة_مسير_من(معرف_الدالة_الداخلية, ف), المكان);
+        }
         | اختياري.لا_شيء -> { };
         ف := ف + 1;
     }

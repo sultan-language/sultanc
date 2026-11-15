@@ -1,7 +1,7 @@
-استورد fs.error;
-استورد fs.attributes;
-استورد os.error;
-استورد os.file_attributes;
+استورد ملفات.أخطاء;
+استورد ملفات.سمات;
+استورد نظام_التشغيل.أخطاء;
+استورد نظام_التشغيل.سمات_الملف;
 
 // Symbolic and hard links (Rust std::os::unix::fs::symlink, fs::read_link,
 // fs::hard_link; Go os.Symlink, os.Readlink, os.Link). On Windows a symbolic

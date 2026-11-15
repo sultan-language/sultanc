@@ -10,8 +10,8 @@
 // stopped" in the program's language with the message under it, exit status
 // 1. It never returns, so `قسم` needs no return after it; the owned text
 // still alive is not dropped (abort semantics).
-استورد المكتبة.دخ.print;
-استورد std.process.panic;
+استورد المكتبة.دخ.اطبع;
+استورد المكتبة.عمليات.انهيار;
 
 عرف قسم(أ: عدد, ب: عدد): عدد {
     إذا (ب != 0) { أرجع أ / ب; };

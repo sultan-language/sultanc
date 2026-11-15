@@ -11,7 +11,7 @@
 استورد compiler.diagnostics.primitive_names;
 استورد compiler.interpreter.runtime_failures;
 استورد compiler.interpreter.diagnostic_translation;
-استورد std.text.from_bytes;
+استورد المكتبة.نصوص.من_بايتات;
 استورد compiler.ispeak.keys.surface;
 
 // A compile-time evaluation that failed inside the evaluated code
@@ -23,7 +23,6 @@
 عرف أضف_نص_تشخيص_وقت_الترجمة(التشخيص: &متغير تشخيص, المفتاح: مفتاح_حجة_تشخيص, النص: نص): فراغ {
     دع أضيف: منطقي = أضف_حجة_تشخيص(التشخيص, المفتاح, النص);
 }
-
 
 // The source name of an MSIR function, from its debug record.
 عرف اسم_دالة_وقت_الترجمة(التصحيح: &بيانات_تصحيح_مسير, الدالة: معرف_دالة_مسير): اختياري نص {

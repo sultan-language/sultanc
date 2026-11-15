@@ -10,7 +10,7 @@
 // and 32-bit atomic loads, stores and fences (LDR/STR with DMB; ARMv6-M has
 // no read-modify-write atomics). tools/tests/cortex_m_tests.sh links and
 // runs it under qemu-system-arm.
-استورد std.sync.atomic;
+استورد المكتبة.تزامن.ذري;
 
 عرف الناتج(أ: ط64, ب: ط64): ط64 { أرجع أ * ب; }
 عرف الناتج_الموقع(أ: ص64, ب: ص64): ص64 { أرجع أ * ب; }

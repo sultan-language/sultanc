@@ -9,14 +9,14 @@
 // layout and its byte order, and the system calls (socketcall is not used on
 // i686) differ per OS and architecture: MIPS numbers SOCK_STREAM 2 and
 // SOL_SOCKET 0xffff, s390x and SPARC are big-endian.
-استورد std.net.socket_address;
-استورد std.net.tcp;
-استورد std.net.udp;
-استورد std.net.options;
-استورد std.io.print;
-استورد std.text.from_bytes;
-استورد std.text.number;
-استورد std.text.transform;
+استورد المكتبة.شبكة.عنوان_مقبس;
+استورد المكتبة.شبكة.تي_سي_بي;
+استورد المكتبة.شبكة.يو_دي_بي;
+استورد المكتبة.شبكة.خيارات;
+استورد المكتبة.دخ.اطبع;
+استورد المكتبة.نصوص.من_بايتات;
+استورد المكتبة.نصوص.أعداد;
+استورد المكتبة.نصوص.تحويل;
 
 عرف ذهاب_وإياب_تي_سي_بي(): اختياري نص {
     دع النص: نص = "127.0.0.1:38641";

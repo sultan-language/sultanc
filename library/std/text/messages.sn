@@ -13,11 +13,11 @@
 //
 // Every lookup is a scan of the catalog's entries; a catalog is built once
 // at startup and read by every request.
-استورد text.from_bytes;
-استورد text.compare;
-استورد text.language;
-استورد text.bidi;
-استورد chars.ascii;
+استورد نصوص.من_بايتات;
+استورد نصوص.مقارنة;
+استورد نصوص.لغة;
+استورد نصوص.اتجاه;
+استورد حروف.أسكي;
 
 // CLDR plural categories.
 عام نوع صنف_جمع =

@@ -1,0 +1,36 @@
+استورد نصوص.أعداد;
+استورد نصوص.من_بايتات;
+
+// A place in a source file (docs/en/reference/testing.md), as Rust's
+// `std::panic::Location`. The compiler makes one at each call of a function
+// marked `@@track_caller` (`@@يتتبع_المستدعي`): such a function's last
+// parameter is a موقع_مصدر, which callers do not pass; the call passes its
+// own place (inside another marked function, the location that function
+// received). الملف refers to the path text the compiler stores once per
+// file, so a موقع_مصدر is a plain value: copying it costs nothing.
+عام نوع موقع_مصدر = {
+    الملف: &نص,
+    // 1-based line and column (the column counts characters).
+    السطر: طبيعي,
+    العمود: طبيعي
+};
+عام نوع source_location = موقع_مصدر;
+
+// `<file>:<line>:<column>`, as a diagnostic's `-->` line shows a place.
+عام عرف نص_موقع_مصدر(الموقع: &موقع_مصدر): نص {
+    دع البايتات: متغير متجه ط8 = بايتات_من_نص(انسخ_نص((*الموقع).الملف));
+    ألحق(البايتات, 0x3A);
+    ألحق_بايتات_نص(&متغير البايتات, طبيعي_إلى_نص((*الموقع).السطر));
+    ألحق(البايتات, 0x3A);
+    ألحق_بايتات_نص(&متغير البايتات, طبيعي_إلى_نص((*الموقع).العمود));
+    أرجع من_بايتات(&البايتات);
+}
+عام مرادف source_location_text = نص_موقع_مصدر;
+
+// The parts of a place.
+عام عرف ملف_موقع_مصدر(الموقع: &موقع_مصدر): نص { أرجع انسخ_نص((*الموقع).الملف); }
+عام عرف سطر_موقع_مصدر(الموقع: &موقع_مصدر): طبيعي { أرجع (*الموقع).السطر; }
+عام عرف عمود_موقع_مصدر(الموقع: &موقع_مصدر): طبيعي { أرجع (*الموقع).العمود; }
+عام مرادف source_location_file = ملف_موقع_مصدر;
+عام مرادف source_location_line = سطر_موقع_مصدر;
+عام مرادف source_location_column = عمود_موقع_مصدر;

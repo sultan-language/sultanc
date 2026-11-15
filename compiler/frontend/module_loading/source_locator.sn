@@ -11,11 +11,11 @@
 استورد compiler.frontend.module_loading.module_paths;
 استورد compiler.frontend.module_loading.logical_environment;
 استورد compiler.frontend.module_loading.source_provider;
-استورد std.fs.read_file;
-استورد std.fs.path;
-استورد std.fs.directory;
-استورد std.text.from_bytes;
-استورد std.text.compare;
+استورد المكتبة.ملفات.قراءة_ملف;
+استورد المكتبة.ملفات.مسار;
+استورد المكتبة.ملفات.مجلد;
+استورد المكتبة.نصوص.من_بايتات;
+استورد المكتبة.نصوص.مقارنة;
 استورد compiler.jisr.translate;
 // Source location is downstream metadata. A Canonical Module Key resolves either
 // through an exact configured source or deterministically under its configured
@@ -43,7 +43,6 @@
     | موجودة بنوع متجه مفتاح_وحدة_مقنن
 ;
 
-
 عرف اقرأ_محتوى_مصدر(
     البيئة: &بيئة_وحدات_منطقية,
     المسار: &نص,
@@ -63,7 +62,6 @@
     };
     أرجع اقرأ_الملف(المسار);
 }
-
 
 // The source root of a C import: C imports under one root share the
 // declarations they have in common (compiler/jisr/shared.sn).
@@ -106,7 +104,6 @@
         أرجع اختياري.موجود(صل_المسار(&جذر_المصدر, &المسار_المنطقي));
     };
 }
-
 
 // Deterministic package-member ordering belongs to source discovery. Keep it
 // local so Module loading does not pull the generic collections sort package

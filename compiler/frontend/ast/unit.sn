@@ -1,4 +1,4 @@
-استورد std.text.from_bytes;
+استورد المكتبة.نصوص.من_بايتات;
 استورد compiler.frontend.ast.types;
 استورد compiler.frontend.ast.literals;
 استورد compiler.frontend.ast.expressions;

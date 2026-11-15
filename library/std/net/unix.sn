@@ -1,9 +1,9 @@
-استورد net.tcp;
-استورد os.socket;
-استورد os.socket_names;
-استورد os.unix_socket;
-استورد os.error;
-استورد text.from_bytes;
+استورد شبكة.تي_سي_بي;
+استورد نظام_التشغيل.مقبس;
+استورد نظام_التشغيل.أسماء_المقابس;
+استورد نظام_التشغيل.مقبس_يونكس;
+استورد نظام_التشغيل.أخطاء;
+استورد نصوص.من_بايتات;
 
 // Unix domain sockets (Rust std::os::unix::net): a listener and the
 // streams it accepts or connects (UnixListener, UnixStream), and

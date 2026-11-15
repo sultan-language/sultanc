@@ -2,10 +2,10 @@
 // Domain «std.fmt», kind = the variant name of خطأ_تنسيق. The message is
 // Arabic, with an English language version («en»); the byte offset, the
 // argument index or the writer status is a note.
-استورد error.failure;
-استورد fmt.fmt;
-استورد text.number;
-استورد text.from_bytes;
+استورد أخطاء.فشل;
+استورد تنسيق.تنسيق;
+استورد نصوص.أعداد;
+استورد نصوص.من_بايتات;
 
 // The note «<prefix><value>»; Stage0-compatible text concatenation.
 عرف نص_ملاحظة_تنسيق(البادئة: نص, القيمة: نص): نص {

@@ -4,9 +4,9 @@
 // تفاضلي: نعم
 // نظير: tests/en/stdlib/behavior/toml_writer.sn
 // ذهاب وإياب: كتابة وثيقة محللة ثم تحليل الناتج يعطي القيم نفسها، وكتابتها مجددا تعطي النص نفسه.
-استورد std.toml.parser;
-استورد std.toml.writer;
-استورد std.text.compare;
+استورد المكتبة.تومل.محلل;
+استورد المكتبة.تومل.كاتب;
+استورد المكتبة.نصوص.مقارنة;
 
 عرف الرئيسية(): عدد {
     دع المصدر: نص = "title = \"Sultan \\\"C\\\"\"\nversion = 3\nflags = [true, false]\n\"odd key\" = 1.5\n[owner]\nname = \"أحمد\"\nborn = 1979-05-27T07:32:00Z\n[owner.address]\ncity = \"Riyadh\"\n[[targets]]\nname = \"x86_64\"\n[[targets]]\nname = \"arm64\"\ninline = { a = 1, b = [2, 3] }\n";

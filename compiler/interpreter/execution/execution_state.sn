@@ -7,8 +7,8 @@
 استورد compiler.interpreter.runtime_failures;
 استورد compiler.backend.target.target_model;
 استورد compiler.runtime.primitive_runtime_abi;
-استورد std.env.system;
-استورد std.text.from_bytes;
+استورد المكتبة.بيئة.نظام;
+استورد المكتبة.نصوص.من_بايتات;
 استورد compiler.interpreter.execution.host_environment;
 استورد compiler.interpreter.execution.host_dynamic;
 استورد compiler.frontend.types.type_context;

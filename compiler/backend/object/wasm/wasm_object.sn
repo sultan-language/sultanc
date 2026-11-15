@@ -14,7 +14,7 @@
 استورد compiler.backend.target.target_model;
 استورد compiler.source.source_map;
 استورد compiler.source.provenance;
-استورد std.text.from_bytes;
+استورد المكتبة.نصوص.من_بايتات;
 
 // WebAssembly relocatable object writer for the native wasm32 path: the
 // format wasm-ld consumes, as specified by the WebAssembly tool conventions

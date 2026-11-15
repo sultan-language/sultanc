@@ -1,10 +1,10 @@
-استورد fs.error;
-استورد fs.path;
-استورد fs.links;
-استورد fs.attributes;
-استورد env.environment;
-استورد text.from_bytes;
-استورد os.error;
+استورد ملفات.أخطاء;
+استورد ملفات.مسار;
+استورد ملفات.وصلات;
+استورد ملفات.سمات;
+استورد بيئة.بيئة_العمل;
+استورد نصوص.من_بايتات;
+استورد نظام_التشغيل.أخطاء;
 
 // Absolute and canonical paths (Rust std::path::absolute and fs::canonicalize,
 // Go filepath.Abs and filepath.EvalSymlinks). The path flavor is the host's.
@@ -125,7 +125,7 @@
 }
 
 إذا (الهدف.المنصة == «windows») {
-    استورد os.file_attributes;
+    استورد نظام_التشغيل.سمات_الملف;
     // GetFinalPathNameByHandleW on the opened path (std.os.file_attributes).
     عام عرف مسار_قانوني(المسار: &نص): نتيجة نص, فئة_خطأ_نظام {
         طابق المسار_النهائي_نظام(المسار) مع

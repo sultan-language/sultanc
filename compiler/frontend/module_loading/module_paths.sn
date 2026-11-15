@@ -1,6 +1,6 @@
-استورد std.text.from_bytes;
-استورد std.bytes.compare;
-استورد std.bytes.range;
+استورد المكتبة.نصوص.من_بايتات;
+استورد المكتبة.بايتات.مقارنة;
+استورد المكتبة.بايتات.نطاق;
 // Logical module paths are language-level identities. They never contain a
 // filesystem-root bit and are never derived from a physical source location.
 عام نوع جزء_مسار_وحدة_منطقي = {

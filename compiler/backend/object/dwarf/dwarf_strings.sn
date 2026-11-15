@@ -1,4 +1,4 @@
-استورد std.text.from_bytes;
+استورد المكتبة.نصوص.من_بايتات;
 استورد compiler.source.source_map;
 استورد compiler.backend.object.dwarf.dwarf_byte_writer;
 استورد compiler.backend.object.dwarf.dwarf_policy;
@@ -89,7 +89,6 @@
     }
     أرجع اختياري.لا_شيء();
 }
-
 
 عرف أعد_فهرسة_سلاسل_دوارف(
     المداخل: &متغير متجه مدخل_سلسلة_دوارف,

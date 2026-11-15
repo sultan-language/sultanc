@@ -23,7 +23,7 @@
 // Other keys (versions, flags, allowable clients, undefineds, UUIDs) do not
 // change what a static link binds.
 
-استورد std.text.from_bytes;
+استورد المكتبة.نصوص.من_بايتات;
 
 عام نوع مكتبة_نصية_ماتشو = {
     اسم_التثبيت: متجه ط8,

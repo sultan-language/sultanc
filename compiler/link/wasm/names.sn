@@ -1,4 +1,4 @@
-استورد std.text.from_bytes;
+استورد المكتبة.نصوص.من_بايتات;
 // The default entry of a WebAssembly executable: `_start`, the WASI command
 // entry, which SultanC also uses as the language entry of browser modules
 // (backend/provider/llvm/functions.sn, backend/object/wasm/wasm_object.sn).

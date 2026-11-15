@@ -2,7 +2,7 @@
 // std (process::id, io::IsTerminal) does: GetCurrentProcessId, and
 // GetConsoleMode on a standard handle, which fails for a file or a pipe.
 // MSDN: DWORD GetCurrentProcessId(void); BOOL GetConsoleMode(HANDLE, LPDWORD).
-استورد os.platform.windows.win32.file_handles;
+استورد نظام_التشغيل.منصات.ويندوز.وين32.مقابض_الملفات;
 
 خارجي «kernel32.dll» عرف GetCurrentProcessId(): ط32;
 خارجي «kernel32.dll» عرف GetConsoleMode(المقبض: ط64, الوضع: *متغير ط32): ص32;

@@ -2,7 +2,7 @@
 استورد compiler.frontend.lexer.keywords.keyword_registry;
 استورد compiler.frontend.lexer.keywords.matching;
 استورد compiler.frontend.identifier_identity;
-استورد std.encoding.utf8;
+استورد المكتبة.ترميز.يوتيف8;
 // Canonical source-identifier legality query for compiler/tooling consumers.
 // Character policy remains generated in identifiers.sn and keyword spelling
 // remains generated from token_registry.def.

@@ -3,9 +3,9 @@
 // scalar types and the predefined macros of a C compiler for that target.
 // Nothing here assumes the host: LLP64 on Windows, LP64 on other 64-bit
 // targets, ILP32 on 32-bit ones, 16-bit int on AVR and MSP430.
-استورد std.text.transform;
-استورد std.text.from_bytes;
-استورد std.text.number;
+استورد المكتبة.نصوص.تحويل;
+استورد المكتبة.نصوص.من_بايتات;
+استورد المكتبة.نصوص.أعداد;
 استورد compiler.backend.target.target_model;
 استورد compiler.jisr.core;
 

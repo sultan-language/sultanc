@@ -2,7 +2,7 @@
 // std uses it only to decode legacy PKCS#12 containers (PBE key derivation and
 // MAC). TLS and certificate verification in std reject SHA-1 signatures.
 
-استورد crypto.words;
+استورد تشفير.كلمات;
 
 عرف اضغط_كتلة_شا1(الحالة: &متغير متجه طبيعي, الرسالة: &متجه ط8, البداية: طبيعي): فراغ {
     دع و: متغير متجه طبيعي = [];

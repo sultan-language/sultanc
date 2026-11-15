@@ -1,7 +1,7 @@
 // Canonical compiler/runtime ABI symbol ownership. Source declarations use these
 // symbols as ordinary typed externs; backend providers resolve only this ABI identity.
 استورد compiler.runtime.primitive_identity;
-استورد std.text.from_bytes;
+استورد المكتبة.نصوص.من_بايتات;
 
 عام عرف اسم_بدائي_تشغيل_أساسي(البدائي: هوية_بدائي_مترجم): متجه ط8 {
     طابق البدائي مع

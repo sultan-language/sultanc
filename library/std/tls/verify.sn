@@ -1,4 +1,4 @@
-استورد text.from_bytes;
+استورد نصوص.من_بايتات;
 // Certificate path building and validation for TLS (RFC 5280 section 6,
 // profiled as Go crypto/x509 and webpki do for the Web PKI) and server
 // identity checks (RFC 6125 / RFC 9525).
@@ -12,9 +12,9 @@
 // and DNS/IP name constraints are enforced. There is no fallback: any
 // failure rejects the peer.
 
-استورد chars.ascii;
-استورد crypto.words;
-استورد tls.x509;
+استورد حروف.أسكي;
+استورد تشفير.كلمات;
+استورد تي_إل_إس.إكس509;
 
 عام نوع غرض_تحقق_تي_إل_إس =
     | غرض_خادم

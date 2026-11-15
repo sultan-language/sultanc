@@ -10,7 +10,7 @@
 استورد compiler.frontend.types.type_identity;
 استورد compiler.msir.identifiers;
 استورد compiler.backend.target.target_model;
-استورد std.text.from_bytes;
+استورد المكتبة.نصوص.من_بايتات;
 
 عام نوع نتيجة_قيمة_إل_إل_في_إم =
     | نجح بنوع تمثيل_قيمة_إل_إل_في_إم

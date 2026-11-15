@@ -1,4 +1,4 @@
-استورد std.text.from_bytes;
+استورد المكتبة.نصوص.من_بايتات;
 استورد compiler.link.model;
 استورد compiler.link.symbol_model;
 استورد compiler.link.symbol_table;
@@ -10,9 +10,9 @@
 استورد compiler.link.resolution;
 استورد compiler.link.elf.layout_script;
 استورد compiler.backend.target.target_model;
-استورد std.collections.map;
-استورد std.bytes.compare;
-استورد std.hash.fnv;
+استورد المكتبة.مجموعات.خريطة;
+استورد المكتبة.بايتات.مقارنة;
+استورد المكتبة.تجزئة.فنڤ;
 
 // How the regular objects refer to one symbol, beside its resolution state
 // in the symbol table (indexed by the same symbol id). LLD keeps the same
@@ -132,7 +132,6 @@
     (*السياق).التخطيط := اختياري.موجود(النسخة);
 }
 
-
 عام عرف أضف_قسم_مدخل_إلى_سياق_الربط(
     السياق: &متغير سياق_ربط,
     المدخل: معرف_مدخل_ربط,
@@ -187,7 +186,6 @@
         اختياري.لا_شيء()
     );
 }
-
 
 عام عرف ابحث_قسم_ربط_بالمعرف(
     السياق: &سياق_ربط,

@@ -2,7 +2,7 @@
 // compiler itself on deeply nested source). Where the platform cannot raise
 // it for the running process this returns false and changes nothing.
 إذا ((الهدف.المنصة == «linux» || الهدف.المنصة == «android» || الهدف.المنصة == «freebsd») && الهدف.المعمارية != «ve») {
-    استورد os.platform.unix.linux.resource_limits;
+    استورد نظام_التشغيل.منصات.يونكس.لينكس.حدود_الموارد;
     عام عرف اطلب_مكدسا_بحجم_نظام(البايتات: ط64): منطقي {
         أرجع ارفع_حد_المكدس_لينكس(البايتات);
     }

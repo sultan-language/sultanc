@@ -1,6 +1,7 @@
 استورد "../common.sn";
 استورد std.text.search;
 استورد std.text.compare;
+استورد std.env.environment;
 
 // Package graphs (--package-graph, compiler/driver/package_graph.sn), in
 // English and Arabic (tests/runner/fixtures/packages): a graph's packages,
@@ -125,10 +126,18 @@
         «reserved», «SULTANC-MODULE-SPELLING-RESERVED», «/lib/lib.sn:1:»,
         «outside», «SULTANC-MODULE-OUTSIDE-ROOT-FILE», «/lib/x.sn:1:1»
     ];
+    دع الدليل_الحالي: متغير نص = «.»;
+    طابق دليل_العمل() مع
+    | نتيجة.نجح(الدليل) -> { الدليل_الحالي := الدليل; }
+    | نتيجة.خطأ(_) -> { };
     دع ح: متغير طبيعي = 0;
     طالما (ح + 2 < (الطول(حالات_التهجئة) مثل طبيعي)) {
         دع الحالة: نص = مسار_تثبيت(مسار_تثبيت(استنسخ(&الأساس), «/spellings/»), استنسخ(&حالات_التهجئة[ح]));
-        دع الرئيسي: نص = مسار_تثبيت(استنسخ(&الحالة), «/main.sn»);
+        // An absolute path: without a package graph the project root of a
+        // relative source is the working directory (the repository here,
+        // where `lib.x` does not exist), and of an absolute one the source's
+        // own directory (docs/en/reference/modules-and-imports.md).
+        دع الرئيسي: نص = مسار_تثبيت(مسار_تثبيت(استنسخ(&الدليل_الحالي), «/»), مسار_تثبيت(استنسخ(&الحالة), «/main.sn»));
         دع الموقع: نص = مسار_تثبيت(استنسخ(&الحالة), استنسخ(&حالات_التهجئة[ح + 2]));
         تحقق_رسم(الملخص, اسم_حالة(&ل, مسار_تثبيت(«تهجئات الوحدات: », استنسخ(&حالات_التهجئة[ح]))),
             [«--lang», استنسخ(&ل), «--color», «never», «check», الرئيسي], «», 1,

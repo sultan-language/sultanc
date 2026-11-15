@@ -22,11 +22,15 @@
 // `خطأ_خيط.غير_مدعوم` and the program stays single-threaded; atomics and the
 // std.sync types still work everywhere. The interpreter runs one OS thread
 // and stops at a spawn with SULTANC-INTERPRETER-UNSUPPORTED-MACHINE-PRIMITIVE.
-استورد os.error;
-استورد os.threads;
-استورد os.clock;
-استورد std.sync.arc;
-استورد std.sync.mutex;
+// Arabic spellings of this folder's modules (docs/en/reference/modules-and-imports.md,
+// "Module spellings"): `استورد المكتبة....` names the same modules as `import std....`.
+module thread { ar: خيط };
+
+استورد نظام_التشغيل.أخطاء;
+استورد نظام_التشغيل.خيوط;
+استورد نظام_التشغيل.ساعة;
+استورد المكتبة.تزامن.مشترك;
+استورد المكتبة.تزامن.قفل;
 
 مرادف عنوان_إغلاق_خيط = بدائي_عنوان_دالة;
 

@@ -1,4 +1,8 @@
-استورد text.from_bytes;
+// Arabic spellings of this folder's modules (docs/en/reference/modules-and-imports.md,
+// "Module spellings"): `استورد المكتبة....` names the same modules as `import std....`.
+module csv { ar: سي_اس_في };
+
+استورد نصوص.من_بايتات;
 
 // RFC 4180-style CSV document. Records and fields preserve source order.
 عام نوع سجل_سي_اس_في = {
@@ -8,7 +12,6 @@
 عام نوع مستند_سي_اس_في = {
     السجلات: متجه سجل_سي_اس_في
 };
-
 
 عرف انسخ_نص_سي_اس_في(القيمة: &نص): نص {
     أرجع انسخ_نص(القيمة);

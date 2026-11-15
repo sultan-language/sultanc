@@ -12,11 +12,11 @@
 //   selection. Signing nonces are deterministic (RFC 6979 3.2, HMAC with the
 //   curve's hash); the nonce inverse uses the fixed-window exponentiation.
 
-استورد crypto.bignum;
-استورد crypto.digest;
-استورد crypto.words;
-استورد encoding.der;
-استورد encoding.hex;
+استورد تشفير.أعداد_كبيرة;
+استورد تشفير.ملخص;
+استورد تشفير.كلمات;
+استورد ترميز.دي_إي_آر;
+استورد ترميز.سداسي;
 
 عام نوع منحنى_إهليلجي =
     | منحنى_بي256

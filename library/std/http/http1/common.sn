@@ -1,10 +1,10 @@
-استورد chars.ascii;
-استورد text.compare;
-استورد text.substring;
-استورد uri.uri;
-استورد http.model;
-استورد http.headers;
-استورد http.limits;
+استورد حروف.أسكي;
+استورد نصوص.مقارنة;
+استورد نصوص.مقطع;
+استورد عنوان_موحد.عنوان_موحد;
+استورد ويب.نموذج;
+استورد ويب.ترويسات;
+استورد ويب.حدود;
 
 عام عرف ابحث_نهاية_سطر_ويب(البايتات: &متجه ط8, البداية: طبيعي): اختياري طبيعي {
     دع ف: متغير طبيعي = البداية;
@@ -267,13 +267,11 @@
     };
 }
 
-
 عام عرف رأس_لاحق_ويب_ممنوع(الرأس: &رأس_ويب): منطقي {
     أرجع رأس_ويب_يسمى(الرأس, «content-length»)
         || رأس_ويب_يسمى(الرأس, «transfer-encoding»)
         || رأس_ويب_يسمى(الرأس, «host»);
 }
-
 
 // SultanC HTTP/1 currently supports only the required chunked transfer coding.
 // Validate the complete field value so unsupported coding lists are rejected,
@@ -391,4 +389,3 @@
     };
     أرجع نص_من_مدى_ويب(البايتات, البداية, النهاية);
 }
-

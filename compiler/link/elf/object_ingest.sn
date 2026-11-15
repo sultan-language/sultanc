@@ -9,6 +9,7 @@
 استورد compiler.link.elf.names;
 استورد compiler.link.elf.reader;
 استورد compiler.link.elf.target_policy;
+استورد compiler.link.elf.eh_frame;
 استورد compiler.backend.target.target_model;
 
 عام نوع خطأ_استيعاب_كائن_إلف =
@@ -302,7 +303,7 @@
     };
     إذا ((*السياق).الأقسام[القسم.القيمة].المعرف.القيمة != القسم.القيمة
         || (*السياق).الأقسام[القسم.القيمة].فهرس_قسم_الصيغة
-            != فهرس_صيغة_رمز_مشترك_إلف()) {
+        != فهرس_صيغة_رمز_مشترك_إلف()) {
         أرجع اختياري.لا_شيء();
     };
     أرجع اختياري.موجود((*السياق).الأقسام[القسم.القيمة].الحجم);
@@ -407,10 +408,10 @@
 //     resolves to a tombstone (InputSection::relocateNonAlloc). The edge is
 //     dropped, so the field keeps the object's value: 0 in a RELA object,
 //     ld.bfd's tombstone for every section but .debug_ranges/.debug_loc;
-//   * `.eh_frame`: LLD's EhFrameSection drops the FDEs of discarded code.
-//     SultanC's ELF image copies `.eh_frame` without FDE elimination and so
-//     refuses the input rather than emitting an FDE for code that is not in
-//     the image. (Previously a link delegated to ld.lld accepted it.)
+//   * `.eh_frame`: as LLD's EhFrameSection does, the link drops the FDE of
+//     discarded code (eh_frame.sn): the edge is dropped, and an FDE whose
+//     initial location has no relocation is not kept. (Previously the input
+//     was refused, since `.eh_frame` was copied without FDE elimination.)
 // Any other allocated reference is LLD's "relocation refers to a discarded
 // section" error. Previously every such reference failed ingestion, so a
 // debug build linking the same inline function from two objects failed.
@@ -419,7 +420,12 @@
     قسم_المصدر: &حقيقة_قسم_إلف_مدخل
 ): منطقي {
     إذا (((*قسم_المصدر).الأعلام & 2) == 0) { أرجع صواب; };
-    أرجع خطأ;
+    طابق (*قسم_المصدر).معرف_الربط مع
+    | اختياري.لا_شيء -> { أرجع خطأ; }
+    | اختياري.موجود(المعرف) -> {
+        أرجع (المعرف.القيمة مثل طبيعي) < (الطول((*السياق).الأقسام) مثل طبيعي)
+            && قسم_إطارات_إلف(&(*السياق).الأقسام[المعرف.القيمة]);
+    };
 }
 
 عرف حول_نتيجة_تسجيل_رمز_إلف(
@@ -1122,7 +1128,7 @@
             دع فهرس_الإزاحة: متغير طبيعي = 0;
             طالما (
                 فهرس_الإزاحة < عدد_الإزاحات
-                    && يوجد_قسم_مصدر
+                && يوجد_قسم_مصدر
             ) {
                 دع معرف_المصدر: معرف_قسم_ربط;
                 طابق معرف_قسم_المصدر مع
@@ -1200,7 +1206,7 @@
                 إذا (الوصف.الآلة == 62 && معلومات.رمز_الصيغة == 42) {
                     إذا (إزاحة_داخل_القسم < 3
                         || قسم_المصدر.موضع_الملف >
-                            0xFFFFFFFFFFFFFFFF - إزاحة_داخل_القسم
+                        0xFFFFFFFFFFFFFFFF - إزاحة_داخل_القسم
                         || !ضمن_حدود_إلف_مدخل(
                             البايتات,
                             قسم_المصدر.موضع_الملف + إزاحة_داخل_القسم - 3,
@@ -1307,7 +1313,7 @@
                     // not allow the signed graph addend to wrap on input.
                     إذا (إضافة_المرجع > 0
                         && حقيقة_الرمز.القيمة >
-                            0x7FFFFFFFFFFFFFFF - (إضافة_المرجع مثل طبيعي)) {
+                        0x7FFFFFFFFFFFFFFF - (إضافة_المرجع مثل طبيعي)) {
                         أرجع نتيجة_استيعاب_كائن_إلف.خطأ(
                             خطأ_استيعاب_كائن_إلف.إزاحة_غير_صالحة()
                         );
@@ -1343,7 +1349,13 @@
 ): منطقي {
     دع فهرس: متغير طبيعي = 0;
     طالما (فهرس < (الطول((*السياق).الأقسام) مثل طبيعي)) {
-        إذا ((*السياق).الأقسام[فهرس].حي) {
+        // A section whose content the link already built (the merged
+        // `.eh_frame`, eh_frame.sn) has no input range.
+        دع مبني: متغير منطقي = خطأ;
+        طابق (*السياق).الأقسام[فهرس].المحتوى مع
+        | اختياري.موجود(_) -> { مبني := صواب; }
+        | اختياري.لا_شيء -> { };
+        إذا ((*السياق).الأقسام[فهرس].حي && !مبني) {
             دع نوع_القسم: متغير طبيعي = 8;
             طابق (*السياق).الأقسام[فهرس].حقائق_الصيغة مع
             | حقائق_صيغة_قسم_ربط.إلف(النوع, _) -> { نوع_القسم := النوع; }

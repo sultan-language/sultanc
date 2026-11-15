@@ -1,4 +1,4 @@
-استورد os.error;
+استورد نظام_التشغيل.أخطاء;
 
 // The path of this process's executable on Darwin: dyld's
 // _NSGetExecutablePath (<mach-o/dyld.h>), which Rust's std::env::current_exe

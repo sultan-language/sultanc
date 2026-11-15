@@ -1,11 +1,11 @@
 // C literals: integer constants (C17 6.4.4.1, with C23 binary and digit
 // separators), floating constants (recognized, kept as spelled), character
 // constants and string literals (escape sequences decoded to bytes).
-استورد std.text.from_bytes;
-استورد std.math.wrapping;
-استورد std.chars.ascii;
-استورد std.encoding.utf8;
-استورد std.unicode.scalar;
+استورد المكتبة.نصوص.من_بايتات;
+استورد المكتبة.رياضيات.التفاف;
+استورد المكتبة.حروف.أسكي;
+استورد المكتبة.ترميز.يوتيف8;
+استورد المكتبة.يونيكود.قيم_قياسية;
 استورد compiler.jisr.core;
 
 عام نوع عدد_حرفي_جسر = {

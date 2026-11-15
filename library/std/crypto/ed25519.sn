@@ -7,9 +7,9 @@
 // decode to a curve point. Keys are the 32-byte seed (private) and the
 // 32-byte encoded point (public).
 
-استورد crypto.field25519;
-استورد crypto.sha512;
-استورد crypto.words;
+استورد تشفير.حقل25519;
+استورد تشفير.شا512;
+استورد تشفير.كلمات;
 
 نوع نقطة_إدواردز = {
     س: متجه ص64,

@@ -1,4 +1,4 @@
-استورد std.text.from_bytes;
+استورد المكتبة.نصوص.من_بايتات;
 استورد compiler.msir.identifiers;
 
 // Runtime payloads are semantic interpreter values. They do not own Type identity or target layout.

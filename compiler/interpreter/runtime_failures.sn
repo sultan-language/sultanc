@@ -1,4 +1,4 @@
-استورد std.text.from_bytes;
+استورد المكتبة.نصوص.من_بايتات;
 استورد compiler.msir.identifiers;
 استورد compiler.runtime.primitive_identity;
 استورد compiler.source.provenance;

@@ -9,15 +9,15 @@
 // progress (RFC 8446 5 and D.4). Every violation returns a std.tls status
 // code; the caller sends the matching alert.
 
-استورد crypto.aes_gcm;
-استورد crypto.chacha20_poly1305;
-استورد crypto.digest;
-استورد crypto.words;
-استورد os.entropy;
-استورد os.error;
-استورد os.socket;
-استورد text.from_bytes;
-استورد tls.errors;
+استورد تشفير.أيس_جي_سي_إم;
+استورد تشفير.تشاتشا20_بولي1305;
+استورد تشفير.ملخص;
+استورد تشفير.كلمات;
+استورد نظام_التشغيل.عشوائية;
+استورد نظام_التشغيل.أخطاء;
+استورد نظام_التشغيل.مقبس;
+استورد نصوص.من_بايتات;
+استورد تي_إل_إس.أخطاء;
 
 عام نوع مفاتيح_اتجاه_تي_إل_إس = {
     مفعلة: منطقي,

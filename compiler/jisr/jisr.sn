@@ -14,13 +14,13 @@
 // sysroot or multiarch directory when one is installed; else the host's
 // headers are read under the target's predefined macros and data model,
 // with a warning in the module (SULTANC-C-HOST-HEADERS).
-استورد std.text.compare;
-استورد std.env.system;
-استورد std.fs.metadata;
-استورد std.fs.path;
-استورد std.text.transform;
-استورد std.text.search;
-استورد std.text.from_bytes;
+استورد المكتبة.نصوص.مقارنة;
+استورد المكتبة.بيئة.نظام;
+استورد المكتبة.ملفات.بيانات_وصفية;
+استورد المكتبة.ملفات.مسار;
+استورد المكتبة.نصوص.تحويل;
+استورد المكتبة.نصوص.بحث;
+استورد المكتبة.نصوص.من_بايتات;
 استورد compiler.backend.target.target_model;
 استورد compiler.backend.target.target_registry;
 استورد compiler.diagnostics.reason;
@@ -38,7 +38,6 @@
     | نتيجة.نجح(نوع_مسار.وصلة_رمزية) -> { أرجع صواب; }
     | _ -> { أرجع خطأ; };
 }
-
 
 عرف متغير_بيئة_جسر(الاسم: نص): اختياري نص {
     طابق متغير_بيئة_النظام(&الاسم) مع
@@ -266,7 +265,6 @@
     }
     | اختياري.لا_شيء -> { أرجع خطأ; };
 }
-
 
 عرف طابق_اختيارا_جسر(القيمة: &اختياري نص): منطقي {
     طابق *القيمة مع

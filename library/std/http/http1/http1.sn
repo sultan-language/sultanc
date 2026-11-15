@@ -1,0 +1,12 @@
+// The root file of std.http.http1: the Arabic spellings of its modules
+// (docs/en/reference/modules-and-imports.md, "Module spellings"). An import may
+// use either name; both name one module.
+
+module chunked { ar: مجزأ };
+module common { ar: مشترك };
+module connection { ar: اتصال };
+module request_parser { ar: محلل_الطلب };
+module request_writer { ar: كاتب_الطلب };
+module response_parser { ar: محلل_الاستجابة };
+module response_writer { ar: كاتب_الاستجابة };
+module views { ar: عروض };

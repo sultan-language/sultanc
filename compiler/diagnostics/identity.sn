@@ -82,6 +82,8 @@
     | تعبير_وقت_الترجمة_غير_ثابت
     | فشل_وقت_الترجمة_مطلوب
     | سمة_تصريح_غير_مدعومة
+    | توقيع_يتتبع_المستدعي_غير_صالح
+    | حجة_موقع_المستدعي_صريحة
     | خفض_تعبير_غير_مدعوم
     | خفض_عبارة_غير_مدعومة
     | دالة_خفض_مفقودة
@@ -259,6 +261,18 @@
     | تهجئة_وحدة_مشتركة
     | تهجئة_وحدة_محجوزة
     | تصريح_وحدة_خارج_ملف_الجذر
+    // `sultanc test` (compiler/test_mode/harness.sn): a test with parameters,
+    // a test whose result is neither nothing nor `نتيجة عدد, فشل`, and
+    // `@@test` on what is not an ordinary function (a type, a module value,
+    // a generic, compile-time or external function).
+    | اختبار_بمعاملات
+    | ناتج_اختبار_غير_صالح
+    | اختبار_ليس_دالة_عادية
+    // `sultanc test --test=<name>` naming no test of the root package, and
+    // `--tests-in=<file>` naming no source of the program
+    // (compiler/test_mode/selection.sn).
+    | اختبار_غير_موجود
+    | ملف_اختبارات_خارج_البرنامج
 ;
 
 // Diagnostic classification is stable metadata, independent of presentation.
@@ -270,4 +284,3 @@
     // failure (GCC's "sorry, unimplemented"). Shown in full, like a user error.
     | غير_منفذ
 ;
-

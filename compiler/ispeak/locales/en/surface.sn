@@ -33,8 +33,32 @@
     | مفتاح_نص_مترجم.خيار_فحص_التنسيق -> { أرجع "    --check                With fmt: report files that are not formatted, change nothing\n"; }
     | مفتاح_نص_مترجم.خيار_مصدر_الوحدة -> { أرجع "    --module-source=<module>=<file>\n"; }
     | مفتاح_نص_مترجم.توضيح_مصدر_الوحدة -> { أرجع "                           Compile <file> as the source of logical <module>\n"; }
+    | مفتاح_نص_مترجم.خيار_رسم_الحزم -> { أرجع "    --package-graph=<file>  The resolved package graph a package manager writes (Supax: build/supax/package-graph.toml);\n                           - reads it from standard input\n"; }
     | مفتاح_نص_مترجم.خيار_مكتبة_الربط -> { أرجع "    -l <name>              Link the library lib<name> (for example -l c)\n"; }
     | مفتاح_نص_مترجم.خيار_دليل_المكتبات -> { أرجع "    -L <dir>               Search <dir> for -l libraries first\n"; }
+    | مفتاح_نص_مترجم.أمر_الاختبار -> { أرجع "    test <file>            Build the functions marked @@test and run each in its own process\n"; }
+    | مفتاح_نص_مترجم.خيار_مرشح_الاختبار -> { أرجع "    --filter <text>        With test: only the tests whose name contains <text>\n"; }
+    | مفتاح_نص_مترجم.خيار_اسم_الاختبار -> { أرجع "    --test=<name>          With test: run exactly the test named <name> (any spelling);\n                           repeatable\n"; }
+    | مفتاح_نص_مترجم.خيار_ملفات_الاختبارات -> { أرجع "    --tests-in=<file>      With test: only the tests declared in <file>; repeatable\n"; }
+    | مفتاح_نص_مترجم.خيار_قائمة_الاختبارات -> { أرجع "    --list                 With test: list the tests, run none\n"; }
+    | مفتاح_نص_مترجم.خيار_تفسير_الاختبارات -> { أرجع "    --interpret            With test: run the tests in the interpreter\n"; }
+    | مفتاح_نص_مترجم.خيار_فهرس_الاختبار -> { أرجع "    --test-index=<n>       With test: run only test number <n> (as --list numbers\n                           them from 0), in this process\n"; }
+    | مفتاح_نص_مترجم.تسمية_اختبار_ناجح -> { أرجع "PASS"; }
+    | مفتاح_نص_مترجم.تسمية_اختبار_فاشل -> { أرجع "FAIL"; }
+    | مفتاح_نص_مترجم.تسمية_اختبار_أرجع_خطأ -> { أرجع "returned an error"; }
+    | مفتاح_نص_مترجم.تسمية_حالة_خروج_اختبار -> { أرجع "exit status"; }
+    | مفتاح_نص_مترجم.تسمية_إشارة_اختبار -> { أرجع "terminated by signal"; }
+    | مفتاح_نص_مترجم.تسمية_اختبار_لم_يبدأ -> { أرجع "could not be started"; }
+    | مفتاح_نص_مترجم.ملاحظة_تصريح_الاختبار -> { أرجع "note: the test is declared at "; }
+    | مفتاح_نص_مترجم.عنوان_نتيجة_الاختبارات -> { أرجع "test result:"; }
+    | مفتاح_نص_مترجم.نتيجة_اختبارات_ناجحة -> { أرجع "ok"; }
+    | مفتاح_نص_مترجم.نتيجة_اختبارات_فاشلة -> { أرجع "FAILED"; }
+    | مفتاح_نص_مترجم.تسمية_الاختبارات_الناجحة -> { أرجع "passed"; }
+    | مفتاح_نص_مترجم.تسمية_الاختبارات_الفاشلة -> { أرجع "failed"; }
+    | مفتاح_نص_مترجم.تسمية_الاختبارات_المستبعدة -> { أرجع "filtered out"; }
+    | مفتاح_نص_مترجم.ملاحظة_اختبارات_مبنية_غير_مشغلة -> { أرجع "note: the tests were built, not run: this host cannot run programs for the target "; }
+    | مفتاح_نص_مترجم.فاصل_جملة_ملخص_الاختبارات -> { أرجع ". "; }
+    | مفتاح_نص_مترجم.فاصل_ملخص_الاختبارات -> { أرجع "; "; }
     | مفتاح_نص_مترجم.تسمية_الخلفيات -> { أرجع «backends:»; }
     | مفتاح_نص_مترجم.تعارض_جذر_مصدر_الحزمة -> { أرجع «package source root conflicts with an existing root»; }
     | مفتاح_نص_مترجم.تعارض_تهجئة_جذر_الحزمة -> { أرجع «package root spelling conflicts with another binding»; }

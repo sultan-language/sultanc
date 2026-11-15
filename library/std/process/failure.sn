@@ -13,13 +13,13 @@
 // then LC_ALL, LC_MESSAGES and LANG, then the language the program was
 // compiled with, then Arabic): Arabic when the locale's language is `ar`,
 // English for any other language.
-استورد text.compare;
-استورد text.from_bytes;
-استورد text.language;
-استورد text.system_language;
-استورد io.println;
-استورد process.failure_text;
-استورد error.failure;
+استورد نصوص.مقارنة;
+استورد نصوص.من_بايتات;
+استورد نصوص.لغة;
+استورد نصوص.لغة_النظام;
+استورد دخ.اطبع_سطر;
+استورد عمليات.نص_الفشل;
+استورد أخطاء.فشل;
 
 // Whether the program speaks English (otherwise Arabic).
 عام عرف البرنامج_بالإنجليزية(): منطقي {

@@ -15,14 +15,14 @@
 //   one puts its variadic arguments in 8-byte slots and calls the defining
 //   unit's slot entry (ج_متغيرة_NAME, lower.sn), as a call inside one unit
 //   does.
-استورد std.text.transform;
-استورد std.text.search;
-استورد std.text.from_bytes;
-استورد std.text.compare;
-استورد std.text.number;
-استورد std.text.radix;
-استورد std.chars.ascii;
-استورد std.text.substring;
+استورد المكتبة.نصوص.تحويل;
+استورد المكتبة.نصوص.بحث;
+استورد المكتبة.نصوص.من_بايتات;
+استورد المكتبة.نصوص.مقارنة;
+استورد المكتبة.نصوص.أعداد;
+استورد المكتبة.نصوص.أساس;
+استورد المكتبة.حروف.أسكي;
+استورد المكتبة.نصوص.مقطع;
 استورد compiler.jisr.core;
 
 // النص with each identifier that starts with `ج_` or `خ_` (outside string
@@ -78,8 +78,6 @@
     }
     أرجع الناتج;
 }
-
-
 
 // The name after `public def ` / `extern def ` up to `(`.
 عرف اسم_بعد_جسر(السطر: &نص, البداية: طبيعي): نص {
@@ -190,7 +188,6 @@
         «  // defined by another file of this import»];
     أرجع صل_النصوص(&الأجزاء, &«»);
 }
-
 
 // A parameter `NAME: TYPE` of a declaration's text.
 نوع معامل_نصي_جسر = { الاسم: نص, النوع: نص };
@@ -486,4 +483,3 @@
     }
     أرجع الناتج مثل نص;
 }
-

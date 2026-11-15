@@ -22,9 +22,9 @@
 استورد compiler.frontend.ast.unit;
 استورد compiler.frontend.lexer.identifiers;
 استورد compiler.frontend.lexer.keywords.deprecated_registry;
-استورد std.encoding.utf8;
+استورد المكتبة.ترميز.يوتيف8;
 استورد compiler.frontend.names.suggestions;
-استورد std.text.from_bytes;
+استورد المكتبة.نصوص.من_بايتات;
 
 // Parsed-source Name result. All stored facts remain Name/Module identities only.
 عام نوع دلالة_أسماء_وحدة = {
@@ -1937,7 +1937,7 @@
         };
         دع الناتج: دلالة_أسماء_وحدة = { الوحدة: الوحدة, الروابط: روابط_الوحدة };
         أرجع نتيجة_دلالة_أسماء_وحدة.مكتملة(الناتج);
-     };
+    };
 }
 
 // Compatibility entry for single-module callers: collect once, then resolve.
@@ -1980,4 +1980,3 @@
 }
 // Deep copies of owned values (one per Type; read the source through a
 // reference and allocate independent storage).
-

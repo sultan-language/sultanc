@@ -1,5 +1,5 @@
-استورد std.fs.path;
-استورد std.text.compare;
+استورد المكتبة.ملفات.مسار;
+استورد المكتبة.نصوص.مقارنة;
 
 // Shared SultanC source-file classification. Driver project discovery and
 // Frontend package discovery use this same pure predicate so extension policy

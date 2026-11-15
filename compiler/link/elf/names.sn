@@ -1,4 +1,4 @@
-استورد std.text.from_bytes;
+استورد المكتبة.نصوص.من_بايتات;
 // ELF ABI spellings are centralized here so normal linker logic never carries
 // raw external byte names inline.
 عام عرف اسم_رمز_دخول_إلف_الافتراضي(): متجه ط8 {

@@ -16,24 +16,24 @@
 //     type.
 // Errors (in the imported file's family) become a compile-time failure of
 // the module, SULTANC-COMPTIME-FAILED carrying the C diagnostics.
-استورد std.text.transform;
-استورد std.text.search;
-استورد std.text.radix;
-استورد std.encoding.utf8;
-استورد std.encoding.hex;
-استورد std.unicode.code_point_text;
-استورد std.chars.ascii;
+استورد المكتبة.نصوص.تحويل;
+استورد المكتبة.نصوص.بحث;
+استورد المكتبة.نصوص.أساس;
+استورد المكتبة.ترميز.يوتيف8;
+استورد المكتبة.ترميز.سداسي;
+استورد المكتبة.يونيكود.نص_نقطة;
+استورد المكتبة.حروف.أسكي;
 استورد compiler.frontend.lexer.identifiers;
-استورد std.text.compare;
-استورد std.text.from_bytes;
-استورد std.text.number;
-استورد std.math.wrapping;
+استورد المكتبة.نصوص.مقارنة;
+استورد المكتبة.نصوص.من_بايتات;
+استورد المكتبة.نصوص.أعداد;
+استورد المكتبة.رياضيات.التفاف;
 استورد compiler.diagnostics.identity;
 استورد compiler.diagnostics.reason;
 استورد compiler.diagnostics.registry;
 استورد compiler.diagnostics.schema;
 استورد compiler.diagnostics.foreign_c;
-استورد std.text.substring;
+استورد المكتبة.نصوص.مقطع;
 استورد compiler.jisr.core;
 استورد compiler.jisr.target;
 استورد compiler.jisr.literals;
@@ -83,7 +83,6 @@
     }
     أرجع خطأ;
 }
-
 
 // A name C reserves to the implementation (`__x`, `_X`).
 // Whether a name is left out of the module: reserved for the
@@ -801,7 +800,6 @@
     دع الأجزاء: متجه نص = [«public extern let », الاسم_س, «: », التهجئة, « = "», الرابط, «";»];
     سطر_جسر(&متغير (*ك).الدوال_ن, صل_النصوص(&الأجزاء, &«»));
 }
-
 
 عرف اكتب_مرادفا_جسر(م: &متغير محلل_جسر, ك: &متغير كاتب_جسر, الكيان: &كيان_سي_جسر): فراغ {
     دع ن: نوع_سي_جسر = (*م).ج.الأنواع[(*الكيان).النوع];

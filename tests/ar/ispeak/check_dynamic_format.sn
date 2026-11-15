@@ -2,8 +2,8 @@
 // أهداف: arm64-darwin,x86_64-linux
 // خروج: 0
 // نظير: tests/en/ispeak/check_dynamic_format.sn
-استورد std.text.compare;
-استورد std.text.from_bytes;
+استورد المكتبة.نصوص.مقارنة;
+استورد المكتبة.نصوص.من_بايتات;
 استورد compiler.diagnostics.identity;
 استورد compiler.diagnostics.reason;
 استورد compiler.ispeak.format.facts;

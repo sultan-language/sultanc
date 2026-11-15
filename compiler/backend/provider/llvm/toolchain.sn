@@ -24,7 +24,7 @@
 // Linux: the kernel's own map of this process (/proc/self/maps) names the
 // loaded monolithic libLLVM; no C library call is involved.
 إذا (الهدف.المنصة == «linux») {
-    استورد std.fs.read_file;
+    استورد المكتبة.ملفات.قراءة_ملف;
 
     // libLLVM followed by '-' (libLLVM-20.so) or '.' (libLLVM.so.20.1), as a
     // shared object: component libraries (libLLVMCore.so) never match.
@@ -115,7 +115,7 @@
 إذا (الهدف.المنصة != «wasi» && الهدف.المنصة != «linux» && الهدف.المنصة != «windows») {
     استورد compiler.backend.provider.llvm.ffi.core;
     استورد compiler.backend.provider.llvm.ffi.types;
-    استورد std.os.platform.unix.apple.darwin.dynamic_loader;
+    استورد المكتبة.نظام_التشغيل.منصات.يونكس.آبل.داروين.المحمل_الديناميكي;
 
     عام عرف مسار_مكتبة_إل_إل_في_إم_الحالي(): اختياري متجه ط8 {
         دع حارس_مؤشر: متغير ط8 = 0;

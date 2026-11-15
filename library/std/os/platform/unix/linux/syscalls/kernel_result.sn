@@ -1,4 +1,4 @@
-استورد os.error;
+استورد نظام_التشغيل.أخطاء;
 
 // Decode the Linux ABIs that report errors as a negative return word.
 // This is NOT a libc status: no errno TLS, C wrapper, or runtime is involved.

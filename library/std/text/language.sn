@@ -11,9 +11,9 @@
 // Pure SultanC within the C Stage0's language: no copy primitive, no
 // reference returns, no references stored in records or mutable locals, no
 // calls inside vector literals, no top-level constants.
-استورد text.from_bytes;
-استورد text.compare;
-استورد chars.ascii;
+استورد نصوص.من_بايتات;
+استورد نصوص.مقارنة;
+استورد حروف.أسكي;
 
 عام نوع لغة = {
     الوسوم: متجه نص

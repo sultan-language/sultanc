@@ -1,6 +1,6 @@
 استورد compiler.backend.provider.llvm.model;
 استورد compiler.backend.provider.llvm.diagnostics;
-استورد std.text.from_bytes;
+استورد المكتبة.نصوص.من_بايتات;
 استورد compiler.backend.provider.llvm.ffi.core;
 استورد compiler.backend.provider.llvm.ffi.types;
 

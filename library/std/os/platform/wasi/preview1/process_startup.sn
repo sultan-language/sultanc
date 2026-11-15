@@ -1,5 +1,5 @@
-استورد os.error;
-استورد os.platform.wasi.preview1.file_descriptors;
+استورد نظام_التشغيل.أخطاء;
+استورد نظام_التشغيل.منصات.واسي.معاينة1.واصفات_الملفات;
 
 // WASI preview 1 process startup data. The host supplies arguments and the
 // environment through *_sizes_get / *_get: the second call fills a pointer

@@ -5,7 +5,7 @@
 // نظير: tests/en/stdlib/error/chain_identity.sn
 // std.error: هل_من_نوع searches the value and its whole cause chain,
 // checked at each level of a three-level chain.
-استورد المكتبة.أخطاء.failure;
+استورد المكتبة.أخطاء.فشل;
 
 عرف الرئيسية(): عدد {
     دع نطاق_ملفات: نص = «std.fs»;

@@ -18,7 +18,7 @@
 استورد compiler.source.span;
 استورد compiler.source.source_file;
 استورد compiler.source.source_map;
-استورد std.encoding.positions;
+استورد المكتبة.ترميز.مواضع;
 
 // Refactoring queries over one tooling Frontend result (نتيجة_واجهة_وحدة built
 // with احتفظ_بحقائق_الأدوات). This module only composes facts the canonical

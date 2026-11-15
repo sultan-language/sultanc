@@ -1,14 +1,13 @@
-استورد std.text.from_bytes;
+استورد المكتبة.نصوص.من_بايتات;
 استورد compiler.source.span;
 استورد compiler.source.source_file;
 استورد compiler.source.source_map;
-استورد std.encoding.positions;
+استورد المكتبة.ترميز.مواضع;
 استورد compiler.diagnostics.identity;
 استورد compiler.diagnostics.record;
 استورد compiler.diagnostics.schema;
 استورد compiler.diagnostics.reason;
 استورد compiler.ispeak.keys.surface;
-
 
 // Construction helpers mutate one canonical diagnostic record.
 // Producers remain responsible for choosing the correct identity and source facts.
@@ -42,7 +41,6 @@
     };
     أرجع الناتج;
 }
-
 
 // The LSP position (0-based line, UTF-16 column) of a byte of the source;
 // none past the end or on a line that is not valid UTF-8.
@@ -352,7 +350,6 @@
     أرجع صواب;
 }
 
-
 // Marks this diagnostic as causally derived from an earlier source failure.
 // The engine suppresses it only when an error covering this dependency was
 // actually emitted; producers must opt in explicitly.
@@ -378,4 +375,3 @@
     ألحق((*التشخيص).الأثر, المدخل);
     أرجع صواب;
 }
-

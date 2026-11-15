@@ -5,8 +5,8 @@
 // نظير: tests/en/stdlib/error/clone.sn
 // std.error: استنسخ and انسخ_فشل give independent deep copies, causes and
 // notes included.
-استورد المكتبة.أخطاء.failure;
-استورد المكتبة.نصوص.compare;
+استورد المكتبة.أخطاء.فشل;
+استورد المكتبة.نصوص.مقارنة;
 
 عرف الرئيسية(): عدد {
     دع الجذر: فشل = فشل_بهوية(«std.fs», «غير_موجود», «الملف غير موجود»);

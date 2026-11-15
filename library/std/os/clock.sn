@@ -1,5 +1,5 @@
-استورد math.integer;
-استورد os.error;
+استورد رياضيات.صحيح;
+استورد نظام_التشغيل.أخطاء;
 
 // Wall-clock timestamps and monotonic instants are distinct types: a system
 // time may jump after clock correction; an elapsed interval needs a monotonic
@@ -33,12 +33,11 @@
 عام مرادف os_monotonic_instant = لحظة_رتيبة_نظام;
 عام مرادف os_monotonic_elapsed_checked = مدة_بين_لحظتين_رتيبتين;
 
-
 // Convert timespec64 only after checking signed nanosecond range.
 إذا ((الهدف.المنصة == «linux» || الهدف.المنصة == «android» || الهدف.المنصة == «freebsd») && الهدف.المعمارية != «ve») {
-    استورد os.platform.unix.linux.clocks;
-    استورد os.platform.unix.linux.syscalls.operations;
-    استورد os.platform.unix.linux.syscalls.selection;
+    استورد نظام_التشغيل.منصات.يونكس.لينكس.ساعات;
+    استورد نظام_التشغيل.منصات.يونكس.لينكس.نداءات_النظام.عمليات;
+    استورد نظام_التشغيل.منصات.يونكس.لينكس.نداءات_النظام.اختيار;
 
     عرف وقت_نانو_لينكس(رتيب: منطقي): نتيجة عدد, خطأ_حد_نظام {
         طابق اقرأ_ساعة_لينكس(
@@ -89,7 +88,7 @@
 }
 
 إذا (الهدف.المنصة == «windows») {
-    استورد os.platform.windows.win32.clocks;
+    استورد نظام_التشغيل.منصات.ويندوز.وين32.ساعات;
 
     عام عرف اقرأ_وقت_نظام_النظام(): نتيجة طابع_وقت_نظام, خطأ_حد_نظام {
         طابق اقرأ_وقت_يونكس_نانو_ويندوز() مع
@@ -134,7 +133,7 @@
 // Darwin uses libSystem/Mach for elapsed time and sleep, and the POSIX
 // CLOCK_REALTIME API for Unix wall time. Keep platform ABI details in std.os.
 إذا (الهدف.المنصة == «macos») {
-    استورد os.platform.unix.apple.darwin.clocks;
+    استورد نظام_التشغيل.منصات.يونكس.آبل.داروين.ساعات;
 
     عرف خطأ_ساعة_ماخ_للنظام(الخطأ: خطأ_ساعة_ماخ): خطأ_حد_نظام {
         طابق الخطأ مع
@@ -183,8 +182,8 @@
 }
 
 إذا (الهدف.المنصة == «wasi») {
-    استورد os.platform.wasi.preview1.file_descriptors;
-    استورد os.platform.wasi.preview1.clocks;
+    استورد نظام_التشغيل.منصات.واسي.معاينة1.واصفات_الملفات;
+    استورد نظام_التشغيل.منصات.واسي.معاينة1.ساعات;
 
     عرف وقت_نانو_واسي(رتيب: منطقي): نتيجة عدد, خطأ_حد_نظام {
         طابق اقرأ_ساعة_واسي(رتيب) مع

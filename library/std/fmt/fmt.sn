@@ -26,12 +26,16 @@
 // precision never cuts a cluster; ASCII text without CR takes a fast path.
 // Rust counts Unicode scalar values; for text without combining marks the
 // two agree. No direction marks are inserted.
+// Arabic spellings of this folder's modules (docs/en/reference/modules-and-imports.md,
+// "Module spellings"): `استورد المكتبة....` names the same modules as `import std....`.
+module fmt { ar: تنسيق };
 
-استورد text.float;
-استورد unicode.grapheme;
-استورد unicode.general_category;
-استورد io.writer;
-استورد io.print;
+
+استورد نصوص.عشري;
+استورد يونيكود.عناقيد;
+استورد يونيكود.الفئة_العامة;
+استورد دخ.كاتب;
+استورد دخ.اطبع;
 
 // ---- Public types --------------------------------------------------------
 

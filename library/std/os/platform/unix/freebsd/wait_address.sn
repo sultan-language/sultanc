@@ -9,9 +9,9 @@
 // umtx_copyin_umtx_time). The system call is reached through the shared
 // operation table (os.platform.unix.freebsd.syscalls.numbers maps مستقبل to
 // SYS__umtx_op).
-استورد os.platform.unix.linux.syscalls.operations;
-استورد os.platform.unix.linux.syscalls.selection;
-استورد os.platform.unix.linux.syscalls.kernel_result;
+استورد نظام_التشغيل.منصات.يونكس.لينكس.نداءات_النظام.عمليات;
+استورد نظام_التشغيل.منصات.يونكس.لينكس.نداءات_النظام.اختيار;
+استورد نظام_التشغيل.منصات.يونكس.لينكس.نداءات_النظام.نتيجة_النواة;
 
 // sys/umtx.h: UMTX_OP_WAIT_UINT_PRIVATE 15, UMTX_OP_WAKE_PRIVATE 16.
 عرف انتظار_عنوان_خاص_فري_بي_إس_دي(): ط64 { أرجع 15; }

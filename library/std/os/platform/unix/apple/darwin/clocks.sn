@@ -1,5 +1,5 @@
-استورد os.error;
-استورد os.platform.unix.apple.darwin.file_descriptors;
+استورد نظام_التشغيل.أخطاء;
+استورد نظام_التشغيل.منصات.يونكس.آبل.داروين.واصفات_الملفات;
 
 // Darwin's POSIX clock_gettime(CLOCK_REALTIME=0) writes a timespec with
 // two 64-bit signed longs on the supported arm64 macOS ABI. This is wall

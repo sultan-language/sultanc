@@ -1,7 +1,7 @@
-استورد math.integer;
-استورد time.duration;
-استورد text.number;
-استورد text.from_bytes;
+استورد رياضيات.صحيح;
+استورد وقت.مدة;
+استورد نصوص.أعداد;
+استورد نصوص.من_بايتات;
 
 // Durations as text in Go's notation ("1h2m3.5s", "1.5ms", "-2µs", "0s"),
 // and checked absolute value and division (Go time.Duration.String and

@@ -1,9 +1,9 @@
-استورد os.buffer;
-استورد os.error;
-استورد os.platform.unix.linux.syscalls.kernel_result;
-استورد os.platform.unix.linux.file_descriptors;
-استورد os.platform.unix.linux.syscalls.operations;
-استورد os.platform.unix.linux.syscalls.selection;
+استورد نظام_التشغيل.مخزن;
+استورد نظام_التشغيل.أخطاء;
+استورد نظام_التشغيل.منصات.يونكس.لينكس.نداءات_النظام.نتيجة_النواة;
+استورد نظام_التشغيل.منصات.يونكس.لينكس.واصفات_الملفات;
+استورد نظام_التشغيل.منصات.يونكس.لينكس.نداءات_النظام.عمليات;
+استورد نظام_التشغيل.منصات.يونكس.لينكس.نداءات_النظام.اختيار;
 // Kernel ABI values of the selected kernel: Linux UAPI or FreeBSD headers.
 إذا ((الهدف.المنصة == «linux» || الهدف.المنصة == «android») && الهدف.المعمارية != «ve») { استورد os.platform.unix.linux.uapi; }
 إذا (الهدف.المنصة == «freebsd») { استورد os.platform.unix.freebsd.uapi; }
@@ -268,7 +268,7 @@
     ); }
     دع ينتظر: متغير منطقي = خطأ;
     طابق حلل_نتيجة_نداء_نواة_لينكس(الاتصال) مع
-    | نتيجة.نجح(_) -> {}
+    | نتيجة.نجح(_) -> { }
     | نتيجة.خطأ(الأصلي) -> {
         // EINPROGRESS, EALREADY, EINTR: wait; EISCONN: already connected.
         إذا (الأصلي.الرمز == رمز_خطأ_قيد_التقدم_لينكس() || الأصلي.الرمز == رمز_خطأ_جار_بالفعل_لينكس()

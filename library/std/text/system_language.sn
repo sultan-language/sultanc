@@ -13,10 +13,10 @@
 // «de_DE@euro»): the encoding and the modifier are dropped. An empty value,
 // «C», «C.…», «POSIX» and a value that is not a language tag carry no
 // language, and the next source is read.
-استورد text.language;
-استورد text.compare;
-استورد env.environment;
-استورد process.failure_text;
+استورد نصوص.لغة;
+استورد نصوص.مقارنة;
+استورد بيئة.بيئة_العمل;
+استورد عمليات.نص_الفشل;
 
 // The language part of a POSIX locale value: the text before «.» or «@»,
 // or empty for «C» and «POSIX».

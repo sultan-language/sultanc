@@ -12,7 +12,7 @@
 استورد compiler.frontend.lexer.values;
 استورد compiler.frontend.parser.parser;
 استورد compiler.frontend.parser.result;
-استورد std.text.from_bytes;
+استورد المكتبة.نصوص.من_بايتات;
 
 // Derived JSON (Nahr item 23): compile-time reflection over a declaration,
 // as serde's derive. `@@json` (`@@جسون`) on a record or enum type T

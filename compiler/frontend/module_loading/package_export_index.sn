@@ -1,4 +1,4 @@
-استورد std.text.from_bytes;
+استورد المكتبة.نصوص.من_بايتات;
 استورد compiler.frontend.module_loading.logical_environment;
 استورد compiler.backend.target.target_model;
 استورد compiler.frontend.module_loading.source_locator;
@@ -11,7 +11,7 @@
 استورد compiler.frontend.ast.declarations;
 استورد compiler.frontend.ast.name;
 استورد compiler.source.source_file;
-استورد std.bytes.compare;
+استورد المكتبة.بايتات.مقارنة;
 
 // Package export discovery is a Module-owned pre-semantic index. It parses
 // demand-discovered package members through the canonical lexer/parser and records

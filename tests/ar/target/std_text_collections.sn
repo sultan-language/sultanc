@@ -6,13 +6,13 @@
 // نظير: tests/en/target/std_text_collections.sn
 // std on every hosted target: standard output, text, numbers, vectors, a hash
 // map and a B-tree map. The line printed is the same everywhere.
-استورد std.io.print;
-استورد std.text.number;
-استورد std.text.transform;
-استورد std.text.search;
-استورد std.collections.map;
-استورد std.collections.btree_map;
-استورد std.collections.sort;
+استورد المكتبة.دخ.اطبع;
+استورد المكتبة.نصوص.أعداد;
+استورد المكتبة.نصوص.تحويل;
+استورد المكتبة.نصوص.بحث;
+استورد المكتبة.مجموعات.خريطة;
+استورد المكتبة.مجموعات.خريطة_شجرية;
+استورد المكتبة.مجموعات.ترتيب;
 
 عرف قارن_أعدادا(اليسار: &عدد, اليمين: &عدد): عدد { أرجع *اليسار - *اليمين; }
 عرف هاش_عدد(القيمة: &عدد): طبيعي { أرجع ((*القيمة) مثل طبيعي) * 2654435761; }

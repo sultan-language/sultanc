@@ -2,10 +2,10 @@
 // Domain «std.json», kind = the variant name of صنف_خطأ_جسون; the byte
 // offset is kept as a note. The message is Arabic, with an English language
 // version («en»).
-استورد error.failure;
-استورد json.value;
-استورد text.number;
-استورد text.from_bytes;
+استورد أخطاء.فشل;
+استورد جسون.قيمة;
+استورد نصوص.أعداد;
+استورد نصوص.من_بايتات;
 
 // The note «<prefix><value>»; Stage0-compatible text concatenation.
 عرف نص_ملاحظة_جسون(البادئة: نص, القيمة: نص): نص {

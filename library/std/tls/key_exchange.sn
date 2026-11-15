@@ -5,12 +5,12 @@
 // crypto.ecdsa). A peer share of the wrong size, an invalid curve point or an
 // all-zero X25519 result fails with illegal_parameter.
 
-استورد crypto.ecdsa;
-استورد crypto.words;
-استورد crypto.x25519;
-استورد tls.errors;
-استورد tls.record;
-استورد tls.wire;
+استورد تشفير.إي_سي_دي_إس_إيه;
+استورد تشفير.كلمات;
+استورد تشفير.إكس25519;
+استورد تي_إل_إس.أخطاء;
+استورد تي_إل_إس.سجل;
+استورد تي_إل_إس.سلك;
 
 عام نوع مشاركة_مفتاح_تي_إل_إس = {
     المجموعة: طبيعي,

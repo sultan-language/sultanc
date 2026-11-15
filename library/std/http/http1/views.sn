@@ -9,11 +9,11 @@
 // Also the range helpers the buffered parser (request_parser.sn) uses: block
 // copies (ألحق_من) and static texts for common methods and header names,
 // which cost no allocation.
-استورد chars.ascii;
-استورد http.model;
-استورد http.headers;
-استورد http.limits;
-استورد http.http1.common;
+استورد حروف.أسكي;
+استورد ويب.نموذج;
+استورد ويب.ترويسات;
+استورد ويب.حدود;
+استورد ويب.ويب1.مشترك;
 
 عام عرف مدى_رمز_ويب_صالح(البايتات: &متجه ط8, البداية: طبيعي, النهاية: طبيعي): منطقي {
     إذا (النهاية <= البداية) { أرجع خطأ; };

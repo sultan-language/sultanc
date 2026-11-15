@@ -1,5 +1,5 @@
-استورد encoding.utf8;
-استورد text.from_bytes;
+استورد ترميز.يوتيف8;
+استورد نصوص.من_بايتات;
 
 // Keep UTF-8 byte offsets separate from Unicode scalar indexes. UAX #29
 // operates on Unicode scalars; callers can map its boundaries to byte offsets.

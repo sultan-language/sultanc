@@ -4,7 +4,7 @@
 استورد compiler.link.symbol_table;
 استورد compiler.link.symbol_model;
 استورد compiler.link.elf.reader;
-استورد std.fs.path;
+استورد المكتبة.ملفات.مسار;
 
 عام نوع خطأ_استيعاب_مكتبة_إلف =
     | مكتبة_غير_صالحة

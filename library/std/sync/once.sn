@@ -11,9 +11,9 @@
 // cell until the runner stores 3 and, if any slept (state 2), wakes them all.
 // A completed Once costs one acquire load. A panic in the closure ends the
 // process (panic=abort), so there is no "poisoned" state.
-استورد sync.atomic;
-استورد sync.arc;
-استورد os.wait_address;
+استورد تزامن.ذري;
+استورد تزامن.مشترك;
+استورد نظام_التشغيل.انتظار_العنوان;
 
 عام نوع مرة = {
     الحالة: ذرة_ط32,

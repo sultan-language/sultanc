@@ -1,6 +1,6 @@
 استورد compiler.link.wasm.reader;
-استورد std.text.from_bytes;
-استورد std.bytes.compare;
+استورد المكتبة.نصوص.من_بايتات;
+استورد المكتبة.بايتات.مقارنة;
 
 // Reader of WebAssembly relocatable objects: the format of the WebAssembly
 // tool conventions (Linking.md) that both SultanC backends write (the native

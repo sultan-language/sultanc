@@ -1,6 +1,6 @@
 استورد compiler.link.model;
-استورد std.text.from_bytes;
-استورد std.chars.ascii;
+استورد المكتبة.نصوص.من_بايتات;
+استورد المكتبة.حروف.أسكي;
 استورد compiler.link.elf.layout_script;
 
 // GNU linker scripts used as link inputs. A system's development `.so` is

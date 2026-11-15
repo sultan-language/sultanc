@@ -31,11 +31,11 @@
 استورد compiler.runtime.primitive_runtime_abi;
 استورد compiler.frontend.types.type_context;
 استورد compiler.frontend.types.type_identity;
-استورد std.env.system;
-استورد std.io.print;
-استورد std.text.from_bytes;
-استورد std.text.compare;
-استورد std.text.number;
+استورد المكتبة.بيئة.نظام;
+استورد المكتبة.دخ.اطبع;
+استورد المكتبة.نصوص.من_بايتات;
+استورد المكتبة.نصوص.مقارنة;
+استورد المكتبة.نصوص.أعداد;
 
 عرف متغير_يساوي_آلة(الاسم: نص, القيمة: نص): منطقي {
     طابق متغير_بيئة_النظام(&الاسم) مع

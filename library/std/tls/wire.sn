@@ -1,11 +1,11 @@
-استورد text.from_bytes;
+استورد نصوص.من_بايتات;
 // Bounds-checked reading of TLS presentation-language structures
 // (RFC 8446 3): fixed-width big-endian integers and opaque vectors with
 // 8-, 16- or 24-bit length prefixes. A read past the end marks the reader
 // invalid instead of trapping; parsers check صالح and that every byte was
 // consumed, and report decode_error otherwise.
 
-استورد crypto.words;
+استورد تشفير.كلمات;
 
 عام نوع قارئ_تي_إل_إس = {
     البيانات: متجه ط8,

@@ -1,10 +1,10 @@
-استورد os.platform.unix.linux.syscalls.operations;
-استورد os.platform.unix.linux.syscalls.selection;
-استورد os.platform.unix.linux.syscalls.kernel_result;
-استورد os.platform.unix.linux.file_descriptors;
-استورد os.platform.unix.linux.kernel_records;
-استورد os.path;
-استورد os.error;
+استورد نظام_التشغيل.منصات.يونكس.لينكس.نداءات_النظام.عمليات;
+استورد نظام_التشغيل.منصات.يونكس.لينكس.نداءات_النظام.اختيار;
+استورد نظام_التشغيل.منصات.يونكس.لينكس.نداءات_النظام.نتيجة_النواة;
+استورد نظام_التشغيل.منصات.يونكس.لينكس.واصفات_الملفات;
+استورد نظام_التشغيل.منصات.يونكس.لينكس.سجلات_النواة;
+استورد نظام_التشغيل.مسار;
+استورد نظام_التشغيل.أخطاء;
 // Kernel ABI values of the selected kernel: Linux UAPI or FreeBSD headers.
 إذا ((الهدف.المنصة == «linux» || الهدف.المنصة == «android») && الهدف.المعمارية != «ve») { استورد os.platform.unix.linux.uapi; }
 إذا (الهدف.المنصة == «freebsd») { استورد os.platform.unix.freebsd.uapi; }

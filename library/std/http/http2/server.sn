@@ -7,13 +7,13 @@
 // The server is sequential like std.http's HTTP/1 server: one service call
 // at a time, while every open stream of the connection keeps progressing.
 
-استورد text.from_bytes;
-استورد text.number;
-استورد http.model;
-استورد http.transport;
-استورد http.http2.frame;
-استورد http.http2.connection;
-استورد http.http2.common;
+استورد نصوص.من_بايتات;
+استورد نصوص.أعداد;
+استورد ويب.نموذج;
+استورد ويب.ناقل;
+استورد ويب.ويب2.إطار;
+استورد ويب.ويب2.اتصال;
+استورد ويب.ويب2.مشترك;
 
 // A request from a completed stream; none means a malformed request.
 عرف طلب_من_تيار_ويب2(التيار: &متغير تيار_ويب2, العنوان_البعيد: &نص): اختياري طلب_ويب_مخزن {

@@ -1,5 +1,5 @@
-استورد std.text.builder;
-استورد std.bytes.builder;
+استورد المكتبة.نصوص.باني;
+استورد المكتبة.بايتات.باني;
 
 // Inline quotation of message facts. Language-free; not terminal/JSON escaping.
 

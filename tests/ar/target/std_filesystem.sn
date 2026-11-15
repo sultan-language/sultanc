@@ -8,20 +8,20 @@
 // handle I/O, seeking, metadata, renaming, listing and removal. The kernel
 // records involved (stat, dirent, open flags, lseek) differ per OS and
 // architecture.
-استورد std.io.print;
-استورد std.text.number;
-استورد std.text.transform;
-استورد std.text.from_bytes;
-استورد std.text.compare;
-استورد std.fs.write_file;
-استورد std.fs.write_bytes;
-استورد std.fs.read_file;
-استورد std.fs.mutation;
-استورد std.fs.metadata;
-استورد std.fs.directory;
-استورد std.fs.handle;
-استورد std.fs.path;
-استورد std.collections.sort;
+استورد المكتبة.دخ.اطبع;
+استورد المكتبة.نصوص.أعداد;
+استورد المكتبة.نصوص.تحويل;
+استورد المكتبة.نصوص.من_بايتات;
+استورد المكتبة.نصوص.مقارنة;
+استورد المكتبة.ملفات.كتابة_ملف;
+استورد المكتبة.ملفات.كتابة_بايتات;
+استورد المكتبة.ملفات.قراءة_ملف;
+استورد المكتبة.ملفات.تعديل;
+استورد المكتبة.ملفات.بيانات_وصفية;
+استورد المكتبة.ملفات.مجلد;
+استورد المكتبة.ملفات.مقبض;
+استورد المكتبة.ملفات.مسار;
+استورد المكتبة.مجموعات.ترتيب;
 
 عرف أزل_بصمت(الدليل: &نص, الاسم: نص): فراغ {
     دع المسار: نص = صل_المسار(الدليل, &الاسم);

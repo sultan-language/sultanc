@@ -2,10 +2,10 @@
 // Domain «std.process», kind = the variant name; the cause is the
 // std.fs-classified system error (فشل_من_فئة_خطأ_نظام). The message is
 // Arabic, with an English language version («en»).
-استورد error.failure;
-استورد error.from_os;
-استورد fs.error;
-استورد process.command;
+استورد أخطاء.فشل;
+استورد أخطاء.من_نظام;
+استورد ملفات.أخطاء;
+استورد عمليات.أمر;
 
 عرف فشل_أمر(النوع: نص, الرسالة: نص, الإنجليزية: نص, الفئة: &فئة_خطأ_نظام): فشل {
     دع الناتج: متغير فشل = فشل_بهوية_وسبب(«std.process», النوع, الرسالة, فشل_من_فئة_خطأ_نظام(الفئة));

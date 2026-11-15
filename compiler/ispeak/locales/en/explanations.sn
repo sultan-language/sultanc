@@ -94,6 +94,8 @@
 عام عرف نص_شرح_مكتبة_إل_إل_في_إم_للهدف_مفقودة(): نص { أرجع «The output target needs its own libLLVM shared library. Supply a compatible target library.»; }
 عام عرف نص_شرح_رمز_إل_إل_في_إم_غير_محلول(): نص { أرجع «The selected libLLVM does not provide the required LLVM C API symbol.»; }
 عام عرف نص_شرح_فشل_وقت_الترجمة_مطلوب(): نص { أرجع «Compile-time code rejected its input. Correct the issue described by the diagnostic.»; }
+عام عرف نص_شرح_توقيع_يتتبع_المستدعي_غير_صالح(): نص { أرجع «A `@@track_caller` function has a body, no type or compile-time parameters, and ends with a std.debug.location `source_location` parameter that each call fills with its place.»; }
+عام عرف نص_شرح_حجة_موقع_المستدعي_صريحة(): نص { أرجع «A call of a `@@track_caller` function passes every argument but the last: the compiler passes the place of the call there (inside another marked function, the location that function received).»; }
 عام عرف نص_شرح_سمة_تصريح_غير_مدعومة(): نص { أرجع «This declaration attribute is not supported by the current annotation processor.»; }
 عام عرف نص_شرح_نقل_من_مرجع(): نص { أرجع «Owned value moved out of a reference. Borrow it with & or copy it with clone(&value).»; }
 عام عرف نص_شرح_هدف_لا_يدعم_الميزة(): نص { أرجع «The chosen target lacks a feature this program needs. Pick another target or avoid the feature.»; }
@@ -122,6 +124,11 @@
 عام عرف نص_شرح_تهجئة_وحدة_مشتركة(): نص { أرجع «An import names a child of a folder by its name or by one of its spellings, so a spelling names one child only, and no other child's name. Give each child its own spellings.»; }
 عام عرف نص_شرح_تهجئة_وحدة_محجوزة(): نص { أرجع «A module spelling is written in import paths, where a reserved word of the language cannot stand. Choose a spelling that is not a reserved word.»; }
 عام عرف نص_شرح_تصريح_وحدة_خارج_ملف_الجذر(): نص { أرجع «Spellings of a folder's children are declared in the folder's root file, FOLDER/FOLDER.sn, or in a package's root file, SOURCE_ROOT/PACKAGE.sn. Move the declaration there.»; }
+عام عرف نص_شرح_اختبار_بمعاملات(): نص { أرجع «A test runs by itself, with nothing to pass it: `@@test` marks a function without parameters. Make the inputs local values of the test, or call a helper that takes them.»; }
+عام عرف نص_شرح_ناتج_اختبار_غير_صالح(): نص { أرجع «A test returns nothing, or `result int, Error` (std.error.failure), whose error the run reports as the test's failure. Change the result type to one of these.»; }
+عام عرف نص_شرح_اختبار_ليس_دالة_عادية(): نص { أرجع «`@@test` marks an ordinary function with a body: not a type, a module value, a generic or compile-time function, or an external one. Move it to a function the test can call.»; }
+عام عرف نص_شرح_اختبار_غير_موجود(): نص { أرجع «`--test` runs exactly the tests named, in any spelling of their names; this name is no test of the root package. Run `sultanc test --list` for the names.»; }
+عام عرف نص_شرح_ملف_اختبارات_خارج_البرنامج(): نص { أرجع «`--tests-in` keeps the tests declared in the given source files; this file is not a source of the program. Name the entry file or a file it imports.»; }
 عام عرف نص_شرح_مكتبة_تفسير_بلا_اسم_تثبيت(): نص { أرجع «On macOS a `.tbd` stub names the install name a dynamic library is loaded from. This stub names none, so there is nothing to load. Pass the `.dylib` itself.»; }
 عام عرف نص_شرح_مكتبة_تفسير_غير_محملة(): نص { أرجع «`run` loads each -l library with the system's dynamic loader before the program starts; this one failed for the reason shown. Check that it is a shared library for this platform and that its dependencies are found.»; }
 عام عرف نص_شرح_مترجم_سي_لغير_المضيف(): نص { أرجع «With SULTANC_C_COMPILER=cc, imported .c files are compiled by the system C compiler, which builds for the host only. Unset SULTANC_C_COMPILER so Jisr compiles the C for any target, or build for the host.»; }
@@ -242,6 +249,8 @@
     | مفتاح_شرح.رمز_إل_إل_في_إم_غير_محلول -> { أرجع نص_شرح_رمز_إل_إل_في_إم_غير_محلول(); }
     | مفتاح_شرح.فشل_وقت_الترجمة_مطلوب -> { أرجع نص_شرح_فشل_وقت_الترجمة_مطلوب(); }
     | مفتاح_شرح.سمة_تصريح_غير_مدعومة -> { أرجع نص_شرح_سمة_تصريح_غير_مدعومة(); }
+    | مفتاح_شرح.توقيع_يتتبع_المستدعي_غير_صالح -> { أرجع نص_شرح_توقيع_يتتبع_المستدعي_غير_صالح(); }
+    | مفتاح_شرح.حجة_موقع_المستدعي_صريحة -> { أرجع نص_شرح_حجة_موقع_المستدعي_صريحة(); }
     | مفتاح_شرح.نقل_من_مرجع -> { أرجع نص_شرح_نقل_من_مرجع(); }
     | مفتاح_شرح.هدف_لا_يدعم_الميزة -> { أرجع نص_شرح_هدف_لا_يدعم_الميزة(); }
     | مفتاح_شرح.بناء_غير_مدعوم_في_الخلفية -> { أرجع نص_شرح_بناء_غير_مدعوم_في_الخلفية(); }
@@ -270,6 +279,11 @@
     | مفتاح_شرح.تهجئة_وحدة_مشتركة -> { أرجع نص_شرح_تهجئة_وحدة_مشتركة(); }
     | مفتاح_شرح.تهجئة_وحدة_محجوزة -> { أرجع نص_شرح_تهجئة_وحدة_محجوزة(); }
     | مفتاح_شرح.تصريح_وحدة_خارج_ملف_الجذر -> { أرجع نص_شرح_تصريح_وحدة_خارج_ملف_الجذر(); }
+    | مفتاح_شرح.اختبار_بمعاملات -> { أرجع نص_شرح_اختبار_بمعاملات(); }
+    | مفتاح_شرح.ناتج_اختبار_غير_صالح -> { أرجع نص_شرح_ناتج_اختبار_غير_صالح(); }
+    | مفتاح_شرح.اختبار_ليس_دالة_عادية -> { أرجع نص_شرح_اختبار_ليس_دالة_عادية(); }
+    | مفتاح_شرح.اختبار_غير_موجود -> { أرجع نص_شرح_اختبار_غير_موجود(); }
+    | مفتاح_شرح.ملف_اختبارات_خارج_البرنامج -> { أرجع نص_شرح_ملف_اختبارات_خارج_البرنامج(); }
     | مفتاح_شرح.مكتبة_تفسير_غير_محملة -> { أرجع نص_شرح_مكتبة_تفسير_غير_محملة(); }
     | مفتاح_شرح.مترجم_سي_لغير_المضيف -> { أرجع نص_شرح_مترجم_سي_لغير_المضيف(); }
     | مفتاح_شرح.فشل_مترجم_سي -> { أرجع نص_شرح_فشل_مترجم_سي(); }

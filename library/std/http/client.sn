@@ -1,23 +1,23 @@
-استورد io.reader;
-استورد io.writer;
-استورد net.dns;
-استورد net.ip;
-استورد net.socket_address;
-استورد net.tcp;
-استورد text.compare;
-استورد text.from_bytes;
-استورد text.number;
-استورد text.substring;
-استورد tls.config;
-استورد tls.stream;
-استورد uri.uri;
-استورد http.model;
-استورد http.limits;
-استورد http.http1.common;
-استورد http.http1.request_writer;
-استورد http.http1.response_parser;
-استورد http.http1.connection;
-استورد http.transport;
+استورد دخ.قارئ;
+استورد دخ.كاتب;
+استورد شبكة.أسماء_النطاقات;
+استورد شبكة.آيبي;
+استورد شبكة.عنوان_مقبس;
+استورد شبكة.تي_سي_بي;
+استورد نصوص.مقارنة;
+استورد نصوص.من_بايتات;
+استورد نصوص.أعداد;
+استورد نصوص.مقطع;
+استورد تي_إل_إس.إعداد;
+استورد تي_إل_إس.مجرى;
+استورد عنوان_موحد.عنوان_موحد;
+استورد ويب.نموذج;
+استورد ويب.حدود;
+استورد ويب.ويب1.مشترك;
+استورد ويب.ويب1.كاتب_الطلب;
+استورد ويب.ويب1.محلل_الاستجابة;
+استورد ويب.ويب1.اتصال;
+استورد ويب.ناقل;
 
 // Transport/client errors are kept separate from the canonical HTTP wire error.
 عام نوع خطأ_عميل_ويب =

@@ -85,7 +85,6 @@
     };
 }
 
-
 // SultanC's internal convention (اتفاقية_نداء_واجهة.داخلية) on SysV AMD64:
 // an aggregate argument larger than this many bytes, one pointer, is passed
 // as a hidden reference (as Rust's ABI passes large aggregates indirectly,
@@ -369,7 +368,6 @@
         };
     };
 }
-
 
 // ---- Foreign (external) call boundary ------------------------------------
 //

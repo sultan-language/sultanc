@@ -1,6 +1,6 @@
-استورد os.buffer;
-استورد os.path;
-استورد os.error;
+استورد نظام_التشغيل.مخزن;
+استورد نظام_التشغيل.مسار;
+استورد نظام_التشغيل.أخطاء;
 
 // WASI preview 1 (wasm32) file-descriptor provider. Every function below is a
 // host import from the target's system interface module wasi_snapshot_preview1

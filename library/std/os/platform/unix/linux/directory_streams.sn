@@ -1,11 +1,11 @@
-استورد os.platform.unix.linux.syscalls.operations;
-استورد os.platform.unix.linux.syscalls.selection;
+استورد نظام_التشغيل.منصات.يونكس.لينكس.نداءات_النظام.عمليات;
+استورد نظام_التشغيل.منصات.يونكس.لينكس.نداءات_النظام.اختيار;
 // Kernel ABI values of the selected kernel: Linux UAPI or FreeBSD headers.
 إذا ((الهدف.المنصة == «linux» || الهدف.المنصة == «android») && الهدف.المعمارية != «ve») { استورد os.platform.unix.linux.uapi; }
 إذا (الهدف.المنصة == «freebsd») { استورد os.platform.unix.freebsd.uapi; }
-استورد os.buffer;
-استورد os.platform.unix.linux.file_descriptors;
-استورد os.platform.unix.linux.directory_records;
+استورد نظام_التشغيل.مخزن;
+استورد نظام_التشغيل.منصات.يونكس.لينكس.واصفات_الملفات;
+استورد نظام_التشغيل.منصات.يونكس.لينكس.سجلات_المجلدات;
 
 // Linux directory file descriptors are opened with openat(O_DIRECTORY), not
 // libc DIR*. getdents64 returns a block of records (not a single filename).

@@ -47,7 +47,7 @@
 استورد compiler.runtime.primitive_identity;
 استورد compiler.diagnostics.primitive_names;
 استورد compiler.frontend.types.type_context;
-استورد std.text.from_bytes;
+استورد المكتبة.نصوص.من_بايتات;
 استورد compiler.frontend.types.type_identity;
 استورد compiler.frontend.types.builtins_generated;
 استورد compiler.frontend.types.type_model;

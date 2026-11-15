@@ -14,12 +14,13 @@
 استورد compiler.backend.target.target_model;
 استورد compiler.backend.target.target_registry;
 استورد compiler.link.dependency.llvm;
-استورد std.text.from_bytes;
-استورد std.text.number;
+استورد المكتبة.نصوص.من_بايتات;
+استورد المكتبة.نصوص.أعداد;
 استورد compiler.link.entry_policy;
 استورد compiler.link.elf.target_policy;
 استورد compiler.link.elf.layout_script;
 استورد compiler.link.elf.script_image;
+استورد compiler.link.elf.eh_frame;
 
 عام نوع طلب_ربط = {
     الخطة: خطة_ربط
@@ -587,7 +588,15 @@
         دع الحمولات_صالحة: متغير منطقي = صواب;
         طابق مزود_ربط_للهدف(&السياق.الهدف) مع
         | هوية_مزود_ربط.إلف -> {
-            الحمولات_صالحة := جهز_حمولات_أقسام_إلف_الحية(&متغير السياق);
+            // Call-frame information of the kept code only, as one section
+            // (elf/eh_frame.sn); a bare-metal image's scripts place none.
+            إذا (السياق.الخطة.الخرج == نوع_خرج_ربط.تنفيذي()
+                && !رابط_إلف_بسكربت_للهدف(&السياق.الهدف)) {
+                الحمولات_صالحة := احتفظ_بإطارات_إلف_الحية(&متغير السياق);
+            };
+            إذا (الحمولات_صالحة) {
+                الحمولات_صالحة := جهز_حمولات_أقسام_إلف_الحية(&متغير السياق);
+            };
         }
         | هوية_مزود_ربط.ماتشو -> {
             الحمولات_صالحة := جهز_حمولات_أقسام_ماتشو_الحية(&متغير السياق);

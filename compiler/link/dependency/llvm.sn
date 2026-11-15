@@ -9,8 +9,8 @@
 استورد compiler.link.elf.dynamic_ingest;
 استورد compiler.link.provider;
 استورد compiler.backend.target.runtime_symbol_query_context;
-استورد std.fs.read_file;
-استورد std.text.from_bytes;
+استورد المكتبة.ملفات.قراءة_ملف;
+استورد المكتبة.نصوص.من_بايتات;
 
 // The LLVM link dependency of a linked program.
 //

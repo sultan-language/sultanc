@@ -3,10 +3,10 @@
 // socket is ready (the other tasks run meanwhile) and then retries. Outside
 // every task, or where tasks do not switch, the same calls wait in the
 // poller, so they still work as blocking calls.
-استورد async.runtime;
-استورد net.tcp;
-استورد net.socket_address;
-استورد os.poll;
+استورد غير_متزامن.وقت_التشغيل;
+استورد شبكة.تي_سي_بي;
+استورد شبكة.عنوان_مقبس;
+استورد نظام_التشغيل.استطلاع;
 
 عرف انتظر_تدفق_مهام(الواصف: عدد, الاهتمام: اهتمام_مستطلع, الخطأ: عدد): نتيجة عدد, عدد {
     إذا (!هل_خطأ_سيحظر(الخطأ)) { أرجع نتيجة.خطأ(الخطأ); };

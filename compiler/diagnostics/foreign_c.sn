@@ -1,7 +1,7 @@
-استورد std.text.from_bytes;
-استورد std.text.compare;
-استورد std.text.number;
-استورد std.text.search;
+استورد المكتبة.نصوص.من_بايتات;
+استورد المكتبة.نصوص.مقارنة;
+استورد المكتبة.نصوص.أعداد;
+استورد المكتبة.نصوص.بحث;
 استورد compiler.source.span;
 استورد compiler.source.source_file;
 استورد compiler.diagnostics.identity;
@@ -10,7 +10,7 @@
 استورد compiler.diagnostics.builder;
 استورد compiler.diagnostics.registry;
 استورد compiler.diagnostics.reason;
-استورد std.encoding.utf8;
+استورد المكتبة.ترميز.يوتيف8;
 
 // C diagnostics reported by Jisr (compiler/jisr) while a C import is read.
 // The module loader receives only the generated module text, so Jisr hands

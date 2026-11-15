@@ -1,0 +1,9 @@
+// `sultanc test --package-graph` (tests/runner/suites/testing.sn): a test of
+// the root package using a dependency. Expected: exit 0.
+import lib.lib;
+import std.debug.assert;
+
+@@test
+def triples(): void {
+    assert(triple(2) == 6);
+}

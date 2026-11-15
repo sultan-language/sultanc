@@ -8,8 +8,8 @@
 استورد compiler.link.input_ingest;
 استورد compiler.link.coff.directive_syntax;
 استورد compiler.link.coff.object_ingest;
-استورد std.text.from_bytes;
-استورد std.text.compare;
+استورد المكتبة.نصوص.من_بايتات;
+استورد المكتبة.نصوص.مقارنة;
 
 // COFF input completion: the `.drectve` directives (coff/directive_syntax.sn)
 // and weak aliases that decide which inputs and definitions an image

@@ -5,7 +5,7 @@
 استورد compiler.frontend.types.type_context;
 استورد compiler.frontend.types.type_identity;
 استورد compiler.frontend.types.builtins_generated;
-استورد std.text.from_bytes;
+استورد المكتبة.نصوص.من_بايتات;
 
 // Readable Type names for debuggers, shared by the DWARF writer and the LLVM
 // provider. A declared Type keeps its source spelling (UTF-8, Arabic or

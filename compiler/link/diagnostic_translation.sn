@@ -1,5 +1,5 @@
 استورد compiler.diagnostics.reason;
-استورد std.text.from_bytes;
+استورد المكتبة.نصوص.من_بايتات;
 استورد compiler.link.linker;
 استورد compiler.link.input_ingest;
 استورد compiler.backend.target.target_model;
@@ -24,7 +24,6 @@
     );
     أرجع التشخيص;
 }
-
 
 عرف أضف_معرف_هدف_إلى_تشخيص_ربط(
     التشخيص: &متغير تشخيص,

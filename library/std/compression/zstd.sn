@@ -18,7 +18,7 @@
 // FSE_writeNCount), whichever is estimated smaller. A block that does not
 // shrink is stored raw.
 
-استورد hash.xxh64;
+استورد تجزئة.إكس_إكس_إتش64;
 
 عام نوع خطأ_زد_ستد =
     | نهاية_غير_متوقعة

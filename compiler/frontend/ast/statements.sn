@@ -1,4 +1,4 @@
-استورد std.text.from_bytes;
+استورد المكتبة.نصوص.من_بايتات;
 استورد compiler.frontend.ast.operators;
 استورد compiler.frontend.ast.literals;
 استورد compiler.source.span;
@@ -103,7 +103,6 @@
         تعبير
     )
 ;
-
 
 عام عرف نطاق_عبارة(العبارة: &عبارة): نطاق {
     طابق *العبارة مع

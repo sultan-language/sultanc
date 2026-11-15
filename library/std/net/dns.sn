@@ -1,8 +1,8 @@
-استورد net.ip;
-استورد net.socket_address;
+استورد شبكة.آيبي;
+استورد شبكة.عنوان_مقبس;
 
-استورد os.socket;
-استورد os.error;
+استورد نظام_التشغيل.مقبس;
+استورد نظام_التشغيل.أخطاء;
 
 // Preserve the existing owned compact address layout, but obtain it from
 // the target-selected native resolver rather than the deleted runtime.

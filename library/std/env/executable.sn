@@ -1,7 +1,7 @@
-استورد fs.error;
-استورد fs.attributes;
-استورد os.error;
-استورد os.executable;
+استورد ملفات.أخطاء;
+استورد ملفات.سمات;
+استورد نظام_التشغيل.أخطاء;
+استورد نظام_التشغيل.البرنامج;
 
 // The path of the running executable (Rust's std::env::current_exe; Go's
 // os.Executable). On macOS dyld may give the path the process was started
@@ -12,7 +12,7 @@
 // (its first argument) and `--` before its own arguments.
 
 إذا (الهدف.المنصة == «macos») {
-    استورد fs.canonical;
+    استورد ملفات.مسار_قانوني;
 
     عام عرف مسار_البرنامج_الحالي(): نتيجة نص, فئة_خطأ_نظام {
         طابق مسار_البرنامج_الحالي_نظام() مع

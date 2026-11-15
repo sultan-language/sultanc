@@ -15,7 +15,7 @@
 استورد compiler.frontend.pattern.pattern_model;
 استورد compiler.frontend.pattern.pattern_registry;
 استورد compiler.msir.lowering.model;
-استورد std.collections.map;
+استورد المكتبة.مجموعات.خريطة;
 
 // MSIR owns monomorphization: generic semantic templates remain Frontend facts,
 // while only concrete function instances cross into target-neutral IR.
@@ -33,7 +33,6 @@
 عام نوع فهرس_حقائق_دوال_خفض = {
     بالرمز: متجه اختياري عرض_حقائق_دالة_خفض
 };
-
 
 // Compact per-unit range ownership for generic top-level functions. Ranges are
 // sorted by source byte start, so semantic fact construction is one pass over
@@ -192,7 +191,6 @@
     أرجع (الداخل.البداية.البايت >= الخارج.البداية.البايت)
         && (الداخل.النهاية.البايت <= الخارج.النهاية.البايت);
 }
-
 
 عرف أضف_رمز_عرض_دالة_فريدا(الرموز: &متغير متجه معرف_رمز, الرمز: معرف_رمز): فراغ {
     دع الموضع: متغير طبيعي = 0;
@@ -535,7 +533,6 @@
     };
 }
 
-
 عرف انسخ_طلب_مثيل_عند(
     الطلبات: &متجه طلب_مثيل_دالة_خفض,
     الموضع: طبيعي
@@ -697,8 +694,6 @@
     أرجع نتيجة.نجح(الطلبات);
 }
 
-
-
 عام نوع استعمال_معتم_في_مثيل = {
     النطاق: نطاق,
     المعتم: معرف_نوع
@@ -784,7 +779,6 @@
     }
     أرجع الناتج;
 }
-
 
 عرف انسخ_نطاقات_خفض(المصدر: &متجه نطاق): متجه نطاق {
     دع القيم: متجه نطاق = *المصدر;

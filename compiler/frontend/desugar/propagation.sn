@@ -14,7 +14,7 @@
 استورد compiler.frontend.lexer.values;
 استورد compiler.frontend.parser.parser;
 استورد compiler.frontend.parser.result;
-استورد std.text.from_bytes;
+استورد المكتبة.نصوص.من_بايتات;
 
 // The propagation operator `؟` / `?` (docs/en/reference/errors.md, layer 1b). The parser
 // accepts it only as the last postfix of a statement's whole right-hand side

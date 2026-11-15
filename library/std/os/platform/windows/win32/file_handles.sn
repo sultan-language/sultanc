@@ -1,7 +1,7 @@
-استورد os.error;
-استورد os.path;
-استورد os.buffer;
-استورد os.platform.windows.win32.error;
+استورد نظام_التشغيل.أخطاء;
+استورد نظام_التشغيل.مسار;
+استورد نظام_التشغيل.مخزن;
+استورد نظام_التشغيل.منصات.ويندوز.وين32.أخطاء;
 
 // Windows file HANDLEs are not Unix descriptors or Winsock SOCKETs.
 // Direct Windows system API calls; no C runtime library is involved.

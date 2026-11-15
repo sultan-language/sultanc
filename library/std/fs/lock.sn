@@ -1,6 +1,6 @@
-استورد fs.handle;
-استورد os.file_lock;
-استورد os.error;
+استورد ملفات.مقبض;
+استورد نظام_التشغيل.قفل_الملف;
+استورد نظام_التشغيل.أخطاء;
 
 // Advisory whole-file locks through an open handle (Rust 1.89 File::lock,
 // lock_shared, try_lock, try_lock_shared, unlock). Many shared holders or

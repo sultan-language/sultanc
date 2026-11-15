@@ -26,14 +26,17 @@ expect أ = 1.*ب = 2.*ج = 3
 expect مرحبا
 print ش
 expect مستطيل
-expect س = 3.*ص = 4
+expect-gdb س = 3.*ص = 4
 print القيم
 expect length = 3
 print الاسم
 expect عالم
+# 6 قبل النداء. وعند -O2 تضمّن LLVM الدالة زد وتطوي الإجمالي + 1 في تخزين 7، ولا يبقى
+# من نداء هذا السطر شيء: فكما في clang عند -O2 للشكل نفسه (نقطة توقف على
+# `bump(&total);` تُظهر القيمة بعد النداء المطوي)، تقرأ نقطة توقف السطر هنا 7.
 print الإجمالي
-expect = 6
-print العداد_العام
+expect = [67]\b
+global العداد_العام
 expect = 7
 
 break fn زد
@@ -44,8 +47,10 @@ expect = 6
 bt
 expect زد
 expect الرئيسية
+# النداء آخر شفرة سطره، فيعود `finish` إلى بداية السطر التالي كما مع gcc
+# وclang عند -O0 (و`next` بعده كان سينفذ ذلك السطر).
 finish
-next
+expect الإجمالي := الإجمالي \+ المساحة
 print الإجمالي
 expect = 7
 
@@ -62,6 +67,7 @@ expect = 0
 next
 expect المجموع := المجموع \+ الفهرس|الفهرس := الفهرس \+ 1
 
+clear @loop
 break fn المجموع_المضاعف
 continue
 expect المجموع_المضاعف

@@ -1,9 +1,9 @@
 // The reader's languages of a request, from its Accept-Language header
 // (std.text.language), for std.text.messages; none (the catalog's default)
 // without one.
-استورد text.language;
-استورد http.model;
-استورد http.headers;
+استورد نصوص.لغة;
+استورد ويب.نموذج;
+استورد ويب.ترويسات;
 
 عام عرف لغة_طلب_ويب<B>(الطلب: &طلب_ويب<B>): لغة {
     دع الاسم: نص = «accept-language»;

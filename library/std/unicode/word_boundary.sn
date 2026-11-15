@@ -1,6 +1,6 @@
-استورد unicode.data.segmentation;
-استورد unicode.algorithms.lookup;
-استورد unicode.algorithms.text_offsets;
+استورد يونيكود.بيانات.تقطيع;
+استورد يونيكود.خوارزميات.بحث;
+استورد يونيكود.خوارزميات.إزاحات_النص;
 
 // UAX #29, Unicode 18.0 default word boundaries.
 // The boundary indices refer to Unicode scalar offsets, NOT UTF-8 bytes.

@@ -2,7 +2,7 @@
 // أهداف: arm64-darwin,x86_64-linux
 // خروج: 0
 // نظير: tests/en/ispeak/check_count_agreement.sn
-استورد std.text.compare;
+استورد المكتبة.نصوص.مقارنة;
 استورد compiler.diagnostics.identity;
 استورد compiler.diagnostics.reason;
 استورد compiler.ispeak.format.facts;

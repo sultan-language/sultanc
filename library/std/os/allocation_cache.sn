@@ -8,7 +8,7 @@
 // entry points instead).
 //
 // Also the calling thread's own allocation counts.
-استورد os.allocation;
+استورد نظام_التشغيل.تخصيص;
 
 إذا ((((الهدف.المنصة == «linux» || الهدف.المنصة == «android» || الهدف.المنصة == «freebsd») && الهدف.المعمارية != «ve») || الهدف.المنصة == «macos» || الهدف.المنصة == «windows») && الهدف.عرض_المؤشر == «64») {
     // An address on the running thread's stack.

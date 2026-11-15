@@ -17,8 +17,8 @@
 //
 // Fixed responses: بايتات_استجابة_ثابتة_ويب1 serializes a response head
 // and body at compile time (no Date: the server adds it per response).
-استورد text.from_bytes;
-استورد text.compare;
+استورد نصوص.من_بايتات;
+استورد نصوص.مقارنة;
 
 // ---- Encoding ----
 // A node at offset o: [route at its end or -1, parameter child offset or

@@ -18,7 +18,8 @@
 // Rust's RawVec::MIN_NON_ZERO_CAP: 8 elements of 1 byte (text, byte
 // buffers), 4 elements of up to 1 KiB, 1 element above that. Growth then
 // doubles (append) or takes max(2 x capacity, needed) (extend_from, through
-// سعة_نمو_المتجه below); reserve_exact and a clone stay exact.
+// سعة_نمو_المتجه below); reserve_exact, a vector literal and a clone stay
+// exact, as Rust's Vec::reserve_exact, vec![...] and clone.
 عام عرف سياسة_نمو_المتجه_لعنصر(حجم_العنصر: طبيعي): سياسة_نمو_متجه {
     دع الدنيا: متغير طبيعي = 1;
     إذا (حجم_العنصر == 1) {

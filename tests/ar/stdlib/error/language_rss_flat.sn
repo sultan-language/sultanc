@@ -8,10 +8,10 @@
 // Counterpart: tests/en/stdlib/error/language_rss_flat.sn. Like rss_flat.sn
 // it has no pair directive: the interpreter does not use the std allocator
 // whose counters this reads.
-استورد المكتبة.أخطاء.failure;
-استورد المكتبة.نصوص.language;
-استورد المكتبة.نصوص.number;
-استورد std.os.allocation;
+استورد المكتبة.أخطاء.فشل;
+استورد المكتبة.نصوص.لغة;
+استورد المكتبة.نصوص.أعداد;
+استورد المكتبة.نظام_التشغيل.تخصيص;
 
 عرف اصنع_سلسلة(ف: طبيعي): فشل {
     دع الجذر: متغير فشل = فشل_بهوية(«config», «فارغ», «ملف الإعدادات فارغ»);

@@ -7,7 +7,7 @@
 // Each takes the result by value and moves the success value through
 // untouched; nothing is copied out of borrowed storage, so an owning T
 // (text, a vector) needs no plain bound.
-استورد error.failure;
+استورد أخطاء.فشل;
 
 // On an error, a new ad-hoc فشل with this message whose cause is the error
 // (moved in); on success, the value unchanged.

@@ -3,7 +3,7 @@
 // تشخيص: SULTANC-FORMAT-STRING
 // نظير: tests/en/stdlib/fmt/reject_format_unclosed_brace.sn
 // قوس `{` لا يغلقه قوس `}`.
-استورد المكتبة.تنسيق.fmt;
+استورد المكتبة.تنسيق.تنسيق;
 
 عرف الرئيسية(): عدد {
     دع الاسم: نص = «سلطان»;

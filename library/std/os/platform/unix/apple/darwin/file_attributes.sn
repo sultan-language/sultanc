@@ -1,8 +1,8 @@
-استورد os.path;
-استورد os.error;
-استورد os.platform.unix.apple.darwin.file_descriptors;
-استورد os.platform.unix.apple.darwin.entropy;
-استورد text.from_bytes;
+استورد نظام_التشغيل.مسار;
+استورد نظام_التشغيل.أخطاء;
+استورد نظام_التشغيل.منصات.يونكس.آبل.داروين.واصفات_الملفات;
+استورد نظام_التشغيل.منصات.يونكس.آبل.داروين.عشوائية;
+استورد نصوص.من_بايتات;
 
 // Links, permission bits, file sizes, file times and the working directory
 // through libSystem (<unistd.h>, <sys/stat.h>, <fcntl.h>). mode_t is u16,

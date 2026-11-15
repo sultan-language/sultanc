@@ -12,20 +12,20 @@
 // configured server; with it off only the CertificateVerify signature is
 // checked against the leaf key, as with Go's InsecureSkipVerify.
 
-استورد crypto.digest;
-استورد crypto.sha256;
-استورد crypto.words;
-استورد text.from_bytes;
-استورد time.time;
-استورد tls.config;
-استورد tls.errors;
-استورد tls.key_exchange;
-استورد tls.record;
-استورد tls.signature;
-استورد tls.trust;
-استورد tls.verify;
-استورد tls.wire;
-استورد tls.x509;
+استورد تشفير.ملخص;
+استورد تشفير.شا256;
+استورد تشفير.كلمات;
+استورد نصوص.من_بايتات;
+استورد وقت.الوقت;
+استورد تي_إل_إس.إعداد;
+استورد تي_إل_إس.أخطاء;
+استورد تي_إل_إس.تبادل_المفاتيح;
+استورد تي_إل_إس.سجل;
+استورد تي_إل_إس.توقيع;
+استورد تي_إل_إس.ثقة;
+استورد تي_إل_إس.تحقق;
+استورد تي_إل_إس.سلك;
+استورد تي_إل_إس.إكس509;
 
 نوع ترحيب_خادم_تي_إل_إس = {
     العشوائي: متجه ط8,

@@ -5,8 +5,8 @@
 استورد compiler.frontend.lexer.values;
 استورد compiler.frontend.lexer.cursor;
 استورد compiler.frontend.lexer.result;
-استورد std.chars.ascii;
-استورد std.text.compare;
+استورد المكتبة.حروف.أسكي;
+استورد المكتبة.نصوص.مقارنة;
 نوع تحليل_عدد =
     | صالح بنوع قيمة_عدد_صحيح_رمز
     | غير_صالح

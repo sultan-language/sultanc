@@ -1,5 +1,5 @@
-استورد os.virtual_memory;
-استورد os.error;
+استورد نظام_التشغيل.ذاكرة_افتراضية;
+استورد نظام_التشغيل.أخطاء;
 
 // Keep the established numeric std.memory interface while using the
 // canonical typed OS operations. A successful mapping outside the signed

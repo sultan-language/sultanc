@@ -1,4 +1,4 @@
-استورد os.error;
+استورد نظام_التشغيل.أخطاء;
 
 // WASI preview 1 errno values (wasi_snapshot_preview1 `errno` enumeration);
 // they differ from every Unix numbering and are never borrowed from one.

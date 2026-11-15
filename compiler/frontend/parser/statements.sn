@@ -19,7 +19,7 @@
 استورد compiler.frontend.parser.initialization;
 استورد compiler.frontend.parser.patterns;
 استورد compiler.frontend.parser.types;
-استورد std.encoding.utf8;
+استورد المكتبة.ترميز.يوتيف8;
 نوع اقتراح_تهجئة_كلمة_عبارة = {
     الرمز: رمز,
     التهجئة: تهجئة_كلمة_مقترحة

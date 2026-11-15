@@ -1,5 +1,5 @@
-استورد os.error;
-استورد os.platform.wasi.preview1.file_descriptors;
+استورد نظام_التشغيل.أخطاء;
+استورد نظام_التشغيل.منصات.واسي.معاينة1.واصفات_الملفات;
 
 // WASI preview 1 random_get fills the buffer from the host's CSPRNG
 // (the specification requires cryptographically secure output).

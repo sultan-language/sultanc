@@ -61,7 +61,6 @@
     };
 }
 
-
 // Calls one of the program's std allocation providers (std
 // os/allocation.sn). Its record is the canonical declaration: a hidden
 // closure-environment pointer (null here) then pointer-width integer operands,

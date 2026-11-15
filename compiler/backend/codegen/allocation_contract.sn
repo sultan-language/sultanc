@@ -78,7 +78,13 @@
     // Whether the spilling allocation may give a register to values whose
     // lifetimes only overlap in their holes (register_allocator.sn
     // خصص_السجلات_بالمقاطع).
-    بالمقاطع: منطقي
+    بالمقاطع: منطقي,
+    // Values a debugger reads (source variables at -O0), one group of
+    // registers per variable: each value stays live, and so in its register
+    // or spill slot, wherever it is its variables' current value, not only
+    // up to its last use (liveness.sn, خروج_ممتد_لكتل_تخصيص). Empty:
+    // liveness alone.
+    القيم_الممتدة: متجه متجه طبيعي
 };
 
 عام نوع تعيين_سجل = {
@@ -293,6 +299,44 @@
         وإلا { النهاية := الوسط; };
     }
     أرجع اختياري.لا_شيء();
+}
+
+// Debug facts: the physical registers each allocation position writes (its
+// definitions' registers, fixed or assigned, and the registers it
+// clobbers). A value's register still holds it after its last use until one
+// of these writes it (codegen/debug/value_ranges.sn).
+عام عرف سجلات_مكتوبة_بالمواضع(
+    المسألة: &مسألة_تخصيص,
+    التعيينات: &متجه تعيين_سجل
+): متجه متجه معرف_سجل_فعلي {
+    دع الناتج: متغير متجه متجه معرف_سجل_فعلي = [];
+    دع ف: متغير طبيعي = 0;
+    طالما (ف < (الطول((*المسألة).التعليمات) مثل طبيعي)) {
+        دع التعليمة: &حقيقة_تعليمة_تخصيص = &(*المسألة).التعليمات[ف];
+        دع الموضع: طبيعي = (*التعليمة).الموضع;
+        طالما ((الطول(الناتج) مثل طبيعي) <= الموضع) {
+            دع فارغة: متجه معرف_سجل_فعلي = [];
+            ألحق(الناتج, فارغة);
+        }
+        دع ع: متغير طبيعي = 0;
+        طالما (ع < (الطول((*التعليمة).التعريفات) مثل طبيعي)) {
+            طابق (*التعليمة).التعريفات[ع].ثابت مع
+            | اختياري.موجود(الفعلي) -> { ألحق(الناتج[الموضع], الفعلي); }
+            | اختياري.لا_شيء -> {
+                طابق ابحث_تعيين_سجل(التعيينات, (*التعليمة).التعريفات[ع].السجل) مع
+                | اختياري.موجود(الفعلي) -> { ألحق(الناتج[الموضع], الفعلي); }
+                | اختياري.لا_شيء -> { };
+            };
+            ع := ع + 1;
+        }
+        ع := 0;
+        طالما (ع < (الطول((*التعليمة).السجلات_المفسدة) مثل طبيعي)) {
+            ألحق(الناتج[الموضع], (*التعليمة).السجلات_المفسدة[ع]);
+            ع := ع + 1;
+        }
+        ف := ف + 1;
+    }
+    أرجع الناتج;
 }
 
 عام نوع سبب_حاجة_انسكاب = {

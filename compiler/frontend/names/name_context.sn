@@ -892,7 +892,6 @@
     أرجع نتيجة_إضافة.أضيف(الرمز);
 }
 
-
 // Canonical read-only Symbol -> Runtime-owned primitive identity query.
 // Source spellings are confined to primitive_registry.sn registration. The
 // compact binding table may outlive the larger Name context at phase boundaries.
@@ -977,7 +976,6 @@
     };
     أرجع اختياري.موجود(الحقيقة);
 }
-
 
 عام عرف اسم_مقنن_عند_استعلام(
     السياق: &سياق_استعلامات_أسماء,

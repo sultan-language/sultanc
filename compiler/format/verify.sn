@@ -8,7 +8,7 @@
 استورد compiler.frontend.parser.result;
 استورد compiler.backend.target.target_model;
 استورد compiler.format.layout;
-استورد std.text.from_bytes;
+استورد المكتبة.نصوص.من_بايتات;
 
 // The formatter's check of its own output, run on every formatting: the
 // formatted text is lexed again by the canonical lexer and must hold the same

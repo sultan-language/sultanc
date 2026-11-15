@@ -1,6 +1,6 @@
-استورد os.platform.unix.linux.syscalls.operations;
-استورد os.platform.unix.linux.syscalls.selection;
-استورد os.platform.unix.linux.syscalls.kernel_result;
+استورد نظام_التشغيل.منصات.يونكس.لينكس.نداءات_النظام.عمليات;
+استورد نظام_التشغيل.منصات.يونكس.لينكس.نداءات_النظام.اختيار;
+استورد نظام_التشغيل.منصات.يونكس.لينكس.نداءات_النظام.نتيجة_النواة;
 
 إذا (الهدف.المنصة == «linux» || الهدف.المنصة == «android») {
     // prlimit64 on the calling process (pid 0), RLIMIT_STACK (3). Linux grows the main thread's stack on demand up to the
@@ -45,7 +45,7 @@
 // to the current soft limit (vm_map_growstack), so raising the soft limit
 // takes effect at run time, within that reservation.
 إذا (الهدف.المنصة == «freebsd») {
-    استورد os.platform.unix.freebsd.uapi;
+    استورد نظام_التشغيل.منصات.يونكس.فري_بي_إس_دي.واجهة_النواة;
 
     عام عرف ارفع_حد_المكدس_لينكس(المطلوب: ط64): منطقي {
         دع الحالي: متغير متجه ط64 = [0, 0];

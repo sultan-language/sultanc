@@ -7,7 +7,7 @@
 استورد compiler.ispeak.format.facts;
 استورد compiler.diagnostics.schema;
 استورد compiler.ispeak.ispeak;
-استورد std.text.compare;
+استورد المكتبة.نصوص.مقارنة;
 
 // Same 200,000 calls through the dynamic API, but with no contextual values.
 عرف سياق_فارغ(): حقائق_سياق_رسالة {

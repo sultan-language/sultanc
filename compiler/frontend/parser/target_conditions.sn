@@ -1,4 +1,4 @@
-استورد std.text.from_bytes;
+استورد المكتبة.نصوص.من_بايتات;
 استورد compiler.backend.target.target_model;
 استورد compiler.backend.target.target_spelling;
 استورد compiler.frontend.identifier_identity;

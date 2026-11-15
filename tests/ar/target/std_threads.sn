@@ -9,13 +9,13 @@
 // mutex. Thread creation (clone and its per-architecture argument order,
 // thr_new, the thread pointer), futex waits and atomics are per OS and
 // architecture.
-استورد std.io.print;
-استورد std.text.number;
-استورد std.text.transform;
-استورد std.thread.thread;
-استورد std.sync.channel;
-استورد std.sync.mutex;
-استورد std.sync.arc;
+استورد المكتبة.دخ.اطبع;
+استورد المكتبة.نصوص.أعداد;
+استورد المكتبة.نصوص.تحويل;
+استورد المكتبة.خيوط.خيط;
+استورد المكتبة.تزامن.قناة;
+استورد المكتبة.تزامن.قفل;
+استورد المكتبة.تزامن.مشترك;
 
 عرف اجمع_المدى(الأول: ط64, الأخير: ط64): ط64 {
     دع المجموع: متغير ط64 = 0;

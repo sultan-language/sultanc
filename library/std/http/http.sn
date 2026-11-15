@@ -1,0 +1,23 @@
+// The root file of std.http: the Arabic spellings of its modules
+// (docs/en/reference/modules-and-imports.md, "Module spellings"). An import may
+// use either name; both name one module.
+
+module body { ar: جسم };
+module client { ar: عميل };
+module cookies { ar: كعكات };
+module deadline { ar: مهلة };
+module handover { ar: تسليم };
+module headers { ar: ترويسات };
+module limits { ar: حدود };
+module locale { ar: لغة_الطلب };
+module media_type { ar: نوع_الوسائط };
+module model { ar: نموذج };
+module multipart { ar: متعدد_الأجزاء };
+module query { ar: استعلام };
+module route_table { ar: جدول_المسارات };
+module router { ar: موجه };
+module server { ar: خادم };
+module shutdown { ar: إيقاف };
+module transport { ar: ناقل };
+module http1 { ar: ويب1 };
+module http2 { ar: ويب2 };

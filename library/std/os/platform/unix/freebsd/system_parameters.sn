@@ -1,8 +1,8 @@
-استورد os.error;
-استورد os.platform.unix.linux.syscalls.operations;
-استورد os.platform.unix.linux.syscalls.selection;
-استورد os.platform.unix.linux.syscalls.kernel_result;
-استورد os.platform.unix.freebsd.uapi;
+استورد نظام_التشغيل.أخطاء;
+استورد نظام_التشغيل.منصات.يونكس.لينكس.نداءات_النظام.عمليات;
+استورد نظام_التشغيل.منصات.يونكس.لينكس.نداءات_النظام.اختيار;
+استورد نظام_التشغيل.منصات.يونكس.لينكس.نداءات_النظام.نتيجة_النواة;
+استورد نظام_التشغيل.منصات.يونكس.فري_بي_إس_دي.واجهة_النواة;
 
 // FreeBSD kernel parameters read through __sysctl(name, namelen, old,
 // oldlenp, new, newlen), the call libc's sysctl(3) wraps. Nothing here is

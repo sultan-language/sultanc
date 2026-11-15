@@ -12,13 +12,13 @@
 // read past the request; the connection is its own from then on (it closes
 // it). Without a callback, a 101 or CONNECT answer closes the connection
 // and a chunked empty body is sent as an empty body.
-استورد text.compare;
-استورد io.writer;
-استورد http.model;
-استورد http.headers;
-استورد http.transport;
-استورد http.http1.chunked;
-استورد http.http1.common;
+استورد نصوص.مقارنة;
+استورد دخ.كاتب;
+استورد ويب.نموذج;
+استورد ويب.ترويسات;
+استورد ويب.ناقل;
+استورد ويب.ويب1.مجزأ;
+استورد ويب.ويب1.مشترك;
 
 عام نوع مسلم_اتصال_ويب<S> = دالة(&S, &طلب_ويب_مخزن, &استجابة_ويب_مخزنة, ناقل_ويب, متجه ط8): فراغ;
 عام مرادف connection_handover = مسلم_اتصال_ويب;

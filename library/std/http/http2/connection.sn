@@ -13,12 +13,12 @@
 // Violations end the connection with GOAWAY or the stream with RST_STREAM,
 // with the error codes of RFC 9113 5.4.
 
-استورد io.writer;
-استورد text.from_bytes;
-استورد http.model;
-استورد http.transport;
-استورد http.http2.frame;
-استورد http.http2.hpack;
+استورد دخ.كاتب;
+استورد نصوص.من_بايتات;
+استورد ويب.نموذج;
+استورد ويب.ناقل;
+استورد ويب.ويب2.إطار;
+استورد ويب.ويب2.إتش_باك;
 
 عام نوع خطأ_ويب2 =
     | اتصال بنوع طبيعي

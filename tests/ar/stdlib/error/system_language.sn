@@ -7,9 +7,9 @@
 // std.text.system_language (docs/en/reference/errors.md): the program's locale from its
 // environment. SULTANC_LANG comes first; a POSIX value loses its encoding
 // and its «_» becomes «-». Native and interpreter agree.
-استورد المكتبة.نصوص.language;
-استورد المكتبة.نصوص.system_language;
-استورد المكتبة.نصوص.compare;
+استورد المكتبة.نصوص.لغة;
+استورد المكتبة.نصوص.لغة_النظام;
+استورد المكتبة.نصوص.مقارنة;
 
 عرف الرئيسية(): عدد {
     دع اللغة: لغة = لغة_من_البيئة();

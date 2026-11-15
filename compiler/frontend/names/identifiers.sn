@@ -1,5 +1,5 @@
 استورد compiler.source.span;
-استورد std.process.panic;
+استورد المكتبة.عمليات.انهيار;
 
 // 32-bit: the identities are vector positions; every one is made by
 // معرف_نطاق_من / معرف_اسم_من / معرف_رمز_من, which checks it (ط32_متحقق, compiler/source/span.sn).

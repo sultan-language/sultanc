@@ -1,8 +1,8 @@
-استورد text.compare;
-استورد text.from_bytes;
-استورد text.substring;
-استورد uri.uri;
-استورد http.model;
+استورد نصوص.مقارنة;
+استورد نصوص.من_بايتات;
+استورد نصوص.مقطع;
+استورد عنوان_موحد.عنوان_موحد;
+استورد ويب.نموذج;
 
 // URL query helpers preserve duplicate keys. They apply the conventional
 // application/x-www-form-urlencoded '+' decoding used by web frameworks.
@@ -94,7 +94,6 @@
     }
     أرجع اختياري.لا_شيء();
 }
-
 
 عام عرف اسم_زوج_استعلام_ويب(الزوج: &زوج_استعلام_ويب): نص { أرجع انسخ_نص_ويب(&(*الزوج).الاسم); }
 عام عرف قيمة_زوج_استعلام_ويب(الزوج: &زوج_استعلام_ويب): نص { أرجع انسخ_نص_ويب(&(*الزوج).القيمة); }

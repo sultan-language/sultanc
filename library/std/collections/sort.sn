@@ -1,4 +1,4 @@
-استورد text.compare;
+استورد نصوص.مقارنة;
 
 // Comparator-driven in-place heap sort. A negative comparator result means
 // the first value sorts before the second value. The implementation swaps

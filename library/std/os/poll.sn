@@ -106,10 +106,10 @@
 
 // ---- Linux and Android: epoll ----
 إذا ((الهدف.المنصة == «linux» || الهدف.المنصة == «android») && الهدف.المعمارية != «ve») {
-    استورد os.platform.unix.linux.uapi;
-    استورد os.platform.unix.linux.syscalls.operations;
-    استورد os.platform.unix.linux.syscalls.selection;
-    استورد os.platform.unix.linux.syscalls.kernel_result;
+    استورد نظام_التشغيل.منصات.يونكس.لينكس.واجهة_النواة;
+    استورد نظام_التشغيل.منصات.يونكس.لينكس.نداءات_النظام.عمليات;
+    استورد نظام_التشغيل.منصات.يونكس.لينكس.نداءات_النظام.اختيار;
+    استورد نظام_التشغيل.منصات.يونكس.لينكس.نداءات_النظام.نتيجة_النواة;
 
     عام عرف هل_المستطلع_مدعوم(): منطقي { أرجع صواب; }
 
@@ -268,9 +268,9 @@
     // 64-bit little-endian targets; elsewhere, or when the kernel refuses
     // (seccomp, io_uring_disabled), the poller is epoll.
     إذا (الهدف.المعمارية == «x86_64» || الهدف.المعمارية == «aarch64» || الهدف.المعمارية == «riscv64» || الهدف.المعمارية == «loongarch64») {
-        استورد sync.atomic;
-        استورد os.platform.unix.linux.virtual_memory;
-        استورد env.system;
+        استورد تزامن.ذري;
+        استورد نظام_التشغيل.منصات.يونكس.لينكس.ذاكرة_افتراضية;
+        استورد بيئة.نظام;
 
         مرادف اقرأ_كلمة_حلقة = بدائي_اقرأ_ذاكرة_الآلة;
         مرادف اكتب_كلمة_حلقة = بدائي_اكتب_ذاكرة_الآلة;
@@ -610,9 +610,9 @@
 
 // ---- FreeBSD: kqueue and kevent as system calls ----
 إذا (الهدف.المنصة == «freebsd») {
-    استورد os.platform.unix.linux.syscalls.operations;
-    استورد os.platform.unix.linux.syscalls.selection;
-    استورد os.platform.unix.linux.syscalls.kernel_result;
+    استورد نظام_التشغيل.منصات.يونكس.لينكس.نداءات_النظام.عمليات;
+    استورد نظام_التشغيل.منصات.يونكس.لينكس.نداءات_النظام.اختيار;
+    استورد نظام_التشغيل.منصات.يونكس.لينكس.نداءات_النظام.نتيجة_النواة;
 
     عرف حجم_حدث_كيو(): طبيعي { أرجع 64; }
 
@@ -688,7 +688,7 @@
 
 // ---- macOS: kqueue and kevent from libSystem ----
 إذا (الهدف.المنصة == «macos») {
-    استورد os.platform.unix.apple.darwin.file_descriptors;
+    استورد نظام_التشغيل.منصات.يونكس.آبل.داروين.واصفات_الملفات;
 
     خارجي «/usr/lib/libSystem.B.dylib» عرف kqueue(): ص32;
     خارجي «/usr/lib/libSystem.B.dylib» عرف kevent(

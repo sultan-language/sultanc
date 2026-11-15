@@ -1,6 +1,6 @@
-استورد unicode.data.segmentation;
-استورد unicode.algorithms.lookup;
-استورد unicode.algorithms.text_offsets;
+استورد يونيكود.بيانات.تقطيع;
+استورد يونيكود.خوارزميات.بحث;
+استورد يونيكود.خوارزميات.إزاحات_النص;
 
 // Unicode 18.0 UAX #29 default sentence boundaries. Scalar offsets.
 عرف صنف_جملة(القيمة: ط32): ط32 {

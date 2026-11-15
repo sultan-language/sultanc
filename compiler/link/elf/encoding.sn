@@ -1,4 +1,4 @@
-استورد std.encoding.binary;
+استورد المكتبة.ترميز.ثنائي;
 استورد compiler.backend.target.target_model;
 
 // ELF executable serialization helpers owned by the linker. Relocatable-object
@@ -181,7 +181,6 @@
     };
     أرجع اختياري.موجود(القيمة مثل طبيعي);
 }
-
 
 // R_X86_64_32S stores a signed 32-bit absolute address. Its addend can
 // legitimately produce a negative value (including when the symbol is zero),

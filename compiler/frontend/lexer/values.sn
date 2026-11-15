@@ -2,7 +2,7 @@
 استورد compiler.frontend.lexer.payload;
 استورد compiler.frontend.lexer.payload_registry;
 استورد compiler.source.span;
-استورد std.bytes.range;
+استورد المكتبة.بايتات.نطاق;
 عام نوع رمز_مصدر = {
     النوع: رمز,
     النطاق: نطاق,

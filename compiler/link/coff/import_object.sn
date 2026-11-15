@@ -4,7 +4,7 @@
 استورد compiler.link.coff.reader;
 استورد compiler.link.coff.object_ingest;
 استورد compiler.link.coff.target_policy;
-استورد std.text.from_bytes;
+استورد المكتبة.نصوص.من_بايتات;
 
 عام نوع نتيجة_استيعاب_كائن_استيراد_كوف =
     | ليس_كائن_استيراد

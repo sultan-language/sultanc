@@ -25,9 +25,9 @@
 //
 // A mutex is shared between threads through an Arc (`مشترك<قفل<ق>>`), as in
 // Rust. It is not copyable: copying it would make two locks guard one value.
-استورد sync.atomic;
-استورد sync.arc;
-استورد os.wait_address;
+استورد تزامن.ذري;
+استورد تزامن.مشترك;
+استورد نظام_التشغيل.انتظار_العنوان;
 
 عام نوع قفل<ق> = {
     الحالة: ذرة_ط32,

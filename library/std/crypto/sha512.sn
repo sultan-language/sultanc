@@ -2,8 +2,8 @@
 // 64-bit word arithmetic is modular through crypto.words because SultanC
 // arithmetic traps on overflow.
 
-استورد crypto.words;
-استورد crypto.words64;
+استورد تشفير.كلمات;
+استورد تشفير.كلمات64;
 
 عرف ثوابت_شا512(): متجه طبيعي {
     دع الثوابت: متجه طبيعي = [

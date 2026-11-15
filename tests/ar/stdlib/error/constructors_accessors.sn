@@ -4,8 +4,8 @@
 // تفاضلي: نعم
 // نظير: tests/en/stdlib/error/constructors_accessors.sn
 // std.error: every constructor and accessor.
-استورد المكتبة.أخطاء.failure;
-استورد المكتبة.نصوص.compare;
+استورد المكتبة.أخطاء.فشل;
+استورد المكتبة.نصوص.مقارنة;
 
 عرف الرئيسية(): عدد {
     دع فارغ: نص = «»;

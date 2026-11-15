@@ -1,5 +1,5 @@
-استورد std.text.from_bytes;
-استورد std.text.compare;
+استورد المكتبة.نصوص.من_بايتات;
+استورد المكتبة.نصوص.مقارنة;
 // Canonical source-content provider. Physical source identity remains the
 // registered source path; an active overlay changes only the bytes supplied
 // to the existing frontend pipeline.
@@ -23,7 +23,6 @@
     دع المزود: مزود_مصادر = { التراكبات: التراكبات };
     أرجع المزود;
 }
-
 
 عام عرف موضع_تراكب_مصدر(
     المزود: &مزود_مصادر,

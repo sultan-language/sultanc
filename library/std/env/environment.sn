@@ -1,8 +1,8 @@
-استورد env.system;
-استورد env.table;
-استورد text.from_bytes;
-استورد os.environment;
-استورد os.error;
+استورد بيئة.نظام;
+استورد بيئة.جدول;
+استورد نصوص.من_بايتات;
+استورد نظام_التشغيل.بيئة;
+استورد نظام_التشغيل.أخطاء;
 
 // A program's environment variables, working directory and temporary
 // directory (Rust std::env::var, current_dir, temp_dir; Go os.Getenv,

@@ -10,12 +10,12 @@
 // The stack mapping (خصص_مكدس_خيط_لينكس) also serves FreeBSD's thr_new
 // (os.platform.unix.freebsd.threads): mmap, mprotect and munmap take the same
 // arguments there, and the flags come from the selected kernel's UAPI.
-استورد os.platform.unix.linux.syscalls.kernel_result;
-استورد os.platform.unix.linux.syscalls.operations;
-استورد os.platform.unix.linux.syscalls.selection;
-استورد os.platform.unix.linux.virtual_memory;
-استورد os.error;
-استورد os.allocation;
+استورد نظام_التشغيل.منصات.يونكس.لينكس.نداءات_النظام.نتيجة_النواة;
+استورد نظام_التشغيل.منصات.يونكس.لينكس.نداءات_النظام.عمليات;
+استورد نظام_التشغيل.منصات.يونكس.لينكس.نداءات_النظام.اختيار;
+استورد نظام_التشغيل.منصات.يونكس.لينكس.ذاكرة_افتراضية;
+استورد نظام_التشغيل.أخطاء;
+استورد نظام_التشغيل.تخصيص;
 إذا ((الهدف.المنصة == «linux» || الهدف.المنصة == «android») && الهدف.المعمارية != «ve») { استورد os.platform.unix.linux.uapi; }
 إذا (الهدف.المنصة == «freebsd») { استورد os.platform.unix.freebsd.uapi; }
 
@@ -154,7 +154,7 @@
     عرف أعلام_خيط_لينكس(): ط64 {
         // VM|FS|FILES|SIGHAND|THREAD|SYSVSEM|PARENT_SETTID|CHILD_CLEARTID.
         أرجع 0x00000100 | 0x00000200 | 0x00000400 | 0x00000800
-           | 0x00010000 | 0x00040000 | 0x00100000 | 0x00200000;
+            | 0x00010000 | 0x00040000 | 0x00100000 | 0x00200000;
     }
 
     // The new thread's tid is written to the cell at the top of its stack

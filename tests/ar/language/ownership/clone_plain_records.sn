@@ -7,7 +7,7 @@
 // numbers, floats, booleans and characters copy element by element; integer
 // vectors (an alias of an integer included) copy with one extend. Each copy
 // is independent of its source, and records that own text still copy deeply.
-استورد المكتبة.نصوص.compare;
+استورد المكتبة.نصوص.مقارنة;
 
 نوع خلية = { أ: طبيعي };
 نوع مختلط = { س: ص32, ص: ع64, ع: ط8 };
