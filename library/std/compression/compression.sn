@@ -1,9 +1,0 @@
-// The root file of std.compression: the Arabic spellings of its modules
-// (docs/en/reference/modules-and-imports.md, "Module spellings"). An import may
-// use either name; both name one module.
-
-module deflate { ar: ديفليت };
-module gzip { ar: جي_زيب };
-module lzma { ar: إل_زد_إم_إيه };
-module xz { ar: إكس_زد };
-module zstd { ar: زد_ستد };

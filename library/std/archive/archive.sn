@@ -1,7 +1,0 @@
-// The root file of std.archive: the Arabic spellings of its modules
-// (docs/en/reference/modules-and-imports.md, "Module spellings"). An import may
-// use either name; both name one module.
-
-module ar { ar: آر };
-module tar { ar: تار };
-module zip { ar: زيب };

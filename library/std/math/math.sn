@@ -1,8 +1,0 @@
-// The root file of std.math: the Arabic spellings of its modules
-// (docs/en/reference/modules-and-imports.md, "Module spellings"). An import may
-// use either name; both name one module.
-
-module float { ar: عشري };
-module integer { ar: صحيح };
-module trigonometry { ar: مثلثات };
-module wrapping { ar: التفاف };

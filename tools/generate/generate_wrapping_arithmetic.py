@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Writes library/std/math/wrapping.sn: wrapping, checked and saturating
+"""Writes library/core/math/wrapping.sn: wrapping, checked and saturating
 integer arithmetic for every integer type (Rust's wrapping_*/checked_*/
 saturating_*). The wrapping operations are the
 compiler's non-trapping intrinsics; checked and saturating ones detect the
@@ -10,7 +10,7 @@ Regenerate with: python3 tools/generate/generate_wrapping_arithmetic.py
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-OUTPUT = ROOT / "library/std/math/wrapping.sn"
+OUTPUT = ROOT / "library/core/math/wrapping.sn"
 
 # (Arabic type, English suffix, bits, signed)
 TYPES = [

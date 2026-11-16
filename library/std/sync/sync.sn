@@ -3,10 +3,13 @@
 // use either name; both name one module.
 
 module arc { ar: مشترك };
-module atomic { ar: ذري };
 module cancel { ar: إلغاء };
 module channel { ar: قناة };
 module condvar { ar: شرط_انتظار };
 module mutex { ar: قفل };
 module once { ar: مرة };
 module rwlock { ar: قفل_قراءة_كتابة };
+
+// Re-exported: these children are modules and folders of alloc and core, at the same
+// paths (docs/en/reference/std-layers.md). One file, one module.
+module atomic = core.sync.atomic { ar: ذري };

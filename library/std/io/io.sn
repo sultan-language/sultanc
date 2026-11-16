@@ -5,7 +5,12 @@
 module buffered_writer { ar: كاتب_مؤقت };
 module log { ar: سجل };
 module print { ar: اطبع };
+module print_failure { ar: اطبع_فشل };
+module print_formatted { ar: اطبع_منسقا };
 module println { ar: اطبع_سطر };
 module read_line { ar: اقرأ_سطر };
 module reader { ar: قارئ };
-module writer { ar: كاتب };
+
+// Re-exported: these children are modules and folders of alloc and core, at the same
+// paths (docs/en/reference/std-layers.md). One file, one module.
+module writer = core.io.writer { ar: كاتب };

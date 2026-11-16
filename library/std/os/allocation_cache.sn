@@ -1,6 +1,8 @@
-// The allocation entry points the compiler binds (compiler/runtime/
-// primitive_runtime_abi.sn): os/allocation.sn's allocator with the running
-// thread's cache (Nahr item 2; see "Per-thread caches" there). The thread is
+// std's global allocator (library/core/memory/allocator.sn): the entry
+// points marked `@@تخصيص_عام`, `@@إعادة_تخصيص_عام` and `@@تحرير_عام`, which
+// MSIR lowering binds when the program marks none of its own
+// (compiler/msir/semantic_lowering.sn, اربط_المخصص_العام_مسير):
+// os/allocation.sn's allocator with the running thread's cache (Nahr item 2; see "Per-thread caches" there). The thread is
 // named by the address of a local variable, which falls in its stack slot;
 // this module holds the one conversion of an address to an integer, so
 // os/allocation.sn stays within what older compilers lower (a compiler
@@ -20,12 +22,16 @@
     }
     عرف مخبأ_الخيط_الحالي(): ط64 { أرجع مخبأ_من_عنوان_مكدس_مخصص(عنوان_في_مكدس_الخيط()); }
 
+    @@تخصيص_عام
+
     عام عرف خصص_ذاكرة_التشغيل_المخبأ(الحجم: ط64): ط64 {
         أرجع خصص_بمخبأ_مخصص(مخبأ_الخيط_الحالي(), الحجم);
     }
+    @@تحرير_عام
     عام عرف حرر_ذاكرة_التشغيل_المخبأ(العنوان: ط64): فراغ {
         حرر_بمخبأ_مخصص(مخبأ_الخيط_الحالي(), العنوان);
     }
+    @@إعادة_تخصيص_عام
     عام عرف أعد_تخصيص_ذاكرة_التشغيل_المخبأ(العنوان: ط64, الحجم: ط64): ط64 {
         أرجع أعد_تخصيص_بمخبأ_مخصص(مخبأ_الخيط_الحالي(), العنوان, الحجم);
     }
@@ -33,18 +39,24 @@
     عرف عداد_الخيط_الحالي(الإزاحة: ط64): ط64 { أرجع عداد_مخبأ_مخصص(مخبأ_الخيط_الحالي(), الإزاحة); }
 }
 
-// No per-thread caches: the plain entry points under the bound names.
+// No per-thread caches: the plain entry points, marked the same way.
 إذا ((الهدف.المنصة == «linux» || الهدف.المنصة == «android» || الهدف.المنصة == «freebsd») && الهدف.المعمارية != «ve» && الهدف.عرض_المؤشر == «32») {
+    @@تخصيص_عام
     عام عرف خصص_ذاكرة_التشغيل_المخبأ(الحجم: ط32): ط32 { أرجع خصص_ذاكرة_التشغيل(الحجم); }
+    @@تحرير_عام
     عام عرف حرر_ذاكرة_التشغيل_المخبأ(العنوان: ط32): فراغ { حرر_ذاكرة_التشغيل(العنوان); }
+    @@إعادة_تخصيص_عام
     عام عرف أعد_تخصيص_ذاكرة_التشغيل_المخبأ(العنوان: ط32, الحجم: ط32): ط32 {
         أرجع أعد_تخصيص_ذاكرة_التشغيل(العنوان, الحجم);
     }
     عرف عداد_الخيط_الحالي(الإزاحة: ط64): ط64 { أرجع عداد_مخبأ_مخصص(0, الإزاحة); }
 }
 إذا (الهدف.المعمارية == «wasm32») {
+    @@تخصيص_عام
     عام عرف خصص_ذاكرة_التشغيل_المخبأ(الحجم: ط32): ط32 { أرجع خصص_ذاكرة_التشغيل(الحجم); }
+    @@تحرير_عام
     عام عرف حرر_ذاكرة_التشغيل_المخبأ(العنوان: ط32): فراغ { حرر_ذاكرة_التشغيل(العنوان); }
+    @@إعادة_تخصيص_عام
     عام عرف أعد_تخصيص_ذاكرة_التشغيل_المخبأ(العنوان: ط32, الحجم: ط32): ط32 {
         أرجع أعد_تخصيص_ذاكرة_التشغيل(العنوان, الحجم);
     }

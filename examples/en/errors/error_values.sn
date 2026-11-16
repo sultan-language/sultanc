@@ -6,6 +6,7 @@ import std.error.from_os;
 import std.fs.read_file;
 import std.io.println;
 import std.text.number;
+import std.io.print_failure;
 
 def read_port(text: string): result int, Error {
     match parse_int(&text) with

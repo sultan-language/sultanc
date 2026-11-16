@@ -135,6 +135,8 @@ def pinned_codes(): vector string {
     append(result, "SULTANC-HOST-OUT-OF-MEMORY");
     append(result, "SULTANC-LINK-SYMBOL-TYPE-MISMATCH");
     append(result, "SULTANC-EXTERN-SYMBOL-CONFLICT");
+    append(result, "SULTANC-PANIC-HANDLER-INVALID");
+    append(result, "SULTANC-GLOBAL-ALLOCATOR-INVALID");
     append(result, "SULTANC-LINK-EXTERNAL-SYMBOL-UNSUPPORTED");
     append(result, "SULTANC-OBJECT-RELOCATION-UNSUPPORTED");
     append(result, "SULTANC-OBJECT-FORMAT-UNSUPPORTED");
@@ -232,6 +234,9 @@ def pinned_codes(): vector string {
     append(result, "SULTANC-FMT-UNFORMATTED");
     append(result, "SULTANC-MODULE-SPELLING-NO-CHILD");
     append(result, "SULTANC-MODULE-SPELLING-SHARED");
+    append(result, "SULTANC-MODULE-REEXPORT-SHADOWS");
+    append(result, "SULTANC-MODULE-REEXPORT-UNAVAILABLE");
+    append(result, "SULTANC-MODULE-REEXPORT-CYCLE");
     append(result, "SULTANC-MODULE-SPELLING-RESERVED");
     append(result, "SULTANC-MODULE-OUTSIDE-ROOT-FILE");
     append(result, "SULTANC-TEST-PARAMETERS");

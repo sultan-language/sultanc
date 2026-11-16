@@ -198,7 +198,12 @@
     قواعد_السجلات: هوية_قواعد_سجلات_هدف,
     التركيب_الأصلي: هوية_تركيب_هدف_أصلي,
     نوع_مخرج_الآلة: نوع_مخرج_آلة_هدف,
-    الدعم: مستوى_دعم_هدف
+    الدعم: مستوى_دعم_هدف,
+    // The program defines the canonical allocator interface's entry points
+    // itself (std/memory/allocator.sn): the driver sets it once MSIR bound
+    // them, so a target without std's allocator (bare metal) has a heap too,
+    // as Rust's #[global_allocator] gives a no_std program one.
+    مخصص_البرنامج: منطقي
 };
 
 عام عرف تركيب_الهدف_الأصلي(الهدف: &واصف_هدف): هوية_تركيب_هدف_أصلي {
@@ -234,7 +239,8 @@
         قواعد_السجلات: (*القيمة).قواعد_السجلات,
         التركيب_الأصلي: (*القيمة).التركيب_الأصلي,
         نوع_مخرج_الآلة: (*القيمة).نوع_مخرج_الآلة,
-        الدعم: (*القيمة).الدعم
+        الدعم: (*القيمة).الدعم,
+        مخصص_البرنامج: (*القيمة).مخصص_البرنامج
     };
     أرجع الناتج;
 }
@@ -353,7 +359,7 @@
 
 // The widest integer the target has atomic read-modify-write instructions
 // (swap, compare-and-swap, fetch-and-op) for: 64, 32 or 0. std declares
-// its atomics only up to it (library/std/sync/atomic.sn, whose guards spell
+// its atomics only up to it (library/core/sync/atomic.sn, whose guards spell
 // the Cortex-M targets out, since a new target-condition field would not
 // parse with the bootstrap compilers), and the LLVM provider rejects wider
 // ones (provider/llvm/freestanding_check.sn). Atomic loads

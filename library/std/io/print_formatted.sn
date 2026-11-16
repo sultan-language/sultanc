@@ -1,0 +1,56 @@
+// std.io.print_formatted (المكتبة.دخ.اطبع_منسقا): formatted output to standard
+// output and standard error, after Rust's print!, println!, eprint! and
+// eprintln!, which live in std::io (`std::io::_print`) while the formatting
+// itself is core::fmt.
+//
+// std.fmt only formats: into a text, a formatter or a std.io writer, with no
+// process stream and no OS. Writing to the process's standard streams is
+// output, so it is here, in std.io, next to print and println. A literal
+// format string given to these functions is checked at compile time like
+// std.fmt's own (compiler/frontend/semantic_pipeline.sn lists this file).
+
+استورد تنسيق.تنسيق;
+استورد دخ.اطبع;
+
+// Standard output and error: one write of the whole formatted text.
+عرف اطبع_إلى(القالب: نص, الوسائط: متجه قيمة_تنسيق, سطر: منطقي, الخطأ_القياسي: منطقي): نتيجة طبيعي, خطأ_تنسيق {
+    دع المنسق: متغير منسق = أنشئ_منسقا();
+    نسق_في(&متغير المنسق, القالب, الوسائط)؟;
+    إذا (سطر) { ألحق(المنسق.الناتج, 0x0A); };
+    دع المكتوب: نتيجة عدد, عدد = اكتب_بايتات_خرج_أو_خطأ(&المنسق.الناتج, الخطأ_القياسي);
+    طابق المكتوب مع
+    | نتيجة.خطأ(الرمز) -> { أرجع نتيجة.خطأ(خطأ_تنسيق.فشل_الكتابة(الرمز)); }
+    | نتيجة.نجح(العدد) -> { أرجع نتيجة.نجح(العدد مثل طبيعي); };
+}
+
+عرف اكتب_بايتات_خرج_أو_خطأ(البايتات: &متجه ط8, الخطأ_القياسي: منطقي): نتيجة عدد, عدد {
+    إذا (الخطأ_القياسي) { أرجع اكتب_بايتات_خطأ(البايتات); };
+    أرجع اكتب_بايتات_خرج(البايتات);
+}
+
+// Rust's print!, println!, eprint!, eprintln! (Go's Printf and Fprintf to
+// os.Stderr); the line forms add "\n".
+عام عرف اطبع_منسقا(القالب: نص, الوسائط: متجه قيمة_تنسيق): نتيجة طبيعي, خطأ_تنسيق {
+    أرجع اطبع_إلى(القالب, الوسائط, خطأ, خطأ);
+}
+
+عام عرف اطبع_سطرا_منسقا(القالب: نص, الوسائط: متجه قيمة_تنسيق): نتيجة طبيعي, خطأ_تنسيق {
+    أرجع اطبع_إلى(القالب, الوسائط, صواب, خطأ);
+}
+
+عام عرف اطبع_خطأ_منسقا(القالب: نص, الوسائط: متجه قيمة_تنسيق): نتيجة طبيعي, خطأ_تنسيق {
+    أرجع اطبع_إلى(القالب, الوسائط, خطأ, صواب);
+}
+
+عام عرف اطبع_سطر_خطأ_منسقا(القالب: نص, الوسائط: متجه قيمة_تنسيق): نتيجة طبيعي, خطأ_تنسيق {
+    أرجع اطبع_إلى(القالب, الوسائط, صواب, صواب);
+}
+
+// ---- English names -------------------------------------------------------------
+// print/println would clash with std.io's print/println when a program
+// imports both, so the printing aliases carry _fmt like write_fmt.
+
+عام مرادف print_fmt = اطبع_منسقا;
+عام مرادف println_fmt = اطبع_سطرا_منسقا;
+عام مرادف eprint_fmt = اطبع_خطأ_منسقا;
+عام مرادف eprintln_fmt = اطبع_سطر_خطأ_منسقا;

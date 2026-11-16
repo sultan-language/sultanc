@@ -186,7 +186,7 @@ def main():
         "// interface of std's direct-kernel provider (platform/unix/linux), which",
         "// FreeBSD shares for the calls that take Linux's arguments; the",
         "// `..._فري_بي_إس_دي` ones serve FreeBSD's own code paths.",
-        "استورد os.error;",
+        "استورد نظام_التشغيل.أخطاء;",
         "",
     ]
     for arch, machine in ARCHES.items():

@@ -1,5 +1,0 @@
-// The root file of std.random: the Arabic spellings of its modules
-// (docs/en/reference/modules-and-imports.md, "Module spellings"). An import may
-// use either name; both name one module.
-
-module prng { ar: مولد };

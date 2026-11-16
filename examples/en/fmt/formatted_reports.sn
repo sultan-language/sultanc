@@ -1,5 +1,6 @@
 // Format a value with explicit specifiers: formatted_reports.
 import std.fmt.fmt;
+import std.io.print_formatted;
 
 
 def main(): int {

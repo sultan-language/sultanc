@@ -8,6 +8,7 @@ import std.error.failure;
 import std.text.language;
 import std.text.system_language;
 import std.io.println;
+import std.io.print_failure;
 
 def load_settings(): result int, Error {
     let empty: mutable Error = error_with_kind("settings", "فارغ", "ملف الإعدادات فارغ");

@@ -27,7 +27,7 @@
 //   عرض_الذريات_للهدف: read-modify-write and compare-and-swap up to 32 bits
 //   on ARMv7-M, none on ARMv6-M; atomic loads and stores up to 32 bits) is
 //   rejected: it would call an __atomic_*/__sync_* routine. std declares no
-//   such atomics for these targets (library/std/sync/atomic.sn), so only a
+//   such atomics for these targets (library/core/sync/atomic.sn), so only a
 //   direct use of the compiler's atomic intrinsics reaches this check.
 // 64-bit division is expanded earlier (wide_division.sn), as on every
 // 32-bit target. The facts come from the target (target_model.sn

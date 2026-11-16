@@ -3,6 +3,24 @@
 #include "semantic/body_internal.h"
 #include "kernel/memory/memory.h"
 
+/* Whether an address operand is a text literal ("..." or «...»). */
+int __Body_Is_Text_Literal_Operand__(const __Ast_Expression__ *__Operand__)
+{
+    return __Operand__ != NULL && __Operand__->__Kind__ == __Ast_Expression_Atom__ &&
+           __Operand__->__As__.__Atom__.__Kind__ == __Ast_Atom_Literal__ &&
+           __Operand__->__As__.__Atom__.__As__.__Literal__ != NULL &&
+           __Operand__->__As__.__Atom__.__As__.__Literal__->__Kind__ == __Ast_Literal_String__;
+}
+
+/* Whether an expression is a shared borrow of a call result (`&f(x)`). */
+int __Body_Is_Call_Borrow__(const __Ast_Expression__ *__Expression__)
+{
+    return __Expression__ != NULL && __Expression__->__Kind__ == __Ast_Expression_Unary__ &&
+           __Expression__->__As__.__Unary__.__Operation__ == __Unary_Address__ &&
+           __Expression__->__As__.__Unary__.__Operand__ != NULL &&
+           __Expression__->__As__.__Unary__.__Operand__->__Kind__ == __Ast_Expression_Call__;
+}
+
 /* Infers the body unary. */
 int __Body_Infer_Unary__(__Semantic_Body_Context__ *__Context__,
                          __Ast_Expression__ *__Expression__,
@@ -22,6 +40,60 @@ int __Body_Infer_Unary__(__Semantic_Body_Context__ *__Context__,
         /* References the reference type. */
         __Ast_Type__ *__Reference_Type__ = NULL;
 
+        /* `&"text"` / `&«text»`: a shared borrow of a text literal is a
+         * borrow of a temporary holding it (the self-hosted compiler gives it
+         * the enclosing block's lifetime; the LLVM emitter stores it in a
+         * function-entry slot, which outlives that block). Only the shared
+         * form: `&mutable` still needs a place. */
+        if (__Operation__ == __Unary_Address__ && __Body_Is_Text_Literal_Operand__(__Operand__))
+        {
+            if (!__Body_Infer_Expression__(__Context__, __Operand__, &__Lvalue_Type__))
+            {
+                return 0;
+            }
+            __Reference_Type__ =
+                __Body_Synthetic_Reference_Type__(__Context__, __Lvalue_Type__, 0);
+            if (__Reference_Type__ == NULL)
+            {
+                return __Body_Fail__(
+                    __Context__, __E1100_Internal_Context_Error__, __Expression__->__Header__.__Span__);
+            }
+            if (__Expression__->__Contextual_Type__ == NULL)
+            {
+                __Expression__->__Contextual_Type__ = __Reference_Type__;
+            }
+            *__Out_Type__ = __Reference_Type__;
+            return 1;
+        }
+        /* `&f(x)` as a call argument: a shared borrow of the call's result,
+         * a temporary the self-hosted compiler keeps to the end of the
+         * statement. The LLVM emitter stores it in a function-entry slot
+         * before the call that takes the borrow and drops it (its owned text
+         * or vector released) right after that call returns; Stage0 forbids
+         * reference returns, so the borrow cannot outlive the call. Only the
+         * shared form, and only directly as a call argument
+         * (__Call_Borrow_Argument__, set by body_call.c). */
+        if (__Body_Is_Call_Borrow__(__Expression__) &&
+            __Context__->__Call_Borrow_Argument__ == __Expression__)
+        {
+            if (!__Body_Infer_Expression__(__Context__, __Operand__, &__Lvalue_Type__))
+            {
+                return 0;
+            }
+            __Reference_Type__ =
+                __Body_Synthetic_Reference_Type__(__Context__, __Lvalue_Type__, 0);
+            if (__Reference_Type__ == NULL)
+            {
+                return __Body_Fail__(
+                    __Context__, __E1100_Internal_Context_Error__, __Expression__->__Header__.__Span__);
+            }
+            if (__Expression__->__Contextual_Type__ == NULL)
+            {
+                __Expression__->__Contextual_Type__ = __Reference_Type__;
+            }
+            *__Out_Type__ = __Reference_Type__;
+            return 1;
+        }
         if (__Operand__ == NULL || __Operand__->__Kind__ != __Ast_Expression_Atom__ ||
             __Operand__->__As__.__Atom__.__Kind__ != __Ast_Atom_Lvalue__)
         {

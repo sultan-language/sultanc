@@ -69,7 +69,7 @@
     ألحق_بايتات_نص(الناتج, ";\n");
 }
 
-// The whole text of library/std/process/failure_text.sn for a program
+// The whole text of library/core/process/failure_text.sn for a program
 // compiled in one language.
 عام عرف نص_وحدة_كلمات_فشل_البرنامج(اللغة_المترجمة: لغة_تشخيص): نص {
     دع الناتج: متغير متجه ط8 = [];

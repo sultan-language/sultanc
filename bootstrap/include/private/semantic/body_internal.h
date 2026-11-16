@@ -115,6 +115,10 @@ typedef struct
     int __Transfer_Into_Plain_Local__;
     /* References the innermost enclosing loop, or NULL. */
     __Body_Loop_Frame__ *__Loop__;
+    /* The call argument being checked, while a call's arguments are checked
+     * (body_call.c): a shared borrow of a call result (`&f(x)`) is accepted
+     * only as that argument (body_unary.c). */
+    __Ast_Expression__ *__Call_Borrow_Argument__;
 } __Semantic_Body_Context__;
 
 /* Stores the body builtin int type. */
@@ -342,6 +346,15 @@ int __Body_Try_Infer_Builtin_Call__(__Semantic_Body_Context__ *,
 int __Body_Infer_Call__(__Semantic_Body_Context__ *__Context__,
                         __Ast_Expression__ *__Expression__,
                         __Ast_Type__ **__Out_Type__);
+
+/* Whether an address operand is a text literal ("..." or «...»), which a
+ * shared borrow (`&«x»`) takes as a temporary. */
+int __Body_Is_Text_Literal_Operand__(const __Ast_Expression__ *__Operand__);
+
+/* Whether an expression is a shared borrow of a call result (`&f(x)`),
+ * which a call argument takes as a temporary: the LLVM emitter materializes
+ * the result before the call and drops it right after the call returns. */
+int __Body_Is_Call_Borrow__(const __Ast_Expression__ *__Expression__);
 
 /* Infers the body unary. */
 int __Body_Infer_Unary__(__Semantic_Body_Context__ *__Context__,

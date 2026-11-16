@@ -24,6 +24,12 @@
     // Two external declarations bind one linker symbol with different
     // parameter or result types (the symbol's name).
     | رمز_خارجي_بتوقيعين بنوع (نطاق, متجه ط8)
+    // A second panic handler, or one whose signature is not (نص): فراغ
+    // (the handler's name span and its name).
+    | معالج_انهيار_غير_صالح بنوع (نطاق, متجه ط8)
+    // A global allocator entry point marked twice, a partial set, or a
+    // signature not the interface's (the function's name span and its name).
+    | مخصص_عام_غير_صالح بنوع (نطاق, متجه ط8)
     | دالة_دلالية_مفقودة بنوع معرف_رمز
     | سعة_خريطة_غير_قابلة_للتمثيل
     | فهرس_مصدر_مكرر

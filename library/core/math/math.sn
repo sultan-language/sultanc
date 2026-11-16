@@ -1,0 +1,9 @@
+// The root file of library/core/math: the Arabic spellings of its modules
+// (docs/en/reference/modules-and-imports.md, "Module spellings"). The
+// standard library is three libraries (docs/en/reference/std-layers.md); this
+// file names only this library's own children.
+
+module float { ar: عشري };
+module integer { ar: صحيح };
+module trigonometry { ar: مثلثات };
+module wrapping { ar: التفاف };

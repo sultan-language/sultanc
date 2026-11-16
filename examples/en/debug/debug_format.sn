@@ -2,6 +2,7 @@
 import std.io.println;
 import std.text.number;
 import std.fmt.fmt;
+import std.io.print_formatted;
 
 
 def main(): int {

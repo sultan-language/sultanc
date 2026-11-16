@@ -4,6 +4,7 @@
 استورد compiler.msir.msir_promotion;
 استورد compiler.msir.msir_inlining;
 استورد compiler.msir.msir_flow;
+استورد compiler.msir.static_environments;
 استورد compiler.msir.debug_contract;
 استورد compiler.frontend.types.type_context;
 
@@ -20,7 +21,11 @@
 // 3. control-flow simplification (msir_flow.sn): constant compares and
 //    branches fold, jumps thread, single-predecessor blocks merge,
 //    unreachable blocks go, trivial and dead block parameters go, repeated
-//    pure expressions are computed once.
+//    pure expressions are computed once;
+// 4. static environments (static_environments.sn): a closure construction
+//    that captures nothing uses its function's one static environment
+//    instead of allocating. This pass runs at every level, بلا included,
+//    since it changes what a construction costs, not what code does.
 //
 // LLVM receives the same program, inlined, although its -O1 and above inline
 // on their own: leaving inlining to LLVM made executables larger (functions
@@ -123,7 +128,8 @@
 // changed: a program the verifier accepted before still verifies outside
 // them, so the verification after it need check only those
 // (msir_verifier.sn, تحقق_دوال_برنامج_مسير). No pass changes a function's
-// declaration, a global or a program fact.
+// declaration or a global; the only program fact a pass adds is the static
+// environment list (static_environments.sn), which that verification checks.
 عام عرف حسن_برنامج_مسير(
     البرنامج: &متغير برنامج_مسير,
     الأنواع: &سجل_أنواع,
@@ -135,10 +141,10 @@
     | مستوى_تحسين_مسير.بلا -> {
         // Locals kept in frame slots are read from them (debug_contract.sn).
         اربط_أماكن_محليات_تصحيح_مسير(التصحيح);
-        دع لا_شيء: متغير متجه منطقي = [];
-        دع د: متغير طبيعي = 0;
-        طالما (د < (الطول((*البرنامج).الدوال) مثل طبيعي)) { ألحق(لا_شيء, خطأ); د := د + 1; }
-        أرجع لا_شيء;
+        // No optimization, but capture-free closures still get static
+        // environments (a function without an allocator relies on it).
+        دع المبقاة: متجه منطقي = دوال_محسنة_مسير(البرنامج, النطاق);
+        أرجع أعط_الإغلاقات_بيئات_ساكنة_مسير(البرنامج, &المبقاة);
     }
     | مستوى_تحسين_مسير.افتراضي -> { };
     // The same binding before promotion: a slot it turns back into values
@@ -156,10 +162,11 @@
     // Flow simplification can leave a local stored once before its loads
     // (a drop flag's test or a dead path gone): promote those too.
     دع المرقاة_ثانية: متجه منطقي = رقّ_محليات_برنامج_مسير(البرنامج, الأنواع, التصحيح, &المبسطة);
+    دع الساكنة: متجه منطقي = أعط_الإغلاقات_بيئات_ساكنة_مسير(البرنامج, &المحسنة);
     دع المتغيرة: متغير متجه منطقي = [];
     دع د: متغير طبيعي = 0;
     طالما (د < (الطول((*البرنامج).الدوال) مثل طبيعي)) {
-        ألحق(المتغيرة, المرقاة[د] || المضمن_فيها[د] || المبسطة[د] || المرقاة_ثانية[د]);
+        ألحق(المتغيرة, المرقاة[د] || المضمن_فيها[د] || المبسطة[د] || المرقاة_ثانية[د] || الساكنة[د]);
         د := د + 1;
     }
     أرجع المتغيرة;

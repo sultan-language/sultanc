@@ -64,10 +64,17 @@ static int __Body_Check_Call_Arguments__(__Semantic_Body_Context__ *__Context__,
 
     for (__Index__ = 0U; __Index__ < __Argument_Count__; ++__Index__)
     {
-        if (!__Body_Check_Expression_Compatible__(__Context__,
-                                                  __Parameters__[__Index__],
-                                                  __Arguments__[__Index__],
-                                                  __Arguments__[__Index__]->__Header__.__Span__))
+        /* The argument a shared borrow of a call result may be
+         * (body_unary.c); restored for the enclosing call's argument. */
+        __Ast_Expression__ *__Enclosing_Borrow_Argument__ = __Context__->__Call_Borrow_Argument__;
+        int __Compatible__;
+        __Context__->__Call_Borrow_Argument__ = __Arguments__[__Index__];
+        __Compatible__ = __Body_Check_Expression_Compatible__(__Context__,
+                                                              __Parameters__[__Index__],
+                                                              __Arguments__[__Index__],
+                                                              __Arguments__[__Index__]->__Header__.__Span__);
+        __Context__->__Call_Borrow_Argument__ = __Enclosing_Borrow_Argument__;
+        if (!__Compatible__)
         {
             return 0;
         }
@@ -384,8 +391,13 @@ static __Semantic_Function_Entry__ *__Body_Instantiate_Generic_Callee__(
     for (__Index__ = 0U; __Index__ < __Template__->__Function__->__Parameter_Count__; ++__Index__)
     {
         __Ast_Type__ *__Actual__ = NULL;
-        if (!__Body_Infer_Expression__(
-                __Context__, __Call__->__As__.__Call__.__Arguments__[__Index__], &__Actual__) ||
+        __Ast_Expression__ *__Enclosing_Borrow_Argument__ = __Context__->__Call_Borrow_Argument__;
+        int __Inferred__;
+        __Context__->__Call_Borrow_Argument__ = __Call__->__As__.__Call__.__Arguments__[__Index__];
+        __Inferred__ = __Body_Infer_Expression__(
+            __Context__, __Call__->__As__.__Call__.__Arguments__[__Index__], &__Actual__);
+        __Context__->__Call_Borrow_Argument__ = __Enclosing_Borrow_Argument__;
+        if (!__Inferred__ ||
             !__Body_Generic_Infer_Type__(
                 __Context__, __Template__->__Function__,
                 __Template__->__Function__->__Parameters__[__Index__].__Slot__.__Type__,

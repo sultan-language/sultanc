@@ -4,6 +4,7 @@
 // pretty Debug form for {:#?}. Closures capture plain values (numbers,
 // booleans, enums and records of them).
 import std.fmt.fmt;
+import std.io.print_formatted;
 
 type Currency = | Riyal | Dollar;
 type Money = { cents: int, currency: Currency };

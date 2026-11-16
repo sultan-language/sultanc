@@ -296,6 +296,8 @@
     | سبب_تشخيص.سبب_مسير_خفض_غير_مدعوم_تعبير_نوع -> { أرجع «This expression's type cannot be lowered to MSIR yet»; }
     | سبب_تشخيص.سبب_مسير_خفض_غير_مدعوم_خارجي_دالة -> { أرجع «This external function cannot be lowered to MSIR yet»; }
     | سبب_تشخيص.سبب_مسير_خفض_خارجي_رمز_بتوقيعين -> { أرجع «Another external declaration binds the same linker symbol with different parameter or result types»; }
+    | سبب_تشخيص.سبب_مسير_خفض_معالج_انهيار_غير_صالح -> { أرجع «The function is a second panic handler, does not take one text and return nothing, or has a path that returns»; }
+    | سبب_تشخيص.سبب_مسير_خفض_مخصص_عام_غير_صالح -> { أرجع «The entry point is marked twice, the program marks only some of the three, or its signature is not the interface's for the target's pointer width»; }
     | سبب_تشخيص.سبب_مسير_خفض_غير_مدعوم_عبارة -> { أرجع «This statement cannot be lowered to MSIR yet»; }
     | سبب_تشخيص.سبب_مسير_مركب_عضو_نوع_عدم_تطابق -> { أرجع «An MSIR aggregate member has a different type than its declaration»; }
     | سبب_تشخيص.سبب_مسير_حسابي_معامل_نوع_عدم_تطابق -> { أرجع «An MSIR arithmetic operand has a type mismatch»; }

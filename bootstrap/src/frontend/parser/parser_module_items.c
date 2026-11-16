@@ -15,6 +15,46 @@
 
 #include <stdalign.h>
 
+/* Whether the current token starts a module spelling declaration
+ * (`module NAME { ar: ..., ... };` or `وحدة NAME { ... };`) of a folder's root
+ * file. Canonical: compiler/frontend/module_loading/module_spellings.sn. */
+static int __Parser_At_Module_Spelling__(__Parser__ *__Parser_State__)
+{
+    return __Parser_State__->__Current__.__Kind__ == __Token_MODULE__;
+}
+
+/* Skips a module spelling declaration: import resolution reads it from the
+ * root file's text (support/path/source_import_path.c); it declares nothing. */
+static int __Parser_Skip_Module_Spelling__(__Parser__ *__Parser_State__)
+{
+    /* Tracks brace depth inside the declaration. */
+    int __Depth__ = 0;
+    for (;;)
+    {
+        __Token_Kind__ __Kind__ = __Parser_State__->__Current__.__Kind__;
+        if (__Kind__ == __Token_EOF__)
+        {
+            return __Parser_Fail__(__Parser_State__, __Diag_Word_Syntax_Expected_Module_Item__);
+        }
+        if (__Kind__ == __Token_LEFT_BRACE_OPERATOR__)
+        {
+            ++__Depth__;
+        }
+        else if (__Kind__ == __Token_RIGHT_BRACE_OPERATOR__)
+        {
+            --__Depth__;
+        }
+        else if (__Kind__ == __Token_SEMICOLON_OPERATOR__ && __Depth__ <= 0)
+        {
+            return __Parser_Advance__(__Parser_State__);
+        }
+        if (!__Parser_Advance__(__Parser_State__))
+        {
+            return 0;
+        }
+    }
+}
+
 /* Parses an item introduced by "خارجي": an external function or external data. */
 static int __Parser_Parse_External_Module_Item__(__Parser__ *__Parser_State__,
                                                  __Vector__ *__Items__,
@@ -211,6 +251,11 @@ static int __Parser_Parse_Module_Content__(__Parser__ *__Parser_State__,
                     __Parser_State__->__Current__.__Span__.__Start__);
                 break;
             default:
+                if (__Parser_At_Module_Spelling__(__Parser_State__))
+                {
+                    __Ok__ = __Parser_Skip_Module_Spelling__(__Parser_State__);
+                    break;
+                }
                 __Ok__ =
                     __Parser_Fail__(__Parser_State__, __Diag_Word_Syntax_Expected_Module_Item__);
                 break;

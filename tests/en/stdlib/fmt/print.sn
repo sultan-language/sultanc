@@ -5,11 +5,12 @@
 // خرج-قياسي: 1 + 2 = 3 |  سلام
 // خطأ-قياسي-ملف: print.stderr
 // نظير: tests/ar/stdlib/fmt/print.sn
-// std.fmt's print_fmt, eprint_fmt and eprintln_fmt (Rust's print!, eprint!,
+// std.io.print_formatted's print_fmt, eprint_fmt and eprintln_fmt (Rust's print!, eprint!,
 // eprintln!): each call formats into one buffer and writes it once; the
 // result is the number of bytes written, the line forms adding "\n". A
 // format error prints nothing.
 import std.fmt.fmt;
+import std.io.print_formatted;
 
 def main(): int {
     let failures: mutable int = 0;

@@ -3,3 +3,7 @@
 // use either name; both name one module.
 
 module system { ar: نظام };
+
+// Re-exported: these children are modules and folders of alloc and core, at the same
+// paths (docs/en/reference/std-layers.md). One file, one module.
+module allocator = core.memory.allocator { ar: مخصص };

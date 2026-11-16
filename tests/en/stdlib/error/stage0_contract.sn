@@ -9,6 +9,7 @@
 // Stage0 too. from_json and from_net are left out: std.json and
 // std.net.socket_address themselves are beyond Stage0.
 import std.error.failure;
+import std.io.print_failure;
 import std.error.from_os;
 import std.error.from_number;
 import std.error.context;

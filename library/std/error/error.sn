@@ -2,12 +2,15 @@
 // (docs/en/reference/modules-and-imports.md, "Module spellings"). An import may
 // use either name; both name one module.
 
-module context { ar: سياق };
-module failure { ar: فشل };
 module from_command { ar: من_أمر };
-module from_duration { ar: من_مدة };
-module from_fmt { ar: من_تنسيق };
-module from_json { ar: من_جسون };
 module from_net { ar: من_شبكة };
-module from_number { ar: من_عدد };
 module from_os { ar: من_نظام };
+
+// Re-exported: these children are modules and folders of alloc and core, at the same
+// paths (docs/en/reference/std-layers.md). One file, one module.
+module context = alloc.error.context { ar: سياق };
+module failure = alloc.error.failure { ar: فشل };
+module from_duration = alloc.error.from_duration { ar: من_مدة };
+module from_fmt = alloc.error.from_fmt { ar: من_تنسيق };
+module from_json = alloc.error.from_json { ar: من_جسون };
+module from_number = alloc.error.from_number { ar: من_عدد };

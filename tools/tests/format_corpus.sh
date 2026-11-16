@@ -4,7 +4,7 @@
 #   SC=<sultanc> tools/tests/format_corpus.sh [work-dir]
 #
 # 1. Copies the checkout to <work-dir>/original and <work-dir>/formatted and formats
-#    compiler/ and library/std/ of the formatted copy.
+#    compiler/ and library/{std,alloc,core}/ of the formatted copy.
 # 2. Every formatted file must hold the same tokens, comments and marks as the
 #    original (tools/tests/format_tokens.sn, the compiler's own lexer).
 # 3. A second run must change nothing (--check).
@@ -35,13 +35,13 @@ copy_tree() {
 copy_tree "$work/original"
 copy_tree "$work/formatted"
 
-echo "format corpus: formatting compiler/ and library/std/"
+echo "format corpus: formatting compiler/ and library/"
 status=0
-(cd "$work/formatted" && "$work/format_files" compiler library/std) || status=$?
+(cd "$work/formatted" && "$work/format_files" compiler library) || status=$?
 [ "$status" -eq 0 ] || fail "the formatter failed on the corpus (status $status)"
 
 echo "format corpus: comparing tokens"
-files=$(cd "$work/original" && find compiler library/std -name '*.sn' | sort)
+files=$(cd "$work/original" && find compiler library -name '*.sn' | sort)
 count=0
 changed=0
 for f in $files; do
@@ -54,7 +54,7 @@ done
 echo "format corpus: $count files, $changed reformatted, every token kept"
 
 echo "format corpus: idempotence"
-(cd "$work/formatted" && "$work/format_files" --check compiler library/std) || fail "a second run would change the formatted corpus"
+(cd "$work/formatted" && "$work/format_files" --check compiler library) || fail "a second run would change the formatted corpus"
 
 if [ "${FORMAT_CORPUS_BUILD:-1}" = "0" ]; then
     echo "format corpus: OK (no compiler build)"

@@ -4,6 +4,7 @@
 
 module allocation { ar: تخصيص };
 module allocation_cache { ar: مخبأ_التخصيص };
+module allocator_platform { ar: منصة_المخصص };
 module arguments { ar: وسائط };
 module buffer { ar: مخزن };
 module capability { ar: مرافق };
@@ -31,6 +32,7 @@ module socket_names { ar: أسماء_المقابس };
 module stack_limit { ar: حد_المكدس };
 module terminal { ar: طرفية };
 module threads { ar: خيوط };
+module trust_store { ar: مخزن_الثقة };
 module unix_socket { ar: مقبس_يونكس };
 module virtual_memory { ar: ذاكرة_افتراضية };
 module wait_address { ar: انتظار_العنوان };

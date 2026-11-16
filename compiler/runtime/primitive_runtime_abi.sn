@@ -90,29 +90,17 @@
     أرجع المسار;
 }
 
-// Canonical spellings of the std allocation-service providers used where the
-// target runtime has no C allocator (std os/allocation.sn, wasm32). MSIR
-// lowering binds the unique public definition of each as a program fact; the
-// backends then call those definitions for the compiler's storage services.
-// ABI spellings, not OS code. The operands and result are pointer-width
-// unsigned integers (linear-memory offsets); 0 means allocation failure.
-عام عرف اسم_مزود_تخصيص_ذاكرة_أساسي(): متجه ط8 {
-    دع الاسم: متجه ط8 = بايتات_من_نص(«خصص_ذاكرة_التشغيل_المخبأ»);
-    أرجع الاسم;
-}
-
-عام عرف اسم_مزود_إعادة_تخصيص_ذاكرة_أساسي(): متجه ط8 {
-    دع الاسم: متجه ط8 = بايتات_من_نص(«أعد_تخصيص_ذاكرة_التشغيل_المخبأ»);
-    أرجع الاسم;
-}
-
-عام عرف اسم_مزود_تحرير_ذاكرة_أساسي(): متجه ط8 {
-    دع الاسم: متجه ط8 = بايتات_من_نص(«حرر_ذاكرة_التشغيل_المخبأ»);
-    أرجع الاسم;
-}
+// The canonical allocator interface (library/core/memory/allocator.sn) has
+// no names here: its three entry points are the functions marked
+// `@@global_alloc`, `@@global_realloc` and `@@global_dealloc`, which MSIR
+// lowering binds as a program fact (compiler/msir/semantic_lowering.sn,
+// اربط_المخصص_العام_مسير); the backends then call those definitions for the
+// compiler's storage services. The operands and result are pointer-width
+// unsigned integers (linear-memory offsets on wasm32); 0 means allocation
+// failure, on which generated code traps.
 
 // Import reference, relative to the trusted std root, of the module defining
-// the allocation providers above: `os/allocation_cache.sn` (the allocator of
+// std's allocation providers: `os/allocation_cache.sn` (the allocator of
 // os/allocation.sn with per-thread caches; an older compiler binds that
 // module's plain, locked entry points by their names without the suffix).
 عام عرف مسار_وحدة_مزودات_الذاكرة_أساسي(): متجه ط8 {

@@ -1,8 +1,0 @@
-// The root file of std.bytes: the Arabic spellings of its modules
-// (docs/en/reference/modules-and-imports.md, "Module spellings"). An import may
-// use either name; both name one module.
-
-module builder { ar: باني };
-module compare { ar: مقارنة };
-module cursor { ar: مؤشر };
-module range { ar: نطاق };

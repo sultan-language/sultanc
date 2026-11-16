@@ -10,6 +10,7 @@
 // std.net.socket_address themselves are beyond Stage0.
 // Imports use std paths: Stage0 does not resolve Arabic package aliases.
 استورد المكتبة.أخطاء.فشل;
+استورد المكتبة.دخ.اطبع_فشل;
 استورد المكتبة.أخطاء.من_نظام;
 استورد المكتبة.أخطاء.من_عدد;
 استورد المكتبة.أخطاء.سياق;

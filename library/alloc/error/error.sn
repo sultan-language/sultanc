@@ -1,0 +1,11 @@
+// The root file of library/alloc/error: the Arabic spellings of its modules
+// (docs/en/reference/modules-and-imports.md, "Module spellings"). The
+// standard library is three libraries (docs/en/reference/std-layers.md); this
+// file names only this library's own children.
+
+module context { ar: سياق };
+module failure { ar: فشل };
+module from_duration { ar: من_مدة };
+module from_fmt { ar: من_تنسيق };
+module from_json { ar: من_جسون };
+module from_number { ar: من_عدد };

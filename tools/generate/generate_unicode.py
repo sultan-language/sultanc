@@ -22,7 +22,7 @@ from pathlib import Path
 import re
 
 ROOT = Path(__file__).resolve().parents[2]
-OUT = ROOT / "library/std/unicode/data"
+OUT = ROOT / "library/core/unicode/data"
 VERSION = "18.0.0"
 
 CATEGORY_CODES = ("Lu", "Ll", "Lt", "Lm", "Lo", "Mn", "Mc", "Me", "Nd", "Nl", "No", "Pc", "Pd", "Ps", "Pe", "Pi", "Pf", "Po", "Sm", "Sc", "Sk", "So", "Zs", "Zl", "Zp", "Cc", "Cf", "Cs", "Co", "Cn")

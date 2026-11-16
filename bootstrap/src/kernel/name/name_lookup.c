@@ -42,8 +42,11 @@ int __Name_Resolve_Module_Alias_Name__(const __Program_Unit__ *__Unit__,
             const __Ast_Module_Item__ *__Item__ =
                 __Unit__->__Parse__.__Module__.__Items__[__Index__];
 
+            /* A re-export (`pub alias NAME = IMPORT.NAME;`) names another
+             * module's declaration; __Name_Reexport_Target__ follows it. */
             if (__Item__ == NULL || __Item__->__Kind__ != __Ast_Module_Item_Alias__ ||
-                __Item__->__As__.__Alias__.__Destination__.__Parent__.__Length__ != 0U)
+                __Item__->__As__.__Alias__.__Destination__.__Parent__.__Length__ != 0U ||
+                __Item__->__As__.__Alias__.__Target__.__Parent__.__Length__ != 0U)
             {
                 continue;
             }
@@ -116,10 +119,77 @@ static const __Semantic_Unit_Name_Range__ *__Name_Unit_Range__(
     return __Range__ != NULL && __Range__->__Unit__ == __Unit__ ? __Range__ : NULL;
 }
 
+/* How many re-exports a lookup follows (`pub alias NAME = IMPORT.NAME;` in a
+ * module whose IMPORT re-exports NAME in turn). */
+#define __NAME_REEXPORT_DEPTH__ 16U
+
+/* The target name of UNIT's public re-export of NAME
+ * (`pub alias NAME = IMPORT.NAME;`), whose declaration is one of UNIT's
+ * imports'. Stage0 binds an `as` import plainly, so IMPORT is not looked up:
+ * the target is searched for in each module UNIT imports. */
+static int __Name_Reexport_Target__(const __Program_Unit__ *__Unit__,
+                                    __Text_Slice__ __Name__,
+                                    __Text_Slice__ *__Out_Target__)
+{
+    size_t __Index__;
+
+    if (__Unit__ == NULL)
+    {
+        return 0;
+    }
+    for (__Index__ = 0U; __Index__ < __Unit__->__Parse__.__Module__.__Item_Count__; ++__Index__)
+    {
+        const __Ast_Module_Item__ *__Item__ = __Unit__->__Parse__.__Module__.__Items__[__Index__];
+
+        if (__Item__ == NULL || __Item__->__Kind__ != __Ast_Module_Item_Alias__ ||
+            !__Item__->__Public__ ||
+            __Item__->__As__.__Alias__.__Destination__.__Parent__.__Length__ != 0U ||
+            __Item__->__As__.__Alias__.__Target__.__Parent__.__Length__ == 0U ||
+            !__Identifier_Identity_Equals__(__Item__->__As__.__Alias__.__Destination__.__Name__,
+                                            __Name__))
+        {
+            continue;
+        }
+        *__Out_Target__ = __Item__->__As__.__Alias__.__Target__.__Name__;
+        return 1;
+    }
+    return 0;
+}
+
+/* The unit UNIT imports at INDEX, or NULL. */
+static const __Program_Unit__ *__Name_Imported_Unit_At__(const __Semantic_Context__ *__Context__,
+                                                         const __Program_Unit__ *__Unit__,
+                                                         size_t __Index__)
+{
+    const size_t *__Imported_Index__ =
+        (const size_t *)__Vector_At_Const__(&__Unit__->__Imported_Unit_Indexes__, __Index__);
+
+    if (__Imported_Index__ == NULL)
+    {
+        return NULL;
+    }
+    return __Program_Unit_At_Const__(__Context__->__Program__, *__Imported_Index__);
+}
+
+static __Semantic_Type_Entry__ *__Name_Find_Type_In_Unit_At_Depth__(
+    __Semantic_Context__ *__Context__, const __Program_Unit__ *__Unit__, __Text_Slice__ __Name__,
+    size_t __Depth__);
+static __Semantic_Function_Entry__ *__Name_Find_Function_In_Unit_At_Depth__(
+    __Semantic_Context__ *__Context__, const __Program_Unit__ *__Unit__, __Text_Slice__ __Name__,
+    size_t __Depth__);
+
 /* Finds a type declaration inside one unit only. */
 static __Semantic_Type_Entry__ *__Name_Find_Type_In_Unit__(__Semantic_Context__ *__Context__,
                                                            const __Program_Unit__ *__Unit__,
                                                            __Text_Slice__ __Name__)
+{
+    return __Name_Find_Type_In_Unit_At_Depth__(__Context__, __Unit__, __Name__, 0U);
+}
+
+/* Finds a type declaration inside one unit, or the public one it re-exports. */
+static __Semantic_Type_Entry__ *__Name_Find_Type_In_Unit_At_Depth__(
+    __Semantic_Context__ *__Context__, const __Program_Unit__ *__Unit__, __Text_Slice__ __Name__,
+    size_t __Depth__)
 {
     const __Semantic_Unit_Name_Range__ *__Range__ = __Name_Unit_Range__(__Context__, __Unit__);
     __Text_Slice__ __Resolved_Name__;
@@ -140,12 +210,34 @@ static __Semantic_Type_Entry__ *__Name_Find_Type_In_Unit__(__Semantic_Context__ 
             return __Entry__;
         }
     }
+    if (__Depth__ < __NAME_REEXPORT_DEPTH__ &&
+        __Name_Reexport_Target__(__Unit__, __Name__, &__Resolved_Name__))
+    {
+        for (__Index__ = 0U; __Index__ < __Unit__->__Imported_Unit_Indexes__.__Count__; ++__Index__)
+        {
+            __Semantic_Type_Entry__ *__Entry__ = __Name_Find_Type_In_Unit_At_Depth__(
+                __Context__, __Name_Imported_Unit_At__(__Context__, __Unit__, __Index__),
+                __Resolved_Name__, __Depth__ + 1U);
+            if (__Entry__ != NULL && __Entry__->__Public__)
+            {
+                return __Entry__;
+            }
+        }
+    }
     return NULL;
 }
 
 /* Finds a function declaration inside one unit only. */
 static __Semantic_Function_Entry__ *__Name_Find_Function_In_Unit__(
     __Semantic_Context__ *__Context__, const __Program_Unit__ *__Unit__, __Text_Slice__ __Name__)
+{
+    return __Name_Find_Function_In_Unit_At_Depth__(__Context__, __Unit__, __Name__, 0U);
+}
+
+/* Finds a function declaration inside one unit, or the public one it re-exports. */
+static __Semantic_Function_Entry__ *__Name_Find_Function_In_Unit_At_Depth__(
+    __Semantic_Context__ *__Context__, const __Program_Unit__ *__Unit__, __Text_Slice__ __Name__,
+    size_t __Depth__)
 {
     const __Semantic_Unit_Name_Range__ *__Range__ = __Name_Unit_Range__(__Context__, __Unit__);
     __Text_Slice__ __Resolved_Name__;
@@ -164,6 +256,20 @@ static __Semantic_Function_Entry__ *__Name_Find_Function_In_Unit__(
         if (__Name_Function_Entry_Matches__(__Entry__, __Resolved_Name__))
         {
             return __Entry__;
+        }
+    }
+    if (__Depth__ < __NAME_REEXPORT_DEPTH__ &&
+        __Name_Reexport_Target__(__Unit__, __Name__, &__Resolved_Name__))
+    {
+        for (__Index__ = 0U; __Index__ < __Unit__->__Imported_Unit_Indexes__.__Count__; ++__Index__)
+        {
+            __Semantic_Function_Entry__ *__Entry__ = __Name_Find_Function_In_Unit_At_Depth__(
+                __Context__, __Name_Imported_Unit_At__(__Context__, __Unit__, __Index__),
+                __Resolved_Name__, __Depth__ + 1U);
+            if (__Entry__ != NULL && __Entry__->__Public__)
+            {
+                return __Entry__;
+            }
         }
     }
     return NULL;

@@ -391,11 +391,30 @@
 // `() -> ()` that destroys the owned captures when the last reference is
 // released. Lowering leaves it empty; the ownership-glue pass assigns one to
 // every construction before any backend sees the program.
+// البيئة_الساكنة: the construction captures nothing and evaluates to the
+// function's one static environment (برنامج_مسير.البيئات_الساكنة) instead of
+// allocating one. Lowering leaves it false; only the static-environment pass
+// (static_environments.sn) sets it.
 عام نوع بناء_إغلاق_مسير = {
     الدالة: معرف_دالة_مسير,
     الالتقاطات: متجه معرف_قيمة_مسير,
+    المدمر: اختياري معرف_دالة_مسير,
+    البيئة_الساكنة: منطقي
+};
+
+// The static environment of a function whose closures capture nothing: one
+// writable 24-byte header per function, emitted as data, whose code pointer
+// is the function, whose reference count starts at
+// عداد_بيئة_إغلاق_ساكنة_مسير() (so atomic releases never bring it to zero
+// and it is never destroyed), and whose destructor slot names المدمر (zero
+// when none). See docs/en/reference/ownership.md, "Closure environments".
+عام نوع بيئة_إغلاق_ساكنة_مسير = {
+    الدالة: معرف_دالة_مسير,
     المدمر: اختياري معرف_دالة_مسير
 };
+
+// 2^62: the initial reference count of a static environment.
+عام عرف عداد_بيئة_إغلاق_ساكنة_مسير(): طبيعي { أرجع 0x4000000000000000; }
 
 عام نوع استخراج_التقاط_مسير = {
     الفهرس: طبيعي
@@ -683,8 +702,55 @@
     // The source origin of each debug location, by location ID: the origin
     // of every instruction that refers to that location. Lowering records it
     // once the program is built (semantic_lowering.sn).
-    أصول_مواقع_التصحيح: متجه معرف_أصل_مصدر
+    أصول_مواقع_التصحيح: متجه معرف_أصل_مصدر,
+    // The functions whose capture-free constructions use a static
+    // environment, one entry per function (static_environments.sn). Entry i
+    // is emitted as the data object معرف_عام_بيئة_إغلاق_ساكنة_مسير(i).
+    البيئات_الساكنة: متجه بيئة_إغلاق_ساكنة_مسير
 };
+
+// The position of الدالة's static environment in البيئات_الساكنة, if any.
+عام عرف فهرس_بيئة_إغلاق_ساكنة_مسير(
+    البرنامج: &برنامج_مسير,
+    الدالة: معرف_دالة_مسير
+): اختياري طبيعي {
+    دع ف: متغير طبيعي = 0;
+    طالما (ف < (الطول((*البرنامج).البيئات_الساكنة) مثل طبيعي)) {
+        إذا (دالتا_مسير_متساويتان((*البرنامج).البيئات_الساكنة[ف].الدالة, الدالة)) {
+            أرجع اختياري.موجود(ف);
+        };
+        ف := ف + 1;
+    }
+    أرجع اختياري.لا_شيء();
+}
+
+// Whether two static-environment destructors are the same.
+عام عرف مدمرا_بيئة_ساكنة_متساويان(
+    الأول: اختياري معرف_دالة_مسير,
+    الثاني: اختياري معرف_دالة_مسير
+): منطقي {
+    طابق الأول مع
+    | اختياري.موجود(أ) -> {
+        طابق الثاني مع
+        | اختياري.موجود(ب) -> { أرجع دالتا_مسير_متساويتان(أ, ب); }
+        | اختياري.لا_شيء -> { أرجع خطأ; };
+    }
+    | اختياري.لا_شيء -> {
+        طابق الثاني مع
+        | اختياري.موجود(_) -> { أرجع خطأ; }
+        | اختياري.لا_شيء -> { أرجع صواب; };
+    };
+}
+
+// The data identity backends give static environment number الفهرس: global
+// IDs past the program's own globals, so the object writers name, place and
+// relocate it as they do a global (native_output.sn).
+عام عرف معرف_عام_بيئة_إغلاق_ساكنة_مسير(
+    البرنامج: &برنامج_مسير,
+    الفهرس: طبيعي
+): معرف_عام_مسير {
+    أرجع معرف_عام_مسير_من((الطول((*البرنامج).العوام) مثل طبيعي) + الفهرس);
+}
 
 // An instruction without debug location or scope (compiler-made code).
 عام عرف تعليمة_مسير_بلا_تصحيح(الناتج: اختياري قيمة_مسير, العملية: عملية_مسير): تعليمة_مسير {
@@ -912,7 +978,8 @@
     دع الناتج: بناء_إغلاق_مسير = {
         الدالة: (*القيمة).الدالة,
         الالتقاطات: انسخ_مملوكا_متجه_معرف_قيمة_مسير(&(*القيمة).الالتقاطات),
-        المدمر: (*القيمة).المدمر
+        المدمر: (*القيمة).المدمر,
+        البيئة_الساكنة: (*القيمة).البيئة_الساكنة
     };
     أرجع الناتج;
 }
@@ -1045,7 +1112,8 @@
         دالة_تحقق_التنسيق: (*القيمة).دالة_تحقق_التنسيق,
         دوال_عدادات_التخصيص: انسخ_دوال_عدادات_مسير(&(*القيمة).دوال_عدادات_التخصيص),
         دوال_اتفاقية_المنصة: انسخ_منطقيات_دوال_مسير(&(*القيمة).دوال_اتفاقية_المنصة),
-        أصول_مواقع_التصحيح: انسخ_أصول_مواقع_مسير(&(*القيمة).أصول_مواقع_التصحيح)
+        أصول_مواقع_التصحيح: انسخ_أصول_مواقع_مسير(&(*القيمة).أصول_مواقع_التصحيح),
+        البيئات_الساكنة: انسخ_بيئات_ساكنة_مسير(&(*القيمة).البيئات_الساكنة)
     };
     أرجع الناتج;
 }
@@ -1149,6 +1217,20 @@
     دع ف: متغير طبيعي = 0;
     طالما (ف < (الطول(*القيمة) مثل طبيعي)) {
         ألحق(الناتج, انسخ_مملوكا_عام_مسير(&(*القيمة)[ف]));
+        ف := ف + 1;
+    }
+    أرجع الناتج;
+}
+
+عرف انسخ_بيئات_ساكنة_مسير(البيئات: &متجه بيئة_إغلاق_ساكنة_مسير): متجه بيئة_إغلاق_ساكنة_مسير {
+    دع الناتج: متغير متجه بيئة_إغلاق_ساكنة_مسير = [];
+    دع ف: متغير طبيعي = 0;
+    طالما (ف < (الطول(*البيئات) مثل طبيعي)) {
+        دع البيئة: بيئة_إغلاق_ساكنة_مسير = {
+            الدالة: (*البيئات)[ف].الدالة,
+            المدمر: (*البيئات)[ف].المدمر
+        };
+        ألحق(الناتج, البيئة);
         ف := ف + 1;
     }
     أرجع الناتج;

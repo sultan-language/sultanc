@@ -10,11 +10,11 @@ import compiler.diagnostics.identity;
 import compiler.driver.program_failure_text;
 
 // The words of a program's runtime failures (docs/en/reference/errors.md): the text of
-// library/std/process/failure_text.sn is exactly the compiler's rendering for
+// library/core/process/failure_text.sn is exactly the compiler's rendering for
 // a program compiled in Arabic, which the compiler writes over it at every
 // compilation; the English rendering differs only in the compiled language.
 def main(): int {
-    let path: string = "library/std/process/failure_text.sn";
+    let path: string = "library/core/process/failure_text.sn";
     let written: string;
     match read_file(&path) with
     | result.ok(text) -> { written := text; }

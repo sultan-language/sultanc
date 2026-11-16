@@ -152,7 +152,7 @@
         [«--lang», استنسخ(&ل), «check», استنسخ(&المستقل)], «», 0, انسخ_مملوكا_متجه_نصوص(&بلا));
     // A source of the standard library itself is compiled as std.
     تحقق_رسم(الملخص, اسم_حالة(&ل, «مصدر من المكتبة القياسية»),
-        [«--lang», استنسخ(&ل), «check», «library/std/text/compare.sn»], «», 0, انسخ_مملوكا_متجه_نصوص(&بلا));
+        [«--lang», استنسخ(&ل), «check», «library/core/text/compare.sn»], «», 0, انسخ_مملوكا_متجه_نصوص(&بلا));
     // No standard library where the compiler looks.
     تحقق_رسم(الملخص, اسم_حالة(&ل, «مكتبة قياسية غير موجودة»),
         [«--lang», استنسخ(&ل), «--color», «never», «check», المستقل],

@@ -1,0 +1,11 @@
+// The root file of library/alloc/archive: the Arabic spellings of its modules
+// (docs/en/reference/modules-and-imports.md, "Module spellings"). The
+// standard library is three libraries (docs/en/reference/std-layers.md); this
+// file names only this library's own children.
+
+module tar { ar: تار };
+module zip { ar: زيب };
+
+// Re-exported: these children are modules and folders of core, at the same
+// paths (docs/en/reference/std-layers.md). One file, one module.
+module ar = core.archive.ar { ar: آر };

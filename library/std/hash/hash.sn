@@ -1,7 +1,0 @@
-// The root file of std.hash: the Arabic spellings of its modules
-// (docs/en/reference/modules-and-imports.md, "Module spellings"). An import may
-// use either name; both name one module.
-
-module combine { ar: دمج };
-module fnv { ar: فنڤ };
-module xxh64 { ar: إكس_إكس_إتش64 };

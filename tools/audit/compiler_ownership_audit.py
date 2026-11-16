@@ -240,14 +240,14 @@ def main() -> int:
     # General-purpose implementations have one standard-library owner and no compiler duplicate.
     compiler_code = "\n".join(text(p) for p in COMPILER.rglob("*.sn"))
     generic_owners = {
-        "متاح_في_النص": ROOT / "library/std/text/range.sn",
-        "فك_محرف_يوتيف8": ROOT / "library/std/encoding/utf8.sn",
-        "ألحق_محرف_يوتيف8": ROOT / "library/std/encoding/utf8.sn",
-        "يطابق_عند": ROOT / "library/std/text/compare.sn",
-        "يطابق_شريحة": ROOT / "library/std/text/compare.sn",
-        "رقم_عشري": ROOT / "library/std/chars/ascii.sn",
-        "رقم_سداسي": ROOT / "library/std/chars/ascii.sn",
-        "قيمة_سداسية": ROOT / "library/std/chars/ascii.sn",
+        "متاح_في_النص": ROOT / "library/core/text/range.sn",
+        "فك_محرف_يوتيف8": ROOT / "library/alloc/encoding/utf8.sn",
+        "ألحق_محرف_يوتيف8": ROOT / "library/alloc/encoding/utf8.sn",
+        "يطابق_عند": ROOT / "library/core/text/compare.sn",
+        "يطابق_شريحة": ROOT / "library/core/text/compare.sn",
+        "رقم_عشري": ROOT / "library/core/chars/ascii.sn",
+        "رقم_سداسي": ROOT / "library/core/chars/ascii.sn",
+        "قيمة_سداسية": ROOT / "library/core/chars/ascii.sn",
     }
     std_sources = sorted((ROOT / "library" / "std").rglob("*.sn"))
     for name, owner in generic_owners.items():
@@ -322,7 +322,7 @@ def main() -> int:
                     f"consumers: {path.relative_to(ROOT)}"
                 )
 
-    utf8_owner = ROOT / "library/std/encoding/utf8.sn"
+    utf8_owner = ROOT / "library/alloc/encoding/utf8.sn"
     utf8_text = text(utf8_owner) if utf8_owner.is_file() else ""
     for required in ("بايت_استمرار_يوتيف8", "صالح_كسلم_يونيكود"):
         definitions = [
@@ -344,7 +344,7 @@ def main() -> int:
                 f"CANONICAL OWNERSHIP FAIL: UTF-8 continuation classification duplicated outside standard-library owner: {path.relative_to(ROOT)}"
             )
 
-    utf16_owner = ROOT / "library/std/encoding/utf16.sn"
+    utf16_owner = ROOT / "library/alloc/encoding/utf16.sn"
     for path in sorted(list(COMPILER.rglob("*.sn")) + list((ROOT / "library" / "std").rglob("*.sn"))):
         if path == utf8_owner:
             continue
@@ -375,7 +375,7 @@ def main() -> int:
         if re.search(r"\bعرف\s+بايتات_تطابق_", name_code):
             problems.append("CANONICAL OWNERSHIP FAIL: Name System reimplements generic/identifier byte equality instead of consuming canonical identity")
 
-    compare_owner = ROOT / "library/std/text/compare.sn"
+    compare_owner = ROOT / "library/core/text/compare.sn"
     if compare_owner.is_file() and not re.search(r"\bعرف\s+نصان_متساويان\b", text(compare_owner)):
         problems.append("CANONICAL OWNERSHIP FAIL: generic whole-text equality is missing from standard-library text owner")
 
@@ -408,7 +408,7 @@ def main() -> int:
             problems.append(
                 "CANONICAL OWNERSHIP FAIL: Target spelling duplicates standard-library whole-text equality"
             )
-        if '../../../library/std/text/compare.sn' not in text(target_spelling) or 'نصان_متساويان(' not in target_code:
+        if '../../../library/core/text/compare.sn' not in text(target_spelling) or 'نصان_متساويان(' not in target_code:
             problems.append(
                 "CANONICAL OWNERSHIP FAIL: Target spelling must consume stdlib نصان_متساويان"
             )

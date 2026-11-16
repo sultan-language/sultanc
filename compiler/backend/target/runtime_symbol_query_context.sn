@@ -42,6 +42,15 @@
     | _ -> { أرجع مزود_خدمات_ذاكرة_هدف.غير_متاح(); };
 }
 
+// Whether generated code may allocate on this target: std implements the
+// storage services there, or the program defines the canonical allocator
+// interface's entry points itself (واصف_هدف.مخصص_البرنامج, set by the driver
+// once MSIR bound them). Whether std's own provider module is loaded asks
+// خدمات_الذاكرة_من_المكتبة_القياسية instead.
+عام عرف خدمات_الذاكرة_متاحة(الهدف: &واصف_هدف): منطقي {
+    أرجع (*الهدف).مخصص_البرنامج || خدمات_الذاكرة_من_المكتبة_القياسية(الهدف);
+}
+
 عام عرف خدمات_الذاكرة_من_المكتبة_القياسية(الهدف: &واصف_هدف): منطقي {
     طابق مزود_خدمات_ذاكرة_للهدف(الهدف) مع
     | مزود_خدمات_ذاكرة_هدف.مكتبة_قياسية -> { أرجع صواب; }

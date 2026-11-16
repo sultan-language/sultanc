@@ -1,0 +1,15 @@
+// The root file of library/alloc/unicode/algorithms: the Arabic spellings of its modules
+// (docs/en/reference/modules-and-imports.md, "Module spellings"). The
+// standard library is three libraries (docs/en/reference/std-layers.md); this
+// file names only this library's own children.
+
+module hangul { ar: هانغول };
+module lookup { ar: بحث };
+module normalization_engine { ar: محرك_التطبيع };
+module text_offsets { ar: إزاحات_النص };
+
+// Re-exported: these children are modules and folders of core, at the same
+// paths (docs/en/reference/std-layers.md). One file, one module.
+module canonical_order = core.unicode.algorithms.canonical_order { ar: ترتيب_قانوني };
+module case_context = core.unicode.algorithms.case_context { ar: سياق_الحالة };
+module segmentation_engine = core.unicode.algorithms.segmentation_engine { ar: محرك_التقطيع };

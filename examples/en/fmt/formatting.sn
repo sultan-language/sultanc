@@ -2,6 +2,7 @@
 // arguments, like Rust's format! and Go's fmt.Sprintf. A spec after `:` sets
 // fill and alignment, sign, `#`, zero padding, width, precision and type.
 import std.fmt.fmt;
+import std.io.print_formatted;
 
 def main(): int {
     let name: string = "Sultan";

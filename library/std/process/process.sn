@@ -10,6 +10,10 @@ module cli { ar: سطر_أوامر };
 module command { ar: أمر };
 module exit { ar: اخرج };
 module failure { ar: فشل };
-module failure_text { ar: نص_الفشل };
 module id { ar: معرف_العملية };
-module panic { ar: انهيار };
+module panic_handler { ar: معالج_الانهيار };
+
+// Re-exported: these children are modules and folders of alloc and core, at the same
+// paths (docs/en/reference/std-layers.md). One file, one module.
+module failure_text = core.process.failure_text { ar: نص_الفشل };
+module panic = core.process.panic { ar: انهيار };

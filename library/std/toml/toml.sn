@@ -1,6 +1,0 @@
-// The root file of std.toml: the Arabic spellings of its modules
-// (docs/en/reference/modules-and-imports.md, "Module spellings"). An import may
-// use either name; both name one module.
-
-module parser { ar: محلل };
-module writer { ar: كاتب };

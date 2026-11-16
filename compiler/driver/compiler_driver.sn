@@ -11,6 +11,8 @@
 استورد compiler.frontend.semantic_pipeline;
 استورد compiler.frontend.module_loading.module_paths;
 استورد compiler.frontend.module_loading.logical_environment;
+استورد compiler.frontend.module_loading.module_spellings;
+استورد compiler.frontend.module_loading.library_root_identity;
 استورد compiler.frontend.module_loading.import_resolution;
 استورد compiler.runtime.primitive_runtime_abi;
 استورد compiler.frontend.types.type_context;
@@ -1167,7 +1169,7 @@
 
     // Resolve the canonical requested target before the frontend loads any
     // module. Cross-compilation must never select sources using host facts.
-    دع الهدف_المحدد: واصف_هدف;
+    دع الهدف_المحدد: متغير واصف_هدف;
     دع حل_الهدف_المحدد: نتيجة_حل_هدف = حل_هدف_طلب_تجميع_مترجم(&الطلب);
     طابق حل_الهدف_المحدد مع
     | نتيجة_حل_هدف.غير_مسجل -> {
@@ -1370,6 +1372,12 @@
         السياق := التالي;
         الحمولة_المخفضة := الحمولة;
     };
+    // A program that defines the canonical allocator interface's entry points
+    // itself (std/memory/allocator.sn) may allocate on any target, bare
+    // metal included: MSIR bound them, so the backends are told so.
+    طابق الحمولة_المخفضة.المسير.مزودات_تخصيص_الذاكرة مع
+    | اختياري.موجود(_) -> { الهدف_المحدد.مخصص_البرنامج := صواب; }
+    | اختياري.لا_شيء -> { };
 
     // From lowered MSIR to what every consumer receives, in this order:
     //   1. the lowered program is verified (the canonical verifier);
@@ -2123,7 +2131,11 @@
 // compilation, with the language the program is compiled with.
 عرف ضع_كلمات_فشل_البرنامج(البيئة: &متغير بيئة_وحدات_منطقية, اللغة: لغة_تشخيص): فراغ {
     طابق جذر_قياسي_موثوق_لبيئة(البيئة) مع
-    | اختياري.موجود(الجذر) -> {
+    | اختياري.موجود(الجذر_القياسي) -> {
+        // The library that holds process/failure_text.sn: core, which std
+        // re-exports (library/std/process/process.sn).
+        دع بايتات_المنطقي: متجه ط8 = بايتات_من_نص(«process/failure_text.sn»);
+        دع الجذر: معرف_جذر_مكتبة = مالك_مسار_معاد_تصديره(البيئة, الجذر_القياسي, &بايتات_المنطقي);
         طابق جذر_مصدر_لمعرف(البيئة, الجذر) مع
         | اختياري.موجود(جذر_المصدر) -> {
             دع المسار_المنطقي: نص = «process/failure_text.sn»;

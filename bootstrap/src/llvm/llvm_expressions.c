@@ -12,6 +12,7 @@
 #include "llvm/runtime/llvm_runtime_memory.h"
 #include "kernel/memory/memory.h"
 #include "kernel/name/name.h"
+#include "frontend/identifier_identity.h"
 #include "kernel/type/tagged.h"
 #include "kernel/type/type.h"
 #include <stdint.h>
@@ -443,6 +444,131 @@ __LLVM_Emit_Atom__(__LLVM_Emitter__ *emitter, __Ast_Atom__ *atom, __Ast_Type__ *
                      is_signed ? 1 : 0);
     result.type = expected;
     return result;
+}
+
+/* `&f(x)` as a call argument (semantic/body_unary.c): the call's result,
+ * evaluated before the call that takes the borrow, is stored in a
+ * function-entry slot and the slot is borrowed. The slot and its type are
+ * returned so that the caller drops the value once that call has returned
+ * (__LLVM_Drop_Call_Borrows__): each evaluation of the call is released once,
+ * also in a loop, where the slot is refilled on the next iteration. */
+static __LLVM_Value__ __LLVM_Emit_Call_Borrow__(__LLVM_Emitter__ *emitter,
+                                                __Ast_Expression__ *argument,
+                                                __Ast_Type__ *parameter_type,
+                                                LLVMValueRef *out_slot,
+                                                __Ast_Type__ **out_type)
+{
+    /* Stores the borrow. */
+    __LLVM_Value__ result = __LLVM_Invalid_Value__();
+    /* References the shared reference type of the borrow. */
+    __Ast_Type__ *reference_type =
+        argument->__Contextual_Type__ != NULL ? argument->__Contextual_Type__ : parameter_type;
+    /* Stores the resolved reference type. */
+    __Resolved_Type__ resolved;
+    /* Stores the call's result. */
+    __LLVM_Value__ value;
+    /* Stores the temporary slot. */
+    LLVMValueRef slot;
+    /* Stores the slot's LLVM type. */
+    LLVMTypeRef slot_type;
+    *out_slot = NULL;
+    *out_type = NULL;
+    if (reference_type == NULL || !__Type_Resolve__(emitter->semantic, reference_type, &resolved) ||
+        resolved.__Kind__ != __Resolved_Type_Reference__ || resolved.__Inner__ == NULL)
+    {
+        __LLVM_Fail__("L2.6 call-result borrow has no canonical reference Type");
+        return result;
+    }
+    value = __LLVM_Emit_Expression__(emitter, argument->__As__.__Unary__.__Operand__, resolved.__Inner__);
+    if (value.value == NULL)
+        return result;
+    slot_type = __LLVM_Type__(emitter, resolved.__Inner__);
+    if (slot_type == NULL)
+        return result;
+    slot = __LLVM_Allocate_Stack__(emitter, slot_type, "call.borrow");
+    if (slot == NULL)
+        return result;
+    LLVMBuildStore(emitter->builder, value.value, slot);
+    *out_slot = slot;
+    *out_type = resolved.__Inner__;
+    result.value = LLVMBuildPointerCast(
+        emitter->builder, slot, __LLVM_Type__(emitter, reference_type), "reference");
+    result.type = reference_type;
+    return result;
+}
+
+/* Drops the call-result borrows of a call that has returned
+ * (__LLVM_Emit_Call_Borrow__): an owned text or vector is released; a
+ * non-owned value needs nothing. */
+static int __LLVM_Drop_Call_Borrows__(__LLVM_Emitter__ *emitter,
+                                      LLVMValueRef *slots,
+                                      __Ast_Type__ **types,
+                                      size_t count)
+{
+    /* Tracks the index. */
+    size_t index;
+    for (index = 0U; index < count; ++index)
+    {
+        if (slots[index] != NULL && types[index] != NULL &&
+            __Memory_Type_Is_Owned__(emitter->semantic, types[index]) &&
+            !__LLVM_Drop_Owned_At__(emitter, slots[index], types[index]))
+            return 0;
+    }
+    return 1;
+}
+
+
+/* Whether a source path ends with a library-relative path, either separator. */
+static int __LLVM_Path_Ends_With__(const char *path, const char *suffix)
+{
+    size_t path_length;
+    size_t suffix_length;
+    size_t index;
+    if (path == NULL)
+        return 0;
+    path_length = strlen(path);
+    suffix_length = strlen(suffix);
+    if (path_length < suffix_length)
+        return 0;
+    for (index = 0U; index < suffix_length; ++index)
+    {
+        char found = path[path_length - suffix_length + index];
+        if (found == '\\')
+            found = '/';
+        if (found != suffix[index])
+            return 0;
+    }
+    return 1;
+}
+
+/* core's إنهيار (library/core/process/panic.sn) cannot print or exit, so its
+   calls go to the panic handler, as the self-hosted compiler binds it in MSIR
+   (compiler/msir/semantic_lowering.sn, اربط_معالج_الانهيار_مسير). Stage0 only
+   builds the compiler, whose handler is std's; the handler's own calls stay. */
+static __LLVM_Function__ *__LLVM_Panic_Handler_For__(__LLVM_Emitter__ *emitter,
+                                                      __Semantic_Function_Entry__ *callee)
+{
+    size_t index;
+    if (callee == NULL || callee->__Function__ == NULL || callee->__Unit__ == NULL ||
+        !__Identifier_Identity_Equals_Cstr__(callee->__Function__->__Name__, "إنهيار") ||
+        !__LLVM_Path_Ends_With__(callee->__Unit__->__Path__, "library/core/process/panic.sn"))
+    {
+        return NULL;
+    }
+    for (index = 0U; index < emitter->function_count; ++index)
+    {
+        __Semantic_Function_Entry__ *semantic = emitter->functions[index].semantic;
+        if (semantic != NULL && semantic != emitter->current_function &&
+            semantic->__Function__ != NULL && semantic->__Unit__ != NULL &&
+            __Identifier_Identity_Equals_Cstr__(semantic->__Function__->__Name__,
+                                                "معالج_انهيار_المكتبة") &&
+            __LLVM_Path_Ends_With__(semantic->__Unit__->__Path__,
+                                    "library/std/process/panic_handler.sn"))
+        {
+            return &emitter->functions[index];
+        }
+    }
+    return NULL;
 }
 
 /* Emits the LLVM expression. */
@@ -1058,6 +1184,10 @@ __LLVM_Value__ __LLVM_Emit_Expression__(__LLVM_Emitter__ *emitter,
             __LLVM_Function__ *llvm_callee;
             /* Stores the call arguments. */
             LLVMValueRef *arguments = NULL;
+            /* The call-result borrows among the arguments (slot and type),
+             * dropped once the call returns. */
+            LLVMValueRef *borrow_slots = NULL;
+            __Ast_Type__ **borrow_types = NULL;
             /* Tracks the index. */
             size_t index;
             if (callee == NULL)
@@ -1068,6 +1198,10 @@ __LLVM_Value__ __LLVM_Emit_Expression__(__LLVM_Emitter__ *emitter,
                 __LLVM_Value__ callable;
                 LLVMTypeRef callable_function_type;
                 LLVMValueRef *indirect_arguments = NULL;
+                /* The call-result borrows among the arguments, dropped once
+                 * the call returns (__LLVM_Emit_Call_Borrow__). */
+                LLVMValueRef *indirect_borrow_slots = NULL;
+                __Ast_Type__ **indirect_borrow_types = NULL;
                 size_t indirect_index;
                 if (callable_type == NULL ||
                     !__Type_Resolve__(emitter->semantic, callable_type, &callable_resolved) ||
@@ -1087,8 +1221,16 @@ __LLVM_Value__ __LLVM_Emit_Expression__(__LLVM_Emitter__ *emitter,
                 {
                     indirect_arguments = (LLVMValueRef *)calloc(
                         callable_resolved.__Parameter_Count__, sizeof(*indirect_arguments));
-                    if (indirect_arguments == NULL)
+                    indirect_borrow_slots = (LLVMValueRef *)calloc(
+                        callable_resolved.__Parameter_Count__, sizeof(*indirect_borrow_slots));
+                    indirect_borrow_types = (__Ast_Type__ **)calloc(
+                        callable_resolved.__Parameter_Count__, sizeof(*indirect_borrow_types));
+                    if (indirect_arguments == NULL || indirect_borrow_slots == NULL ||
+                        indirect_borrow_types == NULL)
                     {
+                        free(indirect_arguments);
+                        free(indirect_borrow_slots);
+                        free(indirect_borrow_types);
                         __LLVM_Fail__("out of memory while lowering indirect call arguments");
                         return result;
                     }
@@ -1096,12 +1238,23 @@ __LLVM_Value__ __LLVM_Emit_Expression__(__LLVM_Emitter__ *emitter,
                 for (indirect_index = 0U;
                      indirect_index < callable_resolved.__Parameter_Count__; ++indirect_index)
                 {
-                    __LLVM_Value__ argument = __LLVM_Emit_Expression__(
-                        emitter, expression->__As__.__Call__.__Arguments__[indirect_index],
-                        callable_resolved.__Parameters__[indirect_index]);
+                    __Ast_Expression__ *indirect_argument =
+                        expression->__As__.__Call__.__Arguments__[indirect_index];
+                    __LLVM_Value__ argument =
+                        __Body_Is_Call_Borrow__(indirect_argument)
+                            ? __LLVM_Emit_Call_Borrow__(
+                                  emitter, indirect_argument,
+                                  callable_resolved.__Parameters__[indirect_index],
+                                  &indirect_borrow_slots[indirect_index],
+                                  &indirect_borrow_types[indirect_index])
+                            : __LLVM_Emit_Expression__(
+                                  emitter, indirect_argument,
+                                  callable_resolved.__Parameters__[indirect_index]);
                     if (argument.value == NULL)
                     {
                         free(indirect_arguments);
+                        free(indirect_borrow_slots);
+                        free(indirect_borrow_types);
                         return result;
                     }
                     argument = __LLVM_Coerce__(
@@ -1109,6 +1262,8 @@ __LLVM_Value__ __LLVM_Emit_Expression__(__LLVM_Emitter__ *emitter,
                     if (argument.value == NULL)
                     {
                         free(indirect_arguments);
+                        free(indirect_borrow_slots);
+                        free(indirect_borrow_types);
                         return result;
                     }
                     indirect_arguments[indirect_index] = argument.value;
@@ -1120,6 +1275,8 @@ __LLVM_Value__ __LLVM_Emit_Expression__(__LLVM_Emitter__ *emitter,
                             emitter->semantic, callable_resolved.__Output__, &output_resolved))
                     {
                         free(indirect_arguments);
+                        free(indirect_borrow_slots);
+                        free(indirect_borrow_types);
                         return result;
                     }
                     if (output_resolved.__Kind__ == __Resolved_Type_Void__)
@@ -1130,12 +1287,25 @@ __LLVM_Value__ __LLVM_Emit_Expression__(__LLVM_Emitter__ *emitter,
                         call_name);
                 }
                 free(indirect_arguments);
+                /* The call has returned: its call-result borrows end. */
+                if (indirect_borrow_slots != NULL &&
+                    !__LLVM_Drop_Call_Borrows__(emitter, indirect_borrow_slots, indirect_borrow_types,
+                                                callable_resolved.__Parameter_Count__))
+                {
+                    free(indirect_borrow_slots);
+                    free(indirect_borrow_types);
+                    return __LLVM_Invalid_Value__();
+                }
+                free(indirect_borrow_slots);
+                free(indirect_borrow_types);
                 result.type = callable_resolved.__Output__;
                 if (expected != NULL)
                     return __LLVM_Coerce__(emitter, result, expected);
                 return result;
             }
-            llvm_callee = __LLVM_Find_Function_By_Semantic__(emitter, callee);
+            llvm_callee = __LLVM_Panic_Handler_For__(emitter, callee);
+            if (llvm_callee == NULL)
+                llvm_callee = __LLVM_Find_Function_By_Semantic__(emitter, callee);
             if (llvm_callee == NULL)
             {
                 __LLVM_Fail__("L2.3 ordinary callee has no LLVM declaration");
@@ -1153,22 +1323,40 @@ __LLVM_Value__ __LLVM_Emit_Expression__(__LLVM_Emitter__ *emitter,
             {
                 arguments = (LLVMValueRef *)calloc(callee->__Function__->__Parameter_Count__,
                                                    sizeof(*arguments));
-                if (arguments == NULL)
+                borrow_slots = (LLVMValueRef *)calloc(callee->__Function__->__Parameter_Count__,
+                                                      sizeof(*borrow_slots));
+                borrow_types = (__Ast_Type__ **)calloc(callee->__Function__->__Parameter_Count__,
+                                                       sizeof(*borrow_types));
+                if (arguments == NULL || borrow_slots == NULL || borrow_types == NULL)
                 {
+                    free(arguments);
+                    free(borrow_slots);
+                    free(borrow_types);
                     __LLVM_Fail__("out of memory while lowering L2.3 call arguments");
                     return result;
                 }
             }
             for (index = 0U; index < callee->__Function__->__Parameter_Count__; ++index)
             {
-                /* Stores the argument. */
-                __LLVM_Value__ argument = __LLVM_Emit_Expression__(
-                    emitter,
-                    expression->__As__.__Call__.__Arguments__[index],
-                    callee->__Function__->__Parameters__[index].__Slot__.__Type__);
+                /* Stores the argument: a call-result borrow is materialized
+                 * before the call and dropped after it (below). */
+                __LLVM_Value__ argument =
+                    __Body_Is_Call_Borrow__(expression->__As__.__Call__.__Arguments__[index])
+                        ? __LLVM_Emit_Call_Borrow__(
+                              emitter,
+                              expression->__As__.__Call__.__Arguments__[index],
+                              callee->__Function__->__Parameters__[index].__Slot__.__Type__,
+                              &borrow_slots[index],
+                              &borrow_types[index])
+                        : __LLVM_Emit_Expression__(
+                              emitter,
+                              expression->__As__.__Call__.__Arguments__[index],
+                              callee->__Function__->__Parameters__[index].__Slot__.__Type__);
                 if (argument.value == NULL)
                 {
                     free(arguments);
+                    free(borrow_slots);
+                    free(borrow_types);
                     return result;
                 }
                 {
@@ -1180,6 +1368,8 @@ __LLVM_Value__ __LLVM_Emit_Expression__(__LLVM_Emitter__ *emitter,
                             &resolved))
                     {
                         free(arguments);
+                        free(borrow_slots);
+                        free(borrow_types);
                         __LLVM_Fail__("L2.3 could not resolve call parameter Type");
                         return result;
                     }
@@ -1194,6 +1384,8 @@ __LLVM_Value__ __LLVM_Emit_Expression__(__LLVM_Emitter__ *emitter,
                 if (argument.value == NULL)
                 {
                     free(arguments);
+                    free(borrow_slots);
+                    free(borrow_types);
                     return result;
                 }
                 arguments[index] = argument.value;
@@ -1207,6 +1399,8 @@ __LLVM_Value__ __LLVM_Emit_Expression__(__LLVM_Emitter__ *emitter,
                         emitter->semantic, callee->__Function__->__Output__.__Type__, &call_output))
                 {
                     free(arguments);
+                    free(borrow_slots);
+                    free(borrow_types);
                     __LLVM_Fail__("Direct LLVM could not resolve ordinary call result Type");
                     return result;
                 }
@@ -1220,6 +1414,17 @@ __LLVM_Value__ __LLVM_Emit_Expression__(__LLVM_Emitter__ *emitter,
                                               call_name);
             }
             free(arguments);
+            /* The call has returned: its call-result borrows end. */
+            if (borrow_slots != NULL &&
+                !__LLVM_Drop_Call_Borrows__(emitter, borrow_slots, borrow_types,
+                                            callee->__Function__->__Parameter_Count__))
+            {
+                free(borrow_slots);
+                free(borrow_types);
+                return __LLVM_Invalid_Value__();
+            }
+            free(borrow_slots);
+            free(borrow_types);
             result.type = callee->__Function__->__Output__.__Type__;
             if (expected != NULL)
             {
@@ -1312,6 +1517,33 @@ __LLVM_Value__ __LLVM_Emit_Expression__(__LLVM_Emitter__ *emitter,
                 __Resolved_Type__ resolved;
                 /* Stores the operand place. */
                 __LLVM_Place__ operand_place;
+                /* A shared borrow of a text literal (body_unary.c): the
+                 * literal's value in a function-entry slot, then its address. */
+                if (operation == __Unary_Address__ && __Body_Is_Text_Literal_Operand__(operand) &&
+                    reference_type != NULL &&
+                    __Type_Resolve__(emitter->semantic, reference_type, &resolved) &&
+                    resolved.__Kind__ == __Resolved_Type_Reference__ && resolved.__Inner__ != NULL)
+                {
+                    /* Stores the literal's value. */
+                    __LLVM_Value__ literal = __LLVM_Emit_Expression__(emitter, operand, resolved.__Inner__);
+                    /* Stores the temporary slot. */
+                    LLVMValueRef slot;
+                    if (literal.value == NULL)
+                    {
+                        return result;
+                    }
+                    slot = __LLVM_Allocate_Stack__(
+                        emitter, __LLVM_Type__(emitter, resolved.__Inner__), "text.literal.borrow");
+                    if (slot == NULL)
+                    {
+                        return result;
+                    }
+                    LLVMBuildStore(emitter->builder, literal.value, slot);
+                    result.value = LLVMBuildPointerCast(
+                        emitter->builder, slot, __LLVM_Type__(emitter, reference_type), "reference");
+                    result.type = reference_type;
+                    return result;
+                }
                 if (operand == NULL || operand->__Kind__ != __Ast_Expression_Atom__ ||
                     operand->__As__.__Atom__.__Kind__ != __Ast_Atom_Lvalue__ ||
                     reference_type == NULL ||

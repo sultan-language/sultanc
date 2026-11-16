@@ -1,15 +1,11 @@
 // Arabic spellings of this folder's modules (docs/en/reference/modules-and-imports.md,
 // "Module spellings"): `استورد المكتبة....` names the same modules as `import std....`.
-module calendar { ar: تقويم };
-module date { ar: تاريخ };
-module duration { ar: مدة };
-module duration_float { ar: مدة_عشرية };
-module duration_text { ar: نص_المدة };
 module time { ar: الوقت };
 module timezone { ar: منطقة_زمنية };
 
 استورد نظام_التشغيل.ساعة;
 استورد نظام_التشغيل.أخطاء;
+استورد وقت.مدة;
 
 عرف وقت_رتيب_داخليا(): نتيجة لحظة_رتيبة_نظام, خطأ_حد_نظام {
     أرجع اقرأ_وقت_رتيب_النظام();
@@ -42,3 +38,20 @@ module timezone { ar: منطقة_زمنية };
 عام مرادف monotonic_time_ns = وقت_رتيب_نانو;
 عام مرادف system_time_ns = وقت_نظام_نانو;
 عام مرادف sleep_ns = نم_نانو;
+
+// Sleeps for a std.time.duration مدة. The duration is a pure value (Rust's
+// core::time::Duration); sleeping is the OS's (Rust's std::thread::sleep), so
+// it is here with the clock, not in duration.sn.
+عام عرف نم_لمدة(المدة: &مدة): نتيجة عدد, عدد {
+    أرجع نم_نانو((*المدة).النانوثواني);
+}
+
+عام مرادف sleep_duration = نم_لمدة;
+
+// Re-exported: these children are modules and folders of alloc and core, at the same
+// paths (docs/en/reference/std-layers.md). One file, one module.
+module date = alloc.time.date { ar: تاريخ };
+module duration_text = alloc.time.duration_text { ar: نص_المدة };
+module calendar = core.time.calendar { ar: تقويم };
+module duration = core.time.duration { ar: مدة };
+module duration_float = core.time.duration_float { ar: مدة_عشرية };

@@ -38,7 +38,7 @@
     // Storage services are std functions bound by MSIR (never symbols); a
     // backend fails closed if the providers are not bound. Process exit is
     // std's exit provider, never a runtime service.
-    إذا (!خدمات_الذاكرة_من_المكتبة_القياسية(الهدف)) { أرجع خطأ; };
+    إذا (!خدمات_الذاكرة_متاحة(الهدف)) { أرجع خطأ; };
     طابق الخدمة مع
     | خدمة_تشغيل_هدف.خروج_العملية -> { أرجع خطأ; }
     | _ -> { أرجع صواب; };
@@ -73,7 +73,7 @@
     إذا ((*الهدف).صيغة_الكائن == صيغة_كائن_هدف.ويب_أسمبلي()) {
         إذا ((*الهدف).مزود_التشغيل != مزود_تشغيل_هدف.واسي()) { أرجع خطأ; };
     };
-    أرجع خدمات_الذاكرة_من_المكتبة_القياسية(الهدف);
+    أرجع خدمات_الذاكرة_متاحة(الهدف);
 }
 
 // Release is the only retained primitive whose lowering still adapts one
@@ -170,7 +170,7 @@
 // (FMADD.D), POWER (FMADD), z/Architecture (MADBR) and LoongArch (FMADD.D).
 // Elsewhere LLVM would call libm's floor or fma, which SultanC executables do
 // not link, so std.math selects its exact software forms on those
-// architectures (library/std/math/float.sn), as Rust's libm does.
+// architectures (library/core/math/float.sn), as Rust's libm does.
 عام عرف يدعم_عملية_عائمة_للهدف(الهدف: &واصف_هدف, العملية: عملية_عائمة_بدائية): منطقي {
     دع المعمارية: هوية_معمارية = (*الهدف).المعمارية.الهوية;
     إذا (عملية_عائمة_تقريب_صحيح(العملية)) {

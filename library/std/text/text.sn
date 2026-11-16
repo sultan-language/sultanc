@@ -2,18 +2,21 @@
 // (docs/en/reference/modules-and-imports.md, "Module spellings"). An import may
 // use either name; both name one module.
 
-module bidi { ar: اتجاه };
-module builder { ar: باني };
-module compare { ar: مقارنة };
-module float { ar: عشري };
-module format { ar: تنسيق };
-module from_bytes { ar: من_بايتات };
-module language { ar: لغة };
-module messages { ar: رسائل };
-module number { ar: أعداد };
-module radix { ar: أساس };
-module range { ar: نطاق };
-module search { ar: بحث };
-module substring { ar: مقطع };
 module system_language { ar: لغة_النظام };
-module transform { ar: تحويل };
+
+// Re-exported: these children are modules and folders of alloc and core, at the same
+// paths (docs/en/reference/std-layers.md). One file, one module.
+module bidi = alloc.text.bidi { ar: اتجاه };
+module builder = alloc.text.builder { ar: باني };
+module float = alloc.text.float { ar: عشري };
+module format = alloc.text.format { ar: تنسيق };
+module from_bytes = alloc.text.from_bytes { ar: من_بايتات };
+module language = alloc.text.language { ar: لغة };
+module messages = alloc.text.messages { ar: رسائل };
+module number = alloc.text.number { ar: أعداد };
+module radix = alloc.text.radix { ar: أساس };
+module substring = alloc.text.substring { ar: مقطع };
+module transform = alloc.text.transform { ar: تحويل };
+module compare = core.text.compare { ar: مقارنة };
+module range = core.text.range { ar: نطاق };
+module search = core.text.search { ar: بحث };

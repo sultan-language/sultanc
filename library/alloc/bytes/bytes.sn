@@ -1,0 +1,12 @@
+// The root file of library/alloc/bytes: the Arabic spellings of its modules
+// (docs/en/reference/modules-and-imports.md, "Module spellings"). The
+// standard library is three libraries (docs/en/reference/std-layers.md); this
+// file names only this library's own children.
+
+module builder { ar: باني };
+module cursor { ar: مؤشر };
+module range { ar: نطاق };
+
+// Re-exported: these children are modules and folders of core, at the same
+// paths (docs/en/reference/std-layers.md). One file, one module.
+module compare = core.bytes.compare { ar: مقارنة };

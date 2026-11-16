@@ -61,6 +61,9 @@ def translate_command(command, debugger, mode, places):
             name = rest[3:].strip()
             return f"break {name}" if gdb else f"breakpoint set --name {name}"
         raise SystemExit(f"unknown breakpoint form: {command}")
+    if word == "clear":
+        file_name, line = places[rest.strip()[1:]]
+        return f"clear {file_name}:{line}" if gdb else f"breakpoint clear --file {file_name} --line {line}"
     if word == "run":
         if gdb:
             return "run"
@@ -77,6 +80,11 @@ def translate_command(command, debugger, mode, places):
     }
     if word in simple:
         return simple[word][0 if gdb else 1]
+    if word == "global":
+        # lldb parses a plain `target variable NAME` with an ASCII identifier
+        # pattern and finds no global with an Arabic name; the anchored
+        # regular-expression lookup finds either.
+        return f"print {rest}" if gdb else f"target variable -r ^{re.escape(rest)}$"
     if word == "print":
         return f"print {rest}" if gdb else f"frame variable {rest}"
     raise SystemExit(f"unknown command: {command}")
@@ -107,9 +115,12 @@ def translate(spec_path, program_dir, debugger, mode):
         lines.append("settings set auto-confirm true")
         if mode == "qemu":
             lines.append("gdb-remote localhost:@PORT@")
+        # Each command through the script interpreter, so a failing one does
+        # not end lldb's batch run.
         for index, (_, command, _) in enumerate(commands):
+            lldb_command = translate_command(command, debugger, mode, places)
             lines.append(f"script print({MARKER.format(index)!r})")
-            lines.append(translate_command(command, debugger, mode, places))
+            lines.append(f"script lldb.debugger.HandleCommand({lldb_command!r})")
         lines.append("process kill")
     print("\n".join(lines))
 

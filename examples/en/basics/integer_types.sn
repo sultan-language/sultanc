@@ -1,6 +1,7 @@
 // Fixed-width integers, hexadecimal literals and explicit casts with `as`,
 // printed with std.fmt in decimal, hexadecimal and binary.
 import std.fmt.fmt;
+import std.io.print_formatted;
 
 def main(): int {
     let small: u8 = 0xFF;

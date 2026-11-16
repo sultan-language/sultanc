@@ -247,6 +247,36 @@ int __Parser_Parse_Alias_Item__(__Parser__ *__Parser_State__,
         return 0;
     }
 
+    /* `pub alias NAME = IMPORT.NAME;` re-exports a name of the module that an
+     * `as` import names. The target is another module's, so it is resolved
+     * through this module's imports when NAME is looked up
+     * (kernel/name/name_lookup.c), not here. */
+    if (__Public__ && !__Destination__.__Qualified__ && __Target__.__Qualified__)
+    {
+        if (__Parser_Module_Name_Exists__(__Items__, __Destination__.__Path__.__Name__))
+        {
+            return __Parser_Alias_Diagnostic__(
+                __Parser_State__, __E0205_Duplicate_Declaration__, __Destination__.__Name_Span__);
+        }
+        if (!__Parser_Expect__(__Parser_State__, __Token_SEMICOLON_OPERATOR__))
+        {
+            return 0;
+        }
+        __Item__ = __Parser_New_Module_Item__(
+            __Parser_State__,
+            __Ast_Module_Item_Alias__,
+            __Destination__.__Path__.__Name__,
+            __Parser_Span__(__Start__, __Parser_State__->__Previous__.__Span__.__End__));
+        if (__Item__ == NULL)
+        {
+            return 0;
+        }
+        __Item__->__Public__ = 1;
+        __Item__->__As__.__Alias__.__Destination__ = __Destination__.__Path__;
+        __Item__->__As__.__Alias__.__Target__ = __Target__.__Path__;
+        return __Parser_Push_Module_Item__(__Parser_State__, __Items__, __Item__);
+    }
+
     if (__Destination__.__Qualified__ != __Target__.__Qualified__)
     {
         return __Parser_Alias_Diagnostic__(

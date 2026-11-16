@@ -162,6 +162,21 @@ def main(): int {
             match roots.المرشحات[at].اللغة with
             | اختياري.موجود(language) -> { if (!نصان_متساويان(&language, &"ar")) { return 30; }; }
             | اختياري.لا_شيء -> { return 30; };
+            // `import std.text.`: a module text re-exports from core
+            // (`module compare = core.text.compare { ar: مقارنة };`).
+            let t3c: string = «import std.text.
+»;
+            let p3c: رقعة_إكمال = رقع_مصدر_للإكمال(&t3c, cursor_after(&t3c, "text."));
+            let text_children: نتيجة_إكمال_أدوات = إكمال_مسار_بيئة(&env, &p3c);
+            if (position_of(&text_children, "compare") >= 1000000) { return 31; };
+            if (position_of(&text_children, "مقارنة") >= 1000000) { return 32; };
+            // `import std.json.`: the children of a folder std re-exports from
+            // alloc (`module json = alloc.json`).
+            let t3d: string = «import std.json.
+»;
+            let p3d: رقعة_إكمال = رقع_مصدر_للإكمال(&t3d, cursor_after(&t3d, "json."));
+            let json_children: نتيجة_إكمال_أدوات = إكمال_مسار_بيئة(&env, &p3d);
+            if (position_of(&json_children, "parse") >= 1000000) { return 33; };
         };
         // T4: the names in scope, the line unfinished.
         let t4: string = «def helper(a: int): int { return a; }

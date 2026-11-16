@@ -1,0 +1,84 @@
+// std.memory.allocator (المكتبة.ذاكرة.مخصص): the canonical allocator interface.
+//
+// Every heap value (a vector, a text, a box, a closure environment) gets its
+// memory from the compiler's three storage services (compiler/runtime/
+// service_identity.sn). Generated code calls them through three entry
+// points: the functions marked with the allocator annotations below, which
+// MSIR lowering binds once as a program fact (compiler/msir/
+// semantic_lowering.sn, اربط_المخصص_العام_مسير); no module imports them and
+// no name is special. This is Rust's split: core::alloc states the interface
+// (Layout, GlobalAlloc), alloc calls it through the compiler-resolved
+// __rust_alloc symbols, and #[global_allocator] names the implementation,
+// std's System by default. Here the annotations, the contract below and the
+// Layout record are the interface; std's implementation is std.os.allocation
+// (the algorithm), std.os.allocation_cache (the marked entry points, with
+// per-thread caches) and std.os.allocator_platform (what the algorithm needs
+// from the OS). This module is pure: it imports nothing and allocates
+// nothing.
+//
+// The entry points (W is the target's pointer-width unsigned integer: ط64,
+// or ط32 on wasm32 and the 32-bit Linux targets; the names are free):
+//
+//   @@تخصيص_عام        / @@global_alloc     (الحجم: W): W              GlobalAlloc::alloc
+//   @@إعادة_تخصيص_عام  / @@global_realloc   (العنوان: W, الحجم: W): W  GlobalAlloc::realloc
+//   @@تحرير_عام        / @@global_dealloc   (العنوان: W): فراغ          GlobalAlloc::dealloc
+//
+// The compiler checks each signature against the target's pointer width,
+// and that each entry point is marked once.
+//
+// The contract. Every implementation keeps it, and generated code relies on
+// nothing else:
+//
+//  1. Alignment: every address returned is a multiple of محاذاة_المخصص()
+//     (16 bytes). A request names only a size: there is no larger alignment.
+//  2. Failure is 0 (out of memory, or a size beyond the heap). Generated code
+//     traps on it, as Rust's handle_alloc_error ends the program.
+//  3. Size 0 gives a live, unique block, as any other size.
+//  4. Reallocate keeps the first min(old, new) bytes and may move the block;
+//     reallocate of 0 allocates. A block outside the heap (static storage: a
+//     text literal passed as an owned value) cannot grow: 0.
+//  5. Free of 0, or of an address outside the heap, does nothing: owned values
+//     may point at static storage and their drop frees it. Freeing a block
+//     twice, or an address inside a block, traps.
+//  6. Thread safety: once a thread exists, the three calls may run on any
+//     thread at the same time.
+//  7. The entry points and everything they call never allocate: no vector,
+//     text, box or closure, only integers, the memory primitives and the
+//     platform's page source.
+//
+// A program's own allocator (Rust's #[global_allocator]). A program that
+// marks three functions of its own replaces std's: std's are the default
+// only when the program marks none, and a program marks all three or none
+// (SULTANC-GLOBAL-ALLOCATOR-INVALID otherwise). On a target without std's
+// implementation (bare metal, such as Cortex-M: the compiler's table is
+// compiler/backend/target/runtime_symbol_query_context.sn,
+// مزود_خدمات_ذاكرة_للهدف) this is how a program gets a heap; there a program
+// that allocates without one is rejected when the backend is chosen.
+
+// The alignment of every block the allocator returns.
+عام عرف محاذاة_المخصص(): طبيعي { أرجع 16; }
+
+// A block's size and alignment (Rust's core::alloc::Layout).
+عام نوع تخطيط_ذاكرة = { الحجم: طبيعي, المحاذاة: طبيعي };
+
+// A layout the allocator can serve: the alignment a power of two no larger
+// than محاذاة_المخصص(), and the size rounded up to it without overflow.
+عام عرف تخطيط_ذاكرة_من(الحجم: طبيعي, المحاذاة: طبيعي): اختياري تخطيط_ذاكرة {
+    إذا (المحاذاة == 0 || (المحاذاة & (المحاذاة - 1)) != 0) { أرجع اختياري.لا_شيء(); };
+    إذا (المحاذاة > محاذاة_المخصص()) { أرجع اختياري.لا_شيء(); };
+    دع الأقصى: طبيعي = ~(0 مثل طبيعي);
+    إذا (الحجم > الأقصى - (المحاذاة - 1)) { أرجع اختياري.لا_شيء(); };
+    دع التخطيط: تخطيط_ذاكرة = { الحجم: الحجم, المحاذاة: المحاذاة };
+    أرجع اختياري.موجود(التخطيط);
+}
+
+// The layout's size rounded up to its alignment (Rust's Layout::pad_to_align).
+عام عرف حجم_تخطيط_مقرب(التخطيط: &تخطيط_ذاكرة): طبيعي {
+    دع القناع: طبيعي = (*التخطيط).المحاذاة - 1;
+    أرجع ((*التخطيط).الحجم + القناع) & ~القناع;
+}
+
+عام مرادف allocator_alignment = محاذاة_المخصص;
+عام نوع memory_layout = تخطيط_ذاكرة;
+عام مرادف memory_layout_from = تخطيط_ذاكرة_من;
+عام مرادف layout_padded_size = حجم_تخطيط_مقرب;

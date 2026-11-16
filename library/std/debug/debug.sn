@@ -3,4 +3,7 @@
 // use either name; both name one module.
 
 module assert { ar: تأكد };
-module location { ar: موقع };
+
+// Re-exported: these children are modules and folders of alloc and core, at the same
+// paths (docs/en/reference/std-layers.md). One file, one module.
+module location = alloc.debug.location { ar: موقع };
