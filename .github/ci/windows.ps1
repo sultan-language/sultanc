@@ -103,6 +103,9 @@ function Step([string]$name, [scriptblock]$body) {
     }
     $watch.Stop()
     Write-Host '::endgroup::'
+    # A failed test run's failures (report.py), outside the collapsed group.
+    $failures = Join-Path $root 'build\tests-failures.txt'
+    if (-not $ok -and (Test-Path $failures)) { Get-Content -Encoding utf8 $failures | Write-Host }
     $time = '{0}:{1:00}' -f [int][Math]::Floor($watch.Elapsed.TotalMinutes), $watch.Elapsed.Seconds
     if ($ok) { Write-Summary "- ✅ $name ($time)" }
     else {
@@ -158,6 +161,7 @@ function Invoke-LlvmVerify {
 function Invoke-Tests {
     # The test suite is a bash script; Git for Windows provides bash on the runner.
     $env:PATH = "$sdk\bin;$env:PATH"
+    Remove-Item -Force -ErrorAction SilentlyContinue (Join-Path $root 'build\tests-failures.txt')
     & "$env:ProgramFiles\Git\bin\bash.exe" tools/tests/ci_run.sh
     $status = $LASTEXITCODE
     python "$PSScriptRoot\report.py" "$root"

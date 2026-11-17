@@ -4,7 +4,9 @@
 Arguments: the directory the test-result artifacts were downloaded into
 (one tests-<route>-<host>/ directory per job, each holding the
 tests-result.json written by tools/tests/ci_run.sh).
-Environment: RESULTS, the workflow's `needs` context as JSON.
+Environment: RESULTS, the workflow's `needs` context as JSON; TIER and
+EXPECTED, the plan's tier and planned jobs (plan.py), so a job the plan left
+out reads "not planned", never as a pass or a failure.
 
 Writes to $GITHUB_STEP_SUMMARY (else stdout): the result of every job, then
 one row per host and route with the test totals. Standard library only.
@@ -20,10 +22,17 @@ ICON = {"success": "✅", "failure": "❌", "cancelled": "⏹️", "skipped": "�
 def main():
     results_dir = sys.argv[1] if len(sys.argv) > 1 else "results"
     needs = json.loads(os.environ.get("RESULTS", "{}"))
-    lines = ["## SultanC CI", "", "| job | result |", "|---|---|"]
+    tier = os.environ.get("TIER") or "unknown"
+    try:
+        expected = set(json.loads(os.environ.get("EXPECTED") or "[]"))
+    except ValueError:
+        expected = set()
+    lines = [f"## SultanC CI ({tier} tier)", "", "| job | planned | result |", "|---|---|---|"]
     for job, info in needs.items():
         result = info.get("result", "?")
-        lines.append(f"| {job} | {ICON.get(result, '❔')} {result} |")
+        planned = "yes" if job in expected else "no"
+        shown = "not planned" if job not in expected and result == "skipped" else result
+        lines.append(f"| {job} | {planned} | {ICON.get(result, '❔')} {shown} |")
 
     rows = []
     if os.path.isdir(results_dir):

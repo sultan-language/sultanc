@@ -7,6 +7,11 @@ Reads, under the repository root given as the only argument:
   build/ispeak-tests-<target>/summary.txt    one row per iSpeak test
 
 Writes:
+  build/tests-failures.txt: every failed test with its whole reason, the
+      suite errors, and the tail of the log of a suite that did not build or
+      crashed; the CI step wrappers (common.sh ci_step, windows.ps1 Step)
+      print it after the step's collapsed log group, so it is the open end
+      of a failed step's log (outside GitHub Actions it is printed here)
   the job summary ($GITHUB_STEP_SUMMARY, else stdout): totals, then every
       failed test with its reason
   one ::error annotation per failed test (at most 50)
@@ -38,14 +43,28 @@ def main():
             result = json.load(f)
     except (OSError, ValueError) as error:
         emit_summary(["### Tests", "", f"No test result ({result_path}: {error})."])
+        os.makedirs(os.path.join(root, "build"), exist_ok=True)
+        with open(os.path.join(root, "build", "tests-failures.txt"), "w", encoding="utf-8") as f:
+            f.write(f"\nNo test result ({result_path}: {error}): tools/tests/ci_run.sh stopped "
+                    "before writing it; its own output is in the log group above.\n")
         return 0
 
     target = result.get("target", "?")
     cases = []  # (suite, name, status, reason)
-    for line in read_lines(os.path.join(root, "build", "tests-ci", "runner.log")):
+    # A reason can span lines (compiler diagnostics, a diff): the lines up to
+    # the next result line belong to the result before them.
+    markers = ("PASS\t", "FAIL\t", "SKIP\t", "TIMEOUT\t")
+    runner_log = os.path.join(root, "build", "tests-ci", "runner.log")
+    for line in read_lines(runner_log):
         parts = line.split("\t")
         if len(parts) >= 2 and parts[0] in ("PASS", "FAIL", "SKIP"):
-            cases.append(("runner", parts[1], parts[0], parts[2] if len(parts) > 2 else ""))
+            cases.append(["runner", parts[1], parts[0], parts[2] if len(parts) > 2 else ""])
+        elif line.startswith("TIMEOUT\t") or "الكلي=" in line:
+            continue
+        elif cases and cases[-1][2] == "FAIL" and line.strip() and not line.startswith(markers):
+            if cases[-1][3].count("\n") < 60:
+                cases[-1][3] += "\n" + line
+    cases = [tuple(c) for c in cases]
     summary_rows = read_lines(os.path.join(root, "build", f"ispeak-tests-{target}", "summary.txt"))
     for row in summary_rows[1:]:
         cols = row.split()
@@ -80,6 +99,7 @@ def main():
             lines.append(f"- … {len(failed) - 200} more (see the test logs artifact)")
         lines += ["", "</details>"]
     emit_summary(lines)
+    log_failures(root, target, result, failed)
 
     if os.environ.get("GITHUB_ACTIONS"):
         for suite, name, _, reason in failed[:50]:
@@ -112,6 +132,56 @@ def main():
             f.write("  </testsuite>\n")
         f.write("</testsuites>\n")
     return 0
+
+
+def tail(path, count):
+    lines = read_lines(path)
+    return lines[-count:] if lines else [f"({path}: missing or empty)"]
+
+
+def log_failures(root, target, result, failed):
+    """The failures, printed last in the step log (not in a group)."""
+    out = []
+    errors = result.get("errors", [])
+    report = os.path.join(root, "build", "tests-failures.txt")
+    if os.path.exists(report):
+        os.remove(report)
+    if not failed and not errors:
+        return
+    out.append("")
+    out.append("=" * 72)
+    out.append(f"SultanC tests on {target}: {result.get('failed', '?')} failed "
+               f"of {result.get('executed', '?')} executed")
+    out.append("=" * 72)
+    for error in errors:
+        out.append(f"suite error: {error}")
+    suites = result.get("suites", {})
+    tests_ci = os.path.join(root, "build", "tests-ci")
+    runner = suites.get("runner", {})
+    if runner.get("built") == 0:
+        out.append("")
+        out.append("--- tests/runner/main.sn did not build; last lines of runner-build.log:")
+        out += tail(os.path.join(tests_ci, "runner-build.log"), 60)
+    elif any("runner:" in e for e in errors):
+        out.append("")
+        out.append("--- the runner reported no usable summary; last lines of runner.log:")
+        out += tail(os.path.join(tests_ci, "runner.log"), 60)
+    if any("ispeak:" in e for e in errors) or any(c[0] == "ispeak" for c in failed):
+        out.append("")
+        out.append("--- last lines of ispeak.log:")
+        out += tail(os.path.join(tests_ci, "ispeak.log"), 40)
+    for index, (suite, name, _, reason) in enumerate(failed, 1):
+        out.append("")
+        out.append(f"--- FAIL {index}/{len(failed)}: {suite} {name}")
+        out += (reason or "(no reason given)").splitlines()
+    out.append("")
+    out.append("Full logs: the tests-<route>-<host> artifact of this run "
+               "(build/tests-ci/*.log, build/tests-junit.xml).")
+    text = "\n".join(out) + "\n"
+    with open(report, "w", encoding="utf-8") as f:
+        f.write(text)
+    if not os.environ.get("GITHUB_ACTIONS"):
+        sys.stdout.write(text)
 
 
 def emit_summary(lines):

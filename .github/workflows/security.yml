@@ -6,6 +6,7 @@ on:
     branches: [main]
     paths: ['bootstrap/**', 'cmake/**', 'build.sh', '.github/workflows/security.yml']
   pull_request:
+    branches: [main]
     paths: ['bootstrap/**', 'cmake/**', 'build.sh', '.github/workflows/security.yml']
   schedule:
     - cron: '41 4 * * 1'
@@ -17,7 +18,7 @@ permissions:
 
 concurrency:
   group: sultanc-security-${{ github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  cancel-in-progress: ${{ github.event_name == 'push' || github.event_name == 'pull_request' }}
 
 jobs:
   codeql:

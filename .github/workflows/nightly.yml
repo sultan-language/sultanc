@@ -1,6 +1,14 @@
-# Nightly: the whole CI (ci.yml) on main with the opt-in test suites on
-# (self-host convergence inside the runner, RSS and allocation checks), so
-# slow checks run every day without slowing every push.
+# Nightly: the full tier of ci.yml (every route on every host, every test
+# step) on main, with the opt-in test suites on (self-host convergence inside
+# the runner, RSS and allocation checks). Pushes to main run only the quick
+# tier, so this is where the whole Native + LLVM matrix runs every day.
+#
+# A scheduled run whose commit already passed the previous scheduled nightly,
+# or a beta/master qualification (the same full tier with the same opt-in
+# suites, .github/ci/evidence.sh), is skipped, and its Fresh job says which
+# run covered it: the same commit is not verified twice for nothing. A failed
+# or cancelled run does not count, so its commit is verified again. A manual
+# dispatch always runs.
 name: SultanC Nightly
 
 on:
@@ -10,9 +18,47 @@ on:
 
 permissions:
   contents: read
+  pull-requests: read
+  actions: read
 
 jobs:
+  fresh:
+    name: Fresh
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      run: ${{ steps.check.outputs.run }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github
+      - name: Commit not yet verified
+        id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT: ${{ github.event_name }}
+          REPO: ${{ github.repository }}
+          BRANCH: ${{ github.ref_name }}
+          SHA: ${{ github.sha }}
+        run: |
+          run=true
+          if [ "$EVENT" = schedule ]; then
+            last=$(gh api "repos/$REPO/actions/workflows/nightly.yml/runs?event=schedule&status=success&branch=$BRANCH&per_page=1" \
+              --jq '.workflow_runs[0] | "\(.head_sha) \(.html_url)"' 2>/dev/null || true)
+            covered=
+            if [ "${last%% *}" = "$SHA" ]; then covered=${last#* }; fi
+            [ -n "$covered" ] || covered=$(sh .github/ci/evidence.sh "$SHA")
+            if [ -n "$covered" ]; then
+              run=false
+              echo "Skipped: $SHA already passed the full matrix in $covered" >> "$GITHUB_STEP_SUMMARY"
+            fi
+          fi
+          echo "run=$run" >> "$GITHUB_OUTPUT"
+
   ci:
+    needs: fresh
+    if: needs.fresh.outputs.run == 'true'
     uses: ./.github/workflows/ci.yml
     with:
+      scope: full
       extended: true

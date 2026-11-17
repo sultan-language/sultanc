@@ -53,6 +53,10 @@ ci_step() { # name command...
     set -e
     ci_step_time=$(ci_duration $(($(ci_seconds) - ci_step_start)))
     ci_group_end
+    # A failed test run's failures (report.py), outside the collapsed group.
+    if [ "$ci_step_status" -ne 0 ] && [ -f "$ci_root/build/tests-failures.txt" ]; then
+        cat "$ci_root/build/tests-failures.txt"
+    fi
     if [ "$ci_step_status" -eq 0 ]; then
         ci_summary "- ✅ $ci_step_name ($ci_step_time)"
     else
@@ -79,6 +83,7 @@ ci_report_tests() {
 # Runs the test suite (tools/tests/ci_run.sh) and reports it; the exit status
 # is the suite's.
 ci_run_tests() { # compiler
+    rm -f "$ci_root/build/tests-failures.txt"
     set +e
     SC=$1 bash "$ci_root/tools/tests/ci_run.sh"
     ci_tests_status=$?
