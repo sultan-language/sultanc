@@ -94,8 +94,12 @@ function Write-Summary([string]$line) {
 function Step([string]$name, [scriptblock]$body) {
     Write-Host "::group::$name"
     $watch = [Diagnostics.Stopwatch]::StartNew()
+    # The step's output is also kept, so a failure can show its end outside
+    # the collapsed group.
+    $log = Join-Path $root 'build\ci-step.log'
+    New-Item -ItemType Directory -Force (Split-Path $log) | Out-Null
     try {
-        & $body
+        & $body *>&1 | Tee-Object -FilePath $log | Out-Host
         $ok = $true
     } catch {
         $ok = $false
@@ -106,6 +110,10 @@ function Step([string]$name, [scriptblock]$body) {
     # A failed test run's failures (report.py), outside the collapsed group.
     $failures = Join-Path $root 'build\tests-failures.txt'
     if (-not $ok -and (Test-Path $failures)) { Get-Content -Encoding utf8 $failures | Write-Host }
+    elseif (-not $ok -and (Test-Path $log)) {
+        Write-Host "--- $name failed; the last 80 lines of its output:"
+        Get-Content $log -Tail 80 | Write-Host
+    }
     $time = '{0}:{1:00}' -f [int][Math]::Floor($watch.Elapsed.TotalMinutes), $watch.Elapsed.Seconds
     if ($ok) { Write-Summary "- ✅ $name ($time)" }
     else {

@@ -10,14 +10,20 @@
 # with the same canonical commands (.github/ci/linux.sh, macos.sh,
 # windows.ps1 -> build.sh / cmake/ and tools/tests/ci_run.sh).
 #
+# The tiers follow LLVM's premerge CI (every change built and tested on
+# Linux, Windows and macOS) with beta as the full gate, like Rust's merge
+# queue (plan.py has the details and sources).
+#
 #   trigger                         tier     runs
-#   push to main                    quick    lint; seed route on linux-x86_64
-#                                            (bootstrap, Stage3 == Stage4, seed
-#                                            reproducible, tests); LLVM route on
-#                                            linux-x86_64 (C Stage0 -> LLVM-enabled
-#                                            Stage2, convergence); docs check when
-#                                            docs changed; seed update when
-#                                            bootstrap-wasm/ changed
+#   push to main                    quick    lint; Seed / linux-x86_64 and
+#                                            macos-arm64 (Native ELF and Mach-O:
+#                                            seed bootstrap, Stage3 == Stage4,
+#                                            seed reproducible, tests); LLVM /
+#                                            linux-x86_64 (C Stage0 -> LLVM
+#                                            Stage2, convergence); LLVM /
+#                                            windows-x86_64 (COFF: build,
+#                                            convergence, tests); docs check
+#                                            when docs changed
 #   pull request into main          focused  quick, plus the hosts of the
 #                                            components it changes (plan.py,
 #                                            COMPONENTS)
@@ -36,7 +42,9 @@
 #                native hosts: Stage1 -> Stage2 -> Stage3 == Stage4 and the
 #                test suite; the committed seed must equal what the sources
 #                rebuild (all six hosts)
-#   seed-update  bootstrap.c --update-seed, then a clean bootstrap from it
+#   seed-update  bootstrap.c --update-seed into a scratch directory, then a
+#                clean bootstrap from it (the committed seed is never changed);
+#                full tier only
 #   llvm-sdk     the pinned LLVM SDK per host (.github/ci/llvm.lock), cached
 #                on llvm.lock alone; built in its own job, so a multi-hour
 #                source build never shares a time budget with a bootstrap

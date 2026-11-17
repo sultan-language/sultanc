@@ -1,17 +1,35 @@
 #!/usr/bin/env python3
 """Plans one CI run: which jobs and hosts run for this trigger.
 
-The tiers (.github/workflows/ci.yml; the policy is written out in CI.md):
+The tiers (.github/workflows/ci.yml; the policy is written out in CI.md).
+They follow what mature compilers run, checked in their CI files:
+  LLVM premerge (.github/workflows/premerge.yaml): every pull request builds
+    and tests on Linux x86_64, Windows and macOS arm64, only the projects the
+    change affects; the full configuration matrix runs on post-commit
+    builders.
+  Rust (src/ci/github-actions/jobs.yml): a pull-request push runs a few Linux
+    jobs; nothing lands on master before the ~84 auto jobs (Linux, macOS,
+    Windows, every tier-1 target) pass in the merge queue.
+SultanC pushes straight to main (no merge queue), so main gets LLVM's
+premerge shape: every OS family, both backends and every object format on
+each push, one representative host each. beta plays the role of Rust's merge
+queue: the full matrix before code may reach master.
 
   docs     only documentation changed: the docs check, no compiler build
-  quick    push to main: lint, the Linux x86_64 seed route (bootstrap,
-           Stage3 == Stage4, seed reproducible, test suite) and the Linux
-           x86_64 LLVM route (C Stage0 -> LLVM-enabled Stage2, convergence)
-  focused  pull request: quick, plus the hosts and routes of the components
-           the pull request changes (COMPONENTS below)
+  quick    push to main:
+             Seed / linux-x86_64   Native ELF: seed bootstrap, Stage3 ==
+                                   Stage4, seed reproducible, test suite
+             Seed / macos-arm64    Native arm64 Mach-O: seed bootstrap,
+                                   Stage3 == Stage4, seed reproducible, tests
+             LLVM / linux-x86_64   C Stage0 -> LLVM-enabled Stage2,
+                                   convergence
+             LLVM / windows-x86_64 COFF, the only Windows route: C Stage0 ->
+                                   LLVM Stage2, convergence, test suite
+  focused  pull request into main: quick, plus the hosts and routes of the
+           components the pull request changes (COMPONENTS below)
   full     beta qualification (beta.yml), master without evidence (master.yml),
            nightly, manual dispatch with scope=full:
-           every route on every host, every test step
+           every route on every host, every test step, the seed update
 
 Every host and route is defined once (HOSTS); a tier only selects from them,
 so a tier never changes what a selected job does. The jobs themselves are the
@@ -56,29 +74,27 @@ DOCS = re.compile(r"^(docs/|LICENSE$)|\.md$")
 # Components a pull request can touch, and what each adds to the quick tier.
 #   seed: seed-route hosts      llvm: LLVM-route hosts (tests on)
 #   llvm_tests: run the test step on these LLVM-route hosts
-#   seed_update: the seed-update job
+# The seed update (regenerate the seed in a scratch directory, bootstrap from
+# it; never written back) runs only in the full tier.
 COMPONENTS = [
-    ("macOS / Mach-O / arm64 Native",
-     re.compile(r"(^|/)(macos|darwin|macho|apple)([/_.]|$)|^compiler/backend/architectures/arm64/"
-                r"|^\.github/ci/macos\.sh$"),
-     {"seed": ["macos-arm64"]}),
-    ("Windows / COFF / PE",
-     re.compile(r"(^|/)(windows|win32|win64|coff|pe|msvc|mingw)([/_.]|$)|^\.github/ci/windows\.ps1$"),
-     {"llvm": ["windows-x86_64"]}),
-    ("arm64 Linux",
+    ("arm64 Linux / Windows",
      re.compile(r"(^|/)(aarch64|arm64)([/_.]|$)"),
-     {"llvm": ["linux-arm64"]}),
+     {"llvm": ["linux-arm64", "windows-arm64"]}),
+    ("macOS x86_64",
+     re.compile(r"(^|/)(macos|darwin|macho|apple)([/_.]|$)|^\.github/ci/macos\.sh$"),
+     {"llvm": ["macos-x86_64"]}),
     ("LLVM provider / C Stage0 / build",
      re.compile(r"^compiler/backend/provider/llvm/|^bootstrap/|^cmake/|^build\.sh$|^\.github/ci/llvm\.lock$"
                 r"|^\.github/ci/linux\.sh$"),
      {"llvm_tests": ["linux-x86_64"]}),
-    ("wasm seed",
-     re.compile(r"^bootstrap-wasm/"),
-     {"seed_update": True}),
 ]
 
-QUICK_SEED = ["linux-x86_64"]
-QUICK_LLVM = ["linux-x86_64"]
+QUICK_SEED = ["linux-x86_64", "macos-arm64"]
+QUICK_LLVM = ["linux-x86_64", "windows-x86_64"]
+# The LLVM-route hosts whose test suite runs in the quick tier: Windows has no
+# other route, so its tests run here; Linux and macOS tests run on the seed
+# route.
+QUICK_LLVM_TESTS = ["windows-x86_64"]
 
 
 def write(path_variable, text):
@@ -147,6 +163,7 @@ def main():
     elif tier in ("quick", "focused"):
         seed_hosts = set(QUICK_SEED)
         llvm_hosts = set(QUICK_LLVM)
+        llvm_test_hosts = set(QUICK_LLVM_TESTS)
         if tier == "focused":
             for label, pattern, adds in COMPONENTS:
                 if changed is None or any(pattern.search(f) for f in changed):
@@ -156,10 +173,6 @@ def main():
                     llvm_test_hosts.update(adds.get("llvm", []))
                     llvm_hosts.update(adds.get("llvm_tests", []))
                     llvm_test_hosts.update(adds.get("llvm_tests", []))
-                    seed_update = seed_update or adds.get("seed_update", False)
-        elif changed is None or any(COMPONENTS[-1][1].search(f) for f in changed):
-            # A push that changes the seed still proves the seed update.
-            seed_update = True
 
     run_docs = tier in ("docs", "full") or docs_changed
     seed = matrix(seed_hosts)

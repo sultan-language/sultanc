@@ -47,16 +47,26 @@ ci_step() { # name command...
     ci_step_start=$(ci_seconds)
     # The step runs in a subshell with errexit on, so the first failing
     # command of a multi-command step ends it with that command's status.
+    # Its output is also kept, so a failure can show its end outside the
+    # collapsed group.
+    mkdir -p "$ci_root/build"
+    ci_step_log=$ci_root/build/ci-step.log
     set +e
-    (set -e; "$@")
-    ci_step_status=$?
+    { (set -e; "$@"); echo $? > "$ci_step_log.status"; } 2>&1 | tee "$ci_step_log"
+    ci_step_status=$(cat "$ci_step_log.status" 2>/dev/null || echo 1)
     set -e
     ci_step_time=$(ci_duration $(($(ci_seconds) - ci_step_start)))
     ci_group_end
-    # A failed test run's failures (report.py), outside the collapsed group.
-    if [ "$ci_step_status" -ne 0 ] && [ -f "$ci_root/build/tests-failures.txt" ]; then
-        cat "$ci_root/build/tests-failures.txt"
+    if [ "$ci_step_status" -ne 0 ]; then
+        if [ -f "$ci_root/build/tests-failures.txt" ]; then
+            # A failed test run: its failures (report.py).
+            cat "$ci_root/build/tests-failures.txt"
+        else
+            echo "--- $ci_step_name failed (exit $ci_step_status); the last 80 lines of its output:"
+            tail -n 80 "$ci_step_log"
+        fi
     fi
+    rm -f "$ci_step_log.status"
     if [ "$ci_step_status" -eq 0 ]; then
         ci_summary "- ✅ $ci_step_name ($ci_step_time)"
     else
