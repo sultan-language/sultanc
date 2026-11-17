@@ -81,9 +81,14 @@ int __Semantic_Integer_Literal_Expression_Value__(const __Ast_Expression__ *__Ex
                 *__Out_Value__ = __Left__ ^ __Right__;
                 return 1;
             default:
+                /* Both factors within floor(sqrt(INT64_MAX)) cannot overflow.
+                 * The bound is an int64_t constant: unsuffixed, 3037000499 is a
+                 * 32-bit unsigned long under MSVC (C90 typing), and its
+                 * negation wraps to 1257966797, which rejected every product
+                 * of small literals (`2 * 65536`) on Windows. */
                 if (__Left__ != 0 && __Right__ != 0 &&
-                    (__Left__ > 3037000499 || __Left__ < -3037000499 || __Right__ > 3037000499 ||
-                     __Right__ < -3037000499))
+                    (__Left__ > INT64_C(3037000499) || __Left__ < -INT64_C(3037000499) ||
+                     __Right__ > INT64_C(3037000499) || __Right__ < -INT64_C(3037000499)))
                     return 0;
                 *__Out_Value__ = __Left__ * __Right__;
                 return 1;
