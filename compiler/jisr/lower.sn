@@ -24,7 +24,12 @@
 //     per call shape for a variadic function, link name SYMBOL...N); calls
 //     to this file's functions are direct. A function pointer to a function
 //     compiled here is the address of a marker of that function; a call
-//     through a pointer compares it with the candidates.
+//     through a pointer compares it with the candidates. Any other pointer
+//     is a C function at a machine address (one from dlsym, or the address
+//     of a function of another file or library, which is its symbol's
+//     address): the call is an indirect call with the target's C calling
+//     convention through a typed call shape (`extern def ... = "*"`,
+//     نادِ_عنوانا_جسر), records by value included.
 //   * A variadic function compiled here takes its variadic arguments as an
 //     array of 8-byte slots; va_start builds the target's va_list over it
 //     (System V and AAPCS64 with their register areas marked used).
@@ -42,6 +47,7 @@
 استورد المكتبة.نصوص.مقطع;
 استورد compiler.jisr.core;
 استورد compiler.jisr.target;
+استورد compiler.backend.target.target_model;
 استورد compiler.jisr.literals;
 استورد compiler.jisr.types;
 استورد compiler.jisr.preprocessor;
@@ -80,6 +86,10 @@
     // variable (اسم non-empty).
     إزاحات_العوام: متجه طبيعي,
     أسماء_العوام: متجه نص,
+    // Per file-scope object kept as a SultanC variable: its type's spelling
+    // (تمثيل_جسر), which taking its address (عنوان_عام_جسر) spells as the
+    // pointee type; "" for an object in the data block.
+    تمثيلات_العوام: متجه نص,
     // Per file-scope object: whether it is thread-local. Those live in the
     // data block too, which holds their initial values (the image); each
     // thread works on its own copy of the bytes from بداية_الخيط to
@@ -891,8 +901,10 @@
     أرجع صل_النصوص(&أجزاء_ج155, &«»);
 }
 
+// The type of file-scope object ع kept as a SultanC variable, as its
+// declaration spells it (`let NAME: mutable TYPE`).
 عرف تمثيل_عام_جسر(ل: &خافض_جسر, م: &محلل_جسر, ع: طبيعي): نص {
-    أرجع انسخ_نص(&(*ل).أسماء_العوام[ع]);
+    أرجع انسخ_نص(&(*ل).تمثيلات_العوام[ع]);
 }
 
 // The global of entity الكيان (+ 1), 0 when not defined in this file.
@@ -905,8 +917,22 @@
 عرف واصف_دالة_جسر(ل: &متغير خافض_جسر, م: &متغير محلل_جسر, الكيان: طبيعي, الرمز: طبيعي): نص {
     مدد_كيانات_جسر(ل, م);
     إذا ((الطول((*ل).أسماء_الدوال[الكيان]) مثل طبيعي) == 0) {
-        لا_يدعم_رمز_جسر(م, الرمز, سبب_تشخيص.سبب_سي_عنوان_دالة_غير_مترجمة(), اسم_م_جسر(م, (*م).الكيانات[الكيان].الاسم));
-        أرجع «0»;
+        // A function of another file or library: the address of its symbol,
+        // the machine address a call through the pointer reaches
+        // (نادِ_عنوانا_جسر), as `&objc_msgSend` is in C. Only where such a
+        // call can be made.
+        إذا (!نداء_عنوان_متاح_جسر(م)) {
+            لا_يدعم_رمز_جسر(م, الرمز, سبب_تشخيص.سبب_سي_عنوان_دالة_غير_مترجمة(), اسم_م_جسر(م, (*م).الكيانات[الكيان].الاسم));
+            أرجع «0»;
+        };
+        دع الاسم_خ: نص = خارجي_كائن_جسر(ل, م, الكيان, الرمز);
+        إذا ((الطول(الاسم_خ) مثل طبيعي) == 0) { أرجع «0»; };
+        دع ق_خ: نص = مؤقت_ل_جسر(ل);
+        دع النوع_خ: نص = انسخ_نص(&(*ل).أنواع_الخارجيات[الكيان]);
+        دع أجزاء_خ: متجه نص = [«let », انسخ_نص(&ق_خ), «: *», النوع_خ, « = &», الاسم_خ, «;»];
+        سطر_ل_جسر(ل, صل_النصوص(&أجزاء_خ, &«»));
+        دع أجزاء_خ2: متجه نص = [«(», ق_خ, « as », كلمة_ل_جسر(م), «)»];
+        أرجع صل_النصوص(&أجزاء_خ2, &«»);
     };
     (*ل).واصفات[الكيان] := صواب;
     دع ق: نص = مؤقت_ل_جسر(ل);
@@ -1284,15 +1310,157 @@
         };
         ك := ك + 1;
     }
-    إذا (أول) {
-        سطر_ل_جسر(ل, «ج_فخ();»);
-    } وإلا {
-        // A pointer to a function compiled elsewhere is not callable here.
+    // Any other pointer is a C function at a machine address (from dlsym,
+    // or another file's or library's function): an indirect call with the
+    // target's C convention. With candidates it is the chain's last branch.
+    دع بلا_مرشحين: منطقي = أول;
+    إذا (!أول) {
         سطر_ل_جسر(ل, «} else {»);
-        سطر_ل_جسر(ل, «    ج_فخ();»);
+        (*ل).المسافة := (*ل).المسافة + 1;
+    };
+    دع القيمة_خ: نص = نادِ_عنوانا_جسر(ل, م, &المؤشر, &الحجج, &أنواع, نوع_الدالة, ت.النوع, انسخ_نص(&الوجهة), ت.الرمز, بلا_مرشحين);
+    إذا (له_ناتج && (الطول(القيمة_خ) مثل طبيعي) > 0) {
+        دع أجزاء_خ: متجه نص = [انسخ_نص(&الناتج), « := », القيمة_خ, «;»];
+        سطر_ل_جسر(ل, صل_النصوص(&أجزاء_خ, &«»));
+    };
+    إذا (!أول) {
+        (*ل).المسافة := (*ل).المسافة - 1;
         سطر_ل_جسر(ل, «};»);
     };
     أرجع الناتج;
+}
+
+// Whether the target can call C at a machine address (a call shape whose
+// link name is `*`, شكل_عنوان_ل_جسر): x86-64
+// and AArch64 with 64-bit pointers (System V, Apple, Windows; the Native
+// backends and LLVM). WebAssembly has no callable addresses, and the
+// 32-bit targets have no such call.
+عرف نداء_عنوان_متاح_جسر(م: &محلل_جسر): منطقي {
+    أرجع (*م).النموذج.عرض_المؤشر == 64 && معمارية_نداء_جسر(م) != 0;
+}
+
+// 1 x86-64, 2 AArch64, 0 any other architecture.
+عرف معمارية_نداء_جسر(م: &محلل_جسر): ط8 {
+    طابق (*م).النموذج.هوية_المعمارية مع
+    | هوية_معمارية.إكس_ستة_وثمانون_أربعة_وستون -> { أرجع 1; }
+    | هوية_معمارية.ذراع_أربعة_وستون -> { أرجع 2; }
+    | _ -> { أرجع 0; };
+}
+
+// A call of the C function at the machine address المؤشر (a word), with
+// the parameter and result types of نوع_الدالة: Jisr's call through a C
+// function pointer. As Zig lowers a call through `*const fn (...)
+// callconv(.c)` exactly as a direct extern call (its airCall takes the
+// function type from the pointer and runs the one C-ABI lowering), the call
+// goes through a typed call shape, `extern def ...(address: u64, the C
+// parameters): R = "*"` (msir: دالة_خارجية_مسير.عند_عنوان), and the backend
+// applies the plan of an external call: records by value classified per the
+// target's C ABI (System V eightbytes, Win64 by size or by reference to a
+// copy, AAPCS64 and Apple arm64 HFAs, x registers, or by reference), a record
+// result in registers or through the hidden result pointer (sret: RDI/RCX
+// on x86-64, x8 on AArch64), variadic arguments under the platform's rules
+// (`*...N`, as SYMBOL...N). Each argument is converted to its parameter type
+// as by assignment; a variadic or unprototyped call passes the promoted
+// arguments. A type with no SultanC form at a call (a long double wider
+// than double, a 128-bit integer) is reported when the pointer can only be
+// such a function (لا_مرشح), and traps otherwise: a candidate compiled here
+// may be the one called. The result is the value, or "" for void and for a
+// record written at الوجهة.
+عرف نادِ_عنوانا_جسر(ل: &متغير خافض_جسر, م: &متغير محلل_جسر, المؤشر: &نص, الحجج: &متجه نص, أنواع: &متجه طبيعي,
+    نوع_الدالة: طبيعي, النوع_ن: طبيعي, الوجهة: نص, الرمز: طبيعي, لا_مرشح: منطقي): نص {
+    دع ن: نوع_سي_جسر = (*م).ج.الأنواع[نوع_الدالة];
+    دع العدد: طبيعي = الطول(*الحجج) مثل طبيعي;
+    // The parameter types: the prototype's, then the promoted variadic ones.
+    دع المعاملات: متغير متجه طبيعي = [];
+    دع الثابتة: طبيعي = اختر_ط_ل_جسر(ن.بلا_نموذج, العدد, ن.عدد_المعطيات);
+    دع ي: متغير طبيعي = 0;
+    طالما (ي < العدد) {
+        إذا (ي < الثابتة && !ن.بلا_نموذج) { ألحق(المعاملات, (*م).ج.المعطيات[ن.بداية_المعطيات + ي]); }
+        وإلا { ألحق(المعاملات, (*أنواع)[ي]); };
+        ي := ي + 1;
+    }
+    دع فراغي: منطقي = (*م).ج.الأنواع[ن.الأساس].الصنف == 1;
+    دع الاسم: متغير نص = «»;
+    إذا (نداء_عنوان_متاح_جسر(م)) {
+        الاسم := شكل_عنوان_ل_جسر(ل, م, &المعاملات, الثابتة, ن.متغير_المعاملات || ن.بلا_نموذج, ن.الأساس);
+    };
+    إذا ((الطول(الاسم) مثل طبيعي) == 0) {
+        إذا (لا_مرشح) {
+            لا_يدعم_جسر(م, الرمز, سبب_تشخيص.سبب_سي_نداء_مؤشر_بتوقيع_غير_مدعوم());
+        };
+        سطر_ل_جسر(ل, «ج_فخ();»);
+        إذا (فراغي || تجميعي_ن_جسر(م, ن.الأساس)) { أرجع «»; };
+        أرجع صفر_جسر(تمثيل_جسر(م, النوع_ن));
+    };
+    // The call: the address word, then each argument in its parameter's
+    // spelling (a record by value from its frame copy).
+    دع الأجزاء: متغير متجه ط8 = [];
+    ألحق_بايتات_نص(&متغير الأجزاء, الاسم);
+    ألحق_بايتات_نص(&متغير الأجزاء, صل_ثلاثة_نصوص(&«((», المؤشر, &« as u64)»));
+    ي := 0;
+    طالما (ي < العدد) {
+        ألحق_بايتات_نص(&متغير الأجزاء, «, »);
+        ألحق_بايتات_نص(&متغير الأجزاء, حجة_تهجئة_جسر(ل, م, المعاملات[ي], انسخ_نص(&(*الحجج)[ي])));
+        ي := ي + 1;
+    }
+    ألحق(الأجزاء, 0x29);
+    دع النداء: نص = الأجزاء مثل نص;
+    إذا (فراغي) { سطر_ل_جسر(ل, صل_نصين(&النداء, &«;»)); أرجع «»; };
+    إذا (تجميعي_ن_جسر(م, ن.الأساس)) {
+        // A record result: stored at its destination.
+        دع التهجئة: نص = تهجئة_ل_جسر(ل, م, ن.الأساس, 1);
+        دع الوجهة_ن: متغير نص = الوجهة;
+        إذا ((الطول(الوجهة_ن) مثل طبيعي) == 0) {
+            دع الإزاحة: طبيعي = احجز_إطارا_جسر(ل, حجم_ن_جسر(م, ن.الأساس), محاذاة_ن_جسر(م, ن.الأساس));
+            الوجهة_ن := عنوان_إطار_جسر(ل, الإزاحة);
+        };
+        دع ق: نص = مؤقت_ل_جسر(ل);
+        دع أجزاء_و: متجه نص = [«let », انسخ_نص(&ق), «: *mutable », انسخ_نص(&التهجئة), « = (», الوجهة_ن, صل_ثلاثة_نصوص(&«) as *mutable », &التهجئة, &«;»)];
+        سطر_ل_جسر(ل, صل_النصوص(&أجزاء_و, &«»));
+        دع أجزاء_خ: متجه نص = [«*», ق, « := », النداء, «;»];
+        سطر_ل_جسر(ل, صل_النصوص(&أجزاء_خ, &«»));
+        أرجع «»;
+    };
+    دع التهجئة: نص = تهجئة_ل_جسر(ل, م, ن.الأساس, 1);
+    دع التمثيل: نص = تمثيل_جسر(م, ن.الأساس);
+    إذا (نصان_متساويان(&التهجئة, &التمثيل)) { أرجع النداء; };
+    دع أجزاء_ت: متجه نص = [«(», النداء, « as », التمثيل, «)»];
+    أرجع صل_النصوص(&أجزاء_ت, &«»);
+}
+
+// The call shape at an address for the C parameters المعاملات and result
+// الناتج_ن: `extern def خ_N_عنوان(p0: u64, p1: T1, ...): R = "*"` (or "*...K"
+// for a variadic shape with K fixed parameters), declared once per module.
+// "" when a type has no SultanC form at a call.
+عرف شكل_عنوان_ل_جسر(ل: &متغير خافض_جسر, م: &متغير محلل_جسر, المعاملات: &متجه طبيعي, الثابتة: طبيعي,
+    متغيرة: منطقي, الناتج_ن: طبيعي): نص {
+    دع الأجزاء: متغير متجه ط8 = [];
+    ألحق_بايتات_نص(&متغير الأجزاء, «p0: u64»);
+    دع ي: متغير طبيعي = 0;
+    طالما (ي < (الطول(*المعاملات) مثل طبيعي)) {
+        دع التهجئة: نص = تهجئة_ل_جسر(ل, م, (*المعاملات)[ي], 0);
+        إذا ((الطول(التهجئة) مثل طبيعي) == 0 || تمثيل128_جسر(&التهجئة)) { أرجع «»; };
+        ألحق_بايتات_نص(&متغير الأجزاء, صل_ثلاثة_نصوص(&صل_نصين(&«, p», &طبيعي_إلى_نص(ي + 1)), &«: », &التهجئة));
+        ي := ي + 1;
+    }
+    دع الناتج: نص = تهجئة_ل_جسر(ل, م, الناتج_ن, 1);
+    إذا ((الطول(الناتج) مثل طبيعي) == 0 || تمثيل128_جسر(&الناتج)) { أرجع «»; };
+    دع الرابط: متغير نص = «*»;
+    إذا (متغيرة) { الرابط := صل_نصين(&«*...», &طبيعي_إلى_نص(الثابتة)); };
+    دع التوقيع: نص = الأجزاء مثل نص;
+    دع أجزاء_م: متجه نص = [انسخ_نص(&الرابط), «|», انسخ_نص(&التوقيع), «|», انسخ_نص(&الناتج)];
+    دع المفتاح: نص = صل_النصوص(&أجزاء_م, &«»);
+    دع ك: متغير طبيعي = 0;
+    طالما (ك < (الطول((*ل).أشكال) مثل طبيعي)) {
+        إذا (نصان_متساويان(&(*ل).أشكال[ك], &المفتاح)) { أرجع صل_ثلاثة_نصوص(&«خ_», &طبيعي_إلى_نص(ك), &«_عنوان»); };
+        ك := ك + 1;
+    }
+    دع الاسم: نص = صل_ثلاثة_نصوص(&«خ_», &طبيعي_إلى_نص(الطول((*ل).أشكال) مثل طبيعي), &«_عنوان»);
+    ألحق((*ل).أشكال, المفتاح);
+    دع أجزاء_س: متجه نص = [«extern def », انسخ_نص(&الاسم), «(», التوقيع, «): », الناتج, صل_ثلاثة_نصوص(&« = "», &الرابط, &«";»)];
+    ألحق_بايتات_نص(&متغير (*ل).الخارجيات, صل_النصوص(&أجزاء_س, &«»));
+    ألحق((*ل).الخارجيات, 10);
+    أرجع الاسم;
 }
 
 // A call of a function compiled in this file: its SultanC function with
@@ -2284,6 +2452,7 @@
             إذا (يبدأ_بـ(&البداية, &«((0 - »)) {
                 // A negative constant stays a constant expression.
             };
+            ألحق(ل.تمثيلات_العوام, انسخ_نص(&التمثيل));
             دع العلني: نص = اختر_نص_ل_جسر(عام_ر && !يبدأ_بـ(&الاسم, &«ج_»), «public let », «let »);
             دع أجزاء_ج272: متجه نص = [العلني, انسخ_نص(&الاسم), «: mutable », التمثيل, « = », البداية, «;»];
             ألحق_بايتات_نص(&متغير الثوابت, صل_النصوص(&أجزاء_ج272, &«»));
@@ -2304,6 +2473,7 @@
             };
             ألحق(ل.إزاحات_العوام, الحجم);
             ألحق(ل.أسماء_العوام, «»);
+            ألحق(ل.تمثيلات_العوام, «»);
             مد_بيانات_جسر(&متغير ل.البيانات, الحجم + ح.الحجم);
             // Integer constants and strings are the block's initial bytes.
             دع ك: متغير طبيعي = 0;
@@ -2407,6 +2577,7 @@
     دع السياقات: متجه سياق_ح_جسر = [];
     دع إزاحات_ع: متجه طبيعي = [];
     دع أ_ع: متجه نص = [];
+    دع ت_ع: متجه نص = [];
     دع خ_ع: متجه منطقي = [];
     دع البيانات: متجه ط8 = [];
     دع إزاحات_ن: متجه طبيعي = [];
@@ -2419,7 +2590,7 @@
     دع الناتج: خافض_جسر = {
         الوحدة: ف1, الخارجيات: ف2, التهيئة: ف3, السطور: ف4, المؤقت: 0, المسافة: 0, أسماء: أسماء, ذاكرة: ذاكرة,
         إزاحات: إزاحات, الإطار: 0, بداية_المحليات: 0, السياقات: السياقات, الدالة: 0, ناتج_غير_مباشر: خطأ,
-        يستعمل_البيانات: خطأ, يستعمل_الإطار: خطأ, إزاحات_العوام: إزاحات_ع, أسماء_العوام: أ_ع, البيانات: البيانات,
+        يستعمل_البيانات: خطأ, يستعمل_الإطار: خطأ, إزاحات_العوام: إزاحات_ع, أسماء_العوام: أ_ع, تمثيلات_العوام: ت_ع, البيانات: البيانات,
         خيطية: خ_ع, بداية_الخيط: 0, نهاية_الخيط: 0, يستعمل_الخيط: خطأ,
         إزاحات_النصوص: إزاحات_ن, أسماء_الدوال: أ_د, دوال_الكيانات: د_ك, واصفات: و, خارجيات: خ, أنواع_الخارجيات: أ_خ, أشكال: أش, موزع: خطأ,
         عدد_الكتل: 0, مفتوحة: خطأ,

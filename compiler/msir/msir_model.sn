@@ -648,7 +648,15 @@
     // register slot to that slot's integer register, Windows on Arm passes
     // them all in x registers and then the stack). One symbol may have
     // several shapes.
-    المعاملات_الثابتة: اختياري طبيعي
+    المعاملات_الثابتة: اختياري طبيعي,
+    // A call shape at an address (link name `*`, or `*...N` for a variadic
+    // shape): no symbol. The first parameter is the machine address of a C
+    // function, and the others and the result are that function's C
+    // signature, records by value included; each backend calls the address
+    // with the target's C convention (the plan of an external call), as C
+    // calls through a function pointer. Jisr (compiler/jisr/lower.sn) writes
+    // these for its calls through C function pointers.
+    عند_عنوان: منطقي
 };
 
 // The three bound allocation-service providers (all or none).
@@ -1207,7 +1215,8 @@
         المكتبة: انسخ_اختيار_بايتات(&(*القيمة).المكتبة),
         المعاملات: انسخ_مملوكا_متجه_معرف_نوع(&(*القيمة).المعاملات),
         الناتج: (*القيمة).الناتج,
-        المعاملات_الثابتة: (*القيمة).المعاملات_الثابتة
+        المعاملات_الثابتة: (*القيمة).المعاملات_الثابتة,
+        عند_عنوان: (*القيمة).عند_عنوان
     };
     أرجع الناتج;
 }

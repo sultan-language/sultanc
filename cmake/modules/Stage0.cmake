@@ -55,6 +55,7 @@ if(SULTANC_STAGE0_DEFAULT_TARGET)
         "SULTANC_BOOTSTRAP_DEFAULT_TARGET=\"${SULTANC_STAGE0_DEFAULT_TARGET}\"")
 endif()
 target_link_libraries(sultanc-stage0-executable PRIVATE SultanC::LLVM)
+sultanc_compiler_stack(sultanc-stage0-executable)
 
 if(_sultanc_stage0_export)
     sultanc_export_executable(sultanc-stage0-executable "${_sultanc_stage0_export}"

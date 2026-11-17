@@ -1363,6 +1363,16 @@
         };
     }
     | _ -> {
+        // A value with no storage of its own (a call result, a literal) as
+        // the base of a place, as in `&f()[i]` or `f().field` passed by
+        // reference: its value goes to a block-owned temporary slot, which
+        // the index or field then projects, as `&e` of a temporary does.
+        إذا (!هل_تعبير_موضع_دلالي(التعبير)) {
+            أرجع اخفض_قيمة_إلى_مكان_مؤقت_مسير(
+                البرنامج, الحالة, نطاق_تعبير(التعبير), التعبير, الأنواع, أنواع_التعبيرات,
+                روابط_الأسماء, دوال_الخفض, هويات_البدائيات
+            );
+        };
         أرجع نتيجة_خفض_مكان.مرفوض(
             خطأ_خفض_مسير.تعبير_غير_مدعوم(نطاق_تعبير(التعبير))
         );

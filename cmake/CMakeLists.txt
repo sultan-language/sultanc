@@ -333,6 +333,27 @@ set(SULTANC_EXPORT_DIRECTORY "${_sultanc_default_export}" CACHE PATH
 # configuration to its own <dir>/<config>/ so configurations never overwrite
 # or reuse one another; single-config trees (the canonical build.sh tree)
 # export directly to <dir>/, preserving build/sultanc.
+# The main-thread stack of a compiler executable linked here (Stage0, Stage1).
+# Linux and macOS give a program 8 MiB, and the compiler raises its soft limit
+# to 64 MiB at start (compiler/driver/process_driver.sn); Windows takes the
+# stack from the image header, where link.exe and ld write 1 MiB by default,
+# and Stage0 overflows it on compiler/main.sn (STATUS_STACK_OVERFLOW). The
+# Windows images therefore reserve the same 64 MiB the compiler asks for
+# elsewhere; the reserve is address space only (commit stays the default).
+# Images the SultanC COFF linker writes get their reserve there
+# (compiler/link/coff/final_image.sn).
+set(SULTANC_COMPILER_STACK_RESERVE 67108864)
+function(sultanc_compiler_stack target)
+    if(NOT WIN32)
+        return()
+    endif()
+    if(MSVC)
+        # cl and clang-cl (link.exe or lld-link).
+        target_link_options(${target} PRIVATE "/STACK:${SULTANC_COMPILER_STACK_RESERVE}")
+    elseif(MINGW OR CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+        target_link_options(${target} PRIVATE "-Wl,--stack,${SULTANC_COMPILER_STACK_RESERVE}")
+    endif()
+endfunction()
 function(sultanc_export_destination name directory output)
     if(SULTANC_MULTI_CONFIG)
         set(${output} "${directory}/$<CONFIG>/${name}" PARENT_SCOPE)

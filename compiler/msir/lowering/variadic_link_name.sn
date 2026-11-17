@@ -31,3 +31,18 @@
     طالما (ك + 3 < ف) { ألحق(الناتج, (*الاسم)[ك]); ك := ك + 1; }
     أرجع الناتج;
 }
+
+// A call shape at an address: the link name `*`, or `*...N` for a variadic
+// shape with N fixed C parameters (after the address). Its first parameter
+// is the address of the C function called, the rest its C signature
+// (msir_model.sn, دالة_خارجية_مسير.عند_عنوان); Jisr writes them for calls
+// through C function pointers.
+عام عرف شكل_نداء_عنوان_للخفض(الاسم: &متجه ط8): منطقي {
+    إذا ((الطول(*الاسم) مثل طبيعي) == 1) { أرجع (*الاسم)[0] == 0x2A; };
+    طابق ثابتة_اسم_ربط_متغير_للخفض(الاسم) مع
+    | اختياري.لا_شيء -> { أرجع خطأ; }
+    | اختياري.موجود(_) -> {
+        دع الرمز: متجه ط8 = رمز_اسم_ربط_متغير_للخفض(الاسم);
+        أرجع (الطول(الرمز) مثل طبيعي) == 1 && الرمز[0] == 0x2A;
+    };
+}

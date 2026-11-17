@@ -670,6 +670,7 @@
     | سبب_تشخيص.سبب_سي_كائن_ملف_آخر_غير_عددي -> { أرجع «The value of a non-scalar object of another file is not compiled»; }
     | سبب_تشخيص.سبب_سي_خيطي_ملف_آخر -> { أرجع «A thread-local object of another file is used by compiled C code»; }
     | سبب_تشخيص.سبب_سي_عنوان_دالة_غير_مترجمة -> { أرجع «The address of a function that is not compiled here is taken»; }
+    | سبب_تشخيص.سبب_سي_نداء_مؤشر_بتوقيع_غير_مدعوم -> { أرجع «A call through a function pointer passes or returns a type with no SultanC form at a call (a long double wider than double, a 128-bit integer), or the target has no callable machine addresses»; }
     | سبب_تشخيص.سبب_سي_نداء_بتوقيع_بلا_صيغة -> { أرجع «A parameter or result type of the called function has no SultanC form»; }
     | سبب_تشخيص.سبب_سي_نداء_بحجة_بلا_صيغة -> { أرجع «An argument type of the call has no SultanC form»; }
     | سبب_تشخيص.سبب_سي_نداء_بناتج_بلا_صيغة -> { أرجع «The result type of the called function has no SultanC form»; }

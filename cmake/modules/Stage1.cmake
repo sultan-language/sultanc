@@ -32,11 +32,14 @@ add_custom_command(
     COMMAND "${CMAKE_COMMAND}" -E make_directory "${SULTANC_STAGE1_OBJECT_DIRECTORY}"
     # Stage0 has neither the thread primitives nor closure literals: the
     # machine interpreter's host threads are its stub in Stage1
-    # (compiler/interpreter/machine/host_threads.sn).
+    # (compiler/interpreter/machine/host_threads.sn). Nor has it `استنسخ`:
+    # the copy of kept later-phase facts, which only incremental tooling
+    # analysis asks for, is its stub (compiler/frontend/later_phase_facts_copy.sn).
     COMMAND "$<TARGET_FILE:sultanc-stage0-executable>"
         compiler/main.sn
         "--target=${SULTANC_STAGE1_TARGET}"
         "--module-source=compiler.interpreter.machine.host_threads=compiler/interpreter/machine/host_threads_unavailable.sn"
+        "--module-source=compiler.frontend.later_phase_facts_copy=compiler/frontend/later_phase_facts_copy_unavailable.sn"
         -o "${SULTANC_STAGE1_OBJECT}"
     DEPENDS sultanc-stage0-executable ${SULTANC_COMPILER_SOURCES}
         "${CMAKE_CURRENT_BINARY_DIR}/sultanc-stage1-target.txt"
@@ -62,6 +65,7 @@ else()
     add_executable(sultanc-stage1-executable "${SULTANC_STAGE1_OBJECT}")
 endif()
 add_dependencies(sultanc-stage1 sultanc-stage1-executable)
+sultanc_compiler_stack(sultanc-stage1-executable)
 set_source_files_properties("${SULTANC_STAGE1_OBJECT}" PROPERTIES
     GENERATED TRUE EXTERNAL_OBJECT TRUE)
 set_target_properties(sultanc-stage1-executable PROPERTIES
