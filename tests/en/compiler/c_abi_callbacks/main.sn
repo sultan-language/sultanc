@@ -1,0 +1,30 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// Twin: tests/ar/compiler/c_abi_callbacks/main.sn (no `نظير` header: a
+// program with @@c_abi functions runs as an executable, not interpreted).
+// A function defined `@@c_abi` (Zig's callconv(.c)) is compiled with the C
+// calling convention, so C code calls it at its machine address,
+// c_function_address(f), with no trampoline (docs/en/internals/jisr.md,
+// "Callbacks"); SultanC also calls it directly. The callback calls a closure,
+// which uses the register that carries a closure's environment: its frame
+// restores it for the C caller.
+import "callbacks.c";
+
+def plus_one(n: i64): i64 { return n + 1; }
+
+@@c_abi
+def weighted(a: i64, b: i64): i64 {
+    let f: fn(i64): i64 = plus_one;
+    return (f(a) - 1) * 10 + b;
+}
+
+@@c_abi
+def mix(x: f64, n: i32, y: f64): f64 { return x * (n as f64) + y; }
+
+def main(): int {
+    if (apply(c_function_address(weighted), 4, 2) != 42) { return 1; };
+    if (apply_mixed(c_function_address(mix)) != 3.25) { return 2; };
+    if (weighted(3, 7) != 37) { return 3; };
+    return 42;
+}

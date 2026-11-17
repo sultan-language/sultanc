@@ -1,3 +1,4 @@
+استورد compiler.interpreter.machine.raw_memory_access;
 // Raw host memory for the machine interpreter (machine_engine.sn).
 //
 // The machine interpreter runs a program on the host's own memory, with the
@@ -188,6 +189,10 @@
 
 // The العدد (1 to 8) bytes at العنوان, little-endian, zero-extended.
 عام عرف اقرأ_خام(م: &ذاكرة_خام, العنوان: ط64, العدد: ط64): ط64 {
+    // Raw memory is the host's: ق is the word at the host address أ, so a
+    // machine address is a host address, read at its own width
+    // (raw_memory_access.sn) where this compiler was not built by Stage0.
+    إذا ((*م).متاحة && وصول_عنوان_خام_متاح()) { أرجع اقرأ_عنوان_خام(العنوان, العدد); };
     دع ز: ط64 = العنوان & 7;
     دع البداية: ط64 = العنوان - ز;
     دع الأول: ط64 = اقرأ_كلمة_محاذاة_خام(م, البداية);
@@ -204,6 +209,7 @@
 
 // Stores the low العدد (1 to 8) bytes of القيمة at العنوان.
 عام عرف اكتب_خام(م: &ذاكرة_خام, العنوان: ط64, العدد: ط64, القيمة: ط64): فراغ {
+    إذا ((*م).متاحة && وصول_عنوان_خام_متاح()) { اكتب_عنوان_خام(العنوان, العدد, القيمة); أرجع; };
     دع ز: ط64 = العنوان & 7;
     دع البداية: ط64 = العنوان - ز;
     إذا (ز == 0 && العدد >= 8) { اكتب_كلمة_محاذاة_خام(م, البداية, القيمة); أرجع; };

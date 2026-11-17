@@ -1913,6 +1913,15 @@
     | هوية_بدائي_مترجم.مدخل_سي_لدالة -> {
         أرجع نتيجة_تنفيذ_بدائي_مفسر.عاد(اختياري.موجود(قيمة_تشغيل.بتات_عدد(0)));
     }
+    // Lowered to the function constant (msir/lowering/expressions.sn,
+    // اخفض_عنوان_دالة_سي_مسير): never executed as a primitive call.
+    | هوية_بدائي_مترجم.عنوان_دالة_سي -> {
+        أرجع نتيجة_تنفيذ_بدائي_مفسر.أخفق(
+            فشل_تفسير_مسير.وقت_تشغيل(
+                خطأ_وقت_تشغيل_مفسر.بدائي_آلة_غير_مدعوم(هوية_بدائي_مترجم.عنوان_دالة_سي())
+            )
+        );
+    }
     // The interpreter runs one thread: a thread start fails as an
     // unsupported call (ENOSYS), so std.thread's spawn answers an error and
     // a caller that has a fallback (serve on this thread) takes it.

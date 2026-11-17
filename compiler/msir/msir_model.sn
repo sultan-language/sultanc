@@ -707,6 +707,13 @@
     // SultanC's internal hidden references (اتفاقية_دالة_مسير_للواجهة in
     // compiler/backend/target/selection_query_context.sn).
     دوال_اتفاقية_المنصة: متجه منطقي,
+    // The functions defined with the C calling convention (@@c_abi, Zig's
+    // callconv(.c)), indexed by FunctionID (shorter when the last functions
+    // are not): their own parameters and every call to them use the
+    // target's foreign C plan, and their prologue saves the registers the C
+    // convention preserves, so C calls them at their address
+    // (بدائي_عنوان_دالة_سي) with no trampoline (اتفاقية_دالة_مسير_للواجهة).
+    دوال_اتفاقية_سي: متجه منطقي,
     // The source origin of each debug location, by location ID: the origin
     // of every instruction that refers to that location. Lowering records it
     // once the program is built (semantic_lowering.sn).
@@ -1120,6 +1127,7 @@
         دالة_تحقق_التنسيق: (*القيمة).دالة_تحقق_التنسيق,
         دوال_عدادات_التخصيص: انسخ_دوال_عدادات_مسير(&(*القيمة).دوال_عدادات_التخصيص),
         دوال_اتفاقية_المنصة: انسخ_منطقيات_دوال_مسير(&(*القيمة).دوال_اتفاقية_المنصة),
+        دوال_اتفاقية_سي: انسخ_منطقيات_دوال_مسير(&(*القيمة).دوال_اتفاقية_سي),
         أصول_مواقع_التصحيح: انسخ_أصول_مواقع_مسير(&(*القيمة).أصول_مواقع_التصحيح),
         البيئات_الساكنة: انسخ_بيئات_ساكنة_مسير(&(*القيمة).البيئات_الساكنة)
     };
@@ -1257,4 +1265,10 @@
     دع ف: متغير طبيعي = 0;
     طالما (ف < (الطول(*الدوال) مثل طبيعي)) { ألحق(الناتج, (*الدوال)[ف]); ف := ف + 1; }
     أرجع الناتج;
+}
+
+// Whether the function was defined with the C calling convention (@@c_abi).
+عام عرف دالة_باتفاقية_سي_مسير(البرنامج: &برنامج_مسير, المعرف: معرف_دالة_مسير): منطقي {
+    أرجع (المعرف.القيمة مثل طبيعي) < (الطول((*البرنامج).دوال_اتفاقية_سي) مثل طبيعي)
+        && (*البرنامج).دوال_اتفاقية_سي[المعرف.القيمة];
 }

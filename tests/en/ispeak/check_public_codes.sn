@@ -246,6 +246,7 @@ def pinned_codes(): vector string {
     append(result, "SULTANC-TEST-FILE-NOT-IN-PROGRAM");
     append(result, "SULTANC-TRACK-CALLER-SIGNATURE");
     append(result, "SULTANC-TRACK-CALLER-EXPLICIT-LOCATION");
+    append(result, "SULTANC-C-ABI-MISUSE");
     return result;
 }
 
@@ -373,6 +374,8 @@ def pinned_kinds(): vector string {
     append(result, "host-out-of-memory");
     append(result, "link-symbol-type-mismatch");
     append(result, "extern-symbol-conflict");
+    append(result, "panic-handler-invalid");
+    append(result, "global-allocator-invalid");
     append(result, "link-external-symbol-unsupported");
     append(result, "object-relocation-unsupported");
     append(result, "object-format-unsupported");
@@ -470,6 +473,9 @@ def pinned_kinds(): vector string {
     append(result, "unformatted-source");
     append(result, "module-spelling-no-child");
     append(result, "module-spelling-shared");
+    append(result, "module-reexport-shadows");
+    append(result, "module-reexport-unavailable");
+    append(result, "module-reexport-cycle");
     append(result, "module-spelling-reserved-word");
     append(result, "module-declaration-outside-root-file");
     append(result, "test-has-parameters");
@@ -479,6 +485,7 @@ def pinned_kinds(): vector string {
     append(result, "test-file-not-in-program");
     append(result, "track-caller-signature");
     append(result, "track-caller-explicit-location");
+    append(result, "c-abi-misuse");
     return result;
 }
 

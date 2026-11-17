@@ -1,0 +1,25 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/language/surface/temporary_place_arguments.sn
+// `&` of an element or field of a temporary as a call argument (`&f()[i]`,
+// `&f().a`): the temporary is stored in a slot the block owns, and the call
+// borrows its element or field (compiler/msir/lowering/expressions.sn,
+// خفض_مكان_إلى_مسير).
+type Pair = { a: int, b: int };
+
+def names(): vector string { return ["zero", "one", "three"]; }
+def make(): Pair { return { a: 30, b: 4 }; }
+def text_length(t: &string): int { return length(*t) as int; }
+def sum(p: &int, q: &int): int { return *p + *q; }
+
+def main(): int {
+    let k: mutable int = 0;
+    let i: mutable int = 0;
+    while (i < 2) {
+        k := k + text_length(&names()[2]);
+        i := i + 1;
+    }
+    return k + sum(&make().a, &make().b) - 2;
+}

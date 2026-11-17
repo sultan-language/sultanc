@@ -30,6 +30,9 @@
     // A global allocator entry point marked twice, a partial set, or a
     // signature not the interface's (the function's name span and its name).
     | مخصص_عام_غير_صالح بنوع (نطاق, متجه ط8)
+    // A `@@c_abi` function used as a function value, or an argument of
+    // c_function_address that names no `@@c_abi` function (its span).
+    | استعمال_اتفاقية_سي_غير_صالح بنوع نطاق
     | دالة_دلالية_مفقودة بنوع معرف_رمز
     | سعة_خريطة_غير_قابلة_للتمثيل
     | فهرس_مصدر_مكرر

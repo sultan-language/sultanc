@@ -9,6 +9,7 @@
 عام عرف نص_خطأ_رمز_إل_إل_في_إم_غير_محلول(): نص { أرجع «the supplied libLLVM does not define an LLVM C API symbol»; }
 عام عرف نص_خطأ_فشل_وقت_الترجمة_مطلوب(): نص { أرجع «compile-time evaluation failed»; }
 عام عرف نص_خطأ_توقيع_يتتبع_المستدعي_غير_صالح(): نص { أرجع «`@@track_caller` needs an ordinary function whose last parameter is a `source_location` (std.debug.location)»; }
+عام عرف نص_خطأ_استعمال_اتفاقية_سي_غير_صالح(): نص { أرجع «`@@c_abi` needs an ordinary function with C-compatible parameters and result, called directly or by address through `c_function_address`»; }
 عام عرف نص_خطأ_حجة_موقع_المستدعي_صريحة(): نص { أرجع «this location is filled by the call: a `@@track_caller` function takes every argument but its last»; }
 عام عرف نص_خطأ_سمة_تصريح_غير_مدعومة(): نص { أرجع «this annotation cannot be applied: declaration decorator processing is not yet supported»; }
 
@@ -214,6 +215,7 @@
     | معرف_تشخيص.فشل_وقت_الترجمة_مطلوب -> { أرجع نص_خطأ_فشل_وقت_الترجمة_مطلوب(); }
     | معرف_تشخيص.سمة_تصريح_غير_مدعومة -> { أرجع نص_خطأ_سمة_تصريح_غير_مدعومة(); }
     | معرف_تشخيص.توقيع_يتتبع_المستدعي_غير_صالح -> { أرجع نص_خطأ_توقيع_يتتبع_المستدعي_غير_صالح(); }
+    | معرف_تشخيص.استعمال_اتفاقية_سي_غير_صالح -> { أرجع نص_خطأ_استعمال_اتفاقية_سي_غير_صالح(); }
     | معرف_تشخيص.حجة_موقع_المستدعي_صريحة -> { أرجع نص_خطأ_حجة_موقع_المستدعي_صريحة(); }
     | معرف_تشخيص.نقل_من_مرجع -> { أرجع «cannot move an owned value out of borrowed storage»; }
     | معرف_تشخيص.هدف_لا_يدعم_الميزة -> { أرجع «the selected target does not support a feature this program needs»; }

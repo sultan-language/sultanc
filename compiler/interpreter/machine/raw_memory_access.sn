@@ -1,0 +1,64 @@
+// Width-exact access to the machine engine's raw memory (raw_memory.sn): the
+// 1 to 8 bytes at a host address with one load or store of that width, as
+// native code does (x86-64 and AArch64, the interpreter's hosts, load and
+// store unaligned scalars), instead of a read-modify-write of the enclosing
+// aligned words. The C Stage0 (bootstrap/) has no casts between integers and
+// pointers: its build binds raw_memory_access_unavailable.sn in this module's
+// place (cmake/modules/Stage1.cmake), whose Stage1 keeps the word accesses.
+
+مرادف جمع_ملتف_آلة = بدائي_جمع_ملتف;
+
+// Whether the accesses below exist (the Stage0 build's stub says no).
+عام عرف وصول_عنوان_خام_متاح(): منطقي { أرجع صواب; }
+
+// The العدد (1 to 8) bytes at the host address العنوان, little-endian,
+// zero-extended.
+عام عرف اقرأ_عنوان_خام(العنوان: ط64, العدد: ط64): ط64 {
+    دع الناتج: متغير ط64 = 0;
+    غير_آمن {
+        إذا (العدد == 1) {
+            الناتج := (*(العنوان مثل *ط8)) مثل ط64;
+        } وإلا إذا (العدد == 2) {
+            الناتج := (*(العنوان مثل *ط16)) مثل ط64;
+        } وإلا إذا (العدد == 4) {
+            الناتج := (*(العنوان مثل *ط32)) مثل ط64;
+        } وإلا إذا (العدد >= 8) {
+            الناتج := *(العنوان مثل *ط64);
+        } وإلا {
+            // 3, 5, 6 or 7 bytes.
+            دع ف: متغير ط64 = 0;
+            طالما (ف < العدد) {
+                دع البايت: ط64 = (*(جمع_ملتف_آلة(العنوان, ف) مثل *ط8)) مثل ط64;
+                الناتج := الناتج | (البايت << (ف * 8));
+                ف := ف + 1;
+            }
+        };
+    }
+    أرجع الناتج;
+}
+
+// Stores the low العدد (1 to 8) bytes of القيمة at the host address العنوان.
+عام عرف اكتب_عنوان_خام(العنوان: ط64, العدد: ط64, القيمة: ط64): فراغ {
+    غير_آمن {
+        إذا (العدد == 1) {
+            دع ب: *متغير ط8 = العنوان مثل *متغير ط8;
+            *ب := (القيمة & 255) مثل ط8;
+        } وإلا إذا (العدد == 2) {
+            دع ب: *متغير ط16 = العنوان مثل *متغير ط16;
+            *ب := (القيمة & 65535) مثل ط16;
+        } وإلا إذا (العدد == 4) {
+            دع ب: *متغير ط32 = العنوان مثل *متغير ط32;
+            *ب := (القيمة & 4294967295) مثل ط32;
+        } وإلا إذا (العدد >= 8) {
+            دع ب: *متغير ط64 = العنوان مثل *متغير ط64;
+            *ب := القيمة;
+        } وإلا {
+            دع ف: متغير ط64 = 0;
+            طالما (ف < العدد) {
+                دع ب: *متغير ط8 = جمع_ملتف_آلة(العنوان, ف) مثل *متغير ط8;
+                *ب := ((القيمة >> (ف * 8)) & 255) مثل ط8;
+                ف := ف + 1;
+            }
+        };
+    }
+}

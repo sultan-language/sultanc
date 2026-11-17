@@ -55,13 +55,18 @@
 // - a compiler primitive (runtime services, kernel calls): the registered
 //   convention;
 // - a declared external function: the platform C ABI.
-// No SultanC function can be called from C: a C-callable entry
-// (بدائي_مدخل_سي_لدالة) runs a closure of no parameters, so function values
-// never reach C with aggregate parameters.
+// - a SultanC function defined `@@c_abi` (برنامج_مسير.دوال_اتفاقية_سي):
+//   the platform C ABI, for its own entry and every call to it, as Zig's
+//   callconv(.c) function type; C calls it at its address.
+// Function values never reach C: a C-callable entry for a closure
+// (بدائي_مدخل_سي_لدالة) runs a closure of no parameters.
 عام عرف اتفاقية_دالة_مسير_للواجهة(
     المسير: &سياق_مستهلك_مسير,
     المعرف: معرف_دالة_مسير
 ): اتفاقية_نداء_واجهة {
+    إذا (دالة_باتفاقية_سي_مسير(&(*المسير).المسير, المعرف)) {
+        أرجع اتفاقية_نداء_واجهة.خارجية();
+    };
     إذا ((المعرف.القيمة مثل طبيعي) < (الطول((*المسير).المسير.دوال_اتفاقية_المنصة) مثل طبيعي)
         && (*المسير).المسير.دوال_اتفاقية_المنصة[المعرف.القيمة]) {
         أرجع اتفاقية_نداء_واجهة.منصة();

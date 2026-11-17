@@ -760,6 +760,26 @@
     | _ -> { };
 }
 
+// Marks the function just declared (the last binding of دوال_الخفض) in
+// المعلمة (برنامج_مسير.دوال_اتفاقية_سي) when it is defined `@@c_abi`: it is
+// compiled with the C calling convention, Zig's callconv(.c).
+عام عرف علم_دالة_باتفاقية_سي_للخفض(
+    الدالة: &تصريح_دالة,
+    دوال_الخفض: &سياق_دوال_خفض,
+    المعلمة: &متغير متجه منطقي
+): فراغ {
+    إذا (!(*الدالة).اتفاقية_سي) { أرجع; };
+    دع العدد: طبيعي = الطول((*دوال_الخفض).الدوال) مثل طبيعي;
+    إذا (العدد == 0) { أرجع; };
+    دع الهدف: هدف_دالة_خفض = (*دوال_الخفض).الدوال[العدد - 1].الهدف;
+    طابق الهدف مع
+    | هدف_دالة_خفض.داخلية(المعرف) -> {
+        طالما ((الطول(*المعلمة) مثل طبيعي) <= (المعرف.القيمة مثل طبيعي)) { ألحق(*المعلمة, خطأ); }
+        (*المعلمة)[المعرف.القيمة] := صواب;
+    }
+    | _ -> { };
+}
+
 // A function whose value is taken (a closure construction names it) is
 // called through function values, which use the internal convention: such
 // a function compiled from C takes the internal convention too, so its

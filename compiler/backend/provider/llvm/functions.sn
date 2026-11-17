@@ -357,9 +357,13 @@
     }
     | اختياري.لا_شيء -> { };
     // All ordinary SultanC functions use one hidden closure-environment
-    // parameter. The process entry alone keeps the plain C ABI its caller (the
-    // process start, dyld or the WASI host) uses.
-    دع له_بيئة: منطقي = !هو_مدخل_البرنامج;
+    // parameter. The process entry keeps the plain C ABI its caller (the
+    // process start, dyld or the WASI host) uses, and so does a function
+    // defined `@@c_abi` (Zig's callconv(.c)), which C calls at its address
+    // with exactly its own parameters; direct calls to either pass none
+    // (القيد.له_بيئة_إغلاق).
+    دع له_بيئة: منطقي = !هو_مدخل_البرنامج
+        && !دالة_باتفاقية_سي_مسير(&(*المسير).المسير, (*العرض).المعرف);
     دع التوقيع: وصف_توقيع_إل_إل_في_إم;
     طابق ابن_توقيع_إل_إل_في_إم(الحالة, الحقائق, الهدف, سجل_التخطيط, &الخطة, له_بيئة) مع
     | نتيجة.خطأ(خ) -> { أرجع اختياري.موجود(خ); }

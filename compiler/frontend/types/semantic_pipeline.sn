@@ -76,6 +76,9 @@
     // `@@track_caller` on a function that is generic, external, has
     // compile-time parameters, or whose last parameter is no source location.
     | توقيع_يتتبع_المستدعي_غير_صالح بنوع نطاق
+    // A `@@c_abi` function without a body, with type or compile-time
+    // parameters, or with a parameter or result C has no form for.
+    | استعمال_اتفاقية_سي_غير_صالح بنوع نطاق
     // A call of a track-caller function that passes its location argument.
     | حجة_موقع_المستدعي_صريحة بنوع نطاق
     | حقل_سجل_غير_معروف بنوع نطاق
@@ -203,6 +206,27 @@
 // call, or inside another marked function the location that function
 // received; a function value gets its definition's place (MSIR lowering,
 // msir/lowering/caller_location.sn). Its own Symbol keeps the full Type.
+// Whether C has a form for a parameter (or, with ناتج, a result) of the
+// Type: an integer, floating point or boolean scalar, or a raw pointer; void
+// as a result. Text, vectors, records, references and function values have
+// none.
+عرف نوع_بصيغة_سي(الأنواع: &سجل_أنواع, النوع: معرف_نوع, ناتج: منطقي): منطقي {
+    طابق معرف_نوع_أساس_عند(الأنواع, النوع) مع
+    | اختياري.لا_شيء -> { أرجع خطأ; }
+    | اختياري.موجود(الأساس) -> {
+        طابق (*الأنواع).الأنواع[الأساس.القيمة] مع
+        | نوع_مقنن.مؤشر(_) -> { أرجع صواب; }
+        | نوع_مقنن.بدائي(البدائي) -> {
+            طابق البدائي مع
+            | نوع_بدائي_مقنن.فراغ -> { أرجع ناتج; }
+            | نوع_بدائي_مقنن.أي -> { أرجع خطأ; }
+            | نوع_بدائي_مقنن.نص -> { أرجع خطأ; }
+            | _ -> { أرجع صواب; };
+        }
+        | _ -> { أرجع خطأ; };
+    };
+}
+
 عرف علم_يتتبع_المستدعي(السياق: &متغير سياق_أنواع_رموز, الرمز: معرف_رمز): فراغ {
     طالما ((الطول((*السياق).يتتبع_المستدعي) مثل طبيعي) <= (الرمز.القيمة مثل طبيعي)) {
         ألحق((*السياق).يتتبع_المستدعي, خطأ);
@@ -3751,6 +3775,26 @@
                 إذا (صالحة) { صالحة := نوع_موقع_مصدر_دلالي(الأنواع, أنواع_المعاملات[العدد - 1]); };
                 إذا (!صالحة) {
                     أرجع اختياري.موجود(خطأ_بناء_سياقات_أنواع.توقيع_يتتبع_المستدعي_غير_صالح(الدالة.الاسم.النطاق));
+                };
+            };
+            // A `@@c_abi` function (Zig's callconv(.c)): an ordinary function
+            // whose parameters and result C can pass in registers or on the
+            // stack: integers, floating point, booleans, raw pointers.
+            إذا (الدالة.اتفاقية_سي) {
+                دع صالحة_سي: متغير منطقي = (الطول(الدالة.معاملات_النوع) مثل طبيعي) == 0;
+                طابق الدالة.الجسم مع
+                | اختياري.لا_شيء -> { صالحة_سي := خطأ; }
+                | اختياري.موجود(_) -> { };
+                دع م_سي: متغير طبيعي = 0;
+                طالما (صالحة_سي && م_سي < (الطول(أنواع_المعاملات) مثل طبيعي)) {
+                    إذا (الدالة.المعاملات[م_سي].مطلوب_مسبقا || !نوع_بصيغة_سي(الأنواع, أنواع_المعاملات[م_سي], خطأ)) {
+                        صالحة_سي := خطأ;
+                    };
+                    م_سي := م_سي + 1;
+                }
+                إذا (صالحة_سي) { صالحة_سي := نوع_بصيغة_سي(الأنواع, نوع_الناتج, صواب); };
+                إذا (!صالحة_سي) {
+                    أرجع اختياري.موجود(خطأ_بناء_سياقات_أنواع.استعمال_اتفاقية_سي_غير_صالح(الدالة.الاسم.النطاق));
                 };
             };
             دع نوع_الدالة: معرف_نوع = قنن_نوعا(

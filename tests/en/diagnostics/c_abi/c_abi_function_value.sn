@@ -1,0 +1,13 @@
+// اختبار: رفض
+// تشخيص: SULTANC-C-ABI-MISUSE
+// نظير: tests/ar/diagnostics/c_abi/c_abi_function_value.sn
+// A @@c_abi function is no function value: a closure call passes an
+// environment in SultanC's internal convention. Its address is
+// c_function_address(f).
+@@c_abi
+def twice(n: i64): i64 { return n * 2; }
+
+def main(): int {
+    let f: fn(i64): i64 = twice;
+    return f(21) as int;
+}

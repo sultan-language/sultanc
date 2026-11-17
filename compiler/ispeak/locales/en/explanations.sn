@@ -95,6 +95,7 @@
 عام عرف نص_شرح_رمز_إل_إل_في_إم_غير_محلول(): نص { أرجع «The selected libLLVM does not provide the required LLVM C API symbol.»; }
 عام عرف نص_شرح_فشل_وقت_الترجمة_مطلوب(): نص { أرجع «Compile-time code rejected its input. Correct the issue described by the diagnostic.»; }
 عام عرف نص_شرح_توقيع_يتتبع_المستدعي_غير_صالح(): نص { أرجع «A `@@track_caller` function has a body, no type or compile-time parameters, and ends with a std.debug.location `source_location` parameter that each call fills with its place.»; }
+عام عرف نص_شرح_استعمال_اتفاقية_سي_غير_صالح(): نص { أرجع «A `@@c_abi` function has a body, no type or compile-time parameters, and only scalar or raw-pointer parameters and result. C calls it at `c_function_address(f)`; it is no function value.»; }
 عام عرف نص_شرح_حجة_موقع_المستدعي_صريحة(): نص { أرجع «A call of a `@@track_caller` function passes every argument but the last: the compiler passes the place of the call there (inside another marked function, the location that function received).»; }
 عام عرف نص_شرح_سمة_تصريح_غير_مدعومة(): نص { أرجع «This declaration attribute is not supported by the current annotation processor.»; }
 عام عرف نص_شرح_نقل_من_مرجع(): نص { أرجع «Owned value moved out of a reference. Borrow it with & or copy it with clone(&value).»; }
@@ -108,8 +109,8 @@
 عام عرف نص_شرح_نفاد_ذاكرة_المترجم(): نص { أرجع «The compiler ran out of memory. Free memory or compile a smaller program.»; }
 عام عرف نص_شرح_رمز_ربط_بنوع_غير_متطابق(): نص { أرجع «A symbol is defined as one kind, such as data, and used as another, such as a function. Make both agree.»; }
 عام عرف نص_شرح_رمز_خارجي_بتوقيعين(): نص { أرجع «Every external declaration of one linker symbol must declare the same parameter and result types. Keep one extern for the symbol and reach other shapes through ordinary functions.»; }
-عام عرف نص_شرح_معالج_انهيار_غير_صالح(): نص { أرجع «A program has at most one panic handler besides std's: one function marked `@@panic_handler` that takes the panic message (`text`, by value), returns nothing, and never returns: every path through it ends in a call that never returns (`exit`, `panic`) or in a loop that never ends, because a panic does not resume. Remove the extra handler, or give it that signature and body.»; }
-عام عرف نص_شرح_مخصص_عام_غير_صالح(): نص { أرجع «A program's global allocator is three functions, each marked once: `@@global_alloc` (size: W): W, `@@global_realloc` (address: W, size: W): W and `@@global_dealloc` (address: W): void, where W is the target's pointer-width unsigned integer (u64, or u32 on 32-bit targets). Mark all three or none; std's are the default (library/core/memory/allocator.sn).»; }
+عام عرف نص_شرح_معالج_انهيار_غير_صالح(): نص { أرجع «A program has at most one `@@panic_handler` besides std's. It takes the message (`text`) and never returns: every path ends in `exit`, `panic` or an endless loop.»; }
+عام عرف نص_شرح_مخصص_عام_غير_صالح(): نص { أرجع «Mark all three or none: `@@global_alloc` (size: W): W, `@@global_realloc` (address: W, size: W): W, `@@global_dealloc` (address: W): void, W the pointer-width unsigned integer.»; }
 عام عرف نص_شرح_رمز_خارجي_غير_مدعوم(): نص { أرجع «The linker cannot bind this external symbol for the target. Provide it from a supported library.»; }
 عام عرف نص_شرح_إعادة_توطين_غير_مدعومة(): نص { أرجع «The output needs a relocation its object format cannot express. Try another backend or target.»; }
 عام عرف نص_شرح_صيغة_كائن_غير_مدعومة_للهدف(): نص { أرجع «Object files of this format cannot be written for this target. Pick a supported target or backend.»; }
@@ -124,8 +125,8 @@
 عام عرف نص_شرح_ملف_غير_منسق(): نص { أرجع «`sultanc fmt --check` found a source file whose layout differs from the canonical one. Run `sultanc fmt` on it; formatting changes only whitespace.»; }
 عام عرف نص_شرح_وحدة_معلنة_بلا_ابن(): نص { أرجع «A `module` declaration gives spellings to a child of its folder, named as it is on disk: a NAME.sn file or a NAME folder next to the root file. Correct the name or remove the declaration.»; }
 عام عرف نص_شرح_تهجئة_وحدة_مشتركة(): نص { أرجع «An import names a child of a folder by its name or by one of its spellings, so a spelling names one child only, and no other child's name. Give each child its own spellings.»; }
-عام عرف نص_شرح_إعادة_تصدير_تحجب_ابنا(): نص { أرجع «A `module NAME = LIBRARY.path;` declaration makes NAME a child of the folder that is another library's module. The folder's own NAME.sn or NAME folder would be a second module at the same path, so a re-export may only name a child the folder does not have. Remove the re-export or the folder's own child.»; }
-عام عرف نص_شرح_هدف_إعادة_تصدير_غير_متاح(): نص { أرجع «A re-export names a module or folder of a library beneath the declaring one, as std re-exports alloc and core and alloc re-exports core. The target is not there, or its library is not visible from this one (core sees no other library; alloc does not see std). Name an existing module of a visible library, by its canonical names.»; }
+عام عرف نص_شرح_إعادة_تصدير_تحجب_ابنا(): نص { أرجع «A re-export adds a child to a folder; the folder already has its own module of that name. Remove the re-export or the folder's own child.»; }
+عام عرف نص_شرح_هدف_إعادة_تصدير_غير_متاح(): نص { أرجع «A re-export names a module of a visible library beneath the declaring one (std sees alloc and core; alloc sees core). This target is missing or not visible.»; }
 عام عرف نص_شرح_دورة_إعادة_تصدير(): نص { أرجع «Each re-export leads to another module path; following them reached a path already followed, so the import names no module. Make one re-export in the chain name the module's own library.»; }
 عام عرف نص_شرح_تهجئة_وحدة_محجوزة(): نص { أرجع «A module spelling is written in import paths, where a reserved word of the language cannot stand. Choose a spelling that is not a reserved word.»; }
 عام عرف نص_شرح_تصريح_وحدة_خارج_ملف_الجذر(): نص { أرجع «Spellings of a folder's children are declared in the folder's root file, FOLDER/FOLDER.sn, or in a package's root file, SOURCE_ROOT/PACKAGE.sn. Move the declaration there.»; }
@@ -255,6 +256,7 @@
     | مفتاح_شرح.فشل_وقت_الترجمة_مطلوب -> { أرجع نص_شرح_فشل_وقت_الترجمة_مطلوب(); }
     | مفتاح_شرح.سمة_تصريح_غير_مدعومة -> { أرجع نص_شرح_سمة_تصريح_غير_مدعومة(); }
     | مفتاح_شرح.توقيع_يتتبع_المستدعي_غير_صالح -> { أرجع نص_شرح_توقيع_يتتبع_المستدعي_غير_صالح(); }
+    | مفتاح_شرح.استعمال_اتفاقية_سي_غير_صالح -> { أرجع نص_شرح_استعمال_اتفاقية_سي_غير_صالح(); }
     | مفتاح_شرح.حجة_موقع_المستدعي_صريحة -> { أرجع نص_شرح_حجة_موقع_المستدعي_صريحة(); }
     | مفتاح_شرح.نقل_من_مرجع -> { أرجع نص_شرح_نقل_من_مرجع(); }
     | مفتاح_شرح.هدف_لا_يدعم_الميزة -> { أرجع نص_شرح_هدف_لا_يدعم_الميزة(); }

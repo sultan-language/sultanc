@@ -246,6 +246,7 @@
     ألحق(الناتج, «SULTANC-TEST-FILE-NOT-IN-PROGRAM»);
     ألحق(الناتج, «SULTANC-TRACK-CALLER-SIGNATURE»);
     ألحق(الناتج, «SULTANC-TRACK-CALLER-EXPLICIT-LOCATION»);
+    ألحق(الناتج, «SULTANC-C-ABI-MISUSE»);
     أرجع الناتج;
 }
 
@@ -373,6 +374,8 @@
     ألحق(الناتج, «host-out-of-memory»);
     ألحق(الناتج, «link-symbol-type-mismatch»);
     ألحق(الناتج, «extern-symbol-conflict»);
+    ألحق(الناتج, «panic-handler-invalid»);
+    ألحق(الناتج, «global-allocator-invalid»);
     ألحق(الناتج, «link-external-symbol-unsupported»);
     ألحق(الناتج, «object-relocation-unsupported»);
     ألحق(الناتج, «object-format-unsupported»);
@@ -470,6 +473,9 @@
     ألحق(الناتج, «unformatted-source»);
     ألحق(الناتج, «module-spelling-no-child»);
     ألحق(الناتج, «module-spelling-shared»);
+    ألحق(الناتج, «module-reexport-shadows»);
+    ألحق(الناتج, «module-reexport-unavailable»);
+    ألحق(الناتج, «module-reexport-cycle»);
     ألحق(الناتج, «module-spelling-reserved-word»);
     ألحق(الناتج, «module-declaration-outside-root-file»);
     ألحق(الناتج, «test-has-parameters»);
@@ -479,6 +485,7 @@
     ألحق(الناتج, «test-file-not-in-program»);
     ألحق(الناتج, «track-caller-signature»);
     ألحق(الناتج, «track-caller-explicit-location»);
+    ألحق(الناتج, «c-abi-misuse»);
     أرجع الناتج;
 }
 

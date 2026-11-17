@@ -559,6 +559,9 @@
     | معرف_تشخيص.حجة_موقع_المستدعي_صريحة -> {
         أرجع تعريف_خطأ(المعرف, «SULTANC-TRACK-CALLER-EXPLICIT-LOCATION», «track-caller-explicit-location»);
     }
+    | معرف_تشخيص.استعمال_اتفاقية_سي_غير_صالح -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-C-ABI-MISUSE», «c-abi-misuse»);
+    }
     | معرف_تشخيص.خفض_تعبير_غير_مدعوم -> {
         أرجع تعريف_خطأ_داخلي(المعرف, «SULTANC-ICE-LOWERING-UNSUPPORTED-EXPRESSION», «unsupported-expression-lowering»);
     }
@@ -1014,6 +1017,7 @@
     // identity (tests/{en,ar}/ispeak/check_public_codes.sn).
     ألحق(الناتج, معرف_تشخيص.توقيع_يتتبع_المستدعي_غير_صالح());
     ألحق(الناتج, معرف_تشخيص.حجة_موقع_المستدعي_صريحة());
+    ألحق(الناتج, معرف_تشخيص.استعمال_اتفاقية_سي_غير_صالح());
     أرجع الناتج;
 }
 

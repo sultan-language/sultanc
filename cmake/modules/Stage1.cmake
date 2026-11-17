@@ -35,11 +35,15 @@ add_custom_command(
     # (compiler/interpreter/machine/host_threads.sn). Nor has it `استنسخ`:
     # the copy of kept later-phase facts, which only incremental tooling
     # analysis asks for, is its stub (compiler/frontend/later_phase_facts_copy.sn).
+    # Nor has it casts between integers and pointers: the interpreter's
+    # width-exact raw memory access is its stub, word accesses
+    # (compiler/interpreter/machine/raw_memory_access.sn).
     COMMAND "$<TARGET_FILE:sultanc-stage0-executable>"
         compiler/main.sn
         "--target=${SULTANC_STAGE1_TARGET}"
         "--module-source=compiler.interpreter.machine.host_threads=compiler/interpreter/machine/host_threads_unavailable.sn"
         "--module-source=compiler.frontend.later_phase_facts_copy=compiler/frontend/later_phase_facts_copy_unavailable.sn"
+        "--module-source=compiler.interpreter.machine.raw_memory_access=compiler/interpreter/machine/raw_memory_access_unavailable.sn"
         -o "${SULTANC_STAGE1_OBJECT}"
     DEPENDS sultanc-stage0-executable ${SULTANC_COMPILER_SOURCES}
         "${CMAKE_CURRENT_BINARY_DIR}/sultanc-stage1-target.txt"
@@ -86,6 +90,36 @@ endif()
 # needs this library. SULTANC_COMPILER_LLVM selects the capability of the
 # self-hosted stages only (Stage2.cmake, Verify.cmake).
 target_link_libraries(sultanc-stage1-executable PRIVATE SultanC::LLVM)
+
+# Windows: Stage0's object carries no /DEFAULTLIB records (cl writes them only
+# into the objects it compiles), so the link names the C runtime (CMake's
+# default, the DLL runtime: msvcrt with ucrt and vcruntime, which also give
+# mainCRTStartup, __chkstk and _fltused) and the system libraries std imports
+# by DLL (library/std/os/platform/windows/win32): ws2_32, crypt32, the
+# synchronization API set (WaitOnAddress), ntdll, and bcryptprimitives
+# (ProcessPrng), whose import library is made here from a .def file because
+# not every Windows SDK ships one.
+if(WIN32 AND MSVC)
+    set(_sultanc_prng_def "${CMAKE_CURRENT_BINARY_DIR}/bcryptprimitives.def")
+    set(_sultanc_prng_lib "${CMAKE_CURRENT_BINARY_DIR}/bcryptprimitives.lib")
+    file(WRITE "${_sultanc_prng_def}" "LIBRARY bcryptprimitives.dll\nEXPORTS\n    ProcessPrng\n")
+    if(CMAKE_C_COMPILER_ARCHITECTURE_ID MATCHES "ARM64")
+        set(_sultanc_lib_machine ARM64)
+    else()
+        set(_sultanc_lib_machine X64)
+    endif()
+    add_custom_command(
+        OUTPUT "${_sultanc_prng_lib}"
+        COMMAND "${CMAKE_AR}" /nologo "/def:${_sultanc_prng_def}" "/out:${_sultanc_prng_lib}"
+            "/machine:${_sultanc_lib_machine}"
+        DEPENDS "${_sultanc_prng_def}"
+        COMMENT "Import library for bcryptprimitives.dll (ProcessPrng)"
+        VERBATIM)
+    add_custom_target(sultanc-stage1-prng-implib DEPENDS "${_sultanc_prng_lib}")
+    add_dependencies(sultanc-stage1-executable sultanc-stage1-prng-implib)
+    target_link_libraries(sultanc-stage1-executable PRIVATE
+        msvcrt ucrt vcruntime ws2_32 crypt32 synchronization ntdll "${_sultanc_prng_lib}")
+endif()
 
 if(_sultanc_stage1_export)
     sultanc_export_executable(sultanc-stage1-executable "${_sultanc_stage1_export}"
