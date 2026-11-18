@@ -292,6 +292,10 @@
         ماكرو_مسبق_جسر(&متغير س, «__GNUC_STDC_INLINE__», «1»);
     };
     ماكرو_مسبق_جسر(&متغير س, «__NO_INLINE__», «1»);
+    // Jisr compiles C itself and has no checked builtins (__builtin___memcpy_chk,
+    // __builtin_object_size), so headers that fortify by default (Apple's
+    // _types.h sets 2) keep the plain declarations, as -D_FORTIFY_SOURCE=0.
+    ماكرو_مسبق_جسر(&متغير س, «_FORTIFY_SOURCE», «0»);
     ماكرو_مسبق_جسر(&متغير س, «__FINITE_MATH_ONLY__», «0»);
     ماكرو_مسبق_جسر(&متغير س, «__CHAR_BIT__», «8»);
     ماكرو_مسبق_جسر(&متغير س, «__ORDER_LITTLE_ENDIAN__», «1234»);

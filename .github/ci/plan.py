@@ -3,37 +3,38 @@
 
 The tiers (.github/workflows/ci.yml; the policy is written out in CI.md).
 They follow what mature compilers run, checked in their CI files:
-  LLVM premerge (.github/workflows/premerge.yaml): every pull request builds
-    and tests on Linux x86_64, Windows and macOS arm64, only the projects the
-    change affects; the full configuration matrix runs on post-commit
-    builders.
-  Rust (src/ci/github-actions/jobs.yml): a pull-request push runs a few Linux
-    jobs; nothing lands on master before the ~84 auto jobs (Linux, macOS,
-    Windows, every tier-1 target) pass in the merge queue.
-SultanC pushes straight to main (no merge queue), so main gets LLVM's
-premerge shape: every OS family, both backends and every object format on
-each push, one representative host each. beta plays the role of Rust's merge
-queue: the full matrix before code may reach master.
+  Rust (src/ci/github-actions/jobs.yml): a pull request runs a few Linux jobs
+    (the `pr` set); the full set of about 80 jobs (`auto`, every tier-1 host)
+    runs once per commit before it lands; PR jobs are a subset of auto jobs.
+    master -> beta -> stable move by promotion of tested commits.
+  LLVM (.github/workflows/premerge.yaml, .ci/compute-projects.sh): presubmit
+    builds only what the change touches; the wide matrix runs after the
+    commit lands, on post-commit builders; release branches run the same
+    workflows.
+  Go (x/build dashboard): every TryBot (presubmit) builder is also a
+    post-submit builder, never the other way round.
+SultanC pushes straight to main, so main gets Rust's PR shape: a smoke set on
+Linux, widened only where a change touches another host's code. The whole
+matrix runs once per commit: nightly on main, and when a commit is qualified
+for promotion to beta (promote.yml). beta and master hold only commits that
+passed it, so they never run it again.
 
   docs     only documentation changed: the docs check, no compiler build
-  quick    push to main:
+  quick    push to main (the smoke set):
              Seed / linux-x86_64   Native ELF: seed bootstrap, Stage3 ==
                                    Stage4, seed reproducible, test suite
-             Seed / macos-arm64    Native arm64 Mach-O: seed bootstrap,
-                                   Stage3 == Stage4, seed reproducible, tests
              LLVM / linux-x86_64   C Stage0 -> LLVM-enabled Stage2,
-                                   convergence
-             LLVM / windows-x86_64 COFF, the only Windows route: C Stage0 ->
-                                   LLVM Stage2, convergence, test suite
+                                   convergence (no second test run)
   focused  pull request into main: quick, plus the hosts and routes of the
            components the pull request changes (COMPONENTS below)
-  full     beta qualification (beta.yml), master without evidence (master.yml),
-           nightly, manual dispatch with scope=full:
-           every route on every host, every test step, the seed update
+  full     nightly, qualification (promote.yml, beta.yml), manual dispatch
+           with scope=full: every route on every host, every test step, the
+           seed update
 
 Every host and route is defined once (HOSTS); a tier only selects from them,
-so a tier never changes what a selected job does. The jobs themselves are the
-same steps, the same scripts (linux.sh, macos.sh, windows.ps1) and the same
+so a tier never changes what a selected job does, and every host of a smaller
+tier is also in the full tier (Go's rule). The jobs themselves are the same
+steps, the same scripts (linux.sh, macos.sh, windows.ps1) and the same
 canonical build and test commands in every tier.
 
 Environment:
@@ -77,24 +78,26 @@ DOCS = re.compile(r"^(docs/|LICENSE$)|\.md$")
 # The seed update (regenerate the seed in a scratch directory, bootstrap from
 # it; never written back) runs only in the full tier.
 COMPONENTS = [
+    ("macOS / Darwin / Mach-O",
+     re.compile(r"(^|/)(macos|darwin|macho|mach_o|apple)([/_.]|$)|^\.github/ci/macos\.sh$"),
+     {"seed": ["macos-arm64"], "llvm": ["macos-x86_64"]}),
+    ("Windows / COFF / PE",
+     re.compile(r"(^|/)(windows|win32|coff|pe|msvc)([/_.]|$)|^\.github/ci/windows\.ps1$"),
+     {"llvm": ["windows-x86_64"]}),
     ("arm64 Linux / Windows",
      re.compile(r"(^|/)(aarch64|arm64)([/_.]|$)"),
      {"llvm": ["linux-arm64", "windows-arm64"]}),
-    ("macOS x86_64",
-     re.compile(r"(^|/)(macos|darwin|macho|apple)([/_.]|$)|^\.github/ci/macos\.sh$"),
-     {"llvm": ["macos-x86_64"]}),
     ("LLVM provider / C Stage0 / build",
      re.compile(r"^compiler/backend/provider/llvm/|^bootstrap/|^cmake/|^build\.sh$|^\.github/ci/llvm\.lock$"
                 r"|^\.github/ci/linux\.sh$"),
      {"llvm_tests": ["linux-x86_64"]}),
 ]
 
-QUICK_SEED = ["linux-x86_64", "macos-arm64"]
-QUICK_LLVM = ["linux-x86_64", "windows-x86_64"]
-# The LLVM-route hosts whose test suite runs in the quick tier: Windows has no
-# other route, so its tests run here; Linux and macOS tests run on the seed
-# route.
-QUICK_LLVM_TESTS = ["windows-x86_64"]
+# The smoke set (push to main): Linux x86_64 only, as Rust's PR jobs. The
+# seed route runs the test suite; the LLVM route builds and converges.
+QUICK_SEED = ["linux-x86_64"]
+QUICK_LLVM = ["linux-x86_64"]
+QUICK_LLVM_TESTS = []
 
 
 def write(path_variable, text):
@@ -229,8 +232,8 @@ def main():
         lines.append(f"- note: {note}")
     if tier != "full":
         lines.append("- the full matrix runs nightly, on manual dispatch with scope `full`, "
-                     "and in beta qualification (beta.yml); a passing quick or focused run "
-                     "qualifies nothing")
+                     "and when a commit is qualified for beta (promote.yml); a passing quick "
+                     "or focused run qualifies nothing")
     write("GITHUB_STEP_SUMMARY", "\n".join(lines) + "\n")
     return 0
 

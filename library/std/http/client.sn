@@ -657,7 +657,6 @@
 عام مرادف close_http_client = أغلق_عميل_ويب;
 عام مرادف serialize_http1_request = سلسل_طلب_ويب1;
 عام مرادف parse_http1_response = حلل_استجابة_ويب1;
-عام مرادف parsed_http_response = استجابة_ويب_محللة;
 عام مرادف parsed_http_response_value = استجابة_الاستجابة_المحللة;
 عام مرادف parsed_http_response_consumed = مستهلك_الاستجابة_المحللة;
 عام مرادف parse_http1_response_with_limits = حلل_استجابة_ويب1_بحدود;

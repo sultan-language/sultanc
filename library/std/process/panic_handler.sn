@@ -7,10 +7,29 @@
 // binds it by this file and name (msir/semantic_lowering.sn), as it binds the
 // allocator's entry points, unless the program marks a handler of its own
 // with `@@panic_handler` / `@@معالج_الانهيار` (docs/en/reference/std-layers.md).
+//
+// Only the first thread that panics reports: it takes the flag, writes the
+// report and ends the process. A thread that panics after it waits on the flag
+// until the process ends, so threads that fail together print one report. A
+// panic inside the report itself finds the flag taken too; that wait is
+// bounded, and the process then ends with status 1 and no second report.
 استورد عمليات.اخرج;
 استورد عمليات.فشل;
+استورد نظام_التشغيل.انتظار_العنوان;
+
+دع انهيار_العملية_جار: متغير ط32 = 0;
+مرادف قارن_وبدّل_علم_الانهيار = بدائي_ذري_قارن_وبدل;
 
 عام عرف معالج_انهيار_المكتبة(الرسالة: نص): فراغ {
+    إذا (قارن_وبدّل_علم_الانهيار(&انهيار_العملية_جار, 0 مثل ط32, 1 مثل ط32, 2, 2) != (0 مثل ط32)) {
+        // 100 waits of 10 ms: the first thread's exit normally ends this one first.
+        دع المحاولات: متغير عدد = 0;
+        طالما (المحاولات < 100) {
+            دع تجاهل: منطقي = انتظر_عند_الخلية(&انهيار_العملية_جار, 1 مثل ط32, اختياري.موجود(10000000));
+            المحاولات := المحاولات + 1;
+        }
+        اخرج(1);
+    };
     اطبع_فشل_تشغيل(1, &الرسالة);
     اخرج(1);
 }

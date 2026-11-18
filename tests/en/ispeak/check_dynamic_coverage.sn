@@ -57,6 +57,6 @@ def main(): int {
         count := count + 1;
         number := number + 1;
     }
-    if (count != 916) { return 3; };
+    if (count != 921) { return 3; };
     return 0;
 }

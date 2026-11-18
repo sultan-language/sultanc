@@ -681,17 +681,17 @@
     أرجع النداءات;
 }
 
-// A trap on a spawned thread under `run` is written like a main-thread trap
-// (the same code, message and source location: the interpreter renders it
-// through the shared renderer with the run's sources, language and format)
-// and the process exits with 101, in the human, short and json formats; four
-// threads trapping at once give one report. In both languages.
+// A runtime check that fails on a spawned thread under `run` is reported like
+// one on the main thread (the same code, message and source location: both go
+// through std's panic handler) and the process exits with 1, with every
+// diagnostic format; four threads failing at once give one report. In both
+// languages.
 عرف اختبر_فخ_خيط(الملخص: &متغير ملخص_اختبارات): فراغ {
     دع الرئيسية: متجه نص = [«tests/runner/fixtures/thread_trap/main_trap.sn», «tests/runner/fixtures/thread_trap/main_trap_ar.sn»];
     دع الخيط: متجه نص = [«tests/runner/fixtures/thread_trap/thread_trap.sn», «tests/runner/fixtures/thread_trap/thread_trap_ar.sn»];
     دع اللغات: متجه نص = [«en», «ar»];
     دع الصيغ: متجه نص = [«human», «short», «json»];
-    دع العلامة: نص = «SULTANC-INTERPRETER-TRAP»;
+    دع العلامة: نص = «SULTANC-RUNTIME-PROGRAM-STOPPED»;
     دع المترجم: نص = مسار_المترجم();
     دع ف: متغير طبيعي = 0;
     طالما (ف < 2) {
@@ -720,10 +720,10 @@
             دع سطرا_رئيسي: نص = بلا_معرف_مصدر(&أول_سطرين(&رئيسي.الخطأ));
             دع سطرا_خيط: نص = بلا_معرف_مصدر(&أول_سطرين(&خيط.الخطأ));
             دع متطابقان: منطقي = نصان_متساويان_اختبار(&سطرا_رئيسي, &سطرا_خيط);
-            إذا (رئيسي.الحالة == 101 && خيط.الحالة == 101 && يحتوي_نصا(&خيط.الخطأ, &العلامة) && متطابقان) {
+            إذا (رئيسي.الحالة == 1 && خيط.الحالة == 1 && يحتوي_نصا(&خيط.الخطأ, &العلامة) && متطابقان) {
                 سجل_نجاح(الملخص, &الاسم);
             } وإلا {
-                دع سبب: نص = «فخ الخيط لم يُبلَّغ كفخ الخيط الرئيسي أو لم يخرج بـ 101»;
+                دع سبب: نص = «فشل الخيط لم يُبلَّغ كفشل الخيط الرئيسي أو لم يخرج بـ 1»;
                 سجل_فشل(الملخص, &الاسم, &سبب);
             };
             ص := ص + 1;
@@ -733,10 +733,10 @@
     دع اسم_أربعة: نص = «أربعة خيوط تقع في الفخ معا: بلاغ واحد»;
     دع و_أربعة: متجه نص = [«--lang», «en», «--color», «never», «run», «tests/runner/fixtures/thread_trap/threads4_trap.sn»];
     دع أربعة: نتيجة_أمر = نفذ_أمرا(&المترجم, &و_أربعة, &اسم_أربعة);
-    إذا (أربعة.الحالة == 101 && عدد_مرات_نص(&أربعة.الخطأ, &العلامة) == 1) {
+    إذا (أربعة.الحالة == 1 && عدد_مرات_نص(&أربعة.الخطأ, &العلامة) == 1) {
         سجل_نجاح(الملخص, &اسم_أربعة);
     } وإلا {
-        دع سبب: نص = «أربعة خيوط في الفخ لم تعط بلاغا واحدا وحالة 101»;
+        دع سبب: نص = «أربعة خيوط فاشلة لم تعط بلاغا واحدا وحالة 1»;
         سجل_فشل(الملخص, &اسم_أربعة, &سبب);
     };
 }

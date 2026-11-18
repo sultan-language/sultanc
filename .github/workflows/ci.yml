@@ -1,39 +1,32 @@
-# SultanC CI, in tiers: fast feedback on every push to main, the whole
-# matrix where code is qualified. Branches promote main -> beta -> master;
-# each has its own workflow:
-#   main    this workflow (quick and focused tiers)
-#   beta    beta.yml: the full tier of this workflow, the qualification
-#   master  master.yml: evidence that the exact commit passed qualification,
-#           else the full tier on that commit
-# Every route and host is defined once (.github/ci/plan.py, HOSTS); a tier
-# only selects which of them run. A selected job always runs the same steps
-# with the same canonical commands (.github/ci/linux.sh, macos.sh,
-# windows.ps1 -> build.sh / cmake/ and tools/tests/ci_run.sh).
-#
-# The tiers follow LLVM's premerge CI (every change built and tested on
-# Linux, Windows and macOS) with beta as the full gate, like Rust's merge
-# queue (plan.py has the details and sources).
+# SultanC CI: one definition of every job, in tiers. The same .github is on
+# main, beta and master (promotion is a fast-forward, so a commit keeps its
+# SHA on every branch); each entry workflow filters on its own branch.
 #
 #   trigger                         tier     runs
-#   push to main                    quick    lint; Seed / linux-x86_64 and
-#                                            macos-arm64 (Native ELF and Mach-O:
-#                                            seed bootstrap, Stage3 == Stage4,
-#                                            seed reproducible, tests); LLVM /
+#   push to main                    quick    the smoke set: lint; Seed /
+#                                            linux-x86_64 (Native ELF: seed
+#                                            bootstrap, Stage3 == Stage4, seed
+#                                            reproducible, test suite); LLVM /
 #                                            linux-x86_64 (C Stage0 -> LLVM
-#                                            Stage2, convergence); LLVM /
-#                                            windows-x86_64 (COFF: build,
-#                                            convergence, tests); docs check
+#                                            Stage2, convergence); docs check
 #                                            when docs changed
 #   pull request into main          focused  quick, plus the hosts of the
 #                                            components it changes (plan.py,
-#                                            COMPONENTS)
+#                                            COMPONENTS: macOS, Windows, arm64,
+#                                            LLVM provider)
 #   documentation-only change       docs     docs check only (no compiler build)
 #   manual dispatch                 scope    full (default) or quick
-#   workflow_call                   scope    beta.yml, master.yml, nightly.yml
-#                                            (full, opt-in suites on)
+#   workflow_call                   scope    nightly.yml, promote.yml, beta.yml
+#                                            (full, opt-in suites on, qualify)
 #
-# A passing quick or focused run qualifies nothing: only the full tier run
-# by beta.yml or master.yml is qualification evidence.
+# This is Rust's shape (a few Linux jobs on a pull request, every tier-1 host
+# once per commit before it lands) and LLVM's (presubmit builds what changed;
+# the wide matrix runs after the commit lands). plan.py has the details.
+#
+# Qualification: a full-tier run called with `qualify: true` that passes its
+# gate sets the commit status `sultanc/qualification` on the commit it tested
+# (`ref`). That status is the only evidence promotion accepts
+# (.github/ci/evidence.sh): a passing quick or focused run qualifies nothing.
 #
 # The full tier is every check CI has:
 #   lint         workflows (actionlint), CI shell scripts (shellcheck), Python helpers
@@ -54,6 +47,7 @@
 #                every planned job must succeed and every job left out of the
 #                plan must be skipped, so skipped, failed and passed stay
 #                distinct (a skip is never reported as a pass)
+#   qualified    with qualify: the commit status, when the full tier passed
 #
 # Superseded push and pull-request runs are cancelled (the newest commit is
 # the one that matters); scheduled, dispatched and qualification runs always
@@ -63,7 +57,8 @@
 # Compilers and test logs are uploaded as artifacts.
 #
 # This workflow never merges, promotes, tags or publishes anything: its token
-# can only read (permissions below). MASTER makes releases by hand.
+# can only read, except the commit status of the qualified job. Promotion is
+# promote.yml; releases are made by hand from master.
 name: SultanC CI
 
 on:
@@ -90,13 +85,22 @@ on:
       extended:
         type: boolean
         default: false
+      ref:
+        # The commit to test (a full SHA); empty: the commit of the caller.
+        type: string
+        default: ''
+      qualify:
+        # Set the sultanc/qualification status on that commit when the full
+        # tier passes.
+        type: boolean
+        default: false
 
 permissions:
   contents: read
   pull-requests: read
 
 concurrency:
-  group: sultanc-ci-${{ github.workflow }}-${{ github.ref }}-${{ inputs.scope || 'auto' }}-${{ inputs.extended && 'ext' || 'std' }}
+  group: sultanc-ci-${{ github.workflow }}-${{ github.ref }}-${{ inputs.ref || 'head' }}-${{ inputs.scope || 'auto' }}-${{ inputs.extended && 'ext' || 'std' }}
   cancel-in-progress: ${{ github.event_name == 'push' || github.event_name == 'pull_request' }}
 
 env:
@@ -123,6 +127,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ${{ inputs.ref }}
           sparse-checkout: .github
       - name: Changed files
         # From the API, so the plan needs no history. Unknown (an error, a
@@ -162,6 +167,8 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
       - name: actionlint
         # The pinned release, checked against its published SHA-256
         # (actionlint_<version>_checksums.txt of the release). Runner labels
@@ -200,6 +207,8 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
       - name: Relative links resolve
         run: python3 .github/ci/docs_check.py .
 
@@ -214,6 +223,8 @@ jobs:
       matrix: ${{ fromJSON(needs.plan.outputs.seed_matrix) }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
       - name: Bootstrap from the seed
         if: matrix.script != 'windows'
         timeout-minutes: 100
@@ -260,6 +271,8 @@ jobs:
     timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
       - name: Update the seed, then bootstrap from it
         timeout-minutes: 80
         run: sh .github/ci/linux.sh seed-update
@@ -276,6 +289,8 @@ jobs:
       matrix: ${{ fromJSON(needs.plan.outputs.llvm_sdk_matrix) }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
       - name: LLVM SDK cache
         id: cache
         uses: actions/cache@v4
@@ -304,6 +319,8 @@ jobs:
       matrix: ${{ fromJSON(needs.plan.outputs.llvm_matrix) }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
       - name: LLVM SDK
         uses: actions/cache/restore@v4
         with:
@@ -371,6 +388,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ${{ inputs.ref }}
           sparse-checkout: .github
       - uses: actions/download-artifact@v4
         with:
@@ -409,3 +427,25 @@ jobs:
           print("planned jobs passed:", sorted(expected))
           print("not planned (skipped):", sorted(set(needs) - expected))
           EOF
+
+  qualified:
+    name: Qualified
+    needs: [plan, summary]
+    # Only a full-tier run whose gate passed, and only when the caller asks.
+    if: inputs.qualify && needs.plan.outputs.tier == 'full' && needs.summary.result == 'success'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      statuses: write
+    steps:
+      - name: Commit status sultanc/qualification
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ inputs.ref || github.sha }}
+          URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          gh api -X POST "repos/$REPO/statuses/$SHA" \
+            -f state=success -f context=sultanc/qualification \
+            -f description="full tier passed" -f target_url="$URL" > /dev/null
+          echo "Qualified: $SHA ($URL)" >> "$GITHUB_STEP_SUMMARY"

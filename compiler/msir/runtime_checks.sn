@@ -38,8 +38,8 @@
 //   - an index past the end of a vector or a text (lowering/places.sn).
 // What still traps: shifts by the width or more, conversions that do not
 // fit, 128-bit operations, a check whose place is unknown, functions that
-// hold compile-time work, the module initializer, std's task switch and the
-// report itself; and every check of a program without std (bare metal), which
+// hold compile-time work, the module initializer, std's task switch, std's
+// allocator and the report itself; and every check of a program without std (bare metal), which
 // has no report to call.
 //
 // The place of an operation the source wrote is its expression's start, as
@@ -180,6 +180,30 @@
 
 // The place of the source position الموضع: its file's text global (made
 // once per file) and its line and column.
+// std's allocator (std/os/allocation*.sn, allocator_platform.sn) keeps its
+// traps: it stops on a bad release with a deliberate checked subtraction, and
+// a report would allocate on the heap it found corrupted.
+عرف ملف_مخصص_المكتبة_فحص(الاسم: &نص): منطقي {
+    دع الأسماء: متجه نص = [«std/os/allocation.sn», «std/os/allocation_cache.sn», «std/os/allocator_platform.sn»];
+    دع ن: طبيعي = الطول(*الاسم) مثل طبيعي;
+    دع ف: متغير طبيعي = 0;
+    طالما (ف < (الطول(الأسماء) مثل طبيعي)) {
+        دع اللاحقة: &نص = &الأسماء[ف];
+        دع ل: طبيعي = الطول(*اللاحقة) مثل طبيعي;
+        إذا (ن >= ل) {
+            دع مطابقة: متغير منطقي = صواب;
+            دع م: متغير طبيعي = 0;
+            طالما (م < ل && مطابقة) {
+                إذا ((*الاسم)[ن - ل + م] != (*اللاحقة)[م]) { مطابقة := خطأ; };
+                م := م + 1;
+            }
+            إذا (مطابقة) { أرجع صواب; };
+        };
+        ف := ف + 1;
+    }
+    أرجع خطأ;
+}
+
 عرف مكان_فحص_عند(
     البرنامج: &متغير برنامج_مسير,
     خريطة_المصادر: &خريطة_مصادر,
@@ -203,6 +227,7 @@
         طابق اسم_مصدر_من_الخريطة(خريطة_المصادر, الموضع.المصدر مثل طبيعي) مع
         | اختياري.لا_شيء -> { أرجع اختياري.لا_شيء(); }
         | اختياري.موجود(الاسم) -> {
+            إذا (ملف_مخصص_المكتبة_فحص(&الاسم)) { أرجع اختياري.لا_شيء(); };
             دع الجديد: معرف_عام_مسير = أضف_عاما_مسير(
                 البرنامج, نوع_بدائي_فحص(نوع_بدائي_مقنن.نص()), ثابت_مسير.نص(بايتات_من_نص(الاسم)), خطأ
             );
