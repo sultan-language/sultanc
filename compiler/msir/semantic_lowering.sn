@@ -355,6 +355,11 @@
     | ثابت_مسير.صحيح_موقع(_) -> { أرجع صواب; }
     | ثابت_مسير.صحيح_طبيعي(_) -> { أرجع صواب; }
     | ثابت_مسير.مؤشر_فارغ -> { أرجع صواب; }
+    // A float (`let r: mutable f64 = 0.0;`, a C file's `static double`):
+    // every backend writes its IEEE-754 bits as the initial bytes
+    // (native_output.sn, the LLVM module's global initializer, the
+    // interpreter's قيمة_متجه_ثابت_مفسر).
+    | ثابت_مسير.عشري(_) -> { أرجع صواب; }
     | ثابت_مسير.متجه(_) -> { أرجع صواب; }
     | _ -> { أرجع خطأ; };
 }
