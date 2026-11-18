@@ -496,6 +496,27 @@
     أرجع الناتج;
 }
 
+// The keys, each a copy made by الناسخ (`انسخ_نص` for text keys), for keys
+// that own memory: مفاتيح_الخريطة copies its keys bit for bit and so takes
+// only plain keys (docs/en/reference/ownership.md, "Generic templates"), as
+// Rust's `map.keys().map(Clone::clone)`. The copy is the caller's function:
+// the C Stage0 compiles this module and has no `استنسخ`.
+عام عرف مفاتيح_الخريطة_بناسخ<م, ق>(الخريطة: &الخريطة<م, ق>, الناسخ: دالة(&م): م): متجه م {
+    دع الناتج: متغير متجه م = [];
+    دع ف: متغير طبيعي = 0;
+    دع السعة: طبيعي = الطول((*الخريطة).الخانات) مثل طبيعي;
+    طالما (ف < السعة) {
+        دع فهرس_المدخل: طبيعي = فهرس_خانة_الخريطة((*الخريطة).الخانات[ف]);
+        إذا (فهرس_المدخل != أقصى_مداخل_الخريطة()) {
+            طابق (*الخريطة).المداخل[فهرس_المدخل].المفتاح مع
+            | اختياري.موجود(المفتاح) -> { ألحق(الناتج, الناسخ(&المفتاح)); }
+            | اختياري.لا_شيء -> { };
+        };
+        ف := ف + 1;
+    }
+    أرجع الناتج;
+}
+
 // English compatibility surface.
 عام نوع map_bucket<K, V> = خانة_الخريطة<K, V>;
 عام نوع map<K, V> = الخريطة<K, V>;
@@ -514,3 +535,4 @@
 عام مرادف map_reset = أعد_ضبط_الخريطة;
 عام مرادف map_entries = مداخل_الخريطة;
 عام مرادف map_keys = مفاتيح_الخريطة;
+عام مرادف map_keys_cloned_with = مفاتيح_الخريطة_بناسخ;

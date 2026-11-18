@@ -64,6 +64,16 @@
 عام نوع طرفا_قناة<ق> = { المرسل: مرسل<ق>, المستلم: مستلم<ق> };
 عام مرادف channel_ends = طرفا_قناة;
 
+// The two ends by name, for code that does not spell the Arabic field names
+// (a record field has one name): a borrow of each end, as `&ends.المرسل`
+// gives, so `send(channel_ends_sender(&ends), x)`. To own an end, take the
+// pair apart with a pattern, or build the ends apart (مستلم_قناة and
+// مرسل_لمستلم).
+عام عرف مرسل_الطرفين<ق>(الطرفان: &طرفا_قناة<ق>): &مرسل<ق> { أرجع &(*الطرفان).المرسل; }
+عام عرف مستلم_الطرفين<ق>(الطرفان: &طرفا_قناة<ق>): &مستلم<ق> { أرجع &(*الطرفان).المستلم; }
+عام مرادف channel_ends_sender = مرسل_الطرفين;
+عام مرادف channel_ends_receiver = مستلم_الطرفين;
+
 // Rust's TryRecvError, RecvTimeoutError, RecvError and TrySendError.
 عام نوع خطأ_محاولة_استقبال =
     | فارغة

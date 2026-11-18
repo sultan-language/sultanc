@@ -24,6 +24,23 @@
     أرجع «خطأ[SULTANC-RUNTIME-PROGRAM-ERROR]: انتهى البرنامج بخطأ»;
 }
 
+// The words of a failed runtime check (std.process.runtime_check), in
+// English or in Arabic: {0} and {1} stand for the index and the length,
+// {2} for the place. The kinds: 0 an integer overflow, 1 an index out of
+// range, 2 a division by zero.
+عام عرف نص_فحص_تشغيل(النوع: عدد, الإنجليزية: منطقي): نص {
+    إذا (النوع == 1) {
+        إذا (الإنجليزية) { أرجع «index {0} out of range for length {1} at {2}»; };
+        أرجع «الفهرس {0} خارج المدى للطول {1} عند {2}»;
+    };
+    إذا (النوع == 2) {
+        إذا (الإنجليزية) { أرجع «division by zero at {2}»; };
+        أرجع «قسمة على صفر عند {2}»;
+    };
+    إذا (الإنجليزية) { أرجع «integer overflow at {2}»; };
+    أرجع «تجاوز العدد الصحيح حدود نوعه عند {2}»;
+}
+
 // Whether the program was compiled with English as its language.
 عام عرف لغة_البرنامج_المترجمة_إنجليزية(): منطقي {
     أرجع خطأ;

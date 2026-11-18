@@ -12,6 +12,7 @@ module exit { ar: اخرج };
 module failure { ar: فشل };
 module id { ar: معرف_العملية };
 module panic_handler { ar: معالج_الانهيار };
+module runtime_check { ar: فحص_التشغيل };
 
 // Re-exported: these children are modules and folders of alloc and core, at the same
 // paths (docs/en/reference/std-layers.md). One file, one module.

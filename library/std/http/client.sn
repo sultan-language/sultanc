@@ -40,6 +40,11 @@
     المستهلك: طبيعي
 };
 
+// The parts of a parsed response by name, for code that does not spell the
+// Arabic field names: the response (borrowed) and the bytes it took.
+عام عرف استجابة_الاستجابة_المحللة(المحللة: &استجابة_ويب_محللة): &استجابة_ويب_مخزنة { أرجع &(*المحللة).الاستجابة; }
+عام عرف مستهلك_الاستجابة_المحللة(المحللة: &استجابة_ويب_محللة): طبيعي { أرجع (*المحللة).المستهلك; }
+
 نوع وجهة_عميل_ويب = {
     المضيف: نص,
     المنفذ: ط16,
@@ -652,6 +657,9 @@
 عام مرادف close_http_client = أغلق_عميل_ويب;
 عام مرادف serialize_http1_request = سلسل_طلب_ويب1;
 عام مرادف parse_http1_response = حلل_استجابة_ويب1;
+عام مرادف parsed_http_response = استجابة_ويب_محللة;
+عام مرادف parsed_http_response_value = استجابة_الاستجابة_المحللة;
+عام مرادف parsed_http_response_consumed = مستهلك_الاستجابة_المحللة;
 عام مرادف parse_http1_response_with_limits = حلل_استجابة_ويب1_بحدود;
 عام مرادف open_http_client_connection = افتح_اتصال_عميل_ويب_عادي;
 عام مرادف open_https_client_connection = افتح_اتصال_عميل_ويب_آمن;

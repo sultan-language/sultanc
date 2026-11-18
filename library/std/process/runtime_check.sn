@@ -1,0 +1,65 @@
+// A failed runtime check (docs/en/reference/errors.md, "Runtime checks"), as
+// Rust's overflow and bounds-check panics: an integer operation whose result
+// does not fit its type, an index past the end of a vector or a text, a
+// division or a remainder by zero. The compiler ends each check that fails
+// in one cold call of this function (compiler/msir/runtime_checks.sn), with
+// the kind, the place in the source and, for an index, the index and the
+// length; nothing is formatted at the check itself. It writes the iSpeak
+// words of the failure (process.failure_text, نص_فحص_تشغيل) in the
+// program's language and panics with them, so the program's panic handler
+// reports it as it reports إنهيار, and the program ends as a panic does.
+// The compiler loads this module for every program on a target std serves;
+// a program without std keeps the trap.
+//
+// The kinds: 0 an integer overflow, 1 an index out of range, 2 a division by
+// zero.
+استورد نصوص.من_بايتات;
+استورد نصوص.أعداد;
+استورد عمليات.انهيار;
+استورد عمليات.نص_الفشل;
+استورد عمليات.فشل;
+
+عام عرف فشل_فحص_تشغيل(
+    النوع: عدد,
+    الملف: &نص,
+    السطر: طبيعي,
+    العمود: طبيعي,
+    الأول: عدد,
+    الثاني: عدد
+): فراغ {
+    دع القالب: متجه ط8 = بايتات_من_نص(نص_فحص_تشغيل(النوع, البرنامج_بالإنجليزية()));
+    دع الرسالة: متغير متجه ط8 = [];
+    دع العدد: طبيعي = الطول(القالب) مثل طبيعي;
+    دع ف: متغير طبيعي = 0;
+    طالما (ف < العدد) {
+        // {0}, {1} and {2}: the index, the length and the place.
+        دع العلامة: متغير طبيعي = 3;
+        إذا (القالب[ف] == 0x7B && ف + 2 < العدد) {
+            إذا (القالب[ف + 2] == 0x7D) {
+                إذا (القالب[ف + 1] == 0x30) { العلامة := 0; };
+                إذا (القالب[ف + 1] == 0x31) { العلامة := 1; };
+                إذا (القالب[ف + 1] == 0x32) { العلامة := 2; };
+            };
+        };
+        إذا (العلامة == 0) {
+            ألحق_بايتات_نص(&متغير الرسالة, عدد_إلى_نص(الأول));
+            ف := ف + 3;
+        } وإلا إذا (العلامة == 1) {
+            ألحق_بايتات_نص(&متغير الرسالة, عدد_إلى_نص(الثاني));
+            ف := ف + 3;
+        } وإلا إذا (العلامة == 2) {
+            ألحق_بايتات_نص(&متغير الرسالة, انسخ_نص(الملف));
+            ألحق(الرسالة, 0x3A);
+            ألحق_بايتات_نص(&متغير الرسالة, طبيعي_إلى_نص(السطر));
+            ألحق(الرسالة, 0x3A);
+            ألحق_بايتات_نص(&متغير الرسالة, طبيعي_إلى_نص(العمود));
+            ف := ف + 3;
+        } وإلا {
+            ألحق(الرسالة, القالب[ف]);
+            ف := ف + 1;
+        };
+    }
+    إنهيار(من_بايتات(&الرسالة));
+}
+
+عام مرادف runtime_check_failed = فشل_فحص_تشغيل;
