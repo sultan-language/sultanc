@@ -147,7 +147,8 @@ Raw machine-memory words (`بدائي_اقرأ_ذاكرة_الآلة`, used by s
 mapped) are read and written on the host through `/proc/self/mem`, as native code does. Like native
 code, nothing checks such an address. The compiler's own sources cannot use the machine-memory
 intrinsic, because the C Stage0 that compiles them has none. The wasm linear-memory primitives exist
-only in wasm32 std paths and are never reached by a host-target program.
+only in wasm32 std paths. A host-target program reaches them only on a WASI host, where reads and
+the memory size are answered from the module's memory (see "`run` under WASI").
 
 ### The foreign-call bridge
 
@@ -208,9 +209,12 @@ contract gives.
 | Windows | `GetEnvironmentStringsW` | a read-only host region up to the empty string that ends the block |
 | Windows | `GetAddrInfoW`, `FreeAddrInfoW` | as `getaddrinfo` (the record type std declares gives each member's offset) |
 | Windows | `CertEnumCertificatesInStore` | a read-only record region for the `CERT_CONTEXT`, whose encoded-bytes member points to a region of `cbCertEncoded` bytes |
+| WASI | `fd_read`, `fd_write`, `sock_recv`, `sock_send` | a host iovec array (u32 buffer address, u32 length), each buffer staged like any pointer argument |
+| WASI | `args_sizes_get`, `args_get`, `environ_sizes_get`, `environ_get` | the interpreted program's own arguments and environment |
+| WASI | `proc_exit` | ends the interpretation with the status |
 
 **The generator rule.** `generate_host_externs.py` fails, naming the declaration, when std declares
-an extern for macOS or Windows that the interpreter cannot call:
+an extern for macOS, Windows or WASI that the interpreter cannot call:
 
 - a parameter or result that is neither an integer nor a pointer (a float, a record by value);
 - a pointer result or a pointer-bearing record argument without a shim;
@@ -218,6 +222,24 @@ an extern for macOS or Windows that the interpreter cannot call:
 - an extern outside `library/std/os/platform/`, where it would escape the audit.
 
 `generate_host_externs.py --check` also fails when the generated table is out of date.
+
+### `run` under WASI
+
+A wasm32-wasi compiler (`sultanc` under Node's WASI or a browser shim) runs `sultanc run` in the
+checked interpreter. The machine interpreter needs an x86-64 or AArch64 host. On WASI, std's I/O is
+`wasi_snapshot_preview1` imports, and the generated table re-declares each of them with the same
+import module and name. The wasm32-wasi compiler is also the bootstrap seed, so the table imports only
+what the seed's WASI host implements (`bootstrap-wasm/wasm2c.c`, signatures checked). std's other
+imports (sockets, links, `fd_filestat_set_size`, `path_filestat_set_times`) answer `ENOSYS` until that
+host gains them. The compiler and its host copies share the module's one linear memory, so a
+host address is a linear-memory address and a pointer is its u32 word (`host_memory.sn`). Host copies
+come from std's allocator. The shims in the table above handle the iovec calls, the program's
+startup strings and `proc_exit`. std reads the startup strings with the linear-memory read primitive,
+which the interpreter answers from the module's memory. Growing, writing and copying linear memory
+remain unsupported. A WASI host cannot start processes, so a program that only an executable runs
+(imported C files, `-l` libraries, a variadic or `@@c_abi` function, a call at an address, or an
+extern outside the table) is reported as `SULTANC-RUN-NEEDS-PROCESS`, naming that part. It never
+takes the executable route.
 
 ### Dynamic C functions
 
@@ -311,6 +333,12 @@ seconds of the current dispatch loop. They show the order of magnitude, not a gu
 | gzip round trip over 16 KiB | 18.6 s |
 | parse and re-stringify 1 000 JSON objects | 11.2 s |
 | `examples/en/crypto/signatures.sn` (Ed25519; native: 1 s) | 283 s |
+
+Measured on the machine engine of this release (`sultanc run`, x86_64-linux): `fib(30)` and a sieve
+of Eratosthenes over a 3·10^6-element `bool` vector take 0.34 s (native: 0.02 s). The engine's raw memory
+(`machine/raw_memory.sn`) reads and writes 1, 2, 4 and 8 bytes with one host load or store of that width,
+as native code does, instead of a read-modify-write of the enclosing aligned words; that took the same
+program from 0.40 s to 0.34 s.
 
 A tight loop costs roughly 0.3 to 0.5 microseconds per MSIR instruction. Programs that loop 10^5
 times through the std allocator counters (`tests/*/language/propagation/drops.sn`,

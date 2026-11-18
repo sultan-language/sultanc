@@ -6,7 +6,7 @@ import compiler.diagnostics.identity;
 import compiler.diagnostics.reason;
 
 // Frozen reason -> public identity policy (tests/check_reason_grouping.sn).
-// Every one of the 679 reasons is listed: grouped reasons must name their
+// Every one of the 682 reasons is listed: grouped reasons must name their
 // identity; all others must leave the producer's identity unchanged.
 def matches(reason: سبب_تشخيص, expected: معرف_تشخيص): bool {
     match تشخيص_عام_لسبب(reason) with
@@ -387,6 +387,8 @@ def main(): int {
     if (!unaggregated(سبب_تشخيص.سبب_نمط_مصدر_عدم_تطابق())) { return 2; };
     if (!unaggregated(سبب_تشخيص.سبب_نمط_نطاق_مصدر_خارج_مصدر())) { return 2; };
     if (!unaggregated(سبب_تشخيص.سبب_نمط_نوع_فحص_فشل())) { return 2; };
+    if (!unaggregated(سبب_تشخيص.سبب_نمط_حالات_غير_مغطاة())) { return 2; };
+    if (!unaggregated(سبب_تشخيص.سبب_نقطة_دخول_خطأ_ليس_فشلا())) { return 2; };
     if (!unaggregated(سبب_تشخيص.سبب_نمط_غير_مدعوم_قيمة_حرفية())) { return 2; };
     if (!matches(سبب_تشخيص.سبب_انتقاء_مقارنة_ليس_منه_شرط(), معرف_تشخيص.بناء_غير_مدعوم_في_الخلفية())) { return 1; };
     if (!matches(سبب_تشخيص.سبب_انتقاء_دالة_واجهة_الاستدعاء_غير_متاح(), معرف_تشخيص.واجهة_استدعاء_غير_متاحة_للهدف())) { return 1; };
@@ -480,6 +482,7 @@ def main(): int {
     if (!unaggregated(سبب_تشخيص.سبب_نوع_عدد_حرفي_خارج_المدى())) { return 2; };
     if (!unaggregated(سبب_تشخيص.سبب_نوع_تحويل_غير_صالح())) { return 2; };
     if (!unaggregated(سبب_تشخيص.سبب_نوع_سالب_عدد_طبيعي())) { return 2; };
+    if (!unaggregated(سبب_تشخيص.سبب_نوع_عامل_غير_معرف_للنوع())) { return 2; };
     if (!unaggregated(سبب_تشخيص.سبب_نوع_ثابت_تسجيل_نوع_تعبير())) { return 2; };
     if (!unaggregated(سبب_تشخيص.سبب_نوع_ثابت_تسجيل_نوع_منشئ())) { return 2; };
     if (!unaggregated(سبب_تشخيص.سبب_نوع_ثابت_نوع_حمولة_منشئ())) { return 2; };
@@ -703,5 +706,6 @@ def main(): int {
     if (!matches(سبب_تشخيص.سبب_وقت_الترجمة_عملية_غير_مدعومة(), معرف_تشخيص.عملية_غير_مدعومة_وقت_الترجمة())) { return 1; };
     if (!unaggregated(سبب_تشخيص.سبب_سمة_معالجة_غير_منفذة())) { return 2; };
     if (!unaggregated(سبب_تشخيص.سبب_تدفق_سلامة_نقل_من_مرجع())) { return 2; };
+    if (!unaggregated(سبب_تشخيص.سبب_تدفق_سلامة_قيد_عادي_منتهك())) { return 2; };
     return 0;
 }

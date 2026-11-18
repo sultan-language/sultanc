@@ -546,7 +546,19 @@ path, so the program ends cleanly.
 `sultanc run` executes the same std code, so it prints the same frames. The interpreter gives a program the
 language variables of its environment (`SULTANC_LANG`, `LC_ALL`, `LC_MESSAGES`, `LANG`) as its startup environment;
 other variables are absent. A raw Linux `exit_group` ends the interpretation with the status, so `exit`, `panic` and
-assertions end an interpreted program with the native status.
+assertions end an interpreted program with the native status. WASI's `proc_exit` does the same under a wasm32-wasi
+compiler.
+
+`SULTANC-RUN-NEEDS-PROCESS` (environment, kind `run-needs-process`) is reported by `sultanc run` on a host that cannot
+start a process: a wasm32-wasi compiler under Node's WASI or in a browser. A program that only an executable can run
+is rejected there instead of being built: one that imports C files, loads `-l` libraries, or calls C functions the
+interpreter cannot call (variadic, `@@c_abi`, at an address, or outside std's WASI imports). The diagnostic names the
+first such part: the external function's link name, the `-l` library, or the C file. Run the program with a native
+`sultanc`, or build it and run the executable.
+
+```text
+error[SULTANC-RUN-NEEDS-PROCESS]: `run` cannot run this program here: it needs an executable, and this host cannot start one
+```
 
 ## Tests
 
@@ -585,4 +597,4 @@ The tests come in Arabic and English pairs, and the English one spells `?`.
 - [Formatting](formatting.md)
 - [Arabic terminology](arabic-terminology.md)
 - [Interpreter](../internals/interpreter.md)
-- [Language tour](../guide/language-tour.md)
+- [The SultanC Book](../book/ch00-00-introduction.md)

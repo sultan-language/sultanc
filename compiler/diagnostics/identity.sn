@@ -231,6 +231,10 @@
     | خريطة_اعتماديات_غير_صالحة
     // A -l library of `run`/`interpret` the host's dynamic loader could not load.
     | مكتبة_تفسير_غير_محملة
+    // `run` on a host that cannot start a process (a wasm32-wasi compiler)
+    // for a program only an executable runs (imported C files, -l
+    // libraries, C functions the interpreter cannot call).
+    | تشغيل_يلزمه_عملية
     // The system C compiler (SULTANC_C_COMPILER=cc) asked for a target other than the host.
     | مترجم_سي_لغير_المضيف
     // The system C compiler failed on an imported C translation unit.

@@ -1,0 +1,2 @@
+خطأ[SULTANC-RUNTIME-PROGRAM-STOPPED]: توقف البرنامج
+تجاوز العدد الصحيح حدود نوعه عند tests/ar/runtime/failure/overflow_ar.sn:13:10

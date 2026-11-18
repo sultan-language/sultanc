@@ -3,24 +3,24 @@
 # SultanC Documentation
 
 This is the documentation for SultanC, a self-hosted systems programming language whose keywords exist in
-Arabic and English as two surfaces of the same syntax. The pages are grouped by purpose: the guide
+Arabic and English as two surfaces of the same syntax. The pages are grouped by purpose: the book
 teaches the language, the reference specifies it, the internals describe how the compiler works, and the
 contributing pages explain how to change it.
 
 The [README](README.md) gives a short overview of the project and its build routes.
 
-## Guide
+## Learn
 
 | Page | What it covers |
 | --- | --- |
 | [Why SultanC](story.md) | The story of the language: why it started, how its compiler moved from OCaml to C and then to SultanC itself, and its goal |
-| [Getting started](guide/getting-started.md) | Building the compiler, the first program, compiling, running and checking |
-| [Language tour](guide/language-tour.md) | The language by example: types, functions, control flow, records, enums, pattern matching, ownership, errors and modules |
+| [The SultanC Book](book/SUMMARY.md) | The language from installation to complete programs, chapter by chapter, with projects; every example is compiled and run by `tools/docs/check_guide.py` |
 
 ## Reference
 
 | Page | What it covers |
 | --- | --- |
+| [The `sultanc` command](reference/command-line.md) | Building the compiler, the standard library's location, compiling, running, checking, cross-compiling, the LLVM backend and diagnostics |
 | [Type system](reference/type-system.md) | Built-in and structural types, type identity, generics, numeric casts and wrapping arithmetic |
 | [Ownership and destruction](reference/ownership.md) | Moves, borrows, copies, drop glue, temporaries, vector capacity and the allocator |
 | [Errors](reference/errors.md) | Results, propagation with `?`, `panic`, `std.error`, runtime failures and localized messages |

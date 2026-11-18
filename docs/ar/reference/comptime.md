@@ -240,6 +240,6 @@ MSIR عادي متحقق منه، ويستوفيه منسق المترجم قب�
 - [الأخطاء](errors.md)
 - [التنسيق](formatting.md)
 - [المفسر](../internals/interpreter.md)
-- [جولة في اللغة](../guide/language-tour.md)
+- [كتاب السلطان](../book/ch00-00-introduction.md)
 
 </div>

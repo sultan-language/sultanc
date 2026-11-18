@@ -1,0 +1,18 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 1
+// تفاضلي: نعم
+// بيئة: SULTANC_LANG=ar
+// خرج-قياسي: <فارغ>
+// خطأ-قياسي-ملف: division_ar.stderr
+// نظير: tests/en/runtime/failure/division_ar.sn
+// A division by zero (docs/en/reference/errors.md, "Runtime checks") stops the
+// program through the panic path: the frame "the program stopped", then the
+// kind and the place of the division, exit status 1.
+عرف اقسم(المجموع: عدد, الأجزاء: عدد): عدد {
+    أرجع المجموع / الأجزاء;
+}
+
+عرف الرئيسية(): عدد {
+    أرجع اقسم(10, 0);
+}

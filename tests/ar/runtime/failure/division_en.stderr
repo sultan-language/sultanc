@@ -1,0 +1,2 @@
+error[SULTANC-RUNTIME-PROGRAM-STOPPED]: the program stopped
+division by zero at tests/ar/runtime/failure/division_en.sn:13:10

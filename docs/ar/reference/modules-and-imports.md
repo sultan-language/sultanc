@@ -208,8 +208,8 @@ target"). وتُرفض الحلقات في الاعتماديات ("package depe
 
 ## انظر أيضًا
 
-- [البدء](../guide/getting-started.md)
-- [جولة في اللغة](../guide/language-tour.md)
+- [الأمر `sultanc`](command-line.md)
+- [كتاب السلطان](../book/ch00-00-introduction.md)
 - [بنية المترجم](../internals/compiler-architecture.md)
 - [المصطلحات العربية](arabic-terminology.md)
 

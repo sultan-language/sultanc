@@ -75,8 +75,9 @@
     | افتراضي
 ;
 
-// Which functions (by position) the pipeline optimizes.
-عرف دوال_محسنة_مسير(البرنامج: &برنامج_مسير, النطاق: نطاق_تحسين_مسير): متجه منطقي {
+// Which functions (by position) the pipeline optimizes (and the runtime
+// checks, runtime_checks.sn, are added to).
+عام عرف دوال_محسنة_مسير(البرنامج: &برنامج_مسير, النطاق: نطاق_تحسين_مسير): متجه منطقي {
     دع العدد: طبيعي = الطول((*البرنامج).الدوال) مثل طبيعي;
     دع الناتج: متغير متجه منطقي = [];
     طابق النطاق مع

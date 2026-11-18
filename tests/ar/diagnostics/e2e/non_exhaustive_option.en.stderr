@@ -1,0 +1,7 @@
+error[SULTANC-PATTERN-NON-EXHAUSTIVE]: non-exhaustive pattern: `option.none` not covered — Every value of the matched type must match one of the arms.
+  --> tests/ar/diagnostics/e2e/non_exhaustive_option.sn:9:10..9:17
+   |
+ 9 |     طابق الموجود مع
+   |          ^^^^^^^
+   |
+  = help: add an arm for each case that is not covered

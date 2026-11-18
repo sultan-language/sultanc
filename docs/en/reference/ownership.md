@@ -379,4 +379,4 @@ Unreachable match arms are accepted, and the self-hosted compiler warns about th
 - [Safety model](../internals/safety-flow.md)
 - [MSIR and code generation](../internals/msir-and-codegen.md)
 - [Bootstrap](../internals/bootstrap.md)
-- [Language tour](../guide/language-tour.md)
+- [The SultanC Book](../book/ch00-00-introduction.md)

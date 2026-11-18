@@ -1,0 +1,14 @@
+// اختبار: رفض
+// تشخيص: SULTANC-OWNERSHIP-MOVE-OUT-OF-REFERENCE
+// نظير: tests/en/diagnostics/e2e/plain_bound_owning_keys.sn
+// خرج-تشخيص-عربي: plain_bound_owning_keys.ar.stderr
+// خرج-تشخيص-إنجليزي: plain_bound_owning_keys.en.stderr
+// A generic function that copies its keys takes only plain keys: named at the call.
+استورد المكتبة.مجموعات.خريطة_شجرية;
+استورد المكتبة.نصوص.مقارنة;
+
+عرف الرئيسية(): عدد {
+    دع العدد: خريطة_شجرة_بي<نص, عدد> = أنشئ_خريطة_شجرة_بي(قارن_نصين_معجميا);
+    دع المفاتيح: متجه نص = مفاتيح_خريطة_شجرة_بي(&العدد);
+    أرجع الطول(المفاتيح) مثل عدد;
+}

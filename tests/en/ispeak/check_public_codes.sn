@@ -247,6 +247,7 @@ def pinned_codes(): vector string {
     append(result, "SULTANC-TRACK-CALLER-SIGNATURE");
     append(result, "SULTANC-TRACK-CALLER-EXPLICIT-LOCATION");
     append(result, "SULTANC-C-ABI-MISUSE");
+    append(result, "SULTANC-RUN-NEEDS-PROCESS");
     return result;
 }
 
@@ -486,6 +487,7 @@ def pinned_kinds(): vector string {
     append(result, "track-caller-signature");
     append(result, "track-caller-explicit-location");
     append(result, "c-abi-misuse");
+    append(result, "run-needs-process");
     return result;
 }
 

@@ -1,0 +1,21 @@
+خطأ[SULTANC-NAME-UNKNOWN]: الاسم ⁨`missing_value`⁩ غير معروف — الاسم المطلوب مفقود أثناء حل المراجع.
+  --> tests/en/diagnostics/e2e/every_phase_errors.sn:18:22..18:35
+    |
+ 18 |     let first: i32 = missing_value + 1;
+    |                      ^^^^^^^^^^^^^
+    |
+
+خطأ[SULTANC-NAME-UNKNOWN]: الاسم ⁨`hlper`⁩ غير معروف — الاسم المطلوب مفقود أثناء حل المراجع.
+  --> tests/en/diagnostics/e2e/every_phase_errors.sn:19:23..19:28
+    |
+ 19 |     let second: i32 = hlper(2);
+    |                       ^^^^^
+    |
+  = مساعدة: يوجد هنا اسم مرئي بتهجئة قريبة — البديل المقترح هو ⁨`helper`⁩.
+
+خطأ[SULTANC-TYPE-MISMATCH]: النوع الموجود ⁨`نص`⁩ لا يطابق النوع المتوقع ⁨`ص32`⁩ — القيمة لا تطابق النوع المصرح به لوجهتها.
+  --> tests/en/diagnostics/e2e/every_phase_errors.sn:14:22..14:28
+    |
+ 14 |     let count: i32 = "text";
+    |                      ^^^^^^
+    |

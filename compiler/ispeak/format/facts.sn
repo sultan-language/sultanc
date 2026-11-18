@@ -9,9 +9,23 @@
     الاسم: نص
 };
 
+// An inferred plain bound broken at a call: the generic function, its type
+// parameter and the owning type given to it (SULTANC-OWNERSHIP-MOVE-OUT-OF-REFERENCE).
+عام نوع حقائق_قيد_عادي = {
+    الدالة: نص,
+    المعامل: نص,
+    النوع: نص
+};
+
 عام نوع حقائق_نوعان_غير_متوافقين = {
     المتوقع: نص,
     الموجود: نص
+};
+
+// A binary operator that its operand's Type does not define.
+عام نوع حقائق_عامل_غير_معرف = {
+    العامل: نص,
+    النوع: نص
 };
 
 عام نوع حقائق_عدد_حجج_غير_مطابق = {
@@ -101,6 +115,8 @@
     | اسم_غير_معروف بنوع حقائق_اسم_غير_معروف
     | نوعان_غير_متوافقين بنوع حقائق_نوعان_غير_متوافقين
     | عدد_حجج_غير_مطابق بنوع حقائق_عدد_حجج_غير_مطابق
+    | عامل_غير_معرف بنوع حقائق_عامل_غير_معرف
+    | قيد_عادي بنوع حقائق_قيد_عادي
 ;
 
 // Empty optional facts carry no message text. Avoid allocating a text builder

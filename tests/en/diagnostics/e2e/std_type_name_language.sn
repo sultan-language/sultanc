@@ -1,0 +1,12 @@
+// اختبار: رفض
+// تشخيص: SULTANC-TYPE-MISMATCH
+// نظير: tests/ar/diagnostics/e2e/std_type_name_language.sn
+// خرج-تشخيص-عربي: std_type_name_language.ar.stderr
+// خرج-تشخيص-إنجليزي: std_type_name_language.en.stderr
+// A std type is named in the output language: `Error` in English, `فشل` in Arabic.
+import std.error.failure;
+
+def main(): int {
+    let value: int = error_new("broken");
+    return value;
+}

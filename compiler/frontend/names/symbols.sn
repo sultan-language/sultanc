@@ -66,7 +66,11 @@
     النطاق_المالك: معرف_نطاق,
     المالك: اختياري معرف_رمز,
     النوع: نوع_تصريح,
-    علني: منطقي
+    علني: منطقي,
+    // A declaration spelled in Arabic with an English alias (`عام مرادف
+    // Error = فشل;`): the alias's name, which English diagnostics print
+    // (types/tooling_queries.sn). None otherwise.
+    الاسم_الإنجليزي: اختياري معرف_اسم
 };
 
 عام نوع نتيجة_إضافة =

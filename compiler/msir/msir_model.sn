@@ -721,7 +721,28 @@
     // The functions whose capture-free constructions use a static
     // environment, one entry per function (static_environments.sn). Entry i
     // is emitted as the data object معرف_عام_بيئة_إغلاق_ساكنة_مسير(i).
-    البيئات_الساكنة: متجه بيئة_إغلاق_ساكنة_مسير
+    البيئات_الساكنة: متجه بيئة_إغلاق_ساكنة_مسير,
+    // std's runtime-check report (std/process/runtime_check.sn,
+    // فشل_فحص_تشغيل), when it is loaded: every failing integer operation and
+    // bounds check calls it with its kind and source place
+    // (runtime_checks.sn). None keeps the trap (bare metal without std).
+    دالة_فشل_فحص_التشغيل: اختياري معرف_دالة_مسير,
+    // The source places lowering gives the checks (runtime_checks.sn), read
+    // once by that pass and then cleared.
+    مواقع_فحوص_التشغيل: متجه موقع_فحص_تشغيل_مسير
+};
+
+// The place of one runtime check, recorded by lowering: an integer
+// operation's (الكتلة none, القيمة its result) or a bounds check's (الكتلة
+// the block that traps, القيمة the index and الطول the length, both 64-bit
+// unsigned), and the start of the source span it reports.
+عام نوع موقع_فحص_تشغيل_مسير = {
+    الدالة: معرف_دالة_مسير,
+    الكتلة: اختياري معرف_كتلة_مسير,
+    القيمة: معرف_قيمة_مسير,
+    الطول: معرف_قيمة_مسير,
+    المصدر: ط32,
+    البايت: ط32
 };
 
 // The position of الدالة's static environment in البيئات_الساكنة, if any.
@@ -1129,7 +1150,9 @@
         دوال_اتفاقية_المنصة: انسخ_منطقيات_دوال_مسير(&(*القيمة).دوال_اتفاقية_المنصة),
         دوال_اتفاقية_سي: انسخ_منطقيات_دوال_مسير(&(*القيمة).دوال_اتفاقية_سي),
         أصول_مواقع_التصحيح: انسخ_أصول_مواقع_مسير(&(*القيمة).أصول_مواقع_التصحيح),
-        البيئات_الساكنة: انسخ_بيئات_ساكنة_مسير(&(*القيمة).البيئات_الساكنة)
+        البيئات_الساكنة: انسخ_بيئات_ساكنة_مسير(&(*القيمة).البيئات_الساكنة),
+        دالة_فشل_فحص_التشغيل: (*القيمة).دالة_فشل_فحص_التشغيل,
+        مواقع_فحوص_التشغيل: انسخ_مواقع_فحوص_مسير(&(*القيمة).مواقع_فحوص_التشغيل)
     };
     أرجع الناتج;
 }
@@ -1250,6 +1273,13 @@
         ألحق(الناتج, البيئة);
         ف := ف + 1;
     }
+    أرجع الناتج;
+}
+
+عرف انسخ_مواقع_فحوص_مسير(المواقع: &متجه موقع_فحص_تشغيل_مسير): متجه موقع_فحص_تشغيل_مسير {
+    دع الناتج: متغير متجه موقع_فحص_تشغيل_مسير = [];
+    دع ف: متغير طبيعي = 0;
+    طالما (ف < (الطول(*المواقع) مثل طبيعي)) { ألحق(الناتج, (*المواقع)[ف]); ف := ف + 1; }
     أرجع الناتج;
 }
 

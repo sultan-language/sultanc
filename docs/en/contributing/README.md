@@ -20,7 +20,7 @@ the documentation is written.
 | `tests/` | Qualification suites: `ar/`, `en/` and the `runner/` |
 | `tools/` | `tests/` (CI entry and checks), `generate/` (registries and generators), `audit/` |
 | `examples/` | Programs in English (`en/`) and Arabic (`ar/`) |
-| `docs/` | Documentation: `guide/`, `reference/`, `internals/`, `contributing/`, `history/` |
+| `docs/` | Documentation: `book/`, `reference/`, `internals/`, `contributing/`, `history/` |
 | `.github/` | CI: `workflows/ci.yml` with one script per host family in `ci/` |
 
 Inside `compiler/`:
@@ -28,6 +28,7 @@ Inside `compiler/`:
 | Path | Responsibility |
 | --- | --- |
 | `compiler/frontend/**` | Parsing and semantic analysis |
+| `compiler/format/**` | The source formatter (`sultanc fmt`, and the library the language server calls) |
 | `compiler/msir/**` | The verified, target-neutral IR |
 | `compiler/backend/**` | Targets, ABI and layout, native code generation, object output |
 | `compiler/link/**` | The built-in ELF, Mach-O, COFF, WebAssembly and SPIR-V linkers |

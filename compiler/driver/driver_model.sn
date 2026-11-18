@@ -43,6 +43,9 @@
     | نص_تجميع
     // The optimized LLVM IR of the module (--emit=llvm-ir), as rustc --emit=llvm-ir.
     | نص_وحدة_إل_إل_في_إم
+    // The optimized MSIR program as text (--emit=msir, msir/msir_text.sn),
+    // written to stdout unless -o names a file.
+    | نص_مسير
 ;
 
 عام نوع اختيار_لغة_تشخيص_عملية =
@@ -174,12 +177,20 @@
     | وحدة_هدف
 ;
 
+// The output path that stands for stdout for --emit=msir: its default, and
+// `-o -`, as for other tools' text output.
+عام عرف مسار_الخرج_القياسي_لمسير(): نص {
+    أرجع «-»;
+}
+
 // The form of an object request: a binary object, target assembly text
-// (--emit=asm) or the optimized LLVM IR (--emit=llvm-ir).
+// (--emit=asm), the optimized LLVM IR (--emit=llvm-ir) or the optimized
+// MSIR program (--emit=msir), which no backend sees.
 عام نوع نص_مخرج_كائن_مترجم =
     | ثنائي
     | تجميع
     | وحدة_إل_إل_في_إم
+    | مسير
 ;
 
 // What an -l of `run` or `interpret` resolved to. Only a shared library can

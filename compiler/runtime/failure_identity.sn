@@ -5,4 +5,10 @@
     | وسيط_خارج_المدى
     | عملية_غير_صالحة
     | إدخال_إخراج
+    // A failed runtime check (std.process.runtime_check): its words are
+    // templates, where {0} and {1} stand for the index and the length and {2}
+    // for the place `file:line:column`.
+    | تجاوز_عدد_صحيح
+    | فهرس_خارج_المدى
+    | قسمة_على_صفر
 ;

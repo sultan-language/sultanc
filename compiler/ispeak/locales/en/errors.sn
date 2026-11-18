@@ -128,6 +128,7 @@
     | معرف_تشخيص.خريطة_اعتماديات_غير_صالحة -> { أرجع «dependency map is invalid»; }
     | معرف_تشخيص.مكتبة_تفسير_بلا_اسم_تثبيت -> { أرجع «the library's `.tbd` stub names no install name»; }
     | معرف_تشخيص.مكتبة_تفسير_غير_محملة -> { أرجع «a -l library could not be loaded into the running program»; }
+    | معرف_تشخيص.تشغيل_يلزمه_عملية -> { أرجع «`run` cannot run this program here: it needs an executable, and this host cannot start one»; }
     | معرف_تشخيص.مترجم_سي_لغير_المضيف -> { أرجع «the system C compiler builds C imports for the host only»; }
     | معرف_تشخيص.فشل_مترجم_سي -> { أرجع «the system C compiler failed to compile an imported C file»; }
     | معرف_تشخيص.مكتبة_سي_غير_موجودة -> { أرجع «the C library of a C import was not found; linking without it»; }

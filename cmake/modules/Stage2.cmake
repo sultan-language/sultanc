@@ -13,7 +13,7 @@ get_filename_component(SULTANC_STAGE2_OUTPUT_DIRECTORY
 
 file(CONFIGURE
     OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/sultanc-stage2-target.txt"
-    CONTENT "${SULTANC_STAGE2_TARGET}\n${SULTANC_STAGE2_BACKEND}\n${SULTANC_COMPILER_CAPABILITY}\n")
+    CONTENT "${SULTANC_STAGE2_TARGET}\n${SULTANC_STAGE2_BACKEND}\n${SULTANC_COMPILER_CAPABILITY}\n${SULTANC_RELEASE_VERSION}\n")
 
 # SULTANC_STAGE1_LINK_INPUTS: extra link inputs Stage1 needs (wasm route: the
 # LLVM library for an LLVM-enabled Stage2, see Stage1Wasm.cmake; C route: none).

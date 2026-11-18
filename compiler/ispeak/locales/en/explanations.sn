@@ -137,6 +137,7 @@
 عام عرف نص_شرح_ملف_اختبارات_خارج_البرنامج(): نص { أرجع «`--tests-in` keeps the tests declared in the given source files; this file is not a source of the program. Name the entry file or a file it imports.»; }
 عام عرف نص_شرح_مكتبة_تفسير_بلا_اسم_تثبيت(): نص { أرجع «On macOS a `.tbd` stub names the install name a dynamic library is loaded from. This stub names none, so there is nothing to load. Pass the `.dylib` itself.»; }
 عام عرف نص_شرح_مكتبة_تفسير_غير_محملة(): نص { أرجع «`run` loads each -l library with the system's dynamic loader before the program starts; this one failed for the reason shown. Check that it is a shared library for this platform and that its dependencies are found.»; }
+عام عرف نص_شرح_تشغيل_يلزمه_عملية(): نص { أرجع «This compiler runs under WASI, where it can neither build nor start a process. `run` interprets the program in place, std's WASI imports included, but imported C files, -l libraries and C functions the interpreter cannot call run only in an executable. Run the program with a native sultanc, or build it and run the executable yourself.»; }
 عام عرف نص_شرح_مترجم_سي_لغير_المضيف(): نص { أرجع «With SULTANC_C_COMPILER=cc, imported .c files are compiled by the system C compiler, which builds for the host only. Unset SULTANC_C_COMPILER so Jisr compiles the C for any target, or build for the host.»; }
 عام عرف نص_شرح_فشل_مترجم_سي(): نص { أرجع «With SULTANC_C_COMPILER=cc, the system C compiler compiles imported .c files, and it reported an error for this one (its own messages come first). Fix the C source, or unset SULTANC_C_COMPILER so Jisr compiles it.»; }
 عام عرف نص_شرح_مكتبة_سي_غير_موجودة(): نص { أرجع «A C import links the C library on Linux, FreeBSD and Android. No library directory holds it, so the link goes on without it; C code that needs it then fails as an undefined symbol. Add its directory with -L.»; }
@@ -297,6 +298,7 @@
     | مفتاح_شرح.اختبار_غير_موجود -> { أرجع نص_شرح_اختبار_غير_موجود(); }
     | مفتاح_شرح.ملف_اختبارات_خارج_البرنامج -> { أرجع نص_شرح_ملف_اختبارات_خارج_البرنامج(); }
     | مفتاح_شرح.مكتبة_تفسير_غير_محملة -> { أرجع نص_شرح_مكتبة_تفسير_غير_محملة(); }
+    | مفتاح_شرح.تشغيل_يلزمه_عملية -> { أرجع نص_شرح_تشغيل_يلزمه_عملية(); }
     | مفتاح_شرح.مترجم_سي_لغير_المضيف -> { أرجع نص_شرح_مترجم_سي_لغير_المضيف(); }
     | مفتاح_شرح.فشل_مترجم_سي -> { أرجع نص_شرح_فشل_مترجم_سي(); }
     | مفتاح_شرح.مكتبة_سي_غير_موجودة -> { أرجع نص_شرح_مكتبة_سي_غير_موجودة(); }

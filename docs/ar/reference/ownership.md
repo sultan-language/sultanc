@@ -349,6 +349,6 @@ wasm32 تصدر تعليمة `i32.store`، وفي LLVM تصدر عملية تخ�
 - [نموذج الأمان](../internals/safety-flow.md)
 - [MSIR وتوليد الشيفرة](../internals/msir-and-codegen.md)
 - [الإقلاع الذاتي](../internals/bootstrap.md)
-- [جولة في اللغة](../guide/language-tour.md)
+- [كتاب السلطان](../book/ch00-00-introduction.md)
 
 </div>

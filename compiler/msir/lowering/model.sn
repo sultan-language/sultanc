@@ -1,5 +1,6 @@
 استورد compiler.source.span;
 استورد compiler.source.provenance;
+استورد compiler.frontend.ast.operators;
 استورد compiler.frontend.names.identifiers;
 استورد compiler.frontend.types.type_identity;
 استورد compiler.frontend.types.type_model;
@@ -54,6 +55,10 @@
     // the call that started the instantiation, the use inside the generic
     // body, and the opaque Type.
     | معتم_في_مثيل_عام بنوع (نطاق, نطاق, معرف_نوع)
+    // A binary operator its operand Type does not define, found in a generic
+    // instance: the operation inside the generic body, the operator, the
+    // operand Type, and the call that started the instantiation.
+    | عامل_غير_معرف_لنوع بنوع (نطاق, عامل_ثنائي, معرف_نوع, اختياري نطاق)
     | بناء_مسير_مرفوض بنوع خطأ_بناء_مسير
 ;
 

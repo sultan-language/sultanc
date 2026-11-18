@@ -1,0 +1,12 @@
+// اختبار: رفض
+// تشخيص: SULTANC-TYPE-MISMATCH
+// نظير: tests/en/diagnostics/e2e/std_type_name_language.sn
+// خرج-تشخيص-عربي: std_type_name_language.ar.stderr
+// خرج-تشخيص-إنجليزي: std_type_name_language.en.stderr
+// A std type is named in the output language: `Error` in English, `فشل` in Arabic.
+استورد المكتبة.أخطاء.فشل;
+
+عرف الرئيسية(): عدد {
+    دع القيمة: عدد = فشل_من(«معطوب»);
+    أرجع القيمة;
+}

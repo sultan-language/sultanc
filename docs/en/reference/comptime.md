@@ -238,4 +238,4 @@ complete, and it is not a compile-time diagnostic.
 - [Errors](errors.md)
 - [Formatting](formatting.md)
 - [Interpreter](../internals/interpreter.md)
-- [Language tour](../guide/language-tour.md)
+- [The SultanC Book](../book/ch00-00-introduction.md)

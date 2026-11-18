@@ -444,6 +444,8 @@
     | سبب_تشخيص.سبب_نمط_مصدر_عدم_تطابق -> { أرجع نص_سبب_سبب_نمط_مصدر_عدم_تطابق(); }
     | سبب_تشخيص.سبب_نمط_نطاق_مصدر_خارج_مصدر -> { أرجع «The pattern source span lies outside its source file»; }
     | سبب_تشخيص.سبب_نمط_نوع_فحص_فشل -> { أرجع «Pattern type validation failed»; }
+    | سبب_تشخيص.سبب_نقطة_دخول_خطأ_ليس_فشلا -> { أرجع «The error type of `main` must be `Error` (std.error)»; }
+    | سبب_تشخيص.سبب_نمط_حالات_غير_مغطاة -> { أرجع «Every value of the matched type must match one of the arms»; }
     | سبب_تشخيص.سبب_نمط_غير_مدعوم_قيمة_حرفية -> { أرجع «This literal cannot be used in a pattern yet»; }
     | سبب_تشخيص.سبب_انتقاء_مقارنة_ليس_منه_شرط -> { أرجع «A comparison result is used in a way the native backend can only handle as a branch condition»; }
     | سبب_تشخيص.سبب_انتقاء_دالة_واجهة_الاستدعاء_غير_متاح -> { أرجع «Instruction selection has no calling convention for this function»; }
@@ -537,6 +539,7 @@
     | سبب_تشخيص.سبب_نوع_عدد_حرفي_خارج_المدى -> { أرجع «The integer literal is outside the range of the expected type»; }
     | سبب_تشخيص.سبب_نوع_تحويل_غير_صالح -> { أرجع «`as` does not convert a value of this type to the target type»; }
     | سبب_تشخيص.سبب_نوع_سالب_عدد_طبيعي -> { أرجع «An unsigned integer value has no negation; subtract, or convert to a signed type first»; }
+    | سبب_تشخيص.سبب_نوع_عامل_غير_معرف_للنوع -> { أرجع «Equality is defined for numbers, characters, booleans, text, raw pointers and enums without payloads, and ordering for numbers and characters; compare a field, or write a comparison function»; }
     | سبب_تشخيص.سبب_نوع_ثابت_تسجيل_نوع_تعبير -> { أرجع «The type table did not record the expression type»; }
     | سبب_تشخيص.سبب_نوع_ثابت_تسجيل_نوع_منشئ -> { أرجع «The type table did not record the constructor call type»; }
     | سبب_تشخيص.سبب_نوع_ثابت_نوع_حمولة_منشئ -> { أرجع «The type table has no type for the constructor payload»; }
@@ -597,6 +600,7 @@
     | سبب_تشخيص.سبب_وقت_الترجمة_عملية_غير_مدعومة -> { أرجع «This operation is not supported at compile time»; }
     | سبب_تشخيص.سبب_سمة_معالجة_غير_منفذة -> { أرجع «Declaration annotation processing is not implemented yet»; }
     | سبب_تشخيص.سبب_تدفق_سلامة_نقل_من_مرجع -> { أرجع «An owned value is moved out of borrowed storage»; }
+    | سبب_تشخيص.سبب_تدفق_سلامة_قيد_عادي_منتهك -> { أرجع «A copy of an owning value would share its memory, so the generic function takes only plain types there»; }
     | سبب_تشخيص.سبب_مفسر_وقت_تشغيل_تجاوز_عمق_النداء -> { أرجع «The interpreted program exceeded the interpreter's call depth limit»; }
     | سبب_تشخيص.سبب_مفسر_وقت_تشغيل_لا_محمل_ديناميكي -> { أرجع «This compiler has no dynamic loader to find a C function: it is a static executable. Build the program, or interpret it with a compiler linked against the C library (an LLVM-enabled build)»; }
     | سبب_تشخيص.سبب_مفسر_وقت_تشغيل_مكتبة_خارجية_غير_محملة -> { أرجع «The library the external function names could not be loaded»; }

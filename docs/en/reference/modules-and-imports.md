@@ -202,7 +202,7 @@ and repeated bindings are rejected. Builds use it to select compiler-build capab
 
 ## See also
 
-- [Getting started](../guide/getting-started.md)
-- [Language tour](../guide/language-tour.md)
+- [The `sultanc` command](command-line.md)
+- [The SultanC Book](../book/ch00-00-introduction.md)
 - [Compiler architecture](../internals/compiler-architecture.md)
 - [Arabic terminology](arabic-terminology.md)

@@ -1,0 +1,9 @@
+// اختبار: رفض
+// تشخيص: SULTANC-ENTRYPOINT-INVALID-SIGNATURE
+// نظير: tests/ar/diagnostics/e2e/entry_error_type.sn
+// خرج-تشخيص-عربي: entry_error_type.ar.stderr
+// خرج-تشخيص-إنجليزي: entry_error_type.en.stderr
+// `main` returning a result whose error is not std's error type: marked at that type.
+def main(): result int, string {
+    return result.ok(0);
+}

@@ -51,7 +51,7 @@ def result_code(r: result int, string): int {
     match r with
     | result.ok(v) -> { return v; }
     | result.err(e) -> {
-        let ignored: result int, int = println(e);
+        let ignored: result int, int = println(&e);
         return 0 - 1;
     };
 }

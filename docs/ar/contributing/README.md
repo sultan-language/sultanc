@@ -21,7 +21,7 @@
 | `tests/` | مجموعات اختبارات التأهيل: `ar/` و`en/` و`runner/` |
 | `tools/` | `tests/` (نقطة دخول التكامل المستمر (CI) والفحوص)، و`generate/` (السجلات والمولّدات)، و`audit/` |
 | `examples/` | برامج بالإنجليزية (`en/`) وبالعربية (`ar/`) |
-| `docs/` | التوثيق: `guide/` و`reference/` و`internals/` و`contributing/` و`history/` |
+| `docs/` | التوثيق: `book/` و`reference/` و`internals/` و`contributing/` و`history/` |
 | `.github/` | التكامل المستمر: الملف `workflows/ci.yml` مع سكربت واحد لكل عائلة من المضيفات في المجلد `ci/` |
 
 داخل `compiler/`:

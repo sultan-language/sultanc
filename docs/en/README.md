@@ -78,7 +78,7 @@ sudo cp build/sultanc /usr/local/bin/sultanc
 | With the LLVM backend inside | `./build.sh --enable-llvm` | LLVM 19–23 |
 | Self-host check | `./build.sh verify` | Stage3 == Stage4, byte for byte |
 
-> macOS with Homebrew LLVM: `export LLVM_CONFIG="$(brew --prefix llvm)/bin/llvm-config"` before building.
+> The build finds LLVM by itself in its usual locations, Homebrew's on macOS included; `LLVM_CONFIG=/path/to/llvm-config` selects another.
 > Windows: `./build.sh --bootstrap=c --enable-llvm --backend=llvm`.
 
 ```sh

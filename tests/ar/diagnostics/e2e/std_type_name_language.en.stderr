@@ -1,0 +1,6 @@
+error[SULTANC-TYPE-MISMATCH]: expected `int`, found `Error` — The value does not match the declared type of its destination.
+  --> tests/ar/diagnostics/e2e/std_type_name_language.sn:10:22..10:37
+    |
+ 10 |     دع القيمة: عدد = فشل_من(«معطوب»);
+    |                      ^^^^^^^^^^^^^^^
+    |

@@ -19,6 +19,7 @@
 استورد compiler.interpreter.values.runtime_values;
 استورد compiler.interpreter.execution.execution_state;
 استورد compiler.interpreter.execution.host_dynamic;
+استورد compiler.interpreter.execution.host_externs_generated;
 استورد compiler.interpreter.execution.load_libraries;
 استورد compiler.backend.target.target_model;
 استورد compiler.backend.target.target_spelling;
@@ -119,35 +120,68 @@
     عرف مضيف_بتنفيذي_فقط_آلة(): منطقي { أرجع خطأ; }
 }
 
-// Whether the program's own C functions (its externs) are callable only from
-// an executable: a variadic one (the interpreter's call bridge passes fixed
-// arguments only), or any one when this compiler has no dynamic loader (a
-// static compiler: host_dynamic.sn). `sultanc run` then builds and runs the
-// program as an executable, as it does for imported .c files. So is every
-// program on a host without a kernel bridge (مضيف_بتنفيذي_فقط_آلة).
-عام عرف يلزم_تنفيذي_لخارجيات_آلة(البرنامج: &برنامج_مسير): منطقي {
-    إذا (مضيف_بتنفيذي_فقط_آلة()) { أرجع صواب; };
-    // A function defined `@@c_abi` is called by C at its machine address
-    // (a callback), so the program runs as an executable too.
+// A WASI host (the wasm32-wasi compiler under Node's WASI or a browser
+// shim) can neither build nor start a process: `sultanc run` never takes the
+// executable route there; the driver reports SULTANC-RUN-NEEDS-PROCESS for
+// a program only an executable runs.
+إذا (الهدف.المنصة == «wasi») {
+    عام عرف مضيف_بلا_عمليات_آلة(): منطقي { أرجع صواب; }
+}
+إذا (الهدف.المنصة != «wasi») {
+    عام عرف مضيف_بلا_عمليات_آلة(): منطقي { أرجع خطأ; }
+}
+
+// The first of the program's C functions (its externs) that only an
+// executable can call, by link name: a variadic one (the interpreter's call
+// bridge passes fixed arguments only), a call at a machine address, or one
+// neither the host table answers (host_externs_generated.sn: std's own
+// externs on Windows, macOS and WASI, called without a dynamic loader) nor
+// a dynamic loader can find (a static compiler has none: host_dynamic.sn).
+// A function defined `@@c_abi` is called by C at its machine address (a
+// callback): «@@c_abi» stands for it. لا_شيء when the interpreter calls
+// them all.
+عام عرف خارجية_تلزم_تنفيذيا_آلة(البرنامج: &برنامج_مسير): اختياري متجه ط8 {
     دع ك: متغير طبيعي = 0;
     طالما (ك < (الطول((*البرنامج).دوال_اتفاقية_سي) مثل طبيعي)) {
-        إذا ((*البرنامج).دوال_اتفاقية_سي[ك]) { أرجع صواب; };
+        إذا ((*البرنامج).دوال_اتفاقية_سي[ك]) { أرجع اختياري.موجود(بايتات_من_نص(«@@c_abi»)); };
         ك := ك + 1;
     }
     دع العدد: طبيعي = الطول((*البرنامج).الدوال_الخارجية) مثل طبيعي;
-    إذا (العدد == 0) { أرجع خطأ; };
+    // The dynamic loader is tried once, for the first extern the table does
+    // not answer.
+    دع المحمل_مجرب: متغير منطقي = خطأ;
+    دع المحمل_متاح: متغير منطقي = خطأ;
     دع ف: متغير طبيعي = 0;
     طالما (ف < العدد) {
-        طابق (*البرنامج).الدوال_الخارجية[ف].المعاملات_الثابتة مع
-        | اختياري.موجود(_) -> { أرجع صواب; }
+        دع الخارجية: &دالة_خارجية_مسير = &(*البرنامج).الدوال_الخارجية[ف];
+        طابق (*الخارجية).المعاملات_الثابتة مع
+        | اختياري.موجود(_) -> { أرجع اختياري.موجود(انسخ_بايتات(&(*الخارجية).الاسم)); }
         | اختياري.لا_شيء -> { };
         // A call at a machine address (Jisr's call through a C function
         // pointer) runs in an executable, as imported .c code does.
-        إذا ((*البرنامج).الدوال_الخارجية[ف].عند_عنوان) { أرجع صواب; };
+        إذا ((*الخارجية).عند_عنوان) { أرجع اختياري.موجود(انسخ_بايتات(&(*الخارجية).الاسم)); };
+        إذا (!دالة_خارجية_مضيف_معروفة(&(*الخارجية).الاسم)) {
+            إذا (!المحمل_مجرب) {
+                دع المحمل: متغير محمل_ديناميكي_مضيف = محمل_ديناميكي_مضيف_جديد();
+                المحمل_متاح := هيئ_محمل_ديناميكي_مضيف(&متغير المحمل);
+                المحمل_مجرب := صواب;
+            };
+            إذا (!المحمل_متاح) { أرجع اختياري.موجود(انسخ_بايتات(&(*الخارجية).الاسم)); };
+        };
         ف := ف + 1;
     }
-    دع المحمل: متغير محمل_ديناميكي_مضيف = محمل_ديناميكي_مضيف_جديد();
-    أرجع !هيئ_محمل_ديناميكي_مضيف(&متغير المحمل);
+    أرجع اختياري.لا_شيء();
+}
+
+// Whether the program's own C functions are callable only from an
+// executable (خارجية_تلزم_تنفيذيا_آلة). `sultanc run` then builds and runs
+// the program as an executable, as it does for imported .c files. So is
+// every program on a host without a kernel bridge (مضيف_بتنفيذي_فقط_آلة).
+عام عرف يلزم_تنفيذي_لخارجيات_آلة(البرنامج: &برنامج_مسير): منطقي {
+    إذا (مضيف_بتنفيذي_فقط_آلة()) { أرجع صواب; };
+    طابق خارجية_تلزم_تنفيذيا_آلة(البرنامج) مع
+    | اختياري.موجود(_) -> { أرجع صواب; }
+    | اختياري.لا_شيء -> { أرجع خطأ; };
 }
 
 // Whether libraries `run` is asked to load (-l) can be loaded only by an

@@ -1,0 +1,11 @@
+error[SULTANC-FLOW-USE-BEFORE-INITIALIZATION]: use before initialization — The value used before initialization is `x`. The value is used before it is initialized.
+  --> tests/en/diagnostics/e2e/use_before_initialization.sn:9:12..9:13
+   |
+ 9 |     return x;
+   |            ^ invalid use
+   |
+  ::: tests/en/diagnostics/e2e/use_before_initialization.sn:8:5..8:16
+   |
+ 8 |     let x: int;
+   |     ^^^^^^^^^^^ declared here
+   |

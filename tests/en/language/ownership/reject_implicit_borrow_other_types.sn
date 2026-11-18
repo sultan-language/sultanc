@@ -1,0 +1,11 @@
+// اختبار: رفض
+// تشخيص: SULTANC-CALL-ARGUMENT-TYPE-MISMATCH
+// نظير: tests/ar/language/ownership/reject_implicit_borrow_other_types.sn
+// Only a text argument is borrowed implicitly: a vector for a `&vector int`
+// parameter still needs `&`.
+def total(v: &vector int): int { return length(*v) as int; }
+
+def main(): int {
+    let v: vector int = [1, 2];
+    return total(v);
+}

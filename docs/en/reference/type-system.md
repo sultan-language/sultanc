@@ -132,6 +132,26 @@ element of another literal (`[[1], [2, 3]]`), an indexed temporary (`[a, b][i]`)
 The C Stage0 seed does not parse vector literal expressions, so the compiler sources and the std modules the
 compiler imports keep `let`-bound literals.
 
+## Opaque types
+
+`type NAME = opaque;` (Arabic `نوع الاسم = معتم;`) declares a type with no fields and no known size, for data
+whose layout only other code knows, typically a C library's handle. No value of the type itself exists in
+SultanC code: only pointers to it, `*NAME` and `*mutable NAME`, which are passed to and returned from
+external functions. A type alias of an opaque type is the same type. C imports declare their incomplete and
+unrepresentable structs this way ([Jisr](../internals/jisr.md)).
+
+```sultan
+type Database = opaque;
+
+def open_count(handle: *Database): int {
+    return 1;
+}
+
+def main(): int {
+    return 0;
+}
+```
+
 ## Numeric casts
 
 `x as T` converts between scalar types. The type checker accepts a cast between two scalar types only
@@ -307,4 +327,4 @@ The meaning of a type stays target-neutral while its physical representation var
 - [Compile-time evaluation](comptime.md)
 - [Concurrency](concurrency.md)
 - [Formatting](formatting.md)
-- [Language tour](../guide/language-tour.md)
+- [The SultanC Book](../book/ch00-00-introduction.md)

@@ -48,6 +48,15 @@ Environment variables:
 | `TARGET` | target of the suite; defaults to the host's target |
 | `SULTANC_BIN` | compiler the runner tests (default `./build/sultanc`); `ci_run.sh` sets it from `SC` |
 | `SULTANC_STAGE0_BIN` | a C Stage0 binary; enables the `// مرحلة0: نعم` comparison |
+| `SULTANC_TEST_TIMEOUT` | time limit of each command the runner starts, in seconds (default 300; 0: none). A command past it is killed, its check fails, and `TIMEOUT` with its name is printed at once; the convergence self-builds get six times the limit. Windows waits without a limit |
+| `SULTANC_TEST_JOBS` | workers for the discovered tests (default: the available processors) |
+
+The discovered tests run on `SULTANC_TEST_JOBS` workers. An English test and its Arabic twin are one
+unit of work, run by one worker, since the pair step reads the twin. A test that imports the network,
+clocks, threads, processes, the file system, the environment or `std.os` runs alone after the others,
+so no two of them share a port or a temporary path, and timing assertions run on an idle machine. Each
+test's `PASS`/`FAIL` line is printed when it finishes, so the order of the log follows the schedule;
+the summary is counted in discovery order.
 
 The runner alone, and the iSpeak suite alone:
 
@@ -94,6 +103,7 @@ or modules of other tests.
 | `// خرج-قياسي: <text>`, `// خطأ-قياسي: <text>` | expected standard output or error of the run; `<فارغ>` means empty |
 | `// خطأ-قياسي-ملف: <file>` | the exact standard error of the run, stored in a file beside the test |
 | `// بيئة: NAME=value` | one environment assignment for the test program's runs, native and interpreted |
+| `// ربط: c,m` | libraries the test's executable and its interpretation link (`-l c -l m`): SultanC links no C library on its own, so a test that calls one through a C import names it |
 | `// تفاضلي: نعم` | on a differential test, also compare standard error between native and interpreted runs |
 | `// نظير: tests/ar/…` | the Arabic or English counterpart of the test |
 | `// مرحلة0: نعم` | the C Stage0 must agree with the compiler under test |

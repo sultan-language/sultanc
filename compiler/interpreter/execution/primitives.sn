@@ -22,6 +22,7 @@
 استورد compiler.backend.target.target_model;
 استورد compiler.interpreter.execution.host_kernel_generated;
 استورد compiler.interpreter.execution.host_calls;
+استورد compiler.interpreter.execution.host_memory;
 استورد compiler.interpreter.operations.float_software;
 استورد المكتبة.ترميز.يوتيف16;
 
@@ -1726,8 +1727,22 @@
         );
     }
     // WebAssembly linear-memory operations exist only in wasm32 machine code;
-    // the interpreter has no linear memory and reports them as unsupported.
+    // the interpreter has no linear memory of its own and reports them as
+    // unsupported. On a WASI host (a wasm32 compiler) a program reads the
+    // module's memory, as std does for the strings args_get and environ_get
+    // point at (foreign_calls.sn): the memory's size (a growth by 0 pages)
+    // and its u32 words. Growth, writes and copies stay unsupported: they
+    // would change the compiler's own memory.
     | هوية_بدائي_مترجم.نمو_ذاكرة_خطية -> {
+        إذا (ذاكرة_خطية_مضيف_متاحة()) {
+            طابق قيم_الحجج[0] مع
+            | قيمة_تشغيل.بتات_عدد(0) -> {
+                أرجع نتيجة_تنفيذ_بدائي_مفسر.عاد(
+                    اختياري.موجود(قيمة_تشغيل.بتات_عدد(صفحات_ذاكرة_خطية_مضيف() مثل طبيعي))
+                );
+            }
+            | _ -> { };
+        };
         أرجع نتيجة_تنفيذ_بدائي_مفسر.أخفق(
             فشل_تفسير_مسير.وقت_تشغيل(
                 خطأ_وقت_تشغيل_مفسر.بدائي_آلة_غير_مدعوم(هوية_بدائي_مترجم.نمو_ذاكرة_خطية())
@@ -1735,6 +1750,19 @@
         );
     }
     | هوية_بدائي_مترجم.قراءة_ذاكرة_خطية -> {
+        إذا (ذاكرة_خطية_مضيف_متاحة()) {
+            طابق قيم_الحجج[0] مع
+            | قيمة_تشغيل.بتات_عدد(العنوان) -> {
+                طابق اقرأ_كلمة_خطية_مضيف(العنوان مثل ط64) مع
+                | اختياري.موجود(الكلمة) -> {
+                    أرجع نتيجة_تنفيذ_بدائي_مفسر.عاد(
+                        اختياري.موجود(قيمة_تشغيل.بتات_عدد(الكلمة مثل طبيعي))
+                    );
+                }
+                | اختياري.لا_شيء -> { };
+            }
+            | _ -> { أرجع فشل_حجة_بدائي(الهوية, 0); };
+        };
         أرجع نتيجة_تنفيذ_بدائي_مفسر.أخفق(
             فشل_تفسير_مسير.وقت_تشغيل(
                 خطأ_وقت_تشغيل_مفسر.بدائي_آلة_غير_مدعوم(هوية_بدائي_مترجم.قراءة_ذاكرة_خطية())

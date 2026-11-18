@@ -1,0 +1,68 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 0
+// نظير: tests/ar/ispeak/check_interpreter_external_call.sn
+import std.text.search;
+import std.text.from_bytes;
+import std.io.print;
+import compiler.diagnostics.identity;
+import compiler.diagnostics.record;
+import compiler.diagnostics.schema;
+import compiler.diagnostics.message;
+import compiler.interpreter.runtime_failures;
+import compiler.interpreter.diagnostic_translation;
+import compiler.msir.identifiers;
+import compiler.msir.debug_contract;
+import compiler.source.source_map;
+import compiler.source.provenance;
+
+// An external function the interpreter cannot call is reported under
+// SULTANC-INTERPRETER-UNSUPPORTED-EXTERNAL-CALL and named by its symbol in
+// the external-function sentence: never as a compilation target, and never
+// by its MSIR number as the affected function.
+def has(text: string, part: string): bool {
+    if (يحتوي_نصا(&text, &part)) { return true; };
+    let ignored: result int, int = اطبع_خطأ(text);
+    let newline: result int, int = اطبع_خطأ("\n");
+    return false;
+}
+
+def lacks(text: string, part: string): bool {
+    if (!يحتوي_نصا(&text, &part)) { return true; };
+    let ignored: result int, int = اطبع_خطأ(text);
+    let newline: result int, int = اطبع_خطأ("\n");
+    return false;
+}
+
+def main(): int {
+    let calls: vector موقع_فشل_تفسير_مسير = [];
+    let failure: فشل_تفسير_موضعي = {
+        الفشل: فشل_تفسير_مسير.وقت_تشغيل(
+            خطأ_وقت_تشغيل_مفسر.نداء_خارجي_غير_مدعوم(
+                معرف_دالة_خارجية_مسير_من(1), بايتات_من_نص("fd_write")
+            )
+        ),
+        الموقع: option.none(),
+        النداءات: calls,
+        المنفذ: 0
+    };
+    let sources: خريطة_مصادر = خريطة_مصادر_جديدة();
+    let origins: سجل_أصول_مصدر = سجل_أصول_مصدر_جديد();
+    let debug: بيانات_تصحيح_مسير = بيانات_تصحيح_مسير_جديدة();
+    let set: مجموعة_تشخيصات = حول_فشل_تفسير_مسير_إلى_تشخيصات(&failure, &sources, &origins, &debug);
+    if (length(set.التشخيصات) != 1) { return 1; };
+    if (set.التشخيصات[0].المعرف != معرف_تشخيص.نداء_خارجي_تفسير_غير_مدعوم()) { return 2; };
+
+    let english: string = نص_رسالة_تشخيص(&set.التشخيصات[0], لغة_تشخيص.الإنجليزية());
+    if (!has(english, "The external function is ")) { return 3; };
+    if (!has(english, "fd_write")) { return 4; };
+    if (!lacks(english, "compilation target")) { return 5; };
+    if (!lacks(english, "affected function")) { return 6; };
+
+    let arabic: string = نص_رسالة_تشخيص(&set.التشخيصات[0], لغة_تشخيص.العربية());
+    if (!has(arabic, "الدالة الخارجية هي ")) { return 7; };
+    if (!has(arabic, "fd_write")) { return 8; };
+    if (!lacks(arabic, "هدف التجميع")) { return 9; };
+    if (!lacks(arabic, "الدالة المتأثرة")) { return 10; };
+    return 0;
+}

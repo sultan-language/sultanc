@@ -21,6 +21,9 @@ output=
 # Compiler-build capability of the self-hosted compiler (SULTANC_COMPILER_LLVM):
 # Native-only unless --enable-llvm is given.
 compiler_llvm=OFF
+# --release-version=VERSION (SULTANC_RELEASE_VERSION): the version the built
+# compiler reports; empty is a development build.
+release_version=
 # Stage1 bootstrap route (SULTANC_BOOTSTRAP): c = bootstrap/ (C Stage0),
 # wasm = bootstrap-wasm/ (WebAssembly seed translated to C).
 bootstrap_route=c
@@ -36,6 +39,7 @@ backend=
 while [ "$#" -gt 0 ]; do
     case "$1" in
         --enable-llvm) compiler_llvm=ON ;;
+        --release-version=*) release_version=${1#--release-version=} ;;
         --bootstrap=*) bootstrap_route=${1#--bootstrap=} ;;
         --with=*) existing_compiler=${1#--with=} ;;
         --backend=*) backend=${1#--backend=} ;;
@@ -67,12 +71,15 @@ while [ "$#" -gt 0 ]; do
         -h|--help|help)
             printf '%s\n' \
                 'usage: ./build.sh [stage0|stage1|stage2|bootstrap|verify] [--target=TRIPLE] [--enable-llvm]' \
-                '                  [--backend=native|llvm] [--bootstrap=c|wasm|existing [--with=PATH]] [OUTPUT]' \
+                '                  [--backend=native|llvm] [--bootstrap=c|wasm|existing [--with=PATH]]' \
+                '                  [--release-version=VERSION] [OUTPUT]' \
                 'All stages are configured and built by CMake in cmake/.' \
                 '  bootstrap  Stage0 + Stage1 only (the bootstrap compiler)' \
                 '  verify     Stage2, then Stage3/Stage4 convergence (LLVM convergence needs --enable-llvm)' \
                 '  --enable-llvm  include the LLVM backend in the built compiler (default: Native-only,' \
                 '             no libLLVM dependency); with --bootstrap=c, Stage0/Stage1 always use LLVM' \
+                '  --release-version=VERSION  the version the built compiler reports' \
+                '             (SULTANC_RELEASE_VERSION; default: a development build)' \
                 '  --backend=native|llvm  backend Stage1 uses to generate Stage2' \
                 '             (SULTANC_STAGE2_BACKEND; default llvm with --enable-llvm when Stage1 has it,' \
                 '             else native). Windows has no Native backend:' \
@@ -148,6 +155,7 @@ cmake -S "$source_directory/cmake" -B "$build_directory" \
     "-DSULTANC_REQUESTED_TARGET:STRING=$target" \
     "-DSULTANC_REQUESTED_OUTPUT:STRING=$output" \
     "-DSULTANC_COMPILER_LLVM:BOOL=$compiler_llvm" \
+    "-DSULTANC_RELEASE_VERSION:STRING=$release_version" \
     ${backend:+"-DSULTANC_STAGE2_BACKEND:STRING=$backend"} \
     ${existing_compiler:+"-DSULTANC_EXISTING_COMPILER:FILEPATH=$existing_compiler"}
 

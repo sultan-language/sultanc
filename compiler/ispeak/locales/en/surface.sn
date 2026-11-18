@@ -26,7 +26,7 @@
     | مفتاح_نص_مترجم.خيار_الكائن -> { أرجع "    -c                     Emit object file\n\n"; }
     | مفتاح_نص_مترجم.عنوان_الخيارات_المتقدمة -> { أرجع "Advanced options:\n"; }
     | مفتاح_نص_مترجم.خيار_الخلفية -> { أرجع "    -b, --backend <name>   native | llvm\n"; }
-    | مفتاح_نص_مترجم.خيار_نوع_الإخراج -> { أرجع "    --emit=<kind>          exe | obj | shared | reloc | module | asm | llvm-ir\n    -O0 | -O1 | -O2 | -O3      LLVM optimization level (default -O2)\n    --release              LLVM at -O3 when this compiler includes LLVM\n    --comptime-budget=<n>  instructions per compile-time evaluation (default 10000000; also SULTANC_COMPTIME_BUDGET)\n"; }
+    | مفتاح_نص_مترجم.خيار_نوع_الإخراج -> { أرجع "    --emit=<kind>          exe | obj | shared | reloc | module | asm | llvm-ir | msir\n    --emit=msir            the optimized MSIR program as text, to stdout unless -o names a file\n    -O0 | -O1 | -O2 | -O3      LLVM optimization level (default -O2)\n    --release              LLVM at -O3 when this compiler includes LLVM\n    --comptime-budget=<n>  instructions per compile-time evaluation (default 10000000; also SULTANC_COMPTIME_BUDGET)\n"; }
     | مفتاح_نص_مترجم.خيار_اللغة -> { أرجع "    --lang=<lang>          auto | ar | en\n"; }
     | مفتاح_نص_مترجم.خيار_التشخيص -> { أرجع "    --diagnostic-format=<format>  human | short | json\n"; }
     | مفتاح_نص_مترجم.خيار_الألوان -> { أرجع "    --color=<policy>       auto | always | never\n"; }
