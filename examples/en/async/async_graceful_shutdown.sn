@@ -1,0 +1,31 @@
+// Graceful shutdown with a cancel token: a worker task loops until the main task cancels
+// it, then reports how many rounds it ran.
+import std.io.println;
+import std.text.number;
+import std.async.runtime;
+import std.sync.cancel;
+
+def worker(token: cancel_token): int {
+    let iterations: mutable int = 0;
+    while (!is_cancelled(&token) && iterations < 1000) {
+        yield_task();
+        iterations := iterations + 1;
+    };
+    if (!is_cancelled(&token)) { return -1; };
+    return iterations;
+}
+
+def main(): int {
+    let token: cancel_token = cancel_token_new();
+    let child: cancel_token = cancel_token_clone(&token);
+    let job: mutable task<int> = spawn_task(fn(): int -> worker(child));
+    yield_task();
+    cancel(&token);
+    match await_task(&mutable job) with
+    | option.some(n) -> {
+        if (n < 0) { return 1; };
+        println(int_to_text(n));
+    }
+    | option.none -> { return 2; };
+    return 0;
+}

@@ -1,0 +1,20 @@
+// Initializing configuration once: once_lock runs the initializer on the first call only,
+// later calls get the same value, and a second set is refused.
+import std.io.println;
+import std.text.number;
+import std.sync.once;
+
+def configure(): i64 {
+    return 42 as i64;
+}
+
+def main(): int {
+    let cell: once_lock<i64> = once_lock_new();
+    let first: &i64 = once_lock_get_or_init(&cell, fn(): i64 -> configure());
+    if (*first != 42 as i64) { return 1; };
+    let again: &i64 = once_lock_get_or_init(&cell, fn(): i64 -> configure());
+    if (*again != 42 as i64) { return 2; };
+    if (once_lock_set(&cell, 99 as i64)) { return 3; };
+    println(int_to_text((*again) as int));
+    return 0;
+}

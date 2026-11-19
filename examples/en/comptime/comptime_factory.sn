@@ -1,0 +1,15 @@
+// A `comptime` parameter: scale is specialized for a factor known at compile time, and the
+// whole call is evaluated during compilation.
+import std.io.println;
+import std.text.number;
+
+def scale(comptime factor: int, x: int): int {
+    return x * factor;
+}
+
+def main(): int {
+    let answer: int = comptime scale(9, 8);
+    if (answer != 72) { return 1; };
+    println(int_to_text(answer));
+    return 0;
+}

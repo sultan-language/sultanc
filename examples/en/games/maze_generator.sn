@@ -1,0 +1,21 @@
+// Generating a 5x5 maze frame: walls (1) all around the border and open cells (0) inside.
+import std.io.println;
+import std.text.number;
+
+def main(): int {
+    let width: int = 5;
+    let height: int = 5;
+    let maze: mutable vector int = [];
+    let i: mutable int = 0;
+    while (i < width * height) {
+        if (i % width == 0 || i % width == width - 1 || i < width || i >= (height - 1) * width) {
+            append(maze, 1);
+        } else {
+            append(maze, 0);
+        };
+        i := i + 1;
+    };
+    if (maze[0] != 1 || maze[12] != 0) { return 1; };
+    println(int_to_text(length(maze)));
+    return 0;
+}

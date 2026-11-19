@@ -1,0 +1,24 @@
+// A secure random token: fill 32 bytes from the operating system's random source and print
+// them as 64 hexadecimal digits.
+import std.io.println;
+import std.text.number;
+import std.os.entropy;
+import std.encoding.hex;
+
+def main(): int {
+    let token: mutable vector u8 = [];
+    let i: mutable int = 0;
+    while (i < 32) {
+        append(token, 0 as u8);
+        i := i + 1;
+    };
+    match os_fill_random_bytes(&mutable token) with
+    | result.ok(n) -> {
+        if (n != 32 as uint) { return 1; };
+    }
+    | result.err(_) -> { return 2; };
+    let text: string = hex_encode(&token);
+    if (length(text) != 64) { return 3; };
+    println(text);
+    return 0;
+}

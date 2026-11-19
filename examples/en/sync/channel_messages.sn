@@ -6,10 +6,10 @@ import std.sync.channel;
 
 def main(): int {
     let ends: channel_ends<int> = channel<int>();
-    match send(&ends.المرسل, 17) with
+    match send(channel_ends_sender(&ends), 17) with
     | result.err(_) -> { return 1; }
     | result.ok(_) -> { };
-    match recv(&ends.المستلم) with
+    match recv(channel_ends_receiver(&ends)) with
     | result.err(_) -> { return 2; }
     | result.ok(value) -> { println(int_to_text(value)); };
     return 0;

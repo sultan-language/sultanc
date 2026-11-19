@@ -1,0 +1,15 @@
+// A null pointer from C: strchr returns null when the character is not in the string, and
+// the program checks for it.
+import std.io.println;
+import std.text.number;
+
+extern def strchr(text: *u8, c: i32): *u8 = «strchr»;
+
+def main(): int {
+    let input: mutable vector u8 = [97 as u8, 98 as u8, 0 as u8];
+    let at: *u8;
+    unsafe { at := strchr(&input[0], 122 as i32); };
+    if (at != 0 as *u8) { return 1; };
+    println("not found");
+    return 0;
+}

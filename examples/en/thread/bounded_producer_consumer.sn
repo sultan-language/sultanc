@@ -1,0 +1,19 @@
+// A producer and a consumer joined by a channel: send one value into the channel and
+// receive it from the other end.
+import std.io.println;
+import std.text.number;
+import std.sync.channel;
+
+def main(): int {
+    let ends: channel_ends<int> = channel<int>();
+    match send(&ends.المرسل, 20) with
+    | result.err(_) -> { return 1; }
+    | _ -> { };
+    match recv(&ends.المستلم) with
+    | result.ok(value) -> {
+        if (value != 20) { return 2; };
+        println(int_to_text(value));
+    }
+    | _ -> { return 3; };
+    return 0;
+}

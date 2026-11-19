@@ -1,0 +1,25 @@
+// Comparing secrets in constant time: OR together the XOR of every byte pair, so the time
+// taken does not depend on where the first difference is.
+import std.io.println;
+import std.text.number;
+import std.text.from_bytes;
+
+def equal_bytes(a: &vector u8, b: &vector u8): bool {
+    if (length(*a) != length(*b)) { return false; };
+    let diff: mutable u8 = 0 as u8;
+    let i: mutable int = 0;
+    while (i < length(*a)) {
+        diff := diff | ((*a)[i] ^ (*b)[i]);
+        i := i + 1;
+    };
+    return diff == 0 as u8;
+}
+
+def main(): int {
+    let a: vector u8 = bytes_from_text("secret");
+    let b: vector u8 = bytes_from_text("secret");
+    let c: vector u8 = bytes_from_text("secrEt");
+    if (!equal_bytes(&a, &b) || equal_bytes(&a, &c)) { return 1; };
+    println("compared");
+    return 0;
+}

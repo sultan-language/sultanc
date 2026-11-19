@@ -1,0 +1,22 @@
+// A least-recently-used cache in two parallel vectors: the entry just used moves to the
+// most recent end.
+import std.io.println;
+import std.text.number;
+
+def main(): int {
+    let keys: mutable vector int = [1, 2, 3];
+    let values: mutable vector int = [10, 20, 30];
+    let latest: int = keys[0];
+    let remembered: int = values[0];
+    let i: mutable int = 0;
+    while (i < 2) {
+        keys[i] := keys[i + 1];
+        values[i] := values[i + 1];
+        i := i + 1;
+    };
+    keys[2] := latest;
+    values[2] := remembered;
+    if (keys[2] != 1 || values[2] != 10) { return 1; };
+    println(int_to_text(keys[2]));
+    return 0;
+}

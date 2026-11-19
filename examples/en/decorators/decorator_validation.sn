@@ -1,0 +1,21 @@
+// A validating decorator: @clamp_positive turns a negative input into a result of 0, so
+// compute(-4) + compute(3) is 9.
+import std.io.println;
+import std.text.number;
+
+def clamp_positive(comptime f: fn(int): int, x: int): int {
+    if (x < 0) { return 0; };
+    return f(x);
+}
+
+@clamp_positive
+def compute(x: int): int {
+    return x * 3;
+}
+
+def main(): int {
+    let answer: int = compute(-4) + compute(3);
+    if (answer != 9) { return 1; };
+    println(int_to_text(answer));
+    return 0;
+}

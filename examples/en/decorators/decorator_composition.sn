@@ -1,0 +1,25 @@
+// Stacking two decorators: @add_one @times_two on compute gives (x + 4) * 2 + 1, so the
+// decorator written first is applied last.
+import std.io.println;
+import std.text.number;
+
+def add_one(comptime f: fn(int): int, x: int): int {
+    return f(x) + 1;
+}
+
+def times_two(comptime f: fn(int): int, x: int): int {
+    return f(x) * 2;
+}
+
+@add_one
+@times_two
+def compute(x: int): int {
+    return x + 4;
+}
+
+def main(): int {
+    let answer: int = compute(5);
+    if (answer != 19) { return 1; };
+    println(int_to_text(answer));
+    return 0;
+}

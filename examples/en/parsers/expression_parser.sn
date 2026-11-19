@@ -1,0 +1,13 @@
+// Parsing a sum: split "12+30" at the plus sign into its two operands.
+import std.io.println;
+import std.text.number;
+import std.text.transform;
+
+def main(): int {
+    let source: string = "12+30";
+    let plus: string = "+";
+    let parts: vector string = split(&source, &plus);
+    if (length(parts) != 2) { return 1; };
+    println(clone(&parts[0]));
+    return 0;
+}

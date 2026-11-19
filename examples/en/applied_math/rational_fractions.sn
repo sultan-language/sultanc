@@ -1,0 +1,23 @@
+// Reducing the fraction 6/8 to lowest terms with Euclid's greatest common divisor.
+import std.io.println;
+import std.text.number;
+
+def gcd(a: int, b: int): int {
+    let x: mutable int = a;
+    let y: mutable int = b;
+    while (y != 0) {
+        let r: int = x % y;
+        x := y;
+        y := r;
+    };
+    return x;
+}
+
+def main(): int {
+    let n: int = 6;
+    let d: int = 8;
+    let f: int = gcd(n, d);
+    if (n / f != 3 || d / f != 4) { return 1; };
+    println(int_to_text(n / f));
+    return 0;
+}

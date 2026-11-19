@@ -1,0 +1,71 @@
+// A* search on a 4x3 grid with one wall: the cost so far plus a Manhattan-distance estimate
+// picks the next cell, and the parent links give a shortest path of 5 steps.
+import std.io.println;
+import std.text.number;
+
+def heuristic(cell: int): int {
+    return (3 - cell % 4) + (2 - cell / 4);
+}
+
+def main(): int {
+    let wall: vector bool = [false, false, false, false, false, true, false, false, false, false, false, false];
+    let frontier: mutable vector bool = [true, false, false, false, false, false, false, false, false, false, false, false];
+    let visited: mutable vector bool = [false, false, false, false, false, false, false, false, false, false, false, false];
+    let cost: mutable vector int = [0, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100];
+    let priority: mutable vector int = [5, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100];
+    let parents: mutable vector int = [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1];
+    let dx: vector int = [1, -1, 0, 0];
+    let dy: vector int = [0, 0, 1, -1];
+    let reached: mutable bool = false;
+    let rounds: mutable int = 0;
+    while (rounds < 12) {
+        let best: mutable int = -1;
+        let score: mutable int = 1000;
+        let i: mutable int = 0;
+        while (i < 12) {
+            if (frontier[i] && priority[i] < score) {
+                score := priority[i];
+                best := i;
+            };
+            i := i + 1;
+        };
+        if (best < 0) { break; };
+        if (best == 11) {
+            reached := true;
+            break;
+        };
+        frontier[best] := false;
+        visited[best] := true;
+        let x: int = best % 4;
+        let y: int = best / 4;
+        let direction: mutable int = 0;
+        while (direction < 4) {
+            let nx: int = x + dx[direction];
+            let ny: int = y + dy[direction];
+            if (nx >= 0 && nx < 4 && ny >= 0 && ny < 3) {
+                let next: int = ny * 4 + nx;
+                if (!wall[next] && !visited[next]) {
+                    let estimate: int = cost[best] + 1;
+                    if (estimate < cost[next]) {
+                        cost[next] := estimate;
+                        priority[next] := estimate + heuristic(next);
+                        parents[next] := best;
+                        frontier[next] := true;
+                    };
+                };
+            };
+            direction := direction + 1;
+        };
+        rounds := rounds + 1;
+    };
+    if (!reached || cost[11] != 5) { return 1; };
+    let path_length: mutable int = 0;
+    let at: mutable int = 11;
+    while (at > 0 && path_length < 12) {
+        at := parents[at];
+        path_length := path_length + 1;
+    };
+    if (at != 0 || path_length != 5) { return 2; };
+    println(int_to_text(path_length));
+    return 0;
+}

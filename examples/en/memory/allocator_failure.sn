@@ -1,0 +1,22 @@
+// Handling an allocation that is refused: a request above the limit returns an error code
+// instead of a vector.
+import std.io.println;
+import std.text.number;
+
+def allocate_if_small(n: int): result vector int, int {
+    if (n > 100) { return result.err(1); };
+    let v: mutable vector int = [];
+    let i: mutable int = 0;
+    while (i < n) {
+        append(v, i);
+        i := i + 1;
+    };
+    return result.ok(v);
+}
+
+def main(): int {
+    match allocate_if_small(1000) with
+    | result.err(code) -> { println(int_to_text(code)); }
+    | result.ok(_) -> { return 1; };
+    return 0;
+}

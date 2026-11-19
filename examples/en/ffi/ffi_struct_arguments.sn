@@ -1,0 +1,18 @@
+// Passing records to C by pointer: nanosleep takes two Timespec records laid out like the C
+// struct.
+import std.io.println;
+import std.text.number;
+
+type Timespec = { seconds: i64, nanoseconds: i64 };
+
+extern def nanosleep(req: *Timespec, remaining: *Timespec): i32 = «nanosleep»;
+
+def main(): int {
+    let value: mutable Timespec = { seconds: 0 as i64, nanoseconds: 0 as i64 };
+    let left: mutable Timespec = { seconds: 0 as i64, nanoseconds: 0 as i64 };
+    let status: mutable i32 = 0 as i32;
+    unsafe { status := nanosleep(&value, &left); };
+    if (status != 0 as i32) { return 1; };
+    println("sleep returned");
+    return 0;
+}

@@ -1,0 +1,35 @@
+// A static site generator: build an HTML page by joining text pieces, write it to a file
+// and check that it reads back the same.
+import std.io.println;
+import std.text.number;
+import std.text.transform;
+import std.text.compare;
+import std.fs.write_file;
+import std.fs.read_file;
+import std.fs.mutation;
+
+def main(): int {
+    let path: string = "index.html";
+    let title: string = "SultanC";
+    let intro: string = "Native compiler examples";
+    let start: string = "<html><head><title>";
+    let between: string = "</title></head><body>";
+    let ending: string = "</body></html>";
+    let a: string = concat(&start, &title);
+    let b: string = concat(&a, &between);
+    let c: string = concat(&b, &intro);
+    let html: string = concat(&c, &ending);
+    match write_file(&path, &html) with
+    | result.ok(_) -> { }
+    | _ -> { return 1; };
+    let good: mutable bool = false;
+    match read_file(&path) with
+    | result.ok(text) -> { good := texts_equal(&text, &html); }
+    | _ -> { return 2; };
+    match remove_file(&path) with
+    | result.ok(_) -> { }
+    | _ -> { return 3; };
+    if (!good) { return 4; };
+    println(int_to_text(length(html)));
+    return 0;
+}

@@ -1,0 +1,15 @@
+// Configuration precedence: a command-line value overrides the value from a file, which
+// overrides the default.
+import std.io.println;
+import std.text.number;
+
+def main(): int {
+    let defaults: int = 3;
+    let file_value: int = 7;
+    let cli_value: int = 9;
+    let selected: mutable int = file_value;
+    if (cli_value > 0) { selected := cli_value; };
+    if (selected != 9) { return 1; };
+    println(int_to_text(selected));
+    return 0;
+}

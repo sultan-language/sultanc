@@ -1,0 +1,19 @@
+// A dispatch table evaluated at compile time: `comptime` runs the `match` on a code and keeps
+// only the chosen value.
+import std.io.println;
+import std.text.number;
+
+def dispatch(code: int): int {
+    match code with
+    | 0 -> { return 11; }
+    | 1 -> { return 22; }
+    | 2 -> { return 33; }
+    | _ -> { return 0; };
+}
+
+def main(): int {
+    let answer: int = comptime dispatch(2);
+    if (answer != 33) { return 1; };
+    println(int_to_text(answer));
+    return 0;
+}

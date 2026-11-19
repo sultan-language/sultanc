@@ -1,0 +1,13 @@
+// Counting the words of an Arabic sentence.
+import std.io.println;
+import std.text.number;
+import std.text.transform;
+
+def main(): int {
+    let source: string = "لغة برمجة عربية قابلة للتعلم";
+    let words: vector string = split(&source, &" ");
+    let count: int = length(words);
+    if (count != 5) { return 1; };
+    println(int_to_text(count));
+    return 0;
+}

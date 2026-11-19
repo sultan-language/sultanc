@@ -1,0 +1,16 @@
+// Complex numbers as a record with a real and an imaginary part, and their multiplication.
+import std.io.println;
+import std.text.number;
+
+type Complex = { real: int, imag: int };
+
+def multiply(a: Complex, b: Complex): Complex {
+    return { real: a.real * b.real - a.imag * b.imag, imag: a.real * b.imag + a.imag * b.real };
+}
+
+def main(): int {
+    let result: Complex = multiply({ real: 3, imag: 2 }, { real: 1, imag: 4 });
+    if (result.real != -5 || result.imag != 14) { return 1; };
+    println(int_to_text(result.imag));
+    return 0;
+}

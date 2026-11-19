@@ -1,0 +1,43 @@
+// Hashing a file on another thread: a worker reads the file, computes its SHA-256 and
+// returns the first byte of the digest when joined.
+import std.io.println;
+import std.text.number;
+import std.thread.thread;
+import std.fs.write_file;
+import std.fs.read_file;
+import std.fs.mutation;
+import std.crypto.sha256;
+import std.text.from_bytes;
+
+def fingerprint(): int {
+    let path: string = "parallel-hash-input.txt";
+    match read_file(&path) with
+    | result.ok(text) -> {
+        let digest: vector u8 = sha256(&bytes_from_text(text));
+        if (length(digest) != 32) { return -1; };
+        return digest[0] as int;
+    }
+    | result.err(_) -> { return -2; };
+}
+
+def main(): int {
+    let path: string = "parallel-hash-input.txt";
+    let source: string = "abc";
+    match write_file(&path, &source) with
+    | result.ok(_) -> { }
+    | result.err(_) -> { return 1; };
+    let worker: mutable value_join_handle<int>;
+    match spawn_value(fn(): int -> fingerprint()) with
+    | result.ok(h) -> { worker := h; }
+    | result.err(_) -> { return 2; };
+    let value: mutable int = -1;
+    match join_value(&mutable worker) with
+    | option.some(n) -> { value := n; }
+    | option.none -> { return 3; };
+    match remove_file(&path) with
+    | result.ok(_) -> { }
+    | result.err(_) -> { return 4; };
+    if (value != 186) { return 5; };
+    println(int_to_text(value));
+    return 0;
+}

@@ -1,0 +1,16 @@
+// Validating a value at compile time: valid_port returns 0 for a port outside 1..65535 and
+// the port itself otherwise, here 8080.
+import std.io.println;
+import std.text.number;
+
+def valid_port(port: int): int {
+    if (port < 1 || port > 65535) { return 0; };
+    return port;
+}
+
+def main(): int {
+    let answer: int = comptime valid_port(8080);
+    if (answer != 8080) { return 1; };
+    println(int_to_text(answer));
+    return 0;
+}

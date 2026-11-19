@@ -1,0 +1,18 @@
+// One stage of a channel pipeline: receive a number from a channel and double it.
+import std.io.println;
+import std.text.number;
+import std.sync.channel;
+
+def main(): int {
+    let ends: channel_ends<int> = channel<int>();
+    match send(&ends.المرسل, 7) with
+    | result.err(_) -> { return 1; }
+    | _ -> { };
+    match recv(&ends.المستلم) with
+    | result.ok(n) -> {
+        let doubled: int = n * 2;
+        println(int_to_text(doubled));
+    }
+    | _ -> { return 2; };
+    return 0;
+}

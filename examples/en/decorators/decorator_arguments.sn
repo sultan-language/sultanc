@@ -1,0 +1,29 @@
+// A definition-time decorator with an argument: @@register("/argument") adds the handler to
+// a route table when it is defined, and main calls it through that table.
+import std.io.println;
+import std.text.number;
+
+type Entry = { path: string, handler: fn(int): int };
+
+let routes: mutable vector Entry = [];
+
+def register(path: string, handler: fn(int): int): void {
+    unsafe { append(routes, { path: path, handler: handler }); }
+}
+
+@@register("/argument")
+def handler(x: int): int {
+    return x + 2;
+}
+
+def main(): int {
+    let count: uint;
+    let output: int;
+    unsafe {
+        count := length(routes) as uint;
+        output := routes[0].handler(10);
+    }
+    if (count != 1 || output != 12) { return 1; };
+    println(int_to_text(output));
+    return 0;
+}

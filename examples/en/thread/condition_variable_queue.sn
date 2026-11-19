@@ -1,0 +1,46 @@
+// Waiting on a condition variable: a producer thread sets a shared value under a mutex and
+// notifies, while the main thread waits until the value is no longer 0.
+import std.io.println;
+import std.text.number;
+import std.sync.arc;
+import std.sync.mutex;
+import std.sync.condvar;
+import std.thread.thread;
+
+type Shared = { message: mutex<i64>, changed: condvar };
+
+def empty(v: &i64): bool {
+    return *v == 0 as i64;
+}
+
+def wait_message(t: &arc<Shared>, v: &mutable i64): i64 {
+    let state: &Shared = arc_get(t);
+    condvar_wait_while(&(*state).changed, &(*state).message, fn(p: &i64): bool -> empty(p));
+    return *v;
+}
+
+def set_message(v: &mutable i64): void {
+    *v := 99 as i64;
+}
+
+def producer(t: arc<Shared>): void {
+    let state: &Shared = arc_get(&t);
+    with_lock(&(*state).message, fn(v: &mutable i64): void -> set_message(v));
+    condvar_notify_one(&(*state).changed);
+}
+
+def main(): int {
+    let state: Shared = { message: mutex_new(0 as i64), changed: condvar_new() };
+    let shared: arc<Shared> = arc_new(state);
+    let cloned: arc<Shared> = arc_clone(&shared);
+    let worker: mutable join_handle;
+    match spawn(fn(): void -> producer(cloned)) with
+    | result.ok(h) -> { worker := h; }
+    | result.err(_) -> { return 1; };
+    let locked: &Shared = arc_get(&shared);
+    let got: i64 = with_lock(&(*locked).message, fn(v: &mutable i64): i64 -> wait_message(&shared, v));
+    join(&mutable worker);
+    if (got != 99 as i64) { return 2; };
+    println(int_to_text(got as int));
+    return 0;
+}

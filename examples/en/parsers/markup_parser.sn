@@ -1,0 +1,16 @@
+// Pulling text out of markup: split at the opening tag, then at the closing tag, to get the
+// text between them.
+import std.io.println;
+import std.text.number;
+import std.text.transform;
+
+def main(): int {
+    let source: string = "<title>Example</title>";
+    let opener: string = "<title>";
+    let closer: string = "</title>";
+    let start: vector string = split(&source, &opener);
+    if (length(start) != 2) { return 1; };
+    let parts: vector string = split(&start[1], &closer);
+    println(clone(&parts[0]));
+    return 0;
+}

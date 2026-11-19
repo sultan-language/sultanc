@@ -1,0 +1,19 @@
+// Changing a signal's disposition through C: ignore SIGPIPE (13) with signal, then raise it
+// without the process stopping.
+import std.io.println;
+import std.text.number;
+
+extern def signal(sig: i32, handler: *u8): *u8 = «signal»;
+extern def raise(sig: i32): i32 = «raise»;
+
+def main(): int {
+    let previous: mutable *u8 = 0 as *u8;
+    let status: mutable i32 = 1 as i32;
+    unsafe {
+        previous := signal(13 as i32, 1 as *u8);
+        status := raise(13 as i32);
+    };
+    if (status != 0 as i32) { return 1; };
+    println("signal ignored");
+    return 0;
+}

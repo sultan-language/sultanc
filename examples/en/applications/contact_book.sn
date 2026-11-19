@@ -1,0 +1,26 @@
+// A small contact book: records with a name and a phone number, searched by name.
+import std.io.println;
+import std.text.number;
+import std.text.compare;
+
+type Contact = { name: string, phone: string };
+
+def main(): int {
+    let contacts: vector Contact = [
+        { name: "Sara", phone: "100" },
+        { name: "Ali", phone: "200" },
+        { name: "Mona", phone: "300" }
+    ];
+    let selected: mutable string = "";
+    let needle: string = "Ali";
+    let i: mutable int = 0;
+    while (i < length(contacts)) {
+        if (texts_equal(&contacts[i].name, &needle)) {
+            selected := clone(&contacts[i].phone);
+        };
+        i := i + 1;
+    };
+    if (length(selected) != 3) { return 1; };
+    println(selected);
+    return 0;
+}

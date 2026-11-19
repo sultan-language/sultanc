@@ -1,0 +1,18 @@
+// Converting Arabic-Indic digits (١٢٣) to ASCII digits (123) by replacing each one.
+import std.io.println;
+import std.text.number;
+import std.text.transform;
+
+def main(): int {
+    let source: string = "١٢٣";
+    let a: string = "١";
+    let b: string = "٢";
+    let c: string = "٣";
+    let one: string = "1";
+    let two: string = "2";
+    let three: string = "3";
+    let s1: string = replace(&source, &a, &one);
+    let s2: string = replace(&s1, &b, &two);
+    println(replace(&s2, &c, &three));
+    return 0;
+}

@@ -1,0 +1,26 @@
+// A small hex dump: print the bytes of the input as hexadecimal.
+import std.io.println;
+import std.process.argument_count;
+import std.process.argument;
+import std.text.number;
+import std.text.transform;
+import std.text.from_bytes;
+import std.encoding.hex;
+
+def read_input(default: string): string {
+    if (argument_count() > 1) {
+        match argument(1) with
+        | option.some(text) -> {
+            if (length(text) > 0) { return text; };
+        }
+        | option.none -> { };
+    };
+    return default;
+}
+
+def main(): int {
+    let text: string = read_input("abc");
+    let bytes: vector u8 = bytes_from_text(text);
+    println(hex_encode(&bytes));
+    return 0;
+}

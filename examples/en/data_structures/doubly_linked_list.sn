@@ -1,0 +1,23 @@
+// A doubly linked list kept in a vector: walk it backwards from the tail through the
+// previous links.
+import std.io.println;
+import std.text.number;
+
+type Node = { value: int, previous: int, next: int };
+
+def main(): int {
+    let nodes: vector Node = [
+        { value: 2, previous: -1, next: 1 },
+        { value: 4, previous: 0, next: 2 },
+        { value: 6, previous: 1, next: -1 }
+    ];
+    let at: mutable int = 2;
+    let sum: mutable int = 0;
+    while (at >= 0) {
+        sum := sum * 10 + nodes[at].value;
+        at := nodes[at].previous;
+    };
+    if (sum != 642) { return 1; };
+    println(int_to_text(sum));
+    return 0;
+}

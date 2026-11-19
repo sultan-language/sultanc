@@ -1,0 +1,23 @@
+// A loop run at compile time: `comptime` computes the 12th Fibonacci number (144).
+import std.io.println;
+import std.text.number;
+
+def fibonacci(n: int): int {
+    let a: mutable int = 0;
+    let b: mutable int = 1;
+    let i: mutable int = 0;
+    while (i < n) {
+        let next: int = a + b;
+        a := b;
+        b := next;
+        i := i + 1;
+    };
+    return a;
+}
+
+def main(): int {
+    let answer: int = comptime fibonacci(12);
+    if (answer != 144) { return 1; };
+    println(int_to_text(answer));
+    return 0;
+}

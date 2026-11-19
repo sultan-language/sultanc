@@ -1,0 +1,14 @@
+// UTF-8 text in C: strlen counts bytes, so the two Arabic letters "مر" give 4.
+import std.io.println;
+import std.text.number;
+
+extern def strlen(text: *u8): uint = «strlen»;
+
+def main(): int {
+    let input: mutable vector u8 = [217 as u8, 133 as u8, 216 as u8, 177 as u8, 0 as u8];
+    let counted: mutable uint = 0;
+    unsafe { counted := strlen(&input[0]); };
+    if (counted != 4 as uint) { return 1; };
+    println(uint_to_text(counted));
+    return 0;
+}

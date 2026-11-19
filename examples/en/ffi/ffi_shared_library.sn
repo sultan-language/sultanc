@@ -1,0 +1,13 @@
+// Calling a function from the C library at run time: getpid returns this process's id.
+import std.io.println;
+import std.text.number;
+
+extern def getpid(): i32 = «getpid»;
+
+def main(): int {
+    let pid: mutable i32 = 0 as i32;
+    unsafe { pid := getpid(); };
+    if (pid <= 0 as i32) { return 1; };
+    println(int_to_text(pid as int));
+    return 0;
+}

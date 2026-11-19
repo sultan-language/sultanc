@@ -1,0 +1,18 @@
+// A circular buffer of three cells: five writes wrap around, so only the last three values
+// remain.
+import std.io.println;
+import std.text.number;
+
+def main(): int {
+    let cells: mutable vector int = [0, 0, 0];
+    let writes: vector int = [2, 4, 6, 8, 10];
+    let i: mutable int = 0;
+    while (i < length(writes)) {
+        cells[i % 3] := writes[i];
+        i := i + 1;
+    };
+    let sum: int = cells[0] + cells[1] + cells[2];
+    if (sum != 24) { return 1; };
+    println(int_to_text(sum));
+    return 0;
+}

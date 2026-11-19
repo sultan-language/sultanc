@@ -30,6 +30,7 @@ job=${1:?usage: macos.sh seed-build|seed-check|llvm-sdk|llvm-build|llvm-verify|t
 cd "$ci_root"
 ci_load_llvm_lock
 version=$LLVM_VERSION
+major=${version%%.*}
 sdk=${LLVM_SDK:-$HOME/llvm-sdk-$version}
 # Seconds a self-build may take before it is reported as hung.
 compile_timeout=${SULTANC_CI_COMPILE_TIMEOUT_SECONDS:-5400}
@@ -79,8 +80,12 @@ llvm_sdk() {
             -Wl,-all_load $archives $system_libs
         cp "$root/bin/llvm-config" "$root/bin/llvm-nm" "$root/bin/llvm-readobj" "$sdk/bin/"
         cp -R "$root/include" "$sdk/include"
-        cp "$root/lib/libLLVM.dylib" "$sdk/lib/"
-        ln -sf libLLVM.dylib "$sdk/lib/libLLVM-22.dylib"
+        # The real file carries the major (libLLVM-22.dylib), as an LLVM
+        # dylib build names it: cmake/modules/LLVMToolchain.cmake accepts a
+        # generic libLLVM.dylib only with installation metadata, which this
+        # SDK (headers, tools, one dylib) does not have.
+        cp "$root/lib/libLLVM.dylib" "$sdk/lib/libLLVM-$major.dylib"
+        ln -sf "libLLVM-$major.dylib" "$sdk/lib/libLLVM.dylib"
     else
         fetch "$base/llvm-project-$version.src.tar.xz" "$work/src.tar.xz"
         tar -xf "$work/src.tar.xz" -C "$work"
@@ -114,10 +119,23 @@ llvm_env() {
         echo "macos.sh: no LLVM SDK in $sdk (run: macos.sh llvm-sdk)" >&2
         exit 2
     }
+    # An SDK cached before the dylib carried its major has the real file at
+    # libLLVM.dylib, and libLLVM-<major>.dylib as a link to it or not at all:
+    # the real file takes the versioned name, and libLLVM.dylib links to it.
+    if [ -f "$sdk/lib/libLLVM.dylib" ] && [ ! -L "$sdk/lib/libLLVM.dylib" ] &&
+        { [ -L "$sdk/lib/libLLVM-$major.dylib" ] || [ ! -e "$sdk/lib/libLLVM-$major.dylib" ]; }; then
+        rm -f "$sdk/lib/libLLVM-$major.dylib"
+        mv "$sdk/lib/libLLVM.dylib" "$sdk/lib/libLLVM-$major.dylib"
+        ln -s "libLLVM-$major.dylib" "$sdk/lib/libLLVM.dylib"
+    fi
     LLVM_CONFIG="$sdk/bin/llvm-config"
     DYLD_LIBRARY_PATH="$sdk/lib${DYLD_LIBRARY_PATH:+:$DYLD_LIBRARY_PATH}"
     export LLVM_CONFIG DYLD_LIBRARY_PATH
     echo "LLVM $("$LLVM_CONFIG" --version) from $sdk"
+    # What the build's LLVM selection will see (cmake/modules/LLVMToolchain.cmake).
+    echo "llvm-config --prefix: $("$LLVM_CONFIG" --prefix 2>&1)"
+    echo "llvm-config --libdir: $("$LLVM_CONFIG" --libdir 2>&1)"
+    ls -l "$sdk/lib" | grep -i 'libLLVM[^A-Z]' || echo "no libLLVM dylib in $sdk/lib"
 }
 
 # One bounded self-build (macOS has no timeout(1): perl's alarm stands in).

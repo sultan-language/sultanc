@@ -1,0 +1,16 @@
+// Borrowing from a box: pass a reference to the boxed value to a function while the box
+// stays alive.
+import std.io.println;
+import std.text.number;
+
+def add_ten(n: &int): int {
+    return *n + 10;
+}
+
+def main(): int {
+    let value: box int = box 7;
+    let result: int = add_ten(&*value);
+    if (result != 17) { return 1; };
+    println(int_to_text(result));
+    return 0;
+}

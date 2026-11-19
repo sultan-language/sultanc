@@ -37,6 +37,13 @@ if [ -n "$exe_suffix" ]; then
 fi
 
 host_target() {
+  # Git for Windows' bash is an x64 program; on Windows on ARM it runs
+  # emulated and uname -m says x86_64. Windows itself names the machine.
+  case "${PROCESSOR_ARCHITEW6432:-${PROCESSOR_ARCHITECTURE:-}}" in
+    ARM64) case "$(uname -s 2>/dev/null)" in
+             MINGW*|MSYS*|CYGWIN*) echo aarch64-windows-msvc; return 0 ;;
+           esac ;;
+  esac
   case "$(uname -s 2>/dev/null)-$(uname -m 2>/dev/null)" in
     Linux-x86_64|Linux-amd64) echo x86_64-linux ;;
     Linux-aarch64|Linux-arm64) echo aarch64-linux-gnu ;;

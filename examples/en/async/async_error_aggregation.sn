@@ -1,0 +1,43 @@
+// Collecting errors from asynchronous tasks: each task returns a result, and the program adds
+// up the successes and counts the failures.
+import std.io.println;
+import std.text.number;
+import std.async.runtime;
+
+def run_request(id: int): result int, int {
+    yield_task();
+    if (id == 2 || id == 4) { return result.err(id); };
+    return result.ok(id * 10);
+}
+
+def main(): int {
+    let a: mutable task<result int, int> = spawn_task(fn(): result int, int -> run_request(1));
+    let b: mutable task<result int, int> = spawn_task(fn(): result int, int -> run_request(2));
+    let c: mutable task<result int, int> = spawn_task(fn(): result int, int -> run_request(4));
+    let total: mutable int = 0;
+    let failures: mutable int = 0;
+    match await_task(&mutable a) with
+    | option.some(out) -> {
+        match out with
+        | result.ok(v) -> { total := total + v; }
+        | result.err(_) -> { failures := failures + 1; };
+    }
+    | option.none -> { return 1; };
+    match await_task(&mutable b) with
+    | option.some(out) -> {
+        match out with
+        | result.ok(v) -> { total := total + v; }
+        | result.err(_) -> { failures := failures + 1; };
+    }
+    | option.none -> { return 2; };
+    match await_task(&mutable c) with
+    | option.some(out) -> {
+        match out with
+        | result.ok(v) -> { total := total + v; }
+        | result.err(_) -> { failures := failures + 1; };
+    }
+    | option.none -> { return 3; };
+    if (total != 10 || failures != 2) { return 4; };
+    println(int_to_text(failures));
+    return 0;
+}

@@ -1,0 +1,44 @@
+// A bounded queue inside an asynchronous task: hold at most two items, take one out
+// whenever the queue is full, and yield between steps.
+import std.io.println;
+import std.text.number;
+import std.async.runtime;
+
+def consume_bounded(): int {
+    let queue: mutable vector int = [];
+    let produced: mutable int = 1;
+    let total: mutable int = 0;
+    while (produced <= 5 || length(queue) > 0) {
+        if (produced <= 5 && length(queue) < 2) {
+            append(queue, produced);
+            produced := produced + 1;
+        } else {
+            total := total + queue[0];
+            let i: mutable int = 0;
+            while (i + 1 < length(queue)) {
+                queue[i] := queue[i + 1];
+                i := i + 1;
+            };
+            let reduced: mutable vector int = [];
+            i := 0;
+            while (i < length(queue) - 1) {
+                append(reduced, queue[i]);
+                i := i + 1;
+            };
+            queue := reduced;
+        };
+        yield_task();
+    };
+    return total;
+}
+
+def main(): int {
+    let worker: mutable task<int> = spawn_task(fn(): int -> consume_bounded());
+    match await_task(&mutable worker) with
+    | option.some(value) -> {
+        if (value != 15) { return 1; };
+        println(int_to_text(value));
+    }
+    | option.none -> { return 2; };
+    return 0;
+}

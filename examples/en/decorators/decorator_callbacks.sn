@@ -1,0 +1,24 @@
+// A decorated function used as a callback: @twice doubles score's result, and the decorated
+// function is passed by value to apply.
+import std.io.println;
+import std.text.number;
+
+def twice(comptime f: fn(int): int, x: int): int {
+    return f(x) * 2;
+}
+
+@twice
+def score(x: int): int {
+    return x + 3;
+}
+
+def apply(f: fn(int): int, x: int): int {
+    return f(x);
+}
+
+def main(): int {
+    let answer: int = apply(score, 4);
+    if (answer != 14) { return 1; };
+    println(int_to_text(answer));
+    return 0;
+}

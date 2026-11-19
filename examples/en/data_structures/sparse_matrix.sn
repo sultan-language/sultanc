@@ -1,0 +1,18 @@
+// A sparse matrix stored as (row, column, value) entries for its nonzero cells only.
+import std.io.println;
+import std.text.number;
+
+type Entry = { row: int, column: int, value: int };
+
+def main(): int {
+    let entries: vector Entry = [{ row: 0, column: 1, value: 7 }, { row: 3, column: 2, value: 9 }];
+    let sum: mutable int = 0;
+    let i: mutable int = 0;
+    while (i < length(entries)) {
+        sum := sum + entries[i].value;
+        i := i + 1;
+    };
+    if (sum != 16) { return 1; };
+    println(int_to_text(sum));
+    return 0;
+}

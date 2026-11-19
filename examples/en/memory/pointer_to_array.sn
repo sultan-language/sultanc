@@ -1,0 +1,13 @@
+// A raw pointer to a vector element: change the element through the pointer inside
+// `unsafe`.
+import std.io.println;
+import std.text.number;
+
+def main(): int {
+    let numbers: mutable vector int = [2, 4, 6];
+    let ptr: *mutable int = &mutable numbers[1];
+    unsafe { *ptr := *ptr * 3; };
+    if (numbers[1] != 12) { return 1; };
+    println(int_to_text(numbers[1]));
+    return 0;
+}

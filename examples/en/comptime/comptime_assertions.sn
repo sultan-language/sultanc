@@ -1,0 +1,16 @@
+// A check run at compile time: `comptime` calls check_power(64), which tests whether 64 is
+// a power of two, so the program only holds the answer.
+import std.io.println;
+import std.text.number;
+
+def check_power(n: int): int {
+    if ((n & (n - 1)) != 0) { return 0; };
+    return 1;
+}
+
+def main(): int {
+    let answer: int = comptime check_power(64);
+    if (answer != 1) { return 1; };
+    println(int_to_text(answer));
+    return 0;
+}

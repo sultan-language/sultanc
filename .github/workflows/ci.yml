@@ -217,7 +217,7 @@ jobs:
     needs: [plan, lint]
     if: needs.plan.outputs.seed == 'true'
     runs-on: ${{ matrix.runner }}
-    timeout-minutes: 150
+    timeout-minutes: ${{ inputs.extended && 260 || 150 }}
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.plan.outputs.seed_matrix) }}
@@ -240,7 +240,9 @@ jobs:
         run: ./.github/ci/windows.ps1 seed
       - name: Tests
         if: matrix.native
-        timeout-minutes: 60
+        # The opt-in suites (extended: nightly, qualification) rebuild the
+        # compiler twice for self-host convergence and three times for RSS.
+        timeout-minutes: ${{ inputs.extended && 150 || 60 }}
         run: sh .github/ci/${{ matrix.script }}.sh test
       - name: Upload compiler
         if: matrix.native
@@ -260,6 +262,9 @@ jobs:
             build/tests-junit.xml
             build/tests-ci/*.log
             build/ispeak-tests-*/summary.txt
+            build/ispeak-tests-*/*.log
+            build/tests-sultanc/*.out
+            build/tests-sultanc/*.err
           retention-days: 14
           if-no-files-found: ignore
 
@@ -313,7 +318,7 @@ jobs:
     needs: [plan, llvm-sdk]
     if: needs.plan.outputs.llvm == 'true'
     runs-on: ${{ matrix.runner }}
-    timeout-minutes: 300
+    timeout-minutes: ${{ inputs.extended && 390 || 300 }}
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.plan.outputs.llvm_matrix) }}
@@ -339,7 +344,7 @@ jobs:
         # Off only where the plan says so (quick tier: the seed route's test
         # run is the push-to-main regression run); on in the full tier.
         if: matrix.script != 'windows' && matrix.tests
-        timeout-minutes: 60
+        timeout-minutes: ${{ inputs.extended && 150 || 60 }}
         run: sh .github/ci/${{ matrix.script }}.sh test
       - name: Stage0 -> Stage1 -> LLVM Stage2
         if: matrix.script == 'windows'
@@ -353,7 +358,7 @@ jobs:
         run: ./.github/ci/windows.ps1 llvm-verify
       - name: Tests
         if: matrix.script == 'windows' && matrix.tests
-        timeout-minutes: 60
+        timeout-minutes: ${{ inputs.extended && 150 || 60 }}
         shell: pwsh
         run: ./.github/ci/windows.ps1 test
       - name: Upload compiler
@@ -376,6 +381,9 @@ jobs:
             build/tests-junit.xml
             build/tests-ci/*.log
             build/ispeak-tests-*/summary.txt
+            build/ispeak-tests-*/*.log
+            build/tests-sultanc/*.out
+            build/tests-sultanc/*.err
           retention-days: 14
           if-no-files-found: ignore
 

@@ -1,0 +1,14 @@
+// A cancellation flag in an atomic: store 1 with sequentially consistent ordering and read
+// it back.
+import std.io.println;
+import std.text.number;
+import std.sync.atomic;
+
+def main(): int {
+    let cancelled: atomic_u32 = atomic_u32_new(0 as u32);
+    atomic_u32_store(&cancelled, 1 as u32, ترتيب_ذاكرة.تسلسلي());
+    let checked: u32 = atomic_u32_load(&cancelled, ترتيب_ذاكرة.تسلسلي());
+    if (checked != 1 as u32) { return 1; };
+    println("cancellation flag seen");
+    return 0;
+}

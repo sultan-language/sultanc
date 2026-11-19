@@ -1,0 +1,28 @@
+// Transforming a stream of values in a task: double each value and yield after each one.
+import std.io.println;
+import std.text.number;
+import std.async.runtime;
+
+def transform(values: vector int): vector int {
+    let output: mutable vector int = [];
+    let i: mutable int = 0;
+    while (i < length(values)) {
+        append(output, values[i] * 2);
+        yield_task();
+        i := i + 1;
+    };
+    return output;
+}
+
+def main(): int {
+    let job: mutable task<vector int> = spawn_task(fn(): vector int -> transform([2, 4, 6, 8]));
+    match await_task(&mutable job) with
+    | option.some(transformed) -> {
+        if (length(transformed) != 4 || transformed[0] != 4 || transformed[3] != 16) {
+            return 1;
+        };
+        println(int_to_text(transformed[3]));
+    }
+    | option.none -> { return 2; };
+    return 0;
+}

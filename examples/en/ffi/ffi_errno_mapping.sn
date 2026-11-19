@@ -1,0 +1,16 @@
+// Calling C's strtol through `extern` on a NUL-terminated buffer: "127" parses to 127, with
+// the end-pointer argument passed as a pointer to a pointer.
+import std.io.println;
+import std.text.number;
+
+extern def strtol(text: *u8, endptr: **u8, base: i32): i64 = «strtol»;
+
+def main(): int {
+    let digits: mutable vector u8 = [49 as u8, 50 as u8, 55 as u8, 0 as u8];
+    let end: *u8 = 0 as *u8;
+    let value: mutable i64 = 0 as i64;
+    unsafe { value := strtol(&digits[0], &end, 10 as i32); };
+    if (value != 127 as i64) { return 1; };
+    println(int_to_text(value as int));
+    return 0;
+}

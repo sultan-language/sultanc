@@ -1,0 +1,12 @@
+// Parsing a log line: split it at "|" into a level, a date and a message.
+import std.io.println;
+import std.text.number;
+import std.text.transform;
+
+def main(): int {
+    let source: string = "INFO|2026-11-16|ready";
+    let parts: vector string = split(&source, &"|");
+    if (length(parts) != 3) { return 1; };
+    println(clone(&parts[2]));
+    return 0;
+}

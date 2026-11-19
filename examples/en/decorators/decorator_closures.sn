@@ -1,0 +1,22 @@
+// A decorator on a function that uses a closure: @plus_one adds one to what the closure
+// inside add_from_closure returns.
+import std.io.println;
+import std.text.number;
+
+def plus_one(comptime f: fn(int): int, x: int): int {
+    return f(x) + 1;
+}
+
+@plus_one
+def add_from_closure(x: int): int {
+    let offset: int = 7;
+    let c: fn(int): int = fn(y: int): int -> y + offset;
+    return c(x);
+}
+
+def main(): int {
+    let answer: int = add_from_closure(4);
+    if (answer != 12) { return 1; };
+    println(int_to_text(answer));
+    return 0;
+}

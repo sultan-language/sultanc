@@ -1,0 +1,16 @@
+// A C function that returns a struct by value: div gives the quotient and remainder as one
+// record.
+import std.io.println;
+import std.text.number;
+
+type DivResult = { quotient: i32, remainder: i32 };
+
+extern def div(numer: i32, denom: i32): DivResult = «div»;
+
+def main(): int {
+    let out: mutable DivResult = { quotient: 0 as i32, remainder: 0 as i32 };
+    unsafe { out := div(17 as i32, 5 as i32); };
+    if (out.quotient != 3 as i32 || out.remainder != 2 as i32) { return 1; };
+    println(int_to_text(out.quotient as int));
+    return 0;
+}

@@ -1,0 +1,19 @@
+// Mapping internal error codes to HTTP status codes with `match`, with 0 for any code not
+// listed.
+import std.io.println;
+import std.text.number;
+
+def code_for_error(code: int): int {
+    match code with
+    | 1 -> { return 400; }
+    | 2 -> { return 404; }
+    | 3 -> { return 500; }
+    | _ -> { return 0; };
+}
+
+def main(): int {
+    let answer: int = code_for_error(2);
+    if (answer != 404) { return 1; };
+    println(int_to_text(answer));
+    return 0;
+}
