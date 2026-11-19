@@ -279,7 +279,7 @@
 
     دع الأمر: نص = ابن_أمر_شل(البرنامج, الوسائط, &مسار_الخرج, &مسار_الخطأ);
     دع وسائط_شل: متجه نص = [«-c», الأمر];
-    دع شل: نص = «/bin/sh»;
+    دع شل: نص = مسار_شل_الاختبار();
     // `exec`: the shell becomes the program, so a kill at the time limit
     // reaches the program itself.
     دع النهاية: نهاية_أمر_بمهلة = شغل_وانتظر_بمهلة(&شل, &وسائط_شل, المهلة);
@@ -307,6 +307,28 @@
     };
 }
 
+// The POSIX tools the suites start: a shell for command lines and env for
+// test environments. On Windows the runner is a native program with no /bin;
+// tools/tests/ci_run.sh passes Git for Windows' sh and env (Windows paths) in
+// SULTANC_TEST_SH and SULTANC_TEST_ENV.
+عام عرف مسار_شل_الاختبار(): نص {
+    دع اسم: نص = «SULTANC_TEST_SH»;
+    دع افتراضي: نص = «/bin/sh»;
+    أرجع قيمة_متغير_بيئة_أو(&اسم, &افتراضي);
+}
+
+عام عرف مسار_env_الاختبار(): نص {
+    دع اسم: نص = «SULTANC_TEST_ENV»;
+    دع افتراضي: نص = «/usr/bin/env»;
+    أرجع قيمة_متغير_بيئة_أو(&اسم, &افتراضي);
+}
+
+// Is the target a Windows one?
+عام عرف هدف_ويندوز(الهدف: &نص): منطقي {
+    دع ويندوز: نص = «-windows-»;
+    أرجع يحتوي_نصا(الهدف, &ويندوز);
+}
+
 عام عرف مسار_المترجم(): نص {
     دع اسم: نص = «SULTANC_BIN»;
     دع افتراضي: نص = «./build/sultanc»;
@@ -320,11 +342,14 @@
     | نتيجة.نجح(القيمة) -> { أرجع القيمة; };
 }
 
-// The host's target: TARGET when tools/tests/ci_run.sh set it to a Unix host
-// target the runner knows, else from uname (Linux and macOS, x86_64 and
-// arm64). Windows hosts are not run here yet: the suites start POSIX tools.
+// The host's target: TARGET when tools/tests/ci_run.sh set it to a host target
+// the runner knows (Windows included), else from uname (Linux and macOS,
+// x86_64 and arm64).
 عام عرف الهدف_المضيف(): اختياري نص {
-    دع المعروفة: متجه نص = [«x86_64-linux», «aarch64-linux-gnu», «arm64-darwin», «x86_64-darwin»];
+    دع المعروفة: متجه نص = [
+        «x86_64-linux», «aarch64-linux-gnu», «arm64-darwin», «x86_64-darwin», «x86_64-windows-msvc»,
+        «aarch64-windows-msvc»
+    ];
     دع اسم_الهدف: نص = «TARGET»;
     دع فارغ: نص = «»;
     دع من_البيئة: نص = قيمة_متغير_بيئة_أو(&اسم_الهدف, &فارغ);
@@ -476,7 +501,7 @@
     دع أجزاء_الأمر: متجه نص = [«( », استنسخ(الأمر), « ) > », اقتبس_لشل(&مسار_الخرج), « 2> », اقتبس_لشل(&مسار_الخطأ)];
     دع الكامل: نص = اجمع_نصوص(&أجزاء_الأمر);
     دع وسائط: متجه نص = [«-c», الكامل];
-    دع شل: نص = «/bin/sh»;
+    دع شل: نص = مسار_شل_الاختبار();
     دع المهلة: عدد = مهلة_الأوامر();
     دع النهاية: نهاية_أمر_بمهلة = شغل_وانتظر_بمهلة(&شل, &وسائط, المهلة);
     أرجع نتيجة_من_نهاية(&النهاية, الاسم, المهلة, &مسار_الخرج, &مسار_الخطأ);

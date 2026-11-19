@@ -276,7 +276,7 @@
         سجل_تجاوز(الملخص, &اسم_المكتبة, &سبب);
         أرجع;
     };
-    دع البيئة: نص = «/usr/bin/env»;
+    دع البيئة: نص = مسار_env_الاختبار();
     دع المصادر: متجه نص = [«tests/runner/fixtures/run_libs/answer.sn», «tests/runner/fixtures/run_libs/answer_ar.sn»];
     دع الأسماء: متجه نص = [«run -L -l answer في التنفيذي (en)», «run -L -l answer في التنفيذي (ar)»];
     دع ك: متغير طبيعي = 0;
@@ -379,7 +379,7 @@
 // target, and a C import's libc missing (a warning; the link goes on), in
 // both languages.
 عرف اختبر_تشخيصات_سي_والبيئة(الملخص: &متغير ملخص_اختبارات): فراغ {
-    دع البيئة: نص = «/usr/bin/env»;
+    دع البيئة: نص = مسار_env_الاختبار();
     دع اللغات: متجه نص = [«en», «ar»];
     دع ف: متغير طبيعي = 0;
     طالما (ف < 2) {

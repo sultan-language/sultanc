@@ -437,6 +437,12 @@ exit 0»;
         سجل_فشل(الملخص, &الاسم, &سبب);
     }
     | اختياري.موجود(الهدف) -> {
+        إذا (هدف_ويندوز(&الهدف)) {
+            // The peak is read from /usr/bin/time, which Windows lacks.
+            دع سبب: نص = «قياس RSS يستعمل /usr/bin/time، وليس على Windows»;
+            سجل_تجاوز(الملخص, &الاسم, &سبب);
+            أرجع;
+        };
         دع المترجم: نص = مسار_المترجم();
         دع مترجم_شل: نص = اقتبس_لشل(&المترجم);
         دع هدف_شل: نص = اقتبس_لشل(&الهدف);
@@ -586,7 +592,7 @@ exit 0»;
         « -c compiler/main.sn --target=arm64-darwin -o build/tests-sultanc/allocation-deep.o >build/tests-sultanc/allocation.stdout 2>build/tests-sultanc/allocation.stderr»
     ];
     دع أمر_عميق: نص = اجمع_نصوص(&أمر_عميق_أجزاء);
-    دع شل: نص = «/bin/sh»;
+    دع شل: نص = مسار_شل_الاختبار();
     دع وسائط_شل: متجه نص = [«-c», أمر_عميق];
 
     طابق شغل_عملية(&شل, &وسائط_شل) مع
