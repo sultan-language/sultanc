@@ -479,9 +479,16 @@ if(_sultanc_llvm_config AND NOT _sultanc_pin_library)
     _sultanc_llvm_config_includes("${_sultanc_llvm_config}" _sultanc_selected_include)
     set(_sultanc_selection_source "LLVM_CONFIG=${_sultanc_llvm_config}")
     if(NOT _sultanc_selected_library)
+        # Name what was searched, so the failure can be read from a log.
+        set(_seen "")
+        foreach(_dir IN LISTS _dirs)
+            file(GLOB _found LIST_DIRECTORIES false "${_dir}/libLLVM*" "${_dir}/LLVM*")
+            list(APPEND _seen ${_found})
+        endforeach()
         message(FATAL_ERROR "LLVM_CONFIG (${_sultanc_llvm_config}) selects LLVM "
             "${_sultanc_selected_version}, but no monolithic shared libLLVM library was found "
-            "(reported: ${_libfiles}).")
+            "(reported: ${_libfiles}). Prefix: ${_sultanc_selected_prefix}; library "
+            "directories searched: ${_dirs}; LLVM libraries there: ${_seen}.")
     endif()
 elseif(LLVM_DIR AND NOT _sultanc_pin_library)
     # Explicit package directory, read directly (aliases resolved first).
