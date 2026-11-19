@@ -1,4 +1,4 @@
-/* WASI Preview 1 host for the translated SultanC seed (see wasm2c.c).
+/* WASI Preview 1 host for the translated SultanC seed (see runtime/w2c.h).
  * Copyright 2026 SultanC contributors. MIT license (see repository LICENSE).
  *
  * The host half of the seed bootstrap: wasm2c turns the seed into C that

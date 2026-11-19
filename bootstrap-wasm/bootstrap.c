@@ -2,9 +2,10 @@
  * Copyright 2026 SultanC contributors. MIT license (see repository LICENSE).
  *
  * The seed bootstrap:
- *   1. wasm2c.c translates the committed, zstd-compressed WASI seed
- *      bootstrap-wasm/seed/sultanc.wasm.zst to C;
- *   2. the C is compiled with wasi.c into Stage1, a native SultanC compiler;
+ *   1. sultanc-wasm2c (wasm2c/) translates the committed, zstd-compressed
+ *      WASI seed bootstrap-wasm/seed/sultanc.wasm.zst to C;
+ *   2. the C is compiled with the runtime (runtime/w2c.c) and the WASI host
+ *      (runtime/wasi.c) into Stage1, a native SultanC compiler;
  *   3. Stage1 compiles compiler/main.sn into the native Stage2 compiler.
  * No CMake, shell, LLVM or WebAssembly runtime is needed: a C99 compiler with
  * gcc-style options (gcc, clang, MinGW, tcc...). For MSVC use the main CMake
@@ -60,7 +61,9 @@
 #define SEED "bootstrap-wasm/seed/sultanc.wasm.zst"
 #define NATIVE_ONLY \
     "--module-source=compiler.backend.provider.llvm.llvm_codegen=compiler/backend/provider/llvm/unavailable.sn"
-#define MAX_SHARDS 64
+/* The translator's sources, and the translated seed's units. */
+static const char *const wasm2c_sources[] = {"common.c", "stream.c", "module.c", "funcgen.c", "output.c", "main.c"};
+#define UNITS 8
 
 #if defined(_WIN32)
 #define EXE ".exe"
@@ -328,9 +331,9 @@ static void build_compiler(const char *compiler, const char *output, const char 
 /* ---- main ----------------------------------------------------------------------- */
 
 int main(int argc, char **argv) {
-    int verify = 0, check_seed = 0, update_seed = 0, stage1_only = 0, i, shards, runnable;
+    int verify = 0, check_seed = 0, update_seed = 0, stage1_only = 0, i, runnable, count;
     const char *target = NULL, *host;
-    char *w2c, *gen, *stage1, *stage2, **cmds, *objs;
+    char *w2c, *gen, *stage1, *stage2, **cmds, *objs, *srcs;
     size_t objs_len = 0;
 
     if (getenv("CC") && *getenv("CC")) cc = getenv("CC");
@@ -374,29 +377,34 @@ int main(int argc, char **argv) {
 
     /* 1. Build the translator and translate the seed. */
     w2c = fmt("%s/sultanc-wasm2c" EXE, out_dir);
-    run(fmt("%s %s -o %s bootstrap-wasm/wasm2c.c", cc, cflags, quote(w2c)));
-    shards = jobs * 4 > MAX_SHARDS ? MAX_SHARDS : jobs * 4;
-    if (shards < 8) shards = 8;
-    run(fmt("%s --shards=%d %s %s", quote(w2c), shards, SEED, quote(fmt("%s/sultanc", gen))));
+    srcs = fmt("%s", "");
+    for (i = 0; i < (int)(sizeof(wasm2c_sources) / sizeof(wasm2c_sources[0])); i++)
+        srcs = fmt("%s bootstrap-wasm/wasm2c/%s", srcs, wasm2c_sources[i]);
+    run(fmt("%s %s -o %s%s", cc, cflags, quote(w2c), srcs));
+    run(fmt("%s --units=%d %s %s", quote(w2c), UNITS, SEED, quote(fmt("%s/sultanc", gen))));
 
-    /* 2. Compile the translated C and the WASI host; link Stage1. */
-    cmds = (char **)calloc((size_t)shards + 2, sizeof(*cmds));
+    /* 2. Compile the translated C, the runtime and the WASI host; link Stage1. */
+    count = UNITS + 3;
+    cmds = (char **)calloc((size_t)count, sizeof(*cmds));
     objs = (char *)calloc(1, 1);
     if (!cmds || !objs) fail("out of memory");
-    for (i = 0; i <= shards + 1; i++) {
+    for (i = 0; i < count; i++) {
         char *src, *obj, *q;
         size_t n;
-        if (i < shards) {
-            src = fmt("%s/sultanc-%03d.c", gen, i);
-            obj = fmt("%s/sultanc-%03d.o", gen, i);
-        } else if (i == shards) {
-            src = fmt("%s/sultanc-runtime.c", gen);
-            obj = fmt("%s/sultanc-runtime.o", gen);
+        if (i < UNITS) {
+            src = fmt("%s/sultanc-%d.c", gen, i + 1);
+            obj = fmt("%s/sultanc-%d.o", gen, i + 1);
+        } else if (i == UNITS) {
+            src = fmt("%s/sultanc-module.c", gen);
+            obj = fmt("%s/sultanc-module.o", gen);
+        } else if (i == UNITS + 1) {
+            src = fmt("bootstrap-wasm/runtime/w2c.c");
+            obj = fmt("%s/w2c.o", out_dir);
         } else {
-            src = fmt("bootstrap-wasm/wasi.c");
+            src = fmt("bootstrap-wasm/runtime/wasi.c");
             obj = fmt("%s/wasi.o", out_dir);
         }
-        cmds[i] = fmt("%s %s -I%s -c %s -o %s", cc, cflags, quote(gen), quote(src), quote(obj));
+        cmds[i] = fmt("%s %s -Ibootstrap-wasm/runtime -I%s -c %s -o %s", cc, cflags, quote(gen), quote(src), quote(obj));
         q = quote(obj);
         n = strlen(q);
         objs = (char *)realloc(objs, objs_len + n + 2);
@@ -405,7 +413,7 @@ int main(int argc, char **argv) {
         memcpy(objs + objs_len, q, n + 1);
         objs_len += n;
     }
-    run_parallel(cmds, shards + 2);
+    run_parallel(cmds, count);
     stage1 = fmt("%s/sultanc-stage1" EXE, out_dir);
     run(fmt("%s -o %s%s", cc, quote(stage1), objs));
     printf("bootstrap: Stage1 compiler: %s\n", stage1);

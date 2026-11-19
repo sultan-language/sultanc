@@ -7,8 +7,8 @@
 // with_capacity, reserve and shrink_to_fit; truncate(0), pop to empty and
 // clear_vector keep the buffer, which the next appends reuse; on integers
 // and on owned text. The growth policy (compiler/runtime/vector_memory_policy.sn)
-// is Rust's RawVec::MIN_NON_ZERO_CAP: the first buffer holds 8 elements of 1
-// byte, 4 of 2 to 1024 bytes, 1 above 1 KiB, then the capacity doubles.
+// starts the first buffer at 8 elements of 1 byte (as Rust's RawVec), 2 of
+// 2 to 1024 bytes, 1 above 1 KiB, then the capacity doubles.
 // extend_from grows by the same policy, amortized: to the larger of length +
 // count and twice the capacity (at least the minimum); reserve_exact and a
 // clone stay exact, and so does a vector literal. Native code and the interpreter report the same
@@ -81,20 +81,20 @@ def main(): int {
     let byte_literal: vector u8 = [1, 2, 3];
     if (capacity(byte_literal) != 3) { return 37; };
 
-    // int (8 bytes): 4, then 8 at the fifth append.
+    // int (8 bytes): 2, then 4 at the third append, 8 at the fifth.
     let grown: mutable vector int = [];
     append(grown, 1);
-    if (capacity(grown) != 4) { return 17; };
+    if (capacity(grown) != 2) { return 17; };
     append(grown, 2);
     append(grown, 3);
     append(grown, 4);
     if (capacity(grown) != 4) { return 18; };
     append(grown, 5);
     if (capacity(grown) != 8) { return 19; };
-    // Text (a 24-byte header) is a 2-1024-byte element: 4.
+    // Text (a 24-byte header) is a 2-1024-byte element: 2.
     let one_word: mutable vector string = [];
     append(one_word, int_to_text(5));
-    if (capacity(one_word) != 4) { return 20; };
+    if (capacity(one_word) != 2) { return 20; };
     let bytes: mutable vector u8 = [];
     append(bytes, 1);
     if (capacity(bytes) != 8) { return 21; };
@@ -105,7 +105,7 @@ def main(): int {
     append(flags, true);
     let halves: mutable vector u16 = [];
     append(halves, 1);
-    if (capacity(flags) != 8 || capacity(halves) != 4) { return 23; };
+    if (capacity(flags) != 8 || capacity(halves) != 2) { return 23; };
 
     let source: vector u8 = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
     let ranged: mutable vector u8 = [];
@@ -119,13 +119,13 @@ def main(): int {
     if (capacity(ranged) != 32 || length(ranged) != 25 || ranged[24] != 16) { return 27; };
     let numbers: vector int = [1, 2, 3, 4, 5];
     let words_of: mutable vector int = [];
-    // int extend: max(3, 2 * 0, 4) = 4; 4 fits; max(6, 2 * 4, 4) = 8.
+    // int extend: max(3, 2 * 0, 2) = 3; 4 needs max(4, 2 * 3, 2) = 6; 6 fits.
     extend_from(words_of, &numbers, 0, 3);
-    if (capacity(words_of) != 4) { return 28; };
+    if (capacity(words_of) != 3) { return 28; };
     extend_from(words_of, &numbers, 4, 1);
-    if (capacity(words_of) != 4 || words_of[3] != 5) { return 29; };
+    if (capacity(words_of) != 6 || words_of[3] != 5) { return 29; };
     extend_from(words_of, &numbers, 0, 2);
-    if (capacity(words_of) != 8 || length(words_of) != 6) { return 32; };
+    if (capacity(words_of) != 6 || length(words_of) != 6) { return 32; };
     let exact: mutable vector u8 = [];
     reserve_exact(exact, 5);
     extend_from(exact, &source, 0, 5);
@@ -133,11 +133,11 @@ def main(): int {
     let copy: vector u8 = clone(&ranged);
     if (capacity(copy) != 25 || length(copy) != 25) { return 31; };
 
-    // The 1 KiB threshold: a 1024-byte record starts at 4, a 1025-byte one at 1.
+    // The 1 KiB threshold: a 1024-byte record starts at 2, a 1025-byte one at 1.
     let whole: kib = zero_kib();
     let records: mutable vector kib = [];
     append(records, whole);
-    if (capacity(records) != 4) { return 33; };
+    if (capacity(records) != 2) { return 33; };
     let over: kib_plus = { a: zero_kib(), b: 7 };
     let big: mutable vector kib_plus = [];
     append(big, over);

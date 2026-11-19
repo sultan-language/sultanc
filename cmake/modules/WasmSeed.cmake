@@ -1,22 +1,23 @@
 # Stage1 from the WebAssembly seed (SULTANC_BOOTSTRAP=wasm, included by
 # Stage1Wasm.cmake). bootstrap-wasm/ holds only the seed and its C sources:
-# wasm2c.c (the translator), wasi.c (the WASI host) and zstd_decoder.h.
+# wasm2c/ (the translator), runtime/ (w2c.h and w2c.c, the runtime the
+# translated code uses, and wasi.c, the WASI host).
 #
 #   sultanc_wasm_add_stage1(<executable-target>
 #       [WASM2C <prebuilt sultanc-wasm2c>]   # cross builds: a build-machine translator
-#       [SHARDS <n>]                         # generated translation units (default 64)
+#       [UNITS <n>]                          # generated function units (default 8)
 #       [EXCLUDE_FROM_ALL])
 #
 # Defines the translator target `sultanc-wasm2c` (unless WASM2C is given), the
 # generated C (seed/sultanc.wasm.zst translated as committed), and
-# <executable-target>: the translated seed linked with wasi.c. Sets
+# <executable-target>: the translated seed linked with the runtime. Sets
 # SULTANC_WASM2C_COMMAND and SULTANC_WASM2C_DEPENDS in the caller's scope.
 set(SULTANC_WASM_DIR "${SULTANC_SOURCE_ROOT}/bootstrap-wasm")
 
 function(sultanc_wasm_add_stage1 exe_target)
-    cmake_parse_arguments(ARG "EXCLUDE_FROM_ALL" "WASM2C;SHARDS" "" ${ARGN})
-    if(NOT ARG_SHARDS)
-        set(ARG_SHARDS 64)
+    cmake_parse_arguments(ARG "EXCLUDE_FROM_ALL" "WASM2C;UNITS" "" ${ARGN})
+    if(NOT ARG_UNITS)
+        set(ARG_UNITS 8)
     endif()
     set(_seed "${SULTANC_WASM_DIR}/seed/sultanc.wasm.zst")
 
@@ -28,7 +29,9 @@ function(sultanc_wasm_add_stage1 exe_target)
         message(FATAL_ERROR "Cross builds of the wasm bootstrap need a prebuilt sultanc-wasm2c "
                             "for the build machine (SULTANC_WASM2C)")
     else()
-        add_executable(sultanc-wasm2c "${SULTANC_WASM_DIR}/wasm2c.c")
+        set(_w2c "${SULTANC_WASM_DIR}/wasm2c")
+        add_executable(sultanc-wasm2c "${_w2c}/common.c" "${_w2c}/stream.c" "${_w2c}/module.c"
+                                      "${_w2c}/funcgen.c" "${_w2c}/output.c" "${_w2c}/main.c")
         set_target_properties(sultanc-wasm2c PROPERTIES C_STANDARD 99 C_STANDARD_REQUIRED YES)
         if(MSVC)
             target_compile_definitions(sultanc-wasm2c PRIVATE _CRT_SECURE_NO_WARNINGS)
@@ -55,34 +58,27 @@ function(sultanc_wasm_add_stage1 exe_target)
         file(WRITE "${_seed_stamp}" "${_seed_hash}")
     endif()
     set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${_seed}")
-    set(_sources "${_gen}/sultanc-runtime.c")
-    math(EXPR _last "${ARG_SHARDS} - 1")
-    foreach(_i RANGE 0 ${_last})
-        string(LENGTH "${_i}" _n)
-        if(_n EQUAL 1)
-            set(_name "00${_i}")
-        elseif(_n EQUAL 2)
-            set(_name "0${_i}")
-        else()
-            set(_name "${_i}")
-        endif()
-        list(APPEND _sources "${_gen}/sultanc-${_name}.c")
+    set(_sources "${_gen}/sultanc-module.c")
+    foreach(_i RANGE 1 ${ARG_UNITS})
+        list(APPEND _sources "${_gen}/sultanc-${_i}.c")
     endforeach()
     add_custom_command(
         OUTPUT "${_gen}/sultanc.h" ${_sources}
         COMMAND "${CMAKE_COMMAND}" -E make_directory "${_gen}"
-        COMMAND "${_wasm2c}" "--shards=${ARG_SHARDS}" "${_seed}" "${_gen}/sultanc"
+        COMMAND "${_wasm2c}" "--units=${ARG_UNITS}" "${_seed}" "${_gen}/sultanc"
         DEPENDS ${_wasm2c_dep} "${_seed}" "${_seed_stamp}"
         COMMENT "Translating the SultanC WASI seed to C"
         VERBATIM)
 
-    # 3. Stage1: the translated seed plus the WASI host. Plain C99, any toolchain.
+    # 3. Stage1: the translated seed plus the runtime and the WASI host. Plain
+    #    C99, any toolchain.
     set(_exclude "")
     if(ARG_EXCLUDE_FROM_ALL)
         set(_exclude EXCLUDE_FROM_ALL)
     endif()
-    add_executable(${exe_target} ${_exclude} ${_sources} "${SULTANC_WASM_DIR}/wasi.c")
-    target_include_directories(${exe_target} PRIVATE "${_gen}")
+    add_executable(${exe_target} ${_exclude} ${_sources} "${SULTANC_WASM_DIR}/runtime/w2c.c"
+                                 "${SULTANC_WASM_DIR}/runtime/wasi.c")
+    target_include_directories(${exe_target} PRIVATE "${_gen}" "${SULTANC_WASM_DIR}/runtime")
     set_target_properties(${exe_target} PROPERTIES C_STANDARD 99 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
     set_source_files_properties(${_sources} PROPERTIES GENERATED TRUE)
     if(MSVC)

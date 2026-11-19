@@ -1,6 +1,6 @@
 # SULTANC_BOOTSTRAP=wasm: Stage1 comes from the WebAssembly seed in
 # bootstrap-wasm/ (the seed bootstrap) instead of the C Stage0 in
-# bootstrap/. The seed is translated to C and compiled with wasi.c; the result
+# bootstrap/. The seed is translated to C and compiled with runtime/; the result
 # is the same SultanC compiler, built Native-only. All bootstrap rules live in
 # WasmSeed.cmake; this module only fits them to the stage
 # targets, output paths and exports of this build (as Stage0.cmake and

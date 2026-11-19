@@ -159,4 +159,11 @@ cmake -S "$source_directory/cmake" -B "$build_directory" \
     ${backend:+"-DSULTANC_STAGE2_BACKEND:STRING=$backend"} \
     ${existing_compiler:+"-DSULTANC_EXISTING_COMPILER:FILEPATH=$existing_compiler"}
 
+# One compile job per core (the seed route translates the seed into units
+# that build in parallel), unless CMAKE_BUILD_PARALLEL_LEVEL says otherwise.
+if [ -z "${CMAKE_BUILD_PARALLEL_LEVEL:-}" ]; then
+    jobs=$(getconf _NPROCESSORS_ONLN 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 2)
+    CMAKE_BUILD_PARALLEL_LEVEL=$jobs
+    export CMAKE_BUILD_PARALLEL_LEVEL
+fi
 cmake --build "$build_directory" --target "sultanc-$stage"
