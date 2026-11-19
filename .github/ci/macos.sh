@@ -135,7 +135,13 @@ llvm_env() {
     # What the build's LLVM selection will see (cmake/modules/LLVMToolchain.cmake).
     echo "llvm-config --prefix: $("$LLVM_CONFIG" --prefix 2>&1)"
     echo "llvm-config --libdir: $("$LLVM_CONFIG" --libdir 2>&1)"
-    ls -l "$sdk/lib" | grep -i 'libLLVM[^A-Z]' || echo "no libLLVM dylib in $sdk/lib"
+    found=no
+    for lib in "$sdk"/lib/libLLVM.* "$sdk"/lib/libLLVM-*; do
+        [ -e "$lib" ] || [ -L "$lib" ] || continue
+        ls -l "$lib"
+        found=yes
+    done
+    [ "$found" = yes ] || echo "no libLLVM dylib in $sdk/lib"
 }
 
 # One bounded self-build (macOS has no timeout(1): perl's alarm stands in).
