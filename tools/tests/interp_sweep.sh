@@ -23,6 +23,18 @@
 # program agrees, 1 otherwise. A summary line is printed last:
 #   interp-sweep: compared=N same=S differ=D timeout=T not-a-program=P skipped=K
 set -u -o pipefail
+# Headers are read as bytes: BSD sed rejects UTF-8 that head -c cut mid-character.
+export LC_ALL=C
+
+# Seconds with a fraction: GNU date has %N; BSD date (macOS) prints it as is.
+now_s() {
+  t=$(date +%s.%N)
+  case "$t" in
+    *N*) perl -MTime::HiRes=time -e 'printf "%.6f\n", time' ;;
+    *) printf '%s\n' "$t" ;;
+  esac
+}
+export -f now_s 2>/dev/null || true
 
 SC=${SC:-build/sultanc}
 JOBS=${JOBS:-$(nproc 2>/dev/null || echo 2)}
@@ -72,13 +84,13 @@ one() {
     return 0
   fi
   local t0 t1 t2 ns is rn ri
-  t0=$(date +%s.%N)
+  t0=$(now_s)
   env "${envset[@]}" timeout "$TIMEOUT" "$d/native" ${SWEEP_ARGS:-} < /dev/null > "$d/n.out" 2> "$d/n.err"
   rn=$?
-  t1=$(date +%s.%N)
+  t1=$(now_s)
   env "${envset[@]}" timeout "$TIMEOUT" "$SC" run "$src" -- ${SWEEP_ARGS:-} < /dev/null > "$d/i.out" 2> "$d/i.err"
   ri=$?
-  t2=$(date +%s.%N)
+  t2=$(now_s)
   ns=$(echo "$t1 - $t0" | bc)
   is=$(echo "$t2 - $t1" | bc)
   local verdict=same detail=""

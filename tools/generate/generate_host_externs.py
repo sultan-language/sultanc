@@ -2,7 +2,8 @@
 """Generate compiler/interpreter/execution/host_externs_generated.sn.
 
 The interpreter's foreign-call table for hosts where std calls C functions
-(Windows: kernel32, ws2_32, ...; macOS: libSystem). Every extern std
+(Windows: kernel32, ws2_32, ...; macOS: libSystem) or host imports (WASI:
+wasi_snapshot_preview1). Every extern std
 declares for that platform is re-declared here with the same library and the
 same C type (a SultanC executable declares each import once, so the
 declaration must agree with std's; every pointer is spelled `*ط8`, the same
@@ -36,6 +37,20 @@ Audit (2026-11-06) of every std extern, per OS:
     interpreter memory), dladdr (strings copied). getcwd's result aliases
     its buffer argument; posix_spawnp's argv/envp are marshalled as host
     pointer tables.
+  - WASI (wasm32, the compiler under Node's WASI or a browser shim): every
+    wasi_snapshot_preview1 import std declares is tabled, with its own
+    import module and name; a pointer word is a linear-memory address (the
+    compiler and its host copies share the module's one memory). Shims for
+    fd_read/fd_write/sock_recv/sock_send (iovec records, whose buffer
+    pointers are staged one by one), args_*/environ_* (the interpreted
+    program's own arguments and environment) and proc_exit (ends the
+    interpretation with the status, as Linux exit_group does).
+    The wasm32-wasi compiler is also the bootstrap seed, which
+    bootstrap-wasm/wasm2c/module.c translates only when its WASI host implements
+    every import. So only the imports in module.c's `wasi_imports` table
+    are declared here (with the signature that table gives, checked); any
+    other std import is known but answers ENOSYS (52) without being
+    imported, until the seed's host implements it.
   - Windows: every extern is tabled; shims for GetLastError/SetLastError/
     WSAGetLastError (the interpreter's last-error cell), GetCommandLineW/
     CommandLineToArgvW/LocalFree (the program's own command line),
@@ -56,6 +71,9 @@ ROOT = pathlib.Path(__file__).resolve().parents[2]
 OUT = ROOT / "compiler/interpreter/execution/host_externs_generated.sn"
 STD = ROOT / "library/std/os/platform"
 BRIDGE = ROOT / "compiler/interpreter/execution/foreign_calls.sn"
+SEED_HOST = ROOT / "bootstrap-wasm/wasm2c/module.c"
+# WASI's ENOSYS: the answer of a std import the seed's host does not provide.
+WASI_ENOSYS = 52
 
 INTS = {"ص8": 8, "ص16": 16, "ص32": 32, "ص64": 64,
         "ط8": 8, "ط16": 16, "ط32": 32, "ط64": 64,
@@ -70,6 +88,8 @@ SHIMS = {
                 "GetCommandLineW", "CommandLineToArgvW", "LocalFree",
                 "GetEnvironmentStringsW", "GetAddrInfoW", "FreeAddrInfoW",
                 "CertEnumCertificatesInStore"},
+    "wasi": {"fd_read", "fd_write", "sock_recv", "sock_send", "proc_exit",
+             "args_sizes_get", "args_get", "environ_sizes_get", "environ_get"},
 }
 # Shims foreign_calls.sn answers entirely, so they never reach the host
 # table: they are not re-declared here. The compiler declares __error itself
@@ -79,6 +99,7 @@ SHIMS = {
 SHIM_ONLY = {
     "macos": {"__error"},
     "windows": set(),
+    "wasi": set(),
 }
 # Pointer results the generic bridge maps back without a shim: the result
 # aliases a pointer argument (getcwd returns its buffer).
@@ -129,6 +150,7 @@ EXTRA_SOURCES = {
     # The allocator's thread-local cache slot (TlsAlloc, TlsGetValue,
     # TlsSetValue: integer words only).
     "windows": ["os/allocation.sn"],
+    "wasi": [],
 }
 
 
@@ -234,6 +256,26 @@ def collect(platform_dir, plat, recs, errors, per_arch):
     return seen
 
 
+def seed_host_imports(errors):
+    """The wasi_snapshot_preview1 imports the seed's WASI host implements, by
+    name, with module.c's signature string (i/I per parameter, ':', result)."""
+    text = SEED_HOST.read_text(encoding="utf-8") if SEED_HOST.exists() else ""
+    m = re.search(r"wasi_imports\[\]\s*=\s*\{(.*?)\n\};", text, re.S)
+    if not m:
+        errors.append(f"{SEED_HOST.relative_to(ROOT)}: wasi_imports table not found")
+        return {}
+    return dict(re.findall(r'\{"(\w+)",\s*"([^"]*)"\}', m.group(1)))
+
+
+def wasm_signature(ps, rk):
+    """module.c's signature string of a WASI import: a 64-bit integer is
+    'I', any other integer and every pointer (a u32 address) 'i'."""
+    def letter(t, k):
+        return "I" if k[0] == "int" and INTS[k[1]] == 64 else "i"
+    result = "" if rk[0] == "void" else letter(None, rk)
+    return "".join(letter(t, k) for t, k in ps) + ":" + result
+
+
 def local(link):
     return re.sub(r"[^0-9A-Za-z_]", "_", link)
 
@@ -267,8 +309,9 @@ def call_lines(callee, ps, rk, indent):
     return out
 
 
-def emit_platform(cond, entries, per_arch=None):
+def emit_platform(cond, entries, per_arch=None, unhosted=None):
     per_arch = per_arch or {}
+    unhosted = unhosted or set()
     out = [f"إذا ({cond}) {{"]
     for link, by_cond in sorted(per_arch.items()):
         for c_op, c_arch in [("==", "aarch64"), ("!=", "aarch64")]:
@@ -282,6 +325,8 @@ def emit_platform(cond, entries, per_arch=None):
             out.append("        }")
             out.append("    }")
     for link, (lib, ps, ret, rk) in sorted(entries.items()):
+        if link in unhosted:
+            continue
         params = ", ".join(f"م{i}: {word_type(t, k)}" for i, (t, k) in enumerate(ps))
         result = "*ط8" if rk[0] == "ptr" else ret
         decl = f"خارجي «{lib}» عرف مضيف_{local(link)}({params}): {result}"
@@ -313,6 +358,11 @@ def emit_platform(cond, entries, per_arch=None):
     for link, (lib, ps, ret, rk) in sorted(entries.items()):
         out.append(f"        إذا (بايتات_تساوي_نص_خارجية(الاسم, «{link}»)) {{")
         out.append(f"            إذا ((الطول(*الكلمات) مثل طبيعي) != {len(ps)}) {{ أرجع اختياري.لا_شيء(); }};")
+        if link in unhosted:
+            out.append("            // Not imported: the seed's WASI host (bootstrap-wasm/runtime/wasi.c) lacks it.")
+            out.append(f"            أرجع اختياري.موجود({WASI_ENOSYS} مثل ط64);")
+            out.append("        };")
+            continue
         args = []
         for i, (t, k) in enumerate(ps):
             if k[0] == "int":
@@ -344,6 +394,22 @@ def main():
     mac_arch = {}
     win = collect("windows", "windows", recs, errors, win_arch)
     mac = collect("unix/apple", "macos", recs, errors, mac_arch)
+    wasi_arch = {}
+    wasi = collect("wasi", "wasi", recs, errors, wasi_arch)
+    if wasi_arch:
+        errors.append("wasi: per-architecture extern variants are not expected (wasm32 only)")
+    seed_imports = seed_host_imports(errors)
+    wasi_unhosted = set()
+    for link, (lib, ps, _, rk) in sorted(wasi.items()):
+        if lib != "wasi_snapshot_preview1":
+            errors.append(f"wasi: {link}: import module {lib}, not wasi_snapshot_preview1")
+        if link not in seed_imports:
+            if rk[0] == "void":
+                errors.append(f"wasi: {link}: a void import the seed's WASI host lacks cannot answer ENOSYS")
+            wasi_unhosted.add(link)
+        elif seed_imports[link] != wasm_signature(ps, rk):
+            errors.append(f"wasi: {link}: signature {wasm_signature(ps, rk)}, the seed's WASI host "
+                          f"(bootstrap-wasm/wasm2c/module.c) implements {seed_imports[link]}")
     # An extern outside the per-OS directories could reach macOS or Windows
     # without being audited here: std keeps every extern in os/platform.
     for f in sorted((ROOT / "library/std").rglob("*.sn")):
@@ -384,7 +450,9 @@ def main():
     lines.append("")
     lines += emit_platform("الهدف.المنصة == «macos»", mac, mac_arch)
     lines.append("")
-    lines.append("إذا (الهدف.المنصة != «windows» && الهدف.المنصة != «macos») {")
+    lines += emit_platform("الهدف.المنصة == «wasi»", wasi, unhosted=wasi_unhosted)
+    lines.append("")
+    lines.append("إذا (الهدف.المنصة != «windows» && الهدف.المنصة != «macos» && الهدف.المنصة != «wasi») {")
     lines.append("    عام عرف دالة_خارجية_مضيف_معروفة(الاسم: &متجه ط8): منطقي { أرجع خطأ; }")
     lines.append("    عام عرف نفذ_دالة_خارجية_مضيف(الاسم: &متجه ط8, الكلمات: &متجه ط64): اختياري ط64 {")
     lines.append("        أرجع اختياري.لا_شيء();")
@@ -397,7 +465,8 @@ def main():
             return 1
         return 0
     OUT.write_text(text, encoding="utf-8")
-    print(f"wrote {OUT}: windows {len(win)}, macos {len(mac)} externs")
+    print(f"wrote {OUT}: windows {len(win)}, macos {len(mac)}, wasi {len(wasi)} externs "
+          f"({len(wasi_unhosted)} answering ENOSYS: {', '.join(sorted(wasi_unhosted))})")
     return 0
 
 

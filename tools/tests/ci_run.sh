@@ -27,6 +27,15 @@ case "$(uname -s 2>/dev/null)" in
 esac
 SC=${SC:-./build/sultanc$exe_suffix}
 
+# The runner is a native program and starts a shell for command lines and env
+# for test environments. On Windows it cannot see this shell's /bin, so it
+# gets Git for Windows' sh and env as Windows paths.
+if [ -n "$exe_suffix" ]; then
+  SULTANC_TEST_SH=$(cygpath -w "$(command -v sh)")
+  SULTANC_TEST_ENV=$(cygpath -w "$(command -v env)")
+  export SULTANC_TEST_SH SULTANC_TEST_ENV
+fi
+
 host_target() {
   case "$(uname -s 2>/dev/null)-$(uname -m 2>/dev/null)" in
     Linux-x86_64|Linux-amd64) echo x86_64-linux ;;

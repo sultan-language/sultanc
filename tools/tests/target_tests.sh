@@ -17,7 +17,8 @@
 #
 #   SC=./build/sultanc bash tools/tests/target_tests.sh [target...]
 # With target arguments, only those targets run. WASI_RUNNER overrides the
-# WASI command (default: wasmtime, else node examples/run-wasi.mjs).
+# WASI command (default: wasmtime; without one, wasm32-wasi programs are built,
+# not run).
 # Run from the repository root on an x86_64 Linux host.
 set -u
 SC=${SC:-./build/sultanc}
@@ -28,7 +29,6 @@ only=" $* "
 wasi_runner() {
   if [ -n "${WASI_RUNNER:-}" ]; then echo "$WASI_RUNNER"; return; fi
   if command -v wasmtime > /dev/null; then echo "wasmtime run --dir=."; return; fi
-  if command -v node > /dev/null; then echo "node --no-warnings examples/run-wasi.mjs"; return; fi
 }
 
 # A wasm32-browser module has no imports; its `_start` returns main's value.
