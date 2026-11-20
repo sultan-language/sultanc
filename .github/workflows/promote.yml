@@ -1,8 +1,6 @@
 # Promotion: main -> beta, beta -> master. Started by hand ("Run workflow",
-# from main) by a promoter only: a repository admin (an organization's owners
-# are admins of its repositories), or a login in the optional repository
-# variable SULTANC_PROMOTERS. Nothing else moves beta or master, and nothing
-# ever pushes to them directly.
+# from main); GitHub lets only people with write access start a run. Nothing
+# else moves beta or master, and nothing ever pushes to them directly.
 #
 # The rules come from mature compilers:
 #   - test the exact commit, then move the branch to it (Rust's "not rocket
@@ -73,27 +71,10 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
-          ACTOR: ${{ github.actor }}
-          OWNER: ${{ github.repository_owner }}
-          PROMOTERS: ${{ vars.SULTANC_PROMOTERS }}
           RUN_REF: ${{ github.ref }}
           TARGET: ${{ inputs.target }}
         run: |
           fail() { echo "::error::$1"; echo "Not promoted: $1" >> "$GITHUB_STEP_SUMMARY"; exit 1; }
-          # Promoters: the repository admins (an organization's owners are
-          # admins of its repositories), the owner when the owner is a person,
-          # and the logins in the optional variable SULTANC_PROMOTERS (spaces
-          # or commas).
-          allowed=no
-          for login in $(printf '%s' "$PROMOTERS" | tr ',' ' ') "$OWNER"; do
-            [ "$ACTOR" = "$login" ] && allowed=yes
-          done
-          if [ "$allowed" != yes ]; then
-            role=$(gh api "repos/$REPO/collaborators/$ACTOR/permission" --jq .permission 2>/dev/null) || role=unknown
-            [ "$role" = admin ] && allowed=yes
-          fi
-          [ "$allowed" = yes ] ||
-            fail "$ACTOR may not promote (permission: $role): a promoter is a repository admin or a login in the repository variable SULTANC_PROMOTERS${PROMOTERS:+ ($PROMOTERS)}"
           [ "$RUN_REF" = refs/heads/main ] || fail "run this workflow from main (it ran from $RUN_REF)"
           case "$TARGET" in
             beta) source=main ;;
@@ -108,7 +89,7 @@ jobs:
             case "$status" in
               identical) identical=true ;;
               ahead) ;;
-              *) fail "$TARGET ($target_sha) is not an ancestor of $source ($sha): compare says $status. Promotion only fast-forwards; see CI.md, \"One-time setup\"" ;;
+              *) fail "$TARGET ($target_sha) has commits $source ($sha) does not (compare says $status). Promotion only fast-forwards: point $TARGET at $source once by hand, CI.md, \"One-time setup of the branches\"" ;;
             esac
           else
             exists=false
