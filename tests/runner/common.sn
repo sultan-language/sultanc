@@ -479,11 +479,18 @@
 // A check's name as the file name of its output: a name that holds a test's
 // path (`… (tests/en/x/main.sn)`) would otherwise name directories that do
 // not exist, and the redirect would fail before the command ran.
+// A test's name as a file name in build/tests-sultanc: every byte no file
+// name may hold on some host becomes "_": path separators, control bytes,
+// and the characters Windows (NTFS) and CI artifacts refuse: " : < > | * ?
 عرف اسم_ملف_أمر(الاسم: &نص): نص {
     دع البايتات: متغير متجه ط8 = بايتات_من_نص(استنسخ(الاسم));
     دع ف: متغير طبيعي = 0;
     طالما (ف < (الطول(البايتات) مثل طبيعي)) {
-        إذا (البايتات[ف] == 0x2F || البايتات[ف] == 0x5C) { البايتات[ف] := 0x5F; };
+        دع ب: ط8 = البايتات[ف];
+        إذا (ب < 0x20 || ب == 0x2F || ب == 0x5C || ب == 0x22 || ب == 0x3A || ب == 0x3C || ب == 0x3E
+            || ب == 0x7C || ب == 0x2A || ب == 0x3F) {
+            البايتات[ف] := 0x5F;
+        };
         ف := ف + 1;
     }
     أرجع من_بايتات(&البايتات);

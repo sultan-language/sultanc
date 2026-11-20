@@ -254,6 +254,8 @@ jobs:
           if-no-files-found: warn
       - name: Upload test results
         if: always() && matrix.native
+        # Evidence only: a problem uploading it never fails the job.
+        continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
           name: tests-seed-${{ matrix.host }}
@@ -373,6 +375,8 @@ jobs:
           if-no-files-found: warn
       - name: Upload test results
         if: always() && matrix.tests
+        # Evidence only: a problem uploading it never fails the job.
+        continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
           name: tests-llvm-${{ matrix.host }}

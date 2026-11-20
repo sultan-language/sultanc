@@ -86,7 +86,12 @@ jobs:
           for login in $(printf '%s' "$PROMOTERS" | tr ',' ' ') "$OWNER"; do
             [ "$ACTOR" = "$login" ] && allowed=yes
           done
-          [ "$allowed" = yes ] || fail "$ACTOR may not promote: add the login to the repository variable SULTANC_PROMOTERS (Settings, Secrets and variables, Actions, Variables)"
+          if [ "$allowed" != yes ]; then
+            if [ -z "$PROMOTERS" ]; then
+              fail "the repository variable SULTANC_PROMOTERS is empty or not visible here: create it under Settings, Secrets and variables, Actions, Variables, Repository variables (not a secret, not an environment variable), value $ACTOR"
+            fi
+            fail "$ACTOR is not in SULTANC_PROMOTERS ($PROMOTERS): add the login there"
+          fi
           [ "$RUN_REF" = refs/heads/main ] || fail "run this workflow from main (it ran from $RUN_REF)"
           case "$TARGET" in
             beta) source=main ;;
