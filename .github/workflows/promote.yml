@@ -1,8 +1,8 @@
 # Promotion: main -> beta, beta -> master. Started by hand ("Run workflow",
-# from main) by a promoter only: a login in the repository variable
-# SULTANC_PROMOTERS, or the repository owner when the owner is a person (an
-# organization cannot start a run). Nothing else moves beta or master, and
-# nothing ever pushes to them directly.
+# from main) by a promoter only: a repository admin (an organization's owners
+# are admins of its repositories), or a login in the optional repository
+# variable SULTANC_PROMOTERS. Nothing else moves beta or master, and nothing
+# ever pushes to them directly.
 #
 # The rules come from mature compilers:
 #   - test the exact commit, then move the branch to it (Rust's "not rocket
@@ -80,18 +80,20 @@ jobs:
           TARGET: ${{ inputs.target }}
         run: |
           fail() { echo "::error::$1"; echo "Not promoted: $1" >> "$GITHUB_STEP_SUMMARY"; exit 1; }
-          # Promoters: the logins in SULTANC_PROMOTERS (spaces or commas), and
-          # the owner (who can start a run only when the owner is a person).
+          # Promoters: the repository admins (an organization's owners are
+          # admins of its repositories), the owner when the owner is a person,
+          # and the logins in the optional variable SULTANC_PROMOTERS (spaces
+          # or commas).
           allowed=no
           for login in $(printf '%s' "$PROMOTERS" | tr ',' ' ') "$OWNER"; do
             [ "$ACTOR" = "$login" ] && allowed=yes
           done
           if [ "$allowed" != yes ]; then
-            if [ -z "$PROMOTERS" ]; then
-              fail "the repository variable SULTANC_PROMOTERS is empty or not visible here: create it under Settings, Secrets and variables, Actions, Variables, Repository variables (not a secret, not an environment variable), value $ACTOR"
-            fi
-            fail "$ACTOR is not in SULTANC_PROMOTERS ($PROMOTERS): add the login there"
+            role=$(gh api "repos/$REPO/collaborators/$ACTOR/permission" --jq .permission 2>/dev/null) || role=unknown
+            [ "$role" = admin ] && allowed=yes
           fi
+          [ "$allowed" = yes ] ||
+            fail "$ACTOR may not promote (permission: $role): a promoter is a repository admin or a login in the repository variable SULTANC_PROMOTERS${PROMOTERS:+ ($PROMOTERS)}"
           [ "$RUN_REF" = refs/heads/main ] || fail "run this workflow from main (it ran from $RUN_REF)"
           case "$TARGET" in
             beta) source=main ;;
