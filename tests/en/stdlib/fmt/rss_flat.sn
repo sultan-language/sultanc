@@ -1,0 +1,60 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// std.fmt ownership: 10^5 rounds of format, format_into on a reused
+// formatter, floats (shortest and exact digits), Arabic text measured in
+// grapheme clusters, lists, a custom formatter and a format error. The
+// allocator's live bytes after the loop equal those before it.
+// Counterpart: tests/ar/stdlib/fmt/rss_flat.sn. It has no pair directive:
+// the interpreter does not use the std allocator whose counters this reads.
+import std.fmt.fmt;
+import std.os.allocation;
+
+type Point = { x: int, y: int };
+
+def show_point(p: &Point, f: &mutable formatter): result uint, fmt_error {
+    return format_into(f, "({}, {})", [fmt_arg.int((*p).x), fmt_arg.int((*p).y)]);
+}
+
+def round(i: int, out: &mutable formatter): int {
+    let total: mutable int = 0;
+    let name: string = "مُحَمَّد";
+    let nums: vector int = [i, -i, 7];
+    let p: Point = { x: i, y: 2 };
+    let args: vector fmt_arg = [
+        fmt_arg.int(i), fmt_arg.text(&name), fmt_arg.f64((i as f64) / 3.0), fmt_arg.ints(&nums),
+        fmt_arg.custom(fn(f: &mutable formatter): result uint, fmt_error -> show_point(&p, f)), fmt_arg.u8(255)
+    ];
+    match format("{:>8}|{:^10}|{:.3}|{2:e}|{:?}|{}|{:#x}", args) with
+    | result.ok(t) -> { total := total + (length(t) as int); }
+    | result.err(_) -> { return -1; };
+    formatter_clear(out);
+    match format_into(out, "{0:08} {1:.2} {2} {3:#?} {4:?} {5}", [
+        fmt_arg.int(i), fmt_arg.text(&name), fmt_arg.f64((i as f64) / 3.0), fmt_arg.ints(&nums),
+        fmt_arg.custom(fn(f: &mutable formatter): result uint, fmt_error -> show_point(&p, f)), fmt_arg.u8(255)
+    ]) with
+    | result.ok(n) -> { total := total + (n as int); }
+    | result.err(_) -> { return -1; };
+    // A format string that is not a literal is checked at run time.
+    let two: string = "{} {}";
+    match format(two, [fmt_arg.int(i), fmt_arg.text(&name), fmt_arg.ints(&nums)]) with
+    | result.ok(_) -> { return -1; }
+    | result.err(_) -> { total := total + 1; };
+    return total;
+}
+
+def main(): int {
+    let out: mutable formatter = new_formatter();
+    // Warm up with the longest output, so the reused formatter's buffer has
+    // its final capacity before the count is taken.
+    if (round(-99999, &mutable out) < 0) { return 1; };
+    let before: u64 = بايتات_حية_مخصص_النظام();
+    let i: mutable int = 0;
+    while (i < 100000) {
+        if (round(i, &mutable out) < 0) { return 2; };
+        i := i + 1;
+    }
+    let after: u64 = بايتات_حية_مخصص_النظام();
+    if (after != before) { return 3; };
+    return 42;
+}

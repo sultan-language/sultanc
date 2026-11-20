@@ -1,0 +1,35 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// Twin: tests/ar/compiler/c_import_records/main.sn (no `نظير` header: the
+// pair step interprets both twins, and the interpreter cannot call the
+// functions of an imported .c file).
+// Records larger than 16 bytes passed by value to and between functions of
+// an imported .c file (compiled by Jisr). Those functions keep the target's
+// registered convention, the C placement of their records
+// (برنامج_مسير.دوال_اتفاقية_المنصة), while SultanC functions pass such
+// records as hidden references; a C function whose value SultanC takes is
+// called through the function value with the internal convention, so it
+// takes that convention for its direct calls too. A C callee that changes
+// its parameter changes its own copy, and a C callback receives its record
+// by value.
+import "records.c";
+
+def sultan_total(s: big): i64 { return s.a + s.b + s.c + s.d + s.e; }
+
+def main(): int {
+    let s: big = { a: 1, b: 2, c: 3, d: 4, e: 5 };
+    if (total(s) != 15) { return 1; };
+    if (bump(s) != 101 || s.a != 1 || s.e != 5) { return 2; };
+    let r: big = shifted(s);
+    if (r.a != 5 || r.b != 1 || r.e != 4) { return 3; };
+    // bump 101 + first 1 + last 5 + total 15.
+    if (callbacks(s) != 122) { return 4; };
+    if (rotate(s, 5) != 1 || rotate(s, 2) != 4) { return 5; };
+    // The value of a C function, called through a function value.
+    let f: fn(big): i64 = total;
+    if (f(s) != 15 || f(r) != sultan_total(r)) { return 6; };
+    let g: fn(big): i64 = sultan_total;
+    if (g(shifted(r)) != 15) { return 7; };
+    return 42;
+}

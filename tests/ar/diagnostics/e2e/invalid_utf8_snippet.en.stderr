@@ -1,0 +1,6 @@
+error[SULTANC-LEX-INVALID-UTF8]: source contains invalid UTF-8 — The source contains a byte sequence that is not valid UTF-8.
+  --> tests/ar/diagnostics/e2e/invalid_utf8_snippet.sn:8:24..8:25
+   |
+ 8 |     دع القيمة: ص32 = 1 \xFF+ 2;
+   |                        ^^^^
+   |

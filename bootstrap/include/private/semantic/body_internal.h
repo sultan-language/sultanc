@@ -12,6 +12,23 @@
 
 #include <stddef.h>
 
+/* Defines who owns the value that a semantic local (or an lvalue) names.
+ * Stage0's drop lowering gives a moved value's owner flag only to a plain
+ * local; these classes let the checker reject moves that would leave the
+ * real owner still holding the value. */
+typedef enum
+{
+    /* The local owns its value, or the value belongs to a plain local (a
+     * pattern binding of a match on that local), or to a temporary. */
+    __Semantic_Ownership_Owner__ = 0,
+    /* The value still belongs to an enclosing owned aggregate: a field,
+     * element or box payload of an owned place, or a pattern binding of a
+     * match on such a place. Moving it out is a partial move. */
+    __Semantic_Ownership_Projected__,
+    /* The value is read through a reference: a non-owning view. */
+    __Semantic_Ownership_Borrowed__
+} __Semantic_Ownership__;
+
 /* Defines the semantic local structure. */
 typedef struct
 {
@@ -39,6 +56,10 @@ typedef struct
     __Safety_Value_Fact__ __Safety__;
     /* Stores the declaration span. */
     __Source_Span__ __Declaration_Span__;
+    /* Stores who owns this local's value; zero-initialized locals own it. */
+    __Semantic_Ownership__ __Ownership__;
+    /* Tracks whether a copy into this local has set its ownership. */
+    int __Ownership_Assigned__;
 } __Semantic_Local__;
 
 /* Defines the body safety local state structure. */
@@ -61,6 +82,16 @@ typedef struct
     size_t __Count__;
 } __Body_Safety_Snapshot__;
 
+/* One enclosing loop: the safety state reaching its exit through `break`
+ * and `continue` (merged), and the locals visible at its entry. */
+typedef struct __Body_Loop_Frame__
+{
+    struct __Body_Loop_Frame__ *__Outer__;
+    size_t __Locals_At_Entry__;
+    __Body_Safety_Snapshot__ __Exits__;
+    int __Has_Exits__;
+} __Body_Loop_Frame__;
+
 /* Defines the semantic body context structure. */
 typedef struct
 {
@@ -74,12 +105,25 @@ typedef struct
     __Arena__ __Synthetic_Types__;
     /* Stores the scope depth. */
     size_t __Scope_Depth__;
+    /* Stores the unsafe nesting depth. */
+    size_t __Unsafe_Depth__;
     /* Tracks the falls through state. */
     int __Falls_Through__;
+    /* Set only while a copy into a plain local transfers its value: the drop
+     * lowering then records the copied value's borrowed provenance, so a
+     * borrowed value may land there without becoming an owner. */
+    int __Transfer_Into_Plain_Local__;
+    /* References the innermost enclosing loop, or NULL. */
+    __Body_Loop_Frame__ *__Loop__;
+    /* The call argument being checked, while a call's arguments are checked
+     * (body_call.c): a shared borrow of a call result (`&f(x)`) is accepted
+     * only as that argument (body_unary.c). */
+    __Ast_Expression__ *__Call_Borrow_Argument__;
 } __Semantic_Body_Context__;
 
 /* Stores the body builtin int type. */
 extern __Ast_Type__ __Body_Builtin_Int_Type__;
+extern __Ast_Type__ __Body_Builtin_Uint_Type__;
 /* Stores the body builtin bool type. */
 extern __Ast_Type__ __Body_Builtin_Bool_Type__;
 /* Stores the body builtin char type. */
@@ -90,6 +134,11 @@ extern __Ast_Type__ __Body_Builtin_String_Type__;
 extern __Ast_Type__ __Body_Builtin_Void_Type__;
 /* Stores the body builtin u 8 type. */
 extern __Ast_Type__ __Body_Builtin_U8_Type__;
+
+extern __Ast_Type__ __Body_Builtin_U32_Type__;
+extern __Ast_Type__ __Body_Builtin_U64_Type__;
+extern __Ast_Type__ __Body_Builtin_F32_Type__;
+extern __Ast_Type__ __Body_Builtin_F64_Type__;
 
 /* Begins the body diagnostic. */
 __Diagnostic__ *
@@ -111,6 +160,14 @@ int __Body_Name_Exists_In_Current_Scope__(__Semantic_Body_Context__ *, const __S
 int __Body_Report_Borrow_Conflict__(__Semantic_Body_Context__ *,
                                     __Semantic_Local__ *,
                                     __Source_Span__);
+
+/* Checks the elements of a vector literal against its element Type. */
+int __Body_Check_Vector_Elements__(__Semantic_Body_Context__ *,
+                                   __Ast_Type__ *,
+                                   __Ast_Atom__ *,
+                                   __Ast_Expression__ **,
+                                   size_t,
+                                   __Source_Span__);
 
 /* Returns the body synthetic named type. */
 __Ast_Type__ *__Body_Synthetic_Named_Type__(__Semantic_Body_Context__ *, __Text_Slice__);
@@ -210,12 +267,23 @@ void __Body_Safety_Merge__(__Semantic_Body_Context__ *,
 void __Body_Safety_Snapshot_Destroy__(__Body_Safety_Snapshot__ *);
 
 /* Returns the body safety move expression. */
+int __Body_Is_Unbound_Null_Name__(__Semantic_Body_Context__ *, __Ast_Expression__ *);
 int __Body_Safety_Move_Expression__(__Semantic_Body_Context__ *,
                                     __Ast_Expression__ *,
                                     __Semantic_Local__ *);
 
 /* Returns the body safety move atom. */
 int __Body_Safety_Move_Atom__(__Semantic_Body_Context__ *, const __Ast_Atom__ *, __Source_Span__);
+
+/* Classifies who owns the value an lvalue names. */
+int __Body_Lvalue_Ownership__(__Semantic_Body_Context__ *,
+                              __Ast_Lvalue__ *,
+                              __Semantic_Ownership__ *);
+
+/* Classifies who owns the value an expression yields. */
+int __Body_Expression_Ownership__(__Semantic_Body_Context__ *,
+                                  __Ast_Expression__ *,
+                                  __Semantic_Ownership__ *);
 
 /* Returns the body safety transfer expression. */
 int __Body_Safety_Transfer_Expression__(__Semantic_Body_Context__ *,
@@ -278,6 +346,15 @@ int __Body_Try_Infer_Builtin_Call__(__Semantic_Body_Context__ *,
 int __Body_Infer_Call__(__Semantic_Body_Context__ *__Context__,
                         __Ast_Expression__ *__Expression__,
                         __Ast_Type__ **__Out_Type__);
+
+/* Whether an address operand is a text literal ("..." or «...»), which a
+ * shared borrow (`&«x»`) takes as a temporary. */
+int __Body_Is_Text_Literal_Operand__(const __Ast_Expression__ *__Operand__);
+
+/* Whether an expression is a shared borrow of a call result (`&f(x)`),
+ * which a call argument takes as a temporary: the LLVM emitter materializes
+ * the result before the call and drops it right after the call returns. */
+int __Body_Is_Call_Borrow__(const __Ast_Expression__ *__Expression__);
 
 /* Infers the body unary. */
 int __Body_Infer_Unary__(__Semantic_Body_Context__ *__Context__,

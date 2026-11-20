@@ -1,0 +1,14 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// فئة: ownership
+def identity(value: & i32): & i32 { return value; }
+def read(value: & i32): i32 { return *value; }
+
+def main(): i32 {
+    let value: i32 = 42;
+    let first: & i32 = identity(&value);
+    let second: & i32 = identity(first);
+    return read(second);
+}

@@ -1,0 +1,42 @@
+# CodeQL over the C Stage0 (bootstrap/); it does not analyze .sn sources.
+name: SultanC Security
+
+on:
+  push:
+    branches: [main]
+    paths: ['bootstrap/**', 'cmake/**', 'build.sh', '.github/workflows/security.yml']
+  pull_request:
+    branches: [main]
+    paths: ['bootstrap/**', 'cmake/**', 'build.sh', '.github/workflows/security.yml']
+  schedule:
+    - cron: '41 4 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+
+concurrency:
+  group: sultanc-security-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'push' || github.event_name == 'pull_request' }}
+
+jobs:
+  codeql:
+    name: CodeQL / Stage0 C
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: github/codeql-action/init@v3
+        with:
+          languages: c-cpp
+      - name: LLVM 22 (apt.llvm.org)
+        run: |
+          curl -fsSL --retry 3 https://apt.llvm.org/llvm.sh -o "$RUNNER_TEMP/llvm.sh"
+          sudo bash "$RUNNER_TEMP/llvm.sh" 22
+          sudo apt-get install -y llvm-22-dev libllvm22
+      - name: Build Stage0
+        env:
+          LLVM_CONFIG: /usr/lib/llvm-22/bin/llvm-config
+        run: ./build.sh stage0
+      - uses: github/codeql-action/analyze@v3

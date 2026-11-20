@@ -1,0 +1,36 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/stdlib/behavior/map_keys_cloned.sn
+// Key listings for keys that own memory (docs/en/reference/ownership.md, "Generic
+// templates"): btree_map_keys_cloned gives a copy of each key in order, and
+// map_keys_cloned_with copies each key with the function it is given; the maps
+// keep their own keys.
+import std.collections.btree_map;
+import std.collections.map;
+import std.text.compare;
+import std.text.from_bytes;
+
+def length_hash(value: &string): uint { return length(*value) as uint; }
+def same_text(left: &string, right: &string): bool { return texts_equal(left, right); }
+
+def main(): int {
+    let counts: mutable btree_map<string, int> = new_btree_map(compare_texts_lexicographically);
+    btree_map_insert(&mutable counts, "beta", 2);
+    btree_map_insert(&mutable counts, "alpha", 1);
+    let keys: vector string = btree_map_keys_cloned(&counts);
+    if ((length(keys) as uint) != 2) { return 1; };
+    let first: string = "alpha";
+    if (!texts_equal(&keys[0], &first)) { return 2; };
+    let words: mutable map<string, int> = new_map(length_hash, same_text);
+    match map_insert(&mutable words, "gamma", 3) with
+    | result.ok(_) -> { }
+    | result.err(_) -> { return 3; };
+    let word_keys: vector string = map_keys_cloned_with(&words, copy_text);
+    if ((length(word_keys) as uint) != 1) { return 4; };
+    let gamma: string = "gamma";
+    if (!texts_equal(&word_keys[0], &gamma)) { return 5; };
+    if ((btree_map_length(&counts) as uint) != 2) { return 6; };
+    return 42;
+}

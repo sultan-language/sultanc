@@ -1,0 +1,10 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+def main(): i32 {
+    let value: mutable i32 = 40;
+    let reference: & mutable i32 = & mutable value;
+    *reference := *reference + 2;
+    return *reference;
+}

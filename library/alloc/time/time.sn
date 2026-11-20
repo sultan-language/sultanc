@@ -1,0 +1,13 @@
+// The root file of library/alloc/time: the Arabic spellings of its modules
+// (docs/en/reference/modules-and-imports.md, "Module spellings"). The
+// standard library is three libraries (docs/en/reference/std-layers.md); this
+// file names only this library's own children.
+
+module date { ar: تاريخ };
+module duration_text { ar: نص_المدة };
+
+// Re-exported: these children are modules and folders of core, at the same
+// paths (docs/en/reference/std-layers.md). One file, one module.
+module calendar = core.time.calendar { ar: تقويم };
+module duration = core.time.duration { ar: مدة };
+module duration_float = core.time.duration_float { ar: مدة_عشرية };

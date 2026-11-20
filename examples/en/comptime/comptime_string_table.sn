@@ -1,0 +1,16 @@
+// Indexing a constant table at compile time: `comptime` reads entry 3 of a list of primes.
+// The answer is 7.
+import std.io.println;
+import std.text.number;
+
+def code_at(index: int): int {
+    let codes: vector int = [2, 3, 5, 7, 11];
+    return codes[index];
+}
+
+def main(): int {
+    let answer: int = comptime code_at(3);
+    if (answer != 7) { return 1; };
+    println(int_to_text(answer));
+    return 0;
+}

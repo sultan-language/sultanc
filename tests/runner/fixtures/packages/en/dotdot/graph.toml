@@ -1,0 +1,17 @@
+version = 1
+root = "main"
+
+[[package]]
+id = "main"
+source_root = "main"
+name = "main"
+
+[[package]]
+id = "util"
+source_root = "main/../util"
+name = "util"
+
+[[edge]]
+from = "main"
+to = "util"
+name = "util"

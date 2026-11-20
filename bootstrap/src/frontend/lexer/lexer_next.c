@@ -28,6 +28,34 @@ static __Utf8_Decode_Result__ __Lexer_Decode_At__(const __Lexer__ *__Lexer_State
 }
 
 /* Returns the lexer. */
+/* The UTF-8 length of a non-ASCII separator at the cursor, or 0 (canonical
+ * طول_فاصل_يونيكود, compiler/frontend/lexer/lexer.sn): NBSP U+00A0,
+ * U+2000-200A, U+2028/2029, U+202F, U+205F, U+3000, the byte-order mark
+ * U+FEFF and the implicit direction marks U+200E, U+200F and U+061C. The
+ * explicit embedding and isolate controls stay errors. */
+static size_t __Lexer_Unicode_Separator_Length__(__Lexer__ *__Lexer_State__)
+{
+    unsigned char __A__, __B__, __C__;
+    if (!__Lexer_Has__(__Lexer_State__, 2U))
+        return 0U;
+    __A__ = __Lexer_Peek__(__Lexer_State__, 0U);
+    __B__ = __Lexer_Peek__(__Lexer_State__, 1U);
+    if ((__A__ == 0xC2U && __B__ == 0xA0U) || (__A__ == 0xD8U && __B__ == 0x9CU))
+        return 2U;
+    if (!__Lexer_Has__(__Lexer_State__, 3U))
+        return 0U;
+    __C__ = __Lexer_Peek__(__Lexer_State__, 2U);
+    if (__A__ == 0xE2U && __B__ == 0x80U &&
+        (__C__ <= 0x8AU || __C__ == 0x8EU || __C__ == 0x8FU || __C__ == 0xA8U || __C__ == 0xA9U ||
+         __C__ == 0xAFU))
+        return 3U;
+    if ((__A__ == 0xE2U && __B__ == 0x81U && __C__ == 0x9FU) ||
+        (__A__ == 0xE3U && __B__ == 0x80U && __C__ == 0x80U) ||
+        (__A__ == 0xEFU && __B__ == 0xBBU && __C__ == 0xBFU))
+        return 3U;
+    return 0U;
+}
+
 int __Lexer_Next__(__Lexer__ *__Lexer_State__, __Token__ *__Out_Token__)
 {
     /* Stores the start. */
@@ -47,10 +75,16 @@ int __Lexer_Next__(__Lexer__ *__Lexer_State__, __Token__ *__Out_Token__)
         {
             /* Stores the byte. */
             unsigned char __Byte__ = __Lexer_Peek__(__Lexer_State__, 0U);
+            /* Stores the length of a non-ASCII separator here, or 0. */
+            size_t __Unicode__ = __Lexer_Unicode_Separator_Length__(__Lexer_State__);
             if (__Byte__ == (unsigned char)' ' || __Byte__ == (unsigned char)'\t' ||
                 __Byte__ == (unsigned char)'\r' || __Byte__ == (unsigned char)'\n')
             {
                 __Lexer_Advance_Bytes__(__Lexer_State__, 1U);
+            }
+            else if (__Unicode__ != 0U)
+            {
+                __Lexer_Advance_Bytes__(__Lexer_State__, __Unicode__);
             }
             else
             {

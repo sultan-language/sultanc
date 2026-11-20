@@ -1,0 +1,58 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+import "module_00.sn";
+import "module_01.sn";
+import "module_02.sn";
+import "module_03.sn";
+import "module_04.sn";
+import "module_05.sn";
+import "module_06.sn";
+import "module_07.sn";
+import "module_08.sn";
+import "module_09.sn";
+import "module_10.sn";
+import "module_11.sn";
+import "module_12.sn";
+import "module_13.sn";
+import "module_14.sn";
+import "module_15.sn";
+import "module_16.sn";
+import "module_17.sn";
+import "module_18.sn";
+import "module_19.sn";
+import "module_20.sn";
+import "module_21.sn";
+import "module_22.sn";
+import "module_23.sn";
+
+def main(): int {
+    let total: mutable int = 0;
+    total := total + value_00();
+    total := total + value_01();
+    total := total + value_02();
+    total := total + value_03();
+    total := total + value_04();
+    total := total + value_05();
+    total := total + value_06();
+    total := total + value_07();
+    total := total + value_08();
+    total := total + value_09();
+    total := total + value_10();
+    total := total + value_11();
+    total := total + value_12();
+    total := total + value_13();
+    total := total + value_14();
+    total := total + value_15();
+    total := total + value_16();
+    total := total + value_17();
+    total := total + value_18();
+    total := total + value_19();
+    total := total + value_20();
+    total := total + value_21();
+    total := total + value_22();
+    total := total + value_23();
+    if (total == 24) { return 42; };
+    return 1;
+}

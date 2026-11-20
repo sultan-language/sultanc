@@ -1,0 +1,25 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// فئة: control
+def classify(value: int): int {
+    if (value < 0) { return 1; };
+    if (value == 0) { return 2; };
+    if (value < 3) { return 4; };
+    if (value < 6) { return 8; };
+    if (value < 10) { return 16; };
+    return 32;
+}
+
+def main(): int {
+    let a: int = classify(-1);
+    let b: int = classify(0);
+    let c: int = classify(2);
+    let d: int = classify(5);
+    let e: int = classify(8);
+    let f: int = classify(12);
+    if ((a + b + c + d + e + f) != 63) { return 1; };
+    if ((classify(a) + classify(b) + classify(c)) != 16) { return 2; };
+    return 42;
+}

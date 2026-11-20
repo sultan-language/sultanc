@@ -1,0 +1,8 @@
+// اختبار: رفض
+// تشخيص: SULTANC-TYPE-DUPLICATE-RECORD-FIELD
+// نظير: tests/en/diagnostics/semantic/duplicate_record_field.sn
+نوع نقطة = { س: ص32, ص: ص32 };
+عرف الرئيسية(): ص32 {
+    دع النقطة: نقطة = { س: 1, س: 2 };
+    أرجع النقطة.س;
+}

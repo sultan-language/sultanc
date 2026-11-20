@@ -1,0 +1,21 @@
+// اختبار: رفض
+// تشخيص: SULTANC-TYPE-MISMATCH
+// نظير: tests/ar/diagnostics/e2e/every_phase_errors.sn
+// خرج-تشخيص-عربي: every_phase_errors.ar.stderr
+// خرج-تشخيص-إنجليزي: every_phase_errors.en.stderr
+// `check` reports the errors of every phase it can reach, not only the first:
+// both unknown names, then the type error of a function that uses neither.
+// The body that uses an unknown name is set aside, so nothing more is
+// reported from it (no error follows from another).
+def helper(value: i32): i32 {
+    return value;
+}
+def mistyped(): i32 {
+    let count: i32 = "text";
+    return count;
+}
+def main(): i32 {
+    let first: i32 = missing_value + 1;
+    let second: i32 = hlper(2);
+    return first + second + mistyped();
+}

@@ -1,0 +1,79 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 0
+// نظير: tests/ar/ispeak/check_arabic_tables.sn
+import std.io.print;
+import compiler.diagnostics.identity;
+import compiler.diagnostics.reason;
+import compiler.diagnostics.registry;
+import compiler.diagnostics.schema;
+import compiler.ispeak.ispeak;
+import compiler.ispeak.keys.surface;
+
+// Every Arabic table string is Arabic: a string with an ASCII letter and no
+// non-ASCII byte is English left in the `ar` locale. Codes, triples and
+// product names inside an Arabic sentence are fine; only a wholly ASCII
+// string fails. The allowlist names the strings that are machine text in
+// every language. Non-empty is checked too (a missing translation).
+
+def إنجليزي_خالص(النص: &string): bool {
+    let فيه_حرف: mutable bool = false;
+    let ف: mutable uint = 0;
+    while (ف < (length(*النص) as uint)) {
+        let البايت: u8 = (*النص)[ف];
+        if (البايت >= 0x80) { return false; };
+        if ((البايت >= 0x41 && البايت <= 0x5A) || (البايت >= 0x61 && البايت <= 0x7A)) { فيه_حرف := true; };
+        ف := ف + 1;
+    }
+    return فيه_حرف;
+}
+
+def نص_عربي_سليم(النص: string): bool {
+    if ((length(النص) as uint) == 0) { return false; };
+    if (إنجليزي_خالص(&النص)) {
+        let ت: result int, int = اطبع_خطأ("نص إنجليزي في جدول العربية: ");
+        let ث: result int, int = اطبع_خطأ(النص);
+        let ج: result int, int = اطبع_خطأ("\n");
+        return false;
+    };
+    return true;
+}
+
+// The product name stays SultanC in every language.
+def مسموح_نص_مترجم(المفتاح: مفتاح_نص_مترجم): bool {
+    match المفتاح with
+    | مفتاح_نص_مترجم.بادئة_الإصدار -> { return true; }
+    | _ -> { return false; };
+}
+
+def main(): int {
+    let الفشل: mutable int = 0;
+    let المفاتيح: vector مفتاح_رسالة_تشخيص = كل_مفاتيح_رسائل_التشخيص();
+    let ف: mutable uint = 0;
+    while (ف < (length(المفاتيح) as uint)) {
+        if (!نص_عربي_سليم(رسالة_تشخيص(لغة_تشخيص.العربية(), المفاتيح[ف]))) { الفشل := الفشل + 1; };
+        ف := ف + 1;
+    }
+    let المعرفات: vector معرف_تشخيص = كل_معرفات_التشخيص();
+    ف := 0;
+    while (ف < (length(المعرفات) as uint)) {
+        if (!نص_عربي_سليم(شرح_تشخيص(لغة_تشخيص.العربية(), المعرفات[ف]))) { الفشل := الفشل + 1; };
+        ف := ف + 1;
+    }
+    let النصوص: vector مفتاح_نص_مترجم = كل_مفاتيح_النص_المترجم();
+    ف := 0;
+    while (ف < (length(النصوص) as uint)) {
+        if (!مسموح_نص_مترجم(النصوص[ف])) {
+            if (!نص_عربي_سليم(نص_المترجم(لغة_تشخيص.العربية(), النصوص[ف]))) { الفشل := الفشل + 1; };
+        };
+        ف := ف + 1;
+    }
+    let الصياغات: vector مفتاح_صياغة = كل_مفاتيح_الصياغة();
+    ف := 0;
+    while (ف < (length(الصياغات) as uint)) {
+        if (!نص_عربي_سليم(نص_تفصيل_ثابت(لغة_تشخيص.العربية(), الصياغات[ف]))) { الفشل := الفشل + 1; };
+        ف := ف + 1;
+    }
+    if (الفشل > 0) { return 1; };
+    return 0;
+}

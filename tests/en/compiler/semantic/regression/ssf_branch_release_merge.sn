@@ -1,0 +1,5 @@
+def main(): int {
+    let text: string = "hello";
+    if (true) { release(text); } else { let keep: int = 0; }
+    return length(text);
+}

@@ -1,0 +1,52 @@
+استورد عمليات.وسيطة;
+استورد نصوص.أعداد;
+استورد دخ.اطبع_سطر;
+استورد أخطاء.فشل;
+
+// The runtime of `sultanc test` (docs/en/reference/testing.md,
+// compiler/test_mode/harness.sn). The compiler builds the program with an
+// entry it synthesizes in MSIR from the functions marked `@@test`
+// (`@@اختبار`); the driver then runs that executable once per test, as
+// `<program> <index>`, so a panic, a failed assertion, a trap or an exit in
+// one test cannot stop the others. The entry asks اختبار_مطلوب_تشغيله which
+// test the argument selects and calls it; a test returning the canonical
+// result ends through أنه_نتيجة_اختبار. Nothing here runs in an ordinary
+// build: only the synthesized entry refers to it.
+//
+// A test returns nothing, or the canonical result `نتيجة عدد, فشل`
+// (`result int, Error`, std.error.failure), the result `main` may return
+// (`نتيجة فراغ, …` has no value to return). For a test the value in
+// `نتيجة.نجح` is not used: a test that returns it passes. The exit
+// statuses the driver reads: 0 passed; 1 the program stopped (a panic or a
+// failed assertion: std.process.failure has written why); 3 the test
+// returned an error (its صف_فشل text on standard error); 2 no test has that
+// index; any other status, or a signal, is reported as it is.
+
+// Whether the program's first argument selects test number الفهرس.
+عام عرف اختبار_مطلوب_تشغيله(الفهرس: عدد): منطقي {
+    طابق وسيطة(1) مع
+    | اختياري.لا_شيء -> { أرجع خطأ; }
+    | اختياري.موجود(النص) -> {
+        طابق حلل_طبيعي(&النص) مع
+        | نتيجة.نجح(القيمة) -> { أرجع الفهرس >= 0 && القيمة == (الفهرس مثل طبيعي); }
+        | نتيجة.خطأ(_) -> { أرجع خطأ; };
+    };
+}
+
+// The exit status of a test that returned النتيجة: 0 for success; for an
+// error, its text on standard error and 3.
+عام عرف أنه_نتيجة_اختبار(النتيجة: نتيجة عدد, فشل): عدد {
+    طابق النتيجة مع
+    | نتيجة.نجح(_) -> { أرجع 0; }
+    | نتيجة.خطأ(الفشل) -> {
+        دع السطر: نص = صف_فشل(&الفشل);
+        دع مكتوب: نتيجة عدد, عدد = اطبع_سطر_خطأ(&السطر);
+        أرجع 3;
+    };
+}
+
+// A function of no result: its signature is what a test returning nothing has.
+عام عرف اختبار_بلا_ناتج(): فراغ { }
+
+عام مرادف test_selected = اختبار_مطلوب_تشغيله;
+عام مرادف finish_test_result = أنه_نتيجة_اختبار;

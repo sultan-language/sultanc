@@ -1,0 +1,64 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// نظير: tests/ar/language/safety/text_byte_borrow.sn
+// `&s[i]` borrows byte i of a text: a shared `&u8` of an immutable byte in
+// the text's buffer (writes and mutable borrows are rejected). Of a local, a
+// parameter, a borrowed text returned from a function, a global, an element
+// of a vector of text; every byte of a text through borrows, and the UTF-8
+// bytes of Arabic text.
+let greeting: string = "hello";
+
+def byte_at(text: &string, i: int): &u8 {
+    return &(*text)[i];
+}
+
+def sum_bytes(text: &string): int {
+    let total: mutable int = 0;
+    let i: mutable int = 0;
+    while (i < (length(*text) as int)) {
+        let b: &u8 = &(*text)[i];
+        total := total + ((*b) as int);
+        i := i + 1;
+    }
+    return total;
+}
+
+def main(): int {
+    // A local.
+    let word: string = "Sultan";
+    let first: &u8 = &word[0];
+    let last: &u8 = &word[5];
+    if (*first != 83 || *last != 110) { return 1; };
+
+    // A parameter, and a borrow returned from a function.
+    if (*byte_at(&word, 1) != 117) { return 2; };
+    let view: &string = &word;
+    let third: &u8 = &(*view)[2];
+    if (*third != 108) { return 3; };
+
+    // A global.
+    let h: &u8 = &greeting[0];
+    if (*h != 104 || sum_bytes(&greeting) != 532) { return 4; };
+
+    // Every byte through borrows.
+    if (sum_bytes(&word) != 631) { return 5; };
+
+    // An element of a vector of text.
+    let words: vector string = ["ab", "cd"];
+    let d: &u8 = &words[1][1];
+    if (*d != 100) { return 6; };
+
+    // Arabic text: alif is 0xD8 0xA7, ba is 0xD8 0xA8.
+    let arabic: string = "اب";
+    if (length(arabic) != 4) { return 7; };
+    let lead: &u8 = &arabic[0];
+    let trail: &u8 = &arabic[3];
+    if (*lead != 216 || *trail != 168 || *byte_at(&arabic, 1) != 167) { return 8; };
+    if (sum_bytes(&arabic) != 216 + 167 + 216 + 168) { return 9; };
+
+    // A borrow agrees with the byte read by value.
+    if (*first != word[0] || *trail != arabic[3]) { return 10; };
+
+    return 42;
+}

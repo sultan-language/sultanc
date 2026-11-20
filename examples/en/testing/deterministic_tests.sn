@@ -1,0 +1,13 @@
+// Self-checking example: deterministic_tests.
+import std.io.println;
+import std.text.number;
+import std.debug.assert;
+
+def seeded_step(n: int): int { return (n * 1103515245 + 12345) & 65535; }
+def main(): int {
+    let first: int = seeded_step(17);
+    let second: int = seeded_step(17);
+    assert(first == second);
+    println(int_to_text(first));
+    return 0;
+}

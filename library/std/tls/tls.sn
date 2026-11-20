@@ -1,0 +1,17 @@
+// The root file of std.tls: the Arabic spellings of its modules
+// (docs/en/reference/modules-and-imports.md, "Module spellings"). An import may
+// use either name; both name one module.
+
+module client { ar: عميل };
+module config { ar: إعداد };
+module errors { ar: أخطاء };
+module key_exchange { ar: تبادل_المفاتيح };
+module pkcs12 { ar: بي_كي_سي_إس12 };
+module record { ar: سجل };
+module server { ar: خادم };
+module signature { ar: توقيع };
+module stream { ar: مجرى };
+module trust { ar: ثقة };
+module verify { ar: تحقق };
+module wire { ar: سلك };
+module x509 { ar: إكس509 };

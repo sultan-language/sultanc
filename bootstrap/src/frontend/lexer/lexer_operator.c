@@ -21,12 +21,15 @@ static const __Operator_Entry__ __Operators__[] = {
 #define SULTANC__KEYWORD__(Name, English, Arabic)
 /* Expands the bool keyword macro. */
 #define SULTANC__BOOL_KEYWORD__(English, Arabic, Value)
+/* Expands the deprecated keyword spelling macro. */
+#define SULTANC__KEYWORD_DEPRECATED__(Name, Old, New)
 /* Expands the operator macro. */
 #define SULTANC__OPERATOR__(Name, Spelling) {Spelling, __Token_##Name##__},
 #include "frontend/lexer/token_registry.def"
 #undef SULTANC__TOKEN__
 #undef SULTANC__KEYWORD__
 #undef SULTANC__BOOL_KEYWORD__
+#undef SULTANC__KEYWORD_DEPRECATED__
 #undef SULTANC__OPERATOR__
 };
 

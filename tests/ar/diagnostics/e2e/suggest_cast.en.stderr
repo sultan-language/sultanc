@@ -1,0 +1,7 @@
+error[SULTANC-TYPE-MISMATCH]: expected `u8`, found `i32` — The value does not match the declared type of its destination.
+  --> tests/ar/diagnostics/e2e/suggest_cast.sn:10:21..10:26
+    |
+ 10 |     دع الصغير: ط8 = العدد;
+    |                     ^^^^^
+    |
+  = help: convert the value explicitly with `as`

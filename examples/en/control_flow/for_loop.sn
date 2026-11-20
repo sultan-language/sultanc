@@ -1,0 +1,14 @@
+// A C-style `for` loop with `continue` and `break`.
+import std.io.println;
+import std.text.number;
+
+def main(): int {
+    let total: mutable int = 0;
+    for (let i: mutable int = 1; i <= 100; i := i + 1) {
+        if (i % 3 == 0) { continue; };
+        if (i > 10) { break; };
+        total := total + i;
+    }
+    println(int_to_text(total));
+    return 0;
+}

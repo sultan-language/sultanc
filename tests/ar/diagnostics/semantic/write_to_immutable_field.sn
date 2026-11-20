@@ -1,0 +1,9 @@
+// اختبار: رفض
+// تشخيص: SULTANC-MUTABILITY-WRITE-TO-IMMUTABLE
+// نظير: tests/en/diagnostics/semantic/write_to_immutable_field.sn
+نوع نقطة = { س: ص32, ص: ص32 };
+عرف الرئيسية(): ص32 {
+    دع النقطة: نقطة = { س: 1, ص: 2 };
+    النقطة.س := 3;
+    أرجع النقطة.س;
+}

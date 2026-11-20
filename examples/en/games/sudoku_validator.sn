@@ -1,0 +1,17 @@
+// Validating a Sudoku row: every digit from 1 to 9 must appear exactly once.
+import std.io.println;
+import std.text.number;
+
+def main(): int {
+    let row: vector int = [5, 3, 4, 6, 7, 8, 9, 1, 2];
+    let seen: mutable vector bool = [false, false, false, false, false, false, false, false, false, false];
+    let i: mutable int = 0;
+    while (i < 9) {
+        let v: int = row[i];
+        if (v < 1 || v > 9 || seen[v]) { return 1; };
+        seen[v] := true;
+        i := i + 1;
+    };
+    println("valid row");
+    return 0;
+}

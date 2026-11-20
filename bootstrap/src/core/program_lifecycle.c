@@ -9,10 +9,11 @@
 #include <string.h>
 
 /* Initializes the program. */
-void __Program_Init__(__Program__ *__Program_State__)
+void __Program_Init__(__Program__ *__Program_State__, const __Bootstrap_Target__ *__Target__)
 {
     memset(__Program_State__, 0, sizeof(*__Program_State__));
     __Vector_Init__(&__Program_State__->__Units__, sizeof(__Program_Unit__));
+    __Program_State__->__Target__ = __Target__;
 }
 
 /* Releases the program. */

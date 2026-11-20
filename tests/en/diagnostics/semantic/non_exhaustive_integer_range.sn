@@ -1,0 +1,10 @@
+// اختبار: رفض
+// تشخيص: SULTANC-PATTERN-NON-EXHAUSTIVE
+// نظير: tests/ar/diagnostics/semantic/non_exhaustive_integer_range.sn
+// 101 is in neither range.
+def main(): i32 {
+    let level: u8 = 7;
+    match level with
+    | range 0 to 100 -> { return 0; }
+    | range 102 to 255 -> { return 1; }
+}

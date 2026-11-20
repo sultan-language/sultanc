@@ -1,0 +1,13 @@
+// OS API example: system_entropy.
+import std.io.println;
+import std.text.number;
+import std.os.entropy;
+
+
+def main(): int {
+    let bytes: mutable vector u8 = [0 as u8, 0 as u8, 0 as u8, 0 as u8];
+    match os_fill_random_bytes(&mutable bytes) with
+    | result.ok(count) -> { println(uint_to_text(count)); }
+    | result.err(_) -> { return 1; };
+    return 0;
+}

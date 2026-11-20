@@ -1,0 +1,46 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/stdlib/behavior/env_variables.sn
+// std.env.variables: every listed variable has a name, the home directory
+// is absent or not empty, and the working directory can be changed and
+// restored.
+import std.env.variables;
+import std.env.environment;
+import std.text.compare;
+
+def main(): int {
+    match environment_variables() with
+    | result.err(_) -> { return 1; }
+    | result.ok(variables) -> {
+        let i: mutable uint = 0;
+        while (i < (length(variables) as uint)) {
+            if (length(variables[i].الاسم) == 0) { return 2; };
+            i := i + 1;
+        }
+    };
+    match home_directory() with
+    | result.err(_) -> { return 3; }
+    | result.ok(option.some(home)) -> { if (length(home) == 0) { return 4; }; }
+    | result.ok(option.none) -> {};
+    let original: mutable string = "";
+    match current_directory() with
+    | result.err(_) -> { return 5; }
+    | result.ok(directory) -> { original := directory; };
+    let root: string = "/";
+    match set_current_directory(&root) with
+    | result.err(_) -> { return 6; }
+    | result.ok(_) -> {};
+    match current_directory() with
+    | result.err(_) -> { return 7; }
+    | result.ok(directory) -> { if (!texts_equal(&directory, &root)) { return 8; }; };
+    match set_current_directory(&original) with
+    | result.err(_) -> { return 9; }
+    | result.ok(_) -> {};
+    let empty: string = "";
+    match set_current_directory(&empty) with
+    | result.err(_) -> {}
+    | result.ok(_) -> { return 10; };
+    return 42;
+}

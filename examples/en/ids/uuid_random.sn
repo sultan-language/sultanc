@@ -1,0 +1,13 @@
+// Worked ids example: uuid_random.
+import std.io.println;
+import std.text.number;
+import std.uuid.uuid;
+import std.uuid.generate;
+
+
+def main(): int {
+    match uuid_v4() with
+    | result.err(_) -> { return 1; }
+    | result.ok(id) -> { println(uuid_to_text(&id)); };
+    return 0;
+}

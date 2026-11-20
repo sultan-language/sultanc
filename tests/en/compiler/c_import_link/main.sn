@@ -1,0 +1,30 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// نظير: tests/ar/compiler/c_import_link/main.sn
+// Two .c files imported by different SultanC modules call each other, as
+// separately compiled C files linked into one program do: left.c (imported
+// by left.sn) calls twice, sum_pt and make_pt of right.c (imported by
+// right.sn), and right.c calls left_base of left.c. Each call is a direct
+// call of the other file's compiled function (MSIR binds a C import's
+// extern to the compiled definition of its symbol), not a linker symbol.
+// struct pt from link.h is one record in the program: right.c's module
+// takes it from left.c's (compiler/jisr/shared.sn), and the frontend makes
+// it visible to every importer of either. This module also imports the
+// header: its prototypes call the same compiled functions, and a name the
+// header declares and a .c file defines is that one function.
+import "left.sn";
+import "right.sn";
+import "link.h";
+
+def main(): int {
+    // use_left(10) = twice(10) + sum_pt({10, 1}) = 20 + 11 = 31
+    if (from_left(10) != 31) { return 1; };
+    // right_total() + sum_pt({2, 3}) = (5 + 2) + 5 = 12
+    if (from_right() != 12) { return 2; };
+    // Through the header's prototypes.
+    let p: pt = make_pt(1, 2);
+    if (sum_pt(p) != 3 || twice(4) != 8 || use_left(0) != 1) { return 3; };
+    // 31 + 12 - 1 = 42
+    return (from_left(10) + from_right() - left_base() + 4) as int;
+}

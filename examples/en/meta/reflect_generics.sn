@@ -1,0 +1,11 @@
+// Compile-time type introspection: reflect_generics.
+import std.io.println;
+import std.text.number;
+import std.meta.reflect;
+
+type Pair<T> = { first: T, second: T };
+def main(): int {
+    let sample: Pair<int> = { first: 1, second: 2 };
+    println(uint_to_text(field_count(&sample) as uint));
+    return 0;
+}

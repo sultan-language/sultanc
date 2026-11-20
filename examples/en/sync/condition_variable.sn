@@ -1,0 +1,13 @@
+// Synchronization primitive: condition_variable.
+import std.io.println;
+import std.text.number;
+import std.sync.condvar;
+
+
+def main(): int {
+    let cv: condvar = condvar_new();
+    condvar_notify_one(&cv);
+    condvar_notify_all(&cv);
+    println("notification sent");
+    return 0;
+}

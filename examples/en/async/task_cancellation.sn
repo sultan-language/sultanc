@@ -1,0 +1,15 @@
+// Cooperative task scheduler: task_cancellation.
+import std.io.println;
+import std.text.number;
+import std.async.runtime;
+
+def do_job(n: int): int { yield_task(); return n * 2; }
+
+def main(): int {
+    // There is no cancel_task API: observe completion rather than claiming cancellation.
+    let job: mutable task<int> = spawn_task(fn(): int -> do_job(5));
+    match await_task(&mutable job) with
+    | option.some(n) -> { println(int_to_text(n)); }
+    | option.none -> { return 1; };
+    return 0;
+}

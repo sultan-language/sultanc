@@ -1,0 +1,29 @@
+// اختبار: تفاضلي
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/stdlib/behavior/env_executable.sn
+// std.env.executable (Rust env::current_exe): the running executable's
+// path is absolute and names an existing file, and asking twice gives the
+// same path. Interpreted, the running executable is the interpreter.
+import std.env.executable;
+import std.fs.metadata;
+import std.fs.path;
+import std.fs.canonical;
+import std.text.compare;
+
+def main(): int {
+    let first: mutable string = "";
+    match current_executable() with
+    | result.err(_) -> { return 1; }
+    | result.ok(path) -> { first := path; };
+    if (length(first) == 0) { return 2; };
+    if (!is_absolute_for(&first, host_path_flavor())) { return 3; };
+    match exists(&first) with
+    | result.err(_) -> { return 4; }
+    | result.ok(false) -> { return 5; }
+    | result.ok(true) -> {};
+    match current_executable() with
+    | result.err(_) -> { return 6; }
+    | result.ok(again) -> { if (!texts_equal(&first, &again)) { return 7; }; };
+    return 42;
+}

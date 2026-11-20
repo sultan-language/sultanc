@@ -1,0 +1,11 @@
+// اختبار: رفض
+// أهداف: arm64-darwin,x86_64-linux
+// تشخيص: SULTANC-TYPE-OPAQUE-POINTER-ARITHMETIC
+// نظير: tests/en/language/opaque/reject_pointer_index.sn
+// فهرسة مؤشر إلى نوع معتم تخطو بحجم ليس له.
+نوع قاعدة = معتم;
+عرف الرئيسية(): عدد {
+    دع م: *قاعدة = 0 مثل *قاعدة;
+    غير_آمن { دع ن: *قاعدة = م[1]; };
+    أرجع 0;
+}

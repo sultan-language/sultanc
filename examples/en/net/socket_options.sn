@@ -1,0 +1,12 @@
+// Parse and print IPv4: socket_options.
+import std.io.println;
+import std.net.ip;
+
+
+def main(): int {
+    let address: string = "127.0.0.7";
+    match parse_ipv4(&address) with
+    | result.ok(ip) -> { println(ipv4_to_text(&ip)); }
+    | result.err(_) -> { println("invalid IP"); };
+    return 0;
+}

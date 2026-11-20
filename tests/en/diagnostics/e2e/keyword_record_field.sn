@@ -1,0 +1,11 @@
+// اختبار: رفض
+// تشخيص: SULTANC-PARSE-SYNTAX
+// نظير: tests/ar/diagnostics/e2e/keyword_record_field.sn
+// خرج-تشخيص-عربي: keyword_record_field.ar.stderr
+// خرج-تشخيص-إنجليزي: keyword_record_field.en.stderr
+// A keyword as a record field name is a syntax error at the keyword, with
+// a help to choose another name (it was an internal parser failure).
+type edge = { from: int, to: int };
+def main(): i32 {
+    return 0;
+}

@@ -1,0 +1,46 @@
+// اختبار: تشغيل
+// أهداف: x86_64-linux,x86_64-windows-msvc
+// خروج: 42
+// نظير: tests/ar/codegen/x86_64_windows/win64_variadic_floats.sn
+// A C variadic call on Windows (the declared call shape `sprintf...2`):
+// Microsoft x64 passes a floating-point variadic argument in its register
+// slot's XMM register and in the slot's integer register as well (the
+// callee's va_arg reads the integer registers' home area), and a later one
+// in its stack slot; Windows on Arm passes every variadic argument, floats
+// included, in the next x registers. "%g/%d/%g|%d %g" with 2.5, 7, 0.25, 9
+// and 1.5 formats "2.5/7/0.25|9 1.5". Elsewhere the program checks the same
+// bytes without the call.
+if (target.platform == "windows") {
+    extern "msvcrt.dll" def format5(
+        out: *mutable u8, format: *u8, a: f64, b: i64, c: f64, d: i64, e: f64
+    ): i32 = "sprintf...2";
+
+    def formatted(buffer: &mutable vector u8): int {
+        let format: vector u8 = [37, 103, 47, 37, 100, 47, 37, 103, 124, 37, 100, 32, 37, 103, 0];
+        let n: mutable i32 = 0;
+        unsafe { n := format5(&mutable (*buffer)[0], &format[0], 2.5, 7, 0.25, 9, 1.5); }
+        return n as int;
+    }
+}
+if (target.platform != "windows") {
+    def formatted(buffer: &mutable vector u8): int {
+        let text: vector u8 = [50, 46, 53, 47, 55, 47, 48, 46, 50, 53, 124, 57, 32, 49, 46, 53];
+        let i: mutable int = 0;
+        while (i < 16) { (*buffer)[i] := text[i]; i := i + 1; }
+        return 16;
+    }
+}
+
+def main(): int {
+    let buffer: mutable vector u8 = [];
+    let i: mutable int = 0;
+    while (i < 64) { append(buffer, 0); i := i + 1; }
+    if (formatted(&mutable buffer) != 16) { return 1; };
+    let expected: vector u8 = [50, 46, 53, 47, 55, 47, 48, 46, 50, 53, 124, 57, 32, 49, 46, 53];
+    let k: mutable int = 0;
+    while (k < 16) {
+        if (buffer[k] != expected[k]) { return 10 + k; };
+        k := k + 1;
+    }
+    return 42;
+}

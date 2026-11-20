@@ -1,0 +1,13 @@
+// اختبار: رفض
+// أهداف: arm64-darwin,x86_64-linux
+// تشخيص: SULTANC-CALL-ARGUMENT-TYPE-MISMATCH
+// نظير: tests/en/compiler/c_import_opaque/reject_mismatch.sn
+// كل مقبض سي نوع قائم بذاته: تمرير عبارة حيث تُنتظر قاعدة بيانات مرفوض وقت
+// الترجمة.
+استورد "handles.h";
+
+عرف الرئيسية(): عدد {
+    دع ع: *متغير stmt = db_prepare(db_open(1), 1);
+    db_close(ع);
+    أرجع 0;
+}

@@ -1,0 +1,13 @@
+// Show the canonical nil/max UUID range boundaries.
+import std.io.println;
+import std.text.number;
+import std.uuid.uuid;
+
+
+def main(): int {
+    let first: uuid = nil_uuid();
+    let last: uuid = max_uuid();
+    println(uuid_to_text(&first));
+    println(uuid_to_text(&last));
+    return 0;
+}

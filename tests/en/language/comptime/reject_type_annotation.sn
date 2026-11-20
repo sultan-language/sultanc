@@ -1,0 +1,9 @@
+// اختبار: رفض
+// خروج: 1
+// تشخيص: SULTANC-ANNOTATION-UNSUPPORTED
+def marker(x: int): int { return x; }
+
+@marker
+type Point = { x: int, y: int };
+
+def main(): int { return 42; }

@@ -1,0 +1,11 @@
+// Two mutually recursive predicates.
+import std.io.println;
+import std.text.number;
+
+def even(n: int): bool { if (n == 0) { return true; }; return odd(n - 1); }
+def odd(n: int): bool { if (n == 0) { return false; }; return even(n - 1); }
+
+def main(): int {
+    if (even(7)) { println("even"); } else { println("odd"); };
+    return 0;
+}

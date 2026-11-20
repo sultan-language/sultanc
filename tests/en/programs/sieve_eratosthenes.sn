@@ -1,0 +1,27 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/programs/sieve_eratosthenes.sn
+def main(): int {
+    let composite: mutable vector bool = [false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false];
+    let p: mutable uint = 2;
+    while ((p * p) < 32) {
+        if (!composite[p]) {
+            let multiple: mutable uint = p * p;
+            while (multiple < 32) {
+                composite[multiple] := true;
+                multiple := multiple + p;
+            }
+        };
+        p := p + 1;
+    }
+    let count: mutable int = 0;
+    let i: mutable uint = 2;
+    while (i < 32) {
+        if (!composite[i]) { count := count + 1; };
+        i := i + 1;
+    }
+    if (count == 11) { return 42; };
+    return 1;
+}

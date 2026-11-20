@@ -1,0 +1,9 @@
+def take(value: string): int {
+    return length(value);
+}
+
+def main(): int {
+    let text: string = "hello";
+    let size: int = take(text);
+    return length(text) + size;
+}

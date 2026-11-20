@@ -1,0 +1,12 @@
+type Mark = | A | B | C;
+
+def main(): i32 {
+    let x: Mark = Mark.B();
+    let same: bool = Mark.A() == Mark.A();
+    let different: bool = Mark.A() != Mark.B();
+    if (!same) { return 1; };
+    if (!different) { return 2; };
+    if (x == Mark.A()) { return 3; };
+    if (x != Mark.B()) { return 4; };
+    return 42;
+}

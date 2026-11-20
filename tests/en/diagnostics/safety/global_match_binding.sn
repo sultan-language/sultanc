@@ -1,0 +1,13 @@
+// اختبار: رفض
+// تشخيص: SULTANC-OWNERSHIP-MOVE-OUT-OF-REFERENCE
+// نظير: tests/ar/diagnostics/safety/global_match_binding.sn
+// A binding would own the payload of a writable global: the global keeps it.
+let numbers: mutable vector int = [1, 2, 3];
+
+def main(): int {
+    // A writable vector global is used inside an unsafe scope (static mut).
+    unsafe {
+        match numbers with
+        | taken -> { return length(taken); };
+    };
+}

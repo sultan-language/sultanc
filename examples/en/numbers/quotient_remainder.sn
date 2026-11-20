@@ -1,0 +1,11 @@
+// Numbers: quotient remainder.
+import std.io.println;
+import std.text.number;
+
+
+def main(): int {
+    let n: int = 660;
+    println(int_to_text(n / 7));
+    println(int_to_text(n % 7));
+    return 0;
+}

@@ -1,0 +1,17 @@
+def mutate(value: & mutable i32): i32 {
+    *value := *value + 2;
+    return *value;
+}
+
+def forward(value: & mutable i32): i32 {
+    return mutate(value);
+}
+
+def main(): i32 {
+    let original: mutable i32 = 40;
+    let observed: i32 = forward(& mutable original);
+    if (observed != 42) {
+        return 1;
+    };
+    return original;
+}

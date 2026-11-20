@@ -1,0 +1,28 @@
+// A task scheduler: pick the task with the nearest due time.
+import std.io.println;
+import std.text.number;
+import std.text.compare;
+
+type Task = { label: string, due: int };
+
+def main(): int {
+    let tasks: vector Task = [
+        { label: "review", due: 19 },
+        { label: "build", due: 4 },
+        { label: "release", due: 10 }
+    ];
+    let soon: mutable int = 999;
+    let selected: mutable string = "";
+    let i: mutable int = 0;
+    while (i < length(tasks)) {
+        if (tasks[i].due < soon) {
+            soon := tasks[i].due;
+            selected := clone(&tasks[i].label);
+        };
+        i := i + 1;
+    };
+    let expected: string = "build";
+    if (!texts_equal(&selected, &expected)) { return 1; };
+    println(selected);
+    return 0;
+}

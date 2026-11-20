@@ -1,0 +1,34 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// نظير: tests/ar/compiler/c_import/main.sn
+// C interop (Jisr, compiler/jisr): `import "vec.c"` compiles vec.c into
+// the program (no C compiler) and reads its declarations and vec.h's as
+// SultanC: its functions with their C signatures (vec.h declares `vec *`
+// and only vec.c completes struct vec: an opaque type, its pointers typed;
+// char * is *mutable u8; a function pointer is an address word; the
+// variadic vec_printf is callable with its fixed arguments), enum values
+// and integer and string macros as constants (VEC_SQUARE, a function-like
+// macro, is not one). `import "errno.h"` reads a system header: EINVAL
+// comes from the bits/ headers it includes.
+import "vec.c";
+import "errno.h";
+
+def main(): int {
+    if (VEC_VERSION != 66051 || VEC_LIMIT != 258 || VEC_NEG != -5 || VEC_MASK != 2147483648) { return 1; };
+    if (VEC_EMPTY != 0 || VEC_SMALL != 4 || VEC_LARGE != 5) { return 2; };
+    if (length(VEC_NAME) != 3) { return 3; };
+    if (EINVAL <= 0) { return 4; };
+    let v: *mutable vec = vec_new(2);
+    if (v == 0 as *mutable vec) { return 5; };
+    let i: mutable i64 = 1;
+    while (i <= 6) {
+        if (vec_push(v, i) != 1) { return 6; };
+        i := i + 1;
+    }
+    if (vec_length(v) != 6 || vec_sum(v) != 21 || vec_mean(v) != 3.5) { return 7; };
+    let name: mutable vector u8 = [0, 0, 0, 0, 0, 0, 0, 0];
+    if (vec_name_copy(&mutable name[0], 8) != 3 || name[0] != 118 || name[3] != 0) { return 8; };
+    vec_free(v);
+    return 42;
+}

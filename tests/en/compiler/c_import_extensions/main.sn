@@ -1,0 +1,22 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// نظير: tests/ar/compiler/c_import_extensions/main.sn
+// Compiled C beyond the core: variable-length arrays (storage made where
+// each is declared, sizeof at run time), computed goto (`&&label` is the
+// label's block in the function's dispatcher, `goto *p` continues there),
+// _BitInt(N) for 64 < N <= 128 (the 128-bit helpers, wrapped within N
+// bits), thread-local objects (each thread's copy of their initial values,
+// compiler/jisr/lower.sn), and long double as f64 where the target's long
+// double is double (the arm64-darwin object; on x86-64 Linux it is 80-bit
+// and a value of it is SULTANC-C-UNSUPPORTED).
+import "ext.c";
+
+def main(): int {
+    if (vla_test(3) != 69) { return 1; };
+    if (goto_test() != 32) { return 2; };
+    if (bitint_test() != 42) { return 3; };
+    if (tls_test() != 42) { return 4; };
+    if (long_double_test() != 42) { return 5; };
+    return 42;
+}

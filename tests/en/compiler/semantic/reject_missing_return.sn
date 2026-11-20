@@ -1,0 +1,6 @@
+def main(): int {
+    let condition: bool = true;
+    if (condition) {
+        return 42;
+    };
+}

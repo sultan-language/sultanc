@@ -1,0 +1,67 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/language/surface/temporary_members.sn
+// Members, elements and calls of a call result (a temporary): `make().name`
+// moves the field out, `make().id` copies it, `make().inner.name` reaches a
+// nested member, `make().callback(3)` calls a closure field, `words()[1]`
+// reads an element, `adder(1)(2)` calls a returned closure. Rust's rules for
+// temporaries apply: the rest of the temporary is destroyed.
+import std.text.number;
+
+type Inner = { name: string, n: int };
+type Rec = { name: string, id: int, callback: fn(int): int, inner: Inner, items: vector string };
+
+def adder(k: int): fn(int): int { return fn(x: int): int -> x + k; }
+
+def make(i: int): Rec {
+    let items: mutable vector string = [];
+    append(items, int_to_text(i));
+    append(items, int_to_text(i + 10));
+    let inner: Inner = { name: int_to_text(i * 2), n: i };
+    let r: Rec = { name: int_to_text(i), id: i, callback: adder(i), inner: inner, items: items };
+    return r;
+}
+
+def words(i: int): vector string {
+    let w: mutable vector string = [];
+    append(w, int_to_text(i));
+    append(w, int_to_text(i + 100));
+    return w;
+}
+
+def numbers(i: int): vector int {
+    let w: mutable vector int = [];
+    append(w, i);
+    append(w, i + 7);
+    return w;
+}
+
+def size(s: string): int { return length(s) as int; }
+
+def main(): int {
+    let total: mutable int = 0;
+    total := total + make(4).id;
+    let name: string = make(25).name;
+    total := total + size(name);
+    total := total + make(5).callback(3);
+    let f: fn(int): int = make(6).callback;
+    total := total + f(1);
+    let inner: string = make(50).inner.name;
+    total := total + size(inner);
+    total := total + make(3).inner.n;
+    total := total + size(make(123).name);
+    total := total + (length(make(7).items) as int);
+    total := total + numbers(2)[1];
+    let w: string = words(5)[1];
+    total := total + size(w);
+    let item: string = make(8).items[1];
+    total := total + size(item);
+    total := total + adder(1)(2);
+    match make(9).inner.n with
+    | 9 -> { total := total + 1; }
+    | _ -> { };
+    if (total != 50) { return total; };
+    return 42;
+}

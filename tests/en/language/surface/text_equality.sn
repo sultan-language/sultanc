@@ -1,0 +1,27 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/language/surface/text_equality.sn
+// `==` and `!=` on text compare the contents byte by byte, as std's
+// texts_equal does: places, literals and call results, in a condition and as
+// a value, and inside a generic instantiated with string. Neither operand is
+// moved, so a text compared twice stays usable.
+def word(): string { return "Sultan"; }
+def same<T>(a: T, b: T): bool { return a == b; }
+
+def main(): int {
+    let name: string = "Sultan";
+    let other: string = "Sultana";
+    let empty: string = "";
+    let score: mutable int = 0;
+    if (name == "Sultan") { score := score + 10; };
+    if (name != other) { score := score + 10; };
+    if (word() == name) { score := score + 10; };
+    if (empty == "") { score := score + 5; };
+    if (name == "sultan") { score := score + 100; };
+    let differ: bool = "abc" != "abd";
+    if (differ) { score := score + 3; };
+    if (same("ab", "ab") && !same("ab", "ba") && same(7, 7)) { score := score + 4; };
+    return score + (length(name) as int) - 6;
+}

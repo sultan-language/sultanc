@@ -1,0 +1,11 @@
+// Sine at the origin.
+import std.io.println;
+import std.text.number;
+import std.math.trigonometry;
+
+
+def main(): int {
+    let s: f64 = sin_f64(0.0);
+    if (s == 0.0) { println("sin zero"); };
+    return 0;
+}

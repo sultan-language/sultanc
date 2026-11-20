@@ -1,0 +1,77 @@
+from std.fs import read_bytes;
+from std.net import
+    resolve_host_ipv4,
+    tcp_connect,
+    tcp_stream_close;
+from std.tls import
+    tls_certificate,
+    tls_client_config,
+    tls_certificate_der,
+    tls_client_config_default,
+    tls_client_config_add_trust_root,
+    tls_client_connect,
+    tls_read,
+    tls_write,
+    tls_close;
+
+def zero_bytes(count: int): vector u8 {
+    let out: mutable vector u8 = [];
+    let i: mutable int = 0;
+    while (i < count) {
+        append(out, 0);
+        i := i + 1;
+    }
+    return out;
+}
+
+def load_bytes(path: &string): vector u8 {
+    match read_bytes(path) with
+    | result.err(_) -> { let empty: vector u8 = []; return empty; }
+    | result.ok(data) -> { return data; };
+}
+
+def main(): int {
+    let host: string = "localhost";
+    match resolve_host_ipv4(&host, 38443) with
+    | result.err(_) -> { return 1; }
+    | result.ok(addr) -> {
+        match tcp_connect(&addr) with
+        | result.err(_) -> { return 2; }
+        | result.ok(stream) -> {
+            let der_path: string = "/tmp/sultanc_tls_test/server.der";
+            let der: vector u8 = load_bytes(&der_path);
+            if (length(der) == 0) {
+                match tcp_stream_close(stream) with
+                | result.err(_) -> { }
+                | result.ok(_) -> { };
+                return 3;
+            };
+            let certificate: tls_certificate = tls_certificate_der(der);
+            let config: mutable tls_client_config = tls_client_config_default(&host);
+            tls_client_config_add_trust_root(&mutable config, certificate);
+            match tls_client_connect(stream, &config) with
+            | result.err(_) -> { return 4; }
+            | result.ok(secure_stream) -> {
+                let output: vector u8 = [112, 105, 110, 103];
+                match tls_write(&secure_stream, &output, 0, 4) with
+                | result.err(_) -> { return 5; }
+                | result.ok(wrote) -> {
+                    if (wrote != 4) { return 6; };
+                };
+                let input: mutable vector u8 = zero_bytes(4);
+                match tls_read(&secure_stream, &mutable input, 0, 4) with
+                | result.err(_) -> { return 7; }
+                | result.ok(got) -> {
+                    if (got != 4) { return 8; };
+                    if ((input[0] != 112) || (input[1] != 111) || (input[2] != 110) || (input[3] != 103)) {
+                        return 9;
+                    };
+                };
+                match tls_close(secure_stream) with
+                | result.err(_) -> { return 10; }
+                | result.ok(_) -> { };
+                return 42;
+            };
+        };
+    };
+}

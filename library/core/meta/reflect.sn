@@ -1,0 +1,50 @@
+// Compile-time type reflection and validation. Each fact belongs to the type
+// the reference argument refers to and is folded by the compiler into a
+// constant for the selected target before code generation (no run-time cost,
+// no evaluation of the referenced value). Size and alignment are the target's
+// layout; a type whose layout is not fixed (text, vectors, slices, function
+// values) is rejected at compile time.
+
+// Byte size of the referenced type on the target.
+عام عرف حجم_النوع<ن>(القيمة: &ن): ط64 {
+    أرجع بدائي_حجم_النوع(القيمة);
+}
+
+// Byte alignment of the referenced type on the target.
+عام عرف محاذاة_النوع<ن>(القيمة: &ن): ط64 {
+    أرجع بدائي_محاذاة_النوع(القيمة);
+}
+
+// Fields of a record or elements of a tuple; 0 for any other type.
+عام عرف عدد_حقول_النوع<ن>(القيمة: &ن): ط64 {
+    أرجع بدائي_عدد_حقول_النوع(القيمة);
+}
+
+// Constructors of an enum; 0 for any other type.
+عام عرف عدد_منشئات_النوع<ن>(القيمة: &ن): ط64 {
+    أرجع بدائي_عدد_منشئات_النوع(القيمة);
+}
+
+// Fails compile-time evaluation with this message (SULTANC-COMPTIME-FAILED).
+// It is meant for code that runs at compile time — comptime blocks, functions
+// evaluated through comptime, specialized comptime parameters, decorators. A
+// run-time path that reaches it traps.
+عام عرف فشل_وقت_الترجمة(الرسالة: نص): فراغ {
+    بدائي_فشل_وقت_الترجمة(الرسالة);
+}
+
+// Sets the instructions the enclosing compile-time evaluation may still run
+// (its default is --comptime-budget, $SULTANC_COMPTIME_BUDGET or ten
+// million), for one block that knowingly does more work. Call it first in
+// the comptime block, or in a function the block calls. Outside compile-time
+// evaluation it does nothing.
+عام عرف ميزانية_وقت_الترجمة(التعليمات: طبيعي): فراغ {
+    بدائي_ميزانية_وقت_الترجمة(التعليمات);
+}
+
+عام مرادف size_of = حجم_النوع;
+عام مرادف align_of = محاذاة_النوع;
+عام مرادف field_count = عدد_حقول_النوع;
+عام مرادف constructor_count = عدد_منشئات_النوع;
+عام مرادف compile_error = فشل_وقت_الترجمة;
+عام مرادف comptime_budget = ميزانية_وقت_الترجمة;

@@ -1,0 +1,43 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// Allocator: released small blocks wait on the list of their size and never
+// merge; release_free_memory merges a run of them into one free large block
+// whose pages go back to the system. Live bytes do not change, and the
+// merged space serves a large request.
+// Counterpart: tests/ar/runtime/runtime_allocator_release.sn.
+import std.os.allocation;
+
+def main(): int {
+    // 4096 blocks of 512 bytes (2 MiB) carved one after another from the
+    // top, and a guard block after them so the run does not end at the top.
+    let first: u64 = خصص_ذاكرة_التشغيل(500);
+    if (first == 0) { return 1; };
+    let i: mutable u64 = 1;
+    while (i < 4096) {
+        if (خصص_ذاكرة_التشغيل(500) != first + i * 512) { return 2; };
+        i := i + 1;
+    }
+    let guard: u64 = خصص_ذاكرة_التشغيل(16);
+    if (guard != first + 4096 * 512) { return 3; };
+    i := 0;
+    while (i < 4096) {
+        حرر_ذاكرة_التشغيل(first + i * 512);
+        i := i + 1;
+    }
+    let live: u64 = بايتات_حية_مخصص_النظام();
+    let released: u64 = بايتات_مستردة_مخصص_النظام();
+    release_free_memory();
+    if (بايتات_حية_مخصص_النظام() != live) { return 4; };
+    if (بايتات_مستردة_مخصص_النظام() < released + 1048576) { return 5; };
+    // The merged run holds a request of nearly its whole size.
+    let big: u64 = خصص_ذاكرة_التشغيل(2000000);
+    if (big != first) { return 6; };
+    // A second pass finds nothing new to merge and changes nothing live.
+    let live_big: u64 = بايتات_حية_مخصص_النظام();
+    release_free_memory();
+    if (بايتات_حية_مخصص_النظام() != live_big) { return 7; };
+    حرر_ذاكرة_التشغيل(big);
+    حرر_ذاكرة_التشغيل(guard);
+    return 42;
+}

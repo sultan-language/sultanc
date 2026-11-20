@@ -1,0 +1,3 @@
+// اختبار: رفض
+// تشخيص: SULTANC-PARSE-SYNTAX
+عرف f(value: عدد): عدد { طابق value مع | {left: x right: y} -> { أرجع 0; }; }

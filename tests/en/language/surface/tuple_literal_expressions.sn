@@ -1,0 +1,21 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/language/surface/tuple_literal_expressions.sn
+// A tuple literal is an expression: a returned value typed by the declared
+// result (`return (a / b, a % b);`), a call argument typed by its parameter,
+// and an owned temporary whose elements are moved in.
+def div_mod(a: int, b: int): (int, int) {
+    return (a / b, a % b);
+}
+def narrow(): (i8, u16) { return (3, 4,); }
+def label(n: int): (string, int) { return ("abc", n); }
+def sum(p: (int, int)): int { return p[0] + p[1]; }
+
+def main(): int {
+    let q: (int, int) = div_mod(47, 5);
+    let n: (i8, u16) = narrow();
+    let l: (string, int) = label(10);
+    return q[0] + q[1] + (n[0] as int) + (n[1] as int) + (length(l[0]) as int) + l[1] + sum((5, 6));
+}

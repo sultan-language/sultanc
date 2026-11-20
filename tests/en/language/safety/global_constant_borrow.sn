@@ -1,0 +1,75 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// نظير: tests/ar/language/safety/global_constant_borrow.sn
+// A borrow of an immutable text or scalar global (a constant: each read is a
+// fresh copy) borrows a temporary holding its value, as `&` of any other value
+// without storage does: passed to a library or user function, bound to a
+// reference, inside a loop, of an Arabic text, shadowed by a local; a vector
+// global (static storage) is borrowed in place.
+import std.text.from_bytes;
+import std.text.compare;
+
+let name: string = "Sultan";
+let arabic_name: string = "السلطان";
+let answer: int = 6 * 7;
+let small: u8 = 7;
+let primes: vector int = [2, 3, 5, 7];
+
+def text_length(value: &string): int {
+    return length(*value) as int;
+}
+
+def read_int(value: &int): int {
+    return *value;
+}
+
+def read_byte(value: &u8): u8 {
+    return *value;
+}
+
+def vector_sum(values: &vector int): int {
+    let total: mutable int = 0;
+    let i: mutable int = 0;
+    while (i < (length(*values) as int)) {
+        total := total + (*values)[i];
+        i := i + 1;
+    }
+    return total;
+}
+
+def main(): int {
+    // The reported case: a library copy of a borrowed text global.
+    let copy: string = copy_text(&name);
+    if (!texts_equal(&copy, &name) || text_length(&copy) != 6) { return 1; };
+
+    // A user function, and a borrow bound to a reference first.
+    if (text_length(&name) != 6) { return 2; };
+    let view: &string = &name;
+    if (text_length(view) != 6 || (*view)[0] != 83) { return 3; };
+
+    // Arabic text: 7 letters, 14 bytes of UTF-8.
+    let arabic_copy: string = copy_text(&arabic_name);
+    if (text_length(&arabic_name) != 14 || !texts_equal(&arabic_copy, &arabic_name)) { return 4; };
+
+    // Scalars.
+    if (read_int(&answer) != 42 || read_byte(&small) != 7) { return 5; };
+
+    // Many borrows: each temporary is released with its block.
+    let total: mutable int = 0;
+    let i: mutable int = 0;
+    while (i < 10000) {
+        total := total + text_length(&name);
+        i := i + 1;
+    }
+    if (total != 60000) { return 6; };
+
+    // A local of the same name is borrowed, not the global.
+    let name: string = "local";
+    if (text_length(&name) != 5) { return 7; };
+
+    // A vector global has static storage and is borrowed in place.
+    if (vector_sum(&primes) != 17) { return 8; };
+
+    return read_int(&answer);
+}

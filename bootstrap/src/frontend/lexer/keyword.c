@@ -30,12 +30,15 @@ static const __Keyword_Entry__ __Keyword_Entries__[] = {
 /* Expands the bool keyword macro. */
 #define SULTANC__BOOL_KEYWORD__(English, Arabic, Value)                                            \
     SULTANC__BOOL_KEYWORD_ENTRY__(English, Value), SULTANC__BOOL_KEYWORD_ENTRY__(Arabic, Value),
+/* Expands the deprecated keyword spelling macro: the old spelling is the same token. */
+#define SULTANC__KEYWORD_DEPRECATED__(Name, Old, New) SULTANC__KEYWORD_ENTRY__(Old, Name),
 /* Expands the operator macro. */
 #define SULTANC__OPERATOR__(Name, Spelling)
 #include "frontend/lexer/token_registry.def"
 #undef SULTANC__TOKEN__
 #undef SULTANC__KEYWORD__
 #undef SULTANC__BOOL_KEYWORD__
+#undef SULTANC__KEYWORD_DEPRECATED__
 #undef SULTANC__OPERATOR__
 };
 

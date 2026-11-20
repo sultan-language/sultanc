@@ -1,0 +1,12 @@
+// Parsing a signed integer.
+import std.io.println;
+import std.text.number;
+
+
+def main(): int {
+    let text: string = "39";
+    match parse_int(&text) with
+    | result.ok(n) -> { println(int_to_text(n)); }
+    | result.err(_) -> { println("invalid"); };
+    return 0;
+}

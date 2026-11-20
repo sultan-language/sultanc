@@ -1,0 +1,8 @@
+// Part of tests/en/compiler/c_import_reexport/main.sn: imports both headers.
+import "first.h";
+import "second.h";
+
+public def both_total(weight: i32): i32 {
+    let it: item_t = first_item(weight);
+    return item_total(&it);
+}

@@ -1,0 +1,9 @@
+// اختبار: رفض
+// خروج: 1
+// تشخيص: SULTANC-TYPE-ADDRESS-OF-NON-LVALUE
+// نظير: tests/ar/language/surface/reject_literal_address_returned.sn
+// A returned reference outlives the statement, so it cannot borrow the
+// temporary of `&5`.
+def five(): &int { return &5; }
+
+def main(): int { return *five(); }

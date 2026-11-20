@@ -1,0 +1,9 @@
+// اختبار: رفض
+// خروج: 1
+// تشخيص: SULTANC-CALL-ARGUMENT-COUNT-MISMATCH
+def wrong(f: fn(int): int): int { return 0; }
+
+@wrong
+def g(x: int): int { return x; }
+
+def main(): int { return g(1); }

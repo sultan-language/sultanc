@@ -1,0 +1,9 @@
+// اختبار: رفض
+// تشخيص: SULTANC-MUTABILITY-WRITE-TO-IMMUTABLE
+// نظير: tests/en/diagnostics/semantic/write_to_text_byte.sn
+// The bytes of a text are immutable, even in a mutable text.
+عرف الرئيسية(): ص32 {
+    دع الكلمة: متغير نص = «abc»;
+    الكلمة[0] := 65;
+    أرجع 0;
+}

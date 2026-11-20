@@ -1,0 +1,16 @@
+// اختبار: رفض
+// تشخيص: SULTANC-OWNERSHIP-MOVE-OUT-OF-REFERENCE
+// نظير: tests/ar/language/ownership/reject_reference_field_move.sn
+// `p.name` through a shared reference is `(*p).name`: moving the owning
+// field out of the reference is an error (Rust's E0507).
+type Person = { name: string, age: int };
+
+def take(p: &Person): string {
+    let name: string = p.name;
+    return name;
+}
+
+def main(): int {
+    let person: Person = { name: "Sultan", age: 9 };
+    return length(take(&person)) as int;
+}

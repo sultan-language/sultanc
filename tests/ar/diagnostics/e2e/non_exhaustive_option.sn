@@ -1,0 +1,12 @@
+// اختبار: رفض
+// تشخيص: SULTANC-PATTERN-NON-EXHAUSTIVE
+// نظير: tests/en/diagnostics/e2e/non_exhaustive_option.sn
+// خرج-تشخيص-عربي: non_exhaustive_option.ar.stderr
+// خرج-تشخيص-إنجليزي: non_exhaustive_option.en.stderr
+// An option without its absent case: the case is named in the output language.
+عرف الرئيسية(): عدد {
+    دع الموجود: اختياري عدد = اختياري.موجود(3);
+    طابق الموجود مع
+    | اختياري.موجود(القيمة) -> { أرجع القيمة; };
+    أرجع 0;
+}

@@ -1,0 +1,6 @@
+خطأ[SULTANC-TYPE-MISMATCH]: النوع الموجود ⁨`نص`⁩ لا يطابق النوع المتوقع ⁨`ص32`⁩ — القيمة لا تطابق النوع المصرح به لوجهتها.
+  --> tests/en/diagnostics/e2e/type_mismatch.sn:7:22..7:28
+   |
+ 7 |     let count: i32 = "text";
+   |                      ^^^^^^
+   |

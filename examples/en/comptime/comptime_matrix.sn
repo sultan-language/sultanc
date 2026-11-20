@@ -1,0 +1,21 @@
+// The trace of a 4x4 matrix whose diagonal holds 1, 4, 9 and 16, added up at compile time
+// (30).
+import std.io.println;
+import std.text.number;
+
+def matrix_trace(n: int): int {
+    let i: mutable int = 0;
+    let total: mutable int = 0;
+    while (i < n) {
+        total := total + (i + 1) * (i + 1);
+        i := i + 1;
+    };
+    return total;
+}
+
+def main(): int {
+    let answer: int = comptime matrix_trace(4);
+    if (answer != 30) { return 1; };
+    println(int_to_text(answer));
+    return 0;
+}

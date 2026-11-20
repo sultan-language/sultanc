@@ -1,0 +1,13 @@
+// Writing newline-delimited JSON: put one JSON document on each line.
+import std.io.println;
+import std.text.number;
+import std.text.transform;
+
+def main(): int {
+    let first: string = "{\"id\":1}";
+    let second: string = "{\"id\":2}";
+    let parts: vector string = [first, second];
+    let newline: string = "\n";
+    println(join(&parts, &newline));
+    return 0;
+}

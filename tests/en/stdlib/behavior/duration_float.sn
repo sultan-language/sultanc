@@ -1,0 +1,36 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/stdlib/behavior/duration_float.sn
+// std.time.duration_float: durations as float seconds (Rust as_secs_f64,
+// try_from_secs_f64; Go Duration.Seconds), rounding to the nearest
+// nanosecond and refusing NaN, infinities and out-of-range values.
+import std.time.duration;
+import std.time.duration_float;
+
+def main(): int {
+    match duration_from_milliseconds(1500) with
+    | option.some(d) -> { if (duration_seconds_f64(&d) != 1.5) { return 1; }; }
+    | option.none -> { return 2; };
+    let tiny: duration = duration_from_nanoseconds(-1);
+    if (duration_seconds_f64(&tiny) != -0.000000001) { return 3; };
+    match duration_from_seconds_f64(2.75) with
+    | option.some(d) -> { if (duration_nanoseconds(&d) != 2750000000) { return 4; }; }
+    | option.none -> { return 5; };
+    match duration_from_seconds_f64(-0.0000000016) with
+    | option.some(d) -> { if (duration_nanoseconds(&d) != -2) { return 6; }; }
+    | option.none -> { return 7; };
+    match duration_from_seconds_f64(0.0 / 0.0) with
+    | option.some(_) -> { return 8; }
+    | option.none -> {};
+    match duration_from_seconds_f64(1.0e10) with
+    | option.some(_) -> { return 9; }
+    | option.none -> {};
+    match duration_from_seconds_f32(0.25) with
+    | option.some(d) -> { if (duration_nanoseconds(&d) != 250000000) { return 10; }; }
+    | option.none -> { return 11; };
+    let day: duration = duration_from_nanoseconds(86400000000000);
+    if (duration_seconds_f32(&day) != 86400.0) { return 12; };
+    return 42;
+}

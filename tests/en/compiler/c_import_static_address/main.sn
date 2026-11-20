@@ -1,0 +1,12 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 41
+// Twin: tests/ar/compiler/c_import_static_address/main.sn (no `نظير` header:
+// the interpreter cannot call the functions of an imported .c file).
+// Taking the address of a static scalar or pointer of a compiled .c file
+// gives a pointer of the variable's own type: 32 + 2 + 1 + 6 = 41.
+import "statics.c";
+
+def main(): int {
+    return static_addresses() as int;
+}

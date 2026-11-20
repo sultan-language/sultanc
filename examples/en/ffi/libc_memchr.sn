@@ -1,0 +1,12 @@
+// Call the actual C library function memchr; link with -l c.
+import std.io.println;
+import std.text.number;
+
+extern def memchr(data: *u8, item: i32, size: uint): *u8;
+def main(): int {
+    let data: mutable vector u8 = [65 as u8, 66 as u8, 67 as u8];
+    let found: mutable *u8 = &data[0];
+    unsafe { found := memchr(&data[0], 66 as i32, 3 as uint); }
+    unsafe { if (*found == 66 as u8) { println("byte found"); } else { return 1; }; };
+    return 0;
+}

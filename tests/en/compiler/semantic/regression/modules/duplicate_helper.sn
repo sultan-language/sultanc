@@ -1,0 +1,1 @@
+public def duplicate_helper(): int { return 42; }

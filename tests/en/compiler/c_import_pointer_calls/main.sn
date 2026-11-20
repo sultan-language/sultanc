@@ -1,0 +1,23 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// Twin: tests/ar/compiler/c_import_pointer_calls/main.sn (no `نظير` header:
+// the interpreter cannot call the functions of an imported .c file).
+// A C call through a function pointer that is a machine address (a pointer
+// from dlsym, the address of a C library function) is an indirect call with
+// the target's C calling convention (compiler/jisr/lower.sn,
+// نادِ_عنوانا_جسر, through a call shape at an address): integer, pointer,
+// double and float values and records by value as a direct C call passes
+// them, the result narrowed to its C type.
+import "pointers.c";
+
+def main(): int {
+    if (through_dlsym() != 5) { return 1; };
+    let floating: i32 = through_dlsym_floating();
+    if (floating != 0) { return 10 + (floating as int); };
+    let records: i32 = through_dlsym_records();
+    if (records != 0) { return 20 + (records as int); };
+    if (through_library_address() != 7) { return 3; };
+    if (through_marker() != 42) { return 4; };
+    return 42;
+}

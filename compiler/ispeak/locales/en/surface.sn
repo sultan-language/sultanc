@@ -1,0 +1,119 @@
+استورد compiler.ispeak.keys.surface;
+
+// Source-backed user-facing wording; no numeric/string lookup or initialization.
+
+// Immutable language resources: longer prose is stored once, outside match arms.
+عرف نص_واجهة_التباس_جذر_الاعتمادية(): نص { أرجع «dependency root spelling is ambiguous in the importing package»; }
+عرف نص_واجهة_تعارض_جذر_المكتبة_في_الاعتمادية(): نص { أرجع «standard-library root spelling conflicts in dependency scope»; }
+
+عام عرف نص_واجهة_إنجليزي(المفتاح: مفتاح_نص_مترجم): نص {
+    طابق المفتاح مع
+    | مفتاح_نص_مترجم.عنوان_المساعدة -> { أرجع "SultanC compiler\n\n"; }
+    | مفتاح_نص_مترجم.عنوان_الاستخدام -> { أرجع "Usage:\n"; }
+    | مفتاح_نص_مترجم.سطر_استخدام_المترجم -> { أرجع "    sultanc <source> [options]\n\n"; }
+    | مفتاح_نص_مترجم.عنوان_الأوامر -> { أرجع "Commands:\n"; }
+    | مفتاح_نص_مترجم.أمر_التشغيل -> { أرجع "    run <source> [args...] Run using the SultanC interpreter\n"; }
+    | مفتاح_نص_مترجم.توضيح_وسائط_التشغيل -> { أرجع "                           Arguments after <source> are passed unchanged\n"; }
+    | مفتاح_نص_مترجم.أمر_التحقق -> { أرجع "    check <source>         Check without normal executable output\n                           With --target <target>, check for that target (default: the host)\n"; }
+    | مفتاح_نص_مترجم.أمر_الأهداف -> { أرجع "    targets                List supported targets\n"; }
+    | مفتاح_نص_مترجم.أمر_الشرح -> { أرجع "    explain <code>         Explain a SultanC diagnostic\n"; }
+    | مفتاح_نص_مترجم.أمر_التنسيق -> { أرجع "    fmt [<path>...|-]      Format SultanC sources in place (a directory: its .sn files;\n                           - or no path: standard input to standard output)\n"; }
+    | مفتاح_نص_مترجم.أمر_المساعدة -> { أرجع "    help                   Show help\n"; }
+    | مفتاح_نص_مترجم.أمر_الإصدار -> { أرجع "    version                Show version\n\n"; }
+    | مفتاح_نص_مترجم.عنوان_الخيارات_الشائعة -> { أرجع "Common options:\n"; }
+    | مفتاح_نص_مترجم.خيار_المخرج -> { أرجع "    -o <file>              Output path\n"; }
+    | مفتاح_نص_مترجم.خيار_الهدف -> { أرجع "    -t, --target <target>  Target platform\n"; }
+    | مفتاح_نص_مترجم.خيار_الكائن -> { أرجع "    -c                     Emit object file\n\n"; }
+    | مفتاح_نص_مترجم.عنوان_الخيارات_المتقدمة -> { أرجع "Advanced options:\n"; }
+    | مفتاح_نص_مترجم.خيار_الخلفية -> { أرجع "    -b, --backend <name>   native | llvm\n"; }
+    | مفتاح_نص_مترجم.خيار_نوع_الإخراج -> { أرجع "    --emit=<kind>          exe | obj | shared | reloc | module | asm | llvm-ir | msir\n    --emit=msir            the optimized MSIR program as text, to stdout unless -o names a file\n    -O0 | -O1 | -O2 | -O3      LLVM optimization level (default -O2)\n    --release              LLVM at -O3 when this compiler includes LLVM\n    --comptime-budget=<n>  instructions per compile-time evaluation (default 10000000; also SULTANC_COMPTIME_BUDGET)\n"; }
+    | مفتاح_نص_مترجم.خيار_اللغة -> { أرجع "    --lang=<lang>          auto | ar | en\n"; }
+    | مفتاح_نص_مترجم.خيار_التشخيص -> { أرجع "    --diagnostic-format=<format>  human | short | json\n"; }
+    | مفتاح_نص_مترجم.خيار_الألوان -> { أرجع "    --color=<policy>       auto | always | never\n"; }
+    | مفتاح_نص_مترجم.خيار_فحص_التنسيق -> { أرجع "    --check                With fmt: report files that are not formatted, change nothing\n"; }
+    | مفتاح_نص_مترجم.خيار_مصدر_الوحدة -> { أرجع "    --module-source=<module>=<file>\n"; }
+    | مفتاح_نص_مترجم.توضيح_مصدر_الوحدة -> { أرجع "                           Compile <file> as the source of logical <module>\n"; }
+    | مفتاح_نص_مترجم.خيار_رسم_الحزم -> { أرجع "    --package-graph=<file>  The resolved package graph a package manager writes (Supax: build/supax/package-graph.toml);\n                           - reads it from standard input\n"; }
+    | مفتاح_نص_مترجم.خيار_مكتبة_الربط -> { أرجع "    -l <name>              Link the library lib<name> (for example -l c)\n"; }
+    | مفتاح_نص_مترجم.خيار_دليل_المكتبات -> { أرجع "    -L <dir>               Search <dir> for -l libraries first\n"; }
+    | مفتاح_نص_مترجم.أمر_الاختبار -> { أرجع "    test <file>            Build the functions marked @@test and run each in its own process\n"; }
+    | مفتاح_نص_مترجم.خيار_مرشح_الاختبار -> { أرجع "    --filter <text>        With test: only the tests whose name contains <text>\n"; }
+    | مفتاح_نص_مترجم.خيار_اسم_الاختبار -> { أرجع "    --test=<name>          With test: run exactly the test named <name> (any spelling);\n                           repeatable\n"; }
+    | مفتاح_نص_مترجم.خيار_ملفات_الاختبارات -> { أرجع "    --tests-in=<file>      With test: only the tests declared in <file>; repeatable\n"; }
+    | مفتاح_نص_مترجم.خيار_قائمة_الاختبارات -> { أرجع "    --list                 With test: list the tests, run none\n"; }
+    | مفتاح_نص_مترجم.خيار_تفسير_الاختبارات -> { أرجع "    --interpret            With test: run the tests in the interpreter\n"; }
+    | مفتاح_نص_مترجم.خيار_فهرس_الاختبار -> { أرجع "    --test-index=<n>       With test: run only test number <n> (as --list numbers\n                           them from 0), in this process\n"; }
+    | مفتاح_نص_مترجم.تسمية_اختبار_ناجح -> { أرجع "PASS"; }
+    | مفتاح_نص_مترجم.تسمية_اختبار_فاشل -> { أرجع "FAIL"; }
+    | مفتاح_نص_مترجم.تسمية_اختبار_أرجع_خطأ -> { أرجع "returned an error"; }
+    | مفتاح_نص_مترجم.تسمية_حالة_خروج_اختبار -> { أرجع "exit status"; }
+    | مفتاح_نص_مترجم.تسمية_إشارة_اختبار -> { أرجع "terminated by signal"; }
+    | مفتاح_نص_مترجم.تسمية_اختبار_لم_يبدأ -> { أرجع "could not be started"; }
+    | مفتاح_نص_مترجم.ملاحظة_تصريح_الاختبار -> { أرجع "note: the test is declared at "; }
+    | مفتاح_نص_مترجم.عنوان_نتيجة_الاختبارات -> { أرجع "test result:"; }
+    | مفتاح_نص_مترجم.نتيجة_اختبارات_ناجحة -> { أرجع "ok"; }
+    | مفتاح_نص_مترجم.نتيجة_اختبارات_فاشلة -> { أرجع "FAILED"; }
+    | مفتاح_نص_مترجم.تسمية_الاختبارات_الناجحة -> { أرجع "passed"; }
+    | مفتاح_نص_مترجم.تسمية_الاختبارات_الفاشلة -> { أرجع "failed"; }
+    | مفتاح_نص_مترجم.تسمية_الاختبارات_المستبعدة -> { أرجع "filtered out"; }
+    | مفتاح_نص_مترجم.ملاحظة_اختبارات_مبنية_غير_مشغلة -> { أرجع "note: the tests were built, not run: this host cannot run programs for the target "; }
+    | مفتاح_نص_مترجم.فاصل_جملة_ملخص_الاختبارات -> { أرجع ". "; }
+    | مفتاح_نص_مترجم.فاصل_ملخص_الاختبارات -> { أرجع "; "; }
+    | مفتاح_نص_مترجم.تسمية_الخلفيات -> { أرجع «backends:»; }
+    | مفتاح_نص_مترجم.تعارض_جذر_مصدر_الحزمة -> { أرجع «package source root conflicts with an existing root»; }
+    | مفتاح_نص_مترجم.تعارض_تهجئة_جذر_الحزمة -> { أرجع «package root spelling conflicts with another binding»; }
+    | مفتاح_نص_مترجم.التباس_جذر_الاعتمادية -> { أرجع نص_واجهة_التباس_جذر_الاعتمادية(); }
+    | مفتاح_نص_مترجم.تعارض_جذر_المكتبة_في_الاعتمادية -> { أرجع نص_واجهة_تعارض_جذر_المكتبة_في_الاعتمادية(); }
+    | مفتاح_نص_مترجم.تعارض_جذر_مكتبة_موثوق -> { أرجع «conflicting trusted standard-library root»; }
+    | مفتاح_نص_مترجم.تعارض_جذر_المكتبة_في_المشروع -> { أرجع «standard-library root spelling conflicts in project scope»; }
+    | مفتاح_نص_مترجم.تهجئة_جذر_حزمة_غير_صالحة -> { أرجع «package root spelling is not a valid source identifier»; }
+    | مفتاح_نص_مترجم.صياغة_تومل_غير_صالحة -> { أرجع «invalid TOML syntax»; }
+    | مفتاح_نص_مترجم.تعذر_قراءة_رسم_حزم -> { أرجع «package graph could not be read»; }
+    | مفتاح_نص_مترجم.إصدار_رسم_حزم_غير_مدعوم -> { أرجع «only package graph version 1 is supported»; }
+    | مفتاح_نص_مترجم.حقل_رسم_حزم_غير_معروف -> { أرجع «unknown package graph field»; }
+    | مفتاح_نص_مترجم.حقل_رسم_حزم_مطلوب_مفقود -> { أرجع «required package graph field is missing»; }
+    | مفتاح_نص_مترجم.حقل_رسم_حزم_ليس_نصا -> { أرجع «package graph field must be a string»; }
+    | مفتاح_نص_مترجم.مدخلات_رسم_حزم_ليست_جداول -> { أرجع «package and edge must be arrays of tables ([[package]], [[edge]])»; }
+    | مفتاح_نص_مترجم.تهجئات_رسم_حزم_ليست_جدولا -> { أرجع «spellings must be a table of language = spelling»; }
+    | مفتاح_نص_مترجم.جذر_مصدر_حزمة_رسم_مفقود -> { أرجع «source_root is not an existing directory»; }
+    | مفتاح_نص_مترجم.جذر_مصدر_حزمة_رسم_مكرر -> { أرجع «two packages have the same source_root»; }
+    | مفتاح_نص_مترجم.مدخل_حزمة_رسم_مفقود -> { أرجع «entry names no module file under source_root»; }
+    | مفتاح_نص_مترجم.حزمة_رسم_غير_معروفة -> { أرجع «no package in the graph has this id»; }
+    | مفتاح_نص_مترجم.معرف_حزمة_رسم_مكرر -> { أرجع «two packages in the graph have the same id»; }
+    | مفتاح_نص_مترجم.معرف_حزمة_رسم_محجوز -> { أرجع «the id std is the standard library's; a package graph does not describe std»; }
+    | مفتاح_نص_مترجم.مصدر_خارج_حزمة_الجذر -> { أرجع «the source file is not under the root package's source_root»; }
+    | مفتاح_نص_مترجم.كلمة_محجوزة_في_رسم_حزم -> { أرجع «a reserved word cannot be a package name, spelling or edge name»; }
+    | مفتاح_نص_مترجم.وصف_عنصر_نائب_مرقم -> { أرجع «indexed placeholder»; }
+    | مفتاح_نص_مترجم.وصف_معرف -> { أرجع «identifier»; }
+    | مفتاح_نص_مترجم.وصف_عدد_صحيح -> { أرجع «integer literal»; }
+    | مفتاح_نص_مترجم.وصف_عدد_عشري -> { أرجع «floating-point literal»; }
+    | مفتاح_نص_مترجم.وصف_نص -> { أرجع «string literal»; }
+    | مفتاح_نص_مترجم.وصف_حرف -> { أرجع «character literal»; }
+    | مفتاح_نص_مترجم.وصف_منطقي -> { أرجع «boolean literal»; }
+    | مفتاح_نص_مترجم.وصف_نهاية_الملف -> { أرجع «end of file»; }
+    | مفتاح_نص_مترجم.غياب_موفر_لي_لي_في_واسي -> { أرجع «LLVM is not available in a WASI-hosted compiler»; }
+    | مفتاح_نص_مترجم.ترويسة_جدول_الأهداف -> { أرجع "Target          Architecture    OS       Object   Support\n"; }
+    | مفتاح_نص_مترجم.بادئة_الإصدار -> { أرجع «SultanC »; }
+    | مفتاح_نص_مترجم.حالة_إصدار_تطويري -> { أرجع «development»; }
+    | مفتاح_نص_مترجم.دعم_هدف_مضيف_ذاتي -> { أرجع «self-host»; }
+    | مفتاح_نص_مترجم.دعم_هدف_مخرج_متحقق -> { أرجع «verified-output»; }
+    | مفتاح_نص_مترجم.دعم_هدف_ترجمة_متقاطعة -> { أرجع «cross»; }
+    | مفتاح_نص_مترجم.دعم_هدف_تجريبي -> { أرجع «experimental»; }
+    | مفتاح_نص_مترجم.منصة_هدف_غير_محددة -> { أرجع «Unspecified»; }
+    | مفتاح_نص_مترجم.منصة_هدف_داروين -> { أرجع «Darwin»; }
+    | مفتاح_نص_مترجم.منصة_هدف_آي_أو_إس -> { أرجع «iOS»; }
+    | مفتاح_نص_مترجم.منصة_هدف_لينكس -> { أرجع «Linux»; }
+    | مفتاح_نص_مترجم.منصة_هدف_ويندوز -> { أرجع «Windows»; }
+    | مفتاح_نص_مترجم.منصة_هدف_أندرويد -> { أرجع «Android»; }
+    | مفتاح_نص_مترجم.منصة_هدف_فري_بي_إس_دي -> { أرجع «FreeBSD»; }
+    | مفتاح_نص_مترجم.منصة_هدف_واسي -> { أرجع «WASI»; }
+    | مفتاح_نص_مترجم.منصة_هدف_متصفح -> { أرجع «Browser»; }
+    | مفتاح_نص_مترجم.منصة_هدف_عتاد_مباشر -> { أرجع «BareMetal»; }
+    | مفتاح_نص_مترجم.عملية_نداء_دالة_خارجية -> { أرجع «a call to an external function»; }
+    | مفتاح_نص_مترجم.عملية_نداء_بدائي -> { أرجع «a call to a compiler primitive»; }
+    | مفتاح_نص_مترجم.عملية_نداء_قيمة_دالة -> { أرجع «a call through a function value»; }
+    | مفتاح_نص_مترجم.عملية_عنوان_عام -> { أرجع «the address of a global»; }
+    | مفتاح_نص_مترجم.عملية_مؤشر_خام_من_مرجع -> { أرجع «a raw pointer made from a reference»; }
+    | مفتاح_نص_مترجم.عملية_تخزين_عبر_مؤشر_خام -> { أرجع «a store through a raw pointer»; }
+    ;
+}

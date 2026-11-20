@@ -1,0 +1,12 @@
+// Splitting shell-style arguments at the spaces: an option with a value and a flag.
+import std.io.println;
+import std.text.number;
+import std.text.transform;
+
+def main(): int {
+    let source: string = "--name=سلمان --verbose";
+    let words: vector string = split(&source, &" ");
+    if (length(words) != 2) { return 1; };
+    println(clone(&words[0]));
+    return 0;
+}

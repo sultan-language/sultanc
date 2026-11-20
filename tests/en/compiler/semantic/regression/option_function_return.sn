@@ -1,0 +1,7 @@
+def make(): option i32 { return option.some(42); }
+def main(): i32 {
+    let value: option i32 = make();
+    match value with
+    | option.some(x) -> { return x; }
+    | option.none() -> { return 1; }
+}

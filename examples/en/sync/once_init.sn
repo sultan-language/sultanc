@@ -1,0 +1,14 @@
+// Synchronization primitive: once_init.
+import std.io.println;
+import std.text.number;
+import std.sync.once;
+
+def report(): void { println("initialize once"); }
+def main(): int {
+    let once_handle: once = once_new();
+    if (once_is_completed(&once_handle)) { return 1; };
+    call_once(&once_handle, fn(): void -> report());
+    call_once(&once_handle, fn(): void -> report());
+    if (once_is_completed(&once_handle)) { println("initialized"); } else { return 2; };
+    return 0;
+}

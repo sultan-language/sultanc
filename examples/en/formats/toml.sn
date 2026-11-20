@@ -1,0 +1,27 @@
+// Reading values from a TOML document, including a nested table.
+import std.io.println;
+import std.toml.parser;
+
+def main(): int {
+    let source: string = "title = \"SultanC\"\nstable = true\n\n[build]\nstage = 2\n";
+    match parse_toml(&source) with
+    | result.err(_) -> { println("invalid toml"); return 1; }
+    | result.ok(document) -> {
+        let title_key: string = "title";
+        // Patterns use the canonical variant names; English variant aliases are
+        // accepted in expressions but not yet in patterns.
+        match toml_value_at(&document, 0, &title_key) with
+        | option.some(قيمة_تومل.سلسلة(title)) -> { println(title); }
+        | _ -> { println("no title"); };
+        let build_key: string = "build";
+        let stage_key: string = "stage";
+        match toml_table_at(&document, 0, &build_key) with
+        | option.some(table) -> {
+            match toml_value_at(&document, table, &stage_key) with
+            | option.some(قيمة_تومل.عدد(stage)) -> { println(stage); }
+            | _ -> { println("no stage"); };
+        }
+        | option.none -> { println("no build table"); };
+    };
+    return 0;
+}

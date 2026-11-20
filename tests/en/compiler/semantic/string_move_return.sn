@@ -1,0 +1,9 @@
+def passthrough(value: string): string {
+    return value;
+}
+
+def main(): u8 {
+    let text: string = "*";
+    let moved: string = passthrough(text);
+    return moved[0];
+}

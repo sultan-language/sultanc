@@ -1,0 +1,3 @@
+// مُثبّت tests/ar/compiler/tooling/incremental_session.sn (ليس اختبارا).
+استورد «lib.sn»;
+عام عرف استعمل_المضاعفة(): عدد { أرجع ضاعف(3) + لم_تمس(); }

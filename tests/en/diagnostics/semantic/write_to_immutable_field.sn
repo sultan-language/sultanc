@@ -1,0 +1,9 @@
+// اختبار: رفض
+// تشخيص: SULTANC-MUTABILITY-WRITE-TO-IMMUTABLE
+// نظير: tests/ar/diagnostics/semantic/write_to_immutable_field.sn
+type Point = { x: i32, y: i32 };
+def main(): i32 {
+    let point: Point = { x: 1, y: 2 };
+    point.x := 3;
+    return point.x;
+}

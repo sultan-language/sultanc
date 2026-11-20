@@ -1,0 +1,15 @@
+// A layout size worked out at compile time: the total of field sizes 1 to 7, n(n + 1) / 2
+// (28).
+import std.io.println;
+import std.text.number;
+
+def field_total(n: int): int {
+    return n * (n + 1) / 2;
+}
+
+def main(): int {
+    let answer: int = comptime field_total(7);
+    if (answer != 28) { return 1; };
+    println(int_to_text(answer));
+    return 0;
+}

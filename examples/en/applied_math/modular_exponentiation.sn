@@ -1,0 +1,22 @@
+// Modular exponentiation by repeated squaring: 5^13 mod 23 without computing 5^13 itself.
+import std.io.println;
+import std.text.number;
+
+def power_mod(base: int, exponent: int, modulus: int): int {
+    let answer: mutable int = 1;
+    let factor: mutable int = base % modulus;
+    let n: mutable int = exponent;
+    while (n > 0) {
+        if (n % 2 == 1) { answer := (answer * factor) % modulus; };
+        factor := (factor * factor) % modulus;
+        n := n / 2;
+    };
+    return answer;
+}
+
+def main(): int {
+    let answer: int = power_mod(5, 13, 23);
+    if (answer != 21) { return 1; };
+    println(int_to_text(answer));
+    return 0;
+}

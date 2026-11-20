@@ -1,0 +1,21 @@
+// اختبار: رفض
+// تشخيص: SULTANC-TYPE-MISMATCH
+// نظير: tests/en/diagnostics/e2e/every_phase_errors.sn
+// خرج-تشخيص-عربي: every_phase_errors.ar.stderr
+// خرج-تشخيص-إنجليزي: every_phase_errors.en.stderr
+// `check` reports the errors of every phase it can reach, not only the first:
+// both unknown names, then the type error of a function that uses neither.
+// The body that uses an unknown name is set aside, so nothing more is
+// reported from it (no error follows from another).
+عرف مساعد(القيمة: ص32): ص32 {
+    أرجع القيمة;
+}
+عرف خاطئ_النوع(): ص32 {
+    دع العدد: ص32 = «نص»;
+    أرجع العدد;
+}
+عرف الرئيسية(): ص32 {
+    دع الأول: ص32 = قيمة_مفقودة + 1;
+    دع الثاني: ص32 = مساعذ(2);
+    أرجع الأول + الثاني + خاطئ_النوع();
+}

@@ -1,0 +1,7 @@
+// اختبار: رفض
+// تشخيص: SULTANC-NAME-PRIVATE
+// نظير: tests/ar/diagnostics/e2e/private_name.sn
+// خرج-تشخيص-عربي: private_name.ar.stderr
+// خرج-تشخيص-إنجليزي: private_name.en.stderr
+import "private_module.sn";
+def main(): i32 { return secret(); }

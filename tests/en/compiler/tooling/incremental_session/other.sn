@@ -1,0 +1,2 @@
+// Fixture of tests/en/compiler/tooling/incremental_session.sn (not a test).
+public def other_value(): int { return 4; }

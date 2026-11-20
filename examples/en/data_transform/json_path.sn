@@ -1,0 +1,22 @@
+// Following a path into JSON: take the root object, then the string stored under "name".
+import std.io.println;
+import std.text.number;
+import std.json.parse;
+import std.json.value;
+
+def main(): int {
+    let input: string = "{\"name\":\"SultanC\"}";
+    match parse_json(&input) with
+    | result.ok(doc) -> {
+        match json_root(&doc) with
+        | قيمة_جسون.كائن(index) -> {
+            let key: string = "name";
+            match json_object_get(&doc, index, &key) with
+            | option.some(قيمة_جسون.سلسلة(name)) -> { println(name); }
+            | _ -> { return 2; };
+        }
+        | _ -> { return 3; };
+    }
+    | result.err(_) -> { return 1; };
+    return 0;
+}

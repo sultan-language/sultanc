@@ -1,0 +1,71 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 0
+// نظير: tests/ar/stdlib/behavior/deflate_roundtrip.sn
+// std.compression: the fixed-Huffman encoder round-trips through the
+// decoder for repetitive text, long runs, pseudo-random bytes and an empty
+// input; one reused compressor (deflate and gzip) gives the same bytes as a
+// fresh one for every input (its tables keep entries of earlier inputs,
+// which must never be used); text shrinks to under a quarter; random bytes
+// fall back to stored blocks (at most 5 bytes per 64 KiB larger).
+import std.compression.deflate;
+import std.compression.gzip;
+
+def sample(kind: int, size: uint): vector u8 {
+    let out: mutable vector u8 = [];
+    let text: vector u8 = [72, 84, 84, 80, 47, 49, 46, 49, 32, 50, 48, 48, 32, 79, 75, 13, 10, 99, 111, 110, 116, 101, 110, 116, 45, 116, 121, 112, 101, 58, 32];
+    let seed: mutable u64 = 12345;
+    let i: mutable uint = 0;
+    while (i < size) {
+        if (kind == 0) { append(out, text[i % (length(text) as uint)]); }
+        else if (kind == 1) { append(out, ((i / 300) % 4) as u8); }
+        else {
+            seed := (seed * 1103515245 + 12345) & 0x7FFFFFFF;
+            append(out, ((seed >> 16) & 0xFF) as u8);
+        };
+        i := i + 1;
+    }
+    return out;
+}
+
+def same(a: &vector u8, b: &vector u8): bool {
+    if (length(*a) != length(*b)) { return false; };
+    let i: mutable uint = 0;
+    while (i < (length(*a) as uint)) {
+        if ((*a)[i] != (*b)[i]) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+
+def check_all(size: uint): int {
+    let reused: mutable deflate_compressor = deflate_compressor_new();
+    let gz: mutable gzip_compressor = gzip_compressor_new();
+    let kind: mutable int = 0;
+    while (kind < 4) {
+        let input: mutable vector u8 = [];
+        if (kind < 3) { input := sample(kind, size); };
+        let fresh: vector u8 = deflate_compress(&input);
+        let again: mutable vector u8 = [];
+        deflate_compress_into(&mutable reused, &input, &mutable again);
+        if (!same(&fresh, &again)) { return 10 + kind; };
+        match deflate_decompress(&fresh) with
+        | result.err(_) -> { return 20 + kind; }
+        | result.ok(back) -> { if (!same(&back, &input)) { return 30 + kind; }; };
+        let zipped: mutable vector u8 = [];
+        gzip_compress_into(&mutable gz, &input, &mutable zipped, 0 as u32);
+        let one_shot: vector u8 = gzip_compress(&input);
+        if (!same(&zipped, &one_shot)) { return 40 + kind; };
+        match gzip_decompress(&zipped) with
+        | result.err(_) -> { return 50 + kind; }
+        | result.ok(back) -> { if (!same(&back, &input)) { return 60 + kind; }; };
+        if (kind == 0 && (length(fresh) as uint) * 4 > size) { return 70; };
+        if (kind == 2 && (length(fresh) as uint) > size + 10) { return 71; };
+        kind := kind + 1;
+    }
+    return 0;
+}
+
+def main(): int {
+    return check_all(70000);
+}

@@ -1,0 +1,26 @@
+// Ed25519 signature verification rejects modified messages.
+import std.io.println;
+import std.text.number;
+import std.crypto.ed25519;
+import std.text.from_bytes;
+
+
+def main(): int {
+    let seed: mutable vector u8 = [];
+    let i: mutable uint = 0;
+    while (i < 32) { append(seed, (i * 7) as u8); i := i + 1; };
+    let original: vector u8 = bytes_from_text("authentic message");
+    let forged: vector u8 = bytes_from_text("forged message");
+    match ed25519_public_key(&seed) with
+    | option.none -> { return 1; }
+    | option.some(public_key) -> {
+        match ed25519_sign(&seed,&original) with
+        | option.none -> { return 2; }
+        | option.some(signature) -> {
+            if (!ed25519_verify(&public_key,&original,&signature)) { return 3; };
+            if (ed25519_verify(&public_key,&forged,&signature)) { return 4; };
+            println("forgery rejected");
+        };
+    };
+    return 0;
+}

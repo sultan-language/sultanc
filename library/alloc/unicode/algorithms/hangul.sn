@@ -1,0 +1,28 @@
+// Algorithmic Hangul canonical decomposition and composition (UAX #15).
+// This algorithm is independent of the versioned Unicode Character Database.
+// The UCD's other decomposition mappings and composition exclusions are
+// intentionally NOT approximated by these Hangul-only operations.
+
+// The composition needs no heap and is core's (core.unicode.algorithms.hangul),
+// re-exported here at the same path.
+استورد الأساس.يونيكود.خوارزميات.هانغول مثل هانغول_الأساس;
+عام مرادف ركب_مقطعي_هانغول = هانغول_الأساس.ركب_مقطعي_هانغول;
+
+عام عرف فك_مقطع_هانغول(القيمة: ط32): متجه ط32 {
+    دع الناتج: متغير متجه ط32 = [];
+    إذا ((القيمة < 0xAC00) || (القيمة >= 0xD7A4)) {
+        أرجع الناتج;
+    };
+
+    دع فهرس_المقطع: ط32 = القيمة - 0xAC00;
+    دع فهرس_البداية: ط32 = فهرس_المقطع / 588;
+    دع فهرس_الحركة: ط32 = (فهرس_المقطع % 588) / 28;
+    دع فهرس_الختام: ط32 = فهرس_المقطع % 28;
+
+    ألحق(الناتج, 0x1100 + فهرس_البداية);
+    ألحق(الناتج, 0x1161 + فهرس_الحركة);
+    إذا (فهرس_الختام != 0) {
+        ألحق(الناتج, 0x11A7 + فهرس_الختام);
+    };
+    أرجع الناتج;
+}

@@ -1,0 +1,5 @@
+def main(): int {
+    let values: vector int = [40, 2];
+    let moved: vector int = values;
+    return values[0];
+}

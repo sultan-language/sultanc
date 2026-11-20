@@ -1,0 +1,15 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// فئة: records-adts
+type Pair = { left: int, right: int };
+type Choice = | Empty | PairValue of Pair;
+
+def main(): int {
+    let pair: Pair = { left: 40, right: 2 };
+    let choice: Choice = Choice.PairValue(pair);
+    match choice with
+    | Choice.Empty -> { return 1; }
+    | Choice.PairValue({ left: a, right: b }) -> { return a + b; };
+}

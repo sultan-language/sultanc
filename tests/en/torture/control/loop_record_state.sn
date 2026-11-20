@@ -1,0 +1,19 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// فئة: control
+type State = { value: int, steps: int };
+
+def main(): int {
+    let state: mutable State = { value: 0, steps: 1 };
+    let i: mutable int = 0;
+    while (i < 6) {
+        state.value := state.value + state.steps;
+        state.steps := state.steps + 1;
+        i := i + 1;
+    }
+    if (state.value != 21) { return 1; };
+    if (state.steps != 7) { return 2; };
+    return 42;
+}

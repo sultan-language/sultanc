@@ -1,0 +1,25 @@
+استورد compiler.backend.abi.abi_model;
+استورد compiler.backend.architectures.riscv.systems.elf.abi_rules;
+استورد compiler.frontend.types.type_identity;
+استورد compiler.frontend.types.type_context;
+استورد compiler.backend.layout.layout_model;
+استورد compiler.backend.target.target_model;
+
+// LoongArch64 lp64d base calling convention ("LoongArch ELF psABI",
+// Procedure Calling Convention) for foreign (C) calls. It is specified by the
+// same rules as the RISC-V hardware floating-point convention with GRLEN = 64
+// and FRLEN = 64, eight argument GARs (a0-a7) and FARs (fa0-fa7), 32-bit
+// values sign-extended in 64-bit registers (Clang LoongArchABIInfo), so it
+// shares that classifier instead of duplicating it.
+عام عرف صنف_واجهة_لونغ_آرتش_أربعة_وستون_خارجية(
+    الأنواع: &سجل_أنواع,
+    الهدف: &واصف_هدف,
+    سجل_التخطيط: &متغير سجل_تخطيط,
+    المعاملات: &متجه معرف_نوع,
+    الناتج: معرف_نوع
+): نتيجة خطة_دالة_واجهة, خطأ_واجهة {
+    دع معاملات_الواجهة: معاملات_واجهة_رايسك_في = { عرض_الصحيح: 8, عرض_العائم: 8 };
+    أرجع صنف_واجهة_رايسك_في_خارجية_بمعاملات(
+        الأنواع, الهدف, سجل_التخطيط, المعاملات, الناتج, &معاملات_الواجهة
+    );
+}

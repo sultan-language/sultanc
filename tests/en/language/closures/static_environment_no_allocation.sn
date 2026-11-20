@@ -1,0 +1,44 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// نظير: tests/ar/language/closures/static_environment_no_allocation.sn
+// A function value that captures nothing (a named function used as a value,
+// or a closure with no captures) is its function's one static environment
+// (compiler/msir/static_environments.sn): building, copying, passing,
+// returning and calling it allocates nothing. 10^5 rounds leave this
+// thread's allocation count where it was.
+import std.os.allocation;
+import std.os.allocation_cache;
+
+def square(x: int): int { return x * x; }
+
+def apply(f: fn(int): int, v: int): int { return f(v); }
+
+def pick(i: int): fn(int): int {
+    if (i % 2 == 0) { return square; };
+    return fn(x: int): int -> x + 1;
+}
+
+def round(i: int): int {
+    let f: fn(int): int = square;
+    let g: fn(int): int = fn(x: int): int -> x * 2;
+    let h: fn(int): int = pick(i);
+    let copy: fn(int): int = g;
+    return apply(f, 3) + g(4) + h(5) + copy(1) + apply(fn(x: int): int -> x - 1, 2);
+}
+
+def main(): int {
+    let warm_up: int = round(0);
+    if (warm_up != 9 + 8 + 25 + 2 + 1) { return 1; };
+    let before: u64 = thread_allocation_count();
+    let i: mutable int = 0;
+    let total: mutable int = 0;
+    while (i < 100000) {
+        total := total + round(i % 7);
+        i := i + 1;
+    }
+    let after: u64 = thread_allocation_count();
+    if (after != before) { return 2; };
+    if (total <= 0) { return 3; };
+    return 42;
+}

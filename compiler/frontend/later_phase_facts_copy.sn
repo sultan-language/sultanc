@@ -1,0 +1,11 @@
+استورد compiler.frontend.later_phase_facts;
+
+// A copy of the later phases' facts, for each attempt of a stage that
+// continues kept facts (حلل_مرحلة_واجهة from a module after the first: only
+// incremental tooling analysis). A compilation's one stage starts from module
+// 0 and never copies. The C Stage0 (bootstrap/) has no `استنسخ`: its build
+// binds later_phase_facts_copy_unavailable.sn in this module's place
+// (cmake/modules/Stage1.cmake).
+عام عرف انسخ_حقائق_لاحقة_مرحلية(الحقائق: &حقائق_لاحقة_مرحلية): حقائق_لاحقة_مرحلية {
+    أرجع استنسخ(الحقائق);
+}

@@ -119,6 +119,10 @@ int __Type_Resolve__(__Semantic_Context__ *__Context__,
 
     switch (__Base__->__Kind__)
     {
+        case __Ast_Type_Pointer__:
+            __Out_Type__->__Kind__ = __Resolved_Type_Pointer__;
+            __Out_Type__->__Inner__ = __Base__->__As__.__Inner__;
+            break;
         case __Ast_Type_Reference__:
             __Out_Type__->__Kind__ = __Resolved_Type_Reference__;
             __Out_Type__->__Reference_Mutable__ =

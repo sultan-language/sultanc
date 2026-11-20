@@ -1,0 +1,14 @@
+// ZIP archive example: zip_create (write, 1 file entries).
+import std.io.println;
+import std.text.number;
+import std.archive.zip;
+
+
+def main(): int {
+    let entries: mutable vector zip_entry = [];
+    append(entries, new_zip_file("zip_create_0.txt", [65 as u8, 10 as u8], false));
+    match zip_encode(&entries) with
+    | result.ok(data) -> { println(uint_to_text(length(data) as uint)); }
+    | result.err(_) -> { return 1; };
+    return 0;
+}

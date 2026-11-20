@@ -1,0 +1,63 @@
+// اختبار: تشغيل
+// أهداف: x86_64-linux
+// خروج: 0
+// std.sync.arc: each round shares a fresh Arc (an owned record with text)
+// with a spawned thread, which reads it through its own clone and adds to an
+// atomic total shared through a second Arc. A thread drops its closure, and
+// so its clone, when it finishes; joining it releases the rest of the thread.
+// After 10^4 rounds the allocator's live bytes are where they were: every
+// value was freed exactly once. Counterpart:
+// tests/ar/stdlib/behavior/sync_arc_threads_rss_flat.sn. No pair directive:
+// the interpreter runs one thread and does not use the std allocator.
+import std.os.allocation;
+import std.sync.arc;
+import std.sync.atomic;
+import std.thread.thread;
+
+type named = { name: string, id: u64 };
+
+def add_name(shared: &arc<named>, total: &arc<atomic_u64>): void {
+    let n: &named = arc_get(shared);
+    let size: u64 = (length((*n).name) as u64) + (*n).id;
+    let old: u64 = atomic_u64_fetch_add(arc_get(total), size, memory_ordering.seq_cst());
+}
+
+// The clones the closure captures live in this frame until it returns, as
+// a Rust `move` closure's would live in the closure alone.
+def start_reader(shared: &arc<named>, total: &arc<atomic_u64>): option join_handle {
+    let mine: arc<named> = arc_clone(shared);
+    let sum: arc<atomic_u64> = arc_clone(total);
+    match spawn(fn(): void -> add_name(&mine, &sum)) with
+    | result.ok(h) -> { return option.some(h); }
+    | result.err(_) -> { return option.none(); };
+}
+
+def round(i: u64, total: &arc<atomic_u64>): bool {
+    let value: named = { name: "shared across threads", id: i };
+    let shared: arc<named> = arc_new(value);
+    match start_reader(&shared, total) with
+    | option.some(h) -> {
+        let handle: mutable join_handle = h;
+        join(&mutable handle);
+    }
+    | option.none -> { return false; };
+    // The thread's clone is gone: this handle is the last one.
+    return arc_strong_count(&shared) == 1;
+}
+
+def main(): i32 {
+    let total: arc<atomic_u64> = arc_new(atomic_u64_new(0 as u64));
+    if (!round(0 as u64, &total)) { return 1; };
+    let before: u64 = بايتات_حية_مخصص_النظام();
+    let i: mutable u64 = 1;
+    while (i <= (10000 as u64)) {
+        if (!round(i, &total)) { return 2; };
+        i := i + 1;
+    }
+    let after: u64 = بايتات_حية_مخصص_النظام();
+    if (after != before) { return 3; };
+    // 21 bytes of text per round plus the ids 0..10^4.
+    let expected: u64 = (21 as u64) * (10001 as u64) + (50005000 as u64);
+    if (atomic_u64_load(arc_get(&total), memory_ordering.seq_cst()) != expected) { return 4; };
+    return 0;
+}

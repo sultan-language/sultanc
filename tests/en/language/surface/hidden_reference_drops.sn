@@ -1,0 +1,132 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// نظير: tests/ar/language/surface/hidden_reference_drops.sn
+// An owning record larger than 16 bytes passed as a hidden reference
+// (compiler/msir/msir_copies.sn) is still dropped exactly once, where it was
+// before: a moved argument by its new owner, the callee (on every return
+// path, and in the arm of a match on the parameter); a cloned argument's
+// copy by the callee and the original by the caller; a parameter the callee
+// moves into a variable it then changes by that variable; a record moved
+// down a recursion and back up, and one replaced each loop iteration, by
+// whichever value owns it last. The allocator's counters (std.os.allocation)
+// show that every round frees what it allocates: no drop is missed, and a
+// double drop would release a buffer twice. The checked interpreter does
+// not use the std allocator (its counters stay put); there the rounds still
+// run and a double release would trap.
+import std.os.allocation;
+import std.text.number;
+
+type Owned = { name: string, tags: vector string, n: int };
+type Pair = { left: Owned, right: Owned };
+
+// Seven characters, owned (heap) text.
+def text(i: int): string { return int_to_text(1000000 + i); }
+def size(s: string): int { return length(s) as int; }
+
+def make(i: int): Owned {
+    let tags: mutable vector string = [];
+    append(tags, text(i + 1));
+    append(tags, text(i + 2));
+    return { name: text(i), tags: tags, n: i };
+}
+
+// Takes ownership and drops the parameter at its return.
+def consume(p: Owned): int { return (length(p.name) as int) + (length(p.tags) as int); }
+
+// Early return: the parameter is dropped on both paths.
+def early(p: Owned, stop: bool): int {
+    if (stop) { return 1; };
+    return consume(p);
+}
+
+// The parameter moves into a variable the callee changes.
+def changed(p: Owned): int {
+    let own: mutable Owned = p;
+    own.name := text(own.n + 7);
+    append(own.tags, text(own.n + 8));
+    return (length(own.name) as int) + (length(own.tags) as int);
+}
+
+// A match on the parameter moves a part out; the other parts are dropped.
+def matched(p: Owned): int {
+    match p with
+    | { name: n, tags: _, n: _ } -> { return size(n); };
+}
+
+// Moved down and back up a recursion.
+def descend(p: Owned, depth: int): Owned {
+    if (depth == 0) { return p; };
+    return descend(p, depth - 1);
+}
+
+// Replaces its parameter: the old one is dropped here.
+def renamed(p: Owned): Owned {
+    return { name: text(p.n + 1), tags: clone(&p.tags), n: p.n + 1 };
+}
+
+def halves(q: Pair): int {
+    match q with
+    | { left: l, right: r } -> { return consume(l) + (length(r.name) as int); };
+}
+
+def run(k: int, i: int): int {
+    if (k == 1) { return consume(make(i)); };
+    if (k == 2) {
+        let r: Owned = make(i);
+        return consume(r);
+    };
+    if (k == 3) {
+        let r: Owned = make(i);
+        let copied: int = consume(clone(&r));
+        return copied + (length(r.name) as int);
+    };
+    if (k == 4) { return changed(make(i)); };
+    if (k == 5) { return early(make(i), true) + early(make(i), false); };
+    if (k == 6) { return matched(make(i)); };
+    if (k == 7) {
+        let back: Owned = descend(make(i), 6);
+        return consume(back);
+    };
+    if (k == 8) {
+        let r: mutable Owned = make(i);
+        let j: mutable int = 0;
+        while (j < 4) { r := renamed(r); j := j + 1; }
+        return r.n - i + consume(r);
+    };
+    let q: Pair = { left: make(i), right: make(i + 3) };
+    return halves(q);
+}
+
+def expected(k: int): int {
+    if (k == 3) { return 16; };
+    if (k == 4) { return 10; };
+    if (k == 5) { return 10; };
+    if (k == 6) { return 7; };
+    if (k == 8) { return 13; };
+    if (k == 9) { return 16; };
+    return 9;
+}
+
+def main(): int {
+    let k: mutable int = 1;
+    while (k <= 9) {
+        if (run(k, 0) != expected(k)) { return k; };
+        let allocations: u64 = allocation_count();
+        let frees: u64 = free_count();
+        let i: mutable int = 0;
+        while (i < 200) {
+            if (run(k, i) != expected(k)) { return 20 + k; };
+            i := i + 1;
+        }
+        let allocated: u64 = allocation_count() - allocations;
+        let freed: u64 = free_count() - frees;
+        // Under the std allocator every round allocates, and frees as much.
+        if (allocated != 0) {
+            if (allocated < 200) { return 40 + k; };
+            if (freed + 8 < allocated || freed > allocated + 8) { return 60 + k; };
+        };
+        k := k + 1;
+    }
+    return 42;
+}

@@ -1,0 +1,18 @@
+// Updating a value behind a mutex: each with_lock call increments it while holding the lock.
+import std.io.println;
+import std.text.number;
+import std.sync.mutex;
+
+def increment(v: &mutable i64): i64 {
+    *v := *v + 1;
+    return *v;
+}
+
+def main(): int {
+    let lock: mutex<i64> = mutex_new(10 as i64);
+    let a: i64 = with_lock(&lock, fn(v: &mutable i64): i64 -> increment(v));
+    let b: i64 = with_lock(&lock, fn(v: &mutable i64): i64 -> increment(v));
+    if (a != 11 as i64 || b != 12 as i64) { return 1; };
+    println(int_to_text(b as int));
+    return 0;
+}

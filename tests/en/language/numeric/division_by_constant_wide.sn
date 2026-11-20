@@ -1,0 +1,3482 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/language/numeric/division_by_constant_wide.sn
+// Division and remainder by u32, i32, u64 and i64 constants on the edges
+// (extremes, 0, ±1, around the divisor) and on 500 pseudo-random dividends
+// each (a 64-bit LCG), against the same division by a value only known at
+// run time. Generated.
+import std.process.argument_count;
+import std.math.wrapping;
+
+def q_u32_1(x: u32): u32 { return x / 1; }
+def r_u32_1(x: u32): u32 { return x % 1; }
+def t_u32_1(one: u32): bool {
+    let d: u32 = 1 * one;
+    if (!agree_u32_1(0, d)) { return false; };
+    if (!agree_u32_1(1, d)) { return false; };
+    if (!agree_u32_1(2, d)) { return false; };
+    if (!agree_u32_1(4294967294, d)) { return false; };
+    if (!agree_u32_1(4294967295, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: u32 = (s >> 32) as u32;
+        if (q_u32_1(x) != x / d || r_u32_1(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_u32_1(x: u32, d: u32): bool {
+    return q_u32_1(x) == x / d && r_u32_1(x) == x % d;
+}
+def q_u32_2(x: u32): u32 { return x / 2; }
+def r_u32_2(x: u32): u32 { return x % 2; }
+def t_u32_2(one: u32): bool {
+    let d: u32 = 2 * one;
+    if (!agree_u32_2(0, d)) { return false; };
+    if (!agree_u32_2(1, d)) { return false; };
+    if (!agree_u32_2(2, d)) { return false; };
+    if (!agree_u32_2(3, d)) { return false; };
+    if (!agree_u32_2(4294967294, d)) { return false; };
+    if (!agree_u32_2(4294967295, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: u32 = (s >> 32) as u32;
+        if (q_u32_2(x) != x / d || r_u32_2(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_u32_2(x: u32, d: u32): bool {
+    return q_u32_2(x) == x / d && r_u32_2(x) == x % d;
+}
+def q_u32_3(x: u32): u32 { return x / 3; }
+def r_u32_3(x: u32): u32 { return x % 3; }
+def t_u32_3(one: u32): bool {
+    let d: u32 = 3 * one;
+    if (!agree_u32_3(0, d)) { return false; };
+    if (!agree_u32_3(1, d)) { return false; };
+    if (!agree_u32_3(2, d)) { return false; };
+    if (!agree_u32_3(3, d)) { return false; };
+    if (!agree_u32_3(4, d)) { return false; };
+    if (!agree_u32_3(4294967294, d)) { return false; };
+    if (!agree_u32_3(4294967295, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: u32 = (s >> 32) as u32;
+        if (q_u32_3(x) != x / d || r_u32_3(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_u32_3(x: u32, d: u32): bool {
+    return q_u32_3(x) == x / d && r_u32_3(x) == x % d;
+}
+def q_u32_5(x: u32): u32 { return x / 5; }
+def r_u32_5(x: u32): u32 { return x % 5; }
+def t_u32_5(one: u32): bool {
+    let d: u32 = 5 * one;
+    if (!agree_u32_5(0, d)) { return false; };
+    if (!agree_u32_5(1, d)) { return false; };
+    if (!agree_u32_5(2, d)) { return false; };
+    if (!agree_u32_5(4, d)) { return false; };
+    if (!agree_u32_5(5, d)) { return false; };
+    if (!agree_u32_5(6, d)) { return false; };
+    if (!agree_u32_5(4294967294, d)) { return false; };
+    if (!agree_u32_5(4294967295, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: u32 = (s >> 32) as u32;
+        if (q_u32_5(x) != x / d || r_u32_5(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_u32_5(x: u32, d: u32): bool {
+    return q_u32_5(x) == x / d && r_u32_5(x) == x % d;
+}
+def q_u32_7(x: u32): u32 { return x / 7; }
+def r_u32_7(x: u32): u32 { return x % 7; }
+def t_u32_7(one: u32): bool {
+    let d: u32 = 7 * one;
+    if (!agree_u32_7(0, d)) { return false; };
+    if (!agree_u32_7(1, d)) { return false; };
+    if (!agree_u32_7(2, d)) { return false; };
+    if (!agree_u32_7(6, d)) { return false; };
+    if (!agree_u32_7(7, d)) { return false; };
+    if (!agree_u32_7(8, d)) { return false; };
+    if (!agree_u32_7(4294967294, d)) { return false; };
+    if (!agree_u32_7(4294967295, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: u32 = (s >> 32) as u32;
+        if (q_u32_7(x) != x / d || r_u32_7(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_u32_7(x: u32, d: u32): bool {
+    return q_u32_7(x) == x / d && r_u32_7(x) == x % d;
+}
+def q_u32_10(x: u32): u32 { return x / 10; }
+def r_u32_10(x: u32): u32 { return x % 10; }
+def t_u32_10(one: u32): bool {
+    let d: u32 = 10 * one;
+    if (!agree_u32_10(0, d)) { return false; };
+    if (!agree_u32_10(1, d)) { return false; };
+    if (!agree_u32_10(2, d)) { return false; };
+    if (!agree_u32_10(9, d)) { return false; };
+    if (!agree_u32_10(10, d)) { return false; };
+    if (!agree_u32_10(11, d)) { return false; };
+    if (!agree_u32_10(4294967294, d)) { return false; };
+    if (!agree_u32_10(4294967295, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: u32 = (s >> 32) as u32;
+        if (q_u32_10(x) != x / d || r_u32_10(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_u32_10(x: u32, d: u32): bool {
+    return q_u32_10(x) == x / d && r_u32_10(x) == x % d;
+}
+def q_u32_60(x: u32): u32 { return x / 60; }
+def r_u32_60(x: u32): u32 { return x % 60; }
+def t_u32_60(one: u32): bool {
+    let d: u32 = 60 * one;
+    if (!agree_u32_60(0, d)) { return false; };
+    if (!agree_u32_60(1, d)) { return false; };
+    if (!agree_u32_60(2, d)) { return false; };
+    if (!agree_u32_60(59, d)) { return false; };
+    if (!agree_u32_60(60, d)) { return false; };
+    if (!agree_u32_60(61, d)) { return false; };
+    if (!agree_u32_60(4294967294, d)) { return false; };
+    if (!agree_u32_60(4294967295, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: u32 = (s >> 32) as u32;
+        if (q_u32_60(x) != x / d || r_u32_60(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_u32_60(x: u32, d: u32): bool {
+    return q_u32_60(x) == x / d && r_u32_60(x) == x % d;
+}
+def q_u32_641(x: u32): u32 { return x / 641; }
+def r_u32_641(x: u32): u32 { return x % 641; }
+def t_u32_641(one: u32): bool {
+    let d: u32 = 641 * one;
+    if (!agree_u32_641(0, d)) { return false; };
+    if (!agree_u32_641(1, d)) { return false; };
+    if (!agree_u32_641(2, d)) { return false; };
+    if (!agree_u32_641(640, d)) { return false; };
+    if (!agree_u32_641(641, d)) { return false; };
+    if (!agree_u32_641(642, d)) { return false; };
+    if (!agree_u32_641(4294967294, d)) { return false; };
+    if (!agree_u32_641(4294967295, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: u32 = (s >> 32) as u32;
+        if (q_u32_641(x) != x / d || r_u32_641(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_u32_641(x: u32, d: u32): bool {
+    return q_u32_641(x) == x / d && r_u32_641(x) == x % d;
+}
+def q_u32_1000(x: u32): u32 { return x / 1000; }
+def r_u32_1000(x: u32): u32 { return x % 1000; }
+def t_u32_1000(one: u32): bool {
+    let d: u32 = 1000 * one;
+    if (!agree_u32_1000(0, d)) { return false; };
+    if (!agree_u32_1000(1, d)) { return false; };
+    if (!agree_u32_1000(2, d)) { return false; };
+    if (!agree_u32_1000(999, d)) { return false; };
+    if (!agree_u32_1000(1000, d)) { return false; };
+    if (!agree_u32_1000(1001, d)) { return false; };
+    if (!agree_u32_1000(4294967294, d)) { return false; };
+    if (!agree_u32_1000(4294967295, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: u32 = (s >> 32) as u32;
+        if (q_u32_1000(x) != x / d || r_u32_1000(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_u32_1000(x: u32, d: u32): bool {
+    return q_u32_1000(x) == x / d && r_u32_1000(x) == x % d;
+}
+def q_u32_2097(x: u32): u32 { return x / 2097; }
+def r_u32_2097(x: u32): u32 { return x % 2097; }
+def t_u32_2097(one: u32): bool {
+    let d: u32 = 2097 * one;
+    if (!agree_u32_2097(0, d)) { return false; };
+    if (!agree_u32_2097(1, d)) { return false; };
+    if (!agree_u32_2097(2, d)) { return false; };
+    if (!agree_u32_2097(2096, d)) { return false; };
+    if (!agree_u32_2097(2097, d)) { return false; };
+    if (!agree_u32_2097(2098, d)) { return false; };
+    if (!agree_u32_2097(4294967294, d)) { return false; };
+    if (!agree_u32_2097(4294967295, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: u32 = (s >> 32) as u32;
+        if (q_u32_2097(x) != x / d || r_u32_2097(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_u32_2097(x: u32, d: u32): bool {
+    return q_u32_2097(x) == x / d && r_u32_2097(x) == x % d;
+}
+def q_u32_3784(x: u32): u32 { return x / 3784; }
+def r_u32_3784(x: u32): u32 { return x % 3784; }
+def t_u32_3784(one: u32): bool {
+    let d: u32 = 3784 * one;
+    if (!agree_u32_3784(0, d)) { return false; };
+    if (!agree_u32_3784(1, d)) { return false; };
+    if (!agree_u32_3784(2, d)) { return false; };
+    if (!agree_u32_3784(3783, d)) { return false; };
+    if (!agree_u32_3784(3784, d)) { return false; };
+    if (!agree_u32_3784(3785, d)) { return false; };
+    if (!agree_u32_3784(4294967294, d)) { return false; };
+    if (!agree_u32_3784(4294967295, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: u32 = (s >> 32) as u32;
+        if (q_u32_3784(x) != x / d || r_u32_3784(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_u32_3784(x: u32, d: u32): bool {
+    return q_u32_3784(x) == x / d && r_u32_3784(x) == x % d;
+}
+def q_u32_13872(x: u32): u32 { return x / 13872; }
+def r_u32_13872(x: u32): u32 { return x % 13872; }
+def t_u32_13872(one: u32): bool {
+    let d: u32 = 13872 * one;
+    if (!agree_u32_13872(0, d)) { return false; };
+    if (!agree_u32_13872(1, d)) { return false; };
+    if (!agree_u32_13872(2, d)) { return false; };
+    if (!agree_u32_13872(13871, d)) { return false; };
+    if (!agree_u32_13872(13872, d)) { return false; };
+    if (!agree_u32_13872(13873, d)) { return false; };
+    if (!agree_u32_13872(4294967294, d)) { return false; };
+    if (!agree_u32_13872(4294967295, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: u32 = (s >> 32) as u32;
+        if (q_u32_13872(x) != x / d || r_u32_13872(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_u32_13872(x: u32, d: u32): bool {
+    return q_u32_13872(x) == x / d && r_u32_13872(x) == x % d;
+}
+def q_u32_29554(x: u32): u32 { return x / 29554; }
+def r_u32_29554(x: u32): u32 { return x % 29554; }
+def t_u32_29554(one: u32): bool {
+    let d: u32 = 29554 * one;
+    if (!agree_u32_29554(0, d)) { return false; };
+    if (!agree_u32_29554(1, d)) { return false; };
+    if (!agree_u32_29554(2, d)) { return false; };
+    if (!agree_u32_29554(29553, d)) { return false; };
+    if (!agree_u32_29554(29554, d)) { return false; };
+    if (!agree_u32_29554(29555, d)) { return false; };
+    if (!agree_u32_29554(4294967294, d)) { return false; };
+    if (!agree_u32_29554(4294967295, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: u32 = (s >> 32) as u32;
+        if (q_u32_29554(x) != x / d || r_u32_29554(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_u32_29554(x: u32, d: u32): bool {
+    return q_u32_29554(x) == x / d && r_u32_29554(x) == x % d;
+}
+def q_u32_65537(x: u32): u32 { return x / 65537; }
+def r_u32_65537(x: u32): u32 { return x % 65537; }
+def t_u32_65537(one: u32): bool {
+    let d: u32 = 65537 * one;
+    if (!agree_u32_65537(0, d)) { return false; };
+    if (!agree_u32_65537(1, d)) { return false; };
+    if (!agree_u32_65537(2, d)) { return false; };
+    if (!agree_u32_65537(65536, d)) { return false; };
+    if (!agree_u32_65537(65537, d)) { return false; };
+    if (!agree_u32_65537(65538, d)) { return false; };
+    if (!agree_u32_65537(4294967294, d)) { return false; };
+    if (!agree_u32_65537(4294967295, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: u32 = (s >> 32) as u32;
+        if (q_u32_65537(x) != x / d || r_u32_65537(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_u32_65537(x: u32, d: u32): bool {
+    return q_u32_65537(x) == x / d && r_u32_65537(x) == x % d;
+}
+def q_u32_274177(x: u32): u32 { return x / 274177; }
+def r_u32_274177(x: u32): u32 { return x % 274177; }
+def t_u32_274177(one: u32): bool {
+    let d: u32 = 274177 * one;
+    if (!agree_u32_274177(0, d)) { return false; };
+    if (!agree_u32_274177(1, d)) { return false; };
+    if (!agree_u32_274177(2, d)) { return false; };
+    if (!agree_u32_274177(274176, d)) { return false; };
+    if (!agree_u32_274177(274177, d)) { return false; };
+    if (!agree_u32_274177(274178, d)) { return false; };
+    if (!agree_u32_274177(4294967294, d)) { return false; };
+    if (!agree_u32_274177(4294967295, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: u32 = (s >> 32) as u32;
+        if (q_u32_274177(x) != x / d || r_u32_274177(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_u32_274177(x: u32, d: u32): bool {
+    return q_u32_274177(x) == x / d && r_u32_274177(x) == x % d;
+}
+def q_u32_751734702(x: u32): u32 { return x / 751734702; }
+def r_u32_751734702(x: u32): u32 { return x % 751734702; }
+def t_u32_751734702(one: u32): bool {
+    let d: u32 = 751734702 * one;
+    if (!agree_u32_751734702(0, d)) { return false; };
+    if (!agree_u32_751734702(1, d)) { return false; };
+    if (!agree_u32_751734702(2, d)) { return false; };
+    if (!agree_u32_751734702(751734701, d)) { return false; };
+    if (!agree_u32_751734702(751734702, d)) { return false; };
+    if (!agree_u32_751734702(751734703, d)) { return false; };
+    if (!agree_u32_751734702(4294967294, d)) { return false; };
+    if (!agree_u32_751734702(4294967295, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: u32 = (s >> 32) as u32;
+        if (q_u32_751734702(x) != x / d || r_u32_751734702(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_u32_751734702(x: u32, d: u32): bool {
+    return q_u32_751734702(x) == x / d && r_u32_751734702(x) == x % d;
+}
+def q_u32_898236552(x: u32): u32 { return x / 898236552; }
+def r_u32_898236552(x: u32): u32 { return x % 898236552; }
+def t_u32_898236552(one: u32): bool {
+    let d: u32 = 898236552 * one;
+    if (!agree_u32_898236552(0, d)) { return false; };
+    if (!agree_u32_898236552(1, d)) { return false; };
+    if (!agree_u32_898236552(2, d)) { return false; };
+    if (!agree_u32_898236552(898236551, d)) { return false; };
+    if (!agree_u32_898236552(898236552, d)) { return false; };
+    if (!agree_u32_898236552(898236553, d)) { return false; };
+    if (!agree_u32_898236552(4294967294, d)) { return false; };
+    if (!agree_u32_898236552(4294967295, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: u32 = (s >> 32) as u32;
+        if (q_u32_898236552(x) != x / d || r_u32_898236552(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_u32_898236552(x: u32, d: u32): bool {
+    return q_u32_898236552(x) == x / d && r_u32_898236552(x) == x % d;
+}
+def q_u32_994744082(x: u32): u32 { return x / 994744082; }
+def r_u32_994744082(x: u32): u32 { return x % 994744082; }
+def t_u32_994744082(one: u32): bool {
+    let d: u32 = 994744082 * one;
+    if (!agree_u32_994744082(0, d)) { return false; };
+    if (!agree_u32_994744082(1, d)) { return false; };
+    if (!agree_u32_994744082(2, d)) { return false; };
+    if (!agree_u32_994744082(994744081, d)) { return false; };
+    if (!agree_u32_994744082(994744082, d)) { return false; };
+    if (!agree_u32_994744082(994744083, d)) { return false; };
+    if (!agree_u32_994744082(4294967294, d)) { return false; };
+    if (!agree_u32_994744082(4294967295, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: u32 = (s >> 32) as u32;
+        if (q_u32_994744082(x) != x / d || r_u32_994744082(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_u32_994744082(x: u32, d: u32): bool {
+    return q_u32_994744082(x) == x / d && r_u32_994744082(x) == x % d;
+}
+def q_u32_1361431979(x: u32): u32 { return x / 1361431979; }
+def r_u32_1361431979(x: u32): u32 { return x % 1361431979; }
+def t_u32_1361431979(one: u32): bool {
+    let d: u32 = 1361431979 * one;
+    if (!agree_u32_1361431979(0, d)) { return false; };
+    if (!agree_u32_1361431979(1, d)) { return false; };
+    if (!agree_u32_1361431979(2, d)) { return false; };
+    if (!agree_u32_1361431979(1361431978, d)) { return false; };
+    if (!agree_u32_1361431979(1361431979, d)) { return false; };
+    if (!agree_u32_1361431979(1361431980, d)) { return false; };
+    if (!agree_u32_1361431979(4294967294, d)) { return false; };
+    if (!agree_u32_1361431979(4294967295, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: u32 = (s >> 32) as u32;
+        if (q_u32_1361431979(x) != x / d || r_u32_1361431979(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_u32_1361431979(x: u32, d: u32): bool {
+    return q_u32_1361431979(x) == x / d && r_u32_1361431979(x) == x % d;
+}
+def q_u32_1684267338(x: u32): u32 { return x / 1684267338; }
+def r_u32_1684267338(x: u32): u32 { return x % 1684267338; }
+def t_u32_1684267338(one: u32): bool {
+    let d: u32 = 1684267338 * one;
+    if (!agree_u32_1684267338(0, d)) { return false; };
+    if (!agree_u32_1684267338(1, d)) { return false; };
+    if (!agree_u32_1684267338(2, d)) { return false; };
+    if (!agree_u32_1684267338(1684267337, d)) { return false; };
+    if (!agree_u32_1684267338(1684267338, d)) { return false; };
+    if (!agree_u32_1684267338(1684267339, d)) { return false; };
+    if (!agree_u32_1684267338(4294967294, d)) { return false; };
+    if (!agree_u32_1684267338(4294967295, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: u32 = (s >> 32) as u32;
+        if (q_u32_1684267338(x) != x / d || r_u32_1684267338(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_u32_1684267338(x: u32, d: u32): bool {
+    return q_u32_1684267338(x) == x / d && r_u32_1684267338(x) == x % d;
+}
+def q_u32_1869511783(x: u32): u32 { return x / 1869511783; }
+def r_u32_1869511783(x: u32): u32 { return x % 1869511783; }
+def t_u32_1869511783(one: u32): bool {
+    let d: u32 = 1869511783 * one;
+    if (!agree_u32_1869511783(0, d)) { return false; };
+    if (!agree_u32_1869511783(1, d)) { return false; };
+    if (!agree_u32_1869511783(2, d)) { return false; };
+    if (!agree_u32_1869511783(1869511782, d)) { return false; };
+    if (!agree_u32_1869511783(1869511783, d)) { return false; };
+    if (!agree_u32_1869511783(1869511784, d)) { return false; };
+    if (!agree_u32_1869511783(4294967294, d)) { return false; };
+    if (!agree_u32_1869511783(4294967295, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: u32 = (s >> 32) as u32;
+        if (q_u32_1869511783(x) != x / d || r_u32_1869511783(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_u32_1869511783(x: u32, d: u32): bool {
+    return q_u32_1869511783(x) == x / d && r_u32_1869511783(x) == x % d;
+}
+def q_u32_1941083453(x: u32): u32 { return x / 1941083453; }
+def r_u32_1941083453(x: u32): u32 { return x % 1941083453; }
+def t_u32_1941083453(one: u32): bool {
+    let d: u32 = 1941083453 * one;
+    if (!agree_u32_1941083453(0, d)) { return false; };
+    if (!agree_u32_1941083453(1, d)) { return false; };
+    if (!agree_u32_1941083453(2, d)) { return false; };
+    if (!agree_u32_1941083453(1941083452, d)) { return false; };
+    if (!agree_u32_1941083453(1941083453, d)) { return false; };
+    if (!agree_u32_1941083453(1941083454, d)) { return false; };
+    if (!agree_u32_1941083453(4294967294, d)) { return false; };
+    if (!agree_u32_1941083453(4294967295, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: u32 = (s >> 32) as u32;
+        if (q_u32_1941083453(x) != x / d || r_u32_1941083453(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_u32_1941083453(x: u32, d: u32): bool {
+    return q_u32_1941083453(x) == x / d && r_u32_1941083453(x) == x % d;
+}
+def q_u32_2147483647(x: u32): u32 { return x / 2147483647; }
+def r_u32_2147483647(x: u32): u32 { return x % 2147483647; }
+def t_u32_2147483647(one: u32): bool {
+    let d: u32 = 2147483647 * one;
+    if (!agree_u32_2147483647(0, d)) { return false; };
+    if (!agree_u32_2147483647(1, d)) { return false; };
+    if (!agree_u32_2147483647(2, d)) { return false; };
+    if (!agree_u32_2147483647(2147483646, d)) { return false; };
+    if (!agree_u32_2147483647(2147483647, d)) { return false; };
+    if (!agree_u32_2147483647(2147483648, d)) { return false; };
+    if (!agree_u32_2147483647(4294967294, d)) { return false; };
+    if (!agree_u32_2147483647(4294967295, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: u32 = (s >> 32) as u32;
+        if (q_u32_2147483647(x) != x / d || r_u32_2147483647(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_u32_2147483647(x: u32, d: u32): bool {
+    return q_u32_2147483647(x) == x / d && r_u32_2147483647(x) == x % d;
+}
+def q_u32_2147483648(x: u32): u32 { return x / 2147483648; }
+def r_u32_2147483648(x: u32): u32 { return x % 2147483648; }
+def t_u32_2147483648(one: u32): bool {
+    let d: u32 = 2147483648 * one;
+    if (!agree_u32_2147483648(0, d)) { return false; };
+    if (!agree_u32_2147483648(1, d)) { return false; };
+    if (!agree_u32_2147483648(2, d)) { return false; };
+    if (!agree_u32_2147483648(2147483647, d)) { return false; };
+    if (!agree_u32_2147483648(2147483648, d)) { return false; };
+    if (!agree_u32_2147483648(2147483649, d)) { return false; };
+    if (!agree_u32_2147483648(4294967294, d)) { return false; };
+    if (!agree_u32_2147483648(4294967295, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: u32 = (s >> 32) as u32;
+        if (q_u32_2147483648(x) != x / d || r_u32_2147483648(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_u32_2147483648(x: u32, d: u32): bool {
+    return q_u32_2147483648(x) == x / d && r_u32_2147483648(x) == x % d;
+}
+def q_u32_2147483649(x: u32): u32 { return x / 2147483649; }
+def r_u32_2147483649(x: u32): u32 { return x % 2147483649; }
+def t_u32_2147483649(one: u32): bool {
+    let d: u32 = 2147483649 * one;
+    if (!agree_u32_2147483649(0, d)) { return false; };
+    if (!agree_u32_2147483649(1, d)) { return false; };
+    if (!agree_u32_2147483649(2, d)) { return false; };
+    if (!agree_u32_2147483649(2147483648, d)) { return false; };
+    if (!agree_u32_2147483649(2147483649, d)) { return false; };
+    if (!agree_u32_2147483649(2147483650, d)) { return false; };
+    if (!agree_u32_2147483649(4294967294, d)) { return false; };
+    if (!agree_u32_2147483649(4294967295, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: u32 = (s >> 32) as u32;
+        if (q_u32_2147483649(x) != x / d || r_u32_2147483649(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_u32_2147483649(x: u32, d: u32): bool {
+    return q_u32_2147483649(x) == x / d && r_u32_2147483649(x) == x % d;
+}
+def q_u32_3003370931(x: u32): u32 { return x / 3003370931; }
+def r_u32_3003370931(x: u32): u32 { return x % 3003370931; }
+def t_u32_3003370931(one: u32): bool {
+    let d: u32 = 3003370931 * one;
+    if (!agree_u32_3003370931(0, d)) { return false; };
+    if (!agree_u32_3003370931(1, d)) { return false; };
+    if (!agree_u32_3003370931(2, d)) { return false; };
+    if (!agree_u32_3003370931(3003370930, d)) { return false; };
+    if (!agree_u32_3003370931(3003370931, d)) { return false; };
+    if (!agree_u32_3003370931(3003370932, d)) { return false; };
+    if (!agree_u32_3003370931(4294967294, d)) { return false; };
+    if (!agree_u32_3003370931(4294967295, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: u32 = (s >> 32) as u32;
+        if (q_u32_3003370931(x) != x / d || r_u32_3003370931(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_u32_3003370931(x: u32, d: u32): bool {
+    return q_u32_3003370931(x) == x / d && r_u32_3003370931(x) == x % d;
+}
+def q_u32_3261442381(x: u32): u32 { return x / 3261442381; }
+def r_u32_3261442381(x: u32): u32 { return x % 3261442381; }
+def t_u32_3261442381(one: u32): bool {
+    let d: u32 = 3261442381 * one;
+    if (!agree_u32_3261442381(0, d)) { return false; };
+    if (!agree_u32_3261442381(1, d)) { return false; };
+    if (!agree_u32_3261442381(2, d)) { return false; };
+    if (!agree_u32_3261442381(3261442380, d)) { return false; };
+    if (!agree_u32_3261442381(3261442381, d)) { return false; };
+    if (!agree_u32_3261442381(3261442382, d)) { return false; };
+    if (!agree_u32_3261442381(4294967294, d)) { return false; };
+    if (!agree_u32_3261442381(4294967295, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: u32 = (s >> 32) as u32;
+        if (q_u32_3261442381(x) != x / d || r_u32_3261442381(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_u32_3261442381(x: u32, d: u32): bool {
+    return q_u32_3261442381(x) == x / d && r_u32_3261442381(x) == x % d;
+}
+def q_u32_4288448282(x: u32): u32 { return x / 4288448282; }
+def r_u32_4288448282(x: u32): u32 { return x % 4288448282; }
+def t_u32_4288448282(one: u32): bool {
+    let d: u32 = 4288448282 * one;
+    if (!agree_u32_4288448282(0, d)) { return false; };
+    if (!agree_u32_4288448282(1, d)) { return false; };
+    if (!agree_u32_4288448282(2, d)) { return false; };
+    if (!agree_u32_4288448282(4288448281, d)) { return false; };
+    if (!agree_u32_4288448282(4288448282, d)) { return false; };
+    if (!agree_u32_4288448282(4288448283, d)) { return false; };
+    if (!agree_u32_4288448282(4294967294, d)) { return false; };
+    if (!agree_u32_4288448282(4294967295, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: u32 = (s >> 32) as u32;
+        if (q_u32_4288448282(x) != x / d || r_u32_4288448282(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_u32_4288448282(x: u32, d: u32): bool {
+    return q_u32_4288448282(x) == x / d && r_u32_4288448282(x) == x % d;
+}
+def q_u32_4294967294(x: u32): u32 { return x / 4294967294; }
+def r_u32_4294967294(x: u32): u32 { return x % 4294967294; }
+def t_u32_4294967294(one: u32): bool {
+    let d: u32 = 4294967294 * one;
+    if (!agree_u32_4294967294(0, d)) { return false; };
+    if (!agree_u32_4294967294(1, d)) { return false; };
+    if (!agree_u32_4294967294(2, d)) { return false; };
+    if (!agree_u32_4294967294(4294967293, d)) { return false; };
+    if (!agree_u32_4294967294(4294967294, d)) { return false; };
+    if (!agree_u32_4294967294(4294967295, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: u32 = (s >> 32) as u32;
+        if (q_u32_4294967294(x) != x / d || r_u32_4294967294(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_u32_4294967294(x: u32, d: u32): bool {
+    return q_u32_4294967294(x) == x / d && r_u32_4294967294(x) == x % d;
+}
+def q_u32_4294967295(x: u32): u32 { return x / 4294967295; }
+def r_u32_4294967295(x: u32): u32 { return x % 4294967295; }
+def t_u32_4294967295(one: u32): bool {
+    let d: u32 = 4294967295 * one;
+    if (!agree_u32_4294967295(0, d)) { return false; };
+    if (!agree_u32_4294967295(1, d)) { return false; };
+    if (!agree_u32_4294967295(2, d)) { return false; };
+    if (!agree_u32_4294967295(4294967294, d)) { return false; };
+    if (!agree_u32_4294967295(4294967295, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: u32 = (s >> 32) as u32;
+        if (q_u32_4294967295(x) != x / d || r_u32_4294967295(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_u32_4294967295(x: u32, d: u32): bool {
+    return q_u32_4294967295(x) == x / d && r_u32_4294967295(x) == x % d;
+}
+def q_i32_m2147483648(x: i32): i32 { return x / (-2147483647 - 1); }
+def r_i32_m2147483648(x: i32): i32 { return x % (-2147483647 - 1); }
+def t_i32_m2147483648(one: i32): bool {
+    let d: i32 = (-2147483647 - 1) * one;
+    if (!agree_i32_m2147483648((-2147483647 - 1), d)) { return false; };
+    if (!agree_i32_m2147483648((-2147483647), d)) { return false; };
+    if (!agree_i32_m2147483648((-2), d)) { return false; };
+    if (!agree_i32_m2147483648((-1), d)) { return false; };
+    if (!agree_i32_m2147483648(0, d)) { return false; };
+    if (!agree_i32_m2147483648(1, d)) { return false; };
+    if (!agree_i32_m2147483648(2, d)) { return false; };
+    if (!agree_i32_m2147483648(2147483646, d)) { return false; };
+    if (!agree_i32_m2147483648(2147483647, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: i32 = (s >> 32) as i32;
+        if (q_i32_m2147483648(x) != x / d || r_i32_m2147483648(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_i32_m2147483648(x: i32, d: i32): bool {
+    return q_i32_m2147483648(x) == x / d && r_i32_m2147483648(x) == x % d;
+}
+def q_i32_m2147483647(x: i32): i32 { return x / (-2147483647); }
+def r_i32_m2147483647(x: i32): i32 { return x % (-2147483647); }
+def t_i32_m2147483647(one: i32): bool {
+    let d: i32 = (-2147483647) * one;
+    if (!agree_i32_m2147483647((-2147483647 - 1), d)) { return false; };
+    if (!agree_i32_m2147483647((-2147483647), d)) { return false; };
+    if (!agree_i32_m2147483647((-2147483646), d)) { return false; };
+    if (!agree_i32_m2147483647((-2), d)) { return false; };
+    if (!agree_i32_m2147483647((-1), d)) { return false; };
+    if (!agree_i32_m2147483647(0, d)) { return false; };
+    if (!agree_i32_m2147483647(1, d)) { return false; };
+    if (!agree_i32_m2147483647(2, d)) { return false; };
+    if (!agree_i32_m2147483647(2147483646, d)) { return false; };
+    if (!agree_i32_m2147483647(2147483647, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: i32 = (s >> 32) as i32;
+        if (q_i32_m2147483647(x) != x / d || r_i32_m2147483647(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_i32_m2147483647(x: i32, d: i32): bool {
+    return q_i32_m2147483647(x) == x / d && r_i32_m2147483647(x) == x % d;
+}
+def q_i32_m1422759668(x: i32): i32 { return x / (-1422759668); }
+def r_i32_m1422759668(x: i32): i32 { return x % (-1422759668); }
+def t_i32_m1422759668(one: i32): bool {
+    let d: i32 = (-1422759668) * one;
+    if (!agree_i32_m1422759668((-2147483647 - 1), d)) { return false; };
+    if (!agree_i32_m1422759668((-2147483647), d)) { return false; };
+    if (!agree_i32_m1422759668((-1422759669), d)) { return false; };
+    if (!agree_i32_m1422759668((-1422759668), d)) { return false; };
+    if (!agree_i32_m1422759668((-1422759667), d)) { return false; };
+    if (!agree_i32_m1422759668((-2), d)) { return false; };
+    if (!agree_i32_m1422759668((-1), d)) { return false; };
+    if (!agree_i32_m1422759668(0, d)) { return false; };
+    if (!agree_i32_m1422759668(1, d)) { return false; };
+    if (!agree_i32_m1422759668(2, d)) { return false; };
+    if (!agree_i32_m1422759668(1422759667, d)) { return false; };
+    if (!agree_i32_m1422759668(1422759668, d)) { return false; };
+    if (!agree_i32_m1422759668(1422759669, d)) { return false; };
+    if (!agree_i32_m1422759668(2147483646, d)) { return false; };
+    if (!agree_i32_m1422759668(2147483647, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: i32 = (s >> 32) as i32;
+        if (q_i32_m1422759668(x) != x / d || r_i32_m1422759668(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_i32_m1422759668(x: i32, d: i32): bool {
+    return q_i32_m1422759668(x) == x / d && r_i32_m1422759668(x) == x % d;
+}
+def q_i32_m1147763406(x: i32): i32 { return x / (-1147763406); }
+def r_i32_m1147763406(x: i32): i32 { return x % (-1147763406); }
+def t_i32_m1147763406(one: i32): bool {
+    let d: i32 = (-1147763406) * one;
+    if (!agree_i32_m1147763406((-2147483647 - 1), d)) { return false; };
+    if (!agree_i32_m1147763406((-2147483647), d)) { return false; };
+    if (!agree_i32_m1147763406((-1147763407), d)) { return false; };
+    if (!agree_i32_m1147763406((-1147763406), d)) { return false; };
+    if (!agree_i32_m1147763406((-1147763405), d)) { return false; };
+    if (!agree_i32_m1147763406((-2), d)) { return false; };
+    if (!agree_i32_m1147763406((-1), d)) { return false; };
+    if (!agree_i32_m1147763406(0, d)) { return false; };
+    if (!agree_i32_m1147763406(1, d)) { return false; };
+    if (!agree_i32_m1147763406(2, d)) { return false; };
+    if (!agree_i32_m1147763406(1147763405, d)) { return false; };
+    if (!agree_i32_m1147763406(1147763406, d)) { return false; };
+    if (!agree_i32_m1147763406(1147763407, d)) { return false; };
+    if (!agree_i32_m1147763406(2147483646, d)) { return false; };
+    if (!agree_i32_m1147763406(2147483647, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: i32 = (s >> 32) as i32;
+        if (q_i32_m1147763406(x) != x / d || r_i32_m1147763406(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_i32_m1147763406(x: i32, d: i32): bool {
+    return q_i32_m1147763406(x) == x / d && r_i32_m1147763406(x) == x % d;
+}
+def q_i32_m860599353(x: i32): i32 { return x / (-860599353); }
+def r_i32_m860599353(x: i32): i32 { return x % (-860599353); }
+def t_i32_m860599353(one: i32): bool {
+    let d: i32 = (-860599353) * one;
+    if (!agree_i32_m860599353((-2147483647 - 1), d)) { return false; };
+    if (!agree_i32_m860599353((-2147483647), d)) { return false; };
+    if (!agree_i32_m860599353((-860599354), d)) { return false; };
+    if (!agree_i32_m860599353((-860599353), d)) { return false; };
+    if (!agree_i32_m860599353((-860599352), d)) { return false; };
+    if (!agree_i32_m860599353((-2), d)) { return false; };
+    if (!agree_i32_m860599353((-1), d)) { return false; };
+    if (!agree_i32_m860599353(0, d)) { return false; };
+    if (!agree_i32_m860599353(1, d)) { return false; };
+    if (!agree_i32_m860599353(2, d)) { return false; };
+    if (!agree_i32_m860599353(860599352, d)) { return false; };
+    if (!agree_i32_m860599353(860599353, d)) { return false; };
+    if (!agree_i32_m860599353(860599354, d)) { return false; };
+    if (!agree_i32_m860599353(2147483646, d)) { return false; };
+    if (!agree_i32_m860599353(2147483647, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: i32 = (s >> 32) as i32;
+        if (q_i32_m860599353(x) != x / d || r_i32_m860599353(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_i32_m860599353(x: i32, d: i32): bool {
+    return q_i32_m860599353(x) == x / d && r_i32_m860599353(x) == x % d;
+}
+def q_i32_m449315040(x: i32): i32 { return x / (-449315040); }
+def r_i32_m449315040(x: i32): i32 { return x % (-449315040); }
+def t_i32_m449315040(one: i32): bool {
+    let d: i32 = (-449315040) * one;
+    if (!agree_i32_m449315040((-2147483647 - 1), d)) { return false; };
+    if (!agree_i32_m449315040((-2147483647), d)) { return false; };
+    if (!agree_i32_m449315040((-449315041), d)) { return false; };
+    if (!agree_i32_m449315040((-449315040), d)) { return false; };
+    if (!agree_i32_m449315040((-449315039), d)) { return false; };
+    if (!agree_i32_m449315040((-2), d)) { return false; };
+    if (!agree_i32_m449315040((-1), d)) { return false; };
+    if (!agree_i32_m449315040(0, d)) { return false; };
+    if (!agree_i32_m449315040(1, d)) { return false; };
+    if (!agree_i32_m449315040(2, d)) { return false; };
+    if (!agree_i32_m449315040(449315039, d)) { return false; };
+    if (!agree_i32_m449315040(449315040, d)) { return false; };
+    if (!agree_i32_m449315040(449315041, d)) { return false; };
+    if (!agree_i32_m449315040(2147483646, d)) { return false; };
+    if (!agree_i32_m449315040(2147483647, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: i32 = (s >> 32) as i32;
+        if (q_i32_m449315040(x) != x / d || r_i32_m449315040(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_i32_m449315040(x: i32, d: i32): bool {
+    return q_i32_m449315040(x) == x / d && r_i32_m449315040(x) == x % d;
+}
+def q_i32_m416649190(x: i32): i32 { return x / (-416649190); }
+def r_i32_m416649190(x: i32): i32 { return x % (-416649190); }
+def t_i32_m416649190(one: i32): bool {
+    let d: i32 = (-416649190) * one;
+    if (!agree_i32_m416649190((-2147483647 - 1), d)) { return false; };
+    if (!agree_i32_m416649190((-2147483647), d)) { return false; };
+    if (!agree_i32_m416649190((-416649191), d)) { return false; };
+    if (!agree_i32_m416649190((-416649190), d)) { return false; };
+    if (!agree_i32_m416649190((-416649189), d)) { return false; };
+    if (!agree_i32_m416649190((-2), d)) { return false; };
+    if (!agree_i32_m416649190((-1), d)) { return false; };
+    if (!agree_i32_m416649190(0, d)) { return false; };
+    if (!agree_i32_m416649190(1, d)) { return false; };
+    if (!agree_i32_m416649190(2, d)) { return false; };
+    if (!agree_i32_m416649190(416649189, d)) { return false; };
+    if (!agree_i32_m416649190(416649190, d)) { return false; };
+    if (!agree_i32_m416649190(416649191, d)) { return false; };
+    if (!agree_i32_m416649190(2147483646, d)) { return false; };
+    if (!agree_i32_m416649190(2147483647, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: i32 = (s >> 32) as i32;
+        if (q_i32_m416649190(x) != x / d || r_i32_m416649190(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_i32_m416649190(x: i32, d: i32): bool {
+    return q_i32_m416649190(x) == x / d && r_i32_m416649190(x) == x % d;
+}
+def q_i32_m177418141(x: i32): i32 { return x / (-177418141); }
+def r_i32_m177418141(x: i32): i32 { return x % (-177418141); }
+def t_i32_m177418141(one: i32): bool {
+    let d: i32 = (-177418141) * one;
+    if (!agree_i32_m177418141((-2147483647 - 1), d)) { return false; };
+    if (!agree_i32_m177418141((-2147483647), d)) { return false; };
+    if (!agree_i32_m177418141((-177418142), d)) { return false; };
+    if (!agree_i32_m177418141((-177418141), d)) { return false; };
+    if (!agree_i32_m177418141((-177418140), d)) { return false; };
+    if (!agree_i32_m177418141((-2), d)) { return false; };
+    if (!agree_i32_m177418141((-1), d)) { return false; };
+    if (!agree_i32_m177418141(0, d)) { return false; };
+    if (!agree_i32_m177418141(1, d)) { return false; };
+    if (!agree_i32_m177418141(2, d)) { return false; };
+    if (!agree_i32_m177418141(177418140, d)) { return false; };
+    if (!agree_i32_m177418141(177418141, d)) { return false; };
+    if (!agree_i32_m177418141(177418142, d)) { return false; };
+    if (!agree_i32_m177418141(2147483646, d)) { return false; };
+    if (!agree_i32_m177418141(2147483647, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: i32 = (s >> 32) as i32;
+        if (q_i32_m177418141(x) != x / d || r_i32_m177418141(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_i32_m177418141(x: i32, d: i32): bool {
+    return q_i32_m177418141(x) == x / d && r_i32_m177418141(x) == x % d;
+}
+def q_i32_m39285(x: i32): i32 { return x / (-39285); }
+def r_i32_m39285(x: i32): i32 { return x % (-39285); }
+def t_i32_m39285(one: i32): bool {
+    let d: i32 = (-39285) * one;
+    if (!agree_i32_m39285((-2147483647 - 1), d)) { return false; };
+    if (!agree_i32_m39285((-2147483647), d)) { return false; };
+    if (!agree_i32_m39285((-39286), d)) { return false; };
+    if (!agree_i32_m39285((-39285), d)) { return false; };
+    if (!agree_i32_m39285((-39284), d)) { return false; };
+    if (!agree_i32_m39285((-2), d)) { return false; };
+    if (!agree_i32_m39285((-1), d)) { return false; };
+    if (!agree_i32_m39285(0, d)) { return false; };
+    if (!agree_i32_m39285(1, d)) { return false; };
+    if (!agree_i32_m39285(2, d)) { return false; };
+    if (!agree_i32_m39285(39284, d)) { return false; };
+    if (!agree_i32_m39285(39285, d)) { return false; };
+    if (!agree_i32_m39285(39286, d)) { return false; };
+    if (!agree_i32_m39285(2147483646, d)) { return false; };
+    if (!agree_i32_m39285(2147483647, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: i32 = (s >> 32) as i32;
+        if (q_i32_m39285(x) != x / d || r_i32_m39285(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_i32_m39285(x: i32, d: i32): bool {
+    return q_i32_m39285(x) == x / d && r_i32_m39285(x) == x % d;
+}
+def q_i32_m1000(x: i32): i32 { return x / (-1000); }
+def r_i32_m1000(x: i32): i32 { return x % (-1000); }
+def t_i32_m1000(one: i32): bool {
+    let d: i32 = (-1000) * one;
+    if (!agree_i32_m1000((-2147483647 - 1), d)) { return false; };
+    if (!agree_i32_m1000((-2147483647), d)) { return false; };
+    if (!agree_i32_m1000((-1001), d)) { return false; };
+    if (!agree_i32_m1000((-1000), d)) { return false; };
+    if (!agree_i32_m1000((-999), d)) { return false; };
+    if (!agree_i32_m1000((-2), d)) { return false; };
+    if (!agree_i32_m1000((-1), d)) { return false; };
+    if (!agree_i32_m1000(0, d)) { return false; };
+    if (!agree_i32_m1000(1, d)) { return false; };
+    if (!agree_i32_m1000(2, d)) { return false; };
+    if (!agree_i32_m1000(999, d)) { return false; };
+    if (!agree_i32_m1000(1000, d)) { return false; };
+    if (!agree_i32_m1000(1001, d)) { return false; };
+    if (!agree_i32_m1000(2147483646, d)) { return false; };
+    if (!agree_i32_m1000(2147483647, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: i32 = (s >> 32) as i32;
+        if (q_i32_m1000(x) != x / d || r_i32_m1000(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_i32_m1000(x: i32, d: i32): bool {
+    return q_i32_m1000(x) == x / d && r_i32_m1000(x) == x % d;
+}
+def q_i32_m7(x: i32): i32 { return x / (-7); }
+def r_i32_m7(x: i32): i32 { return x % (-7); }
+def t_i32_m7(one: i32): bool {
+    let d: i32 = (-7) * one;
+    if (!agree_i32_m7((-2147483647 - 1), d)) { return false; };
+    if (!agree_i32_m7((-2147483647), d)) { return false; };
+    if (!agree_i32_m7((-8), d)) { return false; };
+    if (!agree_i32_m7((-7), d)) { return false; };
+    if (!agree_i32_m7((-6), d)) { return false; };
+    if (!agree_i32_m7((-2), d)) { return false; };
+    if (!agree_i32_m7((-1), d)) { return false; };
+    if (!agree_i32_m7(0, d)) { return false; };
+    if (!agree_i32_m7(1, d)) { return false; };
+    if (!agree_i32_m7(2, d)) { return false; };
+    if (!agree_i32_m7(6, d)) { return false; };
+    if (!agree_i32_m7(7, d)) { return false; };
+    if (!agree_i32_m7(8, d)) { return false; };
+    if (!agree_i32_m7(2147483646, d)) { return false; };
+    if (!agree_i32_m7(2147483647, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: i32 = (s >> 32) as i32;
+        if (q_i32_m7(x) != x / d || r_i32_m7(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_i32_m7(x: i32, d: i32): bool {
+    return q_i32_m7(x) == x / d && r_i32_m7(x) == x % d;
+}
+def q_i32_m3(x: i32): i32 { return x / (-3); }
+def r_i32_m3(x: i32): i32 { return x % (-3); }
+def t_i32_m3(one: i32): bool {
+    let d: i32 = (-3) * one;
+    if (!agree_i32_m3((-2147483647 - 1), d)) { return false; };
+    if (!agree_i32_m3((-2147483647), d)) { return false; };
+    if (!agree_i32_m3((-4), d)) { return false; };
+    if (!agree_i32_m3((-3), d)) { return false; };
+    if (!agree_i32_m3((-2), d)) { return false; };
+    if (!agree_i32_m3((-1), d)) { return false; };
+    if (!agree_i32_m3(0, d)) { return false; };
+    if (!agree_i32_m3(1, d)) { return false; };
+    if (!agree_i32_m3(2, d)) { return false; };
+    if (!agree_i32_m3(3, d)) { return false; };
+    if (!agree_i32_m3(4, d)) { return false; };
+    if (!agree_i32_m3(2147483646, d)) { return false; };
+    if (!agree_i32_m3(2147483647, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: i32 = (s >> 32) as i32;
+        if (q_i32_m3(x) != x / d || r_i32_m3(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_i32_m3(x: i32, d: i32): bool {
+    return q_i32_m3(x) == x / d && r_i32_m3(x) == x % d;
+}
+def q_i32_m2(x: i32): i32 { return x / (-2); }
+def r_i32_m2(x: i32): i32 { return x % (-2); }
+def t_i32_m2(one: i32): bool {
+    let d: i32 = (-2) * one;
+    if (!agree_i32_m2((-2147483647 - 1), d)) { return false; };
+    if (!agree_i32_m2((-2147483647), d)) { return false; };
+    if (!agree_i32_m2((-3), d)) { return false; };
+    if (!agree_i32_m2((-2), d)) { return false; };
+    if (!agree_i32_m2((-1), d)) { return false; };
+    if (!agree_i32_m2(0, d)) { return false; };
+    if (!agree_i32_m2(1, d)) { return false; };
+    if (!agree_i32_m2(2, d)) { return false; };
+    if (!agree_i32_m2(3, d)) { return false; };
+    if (!agree_i32_m2(2147483646, d)) { return false; };
+    if (!agree_i32_m2(2147483647, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: i32 = (s >> 32) as i32;
+        if (q_i32_m2(x) != x / d || r_i32_m2(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_i32_m2(x: i32, d: i32): bool {
+    return q_i32_m2(x) == x / d && r_i32_m2(x) == x % d;
+}
+def q_i32_2(x: i32): i32 { return x / 2; }
+def r_i32_2(x: i32): i32 { return x % 2; }
+def t_i32_2(one: i32): bool {
+    let d: i32 = 2 * one;
+    if (!agree_i32_2((-2147483647 - 1), d)) { return false; };
+    if (!agree_i32_2((-2147483647), d)) { return false; };
+    if (!agree_i32_2((-3), d)) { return false; };
+    if (!agree_i32_2((-2), d)) { return false; };
+    if (!agree_i32_2((-1), d)) { return false; };
+    if (!agree_i32_2(0, d)) { return false; };
+    if (!agree_i32_2(1, d)) { return false; };
+    if (!agree_i32_2(2, d)) { return false; };
+    if (!agree_i32_2(3, d)) { return false; };
+    if (!agree_i32_2(2147483646, d)) { return false; };
+    if (!agree_i32_2(2147483647, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: i32 = (s >> 32) as i32;
+        if (q_i32_2(x) != x / d || r_i32_2(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_i32_2(x: i32, d: i32): bool {
+    return q_i32_2(x) == x / d && r_i32_2(x) == x % d;
+}
+def q_i32_3(x: i32): i32 { return x / 3; }
+def r_i32_3(x: i32): i32 { return x % 3; }
+def t_i32_3(one: i32): bool {
+    let d: i32 = 3 * one;
+    if (!agree_i32_3((-2147483647 - 1), d)) { return false; };
+    if (!agree_i32_3((-2147483647), d)) { return false; };
+    if (!agree_i32_3((-4), d)) { return false; };
+    if (!agree_i32_3((-3), d)) { return false; };
+    if (!agree_i32_3((-2), d)) { return false; };
+    if (!agree_i32_3((-1), d)) { return false; };
+    if (!agree_i32_3(0, d)) { return false; };
+    if (!agree_i32_3(1, d)) { return false; };
+    if (!agree_i32_3(2, d)) { return false; };
+    if (!agree_i32_3(3, d)) { return false; };
+    if (!agree_i32_3(4, d)) { return false; };
+    if (!agree_i32_3(2147483646, d)) { return false; };
+    if (!agree_i32_3(2147483647, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: i32 = (s >> 32) as i32;
+        if (q_i32_3(x) != x / d || r_i32_3(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_i32_3(x: i32, d: i32): bool {
+    return q_i32_3(x) == x / d && r_i32_3(x) == x % d;
+}
+def q_i32_5(x: i32): i32 { return x / 5; }
+def r_i32_5(x: i32): i32 { return x % 5; }
+def t_i32_5(one: i32): bool {
+    let d: i32 = 5 * one;
+    if (!agree_i32_5((-2147483647 - 1), d)) { return false; };
+    if (!agree_i32_5((-2147483647), d)) { return false; };
+    if (!agree_i32_5((-6), d)) { return false; };
+    if (!agree_i32_5((-5), d)) { return false; };
+    if (!agree_i32_5((-4), d)) { return false; };
+    if (!agree_i32_5((-2), d)) { return false; };
+    if (!agree_i32_5((-1), d)) { return false; };
+    if (!agree_i32_5(0, d)) { return false; };
+    if (!agree_i32_5(1, d)) { return false; };
+    if (!agree_i32_5(2, d)) { return false; };
+    if (!agree_i32_5(4, d)) { return false; };
+    if (!agree_i32_5(5, d)) { return false; };
+    if (!agree_i32_5(6, d)) { return false; };
+    if (!agree_i32_5(2147483646, d)) { return false; };
+    if (!agree_i32_5(2147483647, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: i32 = (s >> 32) as i32;
+        if (q_i32_5(x) != x / d || r_i32_5(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_i32_5(x: i32, d: i32): bool {
+    return q_i32_5(x) == x / d && r_i32_5(x) == x % d;
+}
+def q_i32_7(x: i32): i32 { return x / 7; }
+def r_i32_7(x: i32): i32 { return x % 7; }
+def t_i32_7(one: i32): bool {
+    let d: i32 = 7 * one;
+    if (!agree_i32_7((-2147483647 - 1), d)) { return false; };
+    if (!agree_i32_7((-2147483647), d)) { return false; };
+    if (!agree_i32_7((-8), d)) { return false; };
+    if (!agree_i32_7((-7), d)) { return false; };
+    if (!agree_i32_7((-6), d)) { return false; };
+    if (!agree_i32_7((-2), d)) { return false; };
+    if (!agree_i32_7((-1), d)) { return false; };
+    if (!agree_i32_7(0, d)) { return false; };
+    if (!agree_i32_7(1, d)) { return false; };
+    if (!agree_i32_7(2, d)) { return false; };
+    if (!agree_i32_7(6, d)) { return false; };
+    if (!agree_i32_7(7, d)) { return false; };
+    if (!agree_i32_7(8, d)) { return false; };
+    if (!agree_i32_7(2147483646, d)) { return false; };
+    if (!agree_i32_7(2147483647, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: i32 = (s >> 32) as i32;
+        if (q_i32_7(x) != x / d || r_i32_7(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_i32_7(x: i32, d: i32): bool {
+    return q_i32_7(x) == x / d && r_i32_7(x) == x % d;
+}
+def q_i32_10(x: i32): i32 { return x / 10; }
+def r_i32_10(x: i32): i32 { return x % 10; }
+def t_i32_10(one: i32): bool {
+    let d: i32 = 10 * one;
+    if (!agree_i32_10((-2147483647 - 1), d)) { return false; };
+    if (!agree_i32_10((-2147483647), d)) { return false; };
+    if (!agree_i32_10((-11), d)) { return false; };
+    if (!agree_i32_10((-10), d)) { return false; };
+    if (!agree_i32_10((-9), d)) { return false; };
+    if (!agree_i32_10((-2), d)) { return false; };
+    if (!agree_i32_10((-1), d)) { return false; };
+    if (!agree_i32_10(0, d)) { return false; };
+    if (!agree_i32_10(1, d)) { return false; };
+    if (!agree_i32_10(2, d)) { return false; };
+    if (!agree_i32_10(9, d)) { return false; };
+    if (!agree_i32_10(10, d)) { return false; };
+    if (!agree_i32_10(11, d)) { return false; };
+    if (!agree_i32_10(2147483646, d)) { return false; };
+    if (!agree_i32_10(2147483647, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: i32 = (s >> 32) as i32;
+        if (q_i32_10(x) != x / d || r_i32_10(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_i32_10(x: i32, d: i32): bool {
+    return q_i32_10(x) == x / d && r_i32_10(x) == x % d;
+}
+def q_i32_60(x: i32): i32 { return x / 60; }
+def r_i32_60(x: i32): i32 { return x % 60; }
+def t_i32_60(one: i32): bool {
+    let d: i32 = 60 * one;
+    if (!agree_i32_60((-2147483647 - 1), d)) { return false; };
+    if (!agree_i32_60((-2147483647), d)) { return false; };
+    if (!agree_i32_60((-61), d)) { return false; };
+    if (!agree_i32_60((-60), d)) { return false; };
+    if (!agree_i32_60((-59), d)) { return false; };
+    if (!agree_i32_60((-2), d)) { return false; };
+    if (!agree_i32_60((-1), d)) { return false; };
+    if (!agree_i32_60(0, d)) { return false; };
+    if (!agree_i32_60(1, d)) { return false; };
+    if (!agree_i32_60(2, d)) { return false; };
+    if (!agree_i32_60(59, d)) { return false; };
+    if (!agree_i32_60(60, d)) { return false; };
+    if (!agree_i32_60(61, d)) { return false; };
+    if (!agree_i32_60(2147483646, d)) { return false; };
+    if (!agree_i32_60(2147483647, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: i32 = (s >> 32) as i32;
+        if (q_i32_60(x) != x / d || r_i32_60(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_i32_60(x: i32, d: i32): bool {
+    return q_i32_60(x) == x / d && r_i32_60(x) == x % d;
+}
+def q_i32_641(x: i32): i32 { return x / 641; }
+def r_i32_641(x: i32): i32 { return x % 641; }
+def t_i32_641(one: i32): bool {
+    let d: i32 = 641 * one;
+    if (!agree_i32_641((-2147483647 - 1), d)) { return false; };
+    if (!agree_i32_641((-2147483647), d)) { return false; };
+    if (!agree_i32_641((-642), d)) { return false; };
+    if (!agree_i32_641((-641), d)) { return false; };
+    if (!agree_i32_641((-640), d)) { return false; };
+    if (!agree_i32_641((-2), d)) { return false; };
+    if (!agree_i32_641((-1), d)) { return false; };
+    if (!agree_i32_641(0, d)) { return false; };
+    if (!agree_i32_641(1, d)) { return false; };
+    if (!agree_i32_641(2, d)) { return false; };
+    if (!agree_i32_641(640, d)) { return false; };
+    if (!agree_i32_641(641, d)) { return false; };
+    if (!agree_i32_641(642, d)) { return false; };
+    if (!agree_i32_641(2147483646, d)) { return false; };
+    if (!agree_i32_641(2147483647, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: i32 = (s >> 32) as i32;
+        if (q_i32_641(x) != x / d || r_i32_641(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_i32_641(x: i32, d: i32): bool {
+    return q_i32_641(x) == x / d && r_i32_641(x) == x % d;
+}
+def q_i32_893(x: i32): i32 { return x / 893; }
+def r_i32_893(x: i32): i32 { return x % 893; }
+def t_i32_893(one: i32): bool {
+    let d: i32 = 893 * one;
+    if (!agree_i32_893((-2147483647 - 1), d)) { return false; };
+    if (!agree_i32_893((-2147483647), d)) { return false; };
+    if (!agree_i32_893((-894), d)) { return false; };
+    if (!agree_i32_893((-893), d)) { return false; };
+    if (!agree_i32_893((-892), d)) { return false; };
+    if (!agree_i32_893((-2), d)) { return false; };
+    if (!agree_i32_893((-1), d)) { return false; };
+    if (!agree_i32_893(0, d)) { return false; };
+    if (!agree_i32_893(1, d)) { return false; };
+    if (!agree_i32_893(2, d)) { return false; };
+    if (!agree_i32_893(892, d)) { return false; };
+    if (!agree_i32_893(893, d)) { return false; };
+    if (!agree_i32_893(894, d)) { return false; };
+    if (!agree_i32_893(2147483646, d)) { return false; };
+    if (!agree_i32_893(2147483647, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: i32 = (s >> 32) as i32;
+        if (q_i32_893(x) != x / d || r_i32_893(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_i32_893(x: i32, d: i32): bool {
+    return q_i32_893(x) == x / d && r_i32_893(x) == x % d;
+}
+def q_i32_1000(x: i32): i32 { return x / 1000; }
+def r_i32_1000(x: i32): i32 { return x % 1000; }
+def t_i32_1000(one: i32): bool {
+    let d: i32 = 1000 * one;
+    if (!agree_i32_1000((-2147483647 - 1), d)) { return false; };
+    if (!agree_i32_1000((-2147483647), d)) { return false; };
+    if (!agree_i32_1000((-1001), d)) { return false; };
+    if (!agree_i32_1000((-1000), d)) { return false; };
+    if (!agree_i32_1000((-999), d)) { return false; };
+    if (!agree_i32_1000((-2), d)) { return false; };
+    if (!agree_i32_1000((-1), d)) { return false; };
+    if (!agree_i32_1000(0, d)) { return false; };
+    if (!agree_i32_1000(1, d)) { return false; };
+    if (!agree_i32_1000(2, d)) { return false; };
+    if (!agree_i32_1000(999, d)) { return false; };
+    if (!agree_i32_1000(1000, d)) { return false; };
+    if (!agree_i32_1000(1001, d)) { return false; };
+    if (!agree_i32_1000(2147483646, d)) { return false; };
+    if (!agree_i32_1000(2147483647, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: i32 = (s >> 32) as i32;
+        if (q_i32_1000(x) != x / d || r_i32_1000(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_i32_1000(x: i32, d: i32): bool {
+    return q_i32_1000(x) == x / d && r_i32_1000(x) == x % d;
+}
+def q_i32_13416(x: i32): i32 { return x / 13416; }
+def r_i32_13416(x: i32): i32 { return x % 13416; }
+def t_i32_13416(one: i32): bool {
+    let d: i32 = 13416 * one;
+    if (!agree_i32_13416((-2147483647 - 1), d)) { return false; };
+    if (!agree_i32_13416((-2147483647), d)) { return false; };
+    if (!agree_i32_13416((-13417), d)) { return false; };
+    if (!agree_i32_13416((-13416), d)) { return false; };
+    if (!agree_i32_13416((-13415), d)) { return false; };
+    if (!agree_i32_13416((-2), d)) { return false; };
+    if (!agree_i32_13416((-1), d)) { return false; };
+    if (!agree_i32_13416(0, d)) { return false; };
+    if (!agree_i32_13416(1, d)) { return false; };
+    if (!agree_i32_13416(2, d)) { return false; };
+    if (!agree_i32_13416(13415, d)) { return false; };
+    if (!agree_i32_13416(13416, d)) { return false; };
+    if (!agree_i32_13416(13417, d)) { return false; };
+    if (!agree_i32_13416(2147483646, d)) { return false; };
+    if (!agree_i32_13416(2147483647, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: i32 = (s >> 32) as i32;
+        if (q_i32_13416(x) != x / d || r_i32_13416(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_i32_13416(x: i32, d: i32): bool {
+    return q_i32_13416(x) == x / d && r_i32_13416(x) == x % d;
+}
+def q_i32_33225(x: i32): i32 { return x / 33225; }
+def r_i32_33225(x: i32): i32 { return x % 33225; }
+def t_i32_33225(one: i32): bool {
+    let d: i32 = 33225 * one;
+    if (!agree_i32_33225((-2147483647 - 1), d)) { return false; };
+    if (!agree_i32_33225((-2147483647), d)) { return false; };
+    if (!agree_i32_33225((-33226), d)) { return false; };
+    if (!agree_i32_33225((-33225), d)) { return false; };
+    if (!agree_i32_33225((-33224), d)) { return false; };
+    if (!agree_i32_33225((-2), d)) { return false; };
+    if (!agree_i32_33225((-1), d)) { return false; };
+    if (!agree_i32_33225(0, d)) { return false; };
+    if (!agree_i32_33225(1, d)) { return false; };
+    if (!agree_i32_33225(2, d)) { return false; };
+    if (!agree_i32_33225(33224, d)) { return false; };
+    if (!agree_i32_33225(33225, d)) { return false; };
+    if (!agree_i32_33225(33226, d)) { return false; };
+    if (!agree_i32_33225(2147483646, d)) { return false; };
+    if (!agree_i32_33225(2147483647, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: i32 = (s >> 32) as i32;
+        if (q_i32_33225(x) != x / d || r_i32_33225(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_i32_33225(x: i32, d: i32): bool {
+    return q_i32_33225(x) == x / d && r_i32_33225(x) == x % d;
+}
+def q_i32_234254898(x: i32): i32 { return x / 234254898; }
+def r_i32_234254898(x: i32): i32 { return x % 234254898; }
+def t_i32_234254898(one: i32): bool {
+    let d: i32 = 234254898 * one;
+    if (!agree_i32_234254898((-2147483647 - 1), d)) { return false; };
+    if (!agree_i32_234254898((-2147483647), d)) { return false; };
+    if (!agree_i32_234254898((-234254899), d)) { return false; };
+    if (!agree_i32_234254898((-234254898), d)) { return false; };
+    if (!agree_i32_234254898((-234254897), d)) { return false; };
+    if (!agree_i32_234254898((-2), d)) { return false; };
+    if (!agree_i32_234254898((-1), d)) { return false; };
+    if (!agree_i32_234254898(0, d)) { return false; };
+    if (!agree_i32_234254898(1, d)) { return false; };
+    if (!agree_i32_234254898(2, d)) { return false; };
+    if (!agree_i32_234254898(234254897, d)) { return false; };
+    if (!agree_i32_234254898(234254898, d)) { return false; };
+    if (!agree_i32_234254898(234254899, d)) { return false; };
+    if (!agree_i32_234254898(2147483646, d)) { return false; };
+    if (!agree_i32_234254898(2147483647, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: i32 = (s >> 32) as i32;
+        if (q_i32_234254898(x) != x / d || r_i32_234254898(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_i32_234254898(x: i32, d: i32): bool {
+    return q_i32_234254898(x) == x / d && r_i32_234254898(x) == x % d;
+}
+def q_i32_620180896(x: i32): i32 { return x / 620180896; }
+def r_i32_620180896(x: i32): i32 { return x % 620180896; }
+def t_i32_620180896(one: i32): bool {
+    let d: i32 = 620180896 * one;
+    if (!agree_i32_620180896((-2147483647 - 1), d)) { return false; };
+    if (!agree_i32_620180896((-2147483647), d)) { return false; };
+    if (!agree_i32_620180896((-620180897), d)) { return false; };
+    if (!agree_i32_620180896((-620180896), d)) { return false; };
+    if (!agree_i32_620180896((-620180895), d)) { return false; };
+    if (!agree_i32_620180896((-2), d)) { return false; };
+    if (!agree_i32_620180896((-1), d)) { return false; };
+    if (!agree_i32_620180896(0, d)) { return false; };
+    if (!agree_i32_620180896(1, d)) { return false; };
+    if (!agree_i32_620180896(2, d)) { return false; };
+    if (!agree_i32_620180896(620180895, d)) { return false; };
+    if (!agree_i32_620180896(620180896, d)) { return false; };
+    if (!agree_i32_620180896(620180897, d)) { return false; };
+    if (!agree_i32_620180896(2147483646, d)) { return false; };
+    if (!agree_i32_620180896(2147483647, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: i32 = (s >> 32) as i32;
+        if (q_i32_620180896(x) != x / d || r_i32_620180896(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_i32_620180896(x: i32, d: i32): bool {
+    return q_i32_620180896(x) == x / d && r_i32_620180896(x) == x % d;
+}
+def q_i32_978203238(x: i32): i32 { return x / 978203238; }
+def r_i32_978203238(x: i32): i32 { return x % 978203238; }
+def t_i32_978203238(one: i32): bool {
+    let d: i32 = 978203238 * one;
+    if (!agree_i32_978203238((-2147483647 - 1), d)) { return false; };
+    if (!agree_i32_978203238((-2147483647), d)) { return false; };
+    if (!agree_i32_978203238((-978203239), d)) { return false; };
+    if (!agree_i32_978203238((-978203238), d)) { return false; };
+    if (!agree_i32_978203238((-978203237), d)) { return false; };
+    if (!agree_i32_978203238((-2), d)) { return false; };
+    if (!agree_i32_978203238((-1), d)) { return false; };
+    if (!agree_i32_978203238(0, d)) { return false; };
+    if (!agree_i32_978203238(1, d)) { return false; };
+    if (!agree_i32_978203238(2, d)) { return false; };
+    if (!agree_i32_978203238(978203237, d)) { return false; };
+    if (!agree_i32_978203238(978203238, d)) { return false; };
+    if (!agree_i32_978203238(978203239, d)) { return false; };
+    if (!agree_i32_978203238(2147483646, d)) { return false; };
+    if (!agree_i32_978203238(2147483647, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: i32 = (s >> 32) as i32;
+        if (q_i32_978203238(x) != x / d || r_i32_978203238(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_i32_978203238(x: i32, d: i32): bool {
+    return q_i32_978203238(x) == x / d && r_i32_978203238(x) == x % d;
+}
+def q_i32_1073741824(x: i32): i32 { return x / 1073741824; }
+def r_i32_1073741824(x: i32): i32 { return x % 1073741824; }
+def t_i32_1073741824(one: i32): bool {
+    let d: i32 = 1073741824 * one;
+    if (!agree_i32_1073741824((-2147483647 - 1), d)) { return false; };
+    if (!agree_i32_1073741824((-2147483647), d)) { return false; };
+    if (!agree_i32_1073741824((-1073741825), d)) { return false; };
+    if (!agree_i32_1073741824((-1073741824), d)) { return false; };
+    if (!agree_i32_1073741824((-1073741823), d)) { return false; };
+    if (!agree_i32_1073741824((-2), d)) { return false; };
+    if (!agree_i32_1073741824((-1), d)) { return false; };
+    if (!agree_i32_1073741824(0, d)) { return false; };
+    if (!agree_i32_1073741824(1, d)) { return false; };
+    if (!agree_i32_1073741824(2, d)) { return false; };
+    if (!agree_i32_1073741824(1073741823, d)) { return false; };
+    if (!agree_i32_1073741824(1073741824, d)) { return false; };
+    if (!agree_i32_1073741824(1073741825, d)) { return false; };
+    if (!agree_i32_1073741824(2147483646, d)) { return false; };
+    if (!agree_i32_1073741824(2147483647, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: i32 = (s >> 32) as i32;
+        if (q_i32_1073741824(x) != x / d || r_i32_1073741824(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_i32_1073741824(x: i32, d: i32): bool {
+    return q_i32_1073741824(x) == x / d && r_i32_1073741824(x) == x % d;
+}
+def q_i32_1347830511(x: i32): i32 { return x / 1347830511; }
+def r_i32_1347830511(x: i32): i32 { return x % 1347830511; }
+def t_i32_1347830511(one: i32): bool {
+    let d: i32 = 1347830511 * one;
+    if (!agree_i32_1347830511((-2147483647 - 1), d)) { return false; };
+    if (!agree_i32_1347830511((-2147483647), d)) { return false; };
+    if (!agree_i32_1347830511((-1347830512), d)) { return false; };
+    if (!agree_i32_1347830511((-1347830511), d)) { return false; };
+    if (!agree_i32_1347830511((-1347830510), d)) { return false; };
+    if (!agree_i32_1347830511((-2), d)) { return false; };
+    if (!agree_i32_1347830511((-1), d)) { return false; };
+    if (!agree_i32_1347830511(0, d)) { return false; };
+    if (!agree_i32_1347830511(1, d)) { return false; };
+    if (!agree_i32_1347830511(2, d)) { return false; };
+    if (!agree_i32_1347830511(1347830510, d)) { return false; };
+    if (!agree_i32_1347830511(1347830511, d)) { return false; };
+    if (!agree_i32_1347830511(1347830512, d)) { return false; };
+    if (!agree_i32_1347830511(2147483646, d)) { return false; };
+    if (!agree_i32_1347830511(2147483647, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: i32 = (s >> 32) as i32;
+        if (q_i32_1347830511(x) != x / d || r_i32_1347830511(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_i32_1347830511(x: i32, d: i32): bool {
+    return q_i32_1347830511(x) == x / d && r_i32_1347830511(x) == x % d;
+}
+def q_i32_2147483647(x: i32): i32 { return x / 2147483647; }
+def r_i32_2147483647(x: i32): i32 { return x % 2147483647; }
+def t_i32_2147483647(one: i32): bool {
+    let d: i32 = 2147483647 * one;
+    if (!agree_i32_2147483647((-2147483647 - 1), d)) { return false; };
+    if (!agree_i32_2147483647((-2147483647), d)) { return false; };
+    if (!agree_i32_2147483647((-2147483646), d)) { return false; };
+    if (!agree_i32_2147483647((-2), d)) { return false; };
+    if (!agree_i32_2147483647((-1), d)) { return false; };
+    if (!agree_i32_2147483647(0, d)) { return false; };
+    if (!agree_i32_2147483647(1, d)) { return false; };
+    if (!agree_i32_2147483647(2, d)) { return false; };
+    if (!agree_i32_2147483647(2147483646, d)) { return false; };
+    if (!agree_i32_2147483647(2147483647, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: i32 = (s >> 32) as i32;
+        if (q_i32_2147483647(x) != x / d || r_i32_2147483647(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_i32_2147483647(x: i32, d: i32): bool {
+    return q_i32_2147483647(x) == x / d && r_i32_2147483647(x) == x % d;
+}
+def q_u64_1(x: u64): u64 { return x / 1; }
+def r_u64_1(x: u64): u64 { return x % 1; }
+def t_u64_1(one: u64): bool {
+    let d: u64 = 1 * one;
+    if (!agree_u64_1(0, d)) { return false; };
+    if (!agree_u64_1(1, d)) { return false; };
+    if (!agree_u64_1(2, d)) { return false; };
+    if (!agree_u64_1(18446744073709551614, d)) { return false; };
+    if (!agree_u64_1(18446744073709551615, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: u64 = (s >> 0) as u64;
+        if (q_u64_1(x) != x / d || r_u64_1(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_u64_1(x: u64, d: u64): bool {
+    return q_u64_1(x) == x / d && r_u64_1(x) == x % d;
+}
+def q_u64_2(x: u64): u64 { return x / 2; }
+def r_u64_2(x: u64): u64 { return x % 2; }
+def t_u64_2(one: u64): bool {
+    let d: u64 = 2 * one;
+    if (!agree_u64_2(0, d)) { return false; };
+    if (!agree_u64_2(1, d)) { return false; };
+    if (!agree_u64_2(2, d)) { return false; };
+    if (!agree_u64_2(3, d)) { return false; };
+    if (!agree_u64_2(18446744073709551614, d)) { return false; };
+    if (!agree_u64_2(18446744073709551615, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: u64 = (s >> 0) as u64;
+        if (q_u64_2(x) != x / d || r_u64_2(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_u64_2(x: u64, d: u64): bool {
+    return q_u64_2(x) == x / d && r_u64_2(x) == x % d;
+}
+def q_u64_3(x: u64): u64 { return x / 3; }
+def r_u64_3(x: u64): u64 { return x % 3; }
+def t_u64_3(one: u64): bool {
+    let d: u64 = 3 * one;
+    if (!agree_u64_3(0, d)) { return false; };
+    if (!agree_u64_3(1, d)) { return false; };
+    if (!agree_u64_3(2, d)) { return false; };
+    if (!agree_u64_3(3, d)) { return false; };
+    if (!agree_u64_3(4, d)) { return false; };
+    if (!agree_u64_3(18446744073709551614, d)) { return false; };
+    if (!agree_u64_3(18446744073709551615, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: u64 = (s >> 0) as u64;
+        if (q_u64_3(x) != x / d || r_u64_3(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_u64_3(x: u64, d: u64): bool {
+    return q_u64_3(x) == x / d && r_u64_3(x) == x % d;
+}
+def q_u64_5(x: u64): u64 { return x / 5; }
+def r_u64_5(x: u64): u64 { return x % 5; }
+def t_u64_5(one: u64): bool {
+    let d: u64 = 5 * one;
+    if (!agree_u64_5(0, d)) { return false; };
+    if (!agree_u64_5(1, d)) { return false; };
+    if (!agree_u64_5(2, d)) { return false; };
+    if (!agree_u64_5(4, d)) { return false; };
+    if (!agree_u64_5(5, d)) { return false; };
+    if (!agree_u64_5(6, d)) { return false; };
+    if (!agree_u64_5(18446744073709551614, d)) { return false; };
+    if (!agree_u64_5(18446744073709551615, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: u64 = (s >> 0) as u64;
+        if (q_u64_5(x) != x / d || r_u64_5(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_u64_5(x: u64, d: u64): bool {
+    return q_u64_5(x) == x / d && r_u64_5(x) == x % d;
+}
+def q_u64_7(x: u64): u64 { return x / 7; }
+def r_u64_7(x: u64): u64 { return x % 7; }
+def t_u64_7(one: u64): bool {
+    let d: u64 = 7 * one;
+    if (!agree_u64_7(0, d)) { return false; };
+    if (!agree_u64_7(1, d)) { return false; };
+    if (!agree_u64_7(2, d)) { return false; };
+    if (!agree_u64_7(6, d)) { return false; };
+    if (!agree_u64_7(7, d)) { return false; };
+    if (!agree_u64_7(8, d)) { return false; };
+    if (!agree_u64_7(18446744073709551614, d)) { return false; };
+    if (!agree_u64_7(18446744073709551615, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: u64 = (s >> 0) as u64;
+        if (q_u64_7(x) != x / d || r_u64_7(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_u64_7(x: u64, d: u64): bool {
+    return q_u64_7(x) == x / d && r_u64_7(x) == x % d;
+}
+def q_u64_10(x: u64): u64 { return x / 10; }
+def r_u64_10(x: u64): u64 { return x % 10; }
+def t_u64_10(one: u64): bool {
+    let d: u64 = 10 * one;
+    if (!agree_u64_10(0, d)) { return false; };
+    if (!agree_u64_10(1, d)) { return false; };
+    if (!agree_u64_10(2, d)) { return false; };
+    if (!agree_u64_10(9, d)) { return false; };
+    if (!agree_u64_10(10, d)) { return false; };
+    if (!agree_u64_10(11, d)) { return false; };
+    if (!agree_u64_10(18446744073709551614, d)) { return false; };
+    if (!agree_u64_10(18446744073709551615, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: u64 = (s >> 0) as u64;
+        if (q_u64_10(x) != x / d || r_u64_10(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_u64_10(x: u64, d: u64): bool {
+    return q_u64_10(x) == x / d && r_u64_10(x) == x % d;
+}
+def q_u64_60(x: u64): u64 { return x / 60; }
+def r_u64_60(x: u64): u64 { return x % 60; }
+def t_u64_60(one: u64): bool {
+    let d: u64 = 60 * one;
+    if (!agree_u64_60(0, d)) { return false; };
+    if (!agree_u64_60(1, d)) { return false; };
+    if (!agree_u64_60(2, d)) { return false; };
+    if (!agree_u64_60(59, d)) { return false; };
+    if (!agree_u64_60(60, d)) { return false; };
+    if (!agree_u64_60(61, d)) { return false; };
+    if (!agree_u64_60(18446744073709551614, d)) { return false; };
+    if (!agree_u64_60(18446744073709551615, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: u64 = (s >> 0) as u64;
+        if (q_u64_60(x) != x / d || r_u64_60(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_u64_60(x: u64, d: u64): bool {
+    return q_u64_60(x) == x / d && r_u64_60(x) == x % d;
+}
+def q_u64_641(x: u64): u64 { return x / 641; }
+def r_u64_641(x: u64): u64 { return x % 641; }
+def t_u64_641(one: u64): bool {
+    let d: u64 = 641 * one;
+    if (!agree_u64_641(0, d)) { return false; };
+    if (!agree_u64_641(1, d)) { return false; };
+    if (!agree_u64_641(2, d)) { return false; };
+    if (!agree_u64_641(640, d)) { return false; };
+    if (!agree_u64_641(641, d)) { return false; };
+    if (!agree_u64_641(642, d)) { return false; };
+    if (!agree_u64_641(18446744073709551614, d)) { return false; };
+    if (!agree_u64_641(18446744073709551615, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: u64 = (s >> 0) as u64;
+        if (q_u64_641(x) != x / d || r_u64_641(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_u64_641(x: u64, d: u64): bool {
+    return q_u64_641(x) == x / d && r_u64_641(x) == x % d;
+}
+def q_u64_1000(x: u64): u64 { return x / 1000; }
+def r_u64_1000(x: u64): u64 { return x % 1000; }
+def t_u64_1000(one: u64): bool {
+    let d: u64 = 1000 * one;
+    if (!agree_u64_1000(0, d)) { return false; };
+    if (!agree_u64_1000(1, d)) { return false; };
+    if (!agree_u64_1000(2, d)) { return false; };
+    if (!agree_u64_1000(999, d)) { return false; };
+    if (!agree_u64_1000(1000, d)) { return false; };
+    if (!agree_u64_1000(1001, d)) { return false; };
+    if (!agree_u64_1000(18446744073709551614, d)) { return false; };
+    if (!agree_u64_1000(18446744073709551615, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: u64 = (s >> 0) as u64;
+        if (q_u64_1000(x) != x / d || r_u64_1000(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_u64_1000(x: u64, d: u64): bool {
+    return q_u64_1000(x) == x / d && r_u64_1000(x) == x % d;
+}
+def q_u64_16860(x: u64): u64 { return x / 16860; }
+def r_u64_16860(x: u64): u64 { return x % 16860; }
+def t_u64_16860(one: u64): bool {
+    let d: u64 = 16860 * one;
+    if (!agree_u64_16860(0, d)) { return false; };
+    if (!agree_u64_16860(1, d)) { return false; };
+    if (!agree_u64_16860(2, d)) { return false; };
+    if (!agree_u64_16860(16859, d)) { return false; };
+    if (!agree_u64_16860(16860, d)) { return false; };
+    if (!agree_u64_16860(16861, d)) { return false; };
+    if (!agree_u64_16860(18446744073709551614, d)) { return false; };
+    if (!agree_u64_16860(18446744073709551615, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: u64 = (s >> 0) as u64;
+        if (q_u64_16860(x) != x / d || r_u64_16860(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_u64_16860(x: u64, d: u64): bool {
+    return q_u64_16860(x) == x / d && r_u64_16860(x) == x % d;
+}
+def q_u64_32941(x: u64): u64 { return x / 32941; }
+def r_u64_32941(x: u64): u64 { return x % 32941; }
+def t_u64_32941(one: u64): bool {
+    let d: u64 = 32941 * one;
+    if (!agree_u64_32941(0, d)) { return false; };
+    if (!agree_u64_32941(1, d)) { return false; };
+    if (!agree_u64_32941(2, d)) { return false; };
+    if (!agree_u64_32941(32940, d)) { return false; };
+    if (!agree_u64_32941(32941, d)) { return false; };
+    if (!agree_u64_32941(32942, d)) { return false; };
+    if (!agree_u64_32941(18446744073709551614, d)) { return false; };
+    if (!agree_u64_32941(18446744073709551615, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: u64 = (s >> 0) as u64;
+        if (q_u64_32941(x) != x / d || r_u64_32941(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_u64_32941(x: u64, d: u64): bool {
+    return q_u64_32941(x) == x / d && r_u64_32941(x) == x % d;
+}
+def q_u64_40010(x: u64): u64 { return x / 40010; }
+def r_u64_40010(x: u64): u64 { return x % 40010; }
+def t_u64_40010(one: u64): bool {
+    let d: u64 = 40010 * one;
+    if (!agree_u64_40010(0, d)) { return false; };
+    if (!agree_u64_40010(1, d)) { return false; };
+    if (!agree_u64_40010(2, d)) { return false; };
+    if (!agree_u64_40010(40009, d)) { return false; };
+    if (!agree_u64_40010(40010, d)) { return false; };
+    if (!agree_u64_40010(40011, d)) { return false; };
+    if (!agree_u64_40010(18446744073709551614, d)) { return false; };
+    if (!agree_u64_40010(18446744073709551615, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: u64 = (s >> 0) as u64;
+        if (q_u64_40010(x) != x / d || r_u64_40010(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_u64_40010(x: u64, d: u64): bool {
+    return q_u64_40010(x) == x / d && r_u64_40010(x) == x % d;
+}
+def q_u64_58083(x: u64): u64 { return x / 58083; }
+def r_u64_58083(x: u64): u64 { return x % 58083; }
+def t_u64_58083(one: u64): bool {
+    let d: u64 = 58083 * one;
+    if (!agree_u64_58083(0, d)) { return false; };
+    if (!agree_u64_58083(1, d)) { return false; };
+    if (!agree_u64_58083(2, d)) { return false; };
+    if (!agree_u64_58083(58082, d)) { return false; };
+    if (!agree_u64_58083(58083, d)) { return false; };
+    if (!agree_u64_58083(58084, d)) { return false; };
+    if (!agree_u64_58083(18446744073709551614, d)) { return false; };
+    if (!agree_u64_58083(18446744073709551615, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: u64 = (s >> 0) as u64;
+        if (q_u64_58083(x) != x / d || r_u64_58083(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_u64_58083(x: u64, d: u64): bool {
+    return q_u64_58083(x) == x / d && r_u64_58083(x) == x % d;
+}
+def q_u64_274177(x: u64): u64 { return x / 274177; }
+def r_u64_274177(x: u64): u64 { return x % 274177; }
+def t_u64_274177(one: u64): bool {
+    let d: u64 = 274177 * one;
+    if (!agree_u64_274177(0, d)) { return false; };
+    if (!agree_u64_274177(1, d)) { return false; };
+    if (!agree_u64_274177(2, d)) { return false; };
+    if (!agree_u64_274177(274176, d)) { return false; };
+    if (!agree_u64_274177(274177, d)) { return false; };
+    if (!agree_u64_274177(274178, d)) { return false; };
+    if (!agree_u64_274177(18446744073709551614, d)) { return false; };
+    if (!agree_u64_274177(18446744073709551615, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: u64 = (s >> 0) as u64;
+        if (q_u64_274177(x) != x / d || r_u64_274177(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_u64_274177(x: u64, d: u64): bool {
+    return q_u64_274177(x) == x / d && r_u64_274177(x) == x % d;
+}
+def q_u64_4294967297(x: u64): u64 { return x / 4294967297; }
+def r_u64_4294967297(x: u64): u64 { return x % 4294967297; }
+def t_u64_4294967297(one: u64): bool {
+    let d: u64 = 4294967297 * one;
+    if (!agree_u64_4294967297(0, d)) { return false; };
+    if (!agree_u64_4294967297(1, d)) { return false; };
+    if (!agree_u64_4294967297(2, d)) { return false; };
+    if (!agree_u64_4294967297(4294967296, d)) { return false; };
+    if (!agree_u64_4294967297(4294967297, d)) { return false; };
+    if (!agree_u64_4294967297(4294967298, d)) { return false; };
+    if (!agree_u64_4294967297(18446744073709551614, d)) { return false; };
+    if (!agree_u64_4294967297(18446744073709551615, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: u64 = (s >> 0) as u64;
+        if (q_u64_4294967297(x) != x / d || r_u64_4294967297(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_u64_4294967297(x: u64, d: u64): bool {
+    return q_u64_4294967297(x) == x / d && r_u64_4294967297(x) == x % d;
+}
+def q_u64_1783714035436321556(x: u64): u64 { return x / 1783714035436321556; }
+def r_u64_1783714035436321556(x: u64): u64 { return x % 1783714035436321556; }
+def t_u64_1783714035436321556(one: u64): bool {
+    let d: u64 = 1783714035436321556 * one;
+    if (!agree_u64_1783714035436321556(0, d)) { return false; };
+    if (!agree_u64_1783714035436321556(1, d)) { return false; };
+    if (!agree_u64_1783714035436321556(2, d)) { return false; };
+    if (!agree_u64_1783714035436321556(1783714035436321555, d)) { return false; };
+    if (!agree_u64_1783714035436321556(1783714035436321556, d)) { return false; };
+    if (!agree_u64_1783714035436321556(1783714035436321557, d)) { return false; };
+    if (!agree_u64_1783714035436321556(18446744073709551614, d)) { return false; };
+    if (!agree_u64_1783714035436321556(18446744073709551615, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: u64 = (s >> 0) as u64;
+        if (q_u64_1783714035436321556(x) != x / d || r_u64_1783714035436321556(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_u64_1783714035436321556(x: u64, d: u64): bool {
+    return q_u64_1783714035436321556(x) == x / d && r_u64_1783714035436321556(x) == x % d;
+}
+def q_u64_3529890823420262181(x: u64): u64 { return x / 3529890823420262181; }
+def r_u64_3529890823420262181(x: u64): u64 { return x % 3529890823420262181; }
+def t_u64_3529890823420262181(one: u64): bool {
+    let d: u64 = 3529890823420262181 * one;
+    if (!agree_u64_3529890823420262181(0, d)) { return false; };
+    if (!agree_u64_3529890823420262181(1, d)) { return false; };
+    if (!agree_u64_3529890823420262181(2, d)) { return false; };
+    if (!agree_u64_3529890823420262181(3529890823420262180, d)) { return false; };
+    if (!agree_u64_3529890823420262181(3529890823420262181, d)) { return false; };
+    if (!agree_u64_3529890823420262181(3529890823420262182, d)) { return false; };
+    if (!agree_u64_3529890823420262181(18446744073709551614, d)) { return false; };
+    if (!agree_u64_3529890823420262181(18446744073709551615, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: u64 = (s >> 0) as u64;
+        if (q_u64_3529890823420262181(x) != x / d || r_u64_3529890823420262181(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_u64_3529890823420262181(x: u64, d: u64): bool {
+    return q_u64_3529890823420262181(x) == x / d && r_u64_3529890823420262181(x) == x % d;
+}
+def q_u64_6598416443236252119(x: u64): u64 { return x / 6598416443236252119; }
+def r_u64_6598416443236252119(x: u64): u64 { return x % 6598416443236252119; }
+def t_u64_6598416443236252119(one: u64): bool {
+    let d: u64 = 6598416443236252119 * one;
+    if (!agree_u64_6598416443236252119(0, d)) { return false; };
+    if (!agree_u64_6598416443236252119(1, d)) { return false; };
+    if (!agree_u64_6598416443236252119(2, d)) { return false; };
+    if (!agree_u64_6598416443236252119(6598416443236252118, d)) { return false; };
+    if (!agree_u64_6598416443236252119(6598416443236252119, d)) { return false; };
+    if (!agree_u64_6598416443236252119(6598416443236252120, d)) { return false; };
+    if (!agree_u64_6598416443236252119(18446744073709551614, d)) { return false; };
+    if (!agree_u64_6598416443236252119(18446744073709551615, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: u64 = (s >> 0) as u64;
+        if (q_u64_6598416443236252119(x) != x / d || r_u64_6598416443236252119(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_u64_6598416443236252119(x: u64, d: u64): bool {
+    return q_u64_6598416443236252119(x) == x / d && r_u64_6598416443236252119(x) == x % d;
+}
+def q_u64_7492779762783997695(x: u64): u64 { return x / 7492779762783997695; }
+def r_u64_7492779762783997695(x: u64): u64 { return x % 7492779762783997695; }
+def t_u64_7492779762783997695(one: u64): bool {
+    let d: u64 = 7492779762783997695 * one;
+    if (!agree_u64_7492779762783997695(0, d)) { return false; };
+    if (!agree_u64_7492779762783997695(1, d)) { return false; };
+    if (!agree_u64_7492779762783997695(2, d)) { return false; };
+    if (!agree_u64_7492779762783997695(7492779762783997694, d)) { return false; };
+    if (!agree_u64_7492779762783997695(7492779762783997695, d)) { return false; };
+    if (!agree_u64_7492779762783997695(7492779762783997696, d)) { return false; };
+    if (!agree_u64_7492779762783997695(18446744073709551614, d)) { return false; };
+    if (!agree_u64_7492779762783997695(18446744073709551615, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: u64 = (s >> 0) as u64;
+        if (q_u64_7492779762783997695(x) != x / d || r_u64_7492779762783997695(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_u64_7492779762783997695(x: u64, d: u64): bool {
+    return q_u64_7492779762783997695(x) == x / d && r_u64_7492779762783997695(x) == x % d;
+}
+def q_u64_9223372036854775807(x: u64): u64 { return x / 9223372036854775807; }
+def r_u64_9223372036854775807(x: u64): u64 { return x % 9223372036854775807; }
+def t_u64_9223372036854775807(one: u64): bool {
+    let d: u64 = 9223372036854775807 * one;
+    if (!agree_u64_9223372036854775807(0, d)) { return false; };
+    if (!agree_u64_9223372036854775807(1, d)) { return false; };
+    if (!agree_u64_9223372036854775807(2, d)) { return false; };
+    if (!agree_u64_9223372036854775807(9223372036854775806, d)) { return false; };
+    if (!agree_u64_9223372036854775807(9223372036854775807, d)) { return false; };
+    if (!agree_u64_9223372036854775807(9223372036854775808, d)) { return false; };
+    if (!agree_u64_9223372036854775807(18446744073709551614, d)) { return false; };
+    if (!agree_u64_9223372036854775807(18446744073709551615, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: u64 = (s >> 0) as u64;
+        if (q_u64_9223372036854775807(x) != x / d || r_u64_9223372036854775807(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_u64_9223372036854775807(x: u64, d: u64): bool {
+    return q_u64_9223372036854775807(x) == x / d && r_u64_9223372036854775807(x) == x % d;
+}
+def q_u64_9223372036854775808(x: u64): u64 { return x / 9223372036854775808; }
+def r_u64_9223372036854775808(x: u64): u64 { return x % 9223372036854775808; }
+def t_u64_9223372036854775808(one: u64): bool {
+    let d: u64 = 9223372036854775808 * one;
+    if (!agree_u64_9223372036854775808(0, d)) { return false; };
+    if (!agree_u64_9223372036854775808(1, d)) { return false; };
+    if (!agree_u64_9223372036854775808(2, d)) { return false; };
+    if (!agree_u64_9223372036854775808(9223372036854775807, d)) { return false; };
+    if (!agree_u64_9223372036854775808(9223372036854775808, d)) { return false; };
+    if (!agree_u64_9223372036854775808(9223372036854775809, d)) { return false; };
+    if (!agree_u64_9223372036854775808(18446744073709551614, d)) { return false; };
+    if (!agree_u64_9223372036854775808(18446744073709551615, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: u64 = (s >> 0) as u64;
+        if (q_u64_9223372036854775808(x) != x / d || r_u64_9223372036854775808(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_u64_9223372036854775808(x: u64, d: u64): bool {
+    return q_u64_9223372036854775808(x) == x / d && r_u64_9223372036854775808(x) == x % d;
+}
+def q_u64_9223372036854775809(x: u64): u64 { return x / 9223372036854775809; }
+def r_u64_9223372036854775809(x: u64): u64 { return x % 9223372036854775809; }
+def t_u64_9223372036854775809(one: u64): bool {
+    let d: u64 = 9223372036854775809 * one;
+    if (!agree_u64_9223372036854775809(0, d)) { return false; };
+    if (!agree_u64_9223372036854775809(1, d)) { return false; };
+    if (!agree_u64_9223372036854775809(2, d)) { return false; };
+    if (!agree_u64_9223372036854775809(9223372036854775808, d)) { return false; };
+    if (!agree_u64_9223372036854775809(9223372036854775809, d)) { return false; };
+    if (!agree_u64_9223372036854775809(9223372036854775810, d)) { return false; };
+    if (!agree_u64_9223372036854775809(18446744073709551614, d)) { return false; };
+    if (!agree_u64_9223372036854775809(18446744073709551615, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: u64 = (s >> 0) as u64;
+        if (q_u64_9223372036854775809(x) != x / d || r_u64_9223372036854775809(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_u64_9223372036854775809(x: u64, d: u64): bool {
+    return q_u64_9223372036854775809(x) == x / d && r_u64_9223372036854775809(x) == x % d;
+}
+def q_u64_9959896652332546221(x: u64): u64 { return x / 9959896652332546221; }
+def r_u64_9959896652332546221(x: u64): u64 { return x % 9959896652332546221; }
+def t_u64_9959896652332546221(one: u64): bool {
+    let d: u64 = 9959896652332546221 * one;
+    if (!agree_u64_9959896652332546221(0, d)) { return false; };
+    if (!agree_u64_9959896652332546221(1, d)) { return false; };
+    if (!agree_u64_9959896652332546221(2, d)) { return false; };
+    if (!agree_u64_9959896652332546221(9959896652332546220, d)) { return false; };
+    if (!agree_u64_9959896652332546221(9959896652332546221, d)) { return false; };
+    if (!agree_u64_9959896652332546221(9959896652332546222, d)) { return false; };
+    if (!agree_u64_9959896652332546221(18446744073709551614, d)) { return false; };
+    if (!agree_u64_9959896652332546221(18446744073709551615, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: u64 = (s >> 0) as u64;
+        if (q_u64_9959896652332546221(x) != x / d || r_u64_9959896652332546221(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_u64_9959896652332546221(x: u64, d: u64): bool {
+    return q_u64_9959896652332546221(x) == x / d && r_u64_9959896652332546221(x) == x % d;
+}
+def q_u64_13514430548745634686(x: u64): u64 { return x / 13514430548745634686; }
+def r_u64_13514430548745634686(x: u64): u64 { return x % 13514430548745634686; }
+def t_u64_13514430548745634686(one: u64): bool {
+    let d: u64 = 13514430548745634686 * one;
+    if (!agree_u64_13514430548745634686(0, d)) { return false; };
+    if (!agree_u64_13514430548745634686(1, d)) { return false; };
+    if (!agree_u64_13514430548745634686(2, d)) { return false; };
+    if (!agree_u64_13514430548745634686(13514430548745634685, d)) { return false; };
+    if (!agree_u64_13514430548745634686(13514430548745634686, d)) { return false; };
+    if (!agree_u64_13514430548745634686(13514430548745634687, d)) { return false; };
+    if (!agree_u64_13514430548745634686(18446744073709551614, d)) { return false; };
+    if (!agree_u64_13514430548745634686(18446744073709551615, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: u64 = (s >> 0) as u64;
+        if (q_u64_13514430548745634686(x) != x / d || r_u64_13514430548745634686(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_u64_13514430548745634686(x: u64, d: u64): bool {
+    return q_u64_13514430548745634686(x) == x / d && r_u64_13514430548745634686(x) == x % d;
+}
+def q_u64_15020108586837730627(x: u64): u64 { return x / 15020108586837730627; }
+def r_u64_15020108586837730627(x: u64): u64 { return x % 15020108586837730627; }
+def t_u64_15020108586837730627(one: u64): bool {
+    let d: u64 = 15020108586837730627 * one;
+    if (!agree_u64_15020108586837730627(0, d)) { return false; };
+    if (!agree_u64_15020108586837730627(1, d)) { return false; };
+    if (!agree_u64_15020108586837730627(2, d)) { return false; };
+    if (!agree_u64_15020108586837730627(15020108586837730626, d)) { return false; };
+    if (!agree_u64_15020108586837730627(15020108586837730627, d)) { return false; };
+    if (!agree_u64_15020108586837730627(15020108586837730628, d)) { return false; };
+    if (!agree_u64_15020108586837730627(18446744073709551614, d)) { return false; };
+    if (!agree_u64_15020108586837730627(18446744073709551615, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: u64 = (s >> 0) as u64;
+        if (q_u64_15020108586837730627(x) != x / d || r_u64_15020108586837730627(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_u64_15020108586837730627(x: u64, d: u64): bool {
+    return q_u64_15020108586837730627(x) == x / d && r_u64_15020108586837730627(x) == x % d;
+}
+def q_u64_16513613633522812557(x: u64): u64 { return x / 16513613633522812557; }
+def r_u64_16513613633522812557(x: u64): u64 { return x % 16513613633522812557; }
+def t_u64_16513613633522812557(one: u64): bool {
+    let d: u64 = 16513613633522812557 * one;
+    if (!agree_u64_16513613633522812557(0, d)) { return false; };
+    if (!agree_u64_16513613633522812557(1, d)) { return false; };
+    if (!agree_u64_16513613633522812557(2, d)) { return false; };
+    if (!agree_u64_16513613633522812557(16513613633522812556, d)) { return false; };
+    if (!agree_u64_16513613633522812557(16513613633522812557, d)) { return false; };
+    if (!agree_u64_16513613633522812557(16513613633522812558, d)) { return false; };
+    if (!agree_u64_16513613633522812557(18446744073709551614, d)) { return false; };
+    if (!agree_u64_16513613633522812557(18446744073709551615, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: u64 = (s >> 0) as u64;
+        if (q_u64_16513613633522812557(x) != x / d || r_u64_16513613633522812557(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_u64_16513613633522812557(x: u64, d: u64): bool {
+    return q_u64_16513613633522812557(x) == x / d && r_u64_16513613633522812557(x) == x % d;
+}
+def q_u64_17727582826056116227(x: u64): u64 { return x / 17727582826056116227; }
+def r_u64_17727582826056116227(x: u64): u64 { return x % 17727582826056116227; }
+def t_u64_17727582826056116227(one: u64): bool {
+    let d: u64 = 17727582826056116227 * one;
+    if (!agree_u64_17727582826056116227(0, d)) { return false; };
+    if (!agree_u64_17727582826056116227(1, d)) { return false; };
+    if (!agree_u64_17727582826056116227(2, d)) { return false; };
+    if (!agree_u64_17727582826056116227(17727582826056116226, d)) { return false; };
+    if (!agree_u64_17727582826056116227(17727582826056116227, d)) { return false; };
+    if (!agree_u64_17727582826056116227(17727582826056116228, d)) { return false; };
+    if (!agree_u64_17727582826056116227(18446744073709551614, d)) { return false; };
+    if (!agree_u64_17727582826056116227(18446744073709551615, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: u64 = (s >> 0) as u64;
+        if (q_u64_17727582826056116227(x) != x / d || r_u64_17727582826056116227(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_u64_17727582826056116227(x: u64, d: u64): bool {
+    return q_u64_17727582826056116227(x) == x / d && r_u64_17727582826056116227(x) == x % d;
+}
+def q_u64_18417727104339673227(x: u64): u64 { return x / 18417727104339673227; }
+def r_u64_18417727104339673227(x: u64): u64 { return x % 18417727104339673227; }
+def t_u64_18417727104339673227(one: u64): bool {
+    let d: u64 = 18417727104339673227 * one;
+    if (!agree_u64_18417727104339673227(0, d)) { return false; };
+    if (!agree_u64_18417727104339673227(1, d)) { return false; };
+    if (!agree_u64_18417727104339673227(2, d)) { return false; };
+    if (!agree_u64_18417727104339673227(18417727104339673226, d)) { return false; };
+    if (!agree_u64_18417727104339673227(18417727104339673227, d)) { return false; };
+    if (!agree_u64_18417727104339673227(18417727104339673228, d)) { return false; };
+    if (!agree_u64_18417727104339673227(18446744073709551614, d)) { return false; };
+    if (!agree_u64_18417727104339673227(18446744073709551615, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: u64 = (s >> 0) as u64;
+        if (q_u64_18417727104339673227(x) != x / d || r_u64_18417727104339673227(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_u64_18417727104339673227(x: u64, d: u64): bool {
+    return q_u64_18417727104339673227(x) == x / d && r_u64_18417727104339673227(x) == x % d;
+}
+def q_u64_18446744073709551614(x: u64): u64 { return x / 18446744073709551614; }
+def r_u64_18446744073709551614(x: u64): u64 { return x % 18446744073709551614; }
+def t_u64_18446744073709551614(one: u64): bool {
+    let d: u64 = 18446744073709551614 * one;
+    if (!agree_u64_18446744073709551614(0, d)) { return false; };
+    if (!agree_u64_18446744073709551614(1, d)) { return false; };
+    if (!agree_u64_18446744073709551614(2, d)) { return false; };
+    if (!agree_u64_18446744073709551614(18446744073709551613, d)) { return false; };
+    if (!agree_u64_18446744073709551614(18446744073709551614, d)) { return false; };
+    if (!agree_u64_18446744073709551614(18446744073709551615, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: u64 = (s >> 0) as u64;
+        if (q_u64_18446744073709551614(x) != x / d || r_u64_18446744073709551614(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_u64_18446744073709551614(x: u64, d: u64): bool {
+    return q_u64_18446744073709551614(x) == x / d && r_u64_18446744073709551614(x) == x % d;
+}
+def q_u64_18446744073709551615(x: u64): u64 { return x / 18446744073709551615; }
+def r_u64_18446744073709551615(x: u64): u64 { return x % 18446744073709551615; }
+def t_u64_18446744073709551615(one: u64): bool {
+    let d: u64 = 18446744073709551615 * one;
+    if (!agree_u64_18446744073709551615(0, d)) { return false; };
+    if (!agree_u64_18446744073709551615(1, d)) { return false; };
+    if (!agree_u64_18446744073709551615(2, d)) { return false; };
+    if (!agree_u64_18446744073709551615(18446744073709551614, d)) { return false; };
+    if (!agree_u64_18446744073709551615(18446744073709551615, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: u64 = (s >> 0) as u64;
+        if (q_u64_18446744073709551615(x) != x / d || r_u64_18446744073709551615(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_u64_18446744073709551615(x: u64, d: u64): bool {
+    return q_u64_18446744073709551615(x) == x / d && r_u64_18446744073709551615(x) == x % d;
+}
+def q_i64_m9223372036854775808(x: i64): i64 { return x / (-9223372036854775807 - 1); }
+def r_i64_m9223372036854775808(x: i64): i64 { return x % (-9223372036854775807 - 1); }
+def t_i64_m9223372036854775808(one: i64): bool {
+    let d: i64 = (-9223372036854775807 - 1) * one;
+    if (!agree_i64_m9223372036854775808((-9223372036854775807 - 1), d)) { return false; };
+    if (!agree_i64_m9223372036854775808((-9223372036854775807), d)) { return false; };
+    if (!agree_i64_m9223372036854775808((-2), d)) { return false; };
+    if (!agree_i64_m9223372036854775808((-1), d)) { return false; };
+    if (!agree_i64_m9223372036854775808(0, d)) { return false; };
+    if (!agree_i64_m9223372036854775808(1, d)) { return false; };
+    if (!agree_i64_m9223372036854775808(2, d)) { return false; };
+    if (!agree_i64_m9223372036854775808(9223372036854775806, d)) { return false; };
+    if (!agree_i64_m9223372036854775808(9223372036854775807, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: i64 = (s >> 0) as i64;
+        if (q_i64_m9223372036854775808(x) != x / d || r_i64_m9223372036854775808(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_i64_m9223372036854775808(x: i64, d: i64): bool {
+    return q_i64_m9223372036854775808(x) == x / d && r_i64_m9223372036854775808(x) == x % d;
+}
+def q_i64_m9223372036854775807(x: i64): i64 { return x / (-9223372036854775807); }
+def r_i64_m9223372036854775807(x: i64): i64 { return x % (-9223372036854775807); }
+def t_i64_m9223372036854775807(one: i64): bool {
+    let d: i64 = (-9223372036854775807) * one;
+    if (!agree_i64_m9223372036854775807((-9223372036854775807 - 1), d)) { return false; };
+    if (!agree_i64_m9223372036854775807((-9223372036854775807), d)) { return false; };
+    if (!agree_i64_m9223372036854775807((-9223372036854775806), d)) { return false; };
+    if (!agree_i64_m9223372036854775807((-2), d)) { return false; };
+    if (!agree_i64_m9223372036854775807((-1), d)) { return false; };
+    if (!agree_i64_m9223372036854775807(0, d)) { return false; };
+    if (!agree_i64_m9223372036854775807(1, d)) { return false; };
+    if (!agree_i64_m9223372036854775807(2, d)) { return false; };
+    if (!agree_i64_m9223372036854775807(9223372036854775806, d)) { return false; };
+    if (!agree_i64_m9223372036854775807(9223372036854775807, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: i64 = (s >> 0) as i64;
+        if (q_i64_m9223372036854775807(x) != x / d || r_i64_m9223372036854775807(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_i64_m9223372036854775807(x: i64, d: i64): bool {
+    return q_i64_m9223372036854775807(x) == x / d && r_i64_m9223372036854775807(x) == x % d;
+}
+def q_i64_m5944604130761445129(x: i64): i64 { return x / (-5944604130761445129); }
+def r_i64_m5944604130761445129(x: i64): i64 { return x % (-5944604130761445129); }
+def t_i64_m5944604130761445129(one: i64): bool {
+    let d: i64 = (-5944604130761445129) * one;
+    if (!agree_i64_m5944604130761445129((-9223372036854775807 - 1), d)) { return false; };
+    if (!agree_i64_m5944604130761445129((-9223372036854775807), d)) { return false; };
+    if (!agree_i64_m5944604130761445129((-5944604130761445130), d)) { return false; };
+    if (!agree_i64_m5944604130761445129((-5944604130761445129), d)) { return false; };
+    if (!agree_i64_m5944604130761445129((-5944604130761445128), d)) { return false; };
+    if (!agree_i64_m5944604130761445129((-2), d)) { return false; };
+    if (!agree_i64_m5944604130761445129((-1), d)) { return false; };
+    if (!agree_i64_m5944604130761445129(0, d)) { return false; };
+    if (!agree_i64_m5944604130761445129(1, d)) { return false; };
+    if (!agree_i64_m5944604130761445129(2, d)) { return false; };
+    if (!agree_i64_m5944604130761445129(5944604130761445128, d)) { return false; };
+    if (!agree_i64_m5944604130761445129(5944604130761445129, d)) { return false; };
+    if (!agree_i64_m5944604130761445129(5944604130761445130, d)) { return false; };
+    if (!agree_i64_m5944604130761445129(9223372036854775806, d)) { return false; };
+    if (!agree_i64_m5944604130761445129(9223372036854775807, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: i64 = (s >> 0) as i64;
+        if (q_i64_m5944604130761445129(x) != x / d || r_i64_m5944604130761445129(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_i64_m5944604130761445129(x: i64, d: i64): bool {
+    return q_i64_m5944604130761445129(x) == x / d && r_i64_m5944604130761445129(x) == x % d;
+}
+def q_i64_m15482(x: i64): i64 { return x / (-15482); }
+def r_i64_m15482(x: i64): i64 { return x % (-15482); }
+def t_i64_m15482(one: i64): bool {
+    let d: i64 = (-15482) * one;
+    if (!agree_i64_m15482((-9223372036854775807 - 1), d)) { return false; };
+    if (!agree_i64_m15482((-9223372036854775807), d)) { return false; };
+    if (!agree_i64_m15482((-15483), d)) { return false; };
+    if (!agree_i64_m15482((-15482), d)) { return false; };
+    if (!agree_i64_m15482((-15481), d)) { return false; };
+    if (!agree_i64_m15482((-2), d)) { return false; };
+    if (!agree_i64_m15482((-1), d)) { return false; };
+    if (!agree_i64_m15482(0, d)) { return false; };
+    if (!agree_i64_m15482(1, d)) { return false; };
+    if (!agree_i64_m15482(2, d)) { return false; };
+    if (!agree_i64_m15482(15481, d)) { return false; };
+    if (!agree_i64_m15482(15482, d)) { return false; };
+    if (!agree_i64_m15482(15483, d)) { return false; };
+    if (!agree_i64_m15482(9223372036854775806, d)) { return false; };
+    if (!agree_i64_m15482(9223372036854775807, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: i64 = (s >> 0) as i64;
+        if (q_i64_m15482(x) != x / d || r_i64_m15482(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_i64_m15482(x: i64, d: i64): bool {
+    return q_i64_m15482(x) == x / d && r_i64_m15482(x) == x % d;
+}
+def q_i64_m1000(x: i64): i64 { return x / (-1000); }
+def r_i64_m1000(x: i64): i64 { return x % (-1000); }
+def t_i64_m1000(one: i64): bool {
+    let d: i64 = (-1000) * one;
+    if (!agree_i64_m1000((-9223372036854775807 - 1), d)) { return false; };
+    if (!agree_i64_m1000((-9223372036854775807), d)) { return false; };
+    if (!agree_i64_m1000((-1001), d)) { return false; };
+    if (!agree_i64_m1000((-1000), d)) { return false; };
+    if (!agree_i64_m1000((-999), d)) { return false; };
+    if (!agree_i64_m1000((-2), d)) { return false; };
+    if (!agree_i64_m1000((-1), d)) { return false; };
+    if (!agree_i64_m1000(0, d)) { return false; };
+    if (!agree_i64_m1000(1, d)) { return false; };
+    if (!agree_i64_m1000(2, d)) { return false; };
+    if (!agree_i64_m1000(999, d)) { return false; };
+    if (!agree_i64_m1000(1000, d)) { return false; };
+    if (!agree_i64_m1000(1001, d)) { return false; };
+    if (!agree_i64_m1000(9223372036854775806, d)) { return false; };
+    if (!agree_i64_m1000(9223372036854775807, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: i64 = (s >> 0) as i64;
+        if (q_i64_m1000(x) != x / d || r_i64_m1000(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_i64_m1000(x: i64, d: i64): bool {
+    return q_i64_m1000(x) == x / d && r_i64_m1000(x) == x % d;
+}
+def q_i64_m7(x: i64): i64 { return x / (-7); }
+def r_i64_m7(x: i64): i64 { return x % (-7); }
+def t_i64_m7(one: i64): bool {
+    let d: i64 = (-7) * one;
+    if (!agree_i64_m7((-9223372036854775807 - 1), d)) { return false; };
+    if (!agree_i64_m7((-9223372036854775807), d)) { return false; };
+    if (!agree_i64_m7((-8), d)) { return false; };
+    if (!agree_i64_m7((-7), d)) { return false; };
+    if (!agree_i64_m7((-6), d)) { return false; };
+    if (!agree_i64_m7((-2), d)) { return false; };
+    if (!agree_i64_m7((-1), d)) { return false; };
+    if (!agree_i64_m7(0, d)) { return false; };
+    if (!agree_i64_m7(1, d)) { return false; };
+    if (!agree_i64_m7(2, d)) { return false; };
+    if (!agree_i64_m7(6, d)) { return false; };
+    if (!agree_i64_m7(7, d)) { return false; };
+    if (!agree_i64_m7(8, d)) { return false; };
+    if (!agree_i64_m7(9223372036854775806, d)) { return false; };
+    if (!agree_i64_m7(9223372036854775807, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: i64 = (s >> 0) as i64;
+        if (q_i64_m7(x) != x / d || r_i64_m7(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_i64_m7(x: i64, d: i64): bool {
+    return q_i64_m7(x) == x / d && r_i64_m7(x) == x % d;
+}
+def q_i64_m3(x: i64): i64 { return x / (-3); }
+def r_i64_m3(x: i64): i64 { return x % (-3); }
+def t_i64_m3(one: i64): bool {
+    let d: i64 = (-3) * one;
+    if (!agree_i64_m3((-9223372036854775807 - 1), d)) { return false; };
+    if (!agree_i64_m3((-9223372036854775807), d)) { return false; };
+    if (!agree_i64_m3((-4), d)) { return false; };
+    if (!agree_i64_m3((-3), d)) { return false; };
+    if (!agree_i64_m3((-2), d)) { return false; };
+    if (!agree_i64_m3((-1), d)) { return false; };
+    if (!agree_i64_m3(0, d)) { return false; };
+    if (!agree_i64_m3(1, d)) { return false; };
+    if (!agree_i64_m3(2, d)) { return false; };
+    if (!agree_i64_m3(3, d)) { return false; };
+    if (!agree_i64_m3(4, d)) { return false; };
+    if (!agree_i64_m3(9223372036854775806, d)) { return false; };
+    if (!agree_i64_m3(9223372036854775807, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: i64 = (s >> 0) as i64;
+        if (q_i64_m3(x) != x / d || r_i64_m3(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_i64_m3(x: i64, d: i64): bool {
+    return q_i64_m3(x) == x / d && r_i64_m3(x) == x % d;
+}
+def q_i64_m2(x: i64): i64 { return x / (-2); }
+def r_i64_m2(x: i64): i64 { return x % (-2); }
+def t_i64_m2(one: i64): bool {
+    let d: i64 = (-2) * one;
+    if (!agree_i64_m2((-9223372036854775807 - 1), d)) { return false; };
+    if (!agree_i64_m2((-9223372036854775807), d)) { return false; };
+    if (!agree_i64_m2((-3), d)) { return false; };
+    if (!agree_i64_m2((-2), d)) { return false; };
+    if (!agree_i64_m2((-1), d)) { return false; };
+    if (!agree_i64_m2(0, d)) { return false; };
+    if (!agree_i64_m2(1, d)) { return false; };
+    if (!agree_i64_m2(2, d)) { return false; };
+    if (!agree_i64_m2(3, d)) { return false; };
+    if (!agree_i64_m2(9223372036854775806, d)) { return false; };
+    if (!agree_i64_m2(9223372036854775807, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: i64 = (s >> 0) as i64;
+        if (q_i64_m2(x) != x / d || r_i64_m2(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_i64_m2(x: i64, d: i64): bool {
+    return q_i64_m2(x) == x / d && r_i64_m2(x) == x % d;
+}
+def q_i64_2(x: i64): i64 { return x / 2; }
+def r_i64_2(x: i64): i64 { return x % 2; }
+def t_i64_2(one: i64): bool {
+    let d: i64 = 2 * one;
+    if (!agree_i64_2((-9223372036854775807 - 1), d)) { return false; };
+    if (!agree_i64_2((-9223372036854775807), d)) { return false; };
+    if (!agree_i64_2((-3), d)) { return false; };
+    if (!agree_i64_2((-2), d)) { return false; };
+    if (!agree_i64_2((-1), d)) { return false; };
+    if (!agree_i64_2(0, d)) { return false; };
+    if (!agree_i64_2(1, d)) { return false; };
+    if (!agree_i64_2(2, d)) { return false; };
+    if (!agree_i64_2(3, d)) { return false; };
+    if (!agree_i64_2(9223372036854775806, d)) { return false; };
+    if (!agree_i64_2(9223372036854775807, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: i64 = (s >> 0) as i64;
+        if (q_i64_2(x) != x / d || r_i64_2(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_i64_2(x: i64, d: i64): bool {
+    return q_i64_2(x) == x / d && r_i64_2(x) == x % d;
+}
+def q_i64_3(x: i64): i64 { return x / 3; }
+def r_i64_3(x: i64): i64 { return x % 3; }
+def t_i64_3(one: i64): bool {
+    let d: i64 = 3 * one;
+    if (!agree_i64_3((-9223372036854775807 - 1), d)) { return false; };
+    if (!agree_i64_3((-9223372036854775807), d)) { return false; };
+    if (!agree_i64_3((-4), d)) { return false; };
+    if (!agree_i64_3((-3), d)) { return false; };
+    if (!agree_i64_3((-2), d)) { return false; };
+    if (!agree_i64_3((-1), d)) { return false; };
+    if (!agree_i64_3(0, d)) { return false; };
+    if (!agree_i64_3(1, d)) { return false; };
+    if (!agree_i64_3(2, d)) { return false; };
+    if (!agree_i64_3(3, d)) { return false; };
+    if (!agree_i64_3(4, d)) { return false; };
+    if (!agree_i64_3(9223372036854775806, d)) { return false; };
+    if (!agree_i64_3(9223372036854775807, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: i64 = (s >> 0) as i64;
+        if (q_i64_3(x) != x / d || r_i64_3(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_i64_3(x: i64, d: i64): bool {
+    return q_i64_3(x) == x / d && r_i64_3(x) == x % d;
+}
+def q_i64_5(x: i64): i64 { return x / 5; }
+def r_i64_5(x: i64): i64 { return x % 5; }
+def t_i64_5(one: i64): bool {
+    let d: i64 = 5 * one;
+    if (!agree_i64_5((-9223372036854775807 - 1), d)) { return false; };
+    if (!agree_i64_5((-9223372036854775807), d)) { return false; };
+    if (!agree_i64_5((-6), d)) { return false; };
+    if (!agree_i64_5((-5), d)) { return false; };
+    if (!agree_i64_5((-4), d)) { return false; };
+    if (!agree_i64_5((-2), d)) { return false; };
+    if (!agree_i64_5((-1), d)) { return false; };
+    if (!agree_i64_5(0, d)) { return false; };
+    if (!agree_i64_5(1, d)) { return false; };
+    if (!agree_i64_5(2, d)) { return false; };
+    if (!agree_i64_5(4, d)) { return false; };
+    if (!agree_i64_5(5, d)) { return false; };
+    if (!agree_i64_5(6, d)) { return false; };
+    if (!agree_i64_5(9223372036854775806, d)) { return false; };
+    if (!agree_i64_5(9223372036854775807, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: i64 = (s >> 0) as i64;
+        if (q_i64_5(x) != x / d || r_i64_5(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_i64_5(x: i64, d: i64): bool {
+    return q_i64_5(x) == x / d && r_i64_5(x) == x % d;
+}
+def q_i64_7(x: i64): i64 { return x / 7; }
+def r_i64_7(x: i64): i64 { return x % 7; }
+def t_i64_7(one: i64): bool {
+    let d: i64 = 7 * one;
+    if (!agree_i64_7((-9223372036854775807 - 1), d)) { return false; };
+    if (!agree_i64_7((-9223372036854775807), d)) { return false; };
+    if (!agree_i64_7((-8), d)) { return false; };
+    if (!agree_i64_7((-7), d)) { return false; };
+    if (!agree_i64_7((-6), d)) { return false; };
+    if (!agree_i64_7((-2), d)) { return false; };
+    if (!agree_i64_7((-1), d)) { return false; };
+    if (!agree_i64_7(0, d)) { return false; };
+    if (!agree_i64_7(1, d)) { return false; };
+    if (!agree_i64_7(2, d)) { return false; };
+    if (!agree_i64_7(6, d)) { return false; };
+    if (!agree_i64_7(7, d)) { return false; };
+    if (!agree_i64_7(8, d)) { return false; };
+    if (!agree_i64_7(9223372036854775806, d)) { return false; };
+    if (!agree_i64_7(9223372036854775807, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: i64 = (s >> 0) as i64;
+        if (q_i64_7(x) != x / d || r_i64_7(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_i64_7(x: i64, d: i64): bool {
+    return q_i64_7(x) == x / d && r_i64_7(x) == x % d;
+}
+def q_i64_10(x: i64): i64 { return x / 10; }
+def r_i64_10(x: i64): i64 { return x % 10; }
+def t_i64_10(one: i64): bool {
+    let d: i64 = 10 * one;
+    if (!agree_i64_10((-9223372036854775807 - 1), d)) { return false; };
+    if (!agree_i64_10((-9223372036854775807), d)) { return false; };
+    if (!agree_i64_10((-11), d)) { return false; };
+    if (!agree_i64_10((-10), d)) { return false; };
+    if (!agree_i64_10((-9), d)) { return false; };
+    if (!agree_i64_10((-2), d)) { return false; };
+    if (!agree_i64_10((-1), d)) { return false; };
+    if (!agree_i64_10(0, d)) { return false; };
+    if (!agree_i64_10(1, d)) { return false; };
+    if (!agree_i64_10(2, d)) { return false; };
+    if (!agree_i64_10(9, d)) { return false; };
+    if (!agree_i64_10(10, d)) { return false; };
+    if (!agree_i64_10(11, d)) { return false; };
+    if (!agree_i64_10(9223372036854775806, d)) { return false; };
+    if (!agree_i64_10(9223372036854775807, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: i64 = (s >> 0) as i64;
+        if (q_i64_10(x) != x / d || r_i64_10(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_i64_10(x: i64, d: i64): bool {
+    return q_i64_10(x) == x / d && r_i64_10(x) == x % d;
+}
+def q_i64_60(x: i64): i64 { return x / 60; }
+def r_i64_60(x: i64): i64 { return x % 60; }
+def t_i64_60(one: i64): bool {
+    let d: i64 = 60 * one;
+    if (!agree_i64_60((-9223372036854775807 - 1), d)) { return false; };
+    if (!agree_i64_60((-9223372036854775807), d)) { return false; };
+    if (!agree_i64_60((-61), d)) { return false; };
+    if (!agree_i64_60((-60), d)) { return false; };
+    if (!agree_i64_60((-59), d)) { return false; };
+    if (!agree_i64_60((-2), d)) { return false; };
+    if (!agree_i64_60((-1), d)) { return false; };
+    if (!agree_i64_60(0, d)) { return false; };
+    if (!agree_i64_60(1, d)) { return false; };
+    if (!agree_i64_60(2, d)) { return false; };
+    if (!agree_i64_60(59, d)) { return false; };
+    if (!agree_i64_60(60, d)) { return false; };
+    if (!agree_i64_60(61, d)) { return false; };
+    if (!agree_i64_60(9223372036854775806, d)) { return false; };
+    if (!agree_i64_60(9223372036854775807, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: i64 = (s >> 0) as i64;
+        if (q_i64_60(x) != x / d || r_i64_60(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_i64_60(x: i64, d: i64): bool {
+    return q_i64_60(x) == x / d && r_i64_60(x) == x % d;
+}
+def q_i64_641(x: i64): i64 { return x / 641; }
+def r_i64_641(x: i64): i64 { return x % 641; }
+def t_i64_641(one: i64): bool {
+    let d: i64 = 641 * one;
+    if (!agree_i64_641((-9223372036854775807 - 1), d)) { return false; };
+    if (!agree_i64_641((-9223372036854775807), d)) { return false; };
+    if (!agree_i64_641((-642), d)) { return false; };
+    if (!agree_i64_641((-641), d)) { return false; };
+    if (!agree_i64_641((-640), d)) { return false; };
+    if (!agree_i64_641((-2), d)) { return false; };
+    if (!agree_i64_641((-1), d)) { return false; };
+    if (!agree_i64_641(0, d)) { return false; };
+    if (!agree_i64_641(1, d)) { return false; };
+    if (!agree_i64_641(2, d)) { return false; };
+    if (!agree_i64_641(640, d)) { return false; };
+    if (!agree_i64_641(641, d)) { return false; };
+    if (!agree_i64_641(642, d)) { return false; };
+    if (!agree_i64_641(9223372036854775806, d)) { return false; };
+    if (!agree_i64_641(9223372036854775807, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: i64 = (s >> 0) as i64;
+        if (q_i64_641(x) != x / d || r_i64_641(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_i64_641(x: i64, d: i64): bool {
+    return q_i64_641(x) == x / d && r_i64_641(x) == x % d;
+}
+def q_i64_1000(x: i64): i64 { return x / 1000; }
+def r_i64_1000(x: i64): i64 { return x % 1000; }
+def t_i64_1000(one: i64): bool {
+    let d: i64 = 1000 * one;
+    if (!agree_i64_1000((-9223372036854775807 - 1), d)) { return false; };
+    if (!agree_i64_1000((-9223372036854775807), d)) { return false; };
+    if (!agree_i64_1000((-1001), d)) { return false; };
+    if (!agree_i64_1000((-1000), d)) { return false; };
+    if (!agree_i64_1000((-999), d)) { return false; };
+    if (!agree_i64_1000((-2), d)) { return false; };
+    if (!agree_i64_1000((-1), d)) { return false; };
+    if (!agree_i64_1000(0, d)) { return false; };
+    if (!agree_i64_1000(1, d)) { return false; };
+    if (!agree_i64_1000(2, d)) { return false; };
+    if (!agree_i64_1000(999, d)) { return false; };
+    if (!agree_i64_1000(1000, d)) { return false; };
+    if (!agree_i64_1000(1001, d)) { return false; };
+    if (!agree_i64_1000(9223372036854775806, d)) { return false; };
+    if (!agree_i64_1000(9223372036854775807, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: i64 = (s >> 0) as i64;
+        if (q_i64_1000(x) != x / d || r_i64_1000(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_i64_1000(x: i64, d: i64): bool {
+    return q_i64_1000(x) == x / d && r_i64_1000(x) == x % d;
+}
+def q_i64_26772(x: i64): i64 { return x / 26772; }
+def r_i64_26772(x: i64): i64 { return x % 26772; }
+def t_i64_26772(one: i64): bool {
+    let d: i64 = 26772 * one;
+    if (!agree_i64_26772((-9223372036854775807 - 1), d)) { return false; };
+    if (!agree_i64_26772((-9223372036854775807), d)) { return false; };
+    if (!agree_i64_26772((-26773), d)) { return false; };
+    if (!agree_i64_26772((-26772), d)) { return false; };
+    if (!agree_i64_26772((-26771), d)) { return false; };
+    if (!agree_i64_26772((-2), d)) { return false; };
+    if (!agree_i64_26772((-1), d)) { return false; };
+    if (!agree_i64_26772(0, d)) { return false; };
+    if (!agree_i64_26772(1, d)) { return false; };
+    if (!agree_i64_26772(2, d)) { return false; };
+    if (!agree_i64_26772(26771, d)) { return false; };
+    if (!agree_i64_26772(26772, d)) { return false; };
+    if (!agree_i64_26772(26773, d)) { return false; };
+    if (!agree_i64_26772(9223372036854775806, d)) { return false; };
+    if (!agree_i64_26772(9223372036854775807, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: i64 = (s >> 0) as i64;
+        if (q_i64_26772(x) != x / d || r_i64_26772(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_i64_26772(x: i64, d: i64): bool {
+    return q_i64_26772(x) == x / d && r_i64_26772(x) == x % d;
+}
+def q_i64_42880(x: i64): i64 { return x / 42880; }
+def r_i64_42880(x: i64): i64 { return x % 42880; }
+def t_i64_42880(one: i64): bool {
+    let d: i64 = 42880 * one;
+    if (!agree_i64_42880((-9223372036854775807 - 1), d)) { return false; };
+    if (!agree_i64_42880((-9223372036854775807), d)) { return false; };
+    if (!agree_i64_42880((-42881), d)) { return false; };
+    if (!agree_i64_42880((-42880), d)) { return false; };
+    if (!agree_i64_42880((-42879), d)) { return false; };
+    if (!agree_i64_42880((-2), d)) { return false; };
+    if (!agree_i64_42880((-1), d)) { return false; };
+    if (!agree_i64_42880(0, d)) { return false; };
+    if (!agree_i64_42880(1, d)) { return false; };
+    if (!agree_i64_42880(2, d)) { return false; };
+    if (!agree_i64_42880(42879, d)) { return false; };
+    if (!agree_i64_42880(42880, d)) { return false; };
+    if (!agree_i64_42880(42881, d)) { return false; };
+    if (!agree_i64_42880(9223372036854775806, d)) { return false; };
+    if (!agree_i64_42880(9223372036854775807, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: i64 = (s >> 0) as i64;
+        if (q_i64_42880(x) != x / d || r_i64_42880(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_i64_42880(x: i64, d: i64): bool {
+    return q_i64_42880(x) == x / d && r_i64_42880(x) == x % d;
+}
+def q_i64_45212(x: i64): i64 { return x / 45212; }
+def r_i64_45212(x: i64): i64 { return x % 45212; }
+def t_i64_45212(one: i64): bool {
+    let d: i64 = 45212 * one;
+    if (!agree_i64_45212((-9223372036854775807 - 1), d)) { return false; };
+    if (!agree_i64_45212((-9223372036854775807), d)) { return false; };
+    if (!agree_i64_45212((-45213), d)) { return false; };
+    if (!agree_i64_45212((-45212), d)) { return false; };
+    if (!agree_i64_45212((-45211), d)) { return false; };
+    if (!agree_i64_45212((-2), d)) { return false; };
+    if (!agree_i64_45212((-1), d)) { return false; };
+    if (!agree_i64_45212(0, d)) { return false; };
+    if (!agree_i64_45212(1, d)) { return false; };
+    if (!agree_i64_45212(2, d)) { return false; };
+    if (!agree_i64_45212(45211, d)) { return false; };
+    if (!agree_i64_45212(45212, d)) { return false; };
+    if (!agree_i64_45212(45213, d)) { return false; };
+    if (!agree_i64_45212(9223372036854775806, d)) { return false; };
+    if (!agree_i64_45212(9223372036854775807, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: i64 = (s >> 0) as i64;
+        if (q_i64_45212(x) != x / d || r_i64_45212(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_i64_45212(x: i64, d: i64): bool {
+    return q_i64_45212(x) == x / d && r_i64_45212(x) == x % d;
+}
+def q_i64_3315470524515641792(x: i64): i64 { return x / 3315470524515641792; }
+def r_i64_3315470524515641792(x: i64): i64 { return x % 3315470524515641792; }
+def t_i64_3315470524515641792(one: i64): bool {
+    let d: i64 = 3315470524515641792 * one;
+    if (!agree_i64_3315470524515641792((-9223372036854775807 - 1), d)) { return false; };
+    if (!agree_i64_3315470524515641792((-9223372036854775807), d)) { return false; };
+    if (!agree_i64_3315470524515641792((-3315470524515641793), d)) { return false; };
+    if (!agree_i64_3315470524515641792((-3315470524515641792), d)) { return false; };
+    if (!agree_i64_3315470524515641792((-3315470524515641791), d)) { return false; };
+    if (!agree_i64_3315470524515641792((-2), d)) { return false; };
+    if (!agree_i64_3315470524515641792((-1), d)) { return false; };
+    if (!agree_i64_3315470524515641792(0, d)) { return false; };
+    if (!agree_i64_3315470524515641792(1, d)) { return false; };
+    if (!agree_i64_3315470524515641792(2, d)) { return false; };
+    if (!agree_i64_3315470524515641792(3315470524515641791, d)) { return false; };
+    if (!agree_i64_3315470524515641792(3315470524515641792, d)) { return false; };
+    if (!agree_i64_3315470524515641792(3315470524515641793, d)) { return false; };
+    if (!agree_i64_3315470524515641792(9223372036854775806, d)) { return false; };
+    if (!agree_i64_3315470524515641792(9223372036854775807, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: i64 = (s >> 0) as i64;
+        if (q_i64_3315470524515641792(x) != x / d || r_i64_3315470524515641792(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_i64_3315470524515641792(x: i64, d: i64): bool {
+    return q_i64_3315470524515641792(x) == x / d && r_i64_3315470524515641792(x) == x % d;
+}
+def q_i64_4206378163624850419(x: i64): i64 { return x / 4206378163624850419; }
+def r_i64_4206378163624850419(x: i64): i64 { return x % 4206378163624850419; }
+def t_i64_4206378163624850419(one: i64): bool {
+    let d: i64 = 4206378163624850419 * one;
+    if (!agree_i64_4206378163624850419((-9223372036854775807 - 1), d)) { return false; };
+    if (!agree_i64_4206378163624850419((-9223372036854775807), d)) { return false; };
+    if (!agree_i64_4206378163624850419((-4206378163624850420), d)) { return false; };
+    if (!agree_i64_4206378163624850419((-4206378163624850419), d)) { return false; };
+    if (!agree_i64_4206378163624850419((-4206378163624850418), d)) { return false; };
+    if (!agree_i64_4206378163624850419((-2), d)) { return false; };
+    if (!agree_i64_4206378163624850419((-1), d)) { return false; };
+    if (!agree_i64_4206378163624850419(0, d)) { return false; };
+    if (!agree_i64_4206378163624850419(1, d)) { return false; };
+    if (!agree_i64_4206378163624850419(2, d)) { return false; };
+    if (!agree_i64_4206378163624850419(4206378163624850418, d)) { return false; };
+    if (!agree_i64_4206378163624850419(4206378163624850419, d)) { return false; };
+    if (!agree_i64_4206378163624850419(4206378163624850420, d)) { return false; };
+    if (!agree_i64_4206378163624850419(9223372036854775806, d)) { return false; };
+    if (!agree_i64_4206378163624850419(9223372036854775807, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: i64 = (s >> 0) as i64;
+        if (q_i64_4206378163624850419(x) != x / d || r_i64_4206378163624850419(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_i64_4206378163624850419(x: i64, d: i64): bool {
+    return q_i64_4206378163624850419(x) == x / d && r_i64_4206378163624850419(x) == x % d;
+}
+def q_i64_4317320208477757312(x: i64): i64 { return x / 4317320208477757312; }
+def r_i64_4317320208477757312(x: i64): i64 { return x % 4317320208477757312; }
+def t_i64_4317320208477757312(one: i64): bool {
+    let d: i64 = 4317320208477757312 * one;
+    if (!agree_i64_4317320208477757312((-9223372036854775807 - 1), d)) { return false; };
+    if (!agree_i64_4317320208477757312((-9223372036854775807), d)) { return false; };
+    if (!agree_i64_4317320208477757312((-4317320208477757313), d)) { return false; };
+    if (!agree_i64_4317320208477757312((-4317320208477757312), d)) { return false; };
+    if (!agree_i64_4317320208477757312((-4317320208477757311), d)) { return false; };
+    if (!agree_i64_4317320208477757312((-2), d)) { return false; };
+    if (!agree_i64_4317320208477757312((-1), d)) { return false; };
+    if (!agree_i64_4317320208477757312(0, d)) { return false; };
+    if (!agree_i64_4317320208477757312(1, d)) { return false; };
+    if (!agree_i64_4317320208477757312(2, d)) { return false; };
+    if (!agree_i64_4317320208477757312(4317320208477757311, d)) { return false; };
+    if (!agree_i64_4317320208477757312(4317320208477757312, d)) { return false; };
+    if (!agree_i64_4317320208477757312(4317320208477757313, d)) { return false; };
+    if (!agree_i64_4317320208477757312(9223372036854775806, d)) { return false; };
+    if (!agree_i64_4317320208477757312(9223372036854775807, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: i64 = (s >> 0) as i64;
+        if (q_i64_4317320208477757312(x) != x / d || r_i64_4317320208477757312(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_i64_4317320208477757312(x: i64, d: i64): bool {
+    return q_i64_4317320208477757312(x) == x / d && r_i64_4317320208477757312(x) == x % d;
+}
+def q_i64_4611686018427387904(x: i64): i64 { return x / 4611686018427387904; }
+def r_i64_4611686018427387904(x: i64): i64 { return x % 4611686018427387904; }
+def t_i64_4611686018427387904(one: i64): bool {
+    let d: i64 = 4611686018427387904 * one;
+    if (!agree_i64_4611686018427387904((-9223372036854775807 - 1), d)) { return false; };
+    if (!agree_i64_4611686018427387904((-9223372036854775807), d)) { return false; };
+    if (!agree_i64_4611686018427387904((-4611686018427387905), d)) { return false; };
+    if (!agree_i64_4611686018427387904((-4611686018427387904), d)) { return false; };
+    if (!agree_i64_4611686018427387904((-4611686018427387903), d)) { return false; };
+    if (!agree_i64_4611686018427387904((-2), d)) { return false; };
+    if (!agree_i64_4611686018427387904((-1), d)) { return false; };
+    if (!agree_i64_4611686018427387904(0, d)) { return false; };
+    if (!agree_i64_4611686018427387904(1, d)) { return false; };
+    if (!agree_i64_4611686018427387904(2, d)) { return false; };
+    if (!agree_i64_4611686018427387904(4611686018427387903, d)) { return false; };
+    if (!agree_i64_4611686018427387904(4611686018427387904, d)) { return false; };
+    if (!agree_i64_4611686018427387904(4611686018427387905, d)) { return false; };
+    if (!agree_i64_4611686018427387904(9223372036854775806, d)) { return false; };
+    if (!agree_i64_4611686018427387904(9223372036854775807, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: i64 = (s >> 0) as i64;
+        if (q_i64_4611686018427387904(x) != x / d || r_i64_4611686018427387904(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_i64_4611686018427387904(x: i64, d: i64): bool {
+    return q_i64_4611686018427387904(x) == x / d && r_i64_4611686018427387904(x) == x % d;
+}
+def q_i64_4819539751200166005(x: i64): i64 { return x / 4819539751200166005; }
+def r_i64_4819539751200166005(x: i64): i64 { return x % 4819539751200166005; }
+def t_i64_4819539751200166005(one: i64): bool {
+    let d: i64 = 4819539751200166005 * one;
+    if (!agree_i64_4819539751200166005((-9223372036854775807 - 1), d)) { return false; };
+    if (!agree_i64_4819539751200166005((-9223372036854775807), d)) { return false; };
+    if (!agree_i64_4819539751200166005((-4819539751200166006), d)) { return false; };
+    if (!agree_i64_4819539751200166005((-4819539751200166005), d)) { return false; };
+    if (!agree_i64_4819539751200166005((-4819539751200166004), d)) { return false; };
+    if (!agree_i64_4819539751200166005((-2), d)) { return false; };
+    if (!agree_i64_4819539751200166005((-1), d)) { return false; };
+    if (!agree_i64_4819539751200166005(0, d)) { return false; };
+    if (!agree_i64_4819539751200166005(1, d)) { return false; };
+    if (!agree_i64_4819539751200166005(2, d)) { return false; };
+    if (!agree_i64_4819539751200166005(4819539751200166004, d)) { return false; };
+    if (!agree_i64_4819539751200166005(4819539751200166005, d)) { return false; };
+    if (!agree_i64_4819539751200166005(4819539751200166006, d)) { return false; };
+    if (!agree_i64_4819539751200166005(9223372036854775806, d)) { return false; };
+    if (!agree_i64_4819539751200166005(9223372036854775807, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: i64 = (s >> 0) as i64;
+        if (q_i64_4819539751200166005(x) != x / d || r_i64_4819539751200166005(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_i64_4819539751200166005(x: i64, d: i64): bool {
+    return q_i64_4819539751200166005(x) == x / d && r_i64_4819539751200166005(x) == x % d;
+}
+def q_i64_6234493220378930695(x: i64): i64 { return x / 6234493220378930695; }
+def r_i64_6234493220378930695(x: i64): i64 { return x % 6234493220378930695; }
+def t_i64_6234493220378930695(one: i64): bool {
+    let d: i64 = 6234493220378930695 * one;
+    if (!agree_i64_6234493220378930695((-9223372036854775807 - 1), d)) { return false; };
+    if (!agree_i64_6234493220378930695((-9223372036854775807), d)) { return false; };
+    if (!agree_i64_6234493220378930695((-6234493220378930696), d)) { return false; };
+    if (!agree_i64_6234493220378930695((-6234493220378930695), d)) { return false; };
+    if (!agree_i64_6234493220378930695((-6234493220378930694), d)) { return false; };
+    if (!agree_i64_6234493220378930695((-2), d)) { return false; };
+    if (!agree_i64_6234493220378930695((-1), d)) { return false; };
+    if (!agree_i64_6234493220378930695(0, d)) { return false; };
+    if (!agree_i64_6234493220378930695(1, d)) { return false; };
+    if (!agree_i64_6234493220378930695(2, d)) { return false; };
+    if (!agree_i64_6234493220378930695(6234493220378930694, d)) { return false; };
+    if (!agree_i64_6234493220378930695(6234493220378930695, d)) { return false; };
+    if (!agree_i64_6234493220378930695(6234493220378930696, d)) { return false; };
+    if (!agree_i64_6234493220378930695(9223372036854775806, d)) { return false; };
+    if (!agree_i64_6234493220378930695(9223372036854775807, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: i64 = (s >> 0) as i64;
+        if (q_i64_6234493220378930695(x) != x / d || r_i64_6234493220378930695(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_i64_6234493220378930695(x: i64, d: i64): bool {
+    return q_i64_6234493220378930695(x) == x / d && r_i64_6234493220378930695(x) == x % d;
+}
+def q_i64_6521674034281370903(x: i64): i64 { return x / 6521674034281370903; }
+def r_i64_6521674034281370903(x: i64): i64 { return x % 6521674034281370903; }
+def t_i64_6521674034281370903(one: i64): bool {
+    let d: i64 = 6521674034281370903 * one;
+    if (!agree_i64_6521674034281370903((-9223372036854775807 - 1), d)) { return false; };
+    if (!agree_i64_6521674034281370903((-9223372036854775807), d)) { return false; };
+    if (!agree_i64_6521674034281370903((-6521674034281370904), d)) { return false; };
+    if (!agree_i64_6521674034281370903((-6521674034281370903), d)) { return false; };
+    if (!agree_i64_6521674034281370903((-6521674034281370902), d)) { return false; };
+    if (!agree_i64_6521674034281370903((-2), d)) { return false; };
+    if (!agree_i64_6521674034281370903((-1), d)) { return false; };
+    if (!agree_i64_6521674034281370903(0, d)) { return false; };
+    if (!agree_i64_6521674034281370903(1, d)) { return false; };
+    if (!agree_i64_6521674034281370903(2, d)) { return false; };
+    if (!agree_i64_6521674034281370903(6521674034281370902, d)) { return false; };
+    if (!agree_i64_6521674034281370903(6521674034281370903, d)) { return false; };
+    if (!agree_i64_6521674034281370903(6521674034281370904, d)) { return false; };
+    if (!agree_i64_6521674034281370903(9223372036854775806, d)) { return false; };
+    if (!agree_i64_6521674034281370903(9223372036854775807, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: i64 = (s >> 0) as i64;
+        if (q_i64_6521674034281370903(x) != x / d || r_i64_6521674034281370903(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_i64_6521674034281370903(x: i64, d: i64): bool {
+    return q_i64_6521674034281370903(x) == x / d && r_i64_6521674034281370903(x) == x % d;
+}
+def q_i64_6633370043683298429(x: i64): i64 { return x / 6633370043683298429; }
+def r_i64_6633370043683298429(x: i64): i64 { return x % 6633370043683298429; }
+def t_i64_6633370043683298429(one: i64): bool {
+    let d: i64 = 6633370043683298429 * one;
+    if (!agree_i64_6633370043683298429((-9223372036854775807 - 1), d)) { return false; };
+    if (!agree_i64_6633370043683298429((-9223372036854775807), d)) { return false; };
+    if (!agree_i64_6633370043683298429((-6633370043683298430), d)) { return false; };
+    if (!agree_i64_6633370043683298429((-6633370043683298429), d)) { return false; };
+    if (!agree_i64_6633370043683298429((-6633370043683298428), d)) { return false; };
+    if (!agree_i64_6633370043683298429((-2), d)) { return false; };
+    if (!agree_i64_6633370043683298429((-1), d)) { return false; };
+    if (!agree_i64_6633370043683298429(0, d)) { return false; };
+    if (!agree_i64_6633370043683298429(1, d)) { return false; };
+    if (!agree_i64_6633370043683298429(2, d)) { return false; };
+    if (!agree_i64_6633370043683298429(6633370043683298428, d)) { return false; };
+    if (!agree_i64_6633370043683298429(6633370043683298429, d)) { return false; };
+    if (!agree_i64_6633370043683298429(6633370043683298430, d)) { return false; };
+    if (!agree_i64_6633370043683298429(9223372036854775806, d)) { return false; };
+    if (!agree_i64_6633370043683298429(9223372036854775807, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: i64 = (s >> 0) as i64;
+        if (q_i64_6633370043683298429(x) != x / d || r_i64_6633370043683298429(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_i64_6633370043683298429(x: i64, d: i64): bool {
+    return q_i64_6633370043683298429(x) == x / d && r_i64_6633370043683298429(x) == x % d;
+}
+def q_i64_8554364694256843597(x: i64): i64 { return x / 8554364694256843597; }
+def r_i64_8554364694256843597(x: i64): i64 { return x % 8554364694256843597; }
+def t_i64_8554364694256843597(one: i64): bool {
+    let d: i64 = 8554364694256843597 * one;
+    if (!agree_i64_8554364694256843597((-9223372036854775807 - 1), d)) { return false; };
+    if (!agree_i64_8554364694256843597((-9223372036854775807), d)) { return false; };
+    if (!agree_i64_8554364694256843597((-8554364694256843598), d)) { return false; };
+    if (!agree_i64_8554364694256843597((-8554364694256843597), d)) { return false; };
+    if (!agree_i64_8554364694256843597((-8554364694256843596), d)) { return false; };
+    if (!agree_i64_8554364694256843597((-2), d)) { return false; };
+    if (!agree_i64_8554364694256843597((-1), d)) { return false; };
+    if (!agree_i64_8554364694256843597(0, d)) { return false; };
+    if (!agree_i64_8554364694256843597(1, d)) { return false; };
+    if (!agree_i64_8554364694256843597(2, d)) { return false; };
+    if (!agree_i64_8554364694256843597(8554364694256843596, d)) { return false; };
+    if (!agree_i64_8554364694256843597(8554364694256843597, d)) { return false; };
+    if (!agree_i64_8554364694256843597(8554364694256843598, d)) { return false; };
+    if (!agree_i64_8554364694256843597(9223372036854775806, d)) { return false; };
+    if (!agree_i64_8554364694256843597(9223372036854775807, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: i64 = (s >> 0) as i64;
+        if (q_i64_8554364694256843597(x) != x / d || r_i64_8554364694256843597(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_i64_8554364694256843597(x: i64, d: i64): bool {
+    return q_i64_8554364694256843597(x) == x / d && r_i64_8554364694256843597(x) == x % d;
+}
+def q_i64_9091193971765728302(x: i64): i64 { return x / 9091193971765728302; }
+def r_i64_9091193971765728302(x: i64): i64 { return x % 9091193971765728302; }
+def t_i64_9091193971765728302(one: i64): bool {
+    let d: i64 = 9091193971765728302 * one;
+    if (!agree_i64_9091193971765728302((-9223372036854775807 - 1), d)) { return false; };
+    if (!agree_i64_9091193971765728302((-9223372036854775807), d)) { return false; };
+    if (!agree_i64_9091193971765728302((-9091193971765728303), d)) { return false; };
+    if (!agree_i64_9091193971765728302((-9091193971765728302), d)) { return false; };
+    if (!agree_i64_9091193971765728302((-9091193971765728301), d)) { return false; };
+    if (!agree_i64_9091193971765728302((-2), d)) { return false; };
+    if (!agree_i64_9091193971765728302((-1), d)) { return false; };
+    if (!agree_i64_9091193971765728302(0, d)) { return false; };
+    if (!agree_i64_9091193971765728302(1, d)) { return false; };
+    if (!agree_i64_9091193971765728302(2, d)) { return false; };
+    if (!agree_i64_9091193971765728302(9091193971765728301, d)) { return false; };
+    if (!agree_i64_9091193971765728302(9091193971765728302, d)) { return false; };
+    if (!agree_i64_9091193971765728302(9091193971765728303, d)) { return false; };
+    if (!agree_i64_9091193971765728302(9223372036854775806, d)) { return false; };
+    if (!agree_i64_9091193971765728302(9223372036854775807, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: i64 = (s >> 0) as i64;
+        if (q_i64_9091193971765728302(x) != x / d || r_i64_9091193971765728302(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_i64_9091193971765728302(x: i64, d: i64): bool {
+    return q_i64_9091193971765728302(x) == x / d && r_i64_9091193971765728302(x) == x % d;
+}
+def q_i64_9223372036854775807(x: i64): i64 { return x / 9223372036854775807; }
+def r_i64_9223372036854775807(x: i64): i64 { return x % 9223372036854775807; }
+def t_i64_9223372036854775807(one: i64): bool {
+    let d: i64 = 9223372036854775807 * one;
+    if (!agree_i64_9223372036854775807((-9223372036854775807 - 1), d)) { return false; };
+    if (!agree_i64_9223372036854775807((-9223372036854775807), d)) { return false; };
+    if (!agree_i64_9223372036854775807((-9223372036854775806), d)) { return false; };
+    if (!agree_i64_9223372036854775807((-2), d)) { return false; };
+    if (!agree_i64_9223372036854775807((-1), d)) { return false; };
+    if (!agree_i64_9223372036854775807(0, d)) { return false; };
+    if (!agree_i64_9223372036854775807(1, d)) { return false; };
+    if (!agree_i64_9223372036854775807(2, d)) { return false; };
+    if (!agree_i64_9223372036854775807(9223372036854775806, d)) { return false; };
+    if (!agree_i64_9223372036854775807(9223372036854775807, d)) { return false; };
+    let s: mutable u64 = 88172645463325252;
+    let i: mutable uint = 0;
+    while (i < 500) {
+        s := wrapping_add_u64(wrapping_mul_u64(s, 6364136223846793005), 1442695040888963407);
+        let x: i64 = (s >> 0) as i64;
+        if (q_i64_9223372036854775807(x) != x / d || r_i64_9223372036854775807(x) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def agree_i64_9223372036854775807(x: i64, d: i64): bool {
+    return q_i64_9223372036854775807(x) == x / d && r_i64_9223372036854775807(x) == x % d;
+}
+
+def main(): int {
+    let one_u32: u32 = argument_count() as u32;
+    let one_i32: i32 = argument_count() as i32;
+    let one_u64: u64 = argument_count() as u64;
+    let one_i64: i64 = argument_count() as i64;
+    if (!t_u32_1(one_u32)) { return 2; };
+    if (!t_u32_2(one_u32)) { return 3; };
+    if (!t_u32_3(one_u32)) { return 4; };
+    if (!t_u32_5(one_u32)) { return 5; };
+    if (!t_u32_7(one_u32)) { return 6; };
+    if (!t_u32_10(one_u32)) { return 7; };
+    if (!t_u32_60(one_u32)) { return 8; };
+    if (!t_u32_641(one_u32)) { return 9; };
+    if (!t_u32_1000(one_u32)) { return 10; };
+    if (!t_u32_2097(one_u32)) { return 11; };
+    if (!t_u32_3784(one_u32)) { return 12; };
+    if (!t_u32_13872(one_u32)) { return 13; };
+    if (!t_u32_29554(one_u32)) { return 14; };
+    if (!t_u32_65537(one_u32)) { return 15; };
+    if (!t_u32_274177(one_u32)) { return 16; };
+    if (!t_u32_751734702(one_u32)) { return 17; };
+    if (!t_u32_898236552(one_u32)) { return 18; };
+    if (!t_u32_994744082(one_u32)) { return 19; };
+    if (!t_u32_1361431979(one_u32)) { return 20; };
+    if (!t_u32_1684267338(one_u32)) { return 21; };
+    if (!t_u32_1869511783(one_u32)) { return 22; };
+    if (!t_u32_1941083453(one_u32)) { return 23; };
+    if (!t_u32_2147483647(one_u32)) { return 24; };
+    if (!t_u32_2147483648(one_u32)) { return 25; };
+    if (!t_u32_2147483649(one_u32)) { return 26; };
+    if (!t_u32_3003370931(one_u32)) { return 27; };
+    if (!t_u32_3261442381(one_u32)) { return 28; };
+    if (!t_u32_4288448282(one_u32)) { return 29; };
+    if (!t_u32_4294967294(one_u32)) { return 30; };
+    if (!t_u32_4294967295(one_u32)) { return 31; };
+    if (!t_i32_m2147483648(one_i32)) { return 32; };
+    if (!t_i32_m2147483647(one_i32)) { return 33; };
+    if (!t_i32_m1422759668(one_i32)) { return 34; };
+    if (!t_i32_m1147763406(one_i32)) { return 35; };
+    if (!t_i32_m860599353(one_i32)) { return 36; };
+    if (!t_i32_m449315040(one_i32)) { return 37; };
+    if (!t_i32_m416649190(one_i32)) { return 38; };
+    if (!t_i32_m177418141(one_i32)) { return 39; };
+    if (!t_i32_m39285(one_i32)) { return 40; };
+    if (!t_i32_m1000(one_i32)) { return 41; };
+    if (!t_i32_m7(one_i32)) { return 42; };
+    if (!t_i32_m3(one_i32)) { return 43; };
+    if (!t_i32_m2(one_i32)) { return 44; };
+    if (!t_i32_2(one_i32)) { return 45; };
+    if (!t_i32_3(one_i32)) { return 46; };
+    if (!t_i32_5(one_i32)) { return 47; };
+    if (!t_i32_7(one_i32)) { return 48; };
+    if (!t_i32_10(one_i32)) { return 49; };
+    if (!t_i32_60(one_i32)) { return 50; };
+    if (!t_i32_641(one_i32)) { return 51; };
+    if (!t_i32_893(one_i32)) { return 52; };
+    if (!t_i32_1000(one_i32)) { return 53; };
+    if (!t_i32_13416(one_i32)) { return 54; };
+    if (!t_i32_33225(one_i32)) { return 55; };
+    if (!t_i32_234254898(one_i32)) { return 56; };
+    if (!t_i32_620180896(one_i32)) { return 57; };
+    if (!t_i32_978203238(one_i32)) { return 58; };
+    if (!t_i32_1073741824(one_i32)) { return 59; };
+    if (!t_i32_1347830511(one_i32)) { return 60; };
+    if (!t_i32_2147483647(one_i32)) { return 61; };
+    if (!t_u64_1(one_u64)) { return 62; };
+    if (!t_u64_2(one_u64)) { return 63; };
+    if (!t_u64_3(one_u64)) { return 64; };
+    if (!t_u64_5(one_u64)) { return 65; };
+    if (!t_u64_7(one_u64)) { return 66; };
+    if (!t_u64_10(one_u64)) { return 67; };
+    if (!t_u64_60(one_u64)) { return 68; };
+    if (!t_u64_641(one_u64)) { return 69; };
+    if (!t_u64_1000(one_u64)) { return 70; };
+    if (!t_u64_16860(one_u64)) { return 71; };
+    if (!t_u64_32941(one_u64)) { return 72; };
+    if (!t_u64_40010(one_u64)) { return 73; };
+    if (!t_u64_58083(one_u64)) { return 74; };
+    if (!t_u64_274177(one_u64)) { return 75; };
+    if (!t_u64_4294967297(one_u64)) { return 76; };
+    if (!t_u64_1783714035436321556(one_u64)) { return 77; };
+    if (!t_u64_3529890823420262181(one_u64)) { return 78; };
+    if (!t_u64_6598416443236252119(one_u64)) { return 79; };
+    if (!t_u64_7492779762783997695(one_u64)) { return 80; };
+    if (!t_u64_9223372036854775807(one_u64)) { return 81; };
+    if (!t_u64_9223372036854775808(one_u64)) { return 82; };
+    if (!t_u64_9223372036854775809(one_u64)) { return 83; };
+    if (!t_u64_9959896652332546221(one_u64)) { return 84; };
+    if (!t_u64_13514430548745634686(one_u64)) { return 85; };
+    if (!t_u64_15020108586837730627(one_u64)) { return 86; };
+    if (!t_u64_16513613633522812557(one_u64)) { return 87; };
+    if (!t_u64_17727582826056116227(one_u64)) { return 88; };
+    if (!t_u64_18417727104339673227(one_u64)) { return 89; };
+    if (!t_u64_18446744073709551614(one_u64)) { return 90; };
+    if (!t_u64_18446744073709551615(one_u64)) { return 91; };
+    if (!t_i64_m9223372036854775808(one_i64)) { return 92; };
+    if (!t_i64_m9223372036854775807(one_i64)) { return 93; };
+    if (!t_i64_m5944604130761445129(one_i64)) { return 94; };
+    if (!t_i64_m15482(one_i64)) { return 95; };
+    if (!t_i64_m1000(one_i64)) { return 96; };
+    if (!t_i64_m7(one_i64)) { return 97; };
+    if (!t_i64_m3(one_i64)) { return 98; };
+    if (!t_i64_m2(one_i64)) { return 99; };
+    if (!t_i64_2(one_i64)) { return 100; };
+    if (!t_i64_3(one_i64)) { return 101; };
+    if (!t_i64_5(one_i64)) { return 102; };
+    if (!t_i64_7(one_i64)) { return 103; };
+    if (!t_i64_10(one_i64)) { return 104; };
+    if (!t_i64_60(one_i64)) { return 105; };
+    if (!t_i64_641(one_i64)) { return 106; };
+    if (!t_i64_1000(one_i64)) { return 107; };
+    if (!t_i64_26772(one_i64)) { return 108; };
+    if (!t_i64_42880(one_i64)) { return 109; };
+    if (!t_i64_45212(one_i64)) { return 110; };
+    if (!t_i64_3315470524515641792(one_i64)) { return 111; };
+    if (!t_i64_4206378163624850419(one_i64)) { return 112; };
+    if (!t_i64_4317320208477757312(one_i64)) { return 113; };
+    if (!t_i64_4611686018427387904(one_i64)) { return 114; };
+    if (!t_i64_4819539751200166005(one_i64)) { return 115; };
+    if (!t_i64_6234493220378930695(one_i64)) { return 116; };
+    if (!t_i64_6521674034281370903(one_i64)) { return 117; };
+    if (!t_i64_6633370043683298429(one_i64)) { return 118; };
+    if (!t_i64_8554364694256843597(one_i64)) { return 119; };
+    if (!t_i64_9091193971765728302(one_i64)) { return 120; };
+    if (!t_i64_9223372036854775807(one_i64)) { return 121; };
+    return 42;
+}

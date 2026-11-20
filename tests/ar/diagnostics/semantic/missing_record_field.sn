@@ -1,0 +1,8 @@
+// اختبار: رفض
+// تشخيص: SULTANC-TYPE-MISSING-RECORD-FIELD
+// نظير: tests/en/diagnostics/semantic/missing_record_field.sn
+نوع نقطة = { س: ص32, ص: ص32 };
+عرف الرئيسية(): ص32 {
+    دع النقطة: نقطة = { س: 1 };
+    أرجع النقطة.س;
+}

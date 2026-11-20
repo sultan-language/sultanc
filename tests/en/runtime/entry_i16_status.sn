@@ -1,0 +1,9 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 44
+// نظير: tests/ar/runtime/entry_i16_status.sn
+// A 16-bit result: the process status keeps its low 8 bits (300 is 44).
+def main(): i16 {
+    let status: i16 = 300;
+    return status;
+}

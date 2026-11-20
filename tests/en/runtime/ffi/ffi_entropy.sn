@@ -1,0 +1,11 @@
+extern def getentropy(buffer: *mutable u8, size: uint): i32;
+
+def main(): i32 {
+    let byte: mutable u8 = 0;
+    let pointer: *mutable u8 = & mutable byte;
+    unsafe {
+        let status: i32 = getentropy(pointer, 1);
+        if (status == 0) { return 42; };
+    }
+    return 1;
+}

@@ -1,0 +1,1 @@
+public def value_00(): int { return 1; }

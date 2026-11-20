@@ -1,0 +1,17 @@
+// `compile_error` rejects a bad compile-time argument while compiling.
+// Changing `checked_width(8)` to `checked_width(80)` stops the build.
+import std.io.println;
+import std.text.number;
+import std.meta.reflect;
+
+def checked_width(comptime bits: int): int {
+    if (bits > 64) {
+        compile_error("width must be at most 64 bits");
+    };
+    return bits;
+}
+
+def main(): int {
+    println(int_to_text(checked_width(8)));
+    return 0;
+}

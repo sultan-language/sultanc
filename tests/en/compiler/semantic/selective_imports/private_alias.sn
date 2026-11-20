@@ -1,0 +1,8 @@
+// تشخيص: SULTANC-NAME-UNKNOWN
+// اختبار: رفض
+// خروج: 1
+from std.io import البدائي;
+
+def main(): int {
+    return 0;
+}

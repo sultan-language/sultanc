@@ -1,0 +1,9 @@
+// اختبار: رفض
+// تشخيص: SULTANC-TYPE-MISMATCH
+// نظير: tests/en/diagnostics/e2e/type_mismatch.sn
+// خرج-تشخيص-عربي: type_mismatch.ar.stderr
+// خرج-تشخيص-إنجليزي: type_mismatch.en.stderr
+عرف الرئيسية(): ص32 {
+    دع العدد: ص32 = «نص»;
+    أرجع العدد;
+}

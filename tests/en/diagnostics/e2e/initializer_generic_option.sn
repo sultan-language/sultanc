@@ -1,0 +1,13 @@
+// اختبار: رفض
+// تشخيص: SULTANC-TYPE-MISMATCH
+// نظير: tests/ar/diagnostics/e2e/initializer_generic_option.sn
+// خرج-تشخيص-عربي: initializer_generic_option.ar.stderr
+// خرج-تشخيص-إنجليزي: initializer_generic_option.en.stderr
+// A generic call whose result is an option, where its value is declared: a mismatch at the initializer.
+import std.collections.vector;
+
+def main(): int {
+    let values: mutable vector int = [1, 2, 3];
+    let removed: int = remove_at(&mutable values, 1);
+    return removed;
+}

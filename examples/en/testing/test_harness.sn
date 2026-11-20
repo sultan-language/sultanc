@@ -1,0 +1,14 @@
+// Self-checking example: test_harness.
+import std.io.println;
+import std.text.number;
+import std.debug.assert;
+
+def test_even(n: int): bool { return n % 2 == 0; }
+def main(): int {
+    let pass_count: mutable int = 0;
+    if (test_even(2)) { pass_count := pass_count + 1; };
+    if (!test_even(3)) { pass_count := pass_count + 1; };
+    assert(pass_count == 2);
+    println(int_to_text(pass_count));
+    return 0;
+}

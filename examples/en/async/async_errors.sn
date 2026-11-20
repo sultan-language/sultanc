@@ -1,0 +1,17 @@
+// Cooperative task scheduler: async_errors.
+import std.io.println;
+import std.text.number;
+import std.async.runtime;
+
+def do_job(n: int): int { yield_task(); return n * 2; }
+def validated(n: int): result int, int { if (n < 0) { return result.err(1); }; return result.ok(n); }
+
+def main(): int {
+    let job: mutable task<int> = spawn_task(fn(): int -> do_job(5));
+    match await_task(&mutable job) with
+    | option.some(n) -> { match validated(n) with
+      | result.ok(v) -> { println(int_to_text(v)); }
+      | result.err(_) -> { return 2; }; }
+    | option.none -> { return 1; };
+    return 0;
+}

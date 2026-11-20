@@ -1,0 +1,90 @@
+// اختبار: تشغيل
+// أهداف: x86_64-linux
+// خروج: 0
+// std.sync.channel: a sync_channel(2) holds at most two messages. try_send
+// on a full channel hands the value back (full); a producer thread then
+// sends 200 numbers with the blocking send, which waits while the channel is
+// full, so it can never run more than two messages ahead of the receiver
+// (two atomics count what was sent and what was received). Counterpart:
+// tests/ar/stdlib/behavior/sync_channel_bounded.sn. No pair directive: the
+// interpreter runs one thread.
+import std.sync.arc;
+import std.sync.atomic;
+import std.sync.channel;
+import std.thread.thread;
+
+def produce(tx: &sender<i64>, counts: &arc<vector atomic_u64>): void {
+    let i: mutable i64 = 0;
+    while (i < 200) {
+        let value: i64 = i;
+        match send(tx, value) with
+        | result.ok(_) -> { }
+        | result.err(_) -> { return; };
+        let c: &vector atomic_u64 = arc_get(counts);
+        let sent: u64 = atomic_u64_fetch_add(&(*c)[0], 1 as u64, memory_ordering.seq_cst()) + (1 as u64);
+        let received: u64 = atomic_u64_load(&(*c)[1], memory_ordering.seq_cst());
+        if (sent > received) {
+            let ahead: u64 = sent - received;
+            if (ahead > atomic_u64_load(&(*c)[2], memory_ordering.seq_cst())) {
+                atomic_u64_store(&(*c)[2], ahead, memory_ordering.seq_cst());
+            };
+        };
+        i := i + 1;
+    }
+}
+
+def start(tx: sender<i64>, counts: &arc<vector atomic_u64>): option join_handle {
+    let mine: arc<vector atomic_u64> = arc_clone(counts);
+    match spawn(fn(): void -> produce(&tx, &mine)) with
+    | result.ok(h) -> { return option.some(h); }
+    | result.err(_) -> { return option.none(); };
+}
+
+def main(): i32 {
+    let ends: channel_ends<i64> = sync_channel(2);
+    let tx: sender<i64>;
+    let rx: receiver<i64>;
+    match ends with
+    | { المرسل: s, المستلم: r } -> { tx := s; rx := r; };
+
+    // Two messages fit; the third is handed back.
+    match try_send(&tx, 1 as i64) with | result.ok(_) -> { } | result.err(_) -> { return 1; };
+    match try_send(&tx, 2 as i64) with | result.ok(_) -> { } | result.err(_) -> { return 2; };
+    match try_send(&tx, 3 as i64) with
+    | result.ok(_) -> { return 3; }
+    | result.err(try_send_error.full(v)) -> { if (v != (3 as i64)) { return 4; }; }
+    | result.err(_) -> { return 5; };
+    match recv(&rx) with | result.ok(v) -> { if (v != (1 as i64)) { return 6; }; } | result.err(_) -> { return 7; };
+    match recv(&rx) with | result.ok(v) -> { if (v != (2 as i64)) { return 8; }; } | result.err(_) -> { return 9; };
+
+    // Sent, received, and the most the sender ever ran ahead.
+    let cells: mutable vector atomic_u64 = [];
+    append(cells, atomic_u64_new(0 as u64));
+    append(cells, atomic_u64_new(0 as u64));
+    append(cells, atomic_u64_new(0 as u64));
+    let counts: arc<vector atomic_u64> = arc_new(cells);
+    let handle: mutable join_handle;
+    match start(tx, &counts) with
+    | option.some(h) -> { handle := h; }
+    | option.none -> { return 10; };
+    let expected: mutable i64 = 0;
+    while (expected < 200) {
+        // Let the producer fill the channel before each receive.
+        let spin: mutable i64 = 0;
+        while (spin < 2000) { spin := spin + 1; }
+        match recv(&rx) with
+        | result.ok(v) -> { if (v != expected) { return 11; }; }
+        | result.err(_) -> { return 12; };
+        let c: &vector atomic_u64 = arc_get(&counts);
+        let got: u64 = atomic_u64_fetch_add(&(*c)[1], 1 as u64, memory_ordering.seq_cst());
+        expected := expected + 1;
+    }
+    join(&mutable handle);
+    // The sender ran at most two messages ahead, plus the one it may have
+    // counted just after a receive freed a slot.
+    let final_counts: &vector atomic_u64 = arc_get(&counts);
+    if (atomic_u64_load(&(*final_counts)[2], memory_ordering.seq_cst()) > (3 as u64)) { return 13; };
+    // Every sender is gone now: recv reports the disconnection.
+    match recv(&rx) with | result.ok(_) -> { return 14; } | result.err(_) -> { };
+    return 0;
+}

@@ -1,0 +1,14 @@
+// Offline TLS server configuration; no network handshake.
+import std.io.println;
+import std.text.number;
+import std.tls.config;
+
+
+def main(): int {
+    let password: string = "not-a-real-key";
+    let identity: tls_server_identity = tls_server_identity_pkcs12([], &password);
+    let config: mutable tls_server_config = tls_server_config_new(identity);
+    tls_server_config_set_verify_client(&mutable config, true);
+    if (tls_server_config_verifies_client(&config)) { println("client authentication configured"); } else { return 1; };
+    return 0;
+}

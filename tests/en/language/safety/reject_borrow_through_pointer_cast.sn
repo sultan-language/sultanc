@@ -1,0 +1,12 @@
+// اختبار: رفض
+// تشخيص: SULTANC-BORROW-CONFLICT
+// نظير: tests/ar/language/safety/reject_borrow_through_pointer_cast.sn
+// A safe reference keeps its checks when a raw pointer is made from it: the
+// value it borrows cannot be written while it is in scope.
+def main(): int {
+    let v: mutable int = 1;
+    let r: &int = &v;
+    let p: *int = r as *int;
+    v := 3;
+    return *r;
+}

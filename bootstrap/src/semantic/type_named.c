@@ -93,8 +93,21 @@ int __Semantic_Resolve_Named_Entry__(__Semantic_Context__ *__Context__,
         __Context__, __Owner_Unit__, __Type__->__As__.__Named__.__Name__, &__Entry__);
     if (__Status__ != __Name_Lookup_Found__ || __Entry__ == NULL)
     {
-        return __Semantic_Fail__(
+        /* Named types carry no span in Stage0's AST; report the unresolved
+         * name and its owning unit so the failure is actionable. */
+        __Diagnostic__ *__Diagnostic_State__ = __Semantic_Begin_Diagnostic__(
             __Context__, __Name_Lookup_Error_Id__(__Status__), (__Source_Span__){0});
+        if (__Diagnostic_State__ != NULL)
+        {
+            (void)__Diagnostic_Set_Argument_Text__(
+                __Diagnostic_State__, __Diagnostic_Argument_Value__, __Type__->__As__.__Named__.__Name__);
+            if (__Owner_Unit__ != NULL && __Owner_Unit__->__Path__ != NULL)
+            {
+                (void)__Diagnostic_Set_Argument_Cstr__(
+                    __Diagnostic_State__, __Diagnostic_Argument_Path__, __Owner_Unit__->__Path__);
+            }
+        }
+        return 0;
     }
     return __Semantic_Generic_Resolve_Type_Instance__(
         __Context__, __Entry__, __Type__, __Out_Entry__);

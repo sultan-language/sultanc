@@ -1,0 +1,14 @@
+// اختبار: رفض
+// خروج: 1
+// تشخيص: SULTANC-FORMAT-STRING
+// نظير: tests/ar/stdlib/fmt/reject_format_unknown_type.sn
+// The placeholder names an unknown format type.
+// Rust: unknown format trait `q`.
+import std.fmt.fmt;
+
+def main(): int {
+    let name: string = "Sultan";
+    match format("{:q}", [fmt_arg.text(&name)]) with
+    | result.ok(_) -> { return 0; }
+    | result.err(_) -> { return 1; };
+}

@@ -1,0 +1,3 @@
+// Fixture of tests/en/compiler/tooling/isolation.sn (not a test).
+def kept_here(): int { return 6; }
+def uses_unknown(): int { return not_declared_anywhere; }

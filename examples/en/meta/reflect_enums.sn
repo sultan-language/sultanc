@@ -1,0 +1,11 @@
+// Compile-time type introspection: reflect_enums.
+import std.io.println;
+import std.text.number;
+import std.meta.reflect;
+
+type Choice = | Absent | Found of int | Failed of string;
+def main(): int {
+    let sample: Choice = Choice.Absent();
+    println(uint_to_text(constructor_count(&sample) as uint));
+    return 0;
+}

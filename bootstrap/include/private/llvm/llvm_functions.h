@@ -11,8 +11,12 @@ __Semantic_Function_Entry__ *__LLVM_Resolve_Ordinary_Callee__(
     __LLVM_Emitter__ *emitter,
     __Ast_Expression__ *expression);
 int __LLVM_Declare_Functions__(__LLVM_Emitter__ *emitter);
+int __LLVM_Queue_Function__(__LLVM_Emitter__ *emitter,
+                            __LLVM_Function__ *llvm_function);
+int __LLVM_Emit_Reachable_Function_Bodies__(
+    __LLVM_Emitter__ *emitter,
+    __Semantic_Function_Entry__ *language_entry);
 int __LLVM_Emit_Function_Body__(__LLVM_Emitter__ *emitter,
                                 __LLVM_Function__ *llvm_function);
-int __LLVM_Emit_Process_Entry__(__LLVM_Emitter__ *emitter);
 
 #endif

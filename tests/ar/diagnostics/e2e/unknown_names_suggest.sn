@@ -1,0 +1,21 @@
+// اختبار: رفض
+// تشخيص: SULTANC-NAME-UNKNOWN
+// نظير: tests/en/diagnostics/e2e/unknown_names_suggest.sn
+// خرج-تشخيص-عربي: unknown_names_suggest.ar.stderr
+// خرج-تشخيص-إنجليزي: unknown_names_suggest.en.stderr
+// Every unknown name of the module is reported, each with its own evidence:
+// a visible name of close spelling (help and a maybe-incorrect fix), none for
+// a name with no close candidate, and none for a local inside its own
+// declaration (`دع المجموع = المجموغ`).
+عرف مساعد(القيمة: ص32): ص32 {
+    أرجع القيمة;
+}
+عرف الرئيسية(): ص32 {
+    دع العدد: ص32 = 3;
+    دع عداد_الأسطر: ص32 = 4;
+    دع الأول: ص32 = العدذ + 1;
+    دع الثاني: ص32 = مساعذ(2);
+    دع الثالث: ص32 = عداد_الأسطور + 1;
+    دع المجموع: ص32 = المجموغ;
+    أرجع الأول + الثاني + الثالث + المجموع + قيمة_مفقودة;
+}

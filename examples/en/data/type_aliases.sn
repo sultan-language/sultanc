@@ -1,0 +1,19 @@
+// `type` gives an existing type a new name; `alias` gives a function one.
+import std.io.println;
+import std.text.number;
+
+type Celsius = int;
+type Grid = vector vector int;
+
+def add(left: int, right: int): int { return left + right; }
+alias plus = add;
+
+def main(): int {
+    let freezing: Celsius = 0;
+    let boiling: Celsius = 100;
+    println(int_to_text(plus(freezing, boiling)));
+    let row: vector int = [1, 2, 3];
+    let grid: Grid = [row];
+    println(int_to_text(grid[0][2]));
+    return 0;
+}

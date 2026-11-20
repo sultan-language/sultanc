@@ -1,0 +1,4 @@
+type Base = { value: int };
+type Middle = Base;
+type Leaf = Middle;
+def main(): int { return 42; }

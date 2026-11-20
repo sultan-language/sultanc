@@ -1,0 +1,17 @@
+// The root file of std.os.platform.unix.linux.syscalls: the Arabic spellings of its modules
+// (docs/en/reference/modules-and-imports.md, "Module spellings"). An import may
+// use either name; both name one module.
+
+module kernel_result { ar: نتيجة_النواة };
+module numbers_arm_eabi { ar: أرقام_آرم };
+module numbers_asm_generic_64 { ar: أرقام_عامة64 };
+module numbers_i386 { ar: أرقام_آي386 };
+module numbers_loongarch64 { ar: أرقام_لونغ_آرك64 };
+module numbers_mips64 { ar: أرقام_ميبس64 };
+module numbers_powerpc64 { ar: أرقام_باور_بي_سي64 };
+module numbers_riscv64 { ar: أرقام_ريسك_في64 };
+module numbers_s390x { ar: أرقام_إس390إكس };
+module numbers_sparc64 { ar: أرقام_سبارك64 };
+module numbers_x86_64 { ar: أرقام_إكس86_64 };
+module operations { ar: عمليات };
+module selection { ar: اختيار };

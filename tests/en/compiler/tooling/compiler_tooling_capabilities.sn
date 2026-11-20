@@ -1,0 +1,79 @@
+// اختبار: تشغيل
+// خروج: 42
+// نظير: tests/ar/compiler/tooling/compiler_tooling_capabilities.sn
+// The tooling Frontend entry points: the type-alias hierarchy, recovery from a
+// syntax error (the remaining declarations still answer queries), and a
+// cancellation requested before the analysis starts.
+import compiler.driver.source_inputs;
+import compiler.frontend.semantic_pipeline;
+import compiler.frontend.cancellation;
+import compiler.frontend.module_loading.logical_environment;
+import compiler.frontend.types.semantic_pipeline;
+import compiler.frontend.names.identifiers;
+import compiler.frontend.names.symbols;
+
+def request_for(path: string): اختياري طلب_واجهة_وحدة {
+    let extras: vector string = [];
+    match ابن_إعداد_تجميع_مباشر(&path, &extras) with
+    | نتيجة_إعداد_تجميع_مباشر.غير_صالح -> { return اختياري.لا_شيء(); }
+    | نتيجة_إعداد_تجميع_مباشر.جاهز({ البيئة: env, المفتاح_الجذري: key, المفاتيح_المباشرة: _ }) -> {
+        let request: طلب_واجهة_وحدة = { البيئة: env, المفتاح_الجذري: key, احتفظ_بحقائق_الأدوات: true };
+        return اختياري.موجود(request);
+    };
+}
+
+def interface_for(path: string): int {
+    match request_for(path) with
+    | اختياري.لا_شيء -> { return 10; }
+    | اختياري.موجود(request) -> {
+        match ابن_واجهة_وحدة(request) with
+        | نتيجة_بناء_واجهة_وحدة.مرفوضة(_) -> { return 20; }
+        | نتيجة_بناء_واجهة_وحدة.مكتملة(frontend) -> {
+            if ((length(frontend.سياقات_الأنواع.علاقات_هرم_الأنواع) as uint) < 2) { return 21; }
+            let first: علاقة_هرم_نوع = frontend.سياقات_الأنواع.علاقات_هرم_الأنواع[0];
+            let supers: vector معرف_رمز = أنواع_عليا_لرمز_واجهة(&frontend, first.النوع_الفرعي);
+            let subs: vector معرف_رمز = أنواع_فرعية_لرمز_واجهة(&frontend, first.النوع_العلوي);
+            if ((length(supers) as uint) == 0) { return 22; }
+            if ((length(subs) as uint) == 0) { return 23; }
+            return 42;
+        };
+    };
+}
+
+def recovery_for(path: string): int {
+    match request_for(path) with
+    | اختياري.لا_شيء -> { return 30; }
+    | اختياري.موجود(request) -> {
+        match ابن_واجهة_وحدة(request) with
+        | نتيجة_بناء_واجهة_وحدة.مرفوضة(_) -> { return 31; }
+        | نتيجة_بناء_واجهة_وحدة.مكتملة(frontend) -> {
+            if (frontend.كاملة_دلاليا) { return 32; }
+            if (frontend.تشخيصات_الأدوات.عدد_الأخطاء == 0) { return 33; }
+            if ((length(frontend.الوحدات) as uint) == 0) { return 34; }
+            let source_id: uint = frontend.الوحدات[0].معرف_المصدر;
+            let symbols: vector رمز_دلالي = رموز_واجهة_لمصدر(&frontend, source_id);
+            if ((length(symbols) as uint) < 2) { return 35; }
+            return 42;
+        };
+    };
+}
+
+def cancellation_for(path: string): int {
+    match request_for(path) with
+    | اختياري.لا_شيء -> { return 40; }
+    | اختياري.موجود(request) -> {
+        let cancel: حالة_إلغاء_واجهة = حالة_إلغاء_واجهة_جديدة();
+        اطلب_إلغاء_واجهة(&cancel);
+        match ابن_واجهة_وحدة_قابلة_للإلغاء(request, &cancel) with
+        | نتيجة_بناء_واجهة_قابلة_للإلغاء.ملغاة -> { return 42; }
+        | _ -> { return 41; };
+    };
+}
+
+def main(): int {
+    let hierarchy: int = interface_for("tests/en/compiler/tooling/hierarchy/source.sn");
+    if (hierarchy != 42) { return hierarchy; }
+    let recovery: int = recovery_for("tests/en/compiler/tooling/recovery/source.sn");
+    if (recovery != 42) { return recovery; }
+    return cancellation_for("tests/en/compiler/tooling/hierarchy/source.sn");
+}

@@ -1,0 +1,6 @@
+خطأ[SULTANC-PATTERN-PAYLOAD-COUNT-MISMATCH]: عدد حمولات منشئ النمط غير مطابق — المنشئ يحمل حمولة واحدة، لكن النمط يربط حمولتين.
+  --> tests/en/diagnostics/e2e/pattern_payload_count.sn:10:7..10:23
+    |
+ 10 |     | Maybe.Just(a, b) -> { return a; }
+    |       ^^^^^^^^^^^^^^^^
+    |

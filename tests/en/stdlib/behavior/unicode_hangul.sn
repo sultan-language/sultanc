@@ -1,0 +1,27 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+import std.unicode.algorithms.hangul;
+import std.unicode.scalar;
+
+def main(): int {
+    if (!is_unicode_code_point(0x10FFFF)) { return 1; };
+    if (is_unicode_code_point(0x110000)) { return 2; };
+    if (length(فك_مقطع_هانغول(0xABFF)) != 0) { return 3; };
+    let decomposed: vector u32 = فك_مقطع_هانغول(0xAC01);
+    if (length(decomposed) != 3) { return 4; };
+    if (decomposed[0] != 0x1100) { return 5; };
+    if (decomposed[1] != 0x1161) { return 6; };
+    if (decomposed[2] != 0x11A8) { return 7; };
+    match ركب_مقطعي_هانغول(0x1100, 0x1161) with
+    | option.none -> { return 8; }
+    | option.some(value) -> { if (value != 0xAC00) { return 9; }; };
+    match ركب_مقطعي_هانغول(0xAC00, 0x11A8) with
+    | option.none -> { return 10; }
+    | option.some(value) -> { if (value != 0xAC01) { return 11; }; };
+    match ركب_مقطعي_هانغول(0xAC01, 0x11A8) with
+    | option.some(_) -> { return 12; }
+    | option.none -> { };
+    return 42;
+}

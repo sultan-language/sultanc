@@ -1,0 +1,27 @@
+// A tree of tasks: a branch task starts a leaf task, awaits it and builds on its result.
+import std.io.println;
+import std.text.number;
+import std.async.runtime;
+
+def leaf(n: int): int {
+    yield_task();
+    return n * n;
+}
+
+def branch(n: int): int {
+    let child: mutable task<int> = spawn_task(fn(): int -> leaf(n));
+    match await_task(&mutable child) with
+    | option.some(value) -> { return value + 1; }
+    | option.none -> { return -1; };
+}
+
+def main(): int {
+    let root: mutable task<int> = spawn_task(fn(): int -> branch(6));
+    match await_task(&mutable root) with
+    | option.some(v) -> {
+        if (v != 37) { return 1; };
+        println(int_to_text(v));
+    }
+    | option.none -> { return 2; };
+    return 0;
+}

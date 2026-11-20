@@ -10,6 +10,7 @@
 #include "kernel/layout/layout.h"
 #include "kernel/name/name.h"
 #include "kernel/type/type.h"
+#include "semantic/body_internal.h"
 #include <limits.h>
 #include <stdlib.h>
 
@@ -43,7 +44,8 @@ int __LLVM_Resolve_Integer__(__LLVM_Emitter__ *emitter,
     __Resolved_Type__ resolved;
     if (type == NULL || !__Type_Resolve__(emitter->semantic, type, &resolved) ||
         (resolved.__Kind__ != __Resolved_Type_Signed_Integer__ &&
-         resolved.__Kind__ != __Resolved_Type_Unsigned_Integer__))
+         resolved.__Kind__ != __Resolved_Type_Unsigned_Integer__ &&
+         resolved.__Kind__ != __Resolved_Type_Character__))
     {
         return 0;
     }
@@ -224,6 +226,19 @@ LLVMTypeRef __LLVM_Type__(__LLVM_Emitter__ *emitter, __Ast_Type__ *type)
     {
         return LLVMIntTypeInContext(emitter->context, resolved.__Bits__);
     }
+    if (resolved.__Kind__ == __Resolved_Type_Character__)
+    {
+        return LLVMIntTypeInContext(emitter->context, resolved.__Bits__);
+    }
+    if (resolved.__Kind__ == __Resolved_Type_Float__)
+    {
+        if (resolved.__Bits__ == 32U)
+            return LLVMFloatTypeInContext(emitter->context);
+        if (resolved.__Bits__ == 64U)
+            return LLVMDoubleTypeInContext(emitter->context);
+        __LLVM_Fail__("LLVM float Type must be 32 or 64 bits");
+        return NULL;
+    }
     if ((resolved.__Kind__ == __Resolved_Type_Struct__ ||
          resolved.__Kind__ == __Resolved_Type_Enum__) &&
         resolved.__Named__ != NULL)
@@ -243,7 +258,8 @@ LLVMTypeRef __LLVM_Type__(__LLVM_Emitter__ *emitter, __Ast_Type__ *type)
     {
         return __LLVM_Create_Tagged_Literal_Type__(emitter, type);
     }
-    if (resolved.__Kind__ == __Resolved_Type_Reference__ ||
+    if (resolved.__Kind__ == __Resolved_Type_Pointer__ ||
+        resolved.__Kind__ == __Resolved_Type_Reference__ ||
         resolved.__Kind__ == __Resolved_Type_Box__)
     {
         /* Stores the inner. */
@@ -391,30 +407,65 @@ __Ast_Type__ *__LLVM_Expression_Integer_Type__(__LLVM_Emitter__ *emitter,
                 __LLVM_Resolve_Ordinary_Callee__(emitter, expression);
             if (callee != NULL)
                 return callee->__Function__->__Output__.__Type__;
+            {
+                /* A call through a value of function type (a local, a field). */
+                __Ast_Type__ *callee_type =
+                    __LLVM_Lvalue_Type__(emitter, expression->__As__.__Call__.__Function__);
+                __Resolved_Type__ callee_resolved;
+                if (callee_type != NULL &&
+                    __Type_Resolve__(emitter->semantic, callee_type, &callee_resolved) &&
+                    callee_resolved.__Kind__ == __Resolved_Type_Function__ &&
+                    callee_resolved.__Output__ != NULL)
+                    return callee_resolved.__Output__;
+            }
             switch (__LLVM_Builtin_Call_Identity__(emitter, expression))
             {
+                case __Name_Builtin_Wrapping_Add__:
+                case __Name_Builtin_Wrapping_Subtract__:
+                case __Name_Builtin_Wrapping_Multiply__:
+                case __Name_Builtin_Wrapping_Shift_Left__:
+                case __Name_Builtin_Wrapping_Shift_Right__:
+                case __Name_Builtin_Pop__:
+                case __Name_Builtin_C_Address_Call__:
+                /* Atomics and machine memory: semantic analysis records the
+                 * verified result Type on the call. */
+                case __Name_Builtin_Atomic_Load__:
+                case __Name_Builtin_Atomic_Swap__:
+                case __Name_Builtin_Atomic_Compare_Swap__:
+                case __Name_Builtin_Atomic_Fetch_Add__:
+                case __Name_Builtin_Atomic_Fetch_And__:
+                case __Name_Builtin_Atomic_Fetch_Or__:
+                case __Name_Builtin_Atomic_Fetch_Xor__:
+                case __Name_Builtin_Machine_Memory_Read__:
+                case __Name_Builtin_Linear_Memory_Grow__:
+                case __Name_Builtin_Linear_Memory_Read__:
+                case __Name_Builtin_Linear_Heap_Base__:
+                case __Name_Builtin_Float_Sqrt__:
+                case __Name_Builtin_Float_Abs__:
+                case __Name_Builtin_Float_Floor__:
+                case __Name_Builtin_Float_Ceil__:
+                case __Name_Builtin_Float_Trunc__:
+                case __Name_Builtin_Float_Round_Even__:
+                case __Name_Builtin_Float_Minimum__:
+                case __Name_Builtin_Float_Maximum__:
+                case __Name_Builtin_Float_Copy_Sign__:
+                case __Name_Builtin_Float_Fused_Multiply_Add__:
+                    return expression->__Contextual_Type__;
+                case __Name_Builtin_Capacity__:
                 case __Name_Builtin_Length__:
-                case __Name_Builtin_Open_File_Read__:
-                case __Name_Builtin_Read_File_Byte__:
-                case __Name_Builtin_Read_File_Segment__:
-                case __Name_Builtin_Create_File_Write__:
-                case __Name_Builtin_Write_File_Segment__:
-                case __Name_Builtin_Close_File__:
-                case __Name_Builtin_Open_Directory__:
-                case __Name_Builtin_Read_Directory_Entry__:
-                case __Name_Builtin_Close_Directory__:
-                case __Name_Builtin_Read_Stdin_Byte__:
-                case __Name_Builtin_Read_Stdin_Segment__:
                 case __Name_Builtin_Host_Architecture__:
                 case __Name_Builtin_Host_Platform__:
                 case __Name_Builtin_Host_Environment__:
-                case __Name_Builtin_Argument_Count__:
-                case __Name_Builtin_Stdout_Write__:
-                case __Name_Builtin_Stderr_Write__:
-                case __Name_Builtin_Path_Type__:
-                case __Name_Builtin_Path_Size__:
-                case __Name_Builtin_Path_Modified_Time__:
                     return &__LLVM_Integer_Type__;
+                case __Name_Builtin_F64_Bits__:
+                case __Name_Builtin_Raw_Kernel_Call__:
+                    return &__Body_Builtin_U64_Type__;
+                case __Name_Builtin_F64_From_Bits__:
+                    return &__Body_Builtin_F64_Type__;
+                case __Name_Builtin_F32_Bits__:
+                    return &__Body_Builtin_U32_Type__;
+                case __Name_Builtin_F32_From_Bits__:
+                    return &__Body_Builtin_F32_Type__;
                 default:
                     return NULL;
             }
@@ -431,6 +482,7 @@ __Ast_Type__ *__LLVM_Expression_Integer_Type__(__LLVM_Emitter__ *emitter,
                 if (operand_type != NULL &&
                     __Type_Resolve__(emitter->semantic, operand_type, &resolved) &&
                     (resolved.__Kind__ == __Resolved_Type_Reference__ ||
+                     resolved.__Kind__ == __Resolved_Type_Pointer__ ||
                      resolved.__Kind__ == __Resolved_Type_Box__))
                 {
                     return resolved.__Inner__;
@@ -481,47 +533,106 @@ __Ast_Type__ *__LLVM_Expression_Type__(__LLVM_Emitter__ *emitter,
             __Name_Builtin_Function__ builtin;
             if (callee != NULL)
                 return callee->__Function__->__Output__.__Type__;
+            {
+                /* A call through a value of function type (a local, a field). */
+                __Ast_Type__ *callee_type =
+                    __LLVM_Lvalue_Type__(emitter, expression->__As__.__Call__.__Function__);
+                __Resolved_Type__ callee_resolved;
+                if (callee_type != NULL &&
+                    __Type_Resolve__(emitter->semantic, callee_type, &callee_resolved) &&
+                    callee_resolved.__Kind__ == __Resolved_Type_Function__ &&
+                    callee_resolved.__Output__ != NULL)
+                    return callee_resolved.__Output__;
+            }
             builtin = __LLVM_Builtin_Call_Identity__(emitter, expression);
             switch (builtin)
             {
+                case __Name_Builtin_Wrapping_Add__:
+                case __Name_Builtin_Wrapping_Subtract__:
+                case __Name_Builtin_Wrapping_Multiply__:
+                case __Name_Builtin_Wrapping_Shift_Left__:
+                case __Name_Builtin_Wrapping_Shift_Right__:
+                case __Name_Builtin_Pop__:
+                case __Name_Builtin_C_Address_Call__:
+                /* Atomics and machine memory: semantic analysis records the
+                 * verified result Type on the call. */
+                case __Name_Builtin_Atomic_Load__:
+                case __Name_Builtin_Atomic_Swap__:
+                case __Name_Builtin_Atomic_Compare_Swap__:
+                case __Name_Builtin_Atomic_Fetch_Add__:
+                case __Name_Builtin_Atomic_Fetch_And__:
+                case __Name_Builtin_Atomic_Fetch_Or__:
+                case __Name_Builtin_Atomic_Fetch_Xor__:
+                case __Name_Builtin_Machine_Memory_Read__:
+                case __Name_Builtin_Linear_Memory_Grow__:
+                case __Name_Builtin_Linear_Memory_Read__:
+                case __Name_Builtin_Linear_Heap_Base__:
+                case __Name_Builtin_Float_Sqrt__:
+                case __Name_Builtin_Float_Abs__:
+                case __Name_Builtin_Float_Floor__:
+                case __Name_Builtin_Float_Ceil__:
+                case __Name_Builtin_Float_Trunc__:
+                case __Name_Builtin_Float_Round_Even__:
+                case __Name_Builtin_Float_Minimum__:
+                case __Name_Builtin_Float_Maximum__:
+                case __Name_Builtin_Float_Copy_Sign__:
+                case __Name_Builtin_Float_Fused_Multiply_Add__:
+                    return expression->__Contextual_Type__;
+                case __Name_Builtin_Capacity__:
                 case __Name_Builtin_Length__:
-                case __Name_Builtin_Open_File_Read__:
-                case __Name_Builtin_Read_File_Byte__:
-                case __Name_Builtin_Read_File_Segment__:
-                case __Name_Builtin_Create_File_Write__:
-                case __Name_Builtin_Write_File_Segment__:
-                case __Name_Builtin_Close_File__:
-                case __Name_Builtin_Open_Directory__:
-                case __Name_Builtin_Read_Directory_Entry__:
-                case __Name_Builtin_Close_Directory__:
-                case __Name_Builtin_Read_Stdin_Byte__:
-                case __Name_Builtin_Read_Stdin_Segment__:
                 case __Name_Builtin_Host_Architecture__:
                 case __Name_Builtin_Host_Platform__:
                 case __Name_Builtin_Host_Environment__:
-                case __Name_Builtin_Argument_Count__:
-                case __Name_Builtin_Stdout_Write__:
-                case __Name_Builtin_Stderr_Write__:
-                case __Name_Builtin_Path_Type__:
-                case __Name_Builtin_Path_Size__:
-                case __Name_Builtin_Path_Modified_Time__:
                     return &__LLVM_Integer_Type__;
-                case __Name_Builtin_Argument__:
-                case __Name_Builtin_Text_From_Bytes__:
-                    return &__LLVM_String_Type__;
-                    return &__LLVM_Result_Text_Integer_Type__;
-                case __Name_Builtin_Write_Executable_Bytes__:
-                    return &__LLVM_Result_Integer_Integer_Type__;
+                case __Name_Builtin_F64_Bits__:
+                case __Name_Builtin_Raw_Kernel_Call__:
+                    return &__Body_Builtin_U64_Type__;
+                case __Name_Builtin_F64_From_Bits__:
+                    return &__Body_Builtin_F64_Type__;
+                case __Name_Builtin_F32_Bits__:
+                    return &__Body_Builtin_U32_Type__;
+                case __Name_Builtin_F32_From_Bits__:
+                    return &__Body_Builtin_F32_Type__;
                 case __Name_Builtin_Append__:
                 case __Name_Builtin_Swap__:
-                case __Name_Builtin_Process_Exit__:
+                case __Name_Builtin_Release__:
+                case __Name_Builtin_Extend_From__:
                     return &__LLVM_Void_Type__;
+                case __Name_Builtin_None__:
+                {
+                    /* A call through a function value (including a generic
+                     * alias such as كاتب<ح>) has its callable's output type,
+                     * matching the indirect-call lowering. */
+                    __Ast_Type__ *callable_type =
+                        __LLVM_Lvalue_Type__(emitter, expression->__As__.__Call__.__Function__);
+                    __Resolved_Type__ callable_resolved;
+                    if (callable_type != NULL &&
+                        __Type_Resolve__(emitter->semantic, callable_type, &callable_resolved) &&
+                        callable_resolved.__Kind__ == __Resolved_Type_Function__)
+                        return callable_resolved.__Output__;
+                    return expression->__Contextual_Type__;
+                }
                 default:
                     return expression->__Contextual_Type__;
             }
         }
         case __Ast_Expression_Binary__:
-            return __LLVM_Expression_Integer_Type__(emitter, expression);
+            /* Comparisons and logical connectives always produce the
+             * canonical boolean; only arithmetic follows its integer operands. */
+            switch (expression->__As__.__Binary__.__Operation__)
+            {
+                case __Binary_Equal__:
+                case __Binary_Not_Equal__:
+                case __Binary_Less_Than__:
+                case __Binary_Less_Or_Equal__:
+                case __Binary_Greater_Than__:
+                case __Binary_Greater_Or_Equal__:
+                case __Binary_Logical_And__:
+                case __Binary_Logical_Or__:
+                    return &__LLVM_Boolean_Type__;
+                default:
+                    return __LLVM_Expression_Integer_Type__(emitter, expression);
+            }
         case __Ast_Expression_Unary__:
         {
             /* Stores the operation. */
@@ -539,6 +650,7 @@ __Ast_Type__ *__LLVM_Expression_Type__(__LLVM_Emitter__ *emitter,
             if (operation == __Unary_Dereference__ && operand_type != NULL &&
                 __Type_Resolve__(emitter->semantic, operand_type, &resolved) &&
                 (resolved.__Kind__ == __Resolved_Type_Reference__ ||
+                 resolved.__Kind__ == __Resolved_Type_Pointer__ ||
                  resolved.__Kind__ == __Resolved_Type_Box__))
                 return resolved.__Inner__;
             return operand_type;

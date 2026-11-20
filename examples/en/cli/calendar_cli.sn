@@ -1,0 +1,15 @@
+// Days in a month from the calendar module: February 2028, a leap year, has 29 days.
+import std.io.println;
+import std.io.read_line;
+import std.text.number;
+import std.text.transform;
+import std.time.calendar;
+
+def main(): int {
+    let year: int = 2028;
+    let month: uint = 2;
+    let days: uint = days_in_month(year, month);
+    if (days != 29) { return 1; };
+    println(uint_to_text(days));
+    return 0;
+}

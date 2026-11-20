@@ -1,0 +1,258 @@
+استورد compiler.link.context;
+استورد compiler.link.model;
+استورد compiler.link.symbol_table;
+استورد compiler.link.symbol_model;
+استورد compiler.link.input_ingest;
+استورد compiler.backend.target.target_model;
+استورد compiler.link.dependency.llvm_names;
+استورد compiler.link.resolution;
+استورد compiler.link.elf.dynamic_ingest;
+استورد compiler.link.provider;
+استورد compiler.backend.target.runtime_symbol_query_context;
+استورد المكتبة.ملفات.قراءة_ملف;
+استورد المكتبة.نصوص.من_بايتات;
+
+// The LLVM link dependency of a linked program.
+//
+// LLVM is a dependency only when regular-object undefined symbols reference
+// the LLVM C ABI; the code-generation backend that produced the objects is
+// never consulted. Like every other shared library, libLLVM enters the link
+// as a dynamic-library input and goes through the one canonical ingestion
+// (link/input_ingest.sn): its own identity (ELF DT_SONAME, Mach-O
+// LC_ID_DYLIB, PE export name) becomes the output's DT_NEEDED /
+// LC_LOAD_DYLIB / import, and its directory becomes the run path. This is how
+// LLD records a shared library (lld/ELF/InputFiles.cpp reads DT_SONAME into
+// soName; lld/ELF/SyntheticSections.cpp writes DT_NEEDED from it). No name is
+// synthesized from a version number.
+//
+// The library must be built for the output target, as with Clang ("It's not
+// enough to have your host's libraries installed") and LLVM's cross guide
+// (a sysroot holding dependencies "compiled for the target architecture"):
+//
+// - An explicit libLLVM link input already defines the symbols; nothing is
+//   added here.
+// - Otherwise, a target that imports its libLLVM by name
+//   (مكتبة_إل_إل_في_إم_باسم_للهدف: Windows PE, `LLVM-C.dll`) imports every
+//   undefined LLVM C API symbol from that DLL by name, as the COFF linker
+//   imports Windows system functions; no library file is read and none is
+//   needed at link time. The DLL must be found by the loader at run time.
+//   Previously a Windows output stopped with مكتبة_الهدف_مفقودة unless a
+//   Windows libLLVM file was supplied as a link input.
+// - Otherwise the compiler's own libLLVM (بيانات_مكتبة_إل_إل_في_إم_المضيف_ربط,
+//   recorded by the Driver) is used only when the output target is the
+//   compiler's registered host target. That is the only case in which the
+//   running compiler's library is a library for the target.
+// - Otherwise the link stops with مكتبة_الهدف_مفقودة. A compiler built
+//   without LLVM (its LLVM boundary bound to unavailable.sn) records no host
+//   libLLVM, nor does a WASI-hosted compiler (WASI has no loader that maps
+//   one), so such a compiler always needs the explicit input.
+// - A libLLVM that leaves an LLVM C API symbol undefined is a different LLVM
+//   C ABI from the one SultanC's provider binds (the C API is stable only on a
+//   best-effort basis, LLVM DeveloperPolicy "C API Changes"): رمز_غير_محلول.
+//   No other library or LLVM major is tried.
+// - A host libLLVM that the canonical ingestion rejects returns that
+//   ingestion error unchanged (استيعاب_فشل), so the linker reports a
+//   capacity failure as its capacity error and a malformed library as an
+//   invalid input. Previously every ingestion failure became one generic
+//   invalid-input result.
+
+عام نوع نتيجة_اعتماد_إل_إل_في_إم_ربط =
+    | نجح
+    | مكتبة_الهدف_مفقودة بنوع متجه ط8
+    | رمز_غير_محلول بنوع متجه ط8
+    | مدخل_غير_مقروء بنوع (نص, عدد)
+    | استيعاب_فشل بنوع خطأ_استيعاب_مدخل_ربط
+;
+
+عرف أول_رمز_إل_إل_في_إم_غير_معرف(
+    الجدول: &جدول_رموز_ربط
+): اختياري متجه ط8 {
+    دع فهرس_الرمز: متغير طبيعي = 0;
+    طالما (فهرس_الرمز < (الطول((*الجدول).الرموز) مثل طبيعي)) {
+        دع الرمز: &رمز_ربط = &(*الجدول).الرموز[فهرس_الرمز];
+        طابق (*الرمز).الحالة مع
+        | حالة_رمز_ربط.غير_معرف(_) -> {
+            إذا (اسم_رمز_إل_إل_في_إم_للربط(&(*الرمز).الاسم)) {
+                دع الاسم: متغير متجه ط8 = [];
+                دع فهرس_البايت: متغير طبيعي = 0;
+                طالما (فهرس_البايت < (الطول((*الرمز).الاسم) مثل طبيعي)) {
+                    ألحق(الاسم, (*الرمز).الاسم[فهرس_البايت]);
+                    فهرس_البايت := فهرس_البايت + 1;
+                }
+                أرجع اختياري.موجود(الاسم);
+            };
+        }
+        | _ -> { };
+        فهرس_الرمز := فهرس_الرمز + 1;
+    }
+    أرجع اختياري.لا_شيء();
+}
+
+// A supplied shared library already exports LLVM C API symbols (an explicit
+// libLLVM input): the dependency is that library and no other is added.
+عرف مكتبة_إل_إل_في_إم_مستوعبة(
+    الجدول: &جدول_رموز_ربط
+): منطقي {
+    دع فهرس_الرمز: متغير طبيعي = 0;
+    طالما (فهرس_الرمز < (الطول((*الجدول).الرموز) مثل طبيعي)) {
+        دع الرمز: &رمز_ربط = &(*الجدول).الرموز[فهرس_الرمز];
+        طابق (*الرمز).الحالة مع
+        | حالة_رمز_ربط.ديناميكي(_) -> {
+            إذا (اسم_رمز_إل_إل_في_إم_للربط(&(*الرمز).الاسم)) {
+                أرجع صواب;
+            };
+        }
+        | _ -> { };
+        فهرس_الرمز := فهرس_الرمز + 1;
+    }
+    أرجع خطأ;
+}
+
+// Imports every undefined LLVM C API symbol from the named DLL: one
+// dynamic-library input with no bytes and no path whose plan dependency
+// carries the DLL name, so the PE writer builds its import descriptor by name
+// (final_image.sn معلومات_استيراد_مدخل_كوف), as for a Windows system DLL.
+عرف استورد_رموز_إل_إل_في_إم_باسم(
+    السياق: &متغير سياق_ربط,
+    اسم_المكتبة: &نص
+): نتيجة_اعتماد_إل_إل_في_إم_ربط {
+    دع لا_بايتات: متجه ط8 = [];
+    دع المدخل: معرف_مدخل_ربط = أضف_مدخل_بمصدر_إلى_خطة_ربط(
+        &متغير (*السياق).الخطة,
+        صنف_مدخل_ربط.مكتبة_ديناميكية(),
+        لا_بايتات,
+        اختياري.لا_شيء(),
+        أصل_مدخل_ربط.مباشر(),
+        خطأ
+    );
+    دع الاعتماد: متغير اعتماد_مكتبة_ديناميكية_ربط =
+        اعتماد_مكتبة_ديناميكية_باسم(بايتات_من_نص(انسخ_نص(اسم_المكتبة)));
+    اربط_اعتماد_ديناميكي_بمدخل(&متغير الاعتماد, المدخل);
+    أضف_اعتماد_مكتبة_ديناميكية_إلى_خطة_ربط(&متغير (*السياق).الخطة, الاعتماد);
+    دع الفهرس: متغير طبيعي = 0;
+    طالما (الفهرس < (الطول((*السياق).الرموز.الرموز) مثل طبيعي)) {
+        دع بلا_تعريف: متغير منطقي = خطأ;
+        طابق (*السياق).الرموز.الرموز[الفهرس].الحالة مع
+        | حالة_رمز_ربط.غير_معرف(_) -> { بلا_تعريف := صواب; }
+        | _ -> { };
+        إذا (بلا_تعريف) {
+            دع معرف_الرمز: معرف_رمز_ربط = (*السياق).الرموز.الرموز[الفهرس].المعرف;
+            دع الاسم: متجه ط8 = اسم_رمز_في_سياق_الربط(السياق, معرف_الرمز);
+            إذا (اسم_رمز_إل_إل_في_إم_للربط(&الاسم)) {
+                طابق سجل_رمز_مكتبة_ديناميكية_للربط(
+                    &متغير (*السياق).الرموز,
+                    &الاسم,
+                    المدخل
+                ) مع
+                | نتيجة_تسجيل_رمز_ربط.خطأ(الخطأ) -> {
+                    طابق الخطأ مع
+                    | خطأ_حل_رموز_ربط.سعة_رموز_غير_قابلة_للتمثيل -> {
+                        أرجع نتيجة_اعتماد_إل_إل_في_إم_ربط.استيعاب_فشل(
+                            خطأ_استيعاب_مدخل_ربط.سعة_رموز_غير_قابلة_للتمثيل()
+                        );
+                    }
+                    | _ -> {
+                        أرجع نتيجة_اعتماد_إل_إل_في_إم_ربط.استيعاب_فشل(
+                            خطأ_استيعاب_مدخل_ربط.حل_رمز_غير_مكتمل()
+                        );
+                    };
+                }
+                | _ -> { };
+            };
+        };
+        الفهرس := الفهرس + 1;
+    }
+    أرجع نتيجة_اعتماد_إل_إل_في_إم_ربط.نجح();
+}
+
+// The automatic ELF dependency has no consumer for its input bytes once
+// symbol and dependency ingestion has completed.
+عرف أفرغ_مخزن_إل_إل_في_إم_بعد_الفحص(
+    السياق: &متغير سياق_ربط,
+    الموضع: طبيعي
+): فراغ {
+    دع المدخل: &متغير مدخل_ربط = &متغير (*السياق).الخطة.المدخلات[الموضع];
+    دع الفارغ: متجه ط8 = [];
+    (*المدخل).البايتات := الفارغ;
+}
+
+عام عرف حل_اعتماد_إل_إل_في_إم_للربط(
+    السياق: &متغير سياق_ربط
+): نتيجة_اعتماد_إل_إل_في_إم_ربط {
+    دع الرمز_الأول: متجه ط8;
+    طابق أول_رمز_إل_إل_في_إم_غير_معرف(&(*السياق).الرموز) مع
+    | اختياري.لا_شيء -> { أرجع نتيجة_اعتماد_إل_إل_في_إم_ربط.نجح(); }
+    | اختياري.موجود(الاسم) -> { الرمز_الأول := الاسم; };
+    إذا (مكتبة_إل_إل_في_إم_مستوعبة(&(*السياق).الرموز)) {
+        أرجع نتيجة_اعتماد_إل_إل_في_إم_ربط.رمز_غير_محلول(الرمز_الأول);
+    };
+
+    طابق مكتبة_إل_إل_في_إم_باسم_للهدف(&(*السياق).الهدف) مع
+    | اختياري.لا_شيء -> { }
+    | اختياري.موجود(اسم_المكتبة) -> {
+        أرجع استورد_رموز_إل_إل_في_إم_باسم(السياق, &اسم_المكتبة);
+    };
+
+    دع مسار_المكتبة: نص;
+    طابق (*السياق).الخطة.بيانات_الأداة.إل_إل_في_إم_المضيف مع
+    | اختياري.لا_شيء -> {
+        أرجع نتيجة_اعتماد_إل_إل_في_إم_ربط.مكتبة_الهدف_مفقودة(الرمز_الأول);
+    }
+    | اختياري.موجود(البيانات) -> {
+        إذا (!معرفا_هدف_متساويان(البيانات.هدف_المضيف, (*السياق).الخطة.الهدف)) {
+            أرجع نتيجة_اعتماد_إل_إل_في_إم_ربط.مكتبة_الهدف_مفقودة(
+                الرمز_الأول
+            );
+        };
+        مسار_المكتبة := انسخ_نص(&البيانات.المسار);
+    };
+
+    دع البايتات: متجه ط8;
+    طابق اقرأ_بايتات_ملف(&مسار_المكتبة) مع
+    | نتيجة.خطأ(الحالة) -> {
+        أرجع نتيجة_اعتماد_إل_إل_في_إم_ربط.مدخل_غير_مقروء(
+            مسار_المكتبة,
+            الحالة
+        );
+    }
+    | نتيجة.نجح(المحتوى) -> { البايتات := المحتوى; };
+
+    دع البداية: طبيعي = الطول((*السياق).الخطة.المدخلات) مثل طبيعي;
+    دع المعرف: معرف_مدخل_ربط = أضف_مكتبة_ديناميكية_ملف_إلى_خطة_ربط(
+        &متغير (*السياق).الخطة,
+        البايتات,
+        مسار_المكتبة
+    );
+    // The implicit host dependency is the last linker input, after archive
+    // extraction has finished. The ELF scanner can resolve only names that
+    // are already undefined, without storing the rest of libLLVM's exports.
+    // Non-ELF hosts keep the ordinary format-specific ingestion path.
+    طابق مزود_ربط_للهدف(&(*السياق).الهدف) مع
+    | هوية_مزود_ربط.إلف -> {
+        دع مدخل_المكتبة: &مدخل_ربط = &(*السياق).الخطة.المدخلات[البداية];
+        طابق استوعب_مكتبة_إلف_في_سياق_الربط_للمطلوب(السياق, مدخل_المكتبة) مع
+        | نتيجة_استيعاب_مكتبة_إلف.نجح -> { }
+        | نتيجة_استيعاب_مكتبة_إلف.خطأ(_) -> {
+            أرجع نتيجة_اعتماد_إل_إل_في_إم_ربط.استيعاب_فشل(
+                خطأ_استيعاب_مدخل_ربط.صيغة_كائن_غير_مدعومة()
+            );
+        };
+        // ELF output only uses the recorded SONAME/runpath and symbol
+        // ownership; it never consults DSO input bytes after ingestion.
+        // Drop this unique automatic input buffer before image generation.
+        أفرغ_مخزن_إل_إل_في_إم_بعد_الفحص(السياق, البداية);
+    }
+    | _ -> {
+        طابق استوعب_مدخلات_خطة_الربط_من(السياق, البداية) مع
+        | نتيجة_استيعاب_مدخل_ربط.نجح -> { }
+        | نتيجة_استيعاب_مدخل_ربط.خطأ(الخطأ) -> {
+            أرجع نتيجة_اعتماد_إل_إل_في_إم_ربط.استيعاب_فشل(الخطأ);
+        };
+    };
+
+    طابق أول_رمز_إل_إل_في_إم_غير_معرف(&(*السياق).الرموز) مع
+    | اختياري.لا_شيء -> { أرجع نتيجة_اعتماد_إل_إل_في_إم_ربط.نجح(); }
+    | اختياري.موجود(الاسم) -> {
+        أرجع نتيجة_اعتماد_إل_إل_في_إم_ربط.رمز_غير_محلول(الاسم);
+    };
+}

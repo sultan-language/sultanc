@@ -1,0 +1,10 @@
+// اختبار: رفض
+// تشخيص: SULTANC-MUTABILITY-WRITE-TO-IMMUTABLE
+// نظير: tests/en/diagnostics/e2e/write_to_immutable.sn
+// خرج-تشخيص-عربي: write_to_immutable.ar.stderr
+// خرج-تشخيص-إنجليزي: write_to_immutable.en.stderr
+عرف الرئيسية(): ص32 {
+    دع العدد: ص32 = 1;
+    العدد := 2;
+    أرجع العدد;
+}

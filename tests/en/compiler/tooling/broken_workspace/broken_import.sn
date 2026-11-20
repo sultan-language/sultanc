@@ -1,0 +1,5 @@
+// Fixture of tests/en/compiler/tooling/broken_workspace.sn (not a test).
+// Its second import names a module that does not exist.
+import "a.sn";
+import nowhere.missing_module;
+public def doubled(): int { return shared_value() * 2; }

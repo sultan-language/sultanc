@@ -1,0 +1,37 @@
+// Reading a file in chunks: take the content three bytes at a time and count the chunks.
+import std.io.println;
+import std.text.number;
+import std.fs.write_file;
+import std.fs.read_file;
+import std.fs.mutation;
+import std.fs.metadata;
+import std.fs.walk;
+import std.fs.path;
+import std.text.transform;
+import std.text.substring;
+
+def main(): int {
+    let path: string = "sultanc-chunk-read.tmp";
+    let content: string = "abcdefghijkl";
+    match write_file(&path, &content) with
+    | result.err(_) -> { return 1; }
+    | _ -> { };
+    let count: mutable int = 0;
+    match read_file(&path) with
+    | result.ok(text) -> {
+        let offset: mutable uint = 0;
+        while (offset < length(text) as uint) {
+            match substring(&text, offset, 3) with
+            | option.some(part) -> { count := count + 1; }
+            | _ -> { return 2; };
+            offset := offset + 3;
+        };
+    }
+    | _ -> { return 3; };
+    match remove_file(&path) with
+    | result.err(_) -> { return 4; }
+    | _ -> { };
+    if (count != 4) { return 5; };
+    println(int_to_text(count));
+    return 0;
+}

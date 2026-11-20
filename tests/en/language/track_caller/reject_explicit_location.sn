@@ -1,0 +1,12 @@
+// اختبار: رفض
+// خروج: 1
+// تشخيص: SULTANC-TRACK-CALLER-EXPLICIT-LOCATION
+// نظير: tests/ar/language/track_caller/reject_explicit_location.sn
+// A @@track_caller function's location is the call's own: passing it is
+// rejected at the extra argument (docs/en/reference/testing.md).
+import std.debug.assert;
+import std.debug.location;
+
+def forward(location: source_location): void { assert(true, location); }
+
+def main(): int { return 0; }

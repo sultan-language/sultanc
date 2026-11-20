@@ -1,0 +1,18 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+import std.chars.ascii;
+
+def main(): int {
+    let upper: u8 = 0x41;
+    let lower: u8 = 0x7A;
+    let digit: u8 = 0x39;
+    if (!is_ascii_uppercase(upper)) { return 1; };
+    if (!is_ascii_lowercase(lower)) { return 2; };
+    if (!is_decimal_digit(digit)) { return 3; };
+    if (to_ascii_lowercase(upper) != 0x61) { return 4; };
+    if (to_ascii_uppercase(lower) != 0x5A) { return 5; };
+    if (ascii_digit_value(digit) != 9) { return 6; };
+    return 42;
+}

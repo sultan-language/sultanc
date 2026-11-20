@@ -1,0 +1,8 @@
+// اختبار: رفض
+// تشخيص: SULTANC-SAFETY-INDEX-OUT-OF-BOUNDS
+// نظير: tests/en/diagnostics/semantic/known_bounds.sn
+// للنص بايت واحد؛ يُرفض الفهرس الثابت بعده وقت الترجمة.
+عرف الرئيسية(): ط8 {
+    دع النص: نص = «*»;
+    أرجع النص[1];
+}

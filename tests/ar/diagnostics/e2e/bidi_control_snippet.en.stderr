@@ -1,0 +1,6 @@
+error[SULTANC-LEX-INVALID-TOKEN]: lexical error — The source contains a bidirectional text control character (U+202A–U+202E, U+2066–U+2069), which can make code display in a different order than it compiles.
+  --> tests/ar/diagnostics/e2e/bidi_control_snippet.sn:9:23..9:24
+   |
+ 9 |     دع النص: نص = "abc\u{202E}def";
+   |                       ^^^^^^^^
+   |

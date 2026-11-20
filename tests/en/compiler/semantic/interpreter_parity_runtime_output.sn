@@ -1,0 +1,7 @@
+import std.io.print;
+
+def main(): int {
+    print("*");
+    print("!");
+    return 42;
+}

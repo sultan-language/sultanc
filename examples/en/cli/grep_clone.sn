@@ -1,0 +1,29 @@
+// A small grep: print the input when it contains a word, otherwise say that nothing matched.
+import std.io.println;
+import std.process.argument_count;
+import std.process.argument;
+import std.text.number;
+import std.text.transform;
+import std.text.search;
+
+def read_input(default: string): string {
+    if (argument_count() > 1) {
+        match argument(1) with
+        | option.some(text) -> {
+            if (length(text) > 0) { return text; };
+        }
+        | option.none -> { };
+    };
+    return default;
+}
+
+def main(): int {
+    let text: string = read_input("compiler compiled successfully");
+    let needle: string = "compiled";
+    if (contains(&text, &needle)) {
+        println(text);
+    } else {
+        println("no matching lines");
+    };
+    return 0;
+}

@@ -1,0 +1,14 @@
+// Self-checking example: table_driven.
+import std.io.println;
+import std.text.number;
+import std.debug.assert;
+
+
+def main(): int {
+    let inputs: vector int = [1, 2, 3, 4];
+    let expected: vector int = [1, 4, 9, 16];
+    let i: mutable int = 0;
+    while (i < length(inputs)) { assert(inputs[i] * inputs[i] == expected[i]); i := i + 1; };
+    println("four cases passed");
+    return 0;
+}

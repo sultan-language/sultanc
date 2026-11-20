@@ -1,0 +1,19 @@
+// A trie kept in a vector of nodes: follow child links from the root and check that the
+// last node ends a word.
+import std.io.println;
+import std.text.number;
+
+type Node = { terminal: bool, first: int, second: int };
+
+def main(): int {
+    let nodes: vector Node = [
+        { terminal: false, first: 1, second: 3 },
+        { terminal: false, first: 2, second: -1 },
+        { terminal: true, first: -1, second: -1 },
+        { terminal: true, first: -1, second: -1 }
+    ];
+    let found: bool = nodes[nodes[nodes[0].first].first].terminal;
+    if (!found) { return 1; };
+    println("found");
+    return 0;
+}

@@ -1,0 +1,7 @@
+error[SULTANC-PARSE-ITEM]: Cannot parse the declaration or item syntax — A top-level value cannot be initialized with a record, tuple or box literal.
+  --> tests/ar/diagnostics/e2e/top_level_record_initializer.sn:9:18..9:42
+   |
+ 9 | دع الأصل: مقاس = { العرض: 3, الوسم: "x" };
+   |                  ^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+  = help: declare the value inside the function that uses it

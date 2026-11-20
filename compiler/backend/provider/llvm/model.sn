@@ -1,6 +1,12 @@
+استورد المكتبة.نصوص.من_بايتات;
 استورد compiler.backend.provider.llvm.ffi.types;
 استورد compiler.frontend.types.type_identity;
 استورد compiler.msir.identifiers;
+استورد compiler.msir.msir_model;
+استورد compiler.runtime.primitive_identity;
+استورد compiler.backend.target.runtime_service_model;
+استورد compiler.backend.target.target_model;
+استورد compiler.diagnostics.record;
 
 // حالة LLVM مؤقتة تخص مزود الخلفية فقط. لا تعيد امتلاك Type/MSIR/Target/Layout.
 عام نوع تمثيل_قيمة_إل_إل_في_إم =
@@ -19,11 +25,13 @@
     الدالة: مرجع_قيمة_إل_إل_في_إم,
     نوع_الدالة: مرجع_نوع_إل_إل_في_إم,
     غير_مباشر_الناتج: منطقي,
-    عدد_معاملات_إل_إل_في_إم: غير_موقع
+    عدد_معاملات_إل_إل_في_إم: طبيعي,
+    له_بيئة_إغلاق: منطقي
 };
 
 عام نوع قيد_دالة_خارجية_إل_إل_في_إم = {
     المعرف: معرف_دالة_خارجية_مسير,
+    الاسم: متجه ط8,
     الدالة: مرجع_قيمة_إل_إل_في_إم,
     نوع_الدالة: مرجع_نوع_إل_إل_في_إم,
     غير_مباشر_الناتج: منطقي
@@ -40,29 +48,72 @@
     الدالة: مرجع_قيمة_إل_إل_في_إم,
     نوع_الدالة: مرجع_نوع_إل_إل_في_إم,
     الكتل: متجه مرجع_كتلة_إل_إل_في_إم,
-    القيم: متجه اختيار تمثيل_قيمة_إل_إل_في_إم,
-    فاي_الكتل: متجه متجه اختيار مرجع_قيمة_إل_إل_في_إم,
-    بيئة_الإغلاق: اختيار مرجع_قيمة_إل_إل_في_إم,
-    عنوان_الناتج_غير_المباشر: اختيار مرجع_قيمة_إل_إل_في_إم
+    القيم: متجه اختياري تمثيل_قيمة_إل_إل_في_إم,
+    فاي_الكتل: متجه متجه اختياري مرجع_قيمة_إل_إل_في_إم,
+    بيئة_الإغلاق: اختياري مرجع_قيمة_إل_إل_في_إم,
+    عنوان_الناتج_غير_المباشر: اختياري مرجع_قيمة_إل_إل_في_إم,
+    // مخازن_ثابتة_للنداء_مسير (compiler/msir/msir_copies.sn): the values a
+    // hidden reference may pass by the address of their own storage.
+    الثابتة: متجه منطقي
+};
+
+عام نوع تصريح_بدائي_نداء_إل_إل_في_إم = {
+    الهوية: هوية_بدائي_مترجم,
+    الدالة: مرجع_قيمة_إل_إل_في_إم,
+    النوع: مرجع_نوع_إل_إل_في_إم
 };
 
 عام نوع حالة_مزود_إل_إل_في_إم = {
     السياق: مرجع_سياق_إل_إل_في_إم,
     الوحدة: مرجع_وحدة_إل_إل_في_إم,
     الباني: مرجع_بان_إل_إل_في_إم,
+    باني_الحجز: مرجع_بان_إل_إل_في_إم,
     الهدف: مرجع_هدف_إل_إل_في_إم,
     آلة_الهدف: مرجع_آلة_هدف_إل_إل_في_إم,
     بيانات_الهدف: مرجع_بيانات_هدف_إل_إل_في_إم,
-    الأنواع: متجه اختيار قيد_نوع_إل_إل_في_إم,
-    الدوال: متجه اختيار قيد_دالة_إل_إل_في_إم,
-    الدوال_الخارجية: متجه اختيار قيد_دالة_خارجية_إل_إل_في_إم,
-    العوام: متجه اختيار قيد_عام_إل_إل_في_إم
+    الأنواع: متجه اختياري قيد_نوع_إل_إل_في_إم,
+    الدوال: متجه اختياري قيد_دالة_إل_إل_في_إم,
+    الدوال_الخارجية: متجه اختياري قيد_دالة_خارجية_إل_إل_في_إم,
+    العوام: متجه اختياري قيد_عام_إل_إل_في_إم,
+    بدائيات_التشغيل: متجه تصريح_بدائي_نداء_إل_إل_في_إم,
+    // True when the target has no double-width integer multiply (WebAssembly):
+    // LLVM legalizes llvm.*mul.with.overflow there into compiler-rt calls
+    // (__multi3), which no SultanC link provides, so the checked product is
+    // expanded instead: 64-bit from 32-bit halves (wide_division.sn, also
+    // after optimization), narrower widths with native division (lowering.sn).
+    ضرب_التجاوز_بالقسمة: منطقي,
+    // True where the stack is aligned to less than the largest scalar (XCore
+    // 4, MSP430 2, AVR 1): frame slots then take the datalayout's ABI
+    // alignment, since LLVM cannot realign those stacks.
+    مكدس_محاذاته_صغيرة: منطقي,
+    // True where instruction selection has no overflow-flag arithmetic
+    // (SPIR-V): checked add/sub are expanded with sign and carry tests.
+    جمع_التجاوز_يدويا: منطقي,
+    // True where registers are narrower than 64 bits (i386, ARM, 32- and
+    // 16-bit embedded targets; not wasm32): i64 division is expanded by
+    // wide_division.sn instead of becoming a compiler-rt call.
+    قسمة_64_برمجية: منطقي,
+    // True where the target has no integer divide instruction at all (ARMv7-A,
+    // which does not guarantee SDIV/UDIV; AVR; MSP430; Hexagon; Lanai): every
+    // width is expanded by wide_division.sn instead of becoming a call of
+    // __aeabi_idiv, __divmodhi4, __mspabi_divi, __hexagon_divsi3 or __divsi3.
+    قسمة_برمجية_كلها: منطقي,
+    // True on SPARC V9: 8-, 16- and 32-bit division is done in 64 bits
+    // (SDIVX/UDIVX). The 32-bit SDIV/UDIV read the dividend's high word from
+    // the Y register and are deprecated by SPARC V9.
+    قسمة_ضيقة_بعرض_64: منطقي,
+    // True on BPF: before ISA v4 there is no signed divide or modulo, and
+    // LLVM rejects sdiv/srem. Signed division divides the magnitudes unsigned.
+    قسمة_موقعة_بالمقادير: منطقي,
+    // The program's std allocation-service providers (MSIR program fact), used
+    // for storage services where the target has no C allocator (wasm32).
+    مزودات_تخصيص_الذاكرة: اختياري مزودات_تخصيص_ذاكرة_مسير
 };
 
 عام نوع فشل_مزود_إل_إل_في_إم =
     | هدف_غير_مدعوم
-    | خلفية_هدف_غير_متاحة بنوع متجه غ8
-    | عدم_تطابق_حجم_المؤشر بنوع (غير_موقع, غير_موقع)
+    | خلفية_هدف_غير_متاحة بنوع متجه ط8
+    | عدم_تطابق_حجم_المؤشر بنوع (طبيعي, طبيعي)
     | نوع_مفقود بنوع معرف_نوع
     | نوع_غير_مدعوم بنوع معرف_نوع
     | تخطيط_مؤجل بنوع معرف_نوع
@@ -78,15 +129,74 @@
     | بدائي_غير_مدعوم
     | عملية_مسير_غير_مدعومة
     | حافة_مسير_غير_صالحة
-    | تحقق_إل_إل_في_إم_فشل بنوع متجه غ8
-    | تحسين_إل_إل_في_إم_فشل بنوع متجه غ8
-    | إصدار_كائن_إل_إل_في_إم_فشل بنوع متجه غ8
+    | تحقق_إل_إل_في_إم_فشل بنوع متجه ط8
+    | تحسين_إل_إل_في_إم_فشل بنوع متجه ط8
+    | إصدار_مخرج_إل_إل_في_إم_فشل بنوع متجه ط8
     | تصحيح_إل_إل_في_إم_فشل
+    // The target's declared machine output is assembly (e.g. NVPTX PTX, XCore),
+    // so a binary object cannot be produced for it.
+    | مخرج_كائن_غير_مدعوم
+    // An operation the target's instruction set lacks that LLVM would lower
+    // to a run-time routine SultanC does not provide (freestanding_check.sn).
+    | روتين_تشغيل_غير_متاح بنوع روتين_تشغيل_غير_متاح_إل_إل_في_إم
+;
+
+// The facts of that failure: the target, the operation (an LLVM opcode or
+// intrinsic name such as `fmul` or `atomicrmw`) and its type (`f64`,
+// `i64`), the source name of the function it is in (empty when the MSIR
+// debug contract has none) and the source location: the operation's own,
+// else its function's.
+عام نوع روتين_تشغيل_غير_متاح_إل_إل_في_إم = {
+    الهدف: معرف_هدف,
+    العملية: متجه ط8,
+    النوع: متجه ط8,
+    الدالة: متجه ط8,
+    الموقع: اختياري نطاق_مصدر_تشخيص
+};
+
+// Selection vector from compiler/msir/msir_consumer.sn
+// (كل_دوال_مسير_مطلوبة / دوال_مسير_تنفيذية_مطلوبة), indexed by MSIR function id.
+عام عرف دالة_إل_إل_في_إم_مطلوبة(
+    المطلوبة: &متجه منطقي,
+    المعرف: معرف_دالة_مسير
+): منطقي {
+    إذا ((المعرف.القيمة مثل طبيعي) >= (الطول(*المطلوبة) مثل طبيعي)) { أرجع خطأ; };
+    أرجع (*المطلوبة)[المعرف.القيمة];
+}
+
+عام عرف ابحث_قيد_دالة_إل_إل_في_إم(
+    الحالة: &حالة_مزود_إل_إل_في_إم,
+    المعرف: معرف_دالة_مسير
+): نتيجة قيد_دالة_إل_إل_في_إم, فشل_مزود_إل_إل_في_إم {
+    إذا ((المعرف.القيمة مثل طبيعي) >= (الطول((*الحالة).الدوال) مثل طبيعي)) {
+        أرجع نتيجة.خطأ(فشل_مزود_إل_إل_في_إم.دالة_مفقودة(المعرف));
+    };
+    طابق (*الحالة).الدوال[المعرف.القيمة] مع
+    | اختياري.موجود(ق) -> { أرجع نتيجة.نجح(ق); }
+    | اختياري.لا_شيء -> { أرجع نتيجة.خطأ(فشل_مزود_إل_إل_في_إم.دالة_مفقودة(المعرف)); };
+}
+
+عام عرف ابحث_قيد_دالة_خارجية_إل_إل_في_إم(
+    الحالة: &حالة_مزود_إل_إل_في_إم,
+    المعرف: معرف_دالة_خارجية_مسير
+): نتيجة قيد_دالة_خارجية_إل_إل_في_إم, فشل_مزود_إل_إل_في_إم {
+    إذا ((المعرف.القيمة مثل طبيعي) >= (الطول((*الحالة).الدوال_الخارجية) مثل طبيعي)) {
+        أرجع نتيجة.خطأ(فشل_مزود_إل_إل_في_إم.دالة_خارجية_مفقودة(المعرف));
+    };
+    طابق (*الحالة).الدوال_الخارجية[المعرف.القيمة] مع
+    | اختياري.موجود(ق) -> { أرجع نتيجة.نجح(انسخ_مملوكا_قيد_دالة_خارجية_إل_إل_في_إم(&ق)); }
+    | اختياري.لا_شيء -> { أرجع نتيجة.خطأ(فشل_مزود_إل_إل_في_إم.دالة_خارجية_مفقودة(المعرف)); };
+}
+
+عام نوع نوع_ناتج_مزود_إل_إل_في_إم =
+    | كائن
+    | تجميع
 ;
 
 عام نوع ناتج_مزود_إل_إل_في_إم = {
-    الكائن: متجه غ8,
-    نص_الوحدة: اختيار متجه غ8
+    البايتات: متجه ط8,
+    النوع: نوع_ناتج_مزود_إل_إل_في_إم,
+    نص_الوحدة: اختياري متجه ط8
 };
 
 عام نوع نتيجة_مزود_إل_إل_في_إم =
@@ -94,8 +204,31 @@
     | خطأ بنوع فشل_مزود_إل_إل_في_إم
 ;
 
+// -O0 (none), -O1 (low), -O2 (the default) and -O3 (high): the new pass
+// manager's default<On> pipeline and the matching code-generation level.
 عام نوع مستوى_تحسين_مزود_إل_إل_في_إم =
     | بلا
+    | منخفض
     | افتراضي
     | عال
 ;
+
+// Code-placement policy belongs to the output/toolchain request, not to LLVM host state.
+عام نوع سياسة_تموضع_شفرة_إل_إل_في_إم =
+    | افتراضية
+    | مستقلة_الموضع
+;
+
+// Deep copies of owned values (one per Type; read the source through a
+// reference and allocate independent storage).
+
+عام عرف انسخ_مملوكا_قيد_دالة_خارجية_إل_إل_في_إم(القيمة: &قيد_دالة_خارجية_إل_إل_في_إم): قيد_دالة_خارجية_إل_إل_في_إم {
+    دع الناتج: قيد_دالة_خارجية_إل_إل_في_إم = {
+        المعرف: (*القيمة).المعرف,
+        الاسم: انسخ_بايتات(&(*القيمة).الاسم),
+        الدالة: (*القيمة).الدالة,
+        نوع_الدالة: (*القيمة).نوع_الدالة,
+        غير_مباشر_الناتج: (*القيمة).غير_مباشر_الناتج
+    };
+    أرجع الناتج;
+}

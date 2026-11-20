@@ -1,0 +1,63 @@
+// Parallel merge sort: two threads each sort half of the values, then the main thread
+// merges the two sorted halves.
+import std.io.println;
+import std.text.number;
+import std.thread.thread;
+
+def sort_part(values: vector int): vector int {
+    let items: mutable vector int = values;
+    let i: mutable int = 1;
+    while (i < length(items)) {
+        let key: int = items[i];
+        let j: mutable int = i;
+        while (j > 0 && items[j - 1] > key) {
+            items[j] := items[j - 1];
+            j := j - 1;
+        };
+        items[j] := key;
+        i := i + 1;
+    };
+    return items;
+}
+
+def main(): int {
+    let left: mutable value_join_handle<vector int>;
+    let right: mutable value_join_handle<vector int>;
+    match spawn_value(fn(): vector int -> sort_part([9, 1, 5])) with
+    | result.ok(h) -> { left := h; }
+    | result.err(_) -> { return 1; };
+    match spawn_value(fn(): vector int -> sort_part([6, 2, 4])) with
+    | result.ok(h) -> { right := h; }
+    | result.err(_) -> { return 2; };
+    let a: vector int;
+    let b: vector int;
+    match join_value(&mutable left) with
+    | option.some(v) -> { a := v; }
+    | option.none -> { return 3; };
+    match join_value(&mutable right) with
+    | option.some(v) -> { b := v; }
+    | option.none -> { return 4; };
+    let out: mutable vector int = [];
+    let i: mutable int = 0;
+    let j: mutable int = 0;
+    while (i < length(a) && j < length(b)) {
+        if (a[i] <= b[j]) {
+            append(out, a[i]);
+            i := i + 1;
+        } else {
+            append(out, b[j]);
+            j := j + 1;
+        };
+    };
+    while (i < length(a)) {
+        append(out, a[i]);
+        i := i + 1;
+    };
+    while (j < length(b)) {
+        append(out, b[j]);
+        j := j + 1;
+    };
+    if (length(out) != 6 || out[0] != 1 || out[5] != 9) { return 5; };
+    println(int_to_text(out[5]));
+    return 0;
+}

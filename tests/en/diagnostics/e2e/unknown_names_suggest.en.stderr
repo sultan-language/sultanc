@@ -1,0 +1,37 @@
+error[SULTANC-NAME-UNKNOWN]: unknown name: `cuont` — The required name was not found during resolution.
+  --> tests/en/diagnostics/e2e/unknown_names_suggest.sn:16:22..16:27
+    |
+ 16 |     let first: i32 = cuont + 1;
+    |                      ^^^^^
+    |
+  = help: a name with a similar spelling is visible here — The suggested replacement is `count`.
+
+error[SULTANC-NAME-UNKNOWN]: unknown name: `hlper` — The required name was not found during resolution.
+  --> tests/en/diagnostics/e2e/unknown_names_suggest.sn:17:23..17:28
+    |
+ 17 |     let second: i32 = hlper(2);
+    |                       ^^^^^
+    |
+  = help: a name with a similar spelling is visible here — The suggested replacement is `helper`.
+
+error[SULTANC-NAME-UNKNOWN]: unknown name: `عداد_الأسطور` — The required name was not found during resolution.
+  --> tests/en/diagnostics/e2e/unknown_names_suggest.sn:18:22..18:34
+    |
+ 18 |     let third: i32 = عداد_الأسطور + 1;
+    |                      ^^^^^^^^^^^^
+    |
+  = help: a name with a similar spelling is visible here — The suggested replacement is `عداد_الأسطر`.
+
+error[SULTANC-NAME-UNKNOWN]: unknown name: `totl` — The required name was not found during resolution.
+  --> tests/en/diagnostics/e2e/unknown_names_suggest.sn:19:22..19:26
+    |
+ 19 |     let total: i32 = totl;
+    |                      ^^^^
+    |
+
+error[SULTANC-NAME-UNKNOWN]: unknown name: `missing_value` — The required name was not found during resolution.
+  --> tests/en/diagnostics/e2e/unknown_names_suggest.sn:20:45..20:58
+    |
+ 20 |     return first + second + third + total + missing_value;
+    |                                             ^^^^^^^^^^^^^
+    |

@@ -1,0 +1,138 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 0
+// نظير: tests/ar/ispeak/check_new_diagnostics.sn
+import std.text.compare;
+import std.text.from_bytes;
+import compiler.diagnostics.identity;
+import compiler.diagnostics.reason;
+import compiler.ispeak.format.facts;
+import compiler.diagnostics.schema;
+import compiler.ispeak.ispeak;
+
+def same_message(language: لغة_تشخيص, key: مفتاح_رسالة_تشخيص, expected: string): bool {
+    let actual: string = رسالة_تشخيص(language, key);
+    return texts_equal(&actual, &expected);
+}
+
+def same_message_with_arguments(language: لغة_تشخيص, key: مفتاح_رسالة_تشخيص, facts: حقائق_رسالة, expected: string): bool {
+    match رسالة_تشخيص_بحجج(language, key, facts) with
+    | option.some(actual) -> { return texts_equal(&actual, &expected); }
+    | _ -> { return false; };
+}
+
+def link_values(): حقائق_ربط_إل_إل_في_إم {
+    let values: حقائق_ربط_إل_إل_في_إم = { الهدف: "x86_64-linux", الرمز: "LLVMGetVersion" };
+    return values;
+}
+
+def failure_values(): حقائق_فشل_وقت_الترجمة {
+    let values: حقائق_فشل_وقت_الترجمة = { الرسالة: "compile_error was called" };
+    return values;
+}
+
+def main(): int {
+    let library_key: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.مكتبة_إل_إل_في_إم_للهدف_مفقودة());
+    let symbol_key: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.رمز_إل_إل_في_إم_غير_محلول());
+    let failure_key: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.فشل_وقت_الترجمة_مطلوب());
+    let attribute_key: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.سمة_تصريح_غير_مدعومة());
+    if (!same_message(لغة_تشخيص.الإنجليزية(), library_key, "the output calls the LLVM C API and no libLLVM for its target was supplied")) { return 5; };
+    if (!same_message(لغة_تشخيص.العربية(), library_key, "يستدعي المخرج واجهة LLVM C ولم تمرر مكتبة LLVM لهدفه")) { return 6; };
+    if (!same_message(لغة_تشخيص.الإنجليزية(), symbol_key, "the supplied libLLVM does not define an LLVM C API symbol")) { return 7; };
+    if (!same_message(لغة_تشخيص.العربية(), symbol_key, "مكتبة LLVM الممررة لا تعرف رمزا من واجهة LLVM C")) { return 8; };
+    if (!same_message(لغة_تشخيص.الإنجليزية(), failure_key, "compile-time evaluation failed")) { return 9; };
+    if (!same_message(لغة_تشخيص.العربية(), failure_key, "فشل التقييم وقت الترجمة")) { return 10; };
+    if (!same_message(لغة_تشخيص.الإنجليزية(), attribute_key, "this annotation cannot be applied: declaration decorator processing is not yet supported")) { return 11; };
+    if (!same_message(لغة_تشخيص.العربية(), attribute_key, "لا يمكن تطبيق هذه السمة: معالجة مزخرفات التصريحات غير مدعومة بعد")) { return 12; };
+    let target: string = "x86_64-linux";
+    let symbol: string = "LLVMGetVersion";
+    let library_arguments_english: حقائق_رسالة = حقائق_رسالة.ربط_إل_إل_في_إم(link_values());
+    if (!same_message_with_arguments(لغة_تشخيص.الإنجليزية(), library_key, library_arguments_english, "the output calls the LLVM C API and no libLLVM for its target was supplied: `x86_64-linux`, `LLVMGetVersion`")) { return 13; };
+    let library_arguments_arabic: حقائق_رسالة = حقائق_رسالة.ربط_إل_إل_في_إم(link_values());
+    if (!same_message_with_arguments(لغة_تشخيص.العربية(), library_key, library_arguments_arabic, "يستدعي المخرج واجهة LLVM C ولم تمرر مكتبة LLVM لهدفه: `x86_64-linux`, `LLVMGetVersion`")) { return 14; };
+    let symbol_arguments_english: حقائق_رسالة = حقائق_رسالة.ربط_إل_إل_في_إم(link_values());
+    if (!same_message_with_arguments(لغة_تشخيص.الإنجليزية(), symbol_key, symbol_arguments_english, "the supplied libLLVM does not define an LLVM C API symbol: `LLVMGetVersion`, `x86_64-linux`")) { return 15; };
+    let symbol_arguments_arabic: حقائق_رسالة = حقائق_رسالة.ربط_إل_إل_في_إم(link_values());
+    if (!same_message_with_arguments(لغة_تشخيص.العربية(), symbol_key, symbol_arguments_arabic, "مكتبة LLVM الممررة لا تعرف رمزا من واجهة LLVM C: `LLVMGetVersion`, `x86_64-linux`")) { return 16; };
+    let failure_arguments_english: حقائق_رسالة = حقائق_رسالة.فشل_وقت_الترجمة(failure_values());
+    if (!same_message_with_arguments(لغة_تشخيص.الإنجليزية(), failure_key, failure_arguments_english, "compile-time evaluation failed: compile_error was called")) { return 17; };
+    let failure_arguments_arabic: حقائق_رسالة = حقائق_رسالة.فشل_وقت_الترجمة(failure_values());
+    if (!same_message_with_arguments(لغة_تشخيص.العربية(), failure_key, failure_arguments_arabic, "فشل التقييم وقت الترجمة: compile_error was called")) { return 18; };
+    let invalid_arguments: حقائق_رسالة = حقائق_رسالة.فشل_وقت_الترجمة(failure_values());
+    match رسالة_تشخيص_بحجج(لغة_تشخيص.الإنجليزية(), symbol_key, invalid_arguments) with
+    | option.none -> { }
+    | _ -> { return 19; };
+    let move_key: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.نقل_من_مرجع());
+    if (!same_message(لغة_تشخيص.الإنجليزية(), move_key, "cannot move an owned value out of borrowed storage")) { return 24; };
+    if (!same_message(لغة_تشخيص.العربية(), move_key, "لا يجوز نقل قيمة مملوكة من تخزين مستعار")) { return 25; };
+    let key_589: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.هدف_لا_يدعم_الميزة());
+    if (!same_message(لغة_تشخيص.الإنجليزية(), key_589, "the selected target does not support a feature this program needs")) { return 27; };
+    if (!same_message(لغة_تشخيص.العربية(), key_589, "الهدف المحدد لا يدعم ميزة يحتاجها هذا البرنامج")) { return 28; };
+    let key_590: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.بناء_غير_مدعوم_في_الخلفية());
+    if (!same_message(لغة_تشخيص.الإنجليزية(), key_590, "the selected backend cannot generate code for this construct yet")) { return 30; };
+    if (!same_message(لغة_تشخيص.العربية(), key_590, "لا تستطيع الخلفية المحددة توليد شفرة لهذا البناء بعد")) { return 31; };
+    let key_591: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.مدى_ترميز_متجاوز());
+    if (!same_message(لغة_تشخيص.الإنجليزية(), key_591, "the generated code exceeds a range the machine instruction encoding allows")) { return 33; };
+    if (!same_message(لغة_تشخيص.العربية(), key_591, "تتجاوز الشفرة المولدة مدى يسمح به ترميز تعليمات الآلة")) { return 34; };
+    let key_592: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.رمز_ربط_غير_معرف());
+    if (!same_message(لغة_تشخيص.الإنجليزية(), key_592, "a symbol used by the program is not defined in any linked input")) { return 36; };
+    if (!same_message(لغة_تشخيص.العربية(), key_592, "رمز يستخدمه البرنامج غير معرّف في أي مدخل مربوط")) { return 37; };
+    let key_593: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.رمز_ربط_مكرر());
+    if (!same_message(لغة_تشخيص.الإنجليزية(), key_593, "the same symbol is defined more than once")) { return 39; };
+    if (!same_message(لغة_تشخيص.العربية(), key_593, "الرمز نفسه معرّف أكثر من مرة")) { return 40; };
+    let key_594: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.موفر_وقت_تشغيل_مفقود());
+    if (!same_message(لغة_تشخيص.الإنجليزية(), key_594, "the target runtime does not provide a service this program needs")) { return 42; };
+    if (!same_message(لغة_تشخيص.العربية(), key_594, "لا يوفر وقت التشغيل في الهدف خدمة يحتاجها هذا البرنامج")) { return 43; };
+    let key_595: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.نفاد_ذاكرة_المترجم());
+    if (!same_message(لغة_تشخيص.الإنجليزية(), key_595, "the compiler ran out of memory")) { return 45; };
+    if (!same_message(لغة_تشخيص.العربية(), key_595, "نفدت ذاكرة المترجم")) { return 46; };
+    let key_596: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.رمز_ربط_بنوع_غير_متطابق());
+    if (!same_message(لغة_تشخيص.الإنجليزية(), key_596, "a symbol is defined with a different kind than its use expects")) { return 48; };
+    if (!same_message(لغة_تشخيص.العربية(), key_596, "عُرّف رمز بنوع يخالف النوع الذي يتوقعه استخدامه")) { return 49; };
+    let key_597: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.رمز_خارجي_غير_مدعوم());
+    if (!same_message(لغة_تشخيص.الإنجليزية(), key_597, "the linker cannot use this external symbol for the target")) { return 51; };
+    if (!same_message(لغة_تشخيص.العربية(), key_597, "لا يستطيع الرابط استخدام هذا الرمز الخارجي للهدف")) { return 52; };
+    let key_598: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.إعادة_توطين_غير_مدعومة());
+    if (!same_message(لغة_تشخيص.الإنجليزية(), key_598, "the object format cannot express a relocation this code needs")) { return 54; };
+    if (!same_message(لغة_تشخيص.العربية(), key_598, "لا تستطيع صيغة الكائن التعبير عن إعادة توطين تحتاجها هذه الشفرة")) { return 55; };
+    let key_599: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.صيغة_كائن_غير_مدعومة_للهدف());
+    if (!same_message(لغة_تشخيص.الإنجليزية(), key_599, "the compiler cannot write object files of this format for the target")) { return 57; };
+    if (!same_message(لغة_تشخيص.العربية(), key_599, "لا يستطيع المترجم كتابة ملفات كائنية بهذه الصيغة للهدف")) { return 58; };
+    let key_600: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.مخرج_ربط_غير_مدعوم());
+    if (!same_message(لغة_تشخيص.الإنجليزية(), key_600, "the linker cannot produce this output for the target")) { return 60; };
+    if (!same_message(لغة_تشخيص.العربية(), key_600, "لا يستطيع الرابط إنتاج هذا المخرج للهدف")) { return 61; };
+    let key_601: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.واجهة_استدعاء_غير_متاحة_للهدف());
+    if (!same_message(لغة_تشخيص.الإنجليزية(), key_601, "the target has no calling convention for this code")) { return 63; };
+    if (!same_message(لغة_تشخيص.العربية(), key_601, "لا تتوفر في الهدف قواعد استدعاء لهذه الشفرة")) { return 64; };
+    let key_602: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.حد_صيغة_كائن_متجاوز());
+    if (!same_message(لغة_تشخيص.الإنجليزية(), key_602, "the output exceeds a size limit of its file format")) { return 66; };
+    if (!same_message(لغة_تشخيص.العربية(), key_602, "يتجاوز المخرج حدا للحجم في صيغة ملفه")) { return 67; };
+    let key_603: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.حد_وقت_الترجمة_متجاوز());
+    if (!same_message(لغة_تشخيص.الإنجليزية(), key_603, "compile-time evaluation exceeded one of its limits")) { return 69; };
+    if (!same_message(لغة_تشخيص.العربية(), key_603, "تجاوز التقييم وقت الترجمة أحد حدوده")) { return 70; };
+    let key_604: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.أثر_ممنوع_وقت_الترجمة());
+    if (!same_message(لغة_تشخيص.الإنجليزية(), key_604, "compile-time evaluation attempted an effect that is not allowed")) { return 72; };
+    if (!same_message(لغة_تشخيص.العربية(), key_604, "حاول التقييم وقت الترجمة تنفيذ أثر غير مسموح")) { return 73; };
+    let key_605: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.فشل_تنفيذ_وقت_الترجمة());
+    if (!same_message(لغة_تشخيص.الإنجليزية(), key_605, "compile-time code failed while running")) { return 75; };
+    if (!same_message(لغة_تشخيص.العربية(), key_605, "فشلت شفرة وقت الترجمة أثناء تنفيذها")) { return 76; };
+    let key_606: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.عملية_غير_مدعومة_وقت_الترجمة());
+    if (!same_message(لغة_تشخيص.الإنجليزية(), key_606, "this operation cannot run at compile time")) { return 78; };
+    if (!same_message(لغة_تشخيص.العربية(), key_606, "لا يمكن تنفيذ هذه العملية وقت الترجمة")) { return 79; };
+    let key_607: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.ناتج_وقت_الترجمة_غير_ثابت());
+    if (!same_message(لغة_تشخيص.الإنجليزية(), key_607, "compile-time evaluation did not produce a usable constant")) { return 81; };
+    if (!same_message(لغة_تشخيص.العربية(), key_607, "لم ينتج التقييم وقت الترجمة ثابتا صالحا للاستخدام")) { return 82; };
+    let key_608: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.تخطيط_غير_متاح_وقت_الترجمة());
+    if (!same_message(لغة_تشخيص.الإنجليزية(), key_608, "a type's size or alignment is not available at compile time")) { return 84; };
+    if (!same_message(لغة_تشخيص.العربية(), key_608, "حجم النوع أو محاذاته غير متاح وقت الترجمة")) { return 85; };
+    let key_609: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.عدد_حجج_وقت_الترجمة_غير_مطابق());
+    if (!same_message(لغة_تشخيص.الإنجليزية(), key_609, "a compile-time call passes the wrong number of compile-time arguments")) { return 87; };
+    if (!same_message(لغة_تشخيص.العربية(), key_609, "يمرر نداء وقت الترجمة عددا غير صحيح من حجج وقت الترجمة")) { return 88; };
+    let key_610: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.نداء_خارجي_تفسير_غير_مدعوم());
+    if (!same_message(لغة_تشخيص.الإنجليزية(), key_610, "the interpreter cannot call this external function")) { return 90; };
+    if (!same_message(لغة_تشخيص.العربية(), key_610, "لا يستطيع المفسر استدعاء هذه الدالة الخارجية")) { return 91; };
+    let key_611: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.بدائي_آلة_تفسير_غير_مدعوم());
+    if (!same_message(لغة_تشخيص.الإنجليزية(), key_611, "the interpreter does not support this machine-level operation")) { return 93; };
+    if (!same_message(لغة_تشخيص.العربية(), key_611, "لا يدعم المفسر هذه العملية الخاصة بالآلة")) { return 94; };
+    return 0;
+}

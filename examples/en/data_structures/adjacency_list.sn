@@ -1,0 +1,14 @@
+// A graph in compressed adjacency-list form: one array of neighbors plus an offset per node,
+// so a node's degree is the difference between two offsets.
+import std.io.println;
+import std.text.number;
+
+def main(): int {
+    let offsets: vector int = [0, 2, 3, 5, 5];
+    let neighbors: vector int = [1, 2, 2, 0, 3];
+    let node: int = 2;
+    let degree: int = offsets[node + 1] - offsets[node];
+    if (degree != 2) { return 1; };
+    println(int_to_text(degree));
+    return 0;
+}

@@ -1,0 +1,18 @@
+// Updating a record in place through a mutable reference: deposit changes the balance of
+// the caller's account.
+import std.io.println;
+import std.text.number;
+
+type Account = { balance: int };
+
+def deposit(a: &mutable Account, delta: int): void {
+    (*a).balance := (*a).balance + delta;
+}
+
+def main(): int {
+    let a: mutable Account = { balance: 10 };
+    deposit(&mutable a, 7);
+    if (a.balance != 17) { return 1; };
+    println(int_to_text(a.balance));
+    return 0;
+}

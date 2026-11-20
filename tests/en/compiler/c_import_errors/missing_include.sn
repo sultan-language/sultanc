@@ -1,0 +1,8 @@
+// اختبار: رفض
+// تشخيص: SULTANC-C-INCLUDE-NOT-FOUND
+// نظير: tests/ar/compiler/c_import_errors/missing_include.sn
+// Jisr reports an #include of a missing header in an imported header as SULTANC-C-INCLUDE-NOT-FOUND, with the
+// header's file:line:column, and the import fails at compile time.
+import "missing_include.h";
+
+def main(): int { return 0; }

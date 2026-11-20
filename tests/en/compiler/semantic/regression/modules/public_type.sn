@@ -1,0 +1,5 @@
+public type Shared = { value: int };
+public def make_shared(): Shared {
+    let result: Shared = { value: 42 };
+    return result;
+}

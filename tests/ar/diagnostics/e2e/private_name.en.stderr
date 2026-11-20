@@ -1,0 +1,7 @@
+error[SULTANC-NAME-PRIVATE]: declaration is private in this context — The inaccessible private declaration is `سري`. Name resolution cannot access a private declaration.
+  --> tests/ar/diagnostics/e2e/private_name.sn:7:28..7:31
+   |
+ 7 | عرف الرئيسية(): ص32 { أرجع سري(); }
+   |                            ^^^
+   |
+  = help: declare the name `public` in its module to use it from another module

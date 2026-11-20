@@ -1,0 +1,12 @@
+// اختبار: رفض
+// تشخيص: SULTANC-PATTERN-PAYLOAD-COUNT-MISMATCH
+// نظير: tests/en/diagnostics/e2e/pattern_payload_count.sn
+// خرج-تشخيص-عربي: pattern_payload_count.ar.stderr
+// خرج-تشخيص-إنجليزي: pattern_payload_count.en.stderr
+نوع ربما = | لا_شيء_هنا | قيمة بنوع ص32;
+عرف الرئيسية(): ص32 {
+    دع م: ربما = ربما.قيمة(1);
+    طابق م مع
+    | ربما.قيمة(أ, ب) -> { أرجع أ; }
+    | ربما.لا_شيء_هنا -> { أرجع 0; };
+}

@@ -1,0 +1,11 @@
+// Write a variable-length integer.
+import std.io.println;
+import std.text.number;
+import std.encoding.varint;
+
+
+def main(): int {
+    let data: vector u8 = varint_encode(2100 as uint);
+    println(uint_to_text(length(data) as uint));
+    return 0;
+}

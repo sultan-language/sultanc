@@ -1,0 +1,13 @@
+// اختبار: رفض
+// تشخيص: SULTANC-OWNERSHIP-MOVE-OUT-OF-REFERENCE
+// نظير: tests/en/diagnostics/safety/global_match_binding.sn
+// A binding would own the payload of a writable global: the global keeps it.
+دع الأعداد: متغير متجه عدد = [1, 2, 3];
+
+عرف الرئيسية(): عدد {
+    // A writable vector global is used inside an unsafe scope (static mut).
+    غير_آمن {
+        طابق الأعداد مع
+        | المأخوذ -> { أرجع الطول(المأخوذ); };
+    };
+}

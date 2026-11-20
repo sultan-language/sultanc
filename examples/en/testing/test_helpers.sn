@@ -1,0 +1,13 @@
+// Self-checking example: test_helpers.
+import std.io.println;
+import std.text.number;
+import std.debug.assert;
+
+def check_positive(n: int): void { assert(n > 0); }
+def main(): int {
+    check_positive(1);
+    check_positive(10);
+    check_positive(100);
+    println("helpers passed");
+    return 0;
+}

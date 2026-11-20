@@ -1,0 +1,27 @@
+// TOML to JSON: read a string value from a TOML document and write it out as a JSON object.
+import std.io.println;
+import std.text.number;
+import std.toml.parser;
+import std.text.transform;
+import std.json.parse;
+
+def main(): int {
+    let input: string = "title = \"SultanC\"\n";
+    let title: mutable string = "";
+    match parse_toml(&input) with
+    | result.err(_) -> { return 1; }
+    | result.ok(doc) -> {
+        let key: string = "title";
+        match toml_value_at(&doc, doc.الجذر, &key) with
+        | option.some(قيمة_تومل.سلسلة(value)) -> { title := value; }
+        | _ -> { return 2; };
+    };
+    let parts: vector string = ["{\"title\":\"", title, "\"}"];
+    let empty: string = "";
+    let json: string = join(&parts, &empty);
+    match parse_json(&json) with
+    | result.ok(_) -> { }
+    | result.err(_) -> { return 3; };
+    println(json);
+    return 0;
+}

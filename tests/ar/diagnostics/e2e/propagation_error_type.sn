@@ -1,0 +1,17 @@
+// اختبار: رفض
+// تشخيص: SULTANC-CALL-ARGUMENT-TYPE-MISMATCH
+// نظير: tests/en/diagnostics/e2e/propagation_error_type.sn
+// خرج-تشخيص-عربي: propagation_error_type.ar.stderr
+// خرج-تشخيص-إنجليزي: propagation_error_type.en.stderr
+// `؟` converts no error: a different error type is reported at the `؟`,
+// naming the function's error type and the expression's.
+عرف حلل(س: عدد): نتيجة عدد, نص {
+    أرجع نتيجة.نجح(س);
+}
+
+عرف حول(س: عدد): نتيجة عدد, ط8 {
+    دع ق: عدد = حلل(س)؟;
+    أرجع نتيجة.نجح(ق);
+}
+
+عرف الرئيسية(): عدد { أرجع 0; }

@@ -1,0 +1,2 @@
+error[SULTANC-RUNTIME-PROGRAM-STOPPED]: the program stopped
+integer overflow at tests/ar/runtime/failure/unsigned_below_zero_en.sn:13:10

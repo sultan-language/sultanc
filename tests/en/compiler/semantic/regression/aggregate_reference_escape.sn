@@ -1,0 +1,8 @@
+type Holder = { item: &int };
+def make(): Holder {
+    let value: int = 42;
+    let reference: &int = &value;
+    let holder: Holder = { item: reference };
+    return holder;
+}
+def main(): int { return 42; }

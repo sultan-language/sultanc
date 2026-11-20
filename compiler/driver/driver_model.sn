@@ -1,21 +1,60 @@
+استورد compiler.backend.provider.llvm.model;
+استورد المكتبة.بيئة.نظام;
+استورد المكتبة.نصوص.من_بايتات;
+استورد المكتبة.نصوص.أعداد;
 استورد compiler.backend.target.target_model;
 استورد compiler.diagnostics.identity;
 استورد compiler.diagnostics.record;
 استورد compiler.diagnostics.builder;
 استورد compiler.diagnostics.localization;
 استورد compiler.diagnostics.schema;
+استورد compiler.diagnostics.output.render;
 استورد compiler.msir.msir_model;
 استورد compiler.msir.identifiers;
 استورد compiler.interpreter.interpreter;
 استورد compiler.interpreter.values.runtime_values;
 استورد compiler.interpreter.runtime_failures;
+استورد compiler.format.command;
 
 // Driver-level models only. CLI syntax, rendering and compiler execution stay
 // in their canonical owners.
 
 عام نوع اختيار_هدف_عملية =
     | تلقائي
-    | صريح بنوع (هوية_معمارية, هوية_منصة, هوية_بيئة)
+    | صريح بنوع معرف_هدف
+;
+
+عام نوع اختيار_مزود_خلفية_عملية =
+    | تلقائي
+    | صريح بنوع هوية_مزود_خلفية
+    // `--release`: LLVM when this compiler contains it and the target admits
+    // it (its code runs several times faster than the native backend's),
+    // else the target's preferred provider.
+    | إصدار
+;
+
+عام نوع نوع_مخرج_تجميع_عملية =
+    | تنفيذي
+    | كائن
+    | مكتبة_مشتركة
+    | كائن_مترابط
+    | وحدة_هدف
+    // Target assembly text (--emit=asm), as llc -filetype=asm / rustc --emit=asm.
+    | نص_تجميع
+    // The optimized LLVM IR of the module (--emit=llvm-ir), as rustc --emit=llvm-ir.
+    | نص_وحدة_إل_إل_في_إم
+    // The optimized MSIR program as text (--emit=msir, msir/msir_text.sn),
+    // written to stdout unless -o names a file.
+    | نص_مسير
+;
+
+عام نوع اختيار_لغة_تشخيص_عملية =
+    // No --lang option: the historical Arabic default.
+    | غير_محدد
+    // --lang=auto: the host locale (LC_ALL, then LC_MESSAGES, then LANG).
+    | تلقائي
+    | العربية
+    | الإنجليزية
 ;
 
 عام نوع صيغة_تشخيص_عملية =
@@ -31,37 +70,222 @@
 ;
 
 عام نوع إعداد_عرض_عملية = {
-    اللغة: لغة_تشخيص,
+    اللغة: اختيار_لغة_تشخيص_عملية,
     الصيغة: صيغة_تشخيص_عملية,
-    اللون: سياسة_لون_تشخيص_عملية
+    اللون: سياسة_لون_تشخيص_عملية,
+    // --comptime-budget=N, else $SULTANC_COMPTIME_BUDGET (both read by the
+    // CLI): the instruction budget of each compile-time evaluation; 0 when
+    // neither is given (then the default).
+    ميزانية_وقت_الترجمة: طبيعي,
+    // --package-graph=<file>: the package graph Supax wrote (package_graph.sn);
+    // «» when not given, which compiles the sources standalone.
+    رسم_الحزم: نص
 };
 
 عام عرف إعداد_عرض_عملية_افتراضي(): إعداد_عرض_عملية {
-    دع اللغة: لغة_تشخيص = لغة_تشخيص.العربية();
+    دع اللغة: اختيار_لغة_تشخيص_عملية = اختيار_لغة_تشخيص_عملية.غير_محدد();
     دع الصيغة: صيغة_تشخيص_عملية = صيغة_تشخيص_عملية.طرفي();
     دع اللون: سياسة_لون_تشخيص_عملية = سياسة_لون_تشخيص_عملية.تلقائي();
     دع الناتج: إعداد_عرض_عملية = {
         اللغة: اللغة,
         الصيغة: الصيغة,
-        اللون: اللون
+        اللون: اللون,
+        ميزانية_وقت_الترجمة: 0,
+        رسم_الحزم: «»
     };
     أرجع الناتج;
 }
 
+// The settings own the --package-graph path, so a second user of them takes
+// a copy.
+عام عرف انسخ_اختيار_اختبارات(الاختيار: &اختيار_اختبارات): اختيار_اختبارات {
+    دع الأسماء: متغير متجه نص = [];
+    دع ف: متغير طبيعي = 0;
+    طالما (ف < (الطول((*الاختيار).الأسماء) مثل طبيعي)) { ألحق(الأسماء, انسخ_نص(&(*الاختيار).الأسماء[ف])); ف := ف + 1; }
+    دع الملفات: متغير متجه نص = [];
+    ف := 0;
+    طالما (ف < (الطول((*الاختيار).الملفات) مثل طبيعي)) { ألحق(الملفات, انسخ_نص(&(*الاختيار).الملفات[ف])); ف := ف + 1; }
+    دع النسخة: اختيار_اختبارات = { المرشح: انسخ_نص(&(*الاختيار).المرشح), الأسماء: الأسماء, الملفات: الملفات };
+    أرجع النسخة;
+}
+
+عام عرف انسخ_إعداد_عرض_عملية(الإعداد: &إعداد_عرض_عملية): إعداد_عرض_عملية {
+    دع الناتج: إعداد_عرض_عملية = {
+        اللغة: (*الإعداد).اللغة,
+        الصيغة: (*الإعداد).الصيغة,
+        اللون: (*الإعداد).اللون,
+        ميزانية_وقت_الترجمة: (*الإعداد).ميزانية_وقت_الترجمة,
+        رسم_الحزم: انسخ_نص(&(*الإعداد).رسم_الحزم)
+    };
+    أرجع الناتج;
+}
+
+// The rule of std.text.system_language (لغة_من_البيئة), for the compiler's
+// own messages: the first of SULTANC_LANG, LC_ALL, LC_MESSAGES and LANG that
+// carries a language decides. A value's language is the text before «.» or
+// «@» (POSIX «ar_SA.UTF-8», BCP 47 «ar-EG»); an empty value, «C», «C.…» and
+// «POSIX» carry none and the next variable is read. A language starting with
+// `ar` selects Arabic, any other English; with none, auto is English.
+عرف لغة_من_بيئة_المضيف(): لغة_تشخيص {
+    دع الأسماء: متغير متجه نص = [];
+    ألحق(الأسماء, «SULTANC_LANG»);
+    ألحق(الأسماء, «LC_ALL»);
+    ألحق(الأسماء, «LC_MESSAGES»);
+    ألحق(الأسماء, «LANG»);
+    دع ف: متغير طبيعي = 0;
+    طالما (ف < (الطول(الأسماء) مثل طبيعي)) {
+        طابق متغير_بيئة_النظام(&الأسماء[ف]) مع
+        | نتيجة.نجح(اختياري.موجود(القيمة)) -> {
+            دع الطول_الكلي: طبيعي = الطول(القيمة) مثل طبيعي;
+            دع النهاية: متغير طبيعي = 0;
+            طالما (النهاية < الطول_الكلي && القيمة[النهاية] != 0x2E && القيمة[النهاية] != 0x40) {
+                النهاية := النهاية + 1;
+            }
+            دع بلا_لغة: منطقي = النهاية == 0
+                || (النهاية == 1 && القيمة[0] == 0x43)
+                || (النهاية == 5 && القيمة[0] == 0x50 && القيمة[1] == 0x4F && القيمة[2] == 0x53
+                    && القيمة[3] == 0x49 && القيمة[4] == 0x58);
+            إذا (!بلا_لغة) {
+                إذا (النهاية >= 2 && القيمة[0] == 0x61 && القيمة[1] == 0x72) {
+                    أرجع لغة_تشخيص.العربية();
+                };
+                أرجع لغة_تشخيص.الإنجليزية();
+            };
+        }
+        | _ -> { };
+        ف := ف + 1;
+    }
+    أرجع لغة_تشخيص.الإنجليزية();
+}
+
+// Without --lang the compiler keeps its historical Arabic default; an explicit
+// --lang=auto follows the host locale.
+عام عرف حل_لغة_عرض_عملية(الاختيار: اختيار_لغة_تشخيص_عملية): لغة_تشخيص {
+    طابق الاختيار مع
+    | اختيار_لغة_تشخيص_عملية.غير_محدد -> { أرجع لغة_تشخيص.العربية(); }
+    | اختيار_لغة_تشخيص_عملية.تلقائي -> { أرجع لغة_من_بيئة_المضيف(); }
+    | اختيار_لغة_تشخيص_عملية.العربية -> { أرجع لغة_تشخيص.العربية(); }
+    | اختيار_لغة_تشخيص_عملية.الإنجليزية -> { أرجع لغة_تشخيص.الإنجليزية(); };
+}
+
 // Terminal compilation mode. Check consumes the exact Frontend -> MSIR path and
 // stops only after canonical MSIR verification.
+عام نوع نوع_خرج_ربط_مترجم =
+    | تنفيذي
+    | مكتبة_مشتركة
+    | كائن_مترابط
+    | وحدة_هدف
+;
+
+// The output path that stands for stdout for --emit=msir: its default, and
+// `-o -`, as for other tools' text output.
+عام عرف مسار_الخرج_القياسي_لمسير(): نص {
+    أرجع «-»;
+}
+
+// The form of an object request: a binary object, target assembly text
+// (--emit=asm), the optimized LLVM IR (--emit=llvm-ir) or the optimized
+// MSIR program (--emit=msir), which no backend sees.
+عام نوع نص_مخرج_كائن_مترجم =
+    | ثنائي
+    | تجميع
+    | وحدة_إل_إل_في_إم
+    | مسير
+;
+
+// What an -l of `run` or `interpret` resolved to. Only a shared library can
+// be loaded into the running program; an archive, or a macOS stub that names
+// no dylib, is linked when the program runs as an executable and is an error
+// when the interpreter runs it (compiler_driver.sn, once the path is chosen).
+عام نوع صنف_مكتبة_تحميل_تفسير =
+    | مشتركة
+    | أرشيف_ساكن
+    | نصية_بلا_اسم_تثبيت
+;
+
+// A library `run` or `interpret` loads into the running program: an -l the
+// command line named, resolved as a build resolves it
+// (process_driver.sn حل_مكتبات_تحميل_تفسير_عملية).
+عام نوع مكتبة_تحميل_تفسير = {
+    // The -l name as given («sqlite3»), for the loader's diagnostics.
+    الاسم: نص,
+    // The file to load: a shared library the target's loader opens (the
+    // archive or the stub otherwise).
+    المسار: نص,
+    الصنف: صنف_مكتبة_تحميل_تفسير
+};
+
+// How `run` writes a failure while the program runs, on whichever thread
+// hits it: the run's display language, diagnostic format and colour (from
+// the process's display settings, process_driver.sn).
+عام نوع عرض_فشل_تفسير = {
+    اللغة: لغة_تشخيص,
+    الصيغة: صيغة_عرض_تشخيص,
+    أنسي: منطقي
+};
+
 عام نوع طلب_تجميع_مترجم =
-    | تحقق
-    | تفسير
-    | كائن_أصلي بنوع (هوية_معمارية, هوية_منصة, هوية_بيئة)
-    | تنفيذي_أصلي بنوع (هوية_معمارية, هوية_منصة, هوية_بيئة)
+    // `check` for a registered target: target guards select its declarations.
+    | تحقق بنوع معرف_هدف
+    // The libraries to load, in command-line order (none without -l), and
+    // how a failure during the run is written.
+    | تفسير بنوع (معرف_هدف, متجه مكتبة_تحميل_تفسير, عرض_فشل_تفسير, وضع_اختبار_تفسير)
+    // The last field asks for target assembly text or LLVM IR instead of an object.
+    | كائن بنوع (معرف_هدف, هوية_مزود_خلفية, نص_مخرج_كائن_مترجم)
+    // The link inputs (files, the -l libraries already resolved), the -L
+    // directories (searched again for libraries the program itself needs:
+    // c_sources.sn), and a shared library's own name.
+    // The last field builds the executable of `sultanc test` with the tests
+    // it selects: its entry is the test harness (compiler/test_mode/), and
+    // the result names the tests.
+    | ربط بنوع (
+        معرف_هدف,
+        هوية_مزود_خلفية,
+        نوع_خرج_ربط_مترجم,
+        متجه نص,
+        متجه نص,
+        اختياري نص,
+        اختياري اختيار_اختبارات
+    )
+;
+
+// Which tests `sultanc test` builds and runs (all must match): --filter
+// (a text every selected test's name, in some spelling, contains; «» for
+// any), --test (names one of which a selected test's name, in some
+// spelling, equals; none for any), --tests-in (the source files a selected
+// test is declared in; none for any). The tests of the root package only.
+عام نوع اختيار_اختبارات = {
+    المرشح: نص,
+    الأسماء: متجه نص,
+    الملفات: متجه نص
+};
+
+// `sultanc test --interpret` (process_driver.sn): an interpretation either
+// runs the program as written, or builds the test harness
+// (test_mode/harness.sn) and answers the tests' names without running, or
+// runs the harness (its first argument selects the test).
+عام نوع وضع_اختبار_تفسير =
+    | بلا
+    | أسماء بنوع اختيار_اختبارات
+    | تشغيل بنوع اختيار_اختبارات
 ;
 
 عام نوع نتيجة_تجميع_مترجم =
     | تحقق_مكتمل
     | نتيجة_تفسير بنوع نتيجة_تفسير_مسير
-    | كائن_أصلي_مكتمل بنوع متجه غ8
-    | تنفيذي_أصلي_مكتمل بنوع متجه غ8
+    // `run` of a program with imported C translation units: their code
+    // exists only as compiled C, so the program runs as an executable.
+    | تفسير_بتنفيذي
+    | فشل_تفسير بنوع مجموعة_تشخيصات
+    | كائن_مكتمل بنوع متجه ط8
+    | تنفيذي_مكتمل بنوع متجه ط8
+    // `sultanc test`: the test executable, its selected tests' names and
+    // declaration places in harness order (the executable runs test i when
+    // its argument is i), and how many tests the selection left out.
+    | اختبارات_مبنية بنوع (متجه ط8, متجه نص, متجه نص, طبيعي)
+    | مكتبة_مشتركة_مكتملة بنوع متجه ط8
+    | كائن_مترابط_مكتمل بنوع متجه ط8
+    | وحدة_هدف_مكتملة بنوع متجه ط8
     | ملغى
     | فشل_إعداد بنوع مجموعة_تشخيصات
     | فشل_واجهة بنوع مجموعة_تشخيصات
@@ -69,33 +293,107 @@
     | فشل_داخلي بنوع مجموعة_تشخيصات
     | مدخل_تفسير_غير_متاح
     | هدف_غير_مسجل
-    | فشل_مخرج_أصلي بنوع مجموعة_تشخيصات
+    | هدف_تفسير_غير_متوافق
+    | فشل_خلفية بنوع مجموعة_تشخيصات
 ;
 
-// Process request owns normalized external orchestration facts. Every successful
-// CLI parse produces exactly one typed command.
+// One explicit source for a logical module (--module-source=<module>=<file>).
+// It is configuration input to the canonical logical environment, recorded as
+// that module's explicit source location (logical_environment.sn
+// أضف_موقع_مصدر_وحدة) before the Frontend loads anything: the option names
+// the file that is the source of that module. A build uses it to select
+// compiler-build capabilities of the program it compiles: a Native-only
+// SultanC compiler binds compiler.backend.provider.llvm.llvm_codegen to
+// compiler/backend/provider/llvm/unavailable.sn. It never selects a backend,
+// a target or a library of the current compilation.
+عام نوع ربط_مصدر_وحدة_عملية = {
+    الوحدة: نص,
+    المصدر: نص
+};
+
+// Process request owns normalized external orchestration facts. CLI spellings
+// such as -c and --emit=obj collapse into the same output kind here, while
+// backend selection remains auto or explicit until Target policy resolves it.
 عام نوع طلب_عملية_مترجم =
     | مساعدة
     | إصدار
     | أهداف
     | شرح بنوع نص
-    | تحقق بنوع (نص, متجه نص)
-    | تفسير بنوع (نص, متجه نص)
-    | كائن_أصلي بنوع (نص, متجه نص, نص, اختيار_هدف_عملية)
-    | تنفيذي_أصلي بنوع (نص, متجه نص, نص, اختيار_هدف_عملية)
+    // `fmt`: the paths to format (none: standard input) and --check
+    // (compiler/format/command.sn).
+    | تنسيق بنوع طلب_تنسيق
+    | تحقق بنوع (نص, متجه نص, متجه ربط_مصدر_وحدة_عملية, اختيار_هدف_عملية)
+    // The last two fields are the -l library names and -L search
+    // directories, as for تجميع.
+    | تفسير بنوع (
+        نص, متجه نص, متجه متجه ط8, اختيار_هدف_عملية, متجه ربط_مصدر_وحدة_عملية,
+        متجه نص, متجه نص
+    )
+    | تجميع بنوع (
+        نص,
+        متجه نص,
+        متجه نص,
+        نص,
+        اختيار_هدف_عملية,
+        اختيار_مزود_خلفية_عملية,
+        نوع_مخرج_تجميع_عملية,
+        متجه ربط_مصدر_وحدة_عملية,
+        // -l library names and -L search directories, resolved against the
+        // target once it is known.
+        متجه نص,
+        متجه نص,
+        // -O0 .. -O3 for the LLVM backend (-O2 by default); the Native
+        // backends have one level.
+        مستوى_تحسين_مزود_إل_إل_في_إم
+    )
+    // `sultanc test`: the source and further sources, the target and
+    // backend choices, the module source bindings, the -l names and -L
+    // directories, the -O level, the selection (--filter, --test,
+    // --tests-in), --list, --interpret, and --test-index (run only that
+    // test, in this process: what the driver runs in each child of an
+    // interpreted run).
+    | اختبار بنوع (
+        نص,
+        متجه نص,
+        اختيار_هدف_عملية,
+        اختيار_مزود_خلفية_عملية,
+        متجه ربط_مصدر_وحدة_عملية,
+        متجه نص,
+        متجه نص,
+        مستوى_تحسين_مزود_إل_إل_في_إم,
+        اختيار_اختبارات,
+        منطقي,
+        منطقي,
+        اختياري طبيعي
+    )
 ;
 
 عام نوع نتيجة_عملية_مترجم =
     | أمر_مكتمل
     | تحقق_مكتمل
     | نتيجة_تفسير بنوع نتيجة_تفسير_مسير
-    | كائن_أصلي_مكتمل
-    | تنفيذي_أصلي_مكتمل
+    | فشل_تفسير بنوع مجموعة_تشخيصات
+    | كائن_مكتمل
+    | تنفيذي_مكتمل
+    | مكتبة_مشتركة_مكتملة
+    | كائن_مترابط_مكتمل
+    | وحدة_هدف_مكتملة
     | استدعاء_غير_صالح بنوع مجموعة_تشخيصات
     | هدف_غير_معروف بنوع مجموعة_تشخيصات
     | هدف_المضيف_غير_متاح بنوع مجموعة_تشخيصات
     | فشل_تجميع بنوع نتيجة_تجميع_مترجم
     | فشل_بيئة_أو_مخرج بنوع مجموعة_تشخيصات
+    // `fmt --check` found inputs that are not formatted (one diagnostic each).
+    | تنسيق_مطلوب بنوع مجموعة_تشخيصات
+    // `fmt` could not read, parse or write an input.
+    | فشل_تنسيق بنوع مجموعة_تشخيصات
+    // `sultanc test` ran (or listed, or built for a foreign target) and
+    // reported; its exit status: 0 every selected test passed, 1 a test
+    // failed.
+    | اختبارات_منتهية بنوع طبيعي
+    // `sultanc test` could not build the program (or a test is invalid):
+    // the compilation's failure; exit status 2 for the program's own errors.
+    | فشل_بناء_اختبارات بنوع نتيجة_تجميع_مترجم
 ;
 
 عام نوع نتيجة_تحليل_استدعاء_مترجم =
@@ -103,3 +401,29 @@
     | غير_صالح بنوع (مجموعة_تشخيصات, إعداد_عرض_عملية)
     | هدف_غير_معروف بنوع (مجموعة_تشخيصات, إعداد_عرض_عملية)
 ;
+
+// A positive decimal count written with optional `_` separators
+// (`10_000_000`), as --comptime-budget and $SULTANC_COMPTIME_BUDGET take it:
+// the digits are read by std's حلل_طبيعي, so a value past the 64-bit range is
+// rejected rather than wrapped. لا_شيء for anything else (empty, a sign, a
+// non-digit, zero).
+عام عرف عدد_موجب_بفواصل(النص: &نص): اختياري طبيعي {
+    دع الأرقام: متغير متجه ط8 = [];
+    دع ف: متغير طبيعي = 0;
+    طالما (ف < (الطول(*النص) مثل طبيعي)) {
+        دع ب: ط8 = (*النص)[ف];
+        إذا (ب >= 0x30 && ب <= 0x39) {
+            ألحق(الأرقام, ب);
+        } وإلا إذا (ب != 0x5F) {
+            أرجع اختياري.لا_شيء();
+        };
+        ف := ف + 1;
+    }
+    دع نص_الأرقام: نص = الأرقام مثل نص;
+    طابق حلل_طبيعي(&نص_الأرقام) مع
+    | نتيجة.نجح(القيمة) -> {
+        إذا (القيمة > 0) { أرجع اختياري.موجود(القيمة); };
+        أرجع اختياري.لا_شيء();
+    }
+    | نتيجة.خطأ(_) -> { أرجع اختياري.لا_شيء(); };
+}

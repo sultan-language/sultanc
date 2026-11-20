@@ -1,0 +1,2 @@
+// The root file of the package app: spellings of its top-level modules.
+module shapes { ar: أشكال };

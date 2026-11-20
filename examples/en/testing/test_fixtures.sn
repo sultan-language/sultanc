@@ -1,0 +1,12 @@
+// Self-checking example: test_fixtures.
+import std.io.println;
+import std.text.number;
+import std.debug.assert;
+
+def create_fixture(): vector int { return [1, 2, 3, 4]; }
+def main(): int {
+    let sample: vector int = create_fixture();
+    assert(length(sample) == 4);
+    println(int_to_text(sample[0]));
+    return 0;
+}

@@ -1,0 +1,11 @@
+// The program of the package: with --tests-in=<this file> only its own test
+// runs, not the library's (tests/runner/suites/testing.sn).
+import "lib.sn";
+import std.debug.assert;
+
+@@test
+def program_triples(): void {
+    assert(triple(2) == 6);
+}
+
+def main(): int { return triple(0); }

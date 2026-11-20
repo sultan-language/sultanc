@@ -1,0 +1,8 @@
+type PairSurface = { left_surface: int, right_surface: int };
+
+def main(): int {
+    let pair_surface: mutable PairSurface = { left_surface: 40, right_surface: 1 };
+    pair_surface.right_surface := pair_surface.right_surface + 1;
+    let values_surface: mutable [] int = [40, 2];
+    return pair_surface.left_surface + values_surface[1];
+}

@@ -1,0 +1,11 @@
+// اختبار: رفض
+// أهداف: arm64-darwin,x86_64-linux
+// تشخيص: SULTANC-TYPE-INVALID-DEFINITION
+// نظير: tests/ar/language/opaque/reject_opaque_hides_visible_type.sn
+// A type named opaque is visible, so `type Handle = opaque;` (which used to
+// alias it) is an invalid definition instead of silently declaring a new
+// opaque type.
+type opaque = { x: int };
+type Handle = opaque;
+
+def main(): int { return 0; }

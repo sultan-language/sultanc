@@ -1,0 +1,13 @@
+// اختبار: رفض
+// أهداف: arm64-darwin,x86_64-linux
+// تشخيص: SULTANC-CALL-ARGUMENT-TYPE-MISMATCH
+// نظير: tests/ar/compiler/c_import_opaque/reject_mismatch.sn
+// Each C handle is its own type: a statement where a database is expected
+// is rejected at compile time.
+import "handles.h";
+
+def main(): int {
+    let s: *mutable stmt = db_prepare(db_open(1), 1);
+    db_close(s);
+    return 0;
+}

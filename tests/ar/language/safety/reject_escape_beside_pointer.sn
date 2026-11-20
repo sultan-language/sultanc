@@ -1,0 +1,15 @@
+// اختبار: رفض
+// تشخيص: SULTANC-BORROW-REFERENCE-ESCAPE
+// نظير: tests/en/language/safety/reject_escape_beside_pointer.sn
+// A safe reference to a local still cannot escape its function when a raw
+// pointer to the same local exists.
+عرف اهرب(): &عدد {
+    دع المحلي: عدد = 5;
+    دع م: *عدد = &المحلي;
+    دع ر: &عدد = &المحلي;
+    أرجع ر;
+}
+
+عرف الرئيسية(): عدد {
+    أرجع *اهرب();
+}

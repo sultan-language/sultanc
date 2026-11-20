@@ -1,0 +1,12 @@
+// Self-checking example: assert_equal.
+import std.io.println;
+import std.text.number;
+import std.debug.assert;
+
+
+def main(): int {
+    let actual: int = 6 * 7;
+    assert(actual == 42);
+    println("equal");
+    return 0;
+}

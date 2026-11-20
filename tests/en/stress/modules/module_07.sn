@@ -1,0 +1,1 @@
+public def value_07(): int { return 1; }

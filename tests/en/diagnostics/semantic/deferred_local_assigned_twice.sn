@@ -1,0 +1,10 @@
+// اختبار: رفض
+// تشخيص: SULTANC-MUTABILITY-WRITE-TO-IMMUTABLE
+// نظير: tests/ar/diagnostics/semantic/deferred_local_assigned_twice.sn
+def main(): i32 {
+    let ready: bool = true;
+    let value: int;
+    value := 1;
+    if (ready) { value := 2; };
+    return 0;
+}

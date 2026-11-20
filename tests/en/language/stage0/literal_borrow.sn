@@ -1,0 +1,19 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// مرحلة0: نعم
+// نظير: tests/ar/language/stage0/literal_borrow.sn
+// A shared borrow of a text literal, `&"text"` and `&«text»`, is a borrow of a
+// temporary holding it for the call, in the C Stage0 as in the self-hosted
+// compiler, so no adapter function is needed to pass a literal to a `&string`
+// parameter. Native, the interpreter and Stage0 agree.
+
+def size(text: &string): int { return length(*text) as int; }
+
+def main(): int {
+    let quoted: int = size(&"forty");
+    let guillemets: int = size(&«ab»);
+    let both: int = size(&"abc") + size(&«»);
+    return quoted + guillemets + both + 32;
+}

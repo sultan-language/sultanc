@@ -1,0 +1,61 @@
+# Nightly: the full tier of ci.yml (every route on every host, every test
+# step) on main, with the opt-in test suites on (self-host convergence inside
+# the runner, RSS and allocation checks), as Rust builds its nightly from the
+# head of master every day. Pushes to main run only the smoke set, so this is
+# where the whole Native + LLVM matrix runs on main.
+#
+# A passing run qualifies the commit (the sultanc/qualification status), so
+# the next promotion to beta of that commit runs no matrix (promote.yml).
+# A scheduled run whose commit is already qualified is skipped, and its Fresh
+# job links the run that qualified it: the same commit is not verified twice.
+# A failed or cancelled run sets no status, so its commit is verified again.
+# A manual dispatch always runs.
+name: SultanC Nightly
+
+on:
+  schedule:
+    - cron: '23 2 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: read
+  statuses: write
+
+jobs:
+  fresh:
+    name: Fresh
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      run: ${{ steps.check.outputs.run }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github
+      - name: Commit not yet qualified
+        id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT: ${{ github.event_name }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+        run: |
+          run=true
+          if [ "$EVENT" = schedule ]; then
+            covered=$(sh .github/ci/evidence.sh "$SHA")
+            if [ -n "$covered" ]; then
+              run=false
+              echo "Skipped: $SHA is already qualified by $covered" >> "$GITHUB_STEP_SUMMARY"
+            fi
+          fi
+          echo "run=$run" >> "$GITHUB_OUTPUT"
+
+  ci:
+    needs: fresh
+    if: needs.fresh.outputs.run == 'true'
+    uses: ./.github/workflows/ci.yml
+    with:
+      scope: full
+      extended: true
+      qualify: true

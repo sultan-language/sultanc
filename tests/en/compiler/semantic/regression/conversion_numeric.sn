@@ -1,0 +1,7 @@
+def main(): i32 {
+    let wide: i64 = 255;
+    let signed_small: i8 = wide as i8;
+    let unsigned_small: u8 = wide as u8;
+    let widened: i64 = signed_small;
+    return (widened as i32) + (unsigned_small as i32) - 212;
+}

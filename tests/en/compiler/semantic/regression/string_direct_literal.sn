@@ -1,0 +1,6 @@
+import std.io.print;
+
+def main(): int {
+    print("direct literal");
+    return 42;
+}

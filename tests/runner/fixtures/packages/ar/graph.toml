@@ -1,0 +1,30 @@
+version = 1
+root = "app"
+
+[[package]]
+id = "app"
+source_root = "app/src"
+name = "app"
+spellings = { ar = "تطبيق" }
+
+[[package]]
+id = "json@1.2.0"
+source_root = "json/src"
+name = "json"
+spellings = { ar = "جسون" }
+
+[[package]]
+id = "log"
+source_root = "log/src"
+name = "log"
+entry = "lib"
+
+[[edge]]
+from = "app"
+to = "json@1.2.0"
+name = "json"
+
+[[edge]]
+from = "app"
+to = "log"
+name = "سجل"

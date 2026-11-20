@@ -1,0 +1,245 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// نظير: tests/ar/msir/verifier_invalid.sn
+// The canonical verifier (msir_verifier.sn, تحقق_برنامج_مسير) rejects corrupted
+// MSIR programs: a missing value or block, a duplicate value, mismatched Types,
+// wrong branch arguments, a missing terminator, a malformed aggregate, a use
+// before its definition and invalid dominance.
+import compiler.msir.msir_model;
+import compiler.msir.identifiers;
+import compiler.msir.msir_builder;
+import compiler.msir.msir_verifier;
+import compiler.frontend.types.type_identity;
+import compiler.frontend.types.type_context;
+import compiler.frontend.types.type_registry;
+import compiler.frontend.types.type_model;
+import compiler.frontend.types.builtins_generated;
+
+def test_block(outcome: نتيجة_بناء_كتلة_مسير): معرف_كتلة_مسير {
+    match outcome with
+    | نتيجة_بناء_كتلة_مسير.مبنية(id) -> { return id; }
+    | _ -> { return معرف_كتلة_مسير_من(معرف_دالة_مسير_من(9999), 9999); };
+}
+
+def test_value(outcome: نتيجة_بناء_قيمة_مسير): معرف_قيمة_مسير {
+    match outcome with
+    | نتيجة_بناء_قيمة_مسير.مبنية(id) -> { return id; }
+    | _ -> { return معرف_قيمة_مسير_من(معرف_دالة_مسير_من(9999), 9999); };
+}
+
+def is_rejected(program: &برنامج_مسير, types: &سجل_أنواع): bool {
+    match تحقق_برنامج_مسير(program, types) with
+    | نتيجة_تحقق_مسير.صالح -> { return false; }
+    | نتيجة_تحقق_مسير.مرفوض(_) -> { return true; };
+}
+
+def basic_program(types: &mutable سجل_أنواع): برنامج_مسير {
+    let int_type: معرف_نوع = قنن_نوعا_بدائيا(types, نوع_بدائي_مقنن.ص64());
+    let program: mutable برنامج_مسير = برنامج_مسير_جديد();
+    let build: حالة_بناء_مسير = حالة_بناء_مسير_جديدة();
+    let no_parameters: vector معرف_نوع = [];
+    let function: معرف_دالة_مسير = أضف_دالة_مسير(&mutable program, &no_parameters, option.some(int_type));
+    let block: معرف_كتلة_مسير = test_block(أضف_كتلة_مسير(&mutable program, function));
+    let value: معرف_قيمة_مسير = test_value(
+        أصدر_ثابتا_مسير(&mutable program, &build, function, block, ثابت_مسير.صحيح_موقع(42), int_type)
+    );
+    اختم_بإرجاع_مسير(&mutable program, &build, function, block, option.some(value));
+    عين_دالة_بدء_برنامج_مسير(&mutable program, function);
+    return program;
+}
+
+def test_missing_value_id(): bool {
+    let types: mutable سجل_أنواع = سجل_أنواع_جديد();
+    let program: mutable برنامج_مسير = basic_program(&mutable types);
+    let function: معرف_دالة_مسير = program.الدوال[0].المعرف;
+    program.الدوال[0].الكتل[0].المنهي := option.some(
+        منهي_مسير.إرجاع(option.some(معرف_قيمة_مسير_من(function, 99)))
+    );
+    return is_rejected(&program, &types);
+}
+
+def test_missing_block_id(): bool {
+    let types: mutable سجل_أنواع = سجل_أنواع_جديد();
+    let program: mutable برنامج_مسير = basic_program(&mutable types);
+    let function: معرف_دالة_مسير = program.الدوال[0].المعرف;
+    let edge: حافة_مسير = { الهدف: معرف_كتلة_مسير_من(function, 77), الحجج: [] };
+    program.الدوال[0].الكتل[0].المنهي := option.some(منهي_مسير.فرع(edge));
+    return is_rejected(&program, &types);
+}
+
+def test_duplicate_value_id(): bool {
+    let types: mutable سجل_أنواع = سجل_أنواع_جديد();
+    let program: mutable برنامج_مسير = basic_program(&mutable types);
+    append(program.الدوال[0].القيم, program.الدوال[0].القيم[0]);
+    return is_rejected(&program, &types);
+}
+
+def test_result_type_mismatch(): bool {
+    let types: mutable سجل_أنواع = سجل_أنواع_جديد();
+    let bool_type: معرف_نوع = قنن_نوعا_بدائيا(&mutable types, نوع_بدائي_مقنن.منطقي());
+    let program: mutable برنامج_مسير = basic_program(&mutable types);
+    // The result's Type lives in the function's value table (C1).
+    program.الدوال[0].القيم[0].النوع := bool_type;
+    return is_rejected(&program, &types);
+}
+
+def test_branch_argument_count_mismatch(): bool {
+    let types: mutable سجل_أنواع = سجل_أنواع_جديد();
+    let int_type: معرف_نوع = قنن_نوعا_بدائيا(&mutable types, نوع_بدائي_مقنن.ص64());
+    let program: mutable برنامج_مسير = برنامج_مسير_جديد();
+    let build: حالة_بناء_مسير = حالة_بناء_مسير_جديدة();
+    let no_parameters: vector معرف_نوع = [];
+    let function: معرف_دالة_مسير = أضف_دالة_مسير(&mutable program, &no_parameters, option.some(int_type));
+    let entry: معرف_كتلة_مسير = test_block(أضف_كتلة_مسير(&mutable program, function));
+    let target: معرف_كتلة_مسير = test_block(أضف_كتلة_مسير(&mutable program, function));
+    let parameter: معرف_قيمة_مسير = test_value(أضف_معامل_كتلة_مسير(&mutable program, function, target, int_type));
+    let no_args: vector معرف_قيمة_مسير = [];
+    اختم_بفرع_مسير(&mutable program, &build, function, entry, target, &no_args);
+    اختم_بإرجاع_مسير(&mutable program, &build, function, target, option.some(parameter));
+    عين_دالة_بدء_برنامج_مسير(&mutable program, function);
+    return is_rejected(&program, &types);
+}
+
+def test_branch_argument_type_mismatch(): bool {
+    let types: mutable سجل_أنواع = سجل_أنواع_جديد();
+    let int_type: معرف_نوع = قنن_نوعا_بدائيا(&mutable types, نوع_بدائي_مقنن.ص64());
+    let bool_type: معرف_نوع = قنن_نوعا_بدائيا(&mutable types, نوع_بدائي_مقنن.منطقي());
+    let program: mutable برنامج_مسير = برنامج_مسير_جديد();
+    let build: حالة_بناء_مسير = حالة_بناء_مسير_جديدة();
+    let no_parameters: vector معرف_نوع = [];
+    let function: معرف_دالة_مسير = أضف_دالة_مسير(&mutable program, &no_parameters, option.some(int_type));
+    let entry: معرف_كتلة_مسير = test_block(أضف_كتلة_مسير(&mutable program, function));
+    let target: معرف_كتلة_مسير = test_block(أضف_كتلة_مسير(&mutable program, function));
+    let parameter: معرف_قيمة_مسير = test_value(أضف_معامل_كتلة_مسير(&mutable program, function, target, int_type));
+    let condition: معرف_قيمة_مسير = test_value(
+        أصدر_ثابتا_مسير(&mutable program, &build, function, entry, ثابت_مسير.منطق(true), bool_type)
+    );
+    let arguments: vector معرف_قيمة_مسير = [condition];
+    اختم_بفرع_مسير(&mutable program, &build, function, entry, target, &arguments);
+    اختم_بإرجاع_مسير(&mutable program, &build, function, target, option.some(parameter));
+    عين_دالة_بدء_برنامج_مسير(&mutable program, function);
+    return is_rejected(&program, &types);
+}
+
+def test_missing_terminator(): bool {
+    let types: mutable سجل_أنواع = سجل_أنواع_جديد();
+    let program: mutable برنامج_مسير = basic_program(&mutable types);
+    program.الدوال[0].الكتل[0].المنهي := option.none();
+    return is_rejected(&program, &types);
+}
+
+def test_memory_type_mismatch(): bool {
+    let types: mutable سجل_أنواع = سجل_أنواع_جديد();
+    let int_type: معرف_نوع = قنن_نوعا_بدائيا(&mutable types, نوع_بدائي_مقنن.ص64());
+    let bool_type: معرف_نوع = قنن_نوعا_بدائيا(&mutable types, نوع_بدائي_مقنن.منطقي());
+    let program: mutable برنامج_مسير = برنامج_مسير_جديد();
+    let build: حالة_بناء_مسير = حالة_بناء_مسير_جديدة();
+    let no_parameters: vector معرف_نوع = [];
+    let function: معرف_دالة_مسير = أضف_دالة_مسير(&mutable program, &no_parameters, option.some(int_type));
+    let block: معرف_كتلة_مسير = test_block(أضف_كتلة_مسير(&mutable program, function));
+    let place: معرف_قيمة_مسير = test_value(أصدر_مكان_محلي_مسير(&mutable program, &build, function, block, int_type, true));
+    let value: معرف_قيمة_مسير = test_value(
+        أصدر_ثابتا_مسير(&mutable program, &build, function, block, ثابت_مسير.منطق(true), bool_type)
+    );
+    أصدر_تخزين_مسير(&mutable program, &build, function, block, place, value);
+    let zero: معرف_قيمة_مسير = test_value(
+        أصدر_ثابتا_مسير(&mutable program, &build, function, block, ثابت_مسير.صحيح_موقع(0), int_type)
+    );
+    اختم_بإرجاع_مسير(&mutable program, &build, function, block, option.some(zero));
+    عين_دالة_بدء_برنامج_مسير(&mutable program, function);
+    return is_rejected(&program, &types);
+}
+
+def test_malformed_aggregate(): bool {
+    let types: mutable سجل_أنواع = سجل_أنواع_جديد();
+    let int_type: معرف_نوع = قنن_نوعا_بدائيا(&mutable types, نوع_بدائي_مقنن.ص64());
+    let tuple_elements: vector معرف_نوع = [int_type, int_type];
+    let tuple_type: معرف_نوع = قنن_نوعا(&mutable types, نوع_مقنن.صف(tuple_elements));
+    let program: mutable برنامج_مسير = برنامج_مسير_جديد();
+    let build: حالة_بناء_مسير = حالة_بناء_مسير_جديدة();
+    let no_parameters: vector معرف_نوع = [];
+    let function: معرف_دالة_مسير = أضف_دالة_مسير(&mutable program, &no_parameters, option.some(tuple_type));
+    let block: معرف_كتلة_مسير = test_block(أضف_كتلة_مسير(&mutable program, function));
+    let member: معرف_قيمة_مسير = test_value(
+        أصدر_ثابتا_مسير(&mutable program, &build, function, block, ثابت_مسير.صحيح_موقع(1), int_type)
+    );
+    let members: vector معرف_قيمة_مسير = [member];
+    let aggregate: معرف_قيمة_مسير = test_value(
+        أصدر_تجميع_مسير(&mutable program, &build, function, block, &members, tuple_type)
+    );
+    اختم_بإرجاع_مسير(&mutable program, &build, function, block, option.some(aggregate));
+    عين_دالة_بدء_برنامج_مسير(&mutable program, function);
+    return is_rejected(&program, &types);
+}
+
+def test_use_before_definition(): bool {
+    let types: mutable سجل_أنواع = سجل_أنواع_جديد();
+    let int_type: معرف_نوع = قنن_نوعا_بدائيا(&mutable types, نوع_بدائي_مقنن.ص64());
+    let program: mutable برنامج_مسير = برنامج_مسير_جديد();
+    let build: حالة_بناء_مسير = حالة_بناء_مسير_جديدة();
+    let no_parameters: vector معرف_نوع = [];
+    let function: معرف_دالة_مسير = أضف_دالة_مسير(&mutable program, &no_parameters, option.some(int_type));
+    let block: معرف_كتلة_مسير = test_block(أضف_كتلة_مسير(&mutable program, function));
+    let left: معرف_قيمة_مسير = test_value(
+        أصدر_ثابتا_مسير(&mutable program, &build, function, block, ثابت_مسير.صحيح_موقع(20), int_type)
+    );
+    let right: معرف_قيمة_مسير = test_value(
+        أصدر_ثابتا_مسير(&mutable program, &build, function, block, ثابت_مسير.صحيح_موقع(22), int_type)
+    );
+    let result: معرف_قيمة_مسير = test_value(
+        أصدر_حسابا_صحيحا_مسير(
+            &mutable program, &build, function, block, عملية_حساب_صحيح.جمع(), left, right, int_type
+        )
+    );
+    اختم_بإرجاع_مسير(&mutable program, &build, function, block, option.some(result));
+    عين_دالة_بدء_برنامج_مسير(&mutable program, function);
+
+    let right_constant_instruction: تعليمة_مسير = انسخ_مملوكا_تعليمة_مسير(&program.الدوال[0].الكتل[0].التعليمات[1]);
+    let add_instruction: تعليمة_مسير = انسخ_مملوكا_تعليمة_مسير(&program.الدوال[0].الكتل[0].التعليمات[2]);
+    program.الدوال[0].الكتل[0].التعليمات[1] := add_instruction;
+    program.الدوال[0].الكتل[0].التعليمات[2] := right_constant_instruction;
+
+    return is_rejected(&program, &types);
+}
+
+def test_invalid_dominance(): bool {
+    let types: mutable سجل_أنواع = سجل_أنواع_جديد();
+    let int_type: معرف_نوع = قنن_نوعا_بدائيا(&mutable types, نوع_بدائي_مقنن.ص64());
+    let bool_type: معرف_نوع = قنن_نوعا_بدائيا(&mutable types, نوع_بدائي_مقنن.منطقي());
+    let program: mutable برنامج_مسير = برنامج_مسير_جديد();
+    let build: حالة_بناء_مسير = حالة_بناء_مسير_جديدة();
+    let no_parameters: vector معرف_نوع = [];
+    let function: معرف_دالة_مسير = أضف_دالة_مسير(&mutable program, &no_parameters, option.some(int_type));
+    let entry: معرف_كتلة_مسير = test_block(أضف_كتلة_مسير(&mutable program, function));
+    let left_block: معرف_كتلة_مسير = test_block(أضف_كتلة_مسير(&mutable program, function));
+    let right_block: معرف_كتلة_مسير = test_block(أضف_كتلة_مسير(&mutable program, function));
+    let condition: معرف_قيمة_مسير = test_value(
+        أصدر_ثابتا_مسير(&mutable program, &build, function, entry, ثابت_مسير.منطق(true), bool_type)
+    );
+    let left_edge: حافة_مسير = { الهدف: left_block, الحجج: [] };
+    let right_edge: حافة_مسير = { الهدف: right_block, الحجج: [] };
+    اختم_بفرع_شرطي_مسير(&mutable program, &build, function, entry, condition, left_edge, right_edge);
+    let left_value: معرف_قيمة_مسير = test_value(
+        أصدر_ثابتا_مسير(&mutable program, &build, function, left_block, ثابت_مسير.صحيح_موقع(42), int_type)
+    );
+    اختم_بإرجاع_مسير(&mutable program, &build, function, left_block, option.some(left_value));
+    اختم_بإرجاع_مسير(&mutable program, &build, function, right_block, option.some(left_value));
+    عين_دالة_بدء_برنامج_مسير(&mutable program, function);
+    return is_rejected(&program, &types);
+}
+
+def main(): int {
+    if (!test_missing_value_id()) { return 1; };
+    if (!test_missing_block_id()) { return 2; };
+    if (!test_duplicate_value_id()) { return 3; };
+    if (!test_result_type_mismatch()) { return 4; };
+    if (!test_branch_argument_count_mismatch()) { return 5; };
+    if (!test_branch_argument_type_mismatch()) { return 6; };
+    if (!test_missing_terminator()) { return 7; };
+    if (!test_memory_type_mismatch()) { return 8; };
+    if (!test_malformed_aggregate()) { return 9; };
+    if (!test_use_before_definition()) { return 10; };
+    if (!test_invalid_dominance()) { return 11; };
+    return 42;
+}

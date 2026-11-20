@@ -1,0 +1,12 @@
+// اختبار: رفض
+// أهداف: arm64-darwin,x86_64-linux
+// تشخيص: SULTANC-CALL-ARGUMENT-TYPE-MISMATCH
+// نظير: tests/ar/language/safety/reject_pointer_mutable_other_pointee.sn
+// Dropping `mutable` never changes the pointee: a `*mutable A` is not a `*B`.
+type First = opaque;
+type Second = opaque;
+def take(second: *Second): int { return 0; }
+def main(): int {
+    let first: *mutable First = 0 as *mutable First;
+    return take(first);
+}

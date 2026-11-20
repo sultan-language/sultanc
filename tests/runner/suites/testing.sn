@@ -1,0 +1,286 @@
+استورد "../common.sn";
+استورد std.text.search;
+استورد std.text.compare;
+
+// `sultanc test` (docs/en/reference/testing.md), in English and Arabic
+// (tests/runner/fixtures/testing/{en,ar}): passing and failing tests in two
+// modules (an assertion, a panic, a returned error, an exit status), each
+// reported with its name and what ended it, and the summary; every test
+// passing; invalid tests (parameters, result type, a type, a generic and a
+// compile-time function) rejected at compile time with status 2; --list and
+// --filter; a target this host cannot run (built, not run); --interpret;
+// --package-graph; and an ordinary run of the same program, which runs main
+// and no test. -b llvm runs when the compiler includes the LLVM backend.
+// Then --test, --tests-in, definition-time decorators in a test and
+// --package-graph=- (اختبر_اختيار_الاختبارات_لغة).
+
+// One compiler run: its status, and markers its output or standard error
+// all contain.
+// The `--lang` value of a test-mode command line, or none.
+عرف لغة_الوسائط(الوسائط: &متجه نص): اختياري نص {
+    دع العلم: نص = «--lang»;
+    دع ف: متغير طبيعي = 0;
+    طالما (ف + 1 < (الطول(*الوسائط) مثل طبيعي)) {
+        إذا (نصان_متساويان_اختبار(&(*الوسائط)[ف], &العلم)) {
+            أرجع اختياري.موجود(استنسخ(&(*الوسائط)[ف + 1]));
+        };
+        ف := ف + 1;
+    }
+    أرجع اختياري.لا_شيء();
+}
+
+// A test-mode run: the tests run as the compiler's child processes and write
+// std's failure messages (an assertion, a panic) in the program's language,
+// which they read from SULTANC_LANG, LC_ALL, LC_MESSAGES and LANG. The
+// command's `--lang` is passed on as SULTANC_LANG, so the markers do not
+// depend on the locale of the machine running the suite (an English macOS
+// would otherwise print "An assertion failed." for the Arabic fixtures).
+عرف نفذ_أمر_اختبار(المترجم: &نص, الوسائط: &متجه نص, الاسم: &نص): نتيجة_أمر {
+    طابق لغة_الوسائط(الوسائط) مع
+    | اختياري.لا_شيء -> { أرجع نفذ_أمرا(المترجم, الوسائط, الاسم); }
+    | اختياري.موجود(اللغة) -> {
+        دع الإسناد: نص = اجمع_نصوص(&[«SULTANC_LANG=», اللغة]);
+        دع وسائط_البيئة: متغير متجه نص = [الإسناد, استنسخ(المترجم)];
+        دع ف: متغير طبيعي = 0;
+        طالما (ف < (الطول(*الوسائط) مثل طبيعي)) { ألحق(وسائط_البيئة, استنسخ(&(*الوسائط)[ف])); ف := ف + 1; }
+        دع البرنامج_env: نص = مسار_env_الاختبار();
+        أرجع نفذ_أمرا(&البرنامج_env, &وسائط_البيئة, الاسم);
+    };
+}
+
+عرف تحقق_اختبار(
+    الملخص: &متغير ملخص_اختبارات,
+    الاسم: نص,
+    الوسائط: متجه نص,
+    الحالة: عدد,
+    العلامات: متجه نص
+): فراغ {
+    دع المترجم: نص = مسار_المترجم();
+    دع النتيجة: نتيجة_أمر = نفذ_أمر_اختبار(&المترجم, &الوسائط, &الاسم);
+    إذا (النتيجة.الحالة != الحالة) {
+        دع سبب: نص = «حالة المترجم لا تطابق المتوقع»;
+        سجل_فشل(الملخص, &الاسم, &سبب);
+        أرجع;
+    };
+    دع ف: متغير طبيعي = 0;
+    طالما (ف < (الطول(العلامات) مثل طبيعي)) {
+        إذا (!يحتوي_نصا(&النتيجة.الخطأ, &العلامات[ف]) && !يحتوي_نصا(&النتيجة.الخرج, &العلامات[ف])) {
+            دع سبب: نص = «خرج المترجم لا يحتوي علامة مطلوبة»;
+            سجل_فشل(الملخص, &الاسم, &سبب);
+            أرجع;
+        };
+        ف := ف + 1;
+    }
+    سجل_نجاح(الملخص, &الاسم);
+}
+
+عرف ضم(أ: نص, ب: نص): نص {
+    دع أجزاء: متجه نص = [أ, ب];
+    أرجع اجمع_نصوص(&أجزاء);
+}
+
+عرف اسم_حالة_اختبار(اللغة: &نص, الوصف: نص): نص {
+    دع أجزاء: متجه نص = [«وضع الاختبار », استنسخ(اللغة), «: », الوصف];
+    أرجع اجمع_نصوص(&أجزاء);
+}
+
+// العلامات: the markers of the failing run (main.sn), of the passing run,
+// of --filter and of a foreign target, in the language ل.
+عرف اختبر_وضع_الاختبار_لغة(
+    الملخص: &متغير ملخص_اختبارات,
+    ل: نص,
+    علامات_الفشل: متجه نص,
+    علامة_النجاح: نص,
+    المرشح: نص,
+    علامة_المرشح: نص,
+    علامة_غير_مشغل: نص,
+    اسم_في_القائمة: نص
+): فراغ {
+    دع الأساس: نص = ضم(«tests/runner/fixtures/testing/», استنسخ(&ل));
+    دع الرئيسي: نص = ضم(استنسخ(&الأساس), «/main.sn»);
+    دع الناجح: نص = ضم(استنسخ(&الأساس), «/passing.sn»);
+    دع غير_الصالح: نص = ضم(استنسخ(&الأساس), «/invalid.sn»);
+    دع الرسم: نص = ضم(«--package-graph=», ضم(استنسخ(&الأساس), «/graph/graph.toml»));
+    دع مصدر_الرسم: نص = ضم(استنسخ(&الأساس), «/graph/app/src/main.sn»);
+
+    // Each failure with what ended it, the passes, the summary; status 1.
+    تحقق_اختبار(الملخص, اسم_حالة_اختبار(&ل, «اختبارات فاشلة في وحدتين»),
+        [«--lang», استنسخ(&ل), «--color», «never», «test», استنسخ(&الرئيسي)], 1, استنسخ(&علامات_الفشل));
+    // Every test passes: status 0.
+    تحقق_اختبار(الملخص, اسم_حالة_اختبار(&ل, «كل الاختبارات تنجح»),
+        [«--lang», استنسخ(&ل), «test», استنسخ(&الناجح)], 0, [استنسخ(&علامة_النجاح)]);
+    // Invalid tests: diagnostics, nothing run, status 2.
+    تحقق_اختبار(الملخص, اسم_حالة_اختبار(&ل, «اختبارات غير صالحة»),
+        [«--lang», استنسخ(&ل), «--color», «never», «test», استنسخ(&غير_الصالح)], 2,
+        [«SULTANC-TEST-PARAMETERS», «SULTANC-TEST-RESULT-TYPE», «SULTANC-TEST-NOT-A-FUNCTION»]);
+    // --list: the names, nothing run.
+    تحقق_اختبار(الملخص, اسم_حالة_اختبار(&ل, «--list»),
+        [«--lang», استنسخ(&ل), «test», «--list», استنسخ(&الرئيسي)], 0, [استنسخ(&اسم_في_القائمة)]);
+    // --filter: only the tests whose name contains its text.
+    تحقق_اختبار(الملخص, اسم_حالة_اختبار(&ل, «--filter»),
+        [«--lang», استنسخ(&ل), «test», «--filter», استنسخ(&المرشح), استنسخ(&الرئيسي)], 0,
+        [استنسخ(&علامة_المرشح)]);
+    // A target this host cannot run: built, not run.
+    تحقق_اختبار(الملخص, اسم_حالة_اختبار(&ل, «هدف لا يشغله المضيف»),
+        [«--lang», استنسخ(&ل), «test», «--target», «x86_64-windows-msvc», استنسخ(&الرئيسي)], 0,
+        [استنسخ(&علامة_غير_مشغل), «x86_64-windows-msvc»]);
+    // The interpreter runs the tests, each in its own process.
+    تحقق_اختبار(الملخص, اسم_حالة_اختبار(&ل, «--interpret»),
+        [«--lang», استنسخ(&ل), «test», «--interpret», استنسخ(&الناجح)], 0, [استنسخ(&علامة_النجاح)]);
+    // The package graph reaches the build.
+    تحقق_اختبار(الملخص, اسم_حالة_اختبار(&ل, «--package-graph»),
+        [«--lang», استنسخ(&ل), «test», استنسخ(&الرسم), استنسخ(&مصدر_الرسم)], 0, []);
+    // An ordinary run of the same program runs main and no test.
+    تحقق_اختبار(الملخص, اسم_حالة_اختبار(&ل, «التشغيل العادي لا يشغل الاختبارات»),
+        [«--lang», استنسخ(&ل), «run», استنسخ(&الرئيسي)], 0, []);
+    إذا (المترجم_بإل_إل_في_إم()) {
+        تحقق_اختبار(الملخص, اسم_حالة_اختبار(&ل, «-b llvm»),
+            [«--lang», استنسخ(&ل), «--color», «never», «test», «-b», «llvm», استنسخ(&الرئيسي)], 1, علامات_الفشل);
+    };
+}
+
+// One compiler run through the shell in الدليل, its standard input the file
+// الدخل there (for --package-graph=-), checked like تحقق_اختبار.
+عرف تحقق_اختبار_بدخل(
+    الملخص: &متغير ملخص_اختبارات,
+    الاسم: نص,
+    الدليل: نص,
+    الوسائط: متجه نص,
+    الدخل: نص,
+    الحالة: عدد,
+    العلامات: متجه نص
+): فراغ {
+    دع المترجم: نص = مسار_المترجم();
+    // `--lang` passed on to the tests as SULTANC_LANG (نفذ_أمر_اختبار).
+    دع البيئة: متغير نص = «»;
+    طابق لغة_الوسائط(&الوسائط) مع
+    | اختياري.موجود(اللغة) -> { البيئة := اجمع_نصوص(&[«SULTANC_LANG=», اللغة, « »]); }
+    | اختياري.لا_شيء -> { };
+    دع أجزاء: متغير متجه نص = [«C=», اقتبس_لشل(&المترجم), «; case "$C" in /*) ;; *) C="$PWD/$C";; esac; cd », اقتبس_لشل(&الدليل), « && », البيئة, «exec "$C"»];
+    دع ف: متغير طبيعي = 0;
+    طالما (ف < (الطول(الوسائط) مثل طبيعي)) {
+        ألحق(أجزاء, « »);
+        ألحق(أجزاء, اقتبس_لشل(&الوسائط[ف]));
+        ف := ف + 1;
+    }
+    ألحق(أجزاء, « < »);
+    ألحق(أجزاء, اقتبس_لشل(&الدخل));
+    دع الأمر: نص = اجمع_نصوص(&أجزاء);
+    دع النتيجة: نتيجة_أمر = نفذ_نص_شل(&الأمر, &الاسم);
+    إذا (النتيجة.الحالة != الحالة) {
+        دع سبب: نص = «حالة المترجم لا تطابق المتوقع»;
+        سجل_فشل(الملخص, &الاسم, &سبب);
+        أرجع;
+    };
+    ف := 0;
+    طالما (ف < (الطول(العلامات) مثل طبيعي)) {
+        إذا (!يحتوي_نصا(&النتيجة.الخطأ, &العلامات[ف]) && !يحتوي_نصا(&النتيجة.الخرج, &العلامات[ف])) {
+            دع سبب: نص = «خرج المترجم لا يحتوي علامة مطلوبة»;
+            سجل_فشل(الملخص, &الاسم, &سبب);
+            أرجع;
+        };
+        ف := ف + 1;
+    }
+    سجل_نجاح(الملخص, &الاسم);
+}
+
+// --test (exact names, any spelling), --tests-in (a package whose program
+// lies in its library's source root), definition-time decorators before a
+// test, and --package-graph=- (the graph on standard input, its relative
+// paths against the current directory), in the language ل.
+عرف اختبر_اختيار_الاختبارات_لغة(
+    الملخص: &متغير ملخص_اختبارات,
+    ل: نص,
+    اسم_دقيق: نص,
+    اسم_ثان: نص,
+    علامة_واحد_من_ستة: نص,
+    علامة_الكل_في_الحزمة: نص,
+    علامة_البرنامج_وحده: نص,
+    اسم_اختبار_البرنامج: نص
+): فراغ {
+    دع الأساس: نص = ضم(«tests/runner/fixtures/testing/», استنسخ(&ل));
+    دع الرئيسي: نص = ضم(استنسخ(&الأساس), «/main.sn»);
+    دع التسجيل: نص = ضم(استنسخ(&الأساس), «/registration.sn»);
+    دع دليل_الحزمة: نص = ضم(استنسخ(&الأساس), «/libpkg»);
+    دع الرسم: نص = ضم(«--package-graph=», ضم(استنسخ(&دليل_الحزمة), «/graph.toml»));
+    دع البرنامج: نص = ضم(استنسخ(&دليل_الحزمة), «/src/main.sn»);
+    دع في_البرنامج: نص = ضم(«--tests-in=», استنسخ(&البرنامج));
+
+    // --test runs exactly the test named: `doubles`, not `double_is_even`.
+    تحقق_اختبار(الملخص, اسم_حالة_اختبار(&ل, «--test اسم بعينه»),
+        [«--lang», استنسخ(&ل), «test», ضم(«--test=», استنسخ(&اسم_دقيق)), استنسخ(&الرئيسي)], 0,
+        [استنسخ(&علامة_واحد_من_ستة)]);
+    // Repeated, with --list.
+    تحقق_اختبار(الملخص, اسم_حالة_اختبار(&ل, «--test مكرر مع --list»),
+        [«--lang», استنسخ(&ل), «test», «--list», «--test», استنسخ(&اسم_دقيق), ضم(«--test=», استنسخ(&اسم_ثان)), استنسخ(&الرئيسي)], 0,
+        [استنسخ(&اسم_دقيق), استنسخ(&اسم_ثان)]);
+    // A name no test has.
+    تحقق_اختبار(الملخص, اسم_حالة_اختبار(&ل, «--test لاسم لا اختبار له»),
+        [«--lang», استنسخ(&ل), «--color», «never», «test», «--test=no_such_test», استنسخ(&الرئيسي)], 2,
+        [«SULTANC-TEST-NOT-FOUND», «no_such_test»]);
+    // A registration decorator runs before the test as before main.
+    تحقق_اختبار(الملخص, اسم_حالة_اختبار(&ل, «مزخرف تسجيل قبل الاختبار»),
+        [«--lang», استنسخ(&ل), «test», استنسخ(&التسجيل)], 0, []);
+    تحقق_اختبار(الملخص, اسم_حالة_اختبار(&ل, «مزخرف تسجيل قبل الاختبار مفسرا»),
+        [«--lang», استنسخ(&ل), «test», «--interpret», استنسخ(&التسجيل)], 0, []);
+    تحقق_اختبار(الملخص, اسم_حالة_اختبار(&ل, «مزخرف تسجيل قبل الرئيسية»),
+        [«--lang», استنسخ(&ل), «run», استنسخ(&التسجيل)], 0, []);
+    // A package whose program imports its library: every test of the root
+    // package, or with --tests-in the program's only.
+    تحقق_اختبار(الملخص, اسم_حالة_اختبار(&ل, «حزمة بمكتبة وبرنامج»),
+        [«--lang», استنسخ(&ل), «test», استنسخ(&الرسم), استنسخ(&البرنامج)], 0,
+        [استنسخ(&علامة_الكل_في_الحزمة)]);
+    تحقق_اختبار(الملخص, اسم_حالة_اختبار(&ل, «--tests-in»),
+        [«--lang», استنسخ(&ل), «test», استنسخ(&الرسم), استنسخ(&في_البرنامج), استنسخ(&البرنامج)], 0,
+        [استنسخ(&اسم_اختبار_البرنامج), استنسخ(&علامة_البرنامج_وحده)]);
+    تحقق_اختبار(الملخص, اسم_حالة_اختبار(&ل, «--tests-in لملف خارج البرنامج»),
+        [«--lang», استنسخ(&ل), «--color», «never», «test», استنسخ(&الرسم), «--tests-in=no/such/file.sn», استنسخ(&البرنامج)], 2,
+        [«SULTANC-TEST-FILE-NOT-IN-PROGRAM», «no/such/file.sn»]);
+    // The graph on standard input, run in the package's folder.
+    تحقق_اختبار_بدخل(الملخص, اسم_حالة_اختبار(&ل, «--package-graph=- مع test»), استنسخ(&دليل_الحزمة),
+        [«--lang», استنسخ(&ل), «test», «--package-graph=-», «--tests-in=src/main.sn», «src/main.sn»], «graph.toml», 0,
+        [استنسخ(&علامة_البرنامج_وحده)]);
+    تحقق_اختبار_بدخل(الملخص, اسم_حالة_اختبار(&ل, «--package-graph=- مع test --interpret»), استنسخ(&دليل_الحزمة),
+        [«--lang», استنسخ(&ل), «test», «--interpret», «--package-graph=-», «src/main.sn»], «graph.toml», 0,
+        [استنسخ(&علامة_الكل_في_الحزمة)]);
+    تحقق_اختبار_بدخل(الملخص, اسم_حالة_اختبار(&ل, «--package-graph - مع check»), استنسخ(&دليل_الحزمة),
+        [«--lang», استنسخ(&ل), «check», «--package-graph», «-», «src/main.sn»], «graph.toml», 0, []);
+    تحقق_اختبار_بدخل(الملخص, اسم_حالة_اختبار(&ل, «--package-graph=- مع run»), استنسخ(&دليل_الحزمة),
+        [«--lang», استنسخ(&ل), «--package-graph=-», «run», «src/main.sn»], «graph.toml», 0, []);
+}
+
+عام عرف اختبر_وضع_الاختبار(الملخص: &متغير ملخص_اختبارات): فراغ {
+    اختبر_وضع_الاختبار_لغة(الملخص, «en»,
+        [
+            «PASS doubles», «FAIL assertion_fails: exit status 1», «An assertion failed»,
+            // The assertion's place (@@track_caller), then the declaration.
+            «--> tests/runner/fixtures/testing/en/main.sn:19:5», «note: the test is declared at»,
+            «FAIL panics: exit status 1», «something went wrong»,
+            «FAIL returns_error: returned an error», «double(20) is 40, expected 41»,
+            «FAIL exits_seven: exit status 7», «main.sn:36:5», «PASS double_is_even»,
+            «test result: FAILED. passed: 2; failed: 4; filtered out: 0»
+        ],
+        «test result: ok. passed: 3; failed: 0; filtered out: 0»,
+        «double», «passed: 2; failed: 0; filtered out: 4»,
+        «the tests were built, not run», «double_is_even»
+    );
+    اختبر_وضع_الاختبار_لغة(الملخص, «ar»,
+        [
+            «نجح يضاعف», «فشل تأكيد_فاشل: حالة الخروج 1», «فشل تأكيد.»,
+            «--> tests/runner/fixtures/testing/ar/main.sn:19:5», «ملاحظة: الاختبار مصرح به في»,
+            «فشل ينهار: حالة الخروج 1», «حدث خطأ ما»,
+            «فشل يرجع_خطأ: أرجع خطأ», «ضاعف(20) هو 40، والمتوقع 41»,
+            «فشل يخرج_بسبعة: حالة الخروج 7», «main.sn:36:5», «نجح المضاعف_زوجي»,
+            «نتيجة الاختبارات: فاشلة. نجح: 2؛ فشل: 4؛ استُبعد: 0»
+        ],
+        «نتيجة الاختبارات: ناجحة. نجح: 3؛ فشل: 0؛ استُبعد: 0»,
+        «ضاعف», «نجح: 2؛ فشل: 0؛ استُبعد: 4»,
+        «بُنيت الاختبارات ولم تُشغَّل», «المضاعف_زوجي»
+    );
+    اختبر_اختيار_الاختبارات_لغة(الملخص, «en», «doubles», «panics»,
+        «passed: 1; failed: 0; filtered out: 5», «passed: 2; failed: 0; filtered out: 0»,
+        «passed: 1; failed: 0; filtered out: 1», «PASS program_triples»);
+    اختبر_اختيار_الاختبارات_لغة(الملخص, «ar», «يضاعف», «ينهار»,
+        «نجح: 1؛ فشل: 0؛ استُبعد: 5», «نجح: 2؛ فشل: 0؛ استُبعد: 0»,
+        «نجح: 1؛ فشل: 0؛ استُبعد: 1», «نجح البرنامج_يضاعف_ثلاثا»);
+}

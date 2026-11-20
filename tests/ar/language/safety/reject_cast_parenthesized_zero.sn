@@ -1,0 +1,12 @@
+// اختبار: رفض
+// أهداف: arm64-darwin,x86_64-linux
+// تشخيص: SULTANC-SAFETY-UNSAFE-OPERATION
+// نظير: tests/en/language/safety/reject_cast_parenthesized_zero.sn
+// لا يُستثنى إلا الحرفي المجرد `0 مثل *T`: أما `(0)` فلا.
+نوع أول = { القيمة: عدد };
+نوع ثان = { أخرى: عدد };
+
+عرف الرئيسية(): عدد {
+    دع م: *أول = (0) مثل *أول;
+    أرجع 0;
+}

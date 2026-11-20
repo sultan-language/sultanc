@@ -1,0 +1,11 @@
+// اختبار: رفض
+// أهداف: arm64-darwin,x86_64-linux
+// تشخيص: SULTANC-TYPE-OPAQUE-DEREFERENCE
+// نظير: tests/ar/language/opaque/reject_dereference.sn
+// Dereferencing a pointer to an opaque type, even inside unsafe.
+type Db = opaque;
+def main(): int {
+    let p: *Db = 0 as *Db;
+    unsafe { let x: int = *p; };
+    return 0;
+}

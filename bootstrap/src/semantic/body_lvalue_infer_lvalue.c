@@ -1,6 +1,7 @@
 /* Resolves lvalue types and access rules. */
 
 #include "semantic/body_internal.h"
+#include "semantic/generic.h"
 #include "kernel/name/name.h"
 
 #include <stdio.h>
@@ -109,6 +110,30 @@ static int __Body_Infer_Lvalue_Access__(__Semantic_Body_Context__ *__Context__,
         return __Body_Fail__(__Context__, __E0300_Unknown_Name__, (__Source_Span__){0});
     }
 
+    if (__Lvalue__->__Kind__ == __Ast_Lvalue_Base__ &&
+        __Lvalue__->__As__.__Base__.__Kind__ == __Ast_Lvalue_Base_Call__)
+    {
+        /* A call result: a fresh temporary that can be read, never written. */
+        if (!__Require_Read__)
+        {
+            return __Body_Fail__(__Context__, __E0703_Write_To_Immutable__,
+                                 __Lvalue__->__Header__.__Span__);
+        }
+        if (!__Body_Infer_Expression__(__Context__, __Lvalue__->__As__.__Base__.__As__.__Call__,
+                                       __Out_Type__))
+        {
+            return 0;
+        }
+        if (*__Out_Type__ != NULL)
+        {
+            /* The emitter reads this Type after the body check. */
+            __Lvalue__->__As__.__Base__.__As__.__Call__->__Contextual_Type__ =
+                __Semantic_Generic_Substitute_Type__(__Context__->__Semantic__, *__Out_Type__, NULL,
+                                                     NULL, 0U, NULL);
+        }
+        return 1;
+    }
+
     if (__Lvalue__->__Kind__ == __Ast_Lvalue_Base__)
     {
         /* References the local. */
@@ -131,6 +156,41 @@ static int __Body_Infer_Lvalue_Access__(__Semantic_Body_Context__ *__Context__,
                                          __Lvalue__->__Header__.__Span__);
                 }
                 return 1;
+            }
+            if (__Lvalue__->__As__.__Base__.__Kind__ == __Ast_Lvalue_Base_Identifier__)
+            {
+                /* Module-level values (canonical قيمة_عليا) are places after locals
+                 * and functions. Their declared Type is the value Type; a top-level
+                 * متغير wrapper is the only form that permits writes. */
+                __Semantic_Global_Entry__ *__Global__ = NULL;
+                __Name_Lookup_Status__ __Global_Status__ = __Name_Resolve_Global__(
+                    __Context__->__Semantic__, __Context__->__Function__->__Unit__,
+                    __Lvalue__->__As__.__Base__.__As__.__Identifier__, &__Global__);
+
+                if (__Global_Status__ == __Name_Lookup_Found__ && __Global__ != NULL &&
+                    __Global__->__Declaration__ != NULL)
+                {
+                    __Ast_Type__ *__Declared__ = __Global__->__Declaration__->__Type__;
+                    if (__Declared__ == NULL)
+                    {
+                        return __Body_Fail__(__Context__, __E0409_Unresolved_Type__,
+                                             __Lvalue__->__Header__.__Span__);
+                    }
+                    if (!__Require_Read__ && __Declared__->__Kind__ != __Ast_Type_Mutable__)
+                    {
+                        return __Body_Fail__(__Context__, __E0703_Write_To_Immutable__,
+                                             __Lvalue__->__Header__.__Span__);
+                    }
+                    *__Out_Type__ = __Type_Unwrap_Mutable__(__Declared__);
+                    return 1;
+                }
+                if (__Global_Status__ == __Name_Lookup_Private__ ||
+                    __Global_Status__ == __Name_Lookup_Ambiguous__)
+                {
+                    return __Body_Fail__(__Context__,
+                                         __Name_Lookup_Error_Id__(__Global_Status__),
+                                         __Lvalue__->__Header__.__Span__);
+                }
             }
             return __Body_Fail__(
                 __Context__, __E0300_Unknown_Name__, __Lvalue__->__Header__.__Span__);
@@ -203,8 +263,8 @@ static int __Body_Infer_Lvalue_Access__(__Semantic_Body_Context__ *__Context__,
         if (!__Body_Infer_Lvalue_Access__(
                 __Context__, __Lvalue__->__As__.__Index__.__Parent__, &__Parent_Type__, NULL,
                 __Require_Read__) ||
-            !__Body_Infer_Atom__(
-                __Context__, &__Lvalue__->__As__.__Index__.__Index__, &__Index_Type__))
+            !__Body_Infer_Expression__(
+                __Context__, __Lvalue__->__As__.__Index__.__Index__, &__Index_Type__))
         {
             return 0;
         }
@@ -225,8 +285,8 @@ static int __Body_Infer_Lvalue_Access__(__Semantic_Body_Context__ *__Context__,
         {
             /* Tracks the known index. */
             int64_t __Known_Index__ = 0;
-            if (__Semantic_Integer_Literal_Atom_Value__(&__Lvalue__->__As__.__Index__.__Index__,
-                                                        &__Known_Index__))
+            if (__Semantic_Integer_Literal_Expression_Value__(
+                    __Lvalue__->__As__.__Index__.__Index__, &__Known_Index__))
             {
                 /* References the sequence local. */
                 __Semantic_Local__ *__Sequence_Local__ =
@@ -280,9 +340,17 @@ static int __Body_Infer_Lvalue_Access__(__Semantic_Body_Context__ *__Context__,
             }
         }
 
+        if (__Resolved__.__Kind__ == __Resolved_Type_Pointer__ &&
+            __Context__->__Unsafe_Depth__ == 0U)
+        {
+            return __Body_Fail__(
+                __Context__, __E0400_Mismatched_Types__, __Lvalue__->__Header__.__Span__);
+        }
+
         if (__Resolved__.__Kind__ != __Resolved_Type_Vector__ &&
             __Resolved__.__Kind__ != __Resolved_Type_String__ &&
-            __Resolved__.__Kind__ != __Resolved_Type_Box__)
+            __Resolved__.__Kind__ != __Resolved_Type_Box__ &&
+            __Resolved__.__Kind__ != __Resolved_Type_Pointer__)
         {
             return __Body_Fail__(
                 __Context__, __E0400_Mismatched_Types__, __Lvalue__->__Header__.__Span__);
@@ -318,6 +386,29 @@ static int __Body_Infer_Lvalue_Access__(__Semantic_Body_Context__ *__Context__,
             !__Type_Resolve__(__Context__->__Semantic__, __Parent_Type__, &__Resolved__))
         {
             return 0;
+        }
+
+        if (__Resolved__.__Kind__ == __Resolved_Type_Pointer__ && __Resolved__.__Inner__ != NULL)
+        {
+            /* `(*p).f` through a raw pointer is the place at the pointed
+             * address (docs/en/reference/concurrency.md, std.sync.atomic):
+             * only inside غير_آمن, as indexing a raw pointer is. A write
+             * needs a pointer to mutable storage (`*متغير T`). */
+            __Resolved_Type__ __Pointee__;
+            if (__Context__->__Unsafe_Depth__ == 0U)
+            {
+                return __Body_Fail__(
+                    __Context__, __E0400_Mismatched_Types__, __Lvalue__->__Header__.__Span__);
+            }
+            if (!__Require_Read__ &&
+                (!__Type_Resolve__(__Context__->__Semantic__, __Resolved__.__Inner__, &__Pointee__) ||
+                 !__Pointee__.__Mutable__))
+            {
+                return __Body_Fail__(
+                    __Context__, __E0703_Write_To_Immutable__, __Lvalue__->__Header__.__Span__);
+            }
+            *__Out_Type__ = __Type_Unwrap_Mutable__(__Resolved__.__Inner__);
+            return 1;
         }
 
         if (__Resolved__.__Kind__ != __Resolved_Type_Reference__ &&

@@ -1,0 +1,21 @@
+// اختبار: رفض
+// تشخيص: SULTANC-NAME-UNKNOWN
+// نظير: tests/ar/diagnostics/e2e/unknown_names_suggest.sn
+// خرج-تشخيص-عربي: unknown_names_suggest.ar.stderr
+// خرج-تشخيص-إنجليزي: unknown_names_suggest.en.stderr
+// Every unknown name of the module is reported, each with its own evidence:
+// a visible name of close spelling (help and a maybe-incorrect fix), none for
+// a name with no close candidate, and none for a local inside its own
+// declaration (`let total = totl`).
+def helper(value: i32): i32 {
+    return value;
+}
+def main(): i32 {
+    let count: i32 = 3;
+    let عداد_الأسطر: i32 = 4;
+    let first: i32 = cuont + 1;
+    let second: i32 = hlper(2);
+    let third: i32 = عداد_الأسطور + 1;
+    let total: i32 = totl;
+    return first + second + third + total + missing_value;
+}

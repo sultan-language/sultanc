@@ -1,0 +1,68 @@
+// اختبار: تشغيل
+// أهداف: x86_64-linux
+// خروج: 0
+// std.sync.channel: 4 producer threads each send 2 500 numbers through their
+// own clone of one Sender; the receiver sums them until recv reports that
+// every sender is gone. The producers' senders drop when their threads
+// finish, and the main thread drops its own with drop_sender; no message is
+// lost or repeated, and each producer's messages arrive in its order.
+// Counterpart: tests/ar/stdlib/behavior/sync_channel_producers.sn. No pair
+// directive: the interpreter runs one thread.
+import std.sync.channel;
+import std.thread.thread;
+
+def produce(tx: &sender<i64>, producer: i64): void {
+    let i: mutable i64 = 0;
+    while (i < 2500) {
+        match send(tx, producer * 10000 + i) with
+        | result.ok(_) -> { }
+        | result.err(_) -> { return; };
+        i := i + 1;
+    }
+}
+
+def start(tx: &sender<i64>, producer: i64): option join_handle {
+    let mine: sender<i64> = sender_clone(tx);
+    match spawn(fn(): void -> produce(&mine, producer)) with
+    | result.ok(h) -> { return option.some(h); }
+    | result.err(_) -> { return option.none(); };
+}
+
+def main(): i32 {
+    let tx: sender<i64>;
+    let rx: receiver<i64>;
+    let ends: channel_ends<i64> = channel();
+    match ends with
+    | { المرسل: s, المستلم: r } -> { tx := s; rx := r; };
+    let handles: mutable vector join_handle = [];
+    let p: mutable i64 = 0;
+    while (p < 4) {
+        match start(&tx, p) with
+        | option.some(h) -> { append(handles, h); }
+        | option.none -> { return 1; };
+        p := p + 1;
+    }
+    drop_sender(tx);
+    let last: mutable vector i64 = [-1 as i64, -1 as i64, -1 as i64, -1 as i64];
+    let sum: mutable i64 = 0;
+    let count: mutable i64 = 0;
+    let going: mutable bool = true;
+    while (going) {
+        match recv(&rx) with
+        | result.ok(v) -> {
+            let producer: i64 = v / 10000;
+            let n: i64 = v % 10000;
+            if (n <= last[producer as uint]) { return 2; };
+            last[producer as uint] := n;
+            sum := sum + n;
+            count := count + 1;
+        }
+        | result.err(_) -> { going := false; };
+    }
+    let j: mutable uint = 0;
+    while (j < (length(handles) as uint)) { join(&mutable handles[j]); j := j + 1; }
+    if (count != (10000 as i64)) { return 3; };
+    // Four times 0 + 1 + ... + 2499.
+    if (sum != (12495000 as i64)) { return 4; };
+    return 0;
+}

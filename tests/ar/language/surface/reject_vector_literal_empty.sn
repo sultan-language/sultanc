@@ -1,0 +1,6 @@
+// اختبار: رفض
+// خروج: 1
+// تشخيص: SULTANC-TYPE-MISMATCH
+// نظير: tests/en/language/surface/reject_vector_literal_empty.sn
+// يأخذ `[]` نوعه من سياقه؛ وبلا سياق يبقى نوع عناصره مجهولا.
+عرف الرئيسية(): عدد { أرجع الطول([]) مثل عدد; }

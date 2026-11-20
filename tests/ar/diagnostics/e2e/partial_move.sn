@@ -1,0 +1,14 @@
+// اختبار: رفض
+// تشخيص: SULTANC-OWNERSHIP-PARTIAL-MOVE
+// نظير: tests/en/diagnostics/e2e/partial_move.sn
+// خرج-تشخيص-عربي: partial_move.ar.stderr
+// خرج-تشخيص-إنجليزي: partial_move.en.stderr
+// Moving one element out of an owned vector is marked at the element.
+عرف الرئيسية(): عدد {
+    دع الأجزاء: متجه نص = [«الأول», «الثاني»];
+    أرجع خذ(الأجزاء[1]);
+}
+
+عرف خذ(النص: نص): عدد {
+    أرجع الطول(النص) مثل عدد;
+}

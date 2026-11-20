@@ -1,0 +1,11 @@
+// Check the HTTP request method token (no network request).
+import std.io.println;
+import std.text.number;
+import std.http.headers;
+
+
+def main(): int {
+    let method: string = "GET";
+    if (طريقة_ويب_صالحة(&method)) { println("valid request method"); } else { return 1; };
+    return 0;
+}

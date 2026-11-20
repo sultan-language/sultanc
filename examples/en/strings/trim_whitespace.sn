@@ -1,0 +1,10 @@
+// Trim leading and trailing whitespace.
+import std.io.println;
+import std.text.transform;
+
+
+def main(): int {
+    let text: string = "  padded  ";
+    println(trim(&text));
+    return 0;
+}

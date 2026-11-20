@@ -1,0 +1,145 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/stdlib/behavior/fs_links_attributes.sn
+// std.fs links, permissions, sizes, times, canonical paths and temporary
+// files in a fresh temporary directory, removed at the end.
+import std.fs.links;
+import std.fs.permissions;
+import std.fs.attributes;
+import std.fs.canonical;
+import std.fs.temporary;
+import std.fs.write_file;
+import std.fs.read_file;
+import std.fs.metadata;
+import std.fs.mutation;
+import std.fs.handle;
+import std.fs.path;
+import std.fs.error;
+import std.text.compare;
+
+def main(): int {
+    let prefix: string = "sultanc-fs-";
+    let dir: mutable string = "";
+    match create_temp_dir(&prefix) with
+    | result.err(_) -> { return 1; }
+    | result.ok(created) -> { dir := created; };
+    let name: string = "a.txt";
+    let file: string = join(&dir, &name);
+    let content: string = "hello world";
+    match write_file(&file, &content) with
+    | result.err(_) -> { return 2; }
+    | result.ok(_) -> {};
+    match truncate_file(&file, 5) with
+    | result.err(_) -> { return 3; }
+    | result.ok(_) -> {};
+    match path_size(&file) with
+    | result.err(_) -> { return 4; }
+    | result.ok(size) -> { if (size != 5) { return 5; }; };
+
+    // A relative symlink, read back as written and resolved by canonicalize.
+    let link_name: string = "link";
+    let link: string = join(&dir, &link_name);
+    match symlink(&name, &link) with
+    | result.err(_) -> { return 6; }
+    | result.ok(_) -> {};
+    match read_link(&link) with
+    | result.err(_) -> { return 7; }
+    | result.ok(target) -> { if (!texts_equal(&target, &name)) { return 8; }; };
+    match canonicalize(&link) with
+    | result.err(_) -> { return 9; }
+    | result.ok(through_link) -> {
+        match canonicalize(&file) with
+        | result.err(_) -> { return 10; }
+        | result.ok(direct) -> { if (!texts_equal(&through_link, &direct)) { return 11; }; };
+    };
+    let missing_name: string = "missing";
+    let missing: string = join(&dir, &missing_name);
+    match canonicalize(&missing) with
+    | result.err(os_error_class.not_found) -> {}
+    | result.err(_) -> { return 12; }
+    | result.ok(_) -> { return 13; };
+    match absolute(&name) with
+    | result.err(_) -> { return 14; }
+    | result.ok(full) -> { if (!is_absolute(&full)) { return 15; }; };
+
+    // A hard link shares the contents.
+    let hard_name: string = "hard";
+    let hard: string = join(&dir, &hard_name);
+    match hard_link(&file, &hard) with
+    | result.err(_) -> { return 16; }
+    | result.ok(_) -> {};
+    match read_file(&hard) with
+    | result.err(_) -> { return 17; }
+    | result.ok(text) -> { let expected: string = "hello"; if (!texts_equal(&text, &expected)) { return 18; }; };
+
+    // 0o444 is read-only, 0o640 is not.
+    match set_permissions(&file, 292) with
+    | result.err(_) -> { return 19; }
+    | result.ok(_) -> {};
+    match permissions(&file) with
+    | result.err(_) -> { return 20; }
+    | result.ok(mode) -> { if (mode != 292 || !is_readonly(mode)) { return 21; }; };
+    match set_permissions(&file, 416) with
+    | result.err(_) -> { return 22; }
+    | result.ok(_) -> {};
+    match permissions(&file) with
+    | result.err(_) -> { return 23; }
+    | result.ok(mode) -> { if (mode != 416 || is_readonly(mode)) { return 24; }; };
+    match set_permissions(&file, 8192) with
+    | result.err(os_error_class.invalid_input) -> {}
+    | result.err(_) -> { return 25; }
+    | result.ok(_) -> { return 26; };
+
+    // Times in nanoseconds since the epoch (compared to the second).
+    match set_file_times(&file, 1000000000123456789, 1600000000987654321) with
+    | result.err(_) -> { return 27; }
+    | result.ok(_) -> {};
+    match path_modified_time_ns(&file) with
+    | result.err(_) -> { return 28; }
+    | result.ok(time) -> { if (time / 1000000000 != 1600000000) { return 29; }; };
+
+    // A temporary file, written, shortened through its handle and closed.
+    let temp_path: mutable string = "";
+    match create_temp_file_in(&dir, &prefix) with
+    | result.err(_) -> { return 30; }
+    | result.ok({ المسار: path, المقبض: handle }) -> {
+        temp_path := path;
+        let data: vector u8 = [1, 2, 3, 4];
+        match file_handle_write(&handle, &data, 0, 4) with
+        | result.err(_) -> { return 31; }
+        | result.ok(_) -> {};
+        match file_handle_set_len(&handle, 2) with
+        | result.err(_) -> { return 32; }
+        | result.ok(_) -> {};
+        match file_handle_close(handle) with
+        | result.err(_) -> { return 33; }
+        | result.ok(_) -> {};
+    };
+    match path_size(&temp_path) with
+    | result.err(_) -> { return 34; }
+    | result.ok(size) -> { if (size != 2) { return 35; }; };
+    let bad_prefix: string = "a/b";
+    match create_temp_file_in(&dir, &bad_prefix) with
+    | result.err(os_error_class.invalid_input) -> {}
+    | result.err(_) -> { return 36; }
+    | result.ok(_) -> { return 37; };
+
+    match remove_file(&temp_path) with
+    | result.err(_) -> { return 38; }
+    | result.ok(_) -> {};
+    match remove_file(&hard) with
+    | result.err(_) -> { return 39; }
+    | result.ok(_) -> {};
+    match remove_file(&link) with
+    | result.err(_) -> { return 40; }
+    | result.ok(_) -> {};
+    match remove_file(&file) with
+    | result.err(_) -> { return 41; }
+    | result.ok(_) -> {};
+    match remove_directory(&dir) with
+    | result.err(_) -> { return 43; }
+    | result.ok(_) -> {};
+    return 42;
+}

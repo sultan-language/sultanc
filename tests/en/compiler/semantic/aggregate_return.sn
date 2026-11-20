@@ -1,0 +1,11 @@
+type Pair = { left: i32, right: i32 };
+
+def make(): Pair {
+    let pair: Pair = { left: 40, right: 2 };
+    return pair;
+}
+
+def main(): i32 {
+    let pair: Pair = make();
+    return pair.left + pair.right;
+}

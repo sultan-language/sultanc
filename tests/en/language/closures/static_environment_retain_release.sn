@@ -1,0 +1,57 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// نظير: tests/ar/language/closures/static_environment_retain_release.sn
+// Retain and release on static closure environments
+// (compiler/msir/static_environments.sn) in a loop: capture-free function
+// values copied, returned, kept in records, vectors and options, reassigned
+// and dropped, 10^5 times. Each copy retains and each drop releases the one
+// shared count, which never reaches zero, so the environment is never
+// destroyed and every value keeps calling its function.
+type Holder = { f: fn(int): int, bias: int };
+
+def negate(x: int): int { return 0 - x; }
+
+def keep(f: fn(int): int): fn(int): int { return f; }
+
+def round(i: int): int {
+    let a: fn(int): int = negate;
+    let b: fn(int): int = a;
+    let c: fn(int): int = keep(b);
+    let h: Holder = { f: c, bias: i };
+    let h2: Holder = h;
+    let fs: mutable vector fn(int): int = [];
+    append(fs, a);
+    append(fs, fn(x: int): int -> x + 2);
+    let o: option fn(int): int = option.some(keep(a));
+    let r: mutable fn(int): int = a;
+    r := fn(x: int): int -> x * 2;
+    r := c;
+    // -1 - 2 + 0 - 3
+    let total: mutable int = h.f(1) + h2.f(2) + (h2.bias - i) + r(3);
+    let j: mutable uint = 0;
+    // -1 + 3
+    while (j < (length(fs) as uint)) {
+        let fj: fn(int): int = fs[j];
+        total := total + fj(1);
+        j := j + 1;
+    }
+    // -5
+    match o with
+    | option.some(g) -> { total := total + g(5); }
+    | option.none -> { };
+    return total;
+}
+
+def main(): int {
+    let i: mutable int = 0;
+    let sum: mutable int = 0;
+    while (i < 100000) {
+        sum := sum + round(i);
+        i := i + 1;
+    }
+    if (sum != -900000) { return 1; };
+    let n: fn(int): int = negate;
+    if (n(-42) != 42) { return 2; };
+    return 42;
+}

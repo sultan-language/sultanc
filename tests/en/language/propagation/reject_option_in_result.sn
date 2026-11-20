@@ -1,0 +1,16 @@
+// اختبار: رفض
+// تشخيص: SULTANC-PATTERN-INVALID
+// نظير: tests/ar/language/propagation/reject_option_in_result.sn
+// `?` on an option inside a function returning a result: there is no error
+// to return, so the expansion's result arms do not fit the option, reported
+// at the `?`.
+def choose(x: int): option int {
+    return option.some(x);
+}
+
+def convert(x: int): result int, string {
+    let v: int = choose(x)?;
+    return result.ok(v);
+}
+
+def main(): int { return 0; }

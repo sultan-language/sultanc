@@ -1,0 +1,12 @@
+// Self-checking example: assertions.
+import std.io.println;
+import std.text.number;
+import std.debug.assert;
+
+
+def main(): int {
+    let value: int = 2 * 21;
+    assert(value == 42);
+    println(int_to_text(value));
+    return 0;
+}

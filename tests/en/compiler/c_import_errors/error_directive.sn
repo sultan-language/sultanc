@@ -1,0 +1,8 @@
+// اختبار: رفض
+// تشخيص: SULTANC-C-ERROR-DIRECTIVE
+// نظير: tests/ar/compiler/c_import_errors/error_directive.sn
+// Jisr reports #error in an active group in an imported header as SULTANC-C-ERROR-DIRECTIVE, with the
+// header's file:line:column, and the import fails at compile time.
+import "error_directive.h";
+
+def main(): int { return 0; }

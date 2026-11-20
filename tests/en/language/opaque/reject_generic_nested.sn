@@ -1,0 +1,13 @@
+// اختبار: رفض
+// أهداف: arm64-darwin,x86_64-linux
+// تشخيص: SULTANC-TYPE-OPAQUE-TYPE-ARGUMENT
+// نظير: tests/ar/language/opaque/reject_generic_nested.sn
+// The by-value use is two instantiations deep; the error points at the
+// user's call and at the use.
+type Db = opaque;
+def inner<A>(p: *A): int {
+    unsafe { let copy: A = *p; };
+    return 0;
+}
+def outer<A>(p: *A): int { return inner(p); }
+def main(): int { return outer(0 as *Db); }

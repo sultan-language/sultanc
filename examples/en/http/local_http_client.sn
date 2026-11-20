@@ -1,0 +1,11 @@
+// Check HTTP header names: local_http_client.
+import std.io.println;
+import std.text.number;
+import std.http.headers;
+
+
+def main(): int {
+    let header: string = "Content-Type";
+    if (اسم_رأس_ويب_صالح(&header)) { println("valid header"); };
+    return 0;
+}

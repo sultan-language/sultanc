@@ -35,14 +35,18 @@ typedef struct
     __Vector__ __Units__;
     /* Stores loaded program units. */
     char *__Project_Root__;
+    /* Borrows the selected compilation target. Top-level target conditions in
+     * every loaded unit are evaluated against this one canonical target. */
+    const __Bootstrap_Target__ *__Target__;
     /* Stores the diagnostic. */
     __Diagnostic__ __Diagnostic__;
     /* Tracks the failed state. */
     int __Failed__;
 } __Program__;
 
-/* Lifecycle: Init -> Load_Root -> Destroy. */
-void __Program_Init__(__Program__ *__Program_State__);
+/* Lifecycle: Init -> Load_Root -> Destroy. The target is borrowed and must
+ * outlive the program; NULL selects no target (target conditions are errors). */
+void __Program_Init__(__Program__ *__Program_State__, const __Bootstrap_Target__ *__Target__);
 
 /* Releases the program. */
 void __Program_Destroy__(__Program__ *__Program_State__);

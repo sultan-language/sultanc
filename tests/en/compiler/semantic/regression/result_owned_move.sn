@@ -1,0 +1,8 @@
+def main(): int {
+    let text: string = "hello";
+    let wrapped: result string, int = result.ok(text);
+    let moved: result string, int = wrapped;
+    match wrapped with
+    | result.ok(value) -> { return length(value); }
+    | result.err(error) -> { return error; }
+}

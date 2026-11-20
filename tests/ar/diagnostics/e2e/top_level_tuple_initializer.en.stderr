@@ -1,0 +1,7 @@
+error[SULTANC-PARSE-ITEM]: Cannot parse the declaration or item syntax — A top-level value cannot be initialized with a record, tuple or box literal.
+  --> tests/ar/diagnostics/e2e/top_level_tuple_initializer.sn:7:23..7:31
+   |
+ 7 | دع الزوج: (عدد, نص) = (1, "x");
+   |                       ^^^^^^^^
+   |
+  = help: declare the value inside the function that uses it

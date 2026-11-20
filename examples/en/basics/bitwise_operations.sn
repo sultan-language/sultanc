@@ -1,0 +1,10 @@
+// Basic bitwise operations example.
+import std.io.println;
+import std.text.number;
+
+
+def main(): int {
+    let x: int = 46;
+    println(int_to_text((x & 15) | 16));
+    return 0;
+}

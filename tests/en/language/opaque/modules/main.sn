@@ -1,0 +1,21 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/language/opaque/modules/main.sn
+// Public opaque types used from another module: their pointers are passed,
+// returned, stored and compared, and a public alias is the same type.
+import "store.sn";
+
+type Session = { connection: *Handle, statements: vector *Statement };
+
+def main(): int {
+    let connection: *Connection = connect(4096);
+    let statement: *Statement = prepare(connection);
+    let session: Session = { connection: connection, statements: [statement] };
+    let total: mutable int = 0;
+    if (session.connection == connection) { total := total + 10; };
+    if (session.statements[0] != 0 as *Statement) { total := total + 16; };
+    total := total + statement_offset(session.connection, session.statements[0]) as int;
+    return total;
+}

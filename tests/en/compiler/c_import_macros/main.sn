@@ -1,0 +1,33 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// نظير: tests/ar/compiler/c_import_macros/main.sn
+// Jisr's preprocessor (compiler/jisr/preprocessor.sn): an
+// object-like macro becomes a constant when its full expansion is an integer
+// constant expression (typed as C types it), a floating literal or a string
+// literal. Function-like macros expand inside them, with # and ##,
+// __VA_ARGS__, __VA_OPT__ and `, ## __VA_ARGS__`; conditionals use defined,
+// __has_include and short-circuit evaluation; an include guard and #pragma
+// once keep a header from being read twice.
+import "macros.h";
+
+def main(): int {
+    if (AREA != 49 || SUM3 != 15) { return 1; };
+    if (length(VERSION_TEXT) != 4 || VERSION_TEXT[0] != 51 || VERSION_TEXT[1] != 46 || VERSION_TEXT[3] != 52) { return 2; };
+    if (CAT_VALUE != 31 || BITS_7 != 128 || BIT7 != 128) { return 2; };
+    if (ARGS_THREE != 3 || FIRST_OF != 41 || PICKED != 9 || OPT_SOME != 6 || OPT_NONE != 5) { return 3; };
+    if (LATER != 101 || CHOSEN != 1 || HAS_INCLUDE_WORKS != 1 || SHORT_CIRCUIT != 1) { return 4; };
+    if (C_VERSION != 201710 || CHANGING != 2) { return 5; };
+    // The C type of each value decides its SultanC type.
+    let big: u32 = BIG_UNSIGNED;
+    let wide: i64 = BIG_LONG_LONG;
+    let least: i32 = NEGATIVE_LIMIT;
+    let shifted: u32 = SHIFTED;
+    if (big != 4294967295 || wide != 4294967296 || least != -2147483647 - 1 || shifted != 2147483648) { return 6; };
+    if (CHAR_VALUE != 65 || ESCAPED_CHAR != 10 || SIZE_OF_INT != 4) { return 7; };
+    if (HALF != 0.5 || TINY > 0.0011 || TINY < 0.0009) { return 8; };
+    if (length(GREETING) != 12) { return 9; };
+    // Enumerators from macros and from each other, guarded headers once.
+    if (RED != 5 || GREEN != 10 || BLUE != 17 || GUARD_VALUE != 5 || ONCE_VALUE != 7) { return 10; };
+    return 42;
+}

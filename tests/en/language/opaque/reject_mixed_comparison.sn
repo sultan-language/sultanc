@@ -1,0 +1,13 @@
+// اختبار: رفض
+// أهداف: arm64-darwin,x86_64-linux
+// تشخيص: SULTANC-TYPE-MISMATCH
+// نظير: tests/ar/language/opaque/reject_mixed_comparison.sn
+// == between pointers to two different opaque types.
+type Db = opaque;
+type Stmt = opaque;
+def main(): int {
+    let db: *Db = 0 as *Db;
+    let stmt: *Stmt = 0 as *Stmt;
+    if (db == stmt) { return 1; };
+    return 0;
+}

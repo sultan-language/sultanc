@@ -1,0 +1,163 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/stdlib/fmt/custom.sn
+// std.fmt custom formatters, the Display and Debug of user types: a closure
+// that writes into the formatter with format_into, write_str, write_char and
+// pad, reads the placeholder's spec (Rust's Formatter::width, precision,
+// fill, align, alternate, sign_plus, sign_aware_zero_pad), formats Debug and
+// pretty Debug ({:#?}, nested inside a list), and leaves the list's spec to
+// the next element. Closures capture plain values only (numbers, booleans,
+// records of them), so a type that owns text is written by its own function
+// into a formatter and passed as text, moved out without a copy. A formatter
+// is reused across writes.
+import std.fmt.fmt;
+import std.text.compare;
+import std.text.number;
+import std.io.print;
+
+type Point = { x: int, y: int };
+type Named = { name: string, id: int };
+
+// Display "(x, y)"; Debug "Point { x: 1, y: 2 }"; pretty Debug on lines.
+def show_point(p: &Point, f: &mutable formatter): result uint, fmt_error {
+    if (formatter_debug(f)) {
+        if (formatter_alternate(f)) { return format_into(f, "Point {{\n    x: {},\n    y: {},\n}}", [fmt_arg.int((*p).x), fmt_arg.int((*p).y)]); };
+        return format_into(f, "Point {{ x: {}, y: {} }}", [fmt_arg.int((*p).x), fmt_arg.int((*p).y)]);
+    };
+    return format_into(f, "({}, {})", [fmt_arg.int((*p).x), fmt_arg.int((*p).y)]);
+}
+
+// Display through pad: width, alignment and precision apply to the stars.
+def show_stars(count: int, f: &mutable formatter): result uint, fmt_error {
+    let stars: mutable formatter = new_formatter();
+    let i: mutable int = 0;
+    while (i < count) { let w: result uint, fmt_error = write_char(&mutable stars, '★'); i := i + 1; }
+    let text: string = take_formatter_text(&mutable stars);
+    return pad(f, &text);
+}
+
+// A type that owns text: its formatting function writes into a formatter.
+def write_named(n: &Named, f: &mutable formatter): result uint, fmt_error {
+    return format_into(f, "{}#{}", [fmt_arg.text(&(*n).name), fmt_arg.int((*n).id)]);
+}
+
+// Writes what the placeholder asked for.
+def show_spec(f: &mutable formatter): result uint, fmt_error {
+    let width: mutable int = -1;
+    match formatter_width(f) with
+    | option.some(w) -> { width := w as int; }
+    | option.none -> { };
+    let precision: mutable int = -1;
+    match formatter_precision(f) with
+    | option.some(p) -> { precision := p as int; }
+    | option.none -> { };
+    let align: mutable string = "none";
+    match formatter_align(f) with
+    | محاذاة_تنسيق.يسار -> { align := "left"; }
+    | محاذاة_تنسيق.وسط -> { align := "center"; }
+    | محاذاة_تنسيق.يمين -> { align := "right"; }
+    | محاذاة_تنسيق.بلا -> { };
+    let kind: mutable string = "display";
+    match formatter_kind(f) with
+    | صيغة_تنسيق.تصحيح -> { kind := "debug"; }
+    | صيغة_تنسيق.ست_عشري -> { kind := "lower_hex"; }
+    | _ -> { };
+    let args: vector fmt_arg = [
+        fmt_arg.int(width), fmt_arg.int(precision), fmt_arg.u32(formatter_fill(f)), fmt_arg.text(&align),
+        fmt_arg.bool(formatter_alternate(f)), fmt_arg.bool(formatter_sign_plus(f)),
+        fmt_arg.bool(formatter_sign_aware_zero_pad(f)), fmt_arg.text(&kind)
+    ];
+    return format_into(f, "w={} p={} fill={} align={} alt={} plus={} zero={} kind={}", args);
+}
+
+// Writes a character and a text directly.
+def show_raw(f: &mutable formatter): result uint, fmt_error {
+    let a: result uint, fmt_error = write_char(f, 'ب');
+    let t: string = "-x";
+    return write_str(f, &t);
+}
+
+def check(template: string, args: vector fmt_arg, expected: string): int {
+    match format(template, args) with
+    | result.ok(got) -> {
+        if (texts_equal(&got, &expected)) { return 0; };
+        let r: result int, int = eprint(got);
+        let r2: result int, int = eprint("\n");
+        return 1;
+    }
+    | result.err(_) -> { let r: result int, int = eprint("error\n"); return 1; };
+}
+
+def main(): int {
+    let failures: mutable int = 0;
+    let p: Point = { x: 1, y: -2 };
+    let q: Point = { x: 30, y: 4 };
+    let pa: fmt_arg = fmt_arg.custom(fn(f: &mutable formatter): result uint, fmt_error -> show_point(&p, f));
+    let qa: fmt_arg = fmt_arg.custom(fn(f: &mutable formatter): result uint, fmt_error -> show_point(&q, f));
+    failures := failures + check("p = {}", [pa], "p = (1, -2)");
+    failures := failures + check("{:?}", [pa], "Point { x: 1, y: -2 }");
+    failures := failures + check("{:#?}", [pa], "Point {\n    x: 1,\n    y: -2,\n}");
+    // Without pad, a custom formatter decides about width, as in Rust.
+    failures := failures + check("[{:>12}]", [pa], "[(1, -2)]");
+
+    let points: vector fmt_arg = [pa, qa];
+    failures := failures + check("{:?}", [fmt_arg.list(&points)], "[Point { x: 1, y: -2 }, Point { x: 30, y: 4 }]");
+    failures := failures + check("{:#?}", [fmt_arg.list(&points)], "[\n    Point {\n        x: 1,\n        y: -2,\n    },\n    Point {\n        x: 30,\n        y: 4,\n    },\n]");
+
+    // The list's spec reaches the element after a custom one.
+    let mixed_items: vector fmt_arg = [fmt_arg.int(1), pa, fmt_arg.int(2)];
+    failures := failures + check("{:4?}", [fmt_arg.list(&mixed_items)], "[   1, Point { x: 1, y: -2 },    2]");
+
+    // pad honours width, fill, alignment and precision.
+    let three: int = 3;
+    failures := failures + check("[{}]", [fmt_arg.custom(fn(f: &mutable formatter): result uint, fmt_error -> show_stars(three, f))], "[★★★]");
+    failures := failures + check("[{:>6}]", [fmt_arg.custom(fn(f: &mutable formatter): result uint, fmt_error -> show_stars(three, f))], "[   ★★★]");
+    failures := failures + check("[{:-^7}]", [fmt_arg.custom(fn(f: &mutable formatter): result uint, fmt_error -> show_stars(three, f))], "[--★★★--]");
+    failures := failures + check("[{:.2}]", [fmt_arg.custom(fn(f: &mutable formatter): result uint, fmt_error -> show_stars(three, f))], "[★★]");
+
+    // A type that owns text, written first and passed as text.
+    let n: Named = { name: "علي", id: 7 };
+    let rendered: mutable formatter = new_formatter();
+    match write_named(&n, &mutable rendered) with
+    | result.ok(_) -> { }
+    | result.err(_) -> { failures := failures + 1; };
+    let named_text: string = take_formatter_text(&mutable rendered);
+    failures := failures + check("[{:>7}]", [fmt_arg.text(&named_text)], "[  علي#7]");
+
+    // The spec a custom formatter sees.
+    let spec: fmt_arg = fmt_arg.custom(fn(f: &mutable formatter): result uint, fmt_error -> show_spec(f));
+    failures := failures + check("{}", [spec], "w=-1 p=-1 fill=32 align=none alt=false plus=false zero=false kind=display");
+    failures := failures + check("{:*>+#09.3?}", [spec], "w=9 p=3 fill=42 align=right alt=true plus=true zero=true kind=debug");
+    failures := failures + check("{:<5x}", [spec], "w=5 p=-1 fill=32 align=left alt=false plus=false zero=false kind=lower_hex");
+    failures := failures + check("{0:^1$.2$}", [spec, fmt_arg.uint(4), fmt_arg.uint(2)], "w=4 p=2 fill=32 align=center alt=false plus=false zero=false kind=display");
+
+    failures := failures + check("<{}>", [fmt_arg.custom(fn(f: &mutable formatter): result uint, fmt_error -> show_raw(f))], "<ب-x>");
+
+    // One formatter reused for several writes.
+    let out: mutable formatter = formatter_with_capacity(64);
+    let i: mutable int = 0;
+    while (i < 3) {
+        match format_into(&mutable out, "{}:{};", [fmt_arg.int(i), pa]) with
+        | result.ok(written) -> { if (written != 10) { failures := failures + 1; }; }
+        | result.err(_) -> { failures := failures + 1; };
+        i := i + 1;
+    }
+    let all: string = formatter_text(&out);
+    let wanted: string = "0:(1, -2);1:(1, -2);2:(1, -2);";
+    if (!texts_equal(&all, &wanted)) { failures := failures + 1; };
+    if (formatter_length(&out) != 30) { failures := failures + 1; };
+    formatter_clear(&mutable out);
+    if (formatter_length(&out) != 0) { failures := failures + 1; };
+    match format_into(&mutable out, "{:.4}", [fmt_arg.text(&wanted)]) with
+    | result.ok(_) -> { }
+    | result.err(_) -> { failures := failures + 1; };
+    let taken: string = take_formatter_text(&mutable out);
+    let wanted_taken: string = "0:(1";
+    if (!texts_equal(&taken, &wanted_taken)) { failures := failures + 1; };
+    if (formatter_length(&out) != 0) { failures := failures + 1; };
+
+    if (failures != 0) { return 1; };
+    return 42;
+}

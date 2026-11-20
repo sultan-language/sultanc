@@ -1,0 +1,9 @@
+// اختبار: رفض
+// خروج: 1
+// تشخيص: SULTANC-COMPTIME-NON-CONSTANT
+def value(x: int): int {
+    return comptime x;
+}
+def main(): int {
+    return value(42);
+}

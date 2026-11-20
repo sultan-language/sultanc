@@ -1,0 +1,10 @@
+// Compile-time constant calculation: conditional_specialization.
+import std.io.println;
+import std.text.number;
+
+def squares(n: int): int { let i: mutable int = 0; let out: mutable int = 0; while (i < n) { out := out + i * i; i := i + 1; }; return out; }
+
+def main(): int {
+    println(int_to_text(comptime squares(8)));
+    return 0;
+}

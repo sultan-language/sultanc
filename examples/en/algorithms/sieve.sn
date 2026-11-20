@@ -1,0 +1,27 @@
+// Sieve of Eratosthenes: every prime below 50.
+import std.io.println;
+import std.text.number;
+import std.text.transform;
+
+def main(): int {
+    let limit: uint = 50;
+    let composite: mutable vector bool = [];
+    let i: mutable uint = 0;
+    while (i < limit) { append(composite, false); i := i + 1; }
+    let primes: mutable vector string = [];
+    let candidate: mutable uint = 2;
+    while (candidate < limit) {
+        if (!composite[candidate]) {
+            append(primes, uint_to_text(candidate));
+            let multiple: mutable uint = candidate * candidate;
+            while (multiple < limit) {
+                composite[multiple] := true;
+                multiple := multiple + candidate;
+            }
+        };
+        candidate := candidate + 1;
+    }
+    let space: string = " ";
+    println(join(&primes, &space));
+    return 0;
+}

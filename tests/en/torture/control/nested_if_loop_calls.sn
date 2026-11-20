@@ -1,0 +1,26 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// فئة: control
+def step(value: int): int {
+    if (value < 3) { return value + 2; };
+    if (value < 6) { return value - 1; };
+    return value + 1;
+}
+
+def main(): int {
+    let i: mutable int = 0;
+    let total: mutable int = 0;
+    while (i < 7) {
+        let next: int = step(i);
+        if ((i % 2) == 0) {
+            if (next > i) { total := total + next; } else { total := total + 20; };
+        } else {
+            if (next < i) { total := total + next; } else { total := total + 10; };
+        };
+        i := i + 1;
+    }
+    if (total != 49) { return 1; };
+    return 42;
+}

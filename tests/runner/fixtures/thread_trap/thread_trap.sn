@@ -1,0 +1,17 @@
+// Traps on a spawned thread, at the same site as main_trap.sn.
+import std.thread.thread;
+import "trap_site.sn";
+
+def work(): void {
+    let ignored: int = element_at(7);
+}
+
+def main(): int {
+    match spawn(work) with
+    | result.ok(h) -> {
+        let handle: mutable join_handle = h;
+        join(&mutable handle);
+    }
+    | result.err(_) -> { return 2; };
+    return 0;
+}

@@ -1,0 +1,11 @@
+// اختبار: رفض
+// تشخيص: SULTANC-TYPE-MISMATCH
+// نظير: tests/ar/diagnostics/e2e/initializer_type_mismatch.sn
+// خرج-تشخيص-عربي: initializer_type_mismatch.ar.stderr
+// خرج-تشخيص-إنجليزي: initializer_type_mismatch.en.stderr
+// A declared local initialized with a value of another type is a mismatch
+// with its destination, not a call argument at some position.
+def main(): int {
+    let x: int = "hello";
+    return x;
+}

@@ -1,0 +1,30 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/language/surface/temporary_address_arguments.sn
+// `&temporary` as a call argument: a text, vector or record literal, or a
+// call result, is stored in a slot the block owns and the call borrows the
+// slot. It is accepted when the call's result cannot hold a reference, so the
+// borrow cannot leave the block.
+type Pair = { a: int, b: int };
+
+def text_length(t: &string): int { return length(*t) as int; }
+def total(v: &vector int): int {
+    let sum: mutable int = 0;
+    let i: mutable uint = 0;
+    while (i < (length(*v) as uint)) { sum := sum + (*v)[i]; i := i + 1; }
+    return sum;
+}
+def diff(p: &Pair): int { return (*p).a - (*p).b; }
+def word(): string { return "abcd"; }
+
+def main(): int {
+    let k: mutable int = 0;
+    let i: mutable int = 0;
+    while (i < 3) {
+        k := k + text_length(&"xy") + total(&[1, 2, 3]);
+        i := i + 1;
+    }
+    return k + diff(&{ a: 10, b: 4 }) + text_length(&word()) + 8;
+}

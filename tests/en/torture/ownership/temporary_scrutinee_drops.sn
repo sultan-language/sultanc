@@ -1,0 +1,39 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// فئة: ownership
+// A match on a call result owns the result in each arm (C1); an arm that
+// moves one payload destroys the payloads no binding names (C2); a call
+// result read by length is destroyed after the read (C5). Every value is
+// still readable where the arm uses it.
+type Pair = | both of (string, string) | none_pair;
+
+def make(text: string): option string { return option.some(text); }
+def pair(): Pair { return Pair.both("abcd", "efghij"); }
+def take(text: string): int { return length(text) as int; }
+
+def main(): int {
+    let total: mutable int = 0;
+    let round: mutable int = 0;
+    while (round < 3) {
+        match make("xyz") with
+        | option.some(_) -> { total := total + 1; }
+        | option.none -> { };
+        match make("hello") with
+        | option.some(text) -> { total := total + take(text); }
+        | option.none -> { };
+        match pair() with
+        | Pair.both(first, _) -> { total := total + take(first); }
+        | Pair.none_pair -> { };
+        let local: Pair = pair();
+        match local with
+        | Pair.both(_, second) -> { total := total - take(second); }
+        | Pair.none_pair -> { };
+        total := total + (length(make_text()) as int);
+        round := round + 1;
+    }
+    return total + 18;
+}
+
+def make_text(): string { return "abcd"; }

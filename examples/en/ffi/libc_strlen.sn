@@ -1,0 +1,13 @@
+// Call the actual C library function strlen; link with -l c.
+import std.io.println;
+import std.text.number;
+
+extern def strlen(data: *u8): uint;
+def main(): int {
+    let data: mutable vector u8 = [65 as u8, 66 as u8, 67 as u8, 0 as u8];
+    let ptr: *u8 = &data[0];
+    let count: mutable uint = 0;
+    unsafe { count := strlen(ptr); }
+    println(uint_to_text(count));
+    return 0;
+}

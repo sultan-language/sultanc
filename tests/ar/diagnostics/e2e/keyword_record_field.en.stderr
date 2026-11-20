@@ -1,0 +1,7 @@
+error[SULTANC-PARSE-SYNTAX]: syntax error: expected `identifier`, found `from` — The parser expected a different token at this location.
+  --> tests/ar/diagnostics/e2e/keyword_record_field.sn:8:14..8:16
+   |
+ 8 | نوع حافة = { من: عدد, إلى: عدد };
+   |              ^^ parser discovered the problem here
+   |
+  = help: this word is reserved and cannot be a name; choose another name

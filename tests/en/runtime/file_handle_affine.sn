@@ -1,0 +1,17 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+from std.fs import create_file_handle_write, file_handle_flush, file_handle_close;
+def main(): i32 {
+    let path: string = "/tmp/sultanc-affine-handle-test.tmp";
+    match create_file_handle_write(&path) with
+    | result.ok(handle) -> {
+        match file_handle_flush(&handle) with
+        | result.ok(_) -> { }
+        | result.err(_) -> { return 2; };
+        match file_handle_close(handle) with
+        | result.ok(_) -> { return 42; }
+        | result.err(_) -> { return 3; };
+    }
+    | result.err(_) -> { return 1; };
+}

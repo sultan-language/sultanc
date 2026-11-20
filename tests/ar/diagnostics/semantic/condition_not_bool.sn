@@ -1,0 +1,8 @@
+// اختبار: رفض
+// تشخيص: SULTANC-TYPE-MISMATCH
+// نظير: tests/en/diagnostics/semantic/condition_not_bool.sn
+عرف الرئيسية(): ص32 {
+    دع العدد: ص32 = 1;
+    طالما (العدد) { أرجع 1; };
+    أرجع 0;
+}

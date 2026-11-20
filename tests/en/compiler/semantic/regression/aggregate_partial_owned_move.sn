@@ -1,0 +1,7 @@
+type Holder = { item: box int };
+def main(): int {
+    let value: box int = box 42;
+    let holder: Holder = { item: value };
+    let other: box int = holder.item;
+    return *other;
+}

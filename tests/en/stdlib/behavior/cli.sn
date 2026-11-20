@@ -1,0 +1,30 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+import std.process.cli;
+import std.text.compare;
+
+def main(): int {
+    let arguments: vector string = ["tool", "--mode=fast", "-v", "input.sn", "--", "--literal"];
+    let parsed: cli_arguments = parse_cli_arguments(&arguments);
+    let mode: string = "mode";
+    let verbose: string = "v";
+    if (cli_option_count(&parsed) != 2) { return 1; };
+    if (cli_positional_count(&parsed) != 2) { return 2; };
+    if (!cli_has_option(&parsed, &mode)) { return 3; };
+    if (!cli_has_option(&parsed, &verbose)) { return 4; };
+    match cli_option_value(&parsed, &mode) with
+    | option.none -> { return 5; }
+    | option.some(value) -> {
+        let expected: string = "fast";
+        if (!texts_equal(&value, &expected)) { return 6; };
+    };
+    match cli_positional_at(&parsed, 1) with
+    | option.none -> { return 7; }
+    | option.some(value) -> {
+        let expected: string = "--literal";
+        if (!texts_equal(&value, &expected)) { return 8; };
+    };
+    return 42;
+}

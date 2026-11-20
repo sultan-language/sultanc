@@ -1,11 +1,12 @@
+استورد المكتبة.نصوص.من_بايتات;
 // نموذج الهدف الدلالي يملك هوية الهدف وتركيبه وحقائق نموذج البيانات فقط.
-// تنفيذات الخلفية والواجهة الثنائية والكائن والتشغيل والربط يملكها مجال الخلفية.
+// تنفيذات الخلفية والواجهة الثنائية والكائن والتشغيل يملكها مجال الخلفية؛ الربط يملكه compiler/link بعد إنتاج الكائن.
 
 عام نوع معرف_هدف = {
-    القيمة: غير_موقع
+    القيمة: طبيعي
 };
 
-عام عرف معرف_هدف_من(القيمة: غير_موقع): معرف_هدف {
+عام عرف معرف_هدف_من(القيمة: طبيعي): معرف_هدف {
     دع المعرف: معرف_هدف = { القيمة: القيمة };
     أرجع المعرف;
 }
@@ -19,12 +20,31 @@
 عام نوع هوية_معمارية =
     | ذراع_أربعة_وستون
     | إكس_ستة_وثمانون_أربعة_وستون
-    | ويب_أسمبلي_اثنان_وثلاثون
-    | رايسك_في_أربعة_وستون
+    | إكس_ستة_وثمانون_اثنان_وثلاثون
     | ذراع_سبعة
+    | ويب_أسمبلي_اثنان_وثلاثون
+    | ويب_أسمبلي_أربعة_وستون
+    | رايسك_في_اثنان_وثلاثون
+    | رايسك_في_أربعة_وستون
+    | إيه_إم_دي_جي_بي_يو
+    | إيه_في_آر
+    | بي_بي_إف
+    | هيكساغون
+    | لاناي
+    | لونغ_آرتش_أربعة_وستون
+    | ميبس_أربعة_وستون
+    | إم_إس_بي_أربعمئة_وثلاثون
+    | إن_في_بي_تي_إكس_أربعة_وستون
+    | باور_بي_سي_أربعة_وستون
+    | سبارك_أربعة_وستون
+    | سبير_في_أربعة_وستون
+    | سيستم_زد
+    | في_إي
+    | إكس_كور
 ;
 
 عام نوع هوية_منصة =
+    | غير_محددة
     | ماك_أو_إس
     | آي_أو_إس
     | لينكس
@@ -40,6 +60,9 @@
     | غير_محددة
     | جنو
     | مسل
+    | إم_إس_في_سي
+    | إي_إيه_بي_آي
+    | إي_إيه_بي_آي_إتش_إف
 ;
 
 عام نوع ترتيب_بايت =
@@ -50,31 +73,31 @@
 // نموذج بيانات الهدف يصف حقائق الآلة الأساسية فقط، ولا يملك تخطيط الأنواع
 // ولا سياسة الواجهة الثنائية ولا تنفيذ الخلفية.
 عام نوع نموذج_بيانات_هدف = {
-    عرض_المؤشر: غير_موقع,
+    عرض_المؤشر: طبيعي,
     ترتيب_البايت: ترتيب_بايت
 };
 
 عام نوع معرف_نموذج_بيانات_هدف = {
-    القيمة: غير_موقع
+    القيمة: طبيعي
 };
 
 عام عرف معرفا_نموذج_بيانات_هدف_متساويان(أ: معرف_نموذج_بيانات_هدف, ب: معرف_نموذج_بيانات_هدف): منطقي {
-    دع قيمة_أ: غير_موقع = أ.القيمة;
-    دع قيمة_ب: غير_موقع = ب.القيمة;
+    دع قيمة_أ: طبيعي = أ.القيمة;
+    دع قيمة_ب: طبيعي = ب.القيمة;
     أرجع قيمة_أ == قيمة_ب;
 }
 
 عام نوع معرف_معالج = {
-    القيمة: غير_موقع
+    القيمة: طبيعي
 };
 
 عام نوع معرف_ميزة_معمارية = {
-    القيمة: غير_موقع
+    القيمة: طبيعي
 };
 
 عام نوع اختيار_معمارية = {
     الهوية: هوية_معمارية,
-    المعالج: اختيار معرف_معالج,
+    المعالج: اختياري معرف_معالج,
     الميزات: متجه معرف_ميزة_معمارية
 };
 
@@ -93,21 +116,36 @@
 عام نوع هوية_واجهة_ثنائية_هدف =
     | داروين_ذراع_أربعة_وستون
     | سيستم_في_إيه_إيه_إم_دي_أربعة_وستون
+    | سلطان_محمولة
+    // AAPCS64 register ABI for SultanC calls in native code on non-Darwin
+    // AArch64 (arm64/systems/aapcs64). The registry keeps the portable ABI
+    // for these targets; only the native code generator selects this one.
+    | إيه_إيه_بي_سي_إس_أربعة_وستون
 ;
 
 عام نوع صيغة_كائن_هدف =
     | ماتشو
     | إلف
+    | كوف
+    | ويب_أسمبلي
+    | سبير_في
+    | بلا_كائن
 ;
 
 عام نوع مزود_تشغيل_هدف =
     | داروين
     | لينكس
+    | واسي
+    | غير_متاح
 ;
 
 عام نوع هوية_قواعد_سجلات_هدف =
     | داروين_ذراع_أربعة_وستون
     | سيستم_في_إيه_إيه_إم_دي_أربعة_وستون
+    // AArch64 Linux (AAPCS64): the same allocatable, scratch and clobbered
+    // sets as Darwin (x18 stays unallocated); arm64/allocation_constraints.
+    | إيه_إيه_بي_سي_إس_أربعة_وستون
+    | مفوضة_للمزود
 ;
 
 // هوية واحدة للتركيب الأصلي الذي تحقق سجل Target من اتساقه عند التسجيل.
@@ -115,18 +153,42 @@
 عام نوع هوية_تركيب_هدف_أصلي =
     | ذراع_أربعة_وستون_داروين_ماتشو
     | إكس_ستة_وثمانون_أربعة_وستون_لينكس_إلف
+    // AArch64 Linux static ELF executables and objects: the arm64 selector
+    // with AAPCS64, direct kernel entry (svc) and the ELF writer.
+    | ذراع_أربعة_وستون_لينكس_إلف
+    // x86-64 Windows PE executables and COFF objects: the x86-64 selector
+    // with SultanC's internal (System V) convention, the Microsoft x64
+    // convention at foreign calls, kernel32 imports and the COFF writer.
+    | إكس_ستة_وثمانون_أربعة_وستون_ويندوز_كوف
+    // x86-64 macOS Mach-O executables and objects: the x86-64 selector with
+    // the System V convention, libSystem imports and dyld's `_main`.
+    | إكس_ستة_وثمانون_أربعة_وستون_داروين_ماتشو
+    // AArch64 Windows PE executables and COFF objects: the arm64 selector
+    // with AAPCS64 (the Windows on Arm convention for non-variadic calls),
+    // kernel32 imports and the COFF writer.
+    | ذراع_أربعة_وستون_ويندوز_كوف
+    // wasm32 WebAssembly modules (WASI command or browser): the native wasm32
+    // selector and the WebAssembly object writer; runtime facts as delegated.
+    | ويب_أسمبلي_اثنان_وثلاثون_وحدة
+    | ترجمة_متقاطعة_مفوضة
 ;
 
-// Target يختار مزود الإنهاء التنفيذي؛ Object/Runtime يملكان التنفيذ والسياسة التابعة له.
-عام نوع هوية_مزود_إنهاء_تنفيذي_هدف =
-    | ماتشو_داروين
-    | إلف_لينكس
+// Backend provider identity is independent from linker-format routing.
+// Target keeps only canonical target facts; compiler/link derives linker family from object format.
+عام نوع هوية_مزود_خلفية =
+    | أصلي
+    | إل_إل_في_إم
 ;
 
-// الهدف لا يحمل نسخا من سياسة المزودين. يحمل هويات التركيب/المزود المحلولة فقط،
-// والسياسة الملموسة تبقى في ABI/Object/Runtime owners.
+عام نوع نوع_مخرج_آلة_هدف =
+    | كائن
+    | تجميع
+;
+
 عام نوع واصف_هدف = {
     المعرف: معرف_هدف,
+    التهجئة: نص,
+    الثلاثي_المقنن: نص,
     المعمارية: اختيار_معمارية,
     المنصة: اختيار_منصة,
     نموذج_البيانات: نموذج_بيانات_هدف,
@@ -135,18 +197,18 @@
     مزود_التشغيل: مزود_تشغيل_هدف,
     قواعد_السجلات: هوية_قواعد_سجلات_هدف,
     التركيب_الأصلي: هوية_تركيب_هدف_أصلي,
-    مزود_الإنهاء_التنفيذي: هوية_مزود_إنهاء_تنفيذي_هدف,
-    الدعم: مستوى_دعم_هدف
+    نوع_مخرج_الآلة: نوع_مخرج_آلة_هدف,
+    الدعم: مستوى_دعم_هدف,
+    // The program defines the canonical allocator interface's entry points
+    // itself (std/memory/allocator.sn): the driver sets it once MSIR bound
+    // them, so a target without std's allocator (bare metal) has a heap too,
+    // as Rust's #[global_allocator] gives a no_std program one.
+    مخصص_البرنامج: منطقي
 };
 
 عام عرف تركيب_الهدف_الأصلي(الهدف: &واصف_هدف): هوية_تركيب_هدف_أصلي {
     دع الوصف: واصف_هدف = *الهدف;
     أرجع الوصف.التركيب_الأصلي;
-}
-
-عام عرف مزود_إنهاء_تنفيذي_الهدف(الهدف: &واصف_هدف): هوية_مزود_إنهاء_تنفيذي_هدف {
-    دع الوصف: واصف_هدف = *الهدف;
-    أرجع الوصف.مزود_الإنهاء_التنفيذي;
 }
 
 عام عرف معرف_نموذج_بيانات_الهدف(الهدف: &واصف_هدف): معرف_نموذج_بيانات_هدف {
@@ -159,3 +221,187 @@
     | محلول بنوع واصف_هدف
     | غير_مسجل
 ;
+
+// Deep copies of owned values (one per Type; read the source through a
+// reference and allocate independent storage).
+
+عام عرف انسخ_مملوكا_واصف_هدف(القيمة: &واصف_هدف): واصف_هدف {
+    دع الناتج: واصف_هدف = {
+        المعرف: (*القيمة).المعرف,
+        التهجئة: انسخ_نص(&(*القيمة).التهجئة),
+        الثلاثي_المقنن: انسخ_نص(&(*القيمة).الثلاثي_المقنن),
+        المعمارية: انسخ_مملوكا_اختيار_معمارية(&(*القيمة).المعمارية),
+        المنصة: (*القيمة).المنصة,
+        نموذج_البيانات: (*القيمة).نموذج_البيانات,
+        الواجهة_الثنائية: (*القيمة).الواجهة_الثنائية,
+        صيغة_الكائن: (*القيمة).صيغة_الكائن,
+        مزود_التشغيل: (*القيمة).مزود_التشغيل,
+        قواعد_السجلات: (*القيمة).قواعد_السجلات,
+        التركيب_الأصلي: (*القيمة).التركيب_الأصلي,
+        نوع_مخرج_الآلة: (*القيمة).نوع_مخرج_الآلة,
+        الدعم: (*القيمة).الدعم,
+        مخصص_البرنامج: (*القيمة).مخصص_البرنامج
+    };
+    أرجع الناتج;
+}
+
+عام عرف انسخ_مملوكا_اختيار_معمارية(القيمة: &اختيار_معمارية): اختيار_معمارية {
+    دع الناتج: اختيار_معمارية = {
+        الهوية: (*القيمة).الهوية,
+        المعالج: (*القيمة).المعالج,
+        الميزات: انسخ_مملوكا_متجه_معرف_ميزة_معمارية(&(*القيمة).الميزات)
+    };
+    أرجع الناتج;
+}
+
+عام عرف انسخ_مملوكا_متجه_معرف_ميزة_معمارية(القيمة: &متجه معرف_ميزة_معمارية): متجه معرف_ميزة_معمارية {
+    دع الناتج: متغير متجه معرف_ميزة_معمارية = [];
+    دع ف: متغير طبيعي = 0;
+    طالما (ف < (الطول(*القيمة) مثل طبيعي)) {
+        ألحق(الناتج, (*القيمة)[ف]);
+        ف := ف + 1;
+    }
+    أرجع الناتج;
+}
+
+// The Linux kernel ABIs SultanC enters directly (Android is the same kernel
+// ABI without libc): every 64-bit one SultanC targets, plus i386 and ARM
+// EABI. std supplies the operating-system layer for them
+// (library/std/os/platform/unix/linux, one generated syscall table and UAPI
+// block per architecture) and the backends emit only the kernel entry.
+عام عرف هدف_نواة_لينكس_مباشر(الهدف: &واصف_هدف): منطقي {
+    إذا ((*الهدف).المنصة.المنصة != هوية_منصة.لينكس()
+        && (*الهدف).المنصة.المنصة != هوية_منصة.أندرويد()) { أرجع خطأ; };
+    طابق (*الهدف).المعمارية.الهوية مع
+    | هوية_معمارية.إكس_ستة_وثمانون_اثنان_وثلاثون -> { أرجع (*الهدف).نموذج_البيانات.عرض_المؤشر == 32; }
+    | هوية_معمارية.ذراع_سبعة -> { أرجع (*الهدف).نموذج_البيانات.عرض_المؤشر == 32; }
+    | هوية_معمارية.إكس_ستة_وثمانون_أربعة_وستون -> { أرجع (*الهدف).نموذج_البيانات.عرض_المؤشر == 64; }
+    | هوية_معمارية.ذراع_أربعة_وستون -> { أرجع (*الهدف).نموذج_البيانات.عرض_المؤشر == 64; }
+    | هوية_معمارية.رايسك_في_أربعة_وستون -> { أرجع (*الهدف).نموذج_البيانات.عرض_المؤشر == 64; }
+    | هوية_معمارية.لونغ_آرتش_أربعة_وستون -> { أرجع (*الهدف).نموذج_البيانات.عرض_المؤشر == 64; }
+    | هوية_معمارية.باور_بي_سي_أربعة_وستون -> { أرجع (*الهدف).نموذج_البيانات.عرض_المؤشر == 64; }
+    | هوية_معمارية.سيستم_زد -> { أرجع (*الهدف).نموذج_البيانات.عرض_المؤشر == 64; }
+    | هوية_معمارية.ميبس_أربعة_وستون -> { أرجع (*الهدف).نموذج_البيانات.عرض_المؤشر == 64; }
+    | هوية_معمارية.سبارك_أربعة_وستون -> { أرجع (*الهدف).نموذج_البيانات.عرض_المؤشر == 64; }
+    | _ -> { أرجع خطأ; };
+}
+
+// aarch64 targets on which every core implements the ARMv8.1 LSE atomics
+// (FEAT_LSE): macOS, whose Apple Silicon cores are ARMv8.5 or later. Linux,
+// Android, FreeBSD and Windows also run on ARMv8.0 cores (Cortex-A53, A57,
+// A72) without them, where the code generators use LDAXR/STLXR loops.
+عام عرف هدف_ذراع_بذريات_إل_إس_إي(الهدف: &واصف_هدف): منطقي {
+    أرجع (*الهدف).المعمارية.الهوية == هوية_معمارية.ذراع_أربعة_وستون()
+        && (*الهدف).المنصة.المنصة == هوية_منصة.ماك_أو_إس();
+}
+
+// The FreeBSD kernel ABIs SultanC enters directly (raw system calls, no
+// libc, static executables): amd64, arm64 and riscv64. std's direct-kernel
+// provider serves them with FreeBSD's system-call numbers and kernel ABI
+// values (library/std/os/platform/unix/freebsd, generated from FreeBSD's
+// headers); the backends emit only the kernel entry and `_start`.
+عام عرف هدف_نواة_فري_بي_إس_دي_مباشر(الهدف: &واصف_هدف): منطقي {
+    إذا ((*الهدف).المنصة.المنصة != هوية_منصة.فري_بي_إس_دي()
+        || (*الهدف).نموذج_البيانات.عرض_المؤشر != 64) { أرجع خطأ; };
+    طابق (*الهدف).المعمارية.الهوية مع
+    | هوية_معمارية.إكس_ستة_وثمانون_أربعة_وستون -> { أرجع صواب; }
+    | هوية_معمارية.ذراع_أربعة_وستون -> { أرجع صواب; }
+    | هوية_معمارية.رايسك_في_أربعة_وستون -> { أرجع صواب; }
+    | _ -> { أرجع خطأ; };
+}
+
+// Every kernel ABI SultanC enters with raw system calls (Linux, Android and
+// FreeBSD): std's allocator, the raw kernel-call primitive and an
+// LLD-linked static executable exist exactly there.
+عام عرف هدف_نواة_مباشر(الهدف: &واصف_هدف): منطقي {
+    أرجع هدف_نواة_لينكس_مباشر(الهدف) || هدف_نواة_فري_بي_إس_دي_مباشر(الهدف);
+}
+
+// M-profile Arm processor classes of the thumbv*-none-eabi[hf] bare-metal
+// targets. The registry records the class as the target's processor
+// (اختيار_معمارية.المعالج) on the 32-bit Arm architecture identity; it fixes
+// the instruction set the code generator may assume:
+// - ARMv6-M (Cortex-M0, M0+, M1): Thumb-1 plus BL/DMB/MRS/MSR, no hardware
+//   divide, no LDREX/STREX (no atomic read-modify-write), no unaligned access.
+// - ARMv7-M (Cortex-M3): Thumb-2, SDIV/UDIV, LDREX/STREX up to 32 bits.
+// - ARMv7E-M (Cortex-M4, M7): ARMv7-M plus the DSP instructions; the
+//   eabihf target adds the single-precision FPv4-SP-D16 FPU.
+عام نوع صنف_ذراع_إم =
+    | في_ستة_إم
+    | في_سبعة_إم
+    | في_سبعة_إي_إم
+;
+
+عام عرف معرف_معالج_ذراع_إم(الصنف: صنف_ذراع_إم): معرف_معالج {
+    دع القيمة: متغير طبيعي = 1;
+    طابق الصنف مع
+    | صنف_ذراع_إم.في_ستة_إم -> { القيمة := 1; }
+    | صنف_ذراع_إم.في_سبعة_إم -> { القيمة := 2; }
+    | صنف_ذراع_إم.في_سبعة_إي_إم -> { القيمة := 3; };
+    دع المعرف: معرف_معالج = { القيمة: القيمة };
+    أرجع المعرف;
+}
+
+// The M-profile class of a 32-bit Arm bare-metal target, لا_شيء for every
+// other target.
+عام عرف صنف_ذراع_إم_للهدف(الهدف: &واصف_هدف): اختياري صنف_ذراع_إم {
+    إذا ((*الهدف).المعمارية.الهوية != هوية_معمارية.ذراع_سبعة()
+        || (*الهدف).المنصة.المنصة != هوية_منصة.عتاد_مباشر()) { أرجع اختياري.لا_شيء(); };
+    طابق (*الهدف).المعمارية.المعالج مع
+    | اختياري.لا_شيء -> { أرجع اختياري.لا_شيء(); }
+    | اختياري.موجود(المعالج) -> {
+        إذا (المعالج.القيمة == 1) { أرجع اختياري.موجود(صنف_ذراع_إم.في_ستة_إم()); };
+        إذا (المعالج.القيمة == 2) { أرجع اختياري.موجود(صنف_ذراع_إم.في_سبعة_إم()); };
+        إذا (المعالج.القيمة == 3) { أرجع اختياري.موجود(صنف_ذراع_إم.في_سبعة_إي_إم()); };
+        أرجع اختياري.لا_شيء();
+    };
+}
+
+// The widest integer the target has atomic read-modify-write instructions
+// (swap, compare-and-swap, fetch-and-op) for: 64, 32 or 0. std declares
+// its atomics only up to it (library/core/sync/atomic.sn, whose guards spell
+// the Cortex-M targets out, since a new target-condition field would not
+// parse with the bootstrap compilers), and the LLVM provider rejects wider
+// ones (provider/llvm/freestanding_check.sn). Atomic loads
+// and stores exist up to 32 bits everywhere. ARMv7-M has LDREX/STREX but no
+// LDREXD/STREXD: 32. ARMv6-M has no exclusive accesses at all: 0 (aligned
+// 32-bit loads and stores stay atomic, LDR/STR with DMB). Beyond the width
+// LLVM would call __atomic_*/__sync_* library routines, which SultanC does
+// not provide. Every other target reports 64: the hosted ones do 64-bit
+// atomics inline; riscv32-unknown-elf (RV32A, 32 bits) and the 16-bit
+// targets are not modelled here yet.
+عام عرف عرض_الذريات_للهدف(الهدف: &واصف_هدف): طبيعي {
+    طابق صنف_ذراع_إم_للهدف(الهدف) مع
+    | اختياري.موجود(الصنف) -> {
+        إذا (الصنف == صنف_ذراع_إم.في_ستة_إم()) { أرجع 0; };
+        أرجع 32;
+    }
+    | اختياري.لا_شيء -> { أرجع 64; };
+}
+
+// The widest IEEE format the Cortex-M targets compute in hardware: 0 on the
+// soft-float eabi targets (no FPU is assumed), 32 on thumbv7em-none-eabihf
+// (FPv4-SP-D16). A float operation wider than this would be a call to a
+// soft-float run-time routine (__aeabi_fadd, __aeabi_dmul, __aeabi_f2d...),
+// which SultanC does not provide, so the LLVM provider rejects it
+// (provider/llvm/freestanding_check.sn). لا_شيء for every other target:
+// their float operations are not checked here.
+عام عرف عرض_عائم_بالعتاد_للهدف(الهدف: &واصف_هدف): اختياري طبيعي {
+    طابق صنف_ذراع_إم_للهدف(الهدف) مع
+    | اختياري.لا_شيء -> { أرجع اختياري.لا_شيء(); }
+    | اختياري.موجود(_) -> {
+        إذا ((*الهدف).المنصة.البيئة == هوية_بيئة.إي_إيه_بي_آي_إتش_إف()) { أرجع اختياري.موجود(32); };
+        أرجع اختياري.موجود(0);
+    };
+}
+
+// Whether the target lacks a 32 x 32 -> 64-bit multiply and a 64-bit shift
+// by a variable amount in its instruction set: ARMv6-M (Thumb-1 has MULS
+// with a 32-bit product only), where LLVM would call __aeabi_lmul,
+// __aeabi_llsl, __aeabi_llsr and __aeabi_lasr. The LLVM provider expands
+// those operations into 32-bit ones (provider/llvm/freestanding_routines.sn).
+عام عرف هدف_بلا_ضرب_وإزاحة_64(الهدف: &واصف_هدف): منطقي {
+    طابق صنف_ذراع_إم_للهدف(الهدف) مع
+    | اختياري.موجود(الصنف) -> { أرجع الصنف == صنف_ذراع_إم.في_ستة_إم(); }
+    | اختياري.لا_شيء -> { أرجع خطأ; };
+}

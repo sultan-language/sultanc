@@ -1,0 +1,7 @@
+// Helper module of values.sn: a function in another module, for breakpoints
+// by name and backtraces across modules (tools/tests/debugger_tests.sh).
+public def scaled_sum(first: int, second: int, factor: int): int {
+    let sum: int = first + second;
+    let scaled: int = sum * factor;
+    return scaled;                                          // BP:scaled_sum
+}

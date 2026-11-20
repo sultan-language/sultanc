@@ -1,0 +1,4 @@
+// A module-private opaque type: other modules cannot name it.
+type Secret = opaque;
+
+public def secret_count(): int { return 0; }

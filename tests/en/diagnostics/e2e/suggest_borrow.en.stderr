@@ -1,0 +1,7 @@
+error[SULTANC-CALL-ARGUMENT-TYPE-MISMATCH]: call argument type does not match — The argument was expected to have type `&i32` but has type `i32`. The zero-based argument position is 0. A call argument has a different type than the function parameter.
+  --> tests/en/diagnostics/e2e/suggest_borrow.sn:12:17..12:22
+    |
+ 12 |     return take(count);
+    |                 ^^^^^
+    |
+  = help: borrow the value with `&`

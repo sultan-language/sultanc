@@ -1,0 +1,40 @@
+// `sultanc test` (tests/runner/suites/testing.sn): passing and failing tests
+// in two modules. Expected: PASS doubles, FAIL assertion_fails (an assertion),
+// FAIL panics (its message), FAIL returns_error (its error text), FAIL
+// exits_seven (exit status 7), PASS double_is_even (helpers.sn); exit 1.
+// An ordinary build runs main only and returns 0.
+import "helpers.sn";
+import std.debug.assert;
+import std.process.panic;
+import std.process.exit;
+import std.error.failure;
+
+@@test
+def doubles(): void {
+    assert(double(2) == 4);
+}
+
+@@test
+def assertion_fails(): void {
+    assert(double(2) == 5);
+}
+
+@@test
+def panics(): void {
+    panic("something went wrong");
+}
+
+@@test
+def returns_error(): result int, Error {
+    if (double(20) != 41) {
+        return result.err(error_with_kind("test", "demo", "double(20) is 40, expected 41"));
+    };
+    return result.ok(0);
+}
+
+@@test
+def exits_seven(): void {
+    exit(7);
+}
+
+def main(): int { return 0; }

@@ -1,0 +1,18 @@
+// Command-line arguments: argument 0 is the program itself.
+import std.io.println;
+import std.text.number;
+import std.process.argument_count;
+import std.process.argument;
+
+def main(): int {
+    let count: uint = argument_count();
+    println(uint_to_text(count));
+    let i: mutable uint = 1;
+    while (i < count) {
+        match argument(i) with
+        | option.some(text) -> { println(text); }
+        | option.none -> { };
+        i := i + 1;
+    }
+    return 0;
+}

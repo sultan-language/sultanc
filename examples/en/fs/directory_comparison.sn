@@ -1,0 +1,47 @@
+// Comparing two directories: put the same file in each one and compare the two file sizes.
+import std.io.println;
+import std.text.number;
+import std.fs.write_file;
+import std.fs.read_file;
+import std.fs.mutation;
+import std.fs.metadata;
+import std.fs.walk;
+import std.fs.path;
+import std.text.transform;
+
+def main(): int {
+    let left: string = "sultanc-left-dir";
+    let right: string = "sultanc-right-dir";
+    let path_a: string = "sultanc-left-dir/item.txt";
+    let path_b: string = "sultanc-right-dir/item.txt";
+    let content: string = "identical";
+    match create_dir_all(&left) with
+    | result.err(_) -> { return 1; }
+    | _ -> { };
+    match create_dir_all(&right) with
+    | result.err(_) -> { return 2; }
+    | _ -> { };
+    match write_file(&path_a, &content) with
+    | result.err(_) -> { return 3; }
+    | _ -> { };
+    match write_file(&path_b, &content) with
+    | result.err(_) -> { return 4; }
+    | _ -> { };
+    let same: mutable bool = false;
+    match path_size(&path_a) with
+    | result.ok(a) -> {
+        match path_size(&path_b) with
+        | result.ok(b) -> { same := a == b; }
+        | _ -> { };
+    }
+    | _ -> { };
+    match remove_tree(&left) with
+    | result.err(_) -> { return 5; }
+    | _ -> { };
+    match remove_tree(&right) with
+    | result.err(_) -> { return 6; }
+    | _ -> { };
+    if (!same) { return 7; };
+    println("sizes match");
+    return 0;
+}

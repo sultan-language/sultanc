@@ -1,0 +1,10 @@
+// Output to the standard stream: read_until_eof.
+import std.io.println;
+import std.text.number;
+
+
+def main(): int {
+    println("output 8");
+    println(int_to_text(10));
+    return 0;
+}

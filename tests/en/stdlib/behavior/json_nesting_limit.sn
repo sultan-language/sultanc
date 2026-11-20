@@ -1,0 +1,49 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/stdlib/behavior/json_nesting_limit.sn
+// The JSON and TOML parsers are recursive: nesting past their limit is an
+// error, not a stack overflow.
+import std.json.parse;
+import std.json.value;
+import std.toml.parser;
+import std.text.from_bytes;
+
+def nested(open: u8, close: u8, depth: uint): string {
+    let bytes: mutable vector u8 = [];
+    let i: mutable uint = 0;
+    while (i < depth) { append(bytes, open); i := i + 1; }
+    i := 0;
+    while (i < depth) { append(bytes, close); i := i + 1; }
+    return from_bytes(&bytes);
+}
+
+def main(): int {
+    let deep: string = nested(0x5B, 0x5D, 600);
+    match parse_json(&deep) with
+    | result.ok(_) -> { return 1; }
+    | result.err(error) -> {
+        match error.الصنف with
+        | صنف_خطأ_جسون.تعشيش_عميق_جدا -> { }
+        | _ -> { return 2; };
+    };
+    let at_limit: string = nested(0x5B, 0x5D, json_max_nesting());
+    match parse_json(&at_limit) with
+    | result.err(_) -> { return 3; }
+    | result.ok(_) -> { };
+    let past_limit: string = nested(0x5B, 0x5D, json_max_nesting() + 1);
+    match parse_json(&past_limit) with
+    | result.ok(_) -> { return 4; }
+    | result.err(_) -> { };
+    let toml_bytes: mutable vector u8 = [];
+    let prefix: string = "a = ";
+    append_text_bytes(&mutable toml_bytes, prefix);
+    let i: mutable uint = 0;
+    while (i < 600) { append(toml_bytes, 0x5B); i := i + 1; }
+    let deep_toml: string = from_bytes(&toml_bytes);
+    match parse_toml(&deep_toml) with
+    | result.ok(_) -> { return 5; }
+    | result.err(_) -> { };
+    return 42;
+}

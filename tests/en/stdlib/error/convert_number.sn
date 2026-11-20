@@ -1,0 +1,55 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/stdlib/error/convert_number.sn
+// std.error.from_number: every variant of integer_parse_error.
+import std.error.failure;
+import std.error.from_number;
+import std.text.number;
+import std.text.compare;
+
+def has_identity(failure: &Error, kind: string): bool {
+    let its_domain: string = error_domain(failure);
+    let its_kind: string = error_kind(failure);
+    let domain: string = "std.text.number";
+    return texts_equal(&its_domain, &domain) && texts_equal(&its_kind, &kind);
+}
+
+def main(): int {
+    let empty: integer_parse_error = integer_parse_error.empty_text();
+    let e1: Error = error_from_integer_parse_error(&empty);
+    if (!has_identity(&e1, "نص_فارغ")) { return 1; };
+    let sign: integer_parse_error = integer_parse_error.sign_without_digits();
+    let e2: Error = error_from_integer_parse_error(&sign);
+    if (!has_identity(&e2, "إشارة_بلا_أرقام")) { return 2; };
+    let digit: integer_parse_error = integer_parse_error.invalid_digit(3);
+    let e3: Error = error_from_integer_parse_error(&digit);
+    if (!has_identity(&e3, "رقم_غير_صالح")) { return 3; };
+    let notes3: vector string = error_notes(&e3);
+    let expected3: string = "موضع البايت: 3";
+    if ((length(notes3) as uint) != 1) { return 4; };
+    if (!texts_equal(&notes3[0], &expected3)) { return 5; };
+    let overflow: integer_parse_error = integer_parse_error.overflow();
+    let e4: Error = error_from_integer_parse_error(&overflow);
+    if (!has_identity(&e4, "تجاوز")) { return 6; };
+    let negative: integer_parse_error = integer_parse_error.negative_unsigned();
+    let e5: Error = error_from_integer_parse_error(&negative);
+    if (!has_identity(&e5, "سالب_لطبيعي")) { return 7; };
+    let message4: string = error_message(&e4);
+    let expected4: string = "العدد خارج مدى النوع";
+    if (!texts_equal(&message4, &expected4)) { return 8; };
+
+    // A real parse failure.
+    let text: string = "12x4";
+    match parse_int(&text) with
+    | result.ok(_) -> { return 9; }
+    | result.err(problem) -> {
+        let failure: Error = error_from_integer_parse_error(&problem);
+        if (!has_identity(&failure, "رقم_غير_صالح")) { return 10; };
+        let notes: vector string = error_notes(&failure);
+        let expected: string = "موضع البايت: 2";
+        if (!texts_equal(&notes[0], &expected)) { return 11; };
+    };
+    return 42;
+}

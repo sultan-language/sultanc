@@ -1,0 +1,10 @@
+// اختبار: رفض
+// خروج: 1
+// تشخيص: SULTANC-TRACK-CALLER-SIGNATURE
+// نظير: tests/ar/language/track_caller/reject_signature.sn
+// @@track_caller needs a last parameter that is a source_location
+// (docs/en/reference/testing.md).
+@@track_caller
+def mark(value: int): void { }
+
+def main(): int { mark(1); return 0; }

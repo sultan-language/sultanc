@@ -1,0 +1,14 @@
+// اختبار: رفض
+// تشخيص: SULTANC-MUTABILITY-WRITE-TO-IMMUTABLE
+// نظير: tests/ar/language/ownership/reject_reference_field_write.sn
+// Writing `p.x` through a shared reference is a write to an immutable place:
+// only `&mutable` writes through.
+type Point = { x: int, y: int };
+
+def reset(p: &Point): void { p.x := 0; }
+
+def main(): int {
+    let point: Point = { x: 1, y: 2 };
+    reset(&point);
+    return point.x;
+}

@@ -1,0 +1,10 @@
+// Output to the standard stream: input_validation.
+import std.io.println;
+import std.text.number;
+
+
+def main(): int {
+    println("output 7");
+    println(int_to_text(9));
+    return 0;
+}

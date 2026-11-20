@@ -1,0 +1,87 @@
+type Node = { a: int, b: int, c: int, d: int, e: int, f: int };
+type Holder = { items: vector int };
+
+def node(value: int): Node {
+    let n: Node = { a: value, b: 1, c: 2, d: 3, e: 4, f: 5 };
+    return n;
+}
+
+def make(value: int): option Node {
+    let n: Node = node(value);
+    return option.some(n);
+}
+
+def forward(value: int): option Node {
+    return make(value);
+}
+
+def choose(flag: bool, value: int): option Node {
+    if (flag) { return make(value); } else { return option.none(); };
+}
+
+def consume(value: option Node): int {
+    match value with
+    | option.some(n) -> { return n.a + n.b + n.c + n.d + n.e + n.f; }
+    | option.none() -> { return 0; }
+}
+
+def make_result(value: int): result Node, int {
+    let n: Node = node(value);
+    return result.ok(n);
+}
+
+def consume_result(value: result Node, int): int {
+    match value with
+    | result.ok(n) -> { return n.a + n.f; }
+    | result.err(code) -> { return code; }
+}
+
+def make_owned(): option Holder {
+    let items: vector int = [40, 2];
+    let holder: Holder = { items: items };
+    return option.some(holder);
+}
+
+def extracted_payload_survives_parent_reuse(): int {
+    let original: Node = node(27);
+    let parent: mutable option Node = option.some(original);
+    match parent with
+    | option.some(extracted) -> {
+        parent := option.some(node(100));
+        return extracted.a + extracted.b + extracted.c + extracted.d + extracted.e + extracted.f;
+    }
+    | option.none() -> { return 0; };
+}
+
+def main(): int {
+    let direct: option Node = option.some(node(10));
+    if (consume(direct) != 25) { return 1; };
+
+    let one: option Node = make(11);
+    if (consume(one) != 26) { return 2; };
+
+    let two: option Node = forward(12);
+    if (consume(two) != 27) { return 3; };
+
+    match make(13) with
+    | option.some(n) -> { if (n.a + n.f != 18) { return 4; }; }
+    | option.none() -> { return 5; };
+
+    if (consume(make(14)) != 29) { return 6; };
+
+    let first: option Node = make(15);
+    let second: option Node = make(25);
+    if (consume(first) != 30) { return 7; };
+    if (consume(second) != 40) { return 8; };
+
+    if (consume(choose(true, 16)) != 31) { return 9; };
+    if (consume(choose(false, 16)) != 0) { return 10; };
+
+    if (consume_result(make_result(37)) != 42) { return 11; };
+    if (extracted_payload_survives_parent_reuse() != 42) { return 12; };
+
+    let owned: option Holder = make_owned();
+    match owned with
+    | option.some(h) -> { return h.items[0] + h.items[1]; }
+    | option.none() -> { return 13; };
+}

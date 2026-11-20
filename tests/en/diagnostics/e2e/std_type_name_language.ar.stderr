@@ -1,0 +1,6 @@
+خطأ[SULTANC-TYPE-MISMATCH]: النوع الموجود ⁨`فشل`⁩ لا يطابق النوع المتوقع ⁨`عدد`⁩ — القيمة لا تطابق النوع المصرح به لوجهتها.
+  --> tests/en/diagnostics/e2e/std_type_name_language.sn:10:22..10:41
+    |
+ 10 |     let value: int = error_new("broken");
+    |                      ^^^^^^^^^^^^^^^^^^^
+    |

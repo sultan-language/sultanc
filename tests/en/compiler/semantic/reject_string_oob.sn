@@ -1,0 +1,4 @@
+def main(): u8 {
+    let text: string = "*";
+    return text[1];
+}

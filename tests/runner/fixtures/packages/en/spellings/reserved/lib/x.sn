@@ -1,0 +1,1 @@
+public def x_value(): int { return 0; }

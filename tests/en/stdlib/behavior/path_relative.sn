@@ -1,0 +1,47 @@
+// اختبار: تفاضلي
+// خروج: 42
+// تفاضلي: نعم
+// std.fs.path relative_path_from: the lexical path from a directory to a
+// target (Python's os.path.relpath, Rust's pathdiff::diff_paths). It is
+// none across roots or drives, and when a ".." of the origin would remain.
+import std.fs.path;
+import std.text.compare;
+
+def relative_is(origin: string, target: string, flavor: path_flavor, expected: string): bool {
+    match relative_path_from_for(&origin, &target, flavor) with
+    | option.some(path) -> { return texts_equal(&path, &expected); }
+    | option.none -> { return false; };
+}
+
+def relative_is_none(origin: string, target: string, flavor: path_flavor): bool {
+    match relative_path_from_for(&origin, &target, flavor) with
+    | option.some(_) -> { return false; }
+    | option.none -> { return true; };
+}
+
+def main(): int {
+    let posix: path_flavor = path_flavor.posix();
+    let windows: path_flavor = path_flavor.windows();
+    if (!relative_is("/src/app", "/src/include/x.h", posix, "../include/x.h")) { return 1; };
+    if (!relative_is("/src/app", "/src/app", posix, ".")) { return 2; };
+    if (!relative_is("/src/app", "/src/app/lib/y.h", posix, "lib/y.h")) { return 3; };
+    // Both sides are normalized: "." and repeated separators go.
+    if (!relative_is("src/./app//", "src/x.h", posix, "../x.h")) { return 4; };
+    if (!relative_is("/a/b/c", "/d", posix, "../../../d")) { return 5; };
+    // A common ".." is fine; one left in the origin is not.
+    if (!relative_is("../up", "../other/z", posix, "../other/z")) { return 6; };
+    if (!relative_is_none("src/../app", "src/x", posix)) { return 7; };
+    // Different roots.
+    if (!relative_is_none("/src", "src", posix)) { return 8; };
+    if (!relative_is_none("src", "/src", posix)) { return 9; };
+    // Windows: both separators, drive prefixes must match.
+    if (!relative_is("C:\\work\\app", "C:/work/lib/m.h", windows, "..\\lib\\m.h")) { return 10; };
+    if (!relative_is_none("C:\\work", "D:\\work", windows)) { return 11; };
+    if (!relative_is_none("C:work", "C:\\work", windows)) { return 12; };
+    // The host form.
+    let here: string = "a/b";
+    match relative_path_from(&here, &here) with
+    | option.some(path) -> { let dot: string = "."; if (!texts_equal(&path, &dot)) { return 13; }; }
+    | option.none -> { return 14; };
+    return 42;
+}

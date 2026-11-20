@@ -1,0 +1,57 @@
+// Host threads for the machine interpreter (machine_engine.sn): the host
+// primitives a program's thread start needs, behind functions of plain
+// signatures. The C Stage0 (bootstrap/) has none of these primitives and no
+// closure literals; it compiles host_threads_unavailable.sn in this
+// module's place (cmake/modules/Stage1.cmake), and the Stage1 it builds
+// runs a program's threads as a kernel without clone would.
+
+مرادف عنوان_إغلاق_مضيف_خيوط = بدائي_عنوان_دالة;
+
+// Whether this build can start host threads.
+عام عرف خيوط_المضيف_متاحة(): منطقي { أرجع صواب; }
+
+// A host closure that calls الدالة(الوسيط), as the address of its
+// environment with one reference the thread (or C caller) keeps.
+عام عرف إغلاق_مضيف_بوسيط(الدالة: دالة(ط64): فراغ, الوسيط: ط64): ط64 {
+    دع المدخل: دالة(): فراغ = دالة(): فراغ -> الدالة(الوسيط);
+    دع العنوان: متغير ط64 = 0;
+    غير_آمن { العنوان := عنوان_إغلاق_مضيف_خيوط(المدخل); }
+    أرجع العنوان;
+}
+
+إذا ((الهدف.المنصة == «linux» || الهدف.المنصة == «android») && (الهدف.المعمارية == «x86_64» || الهدف.المعمارية == «aarch64»)) {
+    مرادف استنسخ_خيط_مضيف_خيوط = بدائي_استنسخ_خيط_نواة;
+
+    // The thread clone with the program's arguments, whose child runs the
+    // host closure at العنوان and exits; the kernel's answer.
+    عام عرف استنسخ_خيط_مضيف(
+        الرقم: ط64, الأعلام: ط64, المكدس: ط64, الأب: ط64, الابن: ط64, المحلي: ط64, العنوان: ط64
+    ): ط64 {
+        دع الناتج: متغير ط64 = 0;
+        غير_آمن { الناتج := استنسخ_خيط_مضيف_خيوط(الرقم, الأعلام, المكدس, الأب, الابن, المحلي, العنوان); }
+        أرجع الناتج;
+    }
+}
+إذا (!((الهدف.المنصة == «linux» || الهدف.المنصة == «android») && (الهدف.المعمارية == «x86_64» || الهدف.المعمارية == «aarch64»))) {
+    // No clone here: -ENOSYS.
+    عام عرف استنسخ_خيط_مضيف(
+        الرقم: ط64, الأعلام: ط64, المكدس: ط64, الأب: ط64, الابن: ط64, المحلي: ط64, العنوان: ط64
+    ): ط64 {
+        أرجع ~(37 مثل ط64);
+    }
+}
+
+إذا (الهدف.المنصة == «macos» && الهدف.المعمارية == «aarch64») {
+    مرادف مدخل_سي_مضيف_خيوط = بدائي_مدخل_سي_لدالة;
+
+    // The C-callable entry of the host closure at العنوان (its argument is
+    // that address), or 0.
+    عام عرف مدخل_سي_مضيف(العنوان: ط64): ط64 {
+        دع الناتج: متغير ط64 = 0;
+        غير_آمن { الناتج := مدخل_سي_مضيف_خيوط(العنوان); }
+        أرجع الناتج;
+    }
+}
+إذا (!(الهدف.المنصة == «macos» && الهدف.المعمارية == «aarch64»)) {
+    عام عرف مدخل_سي_مضيف(العنوان: ط64): ط64 { أرجع 0; }
+}

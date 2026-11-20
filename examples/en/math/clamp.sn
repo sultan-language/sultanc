@@ -1,0 +1,10 @@
+// Integer math exercise: clamp.
+import std.io.println;
+import std.text.number;
+
+def clamp_number(x: int, low: int, high: int): int { if (x < low) { return low; }; if (x > high) { return high; }; return x; }
+
+def main(): int {
+    println(int_to_text(clamp_number(35, 5, 30)));
+    return 0;
+}

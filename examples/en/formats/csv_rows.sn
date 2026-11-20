@@ -1,0 +1,13 @@
+// CSV parsing and row count: csv_rows.
+import std.io.println;
+import std.text.number;
+import std.csv.csv;
+
+
+def main(): int {
+    let source: string = "name,score\nAda,6\nNoor,20\n";
+    match parse_csv(&source) with
+    | result.ok(document) -> { println(uint_to_text(csv_record_count(&document))); }
+    | result.err(_) -> { return 1; };
+    return 0;
+}

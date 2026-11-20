@@ -1,0 +1,26 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+def main(): i32 {
+    let a: u64 = 4000000000;
+    let b: u64 = 3;
+
+    if ((a + b) != 4000000003) { return 1; };
+    if ((a - b) != 3999999997) { return 2; };
+    if ((b * 7) != 21) { return 3; };
+    if ((a / b) != 1333333333) { return 4; };
+    if ((a % b) != 1) { return 5; };
+
+    let shifted: u64 = b << 9;
+    if (shifted != 1536) { return 6; };
+    if ((shifted >> 8) != 6) { return 7; };
+
+    let byte: u8 = 255;
+    let widened: u64 = byte as u64;
+    if (widened != 255) { return 8; };
+
+    if (!(a > b)) { return 9; };
+    if (!(b < a)) { return 10; };
+    return 42;
+}

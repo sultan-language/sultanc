@@ -1,0 +1,13 @@
+// Isolating mixed Arabic and Latin text with Unicode direction marks so it displays in the
+// right order inside other text.
+import std.io.println;
+import std.text.number;
+import std.text.bidi;
+
+def main(): int {
+    let source: string = "SultanC مرحبا";
+    let isolated: string = bidi_isolate(&source);
+    if (length(isolated) <= length(source)) { return 1; };
+    println(isolated);
+    return 0;
+}

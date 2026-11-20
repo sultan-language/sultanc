@@ -1,0 +1,18 @@
+// JSON parse/stringify round-trip.
+import std.io.println;
+import std.text.number;
+import std.json.parse;
+import std.json.stringify;
+
+
+def main(): int {
+    let input: string = "{\"valid\":true,\"count\":3}";
+    match parse_json(&input) with
+    | result.err(_) -> { return 1; }
+    | result.ok(doc) -> {
+        match stringify_json(&doc) with
+        | result.err(_) -> { return 2; }
+        | result.ok(text) -> { println(text); };
+    };
+    return 0;
+}

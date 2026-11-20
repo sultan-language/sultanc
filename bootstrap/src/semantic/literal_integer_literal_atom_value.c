@@ -9,10 +9,54 @@ int __Semantic_Integer_Literal_Atom_Value__(const __Ast_Atom__ *__Atom__, int64_
 {
     if (__Atom__ == NULL || __Out_Value__ == NULL || __Atom__->__Kind__ != __Ast_Atom_Literal__ ||
         __Atom__->__As__.__Literal__ == NULL ||
-        __Atom__->__As__.__Literal__->__Kind__ != __Ast_Literal_Integer__)
+        __Atom__->__As__.__Literal__->__Kind__ != __Ast_Literal_Integer__ ||
+        __Atom__->__As__.__Literal__->__As__.__Integer__.__Unsigned_Wide__)
     {
         return 0;
     }
     *__Out_Value__ = __Atom__->__As__.__Literal__->__As__.__Integer__.__Value__;
     return 1;
+}
+
+/* Returns whether the atom is an unsigned-wide integer literal (> INT64_MAX). */
+int __Semantic_Integer_Literal_Atom_Is_Unsigned_Wide__(const __Ast_Atom__ *__Atom__)
+{
+    return __Atom__ != NULL && __Atom__->__Kind__ == __Ast_Atom_Literal__ &&
+           __Atom__->__As__.__Literal__ != NULL &&
+           __Atom__->__As__.__Literal__->__Kind__ == __Ast_Literal_Integer__ &&
+           __Atom__->__As__.__Literal__->__As__.__Integer__.__Unsigned_Wide__;
+}
+
+/* Returns whether the expression is an unsigned-wide integer literal atom. */
+int __Semantic_Integer_Literal_Expression_Is_Unsigned_Wide__(const __Ast_Expression__ *__Expression__)
+{
+    return __Expression__ != NULL && __Expression__->__Kind__ == __Ast_Expression_Atom__ &&
+           __Semantic_Integer_Literal_Atom_Is_Unsigned_Wide__(&__Expression__->__As__.__Atom__);
+}
+
+int __Semantic_Float_Literal_Expression__(const __Ast_Expression__ *__Expression__)
+{
+    if (__Expression__ == NULL)
+    {
+        return 0;
+    }
+    if (__Expression__->__Kind__ == __Ast_Expression_Unary__ &&
+        __Expression__->__As__.__Unary__.__Operation__ == __Unary_Negate__)
+    {
+        return __Semantic_Float_Literal_Expression__(__Expression__->__As__.__Unary__.__Operand__);
+    }
+    if (__Expression__->__Kind__ == __Ast_Expression_Binary__ &&
+        (__Expression__->__As__.__Binary__.__Operation__ == __Binary_Add__ ||
+         __Expression__->__As__.__Binary__.__Operation__ == __Binary_Subtract__ ||
+         __Expression__->__As__.__Binary__.__Operation__ == __Binary_Multiply__ ||
+         __Expression__->__As__.__Binary__.__Operation__ == __Binary_Divide__))
+    {
+        /* Arithmetic of float literals takes its Type from the context too. */
+        return __Semantic_Float_Literal_Expression__(__Expression__->__As__.__Binary__.__Left__) &&
+               __Semantic_Float_Literal_Expression__(__Expression__->__As__.__Binary__.__Right__);
+    }
+    return __Expression__->__Kind__ == __Ast_Expression_Atom__ &&
+           __Expression__->__As__.__Atom__.__Kind__ == __Ast_Atom_Literal__ &&
+           __Expression__->__As__.__Atom__.__As__.__Literal__ != NULL &&
+           __Expression__->__As__.__Atom__.__As__.__Literal__->__Kind__ == __Ast_Literal_Float__;
 }

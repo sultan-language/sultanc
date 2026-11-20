@@ -1,0 +1,24 @@
+// اختبار: تفاضلي
+// أهداف: x86_64-linux,thumbv7em-none-eabihf
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/en/target/cortex_m_float.sn
+// Single-precision arithmetic, comparisons and integer conversions on the
+// Cortex-M4/M7 FPU (thumbv7em-none-eabihf: FPv4-SP-D16, AAPCS-VFP, so f32
+// arguments and results travel in s0-s15). f64 there, and every float
+// operation on the soft-float eabi targets, would need a soft-float routine
+// and is rejected with SULTANC-TARGET-FEATURE-UNSUPPORTED.
+عرف كثيرة_الحدود(س: ع32, أ: ع32, ب: ع32): ع32 { أرجع (س * س * أ + ب * س - أ) / ب; }
+عرف أصغر(أ: ع32, ب: ع32): منطقي { أرجع أ < ب; }
+عرف إلى_صحيح(أ: ع32): ص32 { أرجع أ مثل ص32; }
+عرف من_صحيح(ن: ص32, م: ط32): ع32 { أرجع (ن مثل ع32) + (م مثل ع32); }
+
+عرف الرئيسية(): عدد {
+    دع ص: ع32 = كثيرة_الحدود(3.0, 2.0, 4.0);
+    إذا (ص != 7.0) { أرجع 1; };
+    إذا (!أصغر(ص, 7.25) || أصغر(ص, 6.75)) { أرجع 2; };
+    إذا (إلى_صحيح(-7.75) != -7) { أرجع 3; };
+    إذا (من_صحيح(-3, 10) != 7.0) { أرجع 4; };
+    إذا (إلى_صحيح(من_صحيح(100000, 23456)) != 123456) { أرجع 5; };
+    أرجع 42;
+}

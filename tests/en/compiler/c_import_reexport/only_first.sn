@@ -1,0 +1,4 @@
+// Part of tests/en/compiler/c_import_reexport/main.sn: imports first.h only.
+import "first.h";
+
+public def make(weight: i32): item_t { return first_item(weight); }

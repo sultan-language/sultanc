@@ -1,0 +1,6 @@
+def main(): int {
+    let text: string = "hello";
+    let first: &u8 = &text[0];
+    let moved: string = text;
+    return *first + length(moved);
+}

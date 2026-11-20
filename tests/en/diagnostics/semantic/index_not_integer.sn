@@ -1,0 +1,7 @@
+// اختبار: رفض
+// تشخيص: SULTANC-TYPE-MISMATCH
+// نظير: tests/ar/diagnostics/semantic/index_not_integer.sn
+def main(): i32 {
+    let values: vector i32 = [1, 2];
+    return values[true];
+}

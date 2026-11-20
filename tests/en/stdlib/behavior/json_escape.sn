@@ -1,0 +1,60 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/stdlib/behavior/json_escape.sn
+// std.json.escape writes one backslash per JSON escape, and its diagnostic
+// mode writes U+FFFD for bytes that are not valid UTF-8, so both modes emit
+// valid JSON. Expected output is spelled as bytes so no literal escape rule
+// is involved.
+import std.json.escape;
+import std.text.from_bytes;
+import std.text.compare;
+
+def same_bytes(actual: &vector u8, expected: &vector u8): bool {
+    let a: string = from_bytes(actual);
+    let e: string = from_bytes(expected);
+    return texts_equal(&a, &e);
+}
+
+def main(): int {
+    // a " \ LF BS 0x01 س z
+    let clean_bytes: vector u8 = [0x61, 0x22, 0x5C, 0x0A, 0x08, 0x01, 0xD8, 0xB3, 0x7A];
+    let clean: string = from_bytes(&clean_bytes);
+
+    // "a\"\\\n\b\u0001سz"
+    let document_expected: vector u8 = [
+        0x22, 0x61, 0x5C, 0x22, 0x5C, 0x5C, 0x5C, 0x6E, 0x5C, 0x62,
+        0x5C, 0x75, 0x30, 0x30, 0x30, 0x31, 0xD8, 0xB3, 0x7A, 0x22
+    ];
+    let document_out: mutable vector u8 = [];
+    if (!append_json_escaped_string(&mutable document_out, &clean)) { return 1; };
+    if (!same_bytes(&document_out, &document_expected)) { return 2; };
+
+    // "a\"\\\n\u0008\u0001سz": diagnostic mode has no short \b.
+    let diagnostic_expected: vector u8 = [
+        0x22, 0x61, 0x5C, 0x22, 0x5C, 0x5C, 0x5C, 0x6E, 0x5C, 0x75,
+        0x30, 0x30, 0x30, 0x38, 0x5C, 0x75, 0x30, 0x30, 0x30, 0x31,
+        0xD8, 0xB3, 0x7A, 0x22
+    ];
+    let diagnostic_out: mutable vector u8 = [];
+    if (!append_json_escaped_string_with_style(&mutable diagnostic_out, &clean, نمط_هروب_سلسلة_جسون.تشخيص())) { return 3; };
+    if (!same_bytes(&diagnostic_out, &diagnostic_expected)) { return 4; };
+
+    // x 0xFF y 0xE2 0x82: a stray byte and a truncated three-byte sequence.
+    let broken_bytes: vector u8 = [0x78, 0xFF, 0x79, 0xE2, 0x82];
+    let broken: string = from_bytes(&broken_bytes);
+
+    let rejected: mutable vector u8 = [];
+    if (append_json_escaped_string(&mutable rejected, &broken)) { return 5; };
+
+    // "x<FFFD>y<FFFD><FFFD>": one replacement per bad byte.
+    let replaced_expected: vector u8 = [
+        0x22, 0x78, 0xEF, 0xBF, 0xBD, 0x79,
+        0xEF, 0xBF, 0xBD, 0xEF, 0xBF, 0xBD, 0x22
+    ];
+    let replaced: mutable vector u8 = [];
+    if (!append_json_escaped_string_with_style(&mutable replaced, &broken, نمط_هروب_سلسلة_جسون.تشخيص())) { return 6; };
+    if (!same_bytes(&replaced, &replaced_expected)) { return 7; };
+    return 42;
+}

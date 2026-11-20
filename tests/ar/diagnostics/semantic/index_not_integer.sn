@@ -1,0 +1,7 @@
+// اختبار: رفض
+// تشخيص: SULTANC-TYPE-MISMATCH
+// نظير: tests/en/diagnostics/semantic/index_not_integer.sn
+عرف الرئيسية(): ص32 {
+    دع القيم: متجه ص32 = [1, 2];
+    أرجع القيم[صواب];
+}

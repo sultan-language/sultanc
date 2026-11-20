@@ -1,0 +1,7 @@
+error[SULTANC-PARSE-SYNTAX]: syntax error: expected `identifier`, found `if` — The parser expected a different token at this location.
+  --> tests/en/diagnostics/e2e/keyword_type_parameter.sn:7:13..7:15
+   |
+ 7 | type holder<if> = { value: int };
+   |             ^^ parser discovered the problem here
+   |
+  = help: this word is reserved and cannot be a name; choose another name

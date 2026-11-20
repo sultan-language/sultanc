@@ -1,0 +1,7 @@
+error[SULTANC-PARSE-SYNTAX]: syntax error: expected `identifier`, found `if` — The parser expected a different token at this location.
+  --> tests/ar/diagnostics/e2e/keyword_type_parameter.sn:7:11..7:14
+   |
+ 7 | نوع حاوية<إذا> = { القيمة: عدد };
+   |           ^^^ parser discovered the problem here
+   |
+  = help: this word is reserved and cannot be a name; choose another name

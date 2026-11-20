@@ -1,0 +1,13 @@
+// The root file of library/core/unicode: the Arabic spellings of its modules
+// (docs/en/reference/modules-and-imports.md, "Module spellings"). The
+// standard library is three libraries (docs/en/reference/std-layers.md); this
+// file names only this library's own children.
+
+module algorithms { ar: خوارزميات };
+module case_folding { ar: طي_الحالة };
+module case_mapping { ar: تحويل_الحالة };
+module data { ar: بيانات };
+module scalar { ar: قيم_قياسية };
+module sentence_boundary { ar: حدود_الجمل };
+module version { ar: إصدار };
+module word_boundary { ar: حدود_الكلمات };

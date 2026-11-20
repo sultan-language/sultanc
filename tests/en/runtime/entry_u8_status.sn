@@ -1,0 +1,9 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 7
+// نظير: tests/ar/runtime/entry_u8_status.sn
+// An 8-bit integer result is the process exit status, as in C.
+def main(): u8 {
+    let status: u8 = 7;
+    return status;
+}

@@ -1,0 +1,18 @@
+// اختبار: رفض
+// تشخيص: SULTANC-BORROW-REFERENCE-ESCAPE
+// نظير: tests/ar/diagnostics/safety/reference_through_local_escape.sn
+// The returned reference reads through `view`, which borrows a local.
+type table = {
+    items: vector int
+};
+
+def escape(): &int {
+    let start: vector int = [1, 2, 3];
+    let value: table = { items: start };
+    let view: &table = &value;
+    return &(*view).items[0];
+}
+
+def main(): int {
+    return *escape();
+}

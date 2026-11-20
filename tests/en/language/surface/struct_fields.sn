@@ -1,0 +1,12 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/language/surface/struct_fields.sn
+type Pair = { left: int, right: int };
+
+def main(): int {
+    let pair: mutable Pair = { left: 40, right: 1 };
+    pair.right := pair.right + 1;
+    return pair.left + pair.right;
+}

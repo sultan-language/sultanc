@@ -1,0 +1,25 @@
+type Small = i16;
+type ByteBox = { value: u8 };
+
+def accept_all(a: i8, b: i16, c: i32, d: i64, e: u8, f: u16, g: u32, h: u64, i: Small): i32 {
+    let local_i8: i8 = -128;
+    let local_u8: u8 = 255;
+    let record_value: ByteBox = { value: 255 };
+    let values: [] i16 = [32767, 42];
+    return c;
+}
+
+def add_right(x: i32): i32 {
+    return x + 2;
+}
+
+def add_left(x: i32): i32 {
+    return 2 + x;
+}
+
+def main(): i32 {
+    let a: i32 = accept_all(-128, 32767, 42, 42, 255, 65535, 4294967295, 42, 42);
+    let b: i32 = add_right(40);
+    let c: i32 = add_left(40);
+    return a + b - c;
+}

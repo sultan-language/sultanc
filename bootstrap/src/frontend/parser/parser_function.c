@@ -6,6 +6,7 @@
 #include "frontend/parser/span.h"
 #include "frontend/parser/storage.h"
 #include "frontend/parser/type_internal.h"
+#include "frontend/parser/module_internal.h"
 
 #include <stdalign.h>
 #include <string.h>
@@ -14,6 +15,7 @@
 __Ast_Function__ *__Parser_Parse_Function__(__Parser__ *__Parser_State__,
                                             __Text_Slice__ __Name__,
                                             int __Public__,
+                                            int __External__,
                                             __Source_Position__ __Start__)
 {
     /* Stores the parameters. */
@@ -24,7 +26,11 @@ __Ast_Function__ *__Parser_Parse_Function__(__Parser__ *__Parser_State__,
     __Ast_Block__ *__Body__ = NULL;
     /* References the function. */
     __Ast_Function__ *__Function__ = NULL;
+    /* Stores an external declaration's explicit linker symbol, if any. */
+    __Text_Slice__ __Link_Name__;
 
+    __Link_Name__.__Data__ = NULL;
+    __Link_Name__.__Length__ = 0U;
     __Vector_Init__(&__Parameters__, sizeof(__Ast_Function_Parameter__));
     if (!__Parser_Expect__(__Parser_State__, __Token_LEFT_PARENTHESIS_OPERATOR__))
     {
@@ -95,11 +101,31 @@ __Ast_Function__ *__Parser_Parse_Function__(__Parser__ *__Parser_State__,
             return NULL;
         }
         __Output_End__ = __Parser_State__->__Previous__.__Span__.__End__;
-        __Body__ = __Parser_Parse_Block__(__Parser_State__);
-        if (__Body__ == NULL)
+        if (__External__)
         {
-            __Vector_Destroy__(&__Parameters__);
-            return NULL;
+            /* `= «symbol»` names the exact linker symbol (canonical:
+             * أكمل_جسم_دالة). */
+            if (__Parser_Accept__(__Parser_State__, __Token_DEFINITION_SEPARATOR__) &&
+                !__Parser_Parse_Native_Link_Text__(__Parser_State__, &__Link_Name__))
+            {
+                __Vector_Destroy__(&__Parameters__);
+                return NULL;
+            }
+            if (!__Parser_Expect__(__Parser_State__, __Token_SEMICOLON_OPERATOR__))
+            {
+                __Vector_Destroy__(&__Parameters__);
+                return NULL;
+            }
+        }
+        else
+        {
+            __Parser_State__->__Output_Is_Option__ = __Output_Type__->__Kind__ == __Ast_Type_Option__;
+            __Body__ = __Parser_Parse_Block__(__Parser_State__);
+            if (__Body__ == NULL)
+            {
+                __Vector_Destroy__(&__Parameters__);
+                return NULL;
+            }
         }
         __Function__ = (__Ast_Function__ *)__Ast_Allocate__(
             __Parser_State__->__Ast__, sizeof(*__Function__), alignof(__Ast_Function__));
@@ -111,10 +137,15 @@ __Ast_Function__ *__Parser_Parse_Function__(__Parser__ *__Parser_State__,
         }
         memset(__Function__, 0, sizeof(*__Function__));
         __Function__->__Header__ =
-            __Ast_New_Header__(__Parser_State__->__Ast__,
-                               __Parser_Span__(__Start__, __Body__->__Header__.__Span__.__End__));
+            __Ast_New_Header__(
+                __Parser_State__->__Ast__,
+                __Parser_Span__(__Start__, __External__
+                    ? __Parser_State__->__Previous__.__Span__.__End__
+                    : __Body__->__Header__.__Span__.__End__));
         __Function__->__Name__ = __Name__;
         __Function__->__Public__ = __Public__;
+        __Function__->__External__ = __External__;
+        __Function__->__Link_Name__ = __Link_Name__;
         __Function__->__Parameter_Count__ = __Parameters__.__Count__;
         __Function__->__Parameters__ = (__Ast_Function_Parameter__ *)__Parser_Freeze_Vector__(
             __Parser_State__, &__Parameters__, alignof(__Ast_Function_Parameter__));

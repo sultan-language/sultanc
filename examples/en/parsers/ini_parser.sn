@@ -1,0 +1,13 @@
+// Parsing an INI-style setting: split name=value at "=" and print the value.
+import std.io.println;
+import std.text.number;
+import std.text.transform;
+
+def main(): int {
+    let source: string = "name=SultanC";
+    let sep: string = "=";
+    let parts: vector string = split(&source, &sep);
+    if (length(parts) != 2) { return 1; };
+    println(clone(&parts[1]));
+    return 0;
+}

@@ -1,0 +1,10 @@
+// اختبار: رفض
+// تشخيص: SULTANC-BORROW-CONFLICT
+// A slice viewing a vector borrows it: the vector cannot be changed while
+// the view is alive.
+def main(): int {
+    let values: mutable vector int = [1, 2, 3];
+    let view: [] int = values;
+    append(values, 4);
+    return length(view) as int;
+}

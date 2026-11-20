@@ -1,0 +1,3 @@
+def before(): int { return 1; }
+type Broken = { value: int }
+def after(): int { return 42; }

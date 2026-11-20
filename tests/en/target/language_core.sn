@@ -1,0 +1,93 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux,aarch64-linux-gnu,x86_64-darwin,x86_64-windows-msvc,aarch64-windows-msvc,x86_64-android,aarch64-android,armv7-android,x86_64-freebsd,aarch64-freebsd,riscv64-freebsd,i686-linux-gnu,armv7-linux-gnueabihf,riscv64-linux-gnu,riscv32-unknown-elf,wasm32-wasi,wasm32-browser,wasm64-unknown-unknown,amdgcn-amd-amdhsa,avr-unknown-unknown,bpfel-unknown-none,hexagon-unknown-elf,lanai-unknown-unknown,loongarch64-linux-gnu,mips64el-linux-gnuabi64,msp430-unknown-elf,nvptx64-nvidia-cuda,powerpc64le-linux-gnu,sparcv9-linux-gnu,spirv64-unknown-unknown,s390x-linux-gnu,ve-linux-gnu,xcore-unknown-unknown,thumbv6m-none-eabi,thumbv7m-none-eabi,thumbv7em-none-eabi,thumbv7em-none-eabihf
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/target/language_core.sn
+// The language core with no OS service, on all 38 targets: records, tagged
+// unions, matches, generics, loops, narrowing casts and integer arithmetic of
+// every width, including 64-bit division on 8-, 16- and 32-bit machines.
+// Freestanding targets compile it to an object (assembly for nvptx64 and
+// xcore); hosted targets run it.
+
+type point = { x: i64, y: i64 };
+type shape =
+    | circle of i64
+    | rectangle of point
+    | empty
+;
+
+def area(s: shape): i64 {
+    match s with
+    | shape.circle(r) -> { return 3 * r * r; }
+    | shape.rectangle(p) -> { return p.x * p.y; }
+    | shape.empty -> { return 0; };
+}
+
+def larger<T>(a: T, b: T, a_wins: bool): T {
+    if (a_wins) { return a; };
+    return b;
+}
+
+// Wide division and remainder by values the optimizer cannot fold.
+def divide_check(n: u64, d: u64): bool {
+    let q: u64 = n / d;
+    let r: u64 = n % d;
+    return (q * d) + r == n && r < d;
+}
+
+def signed_check(n: i64, d: i64): bool {
+    let q: i64 = n / d;
+    let r: i64 = n % d;
+    return (q * d) + r == n;
+}
+
+// Checked 64-bit products at the edge of the range; none overflows.
+def products_check(a: i64, b: u64): bool {
+    let min_product: i64 = (a * 2) * 2;
+    let max_product: i64 = (a + 1) * -4 * -1;
+    let unsigned_product: u64 = (b - 1) * (b + 1);
+    let square: u64 = (b / 2) * (b / 2);
+    return min_product == -9223372036854775807 - 1
+        && max_product == -9223372036854775804
+        && unsigned_product == 18446744073709551615
+        && square == 4611686018427387904;
+}
+
+def checksum(limit: u32): u32 {
+    let total: mutable u32 = 0;
+    let i: mutable u32 = 1;
+    while (i <= limit) {
+        total := ((total * 31) + (i ^ 0x5a5a)) % 1000003;
+        i := i + 1;
+    }
+    return total;
+}
+
+def main(): int {
+    let a: i64 = area(shape.circle(2));
+    let p: point = { x: 6, y: 7 };
+    let b: i64 = area(shape.rectangle(p));
+    if (a != 12 || b != 42) { return 1; };
+    if (area(shape.empty()) != 0) { return 2; };
+    if (larger(5, 9, false) != 9) { return 3; };
+
+    let big: u64 = 18446744073709551557;
+    let i: mutable u64 = 1;
+    while (i < 1000000007) {
+        if (!divide_check(big, i)) { return 4; };
+        if (!signed_check(-9223372036854775807, i as i64)) { return 5; };
+        i := (i * 7) + 3;
+    }
+    let x: i64 = -7;
+    if (x / 2 != -3 || x % 2 != -1) { return 6; };
+    if ((big >> 60) != 15 || (1 as u64 << 63) != 9223372036854775808) { return 7; };
+    let small: i8 = -128;
+    let widened: i64 = small as i64;
+    if (widened != -128) { return 8; };
+    let wrapped: u8 = (300 as u16) as u8;
+    if (wrapped != 44) { return 9; };
+    if (checksum(1000) != checksum(1000)) { return 10; };
+    if (checksum(10) != 87209) { return 11; };
+    if (!products_check(-2305843009213693952, 4294967296)) { return 12; };
+    return 42;
+}

@@ -1,0 +1,191 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/stdlib/behavior/http2_connection.sn
+// std.http.http2.connection over a loopback TCP pair in one process, each
+// side stepped by hand: the preface and SETTINGS exchange, two concurrent
+// streams (a GET and a POST with a body), header blocks through HPACK, a
+// 20 000-byte response sent through an 8 KiB stream window that only grows
+// with WINDOW_UPDATE, PING and its ACK, RST_STREAM, then GOAWAY.
+from std.net import
+    parse_socket_addr,
+    tcp_bind_with_options,
+    tcp_connect,
+    tcp_accept,
+    tcp_listener_close,
+    socket_option,
+    reuse_address;
+import std.io.writer;
+import std.text.from_bytes;
+import std.http.model;
+import std.http.transport;
+import std.http.http2.frame;
+import std.http.http2.connection;
+
+def field(name: string, value: string): http_header {
+    let h: http_header = { الاسم: name, القيمة: value };
+    return h;
+}
+
+def same_text(a: &string, b: string): bool {
+    if (length(*a) != length(b)) { return false; };
+    let i: mutable uint = 0;
+    while (i < (length(b) as uint)) { if ((*a)[i] != b[i]) { return false; }; i := i + 1; }
+    return true;
+}
+
+def step(connection: &mutable http2_connection): bool {
+    match http2_read_and_process_frame(connection) with
+    | result.ok(_) -> { return true; }
+    | result.err(_) -> { return false; };
+}
+
+def index_of(connection: &http2_connection, id: uint): uint {
+    match http2_stream_index(connection, id) with
+    | option.some(i) -> { return i; }
+    | option.none -> { return 9999; };
+}
+
+def run(server: &mutable http2_connection, client: &mutable http2_connection): int {
+    // Preface and SETTINGS (RFC 9113 3.4).
+    let preface: vector u8 = http2_preface();
+    match write_all(&(*client).الناقل, http_transport_write, &preface) with
+    | result.err(_) -> { return 10; } | result.ok(_) -> { };
+    match http2_send_settings(client) with | result.err(_) -> { return 11; } | result.ok(_) -> { };
+    match http2_send_settings(server) with | result.err(_) -> { return 12; } | result.ok(_) -> { };
+    match http2_read_preface(server) with | result.err(_) -> { return 13; } | result.ok(_) -> { };
+    // The client's SETTINGS reach the server (an 8 KiB window needs no
+    // connection WINDOW_UPDATE).
+    if (!step(server)) { return 14; };
+    if (!(*server).إعدادات_مستلمة) { return 15; };
+    // The server's SETTINGS, WINDOW_UPDATE and SETTINGS ACK reach the client.
+    if (!step(client) || !step(client) || !step(client)) { return 16; };
+    if (!step(server)) { return 17; };
+
+    // Two concurrent streams.
+    let get: uint = http2_open_stream(client);
+    let get_headers: mutable vector http_header = [];
+    append(get_headers, field(":method", "GET"));
+    append(get_headers, field(":scheme", "http"));
+    append(get_headers, field(":authority", "127.0.0.1"));
+    append(get_headers, field(":path", "/one"));
+    match http2_send_headers(client, get, &get_headers, true) with | result.err(_) -> { return 20; } | result.ok(_) -> { };
+    let post: uint = http2_open_stream(client);
+    let post_headers: mutable vector http_header = [];
+    append(post_headers, field(":method", "POST"));
+    append(post_headers, field(":scheme", "http"));
+    append(post_headers, field(":authority", "127.0.0.1"));
+    append(post_headers, field(":path", "/two"));
+    match http2_send_headers(client, post, &post_headers, false) with | result.err(_) -> { return 21; } | result.ok(_) -> { };
+    let body: mutable vector u8 = [];
+    let i: mutable uint = 0;
+    while (i < 2000) { append(body, (i % 256) as u8); i := i + 1; }
+    http2_queue_body(client, post, body);
+    match http2_flush_data(client) with | result.err(_) -> { return 22; } | result.ok(_) -> { };
+    if (get != 1 || post != 3) { return 23; };
+
+    // The server sees both requests complete.
+    let frames: mutable uint = 0;
+    while (frames < 3) { if (!step(server)) { return 24; }; frames := frames + 1; }
+    let g: uint = index_of(server, 1);
+    let p: uint = index_of(server, 3);
+    if (g == 9999 || p == 9999) { return 25; };
+    if (!(*server).التيارات[g].مغلق_بعيدا || !(*server).التيارات[p].مغلق_بعيدا) { return 26; };
+    if (!same_text(&(*server).التيارات[g].الرؤوس[3].القيمة, "/one")) { return 27; };
+    if (length((*server).التيارات[p].الجسم) != 2000 || (*server).التيارات[p].الجسم[1999] != 207) { return 28; };
+
+    // Responses: a short one, and 20 000 bytes through an 8 KiB window.
+    let ok_headers: mutable vector http_header = [];
+    append(ok_headers, field(":status", "200"));
+    append(ok_headers, field("content-type", "text/plain"));
+    match http2_send_headers(server, 3, &ok_headers, false) with | result.err(_) -> { return 30; } | result.ok(_) -> { };
+    let large: mutable vector u8 = [];
+    i := 0;
+    while (i < 20000) { append(large, (65 + (i % 26)) as u8); i := i + 1; }
+    http2_queue_body(server, 3, large);
+    let reply: vector u8 = bytes_from_text("one");
+    match http2_send_headers(server, 1, &ok_headers, false) with | result.err(_) -> { return 31; } | result.ok(_) -> { };
+    http2_queue_body(server, 1, reply);
+    let rounds: mutable uint = 0;
+    let pending: mutable bool = true;
+    while (pending) {
+        match http2_flush_data(server) with
+        | result.err(_) -> { return 32; }
+        | result.ok(more) -> { pending := more; };
+        // The client reads what was sent, which returns window credit.
+        let cp: uint = index_of(client, 3);
+        let sent: uint = (*server).التيارات[index_of(server, 3)].موضع_الإرسال;
+        while (length((*client).التيارات[cp].الجسم) as uint < sent || !(*client).التيارات[index_of(client, 1)].مغلق_بعيدا) {
+            if (!step(client)) { return 33; };
+        }
+        if (pending) {
+            // Window updates for the connection and the stream reach the server.
+            let before: int = (*server).التيارات[index_of(server, 3)].نافذة_الإرسال;
+            while ((*server).التيارات[index_of(server, 3)].نافذة_الإرسال == before) {
+                if (!step(server)) { return 34; };
+            }
+        };
+        rounds := rounds + 1;
+        if (rounds > 20) { return 35; };
+    }
+    if (rounds < 3) { return 36; };
+    let c3: uint = index_of(client, 3);
+    if (length((*client).التيارات[c3].الجسم) != 20000 || !(*client).التيارات[c3].مغلق_بعيدا) { return 37; };
+    if (!same_text(&(*client).التيارات[c3].الرؤوس[0].القيمة, "200")) { return 38; };
+    let c1: uint = index_of(client, 1);
+    if (length((*client).التيارات[c1].الجسم) != 3) { return 39; };
+
+    // PING and its ACK (6.7).
+    let opaque: vector u8 = [1, 2, 3, 4, 5, 6, 7, 8];
+    match http2_send_frame(client, 6, 0, 0, &opaque) with | result.err(_) -> { return 40; } | result.ok(_) -> { };
+    if (!step(server) || !step(client)) { return 41; };
+
+    // A reset stream (6.4).
+    let third: uint = http2_open_stream(client);
+    match http2_send_headers(client, third, &get_headers, false) with | result.err(_) -> { return 42; } | result.ok(_) -> { };
+    match http2_reset_stream(client, third, 8) with | result.err(_) -> { return 43; } | result.ok(_) -> { };
+    if (!step(server) || !step(server)) { return 44; };
+    let s5: uint = index_of(server, 5);
+    if (s5 == 9999 || !(*server).التيارات[s5].ملغى || (*server).التيارات[s5].رمز_الإلغاء != 8) { return 45; };
+
+    // GOAWAY (6.8).
+    http2_goaway(server);
+    if (!step(client)) { return 46; };
+    if (!(*client).وداع_مستلم || (*client).آخر_معرف_وداع != 5) { return 47; };
+    return 0;
+}
+
+def main(): int {
+    let text: string = "127.0.0.1:38631";
+    match parse_socket_addr(&text) with
+    | result.err(_) -> { return 1; }
+    | result.ok(addr) -> {
+        let options: vector socket_option = [reuse_address(true)];
+        match tcp_bind_with_options(&addr, 4, &options) with
+        | result.err(_) -> { return 2; }
+        | result.ok(listener) -> {
+            match tcp_connect(&addr) with
+            | result.err(_) -> { return 3; }
+            | result.ok(client_stream) -> {
+                match tcp_accept(&listener) with
+                | result.err(_) -> { return 4; }
+                | result.ok(server_stream) -> {
+                    let server_limits: http2_limits = default_http2_limits();
+                    let client_limits: mutable http2_limits = default_http2_limits();
+                    client_limits.النافذة_الأولية := 8192;
+                    let nothing1: vector u8 = [];
+                    let nothing2: vector u8 = [];
+                    let server: mutable http2_connection = new_http2_connection(http_transport.tcp(server_stream), true, &server_limits, nothing1);
+                    let client: mutable http2_connection = new_http2_connection(http_transport.tcp(client_stream), false, &client_limits, nothing2);
+                    let status: int = run(&mutable server, &mutable client);
+                    let closed_client: result int, int = http2_close(client);
+                    let closed_server: result int, int = http2_close(server);
+                    if (status != 0) { return status; };
+                };
+            };
+            let closed: result int, int = tcp_listener_close(listener);
+        };
+    };
+    return 42;
+}

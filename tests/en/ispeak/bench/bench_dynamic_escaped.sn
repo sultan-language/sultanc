@@ -1,0 +1,36 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 0
+// نظير: tests/ar/ispeak/bench/bench_dynamic_escaped.sn
+import std.text.compare;
+import std.text.from_bytes;
+import compiler.diagnostics.identity;
+import compiler.diagnostics.reason;
+import compiler.ispeak.format.facts;
+import compiler.diagnostics.schema;
+import compiler.ispeak.ispeak;
+
+// 200,000 exact-match calls; direct, specialized backtick-quoted facts.
+def name_facts_value(): حقائق_اسم_غير_معروف {
+    let values: حقائق_اسم_غير_معروف = { الاسم: "simple`identifier_0123456789_abcdefghijklmnopqrstuvwxyz" };
+    return values;
+}
+
+def main(): int {
+    let key: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.اسم_غير_معروف());
+    let expected: string = «unknown name: `simple\`identifier_0123456789_abcdefghijklmnopqrstuvwxyz`»;
+    let message_length: uint = length(expected) as uint;
+    let total: mutable uint = 0;
+    let i: mutable uint = 0;
+    while (i < 200000) {
+        match رسالة_تشخيص_بحجج(لغة_تشخيص.الإنجليزية(), key, حقائق_رسالة.اسم_غير_معروف(name_facts_value())) with
+        | option.some(output) -> {
+            total := total + (length(output) as uint);
+            if (i == 0 && !texts_equal(&output, &expected)) { return 1; };
+        }
+        | option.none -> { return 2; };
+        i := i + 1;
+    }
+    if (total != message_length * 200000) { return 3; };
+    return 0;
+}

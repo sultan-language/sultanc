@@ -1,0 +1,76 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux,aarch64-linux-gnu,x86_64-darwin,x86_64-windows-msvc,aarch64-windows-msvc,x86_64-android,aarch64-android,armv7-android,x86_64-freebsd,aarch64-freebsd,riscv64-freebsd,i686-linux-gnu,armv7-linux-gnueabihf,riscv64-linux-gnu,loongarch64-linux-gnu,mips64el-linux-gnuabi64,powerpc64le-linux-gnu,s390x-linux-gnu,sparcv9-linux-gnu,wasm32-wasi
+// خروج: 42
+// خرج-قياسي: 10 20 30|second|a-b-c|7|-9223372036854775807|18446744073709551615
+// تفاضلي: نعم
+// نظير: tests/ar/target/std_text_collections.sn
+// std on every hosted target: standard output, text, numbers, vectors, a hash
+// map and a B-tree map. The line printed is the same everywhere.
+import std.io.print;
+import std.text.number;
+import std.text.transform;
+import std.text.search;
+import std.collections.map;
+import std.collections.btree_map;
+import std.collections.sort;
+
+def compare_ints(left: &int, right: &int): int { return *left - *right; }
+def hash_int(value: &int): uint { return ((*value) as uint) * 2654435761; }
+def same_int(left: &int, right: &int): bool { return *left == *right; }
+
+def main(): int {
+    let scores: mutable btree_map<int, string> = new_btree_map(compare_ints);
+    btree_map_insert(&mutable scores, 30, "third");
+    btree_map_insert(&mutable scores, 10, "first");
+    btree_map_insert(&mutable scores, 20, "second");
+    let keys: vector int = btree_map_keys(&scores);
+    let texts: mutable vector string = [];
+    let i: mutable uint = 0;
+    while (i < (length(keys) as uint)) {
+        append(texts, int_to_text(keys[i]));
+        i := i + 1;
+    }
+    let space: string = " ";
+    let line: mutable vector string = [];
+    append(line, join(&texts, &space));
+    let wanted: int = 20;
+    match btree_map_get(&scores, &wanted) with
+    | option.some(name) -> { append(line, name); }
+    | option.none -> { return 1; };
+
+    let csv: string = "a,b,c";
+    let comma: string = ",";
+    let parts: vector string = split(&csv, &comma);
+    let dash: string = "-";
+    append(line, join(&parts, &dash));
+
+    // A hash map with enough keys to grow several times.
+    let counts: mutable map<int, int> = new_map(hash_int, same_int);
+    let k: mutable int = 0;
+    while (k < 500) {
+        map_insert(&mutable counts, k % 7, k);
+        k := k + 1;
+    }
+    append(line, int_to_text(map_length(&counts) as int));
+
+    // 64-bit text conversion, both directions.
+    let low: string = "-9223372036854775807";
+    let high: string = "18446744073709551615";
+    match parse_int(&low) with
+    | result.ok(v) -> { append(line, int_to_text(v)); }
+    | result.err(_) -> { return 2; };
+    match parse_uint(&high) with
+    | result.ok(v) -> { append(line, uint_to_text(v)); }
+    | result.err(_) -> { return 3; };
+
+    let numbers: mutable vector int = [5, -3, 9, 0, 2];
+    sort_int(&mutable numbers);
+    if (numbers[0] != -3 || numbers[4] != 9) { return 4; };
+    let phrase: string = "cross-compiled";
+    let part: string = "comp";
+    if (!contains(&phrase, &part)) { return 5; };
+
+    let bar: string = "|";
+    print(join(&line, &bar));
+    return 42;
+}

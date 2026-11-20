@@ -1,0 +1,66 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 0
+// نظير: tests/ar/stdlib/behavior/cancel_deadline.sn
+// Cancellation tokens (std.sync.cancel) and request deadlines
+// (std.http.deadline): an explicit cancel reaches the copies, a deadline
+// passes after its time, a service that runs past its deadline is answered
+// 503 with "connection: close", and one that finishes in time keeps its own.
+import std.sync.cancel;
+import std.time.time;
+import std.http.model;
+import std.http.headers;
+import std.http.deadline;
+import std.text.from_bytes;
+
+type State = { delay: int };
+
+def service(state: &State, request: &buffered_http_request): buffered_http_response {
+    if ((*state).delay > 0) { let n: result int, int = sleep_ns((*state).delay); };
+    let headers: vector http_header = [];
+    let trailers: vector http_header = [];
+    let body: vector u8 = [];
+    let response: buffered_http_response = {
+        الإصدار: http_version.http_1_1(), الحالة: 200, الرؤوس: headers, الرؤوس_اللاحقة: trailers, الجسم: body
+    };
+    return response;
+}
+
+def empty_request(): buffered_http_request {
+    let headers: vector http_header = [];
+    let trailers: vector http_header = [];
+    let body: vector u8 = [];
+    let request: buffered_http_request = {
+        الطريقة: "GET", الهدف: "/", الإصدار: http_version.http_1_1(), الرؤوس: headers,
+        الرؤوس_اللاحقة: trailers, الجسم: body, العنوان_البعيد: "", السياق: http_request_context_empty()
+    };
+    return request;
+}
+
+def main(): int {
+    let a: cancel_token = cancel_token_new();
+    let b: cancel_token = cancel_token_clone(&a);
+    if (is_cancelled(&b)) { return 1; };
+    cancel(&a);
+    if (!is_cancelled(&b)) { return 2; };
+
+    let t: cancel_token = cancel_token_with_timeout(20);
+    if (is_cancelled(&t)) { return 3; };
+    let n: result int, int = sleep_ns(40000000);
+    if (!is_cancelled(&t)) { return 4; };
+
+    let slow: State = { delay: 40000000 };
+    let r1: mutable buffered_http_request = empty_request();
+    let s1: buffered_http_response = serve_with_http_deadline(&slow, service, &mutable r1, 10);
+    if (s1.الحالة != 503) { return 5; };
+    if (!http_request_cancelled(&r1)) { return 6; };
+
+    let fast: State = { delay: 0 };
+    let r2: mutable buffered_http_request = empty_request();
+    let s2: buffered_http_response = serve_with_http_deadline(&fast, service, &mutable r2, 5000);
+    if (s2.الحالة != 200) { return 7; };
+    match http_request_remaining_ms(&r2) with
+    | option.none -> { return 8; }
+    | option.some(left) -> { if (left <= 0) { return 9; }; };
+    return 0;
+}

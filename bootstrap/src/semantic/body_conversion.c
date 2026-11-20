@@ -35,6 +35,15 @@ int __Body_Infer_Conversion__(__Semantic_Body_Context__ *__Context__,
         return __Body_Fail__(
             __Context__, __E0400_Mismatched_Types__, __Expression__->__Header__.__Span__);
     }
+    /* The byte-vector-to-text cast is an ownership transfer: the source
+     * buffer cannot remain usable or aliased after the conversion. */
+    if (__Type_Is_Byte_Vector_To_Text_Move__(
+            __Context__->__Semantic__, __Source_Type__, __Target_Type__) &&
+        !__Body_Safety_Move_Expression__(
+            __Context__, __Expression__->__As__.__Conversion__.__Operand__, NULL))
+    {
+        return 0;
+    }
 
     *__Out_Type__ = __Target_Type__;
     return 1;

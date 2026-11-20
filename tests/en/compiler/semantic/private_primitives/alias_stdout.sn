@@ -1,0 +1,9 @@
+// اختبار: رفض
+// خروج: 1
+// تشخيص: SULTANC-NAME-UNKNOWN
+alias sneaky_stdout = بدائي_كتابة_خرج;
+
+def main(): int {
+    sneaky_stdout("no");
+    return 0;
+}

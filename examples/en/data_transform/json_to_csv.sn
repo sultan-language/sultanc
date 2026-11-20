@@ -1,0 +1,40 @@
+// JSON to CSV: read a string and a number from a JSON object, write them as a CSV row under
+// a header and check that the CSV parses.
+import std.io.println;
+import std.text.number;
+import std.json.parse;
+import std.json.value;
+import std.csv.csv;
+import std.text.transform;
+
+def main(): int {
+    let source: string = "{\"name\":\"Ali\",\"age\":31}";
+    let name: mutable string = "";
+    let age: mutable string = "";
+    match parse_json(&source) with
+    | result.err(_) -> { return 1; }
+    | result.ok(doc) -> {
+        match json_root(&doc) with
+        | قيمة_جسون.كائن(index) -> {
+            let key_name: string = "name";
+            let key_age: string = "age";
+            match json_object_get(&doc, index, &key_name) with
+            | option.some(قيمة_جسون.سلسلة(v)) -> { name := v; }
+            | _ -> { return 2; };
+            match json_object_get(&doc, index, &key_age) with
+            | option.some(قيمة_جسون.رقم(v)) -> { age := v; }
+            | _ -> { return 3; };
+        }
+        | _ -> { return 4; };
+    };
+    let parts: vector string = ["name,age\n", name, ",", age, "\n"];
+    let empty: string = "";
+    let csv: string = join(&parts, &empty);
+    match parse_csv(&csv) with
+    | result.ok(doc) -> {
+        if (csv_record_count(&doc) != 2 as uint) { return 5; };
+    }
+    | result.err(_) -> { return 6; };
+    println(csv);
+    return 0;
+}

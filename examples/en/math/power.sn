@@ -1,0 +1,10 @@
+// Integer math exercise: power.
+import std.io.println;
+import std.text.number;
+
+def power(base: int, n: int): int { let total: mutable int = 1; let i: mutable int = 0; while (i < n) { total := total * base; i := i + 1; }; return total; }
+
+def main(): int {
+    println(int_to_text(power(2, 6)));
+    return 0;
+}

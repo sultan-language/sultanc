@@ -1,0 +1,11 @@
+// `from ... import` brings chosen names from a library directory into scope.
+from std.text import int_to_text, contains;
+from std.io import println;
+
+def main(): int {
+    println(int_to_text(2026));
+    let sentence: string = "imports can be selective";
+    let word: string = "selective";
+    if (contains(&sentence, &word)) { println("found"); };
+    return 0;
+}

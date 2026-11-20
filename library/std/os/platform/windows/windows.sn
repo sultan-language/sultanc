@@ -1,0 +1,6 @@
+// The root file of std.os.platform.windows: the Arabic spellings of its modules
+// (docs/en/reference/modules-and-imports.md, "Module spellings"). An import may
+// use either name; both name one module.
+
+module win32 { ar: وين32 };
+module winsock { ar: وين_سوك };

@@ -3,7 +3,6 @@
 #ifndef SULTANC_BOOTSTRAP_TARGET_BOOTSTRAP_TARGET_H
 #define SULTANC_BOOTSTRAP_TARGET_BOOTSTRAP_TARGET_H
 
-#include "llvm/llvm_c_api.h"
 #include <stddef.h>
 
 /* Identifies the target architecture facts consumed by Stage0 runtime lowering. */
@@ -12,7 +11,9 @@ typedef enum
     __Bootstrap_Target_Architecture_Unknown__,
     __Bootstrap_Target_Architecture_AArch64__,
     __Bootstrap_Target_Architecture_X86_64__,
-    __Bootstrap_Target_Architecture_RISCV64__
+    __Bootstrap_Target_Architecture_RISCV64__,
+    __Bootstrap_Target_Architecture_Wasm32__,
+    __Bootstrap_Target_Architecture_Wasm64__
 } __Bootstrap_Target_Architecture__;
 
 /* Identifies the target operating-system facts consumed by Stage0 runtime lowering. */
@@ -21,7 +22,8 @@ typedef enum
     __Bootstrap_Target_Platform_Unknown__,
     __Bootstrap_Target_Platform_Darwin__,
     __Bootstrap_Target_Platform_Linux__,
-    __Bootstrap_Target_Platform_Windows__
+    __Bootstrap_Target_Platform_Windows__,
+    __Bootstrap_Target_Platform_Wasi__
 } __Bootstrap_Target_Platform__;
 
 /* Identifies the target ABI environment facts consumed by Stage0 runtime lowering. */
@@ -32,24 +34,6 @@ typedef enum
     __Bootstrap_Target_Environment_Musl__,
     __Bootstrap_Target_Environment_MSVC__
 } __Bootstrap_Target_Environment__;
-
-/* Identifies the object format implied by the normalized target. */
-typedef enum
-{
-    __Bootstrap_Target_Object_Unknown__,
-    __Bootstrap_Target_Object_ELF__,
-    __Bootstrap_Target_Object_MachO__,
-    __Bootstrap_Target_Object_COFF__,
-    __Bootstrap_Target_Object_Wasm__
-} __Bootstrap_Target_Object_Format__;
-
-/* Identifies the custom Stage1 executable finalizers that actually exist. */
-typedef enum
-{
-    __Bootstrap_Target_Finalizer_Unsupported__,
-    __Bootstrap_Target_Finalizer_MachO_ARM64__,
-    __Bootstrap_Target_Finalizer_ELF_X86_64__
-} __Bootstrap_Target_Finalizer__;
 
 /* Stores one normalized bootstrap compilation target. */
 typedef struct
@@ -62,11 +46,28 @@ typedef struct
     __Bootstrap_Target_Platform__ platform;
     /* Stores the ABI environment identity needed by bootstrap runtime semantics. */
     __Bootstrap_Target_Environment__ environment;
-    /* Stores the object format implied by the target identity. */
-    __Bootstrap_Target_Object_Format__ object_format;
-    /* Tracks whether the target came from an explicit user request. */
-    int explicit_target;
 } __Bootstrap_Target__;
+
+/* Identifies the target-predicate fields Stage0's target model can answer.
+ * Spellings mirror compiler/backend/target/target_spelling.sn as consumed by
+ * compiler/frontend/parser/target_conditions.sn (قيمة_حقل_حارس_هدف). */
+typedef enum
+{
+    /* الهدف.المنصة */
+    __Bootstrap_Target_Condition_Platform__,
+    /* الهدف.البيئة */
+    __Bootstrap_Target_Condition_Environment__,
+    /* الهدف.المعمارية */
+    __Bootstrap_Target_Condition_Architecture__,
+    /* الهدف.عائلة_المنصة */
+    __Bootstrap_Target_Condition_Platform_Family__,
+    /* الهدف.صيغة_الكائن */
+    __Bootstrap_Target_Condition_Object_Format__,
+    /* الهدف.ترتيب_البايت */
+    __Bootstrap_Target_Condition_Byte_Order__,
+    /* الهدف.عرض_المؤشر */
+    __Bootstrap_Target_Condition_Pointer_Width__
+} __Bootstrap_Target_Condition_Field__;
 
 /* Initializes one canonical target from an optional Sultan alias or LLVM triple. */
 int __Bootstrap_Target_Init__(__Bootstrap_Target__ *target,
@@ -74,14 +75,13 @@ int __Bootstrap_Target_Init__(__Bootstrap_Target__ *target,
                               char *error,
                               size_t error_size);
 
+/* Returns the canonical target-condition spelling of one field for this target,
+ * or NULL when the field has no canonical spelling for the classified target.
+ * Callers must treat NULL as an invalid target condition, never as a match. */
+const char *__Bootstrap_Target_Condition_Value__(const __Bootstrap_Target__ *target,
+                                                 __Bootstrap_Target_Condition_Field__ field);
+
 /* Releases one canonical bootstrap target. */
 void __Bootstrap_Target_Destroy__(__Bootstrap_Target__ *target);
-
-/* Returns whether the existing bootstrap runtime ABI is qualified for this target. */
-int __Bootstrap_Target_Runtime_Qualified__(const __Bootstrap_Target__ *target);
-
-/* Returns the existing custom Stage1 executable finalizer for this target. */
-__Bootstrap_Target_Finalizer__
-__Bootstrap_Target_Finalizer_Kind__(const __Bootstrap_Target__ *target);
 
 #endif

@@ -1,0 +1,10 @@
+// The root file of library/alloc/json: the Arabic spellings of its modules
+// (docs/en/reference/modules-and-imports.md, "Module spellings"). The
+// standard library is three libraries (docs/en/reference/std-layers.md); this
+// file names only this library's own children.
+
+module derive { ar: اشتقاق };
+module escape { ar: هروب };
+module parse { ar: تحليل };
+module stringify { ar: إلى_نص };
+module value { ar: قيمة };

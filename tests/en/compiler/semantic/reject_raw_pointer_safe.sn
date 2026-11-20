@@ -1,0 +1,5 @@
+def main(): int {
+    let value: mutable int = 42;
+    let pointer: *mutable int = & mutable value;
+    return *pointer;
+}

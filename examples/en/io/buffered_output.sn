@@ -1,0 +1,20 @@
+// Buffering many small writes and flushing them in one go.
+import std.io.buffered_writer;
+import std.text.from_bytes;
+import std.text.number;
+
+def main(): int {
+    let writer: mutable buffered_writer = new_buffered_writer(256);
+    let i: mutable int = 1;
+    while (i <= 3) {
+        let line: vector u8 = bytes_from_text(int_to_text(i));
+        buffered_write(&mutable writer, &line);
+        let newline: vector u8 = [10];
+        buffered_write(&mutable writer, &newline);
+        i := i + 1;
+    }
+    match flush(&mutable writer) with
+    | result.ok(_) -> { }
+    | result.err(code) -> { return code; };
+    return 0;
+}

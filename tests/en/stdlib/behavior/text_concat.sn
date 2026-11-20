@@ -1,0 +1,43 @@
+// اختبار: تفاضلي
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/stdlib/behavior/text_concat.sn
+// std.text.transform concat and concat3: two or three texts joined in order,
+// with empty and multi-byte UTF-8 pieces; the result's length is the sum of
+// the pieces' byte lengths.
+import std.text.transform;
+import std.text.compare;
+
+def main(): int {
+    let empty: string = "";
+    let a: string = "ab";
+    let arabic: string = "سلطان";
+    let emoji: string = "😀";
+
+    let ab_arabic: string = concat(&a, &arabic);
+    let expected_ab_arabic: string = "abسلطان";
+    if (!texts_equal(&ab_arabic, &expected_ab_arabic)) { return 1; };
+    if (length(ab_arabic) != 12) { return 2; };
+
+    let left_empty: string = concat(&empty, &arabic);
+    if (!texts_equal(&left_empty, &arabic) || length(left_empty) != 10) { return 3; };
+    let right_empty: string = concat(&a, &empty);
+    if (!texts_equal(&right_empty, &a) || length(right_empty) != 2) { return 4; };
+    let both_empty: string = concat(&empty, &empty);
+    if (length(both_empty) != 0) { return 5; };
+
+    let three: string = concat3(&arabic, &emoji, &a);
+    let expected_three: string = "سلطان😀ab";
+    if (!texts_equal(&three, &expected_three)) { return 6; };
+    if (length(three) != 16) { return 7; };
+
+    let middle_empty: string = concat3(&a, &empty, &emoji);
+    let expected_middle: string = "ab😀";
+    if (!texts_equal(&middle_empty, &expected_middle) || length(middle_empty) != 6) { return 8; };
+    let all_empty: string = concat3(&empty, &empty, &empty);
+    if (length(all_empty) != 0) { return 9; };
+
+    // The pieces are borrowed, not consumed.
+    if (length(a) != 2 || length(arabic) != 10 || length(emoji) != 4) { return 10; };
+    return 42;
+}

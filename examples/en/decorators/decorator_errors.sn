@@ -1,0 +1,22 @@
+// A decorator that guards against bad input: @checked returns 0 for a negative argument
+// instead of calling the function.
+import std.io.println;
+import std.text.number;
+
+def checked(comptime f: fn(int): int, x: int): int {
+    if (x < 0) { return 0; };
+    return f(x);
+}
+
+@checked
+def positive_square(x: int): int {
+    return x * x;
+}
+
+def main(): int {
+    let a: int = positive_square(-5);
+    let b: int = positive_square(3);
+    if (a != 0 || b != 9) { return 1; };
+    println(int_to_text(b));
+    return 0;
+}

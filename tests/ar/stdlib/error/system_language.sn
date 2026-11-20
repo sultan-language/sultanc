@@ -1,0 +1,25 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// بيئة: SULTANC_LANG=en_GB.UTF-8
+// نظير: tests/en/stdlib/error/system_language.sn
+// std.text.system_language (docs/en/reference/errors.md): the program's locale from its
+// environment. SULTANC_LANG comes first; a POSIX value loses its encoding
+// and its «_» becomes «-». Native and interpreter agree.
+استورد المكتبة.نصوص.لغة;
+استورد المكتبة.نصوص.لغة_النظام;
+استورد المكتبة.نصوص.مقارنة;
+
+عرف الرئيسية(): عدد {
+    دع اللغة: لغة = لغة_من_البيئة();
+    دع الوسم: نص = وسم_لغة(&اللغة);
+    دع المتوقع: نص = «en-GB»;
+    إذا (!نصان_متساويان(&الوسم, &المتوقع)) { أرجع 1; };
+    دع الأساسية: نص = اللغة_الأساسية(&اللغة);
+    دع الإنجليزية: نص = «en»;
+    إذا (!نصان_متساويان(&الأساسية, &الإنجليزية)) { أرجع 2; };
+    دع الوسوم: متجه نص = وسوم_لغة(&اللغة);
+    إذا ((الطول(الوسوم) مثل طبيعي) != 1) { أرجع 3; };
+    أرجع 42;
+}

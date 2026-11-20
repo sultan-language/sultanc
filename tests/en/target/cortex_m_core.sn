@@ -1,0 +1,62 @@
+// اختبار: تفاضلي
+// أهداف: x86_64-linux,thumbv6m-none-eabi,thumbv7m-none-eabi,thumbv7em-none-eabi,thumbv7em-none-eabihf
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/target/cortex_m_core.sn
+// What the Cortex-M targets do without a run-time library: 64-bit products
+// and variable 64-bit shifts (ARMv6-M has neither a 32 x 32 -> 64 multiply
+// nor 64-bit shifts, so the backend expands them instead of calling
+// __aeabi_lmul, __aeabi_llsl and __aeabi_llsr), 8- and 16-bit wrapping
+// arithmetic, and 32-bit atomic loads, stores and fences (LDR/STR with DMB;
+// ARMv6-M has no read-modify-write atomics). tools/tests/cortex_m_tests.sh
+// links and runs it under qemu-system-arm.
+import std.sync.atomic;
+
+def product(a: u64, b: u64): u64 { return a * b; }
+def signed_product(a: i64, b: i64): i64 { return a * b; }
+def left(a: u64, n: u64): u64 { return a << n; }
+def right(a: u64, n: u64): u64 { return a >> n; }
+
+// Products and shifts by values the optimizer cannot fold; none overflows.
+def wide_check(seed: u64): bool {
+    let a: u64 = seed * 2654435761 + 12345;
+    let b: u64 = (seed << 7) + 977;
+    let p: u64 = product(a, b);
+    if (p / b != a || p % b != 0 || p != product(b, a)) { return false; };
+    let n: mutable u64 = 0;
+    while (n < 21) {
+        if (right(left(a, n), n) != a) { return false; };
+        n := n + 1;
+    }
+    while (n < 64) {
+        if (right(left(1, n), n) != 1) { return false; };
+        if (left(1, n) != product(left(1, n / 2), left(1, n - (n / 2)))) { return false; };
+        n := n + 1;
+    }
+    return true;
+}
+
+def narrow_check(a: u8, b: u16): bool {
+    let c: u8 = a + 55;
+    let d: u16 = b * 200;
+    return c == 255 && d == 60000;
+}
+
+def main(): int {
+    if (product(4294967295, 4294967297) != 18446744073709551615) { return 1; };
+    if (signed_product(-3037000499, 3037000499) != -9223372030926249001) { return 2; };
+    if (left(1, 40) != 1099511627776 || right(1099511627776, 40) != 1) { return 3; };
+    if (right(18446744073709551615, 63) != 1 || left(3, 62) != 13835058055282163712) { return 4; };
+    let seed: mutable u64 = 1;
+    while (seed < 2000) {
+        if (!wide_check(seed)) { return 5; };
+        seed := seed * 3 + 1;
+    }
+    if (!narrow_check(200, 300)) { return 6; };
+    let cell: atomic_u32 = atomic_u32_new(7);
+    atomic_u32_store(&cell, 40, memory_ordering.seq_cst());
+    atomic_fence(memory_ordering.seq_cst());
+    let v: u32 = atomic_u32_load(&cell, memory_ordering.acquire());
+    if (v != 40) { return 7; };
+    return (v + 2) as int;
+}

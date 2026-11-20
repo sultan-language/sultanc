@@ -1,0 +1,50 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/language/optimization/msir_pipeline.sn
+// What the MSIR optimization pipeline (compiler/msir/msir_optimization_pipeline.sn)
+// rewrites keeps its meaning under `run` and in executables alike: a small
+// callee inlined with a constant for the parameter it tests, an owned local
+// moved on some paths only (its drop flag is a block parameter every other
+// path passes false for), an unused bitwise computation, and a loop whose
+// parameters are copies of one value.
+
+def pick(k: int, a: int, b: int): int {
+    if (k == 0) { return a; };
+    if (k == 1) { return b; };
+    return a + b;
+}
+
+def consume(v: vector int): int { return length(v) as int; }
+
+def filled(n: int): vector int {
+    let v: mutable vector int = [];
+    let i: mutable int = 0;
+    while (i < n) { append(v, i); i := i + 1; }
+    return v;
+}
+
+// Moves the vector only when take is true; otherwise it is dropped at the end.
+def maybe_take(take: bool, n: int): int {
+    let v: vector int = filled(n);
+    let unused: int = (n & 255) | 3;
+    if (take) { return consume(v); };
+    return 1;
+}
+
+def main(): int {
+    let total: mutable int = 0;
+    let fixed: int = 5;
+    let i: mutable int = 0;
+    while (i < 4) {
+        // fixed and the constant 0 travel through the loop unchanged.
+        total := total + pick(0, fixed, 100) - fixed;
+        total := total + pick(1, 0, 2);
+        i := i + 1;
+    }
+    total := total + pick(2, 3, 4);
+    total := total + maybe_take(true, 10) + maybe_take(false, 10);
+    total := total + maybe_take(true, 16);
+    return total;
+}

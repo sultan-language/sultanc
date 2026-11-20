@@ -1,0 +1,28 @@
+// Actual shortest path implementation over an in-memory graph/vector.
+import std.io.println;
+import std.text.number;
+
+def shortest_path(graph: &vector vector int, goal: int): int {
+    let distance: mutable vector int = [0, -1, -1, -1, -1];
+    let queue: mutable vector int = [0];
+    let head: mutable int = 0;
+    while (head < length(queue)) {
+        let node: int = queue[head]; head := head + 1;
+        let i: mutable int = 0;
+        while (i < length((*graph)[node])) {
+            let neighbor: int = (*graph)[node][i];
+            if (distance[neighbor] < 0) {
+                distance[neighbor] := distance[node] + 1;
+                append(queue, neighbor);
+            };
+            i := i + 1;
+        }
+    }
+    return distance[goal];
+}
+
+def main(): int {
+    let graph: vector vector int = [[1, 2], [3], [3], [4], []];
+    println(int_to_text(shortest_path(&graph, 4)));
+    return 0;
+}

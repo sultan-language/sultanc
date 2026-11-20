@@ -1,0 +1,38 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 0
+// نظير: tests/ar/ispeak/bench/bench_catalog_cycle.sn
+import compiler.diagnostics.identity;
+import compiler.diagnostics.reason;
+import compiler.diagnostics.schema;
+import compiler.ispeak.ispeak;
+
+// Stress every message key (all public diagnostics, then all reasons) from the
+// typed enumeration repeatedly. Both locales are dispatched every cycle; the
+// expected checksum uses a separate single scan.
+def cycle_sum(keys: &vector مفتاح_رسالة_تشخيص): uint {
+    let total: mutable uint = 0;
+    let i: mutable uint = 0;
+    while (i < (length(*keys) as uint)) {
+        let key: مفتاح_رسالة_تشخيص = (*keys)[i];
+        let english: string = رسالة_تشخيص(لغة_تشخيص.الإنجليزية(), key);
+        let arabic: string = رسالة_تشخيص(لغة_تشخيص.العربية(), key);
+        total := total + (length(english) as uint) + (length(arabic) as uint);
+        i := i + 1;
+    }
+    return total;
+}
+
+def main(): int {
+    let keys: vector مفتاح_رسالة_تشخيص = كل_مفاتيح_رسائل_التشخيص();
+    let expected: uint = cycle_sum(&keys);
+    if (expected == 0) { return 1; };
+    let round: mutable uint = 0;
+    let total: mutable uint = 0;
+    while (round < 10000) {
+        total := total + cycle_sum(&keys);
+        round := round + 1;
+    }
+    if (total != (expected * 10000)) { return 2; };
+    return 0;
+}

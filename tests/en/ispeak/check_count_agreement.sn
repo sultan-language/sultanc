@@ -1,0 +1,78 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 0
+// نظير: tests/ar/ispeak/check_count_agreement.sn
+import std.text.compare;
+import compiler.diagnostics.identity;
+import compiler.diagnostics.reason;
+import compiler.ispeak.format.facts;
+import compiler.diagnostics.schema;
+import compiler.ispeak.ispeak;
+
+// Exact count agreement in both languages for counts that select every rule:
+// 0, 1, 2, 3-10, 11-99, hundreds, and last-two-digit cases 102/103/110/111.
+def check(language: لغة_تشخيص, key: مفتاح_رسالة_تشخيص, context: حقائق_سياق_رسالة, expected: string): bool {
+    let data: حقائق_رسالة = حقائق_رسالة.سياق_تشخيص(context);
+    match رسالة_تشخيص_بحجج(language, key, data) with
+    | option.some(actual) -> { return texts_equal(&actual, &expected); }
+    | option.none -> { return false; };
+}
+
+// Same shape as the other tests' context builders: values arrive as parameters,
+// so the returned record holds no reference to this function's locals.
+def two_count_context(expected: option قيمة_حجة_رسالة, found: option قيمة_حجة_رسالة): حقائق_سياق_رسالة {
+    let data: حقائق_سياق_رسالة = {
+        القيمة: option.none(),
+        المتوقع: expected,
+        الاستبدال: option.none(),
+        الموجود: found,
+        الفهرس: option.none(),
+        الطول: option.none(),
+        المجال: option.none(),
+        النمط: option.none(),
+        المسار: option.none(),
+        الرمز: option.none(),
+        النوع: option.none(),
+        السياق: option.none(),
+        المرحلة: option.none(),
+        الهدف: option.none(),
+        الدالة: option.none(),
+        الكتلة: option.none(),
+        التعليمة: option.none(),
+        العملية: option.none(),
+        البدائي: option.none(),
+        المصدر: option.none(),
+        الوجهة: option.none(),
+        السبب: option.none()
+    };
+    return data;
+}
+
+def main(): int {
+    let arguments_key: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.عدد_حجج_غير_مطابق());
+    if (!check(لغة_تشخيص.الإنجليزية(), arguments_key, two_count_context(option.some(قيمة_حجة_رسالة.طبيعية(0 as uint)), option.some(قيمة_حجة_رسالة.طبيعية(1 as uint))), "call argument count does not match — The function expects no arguments, but the call passes 1 argument.")) { return 1; };
+    if (!check(لغة_تشخيص.العربية(), arguments_key, two_count_context(option.some(قيمة_حجة_رسالة.طبيعية(0 as uint)), option.some(قيمة_حجة_رسالة.طبيعية(1 as uint))), "عدد حجج النداء غير مطابق — الدالة لا تتوقع أي حجة، لكن النداء يمرر حجة واحدة.")) { return 2; };
+    if (!check(لغة_تشخيص.الإنجليزية(), arguments_key, two_count_context(option.some(قيمة_حجة_رسالة.طبيعية(1 as uint)), option.some(قيمة_حجة_رسالة.طبيعية(2 as uint))), "call argument count does not match — The function expects 1 argument, but the call passes 2 arguments.")) { return 3; };
+    if (!check(لغة_تشخيص.العربية(), arguments_key, two_count_context(option.some(قيمة_حجة_رسالة.طبيعية(1 as uint)), option.some(قيمة_حجة_رسالة.طبيعية(2 as uint))), "عدد حجج النداء غير مطابق — الدالة تتوقع حجة واحدة، لكن النداء يمرر حجتين.")) { return 4; };
+    if (!check(لغة_تشخيص.الإنجليزية(), arguments_key, two_count_context(option.some(قيمة_حجة_رسالة.طبيعية(2 as uint)), option.some(قيمة_حجة_رسالة.طبيعية(3 as uint))), "call argument count does not match — The function expects 2 arguments, but the call passes 3 arguments.")) { return 5; };
+    if (!check(لغة_تشخيص.العربية(), arguments_key, two_count_context(option.some(قيمة_حجة_رسالة.طبيعية(2 as uint)), option.some(قيمة_حجة_رسالة.طبيعية(3 as uint))), "عدد حجج النداء غير مطابق — الدالة تتوقع حجتين، لكن النداء يمرر 3 حجج.")) { return 6; };
+    if (!check(لغة_تشخيص.الإنجليزية(), arguments_key, two_count_context(option.some(قيمة_حجة_رسالة.طبيعية(3 as uint)), option.some(قيمة_حجة_رسالة.طبيعية(10 as uint))), "call argument count does not match — The function expects 3 arguments, but the call passes 10 arguments.")) { return 7; };
+    if (!check(لغة_تشخيص.العربية(), arguments_key, two_count_context(option.some(قيمة_حجة_رسالة.طبيعية(3 as uint)), option.some(قيمة_حجة_رسالة.طبيعية(10 as uint))), "عدد حجج النداء غير مطابق — الدالة تتوقع 3 حجج، لكن النداء يمرر 10 حجج.")) { return 8; };
+    if (!check(لغة_تشخيص.الإنجليزية(), arguments_key, two_count_context(option.some(قيمة_حجة_رسالة.طبيعية(10 as uint)), option.some(قيمة_حجة_رسالة.طبيعية(11 as uint))), "call argument count does not match — The function expects 10 arguments, but the call passes 11 arguments.")) { return 9; };
+    if (!check(لغة_تشخيص.العربية(), arguments_key, two_count_context(option.some(قيمة_حجة_رسالة.طبيعية(10 as uint)), option.some(قيمة_حجة_رسالة.طبيعية(11 as uint))), "عدد حجج النداء غير مطابق — الدالة تتوقع 10 حجج، لكن النداء يمرر 11 حجة.")) { return 10; };
+    if (!check(لغة_تشخيص.الإنجليزية(), arguments_key, two_count_context(option.some(قيمة_حجة_رسالة.طبيعية(11 as uint)), option.some(قيمة_حجة_رسالة.طبيعية(99 as uint))), "call argument count does not match — The function expects 11 arguments, but the call passes 99 arguments.")) { return 11; };
+    if (!check(لغة_تشخيص.العربية(), arguments_key, two_count_context(option.some(قيمة_حجة_رسالة.طبيعية(11 as uint)), option.some(قيمة_حجة_رسالة.طبيعية(99 as uint))), "عدد حجج النداء غير مطابق — الدالة تتوقع 11 حجة، لكن النداء يمرر 99 حجة.")) { return 12; };
+    if (!check(لغة_تشخيص.الإنجليزية(), arguments_key, two_count_context(option.some(قيمة_حجة_رسالة.طبيعية(99 as uint)), option.some(قيمة_حجة_رسالة.طبيعية(100 as uint))), "call argument count does not match — The function expects 99 arguments, but the call passes 100 arguments.")) { return 13; };
+    if (!check(لغة_تشخيص.العربية(), arguments_key, two_count_context(option.some(قيمة_حجة_رسالة.طبيعية(99 as uint)), option.some(قيمة_حجة_رسالة.طبيعية(100 as uint))), "عدد حجج النداء غير مطابق — الدالة تتوقع 99 حجة، لكن النداء يمرر 100 حجة.")) { return 14; };
+    if (!check(لغة_تشخيص.الإنجليزية(), arguments_key, two_count_context(option.some(قيمة_حجة_رسالة.طبيعية(100 as uint)), option.some(قيمة_حجة_رسالة.طبيعية(102 as uint))), "call argument count does not match — The function expects 100 arguments, but the call passes 102 arguments.")) { return 15; };
+    if (!check(لغة_تشخيص.العربية(), arguments_key, two_count_context(option.some(قيمة_حجة_رسالة.طبيعية(100 as uint)), option.some(قيمة_حجة_رسالة.طبيعية(102 as uint))), "عدد حجج النداء غير مطابق — الدالة تتوقع 100 حجة، لكن النداء يمرر 102 حجة.")) { return 16; };
+    if (!check(لغة_تشخيص.الإنجليزية(), arguments_key, two_count_context(option.some(قيمة_حجة_رسالة.طبيعية(102 as uint)), option.some(قيمة_حجة_رسالة.طبيعية(103 as uint))), "call argument count does not match — The function expects 102 arguments, but the call passes 103 arguments.")) { return 17; };
+    if (!check(لغة_تشخيص.العربية(), arguments_key, two_count_context(option.some(قيمة_حجة_رسالة.طبيعية(102 as uint)), option.some(قيمة_حجة_رسالة.طبيعية(103 as uint))), "عدد حجج النداء غير مطابق — الدالة تتوقع 102 حجة، لكن النداء يمرر 103 حجج.")) { return 18; };
+    if (!check(لغة_تشخيص.الإنجليزية(), arguments_key, two_count_context(option.some(قيمة_حجة_رسالة.طبيعية(103 as uint)), option.some(قيمة_حجة_رسالة.طبيعية(110 as uint))), "call argument count does not match — The function expects 103 arguments, but the call passes 110 arguments.")) { return 19; };
+    if (!check(لغة_تشخيص.العربية(), arguments_key, two_count_context(option.some(قيمة_حجة_رسالة.طبيعية(103 as uint)), option.some(قيمة_حجة_رسالة.طبيعية(110 as uint))), "عدد حجج النداء غير مطابق — الدالة تتوقع 103 حجج، لكن النداء يمرر 110 حجج.")) { return 20; };
+    if (!check(لغة_تشخيص.الإنجليزية(), arguments_key, two_count_context(option.some(قيمة_حجة_رسالة.طبيعية(110 as uint)), option.some(قيمة_حجة_رسالة.طبيعية(111 as uint))), "call argument count does not match — The function expects 110 arguments, but the call passes 111 arguments.")) { return 21; };
+    if (!check(لغة_تشخيص.العربية(), arguments_key, two_count_context(option.some(قيمة_حجة_رسالة.طبيعية(110 as uint)), option.some(قيمة_حجة_رسالة.طبيعية(111 as uint))), "عدد حجج النداء غير مطابق — الدالة تتوقع 110 حجج، لكن النداء يمرر 111 حجة.")) { return 22; };
+    if (!check(لغة_تشخيص.الإنجليزية(), arguments_key, two_count_context(option.some(قيمة_حجة_رسالة.طبيعية(111 as uint)), option.some(قيمة_حجة_رسالة.طبيعية(0 as uint))), "call argument count does not match — The function expects 111 arguments, but the call passes no arguments.")) { return 23; };
+    if (!check(لغة_تشخيص.العربية(), arguments_key, two_count_context(option.some(قيمة_حجة_رسالة.طبيعية(111 as uint)), option.some(قيمة_حجة_رسالة.طبيعية(0 as uint))), "عدد حجج النداء غير مطابق — الدالة تتوقع 111 حجة، لكن النداء لا يمرر أي حجة.")) { return 24; };
+    return 0;
+}

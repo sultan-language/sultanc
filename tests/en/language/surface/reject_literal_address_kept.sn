@@ -1,0 +1,12 @@
+// اختبار: رفض
+// خروج: 1
+// تشخيص: SULTANC-TYPE-ADDRESS-OF-NON-LVALUE
+// نظير: tests/ar/language/surface/reject_literal_address_kept.sn
+// `&"total"` is a temporary that ends with its statement: a vector kept in a
+// local past the statement cannot hold its borrow.
+type Arg = | Text of &string;
+
+def main(): int {
+    let args: vector Arg = [Arg.Text(&"total")];
+    return length(args) as int;
+}

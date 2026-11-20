@@ -1,0 +1,10 @@
+// The root file of library/core/encoding: the Arabic spellings of its modules
+// (docs/en/reference/modules-and-imports.md, "Module spellings"). The
+// standard library is three libraries (docs/en/reference/std-layers.md); this
+// file names only this library's own children.
+
+module binary { ar: ثنائي };
+module der { ar: دي_إي_آر };
+module positions { ar: مواضع };
+module utf8 { ar: يوتيف8 };
+module varint { ar: فارنت };

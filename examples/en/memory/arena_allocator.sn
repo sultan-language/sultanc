@@ -1,0 +1,20 @@
+// An arena: fill one vector up front and hand it to a record that owns all the values at
+// once.
+import std.io.println;
+import std.text.number;
+
+type Arena = { values: vector int };
+
+def main(): int {
+    let memory: mutable vector int = [];
+    let i: mutable int = 0;
+    while (i < 5) {
+        append(memory, i * 10);
+        i := i + 1;
+    };
+    let arena: Arena = { values: memory };
+    let answer: int = arena.values[4];
+    if (answer != 40) { return 1; };
+    println(int_to_text(answer));
+    return 0;
+}

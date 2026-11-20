@@ -1,0 +1,8 @@
+// جزء من tests/ar/compiler/c_import_reexport/main.sn: تستورد الترويستين.
+استورد "first.h";
+استورد "second.h";
+
+عام عرف مجموع_الاثنين(الوزن: ص32): ص32 {
+    دع العنصر: item_t = first_item(الوزن);
+    أرجع item_total(&العنصر);
+}

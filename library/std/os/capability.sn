@@ -1,0 +1,63 @@
+// A capability describes the execution environment of the compilation
+// target, not the host running SultanC. This module defines the result
+// contract; the frontend must eventually select the target implementation
+// and enforce its result. This module does NOT decide target capabilities.
+عام نوع مرفق_نظام =
+    | ملفات
+    | استعراض_أدلة
+    | تيارات_قياسية
+    | متغيرات_بيئة
+    | إنشاء_عمليات
+    | إنهاء_عمليات
+    | مقابس_شبكة
+    | حل_أسماء_شبكة
+    | ذاكرة_افتراضية
+    | حماية_ذاكرة
+    | قفل_ذاكرة
+    | ساعة_نظام
+    | ساعة_رتيبة
+    | نوم
+    | مكتبات_ديناميكية
+;
+
+عام نوع توفر_مرفق_نظام =
+    | متاح
+    | مشروط_بالمضيف
+    | غير_مدعوم
+    | متوقف_على_المترجم
+;
+
+عام نوع عقد_مرفق_نظام = {
+    المرفق: مرفق_نظام,
+    التوفر: توفر_مرفق_نظام
+};
+
+عام عرف أنشئ_عقد_مرفق_نظام(
+    المرفق: مرفق_نظام,
+    التوفر: توفر_مرفق_نظام
+): عقد_مرفق_نظام {
+    دع العقد: عقد_مرفق_نظام = { المرفق: المرفق, التوفر: التوفر };
+    أرجع العقد;
+}
+
+// Conditional support is not unconditional support: a browser host import,
+// WASI preopen or other host grant must be checked by the actual provider.
+عام عرف مرفق_نظام_متاح_بلا_شرط(العقد: &عقد_مرفق_نظام): منطقي {
+    طابق (*العقد).التوفر مع
+    | توفر_مرفق_نظام.متاح -> { أرجع صواب; }
+    | _ -> { أرجع خطأ; };
+}
+
+عام مرادف os_facility = مرفق_نظام;
+عام مرادف os_facility_availability = توفر_مرفق_نظام;
+عام مرادف os_facility_contract = عقد_مرفق_نظام;
+عام مرادف make_os_facility_contract = أنشئ_عقد_مرفق_نظام;
+عام مرادف os_facility_unconditionally_available = مرفق_نظام_متاح_بلا_شرط;
+عام مرادف os_facility.filesystem = مرفق_نظام.ملفات;
+عام مرادف os_facility.process_creation = مرفق_نظام.إنشاء_عمليات;
+عام مرادف os_facility.socket_networking = مرفق_نظام.مقابس_شبكة;
+عام مرادف os_facility.virtual_memory = مرفق_نظام.ذاكرة_افتراضية;
+عام مرادف os_facility_availability.available = توفر_مرفق_نظام.متاح;
+عام مرادف os_facility_availability.host_conditional = توفر_مرفق_نظام.مشروط_بالمضيف;
+عام مرادف os_facility_availability.unsupported = توفر_مرفق_نظام.غير_مدعوم;
+عام مرادف os_facility_availability.compiler_blocked = توفر_مرفق_نظام.متوقف_على_المترجم;

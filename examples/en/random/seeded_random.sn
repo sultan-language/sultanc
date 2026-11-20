@@ -1,0 +1,28 @@
+// A seeded pseudo-random generator: the same seed gives the same sequence.
+import std.io.println;
+import std.text.number;
+import std.text.transform;
+import std.random.prng;
+import std.text.compare;
+
+def roll_dice(seed: uint, count: uint): string {
+    let generator: mutable prng = new_prng(seed);
+    let rolls: mutable vector string = [];
+    let i: mutable uint = 0;
+    while (i < count) {
+        match prng_range(&mutable generator, 1, 7) with
+        | option.some(face) -> { append(rolls, uint_to_text(face)); }
+        | option.none -> { };
+        i := i + 1;
+    }
+    let space: string = " ";
+    return join(&rolls, &space);
+}
+
+def main(): int {
+    let first: string = roll_dice(2026, 8);
+    let again: string = roll_dice(2026, 8);
+    println(clone(&first));
+    if (texts_equal(&first, &again)) { println("same seed, same rolls"); };
+    return 0;
+}

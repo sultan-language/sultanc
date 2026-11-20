@@ -1,0 +1,11 @@
+// اختبار: رفض
+// تشخيص: SULTANC-OWNERSHIP-MOVE-OUT-OF-REFERENCE
+// نظير: tests/en/diagnostics/safety/global_release.sn
+// The program owns a global; a function cannot release it.
+دع الأعداد: متغير متجه عدد = [1, 2, 3];
+
+عرف الرئيسية(): عدد {
+    // A writable vector global is used inside an unsafe scope (static mut).
+    غير_آمن { حرر(الأعداد); };
+    أرجع 0;
+}

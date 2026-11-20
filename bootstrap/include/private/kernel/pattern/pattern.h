@@ -41,6 +41,10 @@ typedef struct
     size_t __Top_Enum_Constructor_Index__;
     /* Tracks the top enum constructor fully covered state. */
     int __Top_Enum_Constructor_Fully_Covered__;
+    /* The constructors a top-level `p | q` alternatives pattern fully
+     * covers (each alternative a fully covered constructor pattern). */
+    size_t __Alternative_Constructors__[32];
+    size_t __Alternative_Constructor_Count__;
 } __Pattern_Analysis__;
 
 /* Initializes the pattern analysis. */

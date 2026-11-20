@@ -1,0 +1,232 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/stdlib/behavior/unix_sockets.sn
+// std.net.unix (Rust std::os::unix::net) with two sockets in one process:
+// a listener, a connected stream and the accepted one, exchanging bytes,
+// their addresses, shutdown; datagrams between bound sockets, a connected
+// datagram socket and an unbound sender; on Linux an abstract name; and
+// a path too long for sun_path. A connect completes as soon as the kernel
+// queues it, so accept can follow it in the same thread.
+import std.net.unix;
+import std.net.tcp;
+import std.fs.temporary;
+import std.fs.mutation;
+import std.fs.path;
+import std.text.from_bytes;
+import std.text.compare;
+
+def is_path(addr: &unix_socket_addr, want: &string): bool {
+    match *addr with
+    | unix_socket_addr.pathname(text) -> { return texts_equal(&text, want); }
+    | _ -> { return false; };
+}
+
+def is_unnamed(addr: &unix_socket_addr): bool {
+    match *addr with
+    | unix_socket_addr.unnamed -> { return true; }
+    | _ -> { return false; };
+}
+
+def bytes_equal(a: &vector u8, b: &vector u8): bool {
+    if (length(*a) != length(*b)) { return false; };
+    let i: mutable uint = 0;
+    while (i < (length(*a) as uint)) {
+        if ((*a)[i] != (*b)[i]) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+
+// Writes الرسالة on one stream and reads it whole on the other.
+def exchange(sender: &unix_stream, receiver: &unix_stream, message: &string): bool {
+    let bytes: vector u8 = bytes_from_text(copy_text(message));
+    let n: int = length(bytes) as int;
+    match unix_write(sender, &bytes, 0, n) with
+    | result.err(_) -> { return false; }
+    | result.ok(written) -> { if (written != n) { return false; }; };
+    let buf: mutable vector u8 = [];
+    let i: mutable int = 0;
+    while (i < n) { append(buf, 0); i := i + 1; }
+    let got: mutable int = 0;
+    while (got < n) {
+        match unix_read(receiver, &mutable buf, got, n - got) with
+        | result.err(_) -> { return false; }
+        | result.ok(0) -> { return false; }
+        | result.ok(read) -> { got := got + read; };
+    }
+    return bytes_equal(&buf, &bytes);
+}
+
+def main(): int {
+    let prefix: string = "sultanc-unix-";
+    let dir: string;
+    match create_temp_dir(&prefix) with
+    | result.err(_) -> { return 1; }
+    | result.ok(made) -> { dir := made; };
+    let sock_name: string = "stream.sock";
+    let path: string = join(&dir, &sock_name);
+
+    // 1. A listener, a client and the accepted stream.
+    let listener: unix_listener;
+    match unix_listener_bind(&path) with
+    | result.err(_) -> { return 2; }
+    | result.ok(bound) -> { listener := bound; };
+    match unix_listener_local_addr(&listener) with
+    | result.err(_) -> { return 3; }
+    | result.ok(addr) -> { if (!is_path(&addr, &path)) { return 4; }; };
+    // Binding the same path again: the socket file exists.
+    match unix_listener_bind(&path) with
+    | result.err(_) -> {}
+    | result.ok(_) -> { return 5; };
+    let client: unix_stream;
+    match unix_connect(&path) with
+    | result.err(_) -> { return 6; }
+    | result.ok(connected) -> { client := connected; };
+    let server: unix_stream;
+    match unix_accept(&listener) with
+    | result.err(_) -> { return 7; }
+    | result.ok(accepted) -> { server := accepted; };
+    let ping: string = "ping";
+    let pong: string = "pong, and a longer reply";
+    if (!exchange(&client, &server, &ping)) { return 8; };
+    if (!exchange(&server, &client, &pong)) { return 9; };
+    match unix_peer_addr(&client) with
+    | result.err(_) -> { return 10; }
+    | result.ok(addr) -> { if (!is_path(&addr, &path)) { return 11; }; };
+    match unix_peer_addr(&server) with
+    | result.err(_) -> { return 12; }
+    | result.ok(addr) -> { if (!is_unnamed(&addr)) { return 13; }; };
+    // Shutting down the client's writing is the server's end of stream.
+    match unix_shutdown(&client, tcp_shutdown_write()) with
+    | result.err(_) -> { return 14; }
+    | result.ok(_) -> {};
+    let one: mutable vector u8 = [0];
+    match unix_read(&server, &mutable one, 0, 1) with
+    | result.err(_) -> { return 15; }
+    | result.ok(n) -> { if (n != 0) { return 16; }; };
+    match unix_stream_close(client) with
+    | result.err(_) -> { return 17; }
+    | result.ok(_) -> {};
+    match unix_stream_close(server) with
+    | result.err(_) -> { return 18; }
+    | result.ok(_) -> {};
+    match unix_listener_close(listener) with
+    | result.err(_) -> { return 19; }
+    | result.ok(_) -> {};
+    // No listener behind the file any more: connection refused.
+    match unix_connect(&path) with
+    | result.err(_) -> {}
+    | result.ok(_) -> { return 20; };
+    match remove_file(&path) with
+    | result.err(_) -> { return 21; }
+    | result.ok(_) -> {};
+
+    // 2. Datagrams between two bound sockets.
+    let a_name: string = "a.sock";
+    let b_name: string = "b.sock";
+    let a_path: string = join(&dir, &a_name);
+    let b_path: string = join(&dir, &b_name);
+    let a: unix_datagram;
+    match unix_datagram_bind(&a_path) with
+    | result.err(_) -> { return 22; }
+    | result.ok(bound) -> { a := bound; };
+    let b: unix_datagram;
+    match unix_datagram_bind(&b_path) with
+    | result.err(_) -> { return 23; }
+    | result.ok(bound) -> { b := bound; };
+    let hello: vector u8 = [104, 101, 108, 108, 111];
+    match unix_send_to(&a, &hello, 0, 5, &b_path) with
+    | result.err(_) -> { return 24; }
+    | result.ok(n) -> { if (n != 5) { return 25; }; };
+    let buf: mutable vector u8 = [0, 0, 0, 0, 0, 0, 0, 0];
+    match unix_recv_from(&b, &mutable buf, 0, 8) with
+    | result.err(_) -> { return 26; }
+    | result.ok(packet) -> {
+        if (packet.المقروء != 5 || buf[0] != 104 || buf[4] != 111) { return 27; };
+        if (!is_path(&packet.المرسل, &a_path)) { return 28; };
+    };
+    // b connected to a: send and recv without addresses.
+    match unix_datagram_connect(&b, &a_path) with
+    | result.err(_) -> { return 29; }
+    | result.ok(_) -> {};
+    let back: vector u8 = [98, 97, 99, 107];
+    match unix_send(&b, &back, 0, 4) with
+    | result.err(_) -> { return 30; }
+    | result.ok(_) -> {};
+    match unix_recv_from(&a, &mutable buf, 0, 8) with
+    | result.err(_) -> { return 31; }
+    | result.ok(packet) -> {
+        if (packet.المقروء != 4 || buf[0] != 98) { return 32; };
+        if (!is_path(&packet.المرسل, &b_path)) { return 33; };
+    };
+    match unix_datagram_peer_addr(&b) with
+    | result.err(_) -> { return 34; }
+    | result.ok(addr) -> { if (!is_path(&addr, &a_path)) { return 35; }; };
+    // An unbound sender arrives unnamed.
+    let c: unix_datagram;
+    match unix_datagram_unbound() with
+    | result.err(_) -> { return 36; }
+    | result.ok(made) -> { c := made; };
+    match unix_send_to(&c, &hello, 0, 5, &a_path) with
+    | result.err(_) -> { return 37; }
+    | result.ok(_) -> {};
+    match unix_recv_from(&a, &mutable buf, 0, 8) with
+    | result.err(_) -> { return 38; }
+    | result.ok(packet) -> {
+        if (packet.المقروء != 5) { return 39; };
+        if (!is_unnamed(&packet.المرسل)) { return 40; };
+    };
+    match unix_datagram_close(a) with | result.err(_) -> { return 41; } | result.ok(_) -> {};
+    match unix_datagram_close(b) with | result.err(_) -> { return 42; } | result.ok(_) -> {};
+    match unix_datagram_close(c) with | result.err(_) -> { return 43; } | result.ok(_) -> {};
+    match remove_file(&a_path) with | result.err(_) -> { return 44; } | result.ok(_) -> {};
+    match remove_file(&b_path) with | result.err(_) -> { return 45; } | result.ok(_) -> {};
+
+    // 3. An abstract name (Linux, Android): no file, the same address back.
+    if (unix_abstract_supported()) {
+        let name: vector u8 = bytes_from_text(copy_text(&dir));
+        let abstract_addr: unix_socket_addr = unix_socket_addr.abstract_name(copy_bytes(&name));
+        let al: unix_listener;
+        match unix_listener_bind_addr(&abstract_addr) with
+        | result.err(_) -> { return 46; }
+        | result.ok(bound) -> { al := bound; };
+        match unix_listener_local_addr(&al) with
+        | result.err(_) -> { return 47; }
+        | result.ok(unix_socket_addr.abstract_name(got)) -> { if (!bytes_equal(&got, &name)) { return 48; }; }
+        | result.ok(_) -> { return 49; };
+        let ac: unix_stream;
+        match unix_connect_addr(&abstract_addr) with
+        | result.err(_) -> { return 50; }
+        | result.ok(connected) -> { ac := connected; };
+        let as_: unix_stream;
+        match unix_accept(&al) with
+        | result.err(_) -> { return 51; }
+        | result.ok(accepted) -> { as_ := accepted; };
+        if (!exchange(&ac, &as_, &ping)) { return 52; };
+        match unix_stream_close(ac) with | result.err(_) -> { return 53; } | result.ok(_) -> {};
+        match unix_stream_close(as_) with | result.err(_) -> { return 54; } | result.ok(_) -> {};
+        match unix_listener_close(al) with | result.err(_) -> { return 55; } | result.ok(_) -> {};
+    } else {
+        let name: vector u8 = [120];
+        let abstract_addr: unix_socket_addr = unix_socket_addr.abstract_name(name);
+        match unix_listener_bind_addr(&abstract_addr) with
+        | result.err(_) -> {}
+        | result.ok(_) -> { return 56; };
+    };
+
+    // 4. A path longer than sun_path is refused before any system call.
+    let long_bytes: mutable vector u8 = [];
+    let k: mutable uint = 0;
+    while (k < 300) { append(long_bytes, 97); k := k + 1; }
+    let long_name: string = from_bytes(&long_bytes);
+    match unix_connect(&long_name) with
+    | result.err(code) -> { if (code != -22) { return 57; }; }
+    | result.ok(_) -> { return 58; };
+
+    match remove_directory(&dir) with
+    | result.err(_) -> { return 59; }
+    | result.ok(_) -> {};
+    return 42;
+}

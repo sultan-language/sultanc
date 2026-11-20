@@ -1,0 +1,6 @@
+// اختبار: رفض
+// تشخيص: SULTANC-TYPE-RETURN-MISMATCH
+// نظير: tests/en/diagnostics/semantic/bare_return_value.sn
+عرف الرئيسية(): ص32 {
+    أرجع;
+}

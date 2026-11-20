@@ -1,0 +1,29 @@
+// X25519 key exchange: two parties each combine their private key with the other's public
+// key and arrive at the same shared secret.
+import std.io.println;
+import std.text.number;
+import std.text.from_bytes;
+import std.crypto.x25519;
+
+def main(): int {
+    let a: mutable vector u8 = [];
+    let b: mutable vector u8 = [];
+    let i: mutable int = 0;
+    while (i < 32) {
+        append(a, (i + 1) as u8);
+        append(b, (i + 41) as u8);
+        i := i + 1;
+    };
+    let pub_a: vector u8 = x25519_public_key(&a);
+    let pub_b: vector u8 = x25519_public_key(&b);
+    let secret_a: vector u8 = x25519(&a, &pub_b);
+    let secret_b: vector u8 = x25519(&b, &pub_a);
+    if (length(secret_a) != 32 || length(secret_b) != 32) { return 1; };
+    i := 0;
+    while (i < 32) {
+        if (secret_a[i] != secret_b[i]) { return 2; };
+        i := i + 1;
+    };
+    println("shared secret matches");
+    return 0;
+}

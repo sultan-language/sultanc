@@ -1,0 +1,21 @@
+// A tiny expression tree as an algebraic data type: each variant carries a number, and
+// eval combines it with a base value through `match`.
+import std.io.println;
+import std.text.number;
+
+type Expr = | Number of int | Add of int | Multiply of int;
+
+def eval(e: Expr, base: int): int {
+    match e with
+    | Expr.Number(x) -> { return x; }
+    | Expr.Add(a) -> { return base + a; }
+    | Expr.Multiply(a) -> { return base * a; };
+}
+
+def main(): int {
+    let tree: Expr = Expr.Multiply(7);
+    let answer: int = eval(tree, 6);
+    if (answer != 42) { return 1; };
+    println(int_to_text(answer));
+    return 0;
+}

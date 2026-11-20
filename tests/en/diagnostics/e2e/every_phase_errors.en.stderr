@@ -1,0 +1,21 @@
+error[SULTANC-NAME-UNKNOWN]: unknown name: `missing_value` — The required name was not found during resolution.
+  --> tests/en/diagnostics/e2e/every_phase_errors.sn:18:22..18:35
+    |
+ 18 |     let first: i32 = missing_value + 1;
+    |                      ^^^^^^^^^^^^^
+    |
+
+error[SULTANC-NAME-UNKNOWN]: unknown name: `hlper` — The required name was not found during resolution.
+  --> tests/en/diagnostics/e2e/every_phase_errors.sn:19:23..19:28
+    |
+ 19 |     let second: i32 = hlper(2);
+    |                       ^^^^^
+    |
+  = help: a name with a similar spelling is visible here — The suggested replacement is `helper`.
+
+error[SULTANC-TYPE-MISMATCH]: expected `i32`, found `string` — The value does not match the declared type of its destination.
+  --> tests/en/diagnostics/e2e/every_phase_errors.sn:14:22..14:28
+    |
+ 14 |     let count: i32 = "text";
+    |                      ^^^^^^
+    |

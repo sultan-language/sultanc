@@ -1,0 +1,44 @@
+// Fixture of tests/en/compiler/tooling/refactoring_queries.sn (not a test).
+def scale(value: int, factor: int): int {
+    return value * factor;
+}
+alias مقياس = scale;
+
+def bump(slot: &mutable int): int {
+    *slot := *slot + 1;
+    return *slot;
+}
+
+def peek(slot: &int): int {
+    return *slot;
+}
+
+def consume(items: vector int): int {
+    return length(items) as int;
+}
+
+if (target.platform == "plan9") {
+    def platform_score(): int { return 1; }
+} else {
+    def platform_score(): int { return 2; }
+}
+
+def main(): int {
+    let total: mutable int = 0;
+    let factor: int = 3;
+    total := scale(2, factor);
+    let doubled: int = مقياس(total, 2);
+    let bumped: int = bump(&mutable total);
+    let items: vector int = [1, 2, 3];
+    let count: int = consume(items);
+    let snapshot: int = peek(&total);
+    if (total > 0) {
+        let step: int = 1;
+        total := total + factor * step;
+        let extra: int = step + 1;
+        total := total + extra;
+    }
+    let tmp: int = 1;
+    let product: int = scale(tmp, 1);
+    return doubled + bumped + count + snapshot + product + total + platform_score();
+}

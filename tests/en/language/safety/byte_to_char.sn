@@ -1,0 +1,19 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 18
+// نظير: tests/ar/language/safety/byte_to_char.sn
+// `u8 as char` at run time, in a comptime call and in a module constant.
+let third: char = (67 as u8) as char;
+
+def letter(): char {
+    let byte: u8 = 66;
+    return byte as char;
+}
+
+def main(): int {
+    let byte: u8 = 65;
+    let first: char = byte as char;
+    let second: char = comptime { letter() };
+    let sum: u32 = (first as u32) + (second as u32) + (third as u32);
+    return (sum as int) - 180;
+}

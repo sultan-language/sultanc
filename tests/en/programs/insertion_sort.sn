@@ -1,0 +1,30 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/programs/insertion_sort.sn
+def main(): int {
+    let values: mutable vector int = [9, 4, 7, 1, 3, 8, 2, 6, 5];
+    let n: uint = length(values) as uint;
+    let pass: mutable uint = 0;
+    while (pass < n) {
+        let j: mutable uint = 1;
+        let limit: uint = n - pass;
+        while (j < limit) {
+            let previous: uint = j - 1;
+            if (values[previous] > values[j]) {
+                let temporary: int = values[previous];
+                values[previous] := values[j];
+                values[j] := temporary;
+            };
+            j := j + 1;
+        }
+        pass := pass + 1;
+    }
+    let k: mutable uint = 0;
+    while (k < n) {
+        if (values[k] != ((k + 1) as int)) { return 1; };
+        k := k + 1;
+    }
+    return 42;
+}

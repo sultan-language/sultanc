@@ -1,0 +1,11 @@
+// Month lengths and leap years: iso_timestamp.
+import std.io.println;
+import std.text.number;
+import std.time.calendar;
+
+
+def main(): int {
+    println(uint_to_text(days_in_month(2028, 2)));
+    if (is_leap_year(2028)) { println("leap"); };
+    return 0;
+}

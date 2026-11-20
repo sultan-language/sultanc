@@ -1,0 +1,8 @@
+// اختبار: رفض
+// تشخيص: SULTANC-C-UNSUPPORTED
+// نظير: tests/ar/compiler/c_import_errors/bitint_wide.sn
+// A _BitInt wider than 128 bits in compiled C code (_BitInt(65..128) is held in 128 bits) is reported as
+// SULTANC-C-UNSUPPORTED at its file:line:column, and the compiler does not stop on its shift.
+import "bitint_wide.c";
+
+def main(): int { return 0; }

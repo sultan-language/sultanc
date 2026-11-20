@@ -1,0 +1,8 @@
+// اختبار: رفض
+// تشخيص: SULTANC-C-UNSUPPORTED
+// نظير: tests/ar/compiler/c_import_errors/vector_value.sn
+// A local of a vector type (__attribute__((vector_size(16)))) in compiled C code is reported as
+// SULTANC-C-UNSUPPORTED at its file:line:column; a vector typedef alone is only a skip comment.
+import "vector_value.c";
+
+def main(): int { return 0; }

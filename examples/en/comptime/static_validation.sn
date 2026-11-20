@@ -1,0 +1,10 @@
+// Compile-time specialization: static_validation.
+import std.io.println;
+import std.text.number;
+
+def scale(comptime factor: int, n: int): int { return factor * n; }
+
+def main(): int {
+    println(int_to_text(scale(7, 7)));
+    return 0;
+}

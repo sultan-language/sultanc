@@ -1,0 +1,15 @@
+// A fixed-size byte buffer: fill 16 bytes in a loop and read one back by index.
+import std.io.println;
+import std.text.number;
+
+def main(): int {
+    let block: mutable vector u8 = [];
+    let i: mutable int = 0;
+    while (i < 16) {
+        append(block, (i * 2) as u8);
+        i := i + 1;
+    };
+    if (length(block) != 16) { return 1; };
+    println(int_to_text(block[8] as int));
+    return 0;
+}

@@ -1,0 +1,3 @@
+// مُثبّت tests/ar/compiler/tooling/partial_project.sn (ليس اختبارا).
+استورد «a.sn»;
+عرف الرئيسية(): عدد { أرجع ف(); }

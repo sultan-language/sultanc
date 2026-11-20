@@ -26,6 +26,24 @@ int __Parser_Parse_Return__(__Parser__ *__Parser_State__, __Vector__ *__Statemen
             return 0;
         }
     }
+    if (__Expression__ != NULL && __Parser_State__->__Current__.__Kind__ == __Token_QUESTION_OPERATOR__)
+    {
+        /* Stores the propagation mark. */
+        __Source_Span__ __Mark__ = __Parser_State__->__Current__.__Span__;
+        if (!__Parser_Advance__(__Parser_State__) ||
+            !__Parser_Expect__(__Parser_State__, __Token_SEMICOLON_OPERATOR__))
+        {
+            return 0;
+        }
+        return __Parser_Push_Propagation__(
+            __Parser_State__,
+            __Statements__,
+            __Expression__,
+            __Parser_Propagation_Return__,
+            NULL,
+            __Mark__,
+            __Parser_Span__(__Start__, __Parser_State__->__Previous__.__Span__.__End__));
+    }
     if (!__Parser_Expect__(__Parser_State__, __Token_SEMICOLON_OPERATOR__))
     {
         return 0;

@@ -174,6 +174,7 @@ int __Layout_Type__(__Semantic_Context__ *__Context__,
         case __Ast_Type_Any__:
         case __Ast_Type_Integer__:
         case __Ast_Type_Unsigned_Integer__:
+        case __Ast_Type_Pointer__:
         case __Ast_Type_Reference__:
         case __Ast_Type_Box__:
         case __Ast_Type_Function__:

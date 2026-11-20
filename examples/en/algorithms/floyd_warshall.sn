@@ -1,0 +1,24 @@
+// Floyd-Warshall all-pairs shortest paths on a 3-node graph stored as a flat 3x3 matrix.
+import std.io.println;
+import std.text.number;
+
+def main(): int {
+    let d: mutable vector int = [0, 3, 100, 100, 0, 4, 2, 100, 0];
+    let k: mutable int = 0;
+    while (k < 3) {
+        let i: mutable int = 0;
+        while (i < 3) {
+            let j: mutable int = 0;
+            while (j < 3) {
+                let via: int = d[i * 3 + k] + d[k * 3 + j];
+                if (via < d[i * 3 + j]) { d[i * 3 + j] := via; };
+                j := j + 1;
+            };
+            i := i + 1;
+        };
+        k := k + 1;
+    };
+    if (d[0 * 3 + 2] != 7) { return 1; };
+    println(int_to_text(d[2]));
+    return 0;
+}

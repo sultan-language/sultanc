@@ -1,0 +1,18 @@
+// All or nothing: a debit larger than the balance fails, and the balance stays as it was.
+import std.io.println;
+import std.text.number;
+
+def debit(balance: int, amount: int): result int, int {
+    if (amount > balance) { return result.err(1); };
+    return result.ok(balance - amount);
+}
+
+def main(): int {
+    let balance: mutable int = 50;
+    match debit(balance, 80) with
+    | result.err(_) -> { }
+    | result.ok(next) -> { balance := next; };
+    if (balance != 50) { return 1; };
+    println(int_to_text(balance));
+    return 0;
+}

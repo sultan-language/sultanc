@@ -1,0 +1,12 @@
+// Control flow: match strings.
+import std.io.println;
+import std.text.number;
+
+
+def main(): int {
+    let text: string = "hello";
+    match text with
+    | "hello" -> { println("matched"); }
+    | _ -> { println("other"); };
+    return 0;
+}

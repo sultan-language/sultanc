@@ -1,0 +1,18 @@
+// اختبار: تفاضلي
+// خروج: 42
+// تفاضلي: نعم
+type Choice = | None | Some of i32;
+
+def main(): i32 {
+    let values: mutable vector i32 = [40];
+    append(values, 0);
+    values[1] := 2;
+    let value: Choice = Choice.Some(values[0] + values[1]);
+    match value with
+    | Choice.None -> {
+        return 0;
+    }
+    | Choice.Some(payload) -> {
+        return payload;
+    };
+}

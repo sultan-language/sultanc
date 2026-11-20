@@ -1,0 +1,12 @@
+error[SULTANC-MUTABILITY-WRITE-TO-IMMUTABLE]: cannot write to an immutable value — The immutable value being written to is `العدد`. An assignment targets an immutable variable.
+  --> tests/ar/diagnostics/e2e/suggest_mutable.sn:10:5..10:10
+    |
+ 10 |     العدد := 4;
+    |     ^^^^^ invalid use
+    |
+  ::: tests/ar/diagnostics/e2e/suggest_mutable.sn:9:5..9:23
+   |
+ 9 |     دع العدد: ص32 = 3;
+   |     ^^^^^^^^^^^^^^^^^^ declared here without `mutable`
+   |
+  = help: declare the variable `mutable` to write to it

@@ -1,0 +1,9 @@
+// The root file of std.os.platform.unix.freebsd: the Arabic spellings of its modules
+// (docs/en/reference/modules-and-imports.md, "Module spellings"). An import may
+// use either name; both name one module.
+
+module system_parameters { ar: معاملات_النظام };
+module threads { ar: خيوط };
+module uapi { ar: واجهة_النواة };
+module wait_address { ar: انتظار_العنوان };
+module syscalls { ar: نداءات_النظام };

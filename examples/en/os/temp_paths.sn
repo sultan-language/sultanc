@@ -1,0 +1,12 @@
+// OS API example: temp_paths.
+import std.io.println;
+import std.text.number;
+import std.env.environment;
+
+
+def main(): int {
+    match temporary_directory() with
+    | result.ok(path) -> { println(path); }
+    | result.err(_) -> { println("temporary directory unavailable"); };
+    return 0;
+}

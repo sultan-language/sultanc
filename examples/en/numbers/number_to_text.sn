@@ -1,0 +1,10 @@
+// Numbers: number to text.
+import std.io.println;
+import std.text.number;
+
+
+def main(): int {
+    let n: int = 46;
+    println(int_to_text(n));
+    return 0;
+}

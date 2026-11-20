@@ -1,0 +1,27 @@
+--- !tapi-tbd
+tbd-version:     4
+targets:         [ x86_64-macos, x86_64-maccatalyst, arm64-macos,
+                   arm64-maccatalyst ]
+install-name:    '/usr/lib/libfake.dylib'
+current-version: 1
+reexported-libraries:
+  - targets:         [ x86_64-macos, arm64-macos ]
+    libraries:       [ '/usr/lib/system/libfake_c.dylib' ]
+exports:
+  - targets:         [ x86_64-maccatalyst, x86_64-macos,
+                       arm64-macos, arm64-maccatalyst ]
+    symbols:         [ _fake_first, _fake_second ]
+undefineds:
+  - targets:         [ arm64-macos ]
+    symbols:         [ _not_exported_by_fake ]
+--- !tapi-tbd
+tbd-version:     4
+targets:         [ x86_64-macos, arm64-macos ]
+install-name:    '/usr/lib/system/libfake_c.dylib'
+exports:
+  - targets:         [ x86_64-macos ]
+    symbols:         [ _labs ]
+  - targets:         [ arm64-macos, x86_64-macos ]
+    symbols:         [ _abs, _fake_third,
+                       _fake_fourth ]
+...

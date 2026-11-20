@@ -1,0 +1,13 @@
+// Unicode processing: case_folding.
+import std.io.println;
+import std.text.number;
+import std.unicode.case_folding;
+
+
+def main(): int {
+    let text: string = "Straße";
+    match طي_حالة_نص_يونيكود(&text) with
+    | result.ok(folded) -> { println(folded); }
+    | result.err(_) -> { return 1; };
+    return 0;
+}

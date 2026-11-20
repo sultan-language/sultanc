@@ -1,0 +1,8 @@
+// اختبار: رفض
+// تشخيص: SULTANC-C-INVALID-UTF8
+// نظير: tests/ar/compiler/c_import_errors/invalid_utf8.sn
+// C source is UTF-8: an overlong encoding (C0 AF) in a literal that is used is
+// SULTANC-C-INVALID-UTF8 at its file:line:column.
+import "invalid_utf8.h";
+
+def main(): int { return 0; }

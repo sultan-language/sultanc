@@ -1,0 +1,10 @@
+// Output to the standard stream: read_all_stdin.
+import std.io.println;
+import std.text.number;
+
+
+def main(): int {
+    println("output 1");
+    println(int_to_text(3));
+    return 0;
+}

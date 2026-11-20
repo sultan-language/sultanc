@@ -1,0 +1,12 @@
+// Synchronization primitive: shared_arc.
+import std.io.println;
+import std.text.number;
+import std.sync.arc;
+
+
+def main(): int {
+    let original: arc<int> = arc_new(42);
+    let another: arc<int> = arc_clone(&original);
+    if (arc_ptr_eq(&original, &another)) { println(int_to_text(*arc_get(&another))); } else { return 1; };
+    return 0;
+}

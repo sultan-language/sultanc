@@ -1,0 +1,6 @@
+خطأ[SULTANC-LEX-INVALID-UTF8]: المصدر يحتوي على ترميز UTF-8 غير صالح — يحتوي المصدر تسلسل بايتات ليس UTF-8 صالحا.
+  --> tests/en/diagnostics/e2e/invalid_utf8_snippet.sn:8:24..8:25
+   |
+ 8 |     let value: i32 = 1 \xFF+ 2;
+   |                        ^^^^
+   |

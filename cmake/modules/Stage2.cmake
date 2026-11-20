@@ -1,0 +1,97 @@
+if(NOT DEFINED SULTANC_STAGE2_TARGET)
+    set(SULTANC_STAGE2_TARGET "" CACHE STRING "SultanC target for Stage2 output")
+endif()
+if(NOT SULTANC_STAGE2_OUTPUT_EXPLICIT)
+    set(SULTANC_STAGE2_OUTPUT "${SULTANC_BINARY_OUTPUT_DIRECTORY}/sultanc${CMAKE_EXECUTABLE_SUFFIX}")
+endif()
+if(WIN32 AND NOT SULTANC_STAGE2_OUTPUT MATCHES "[.]exe$")
+    message(FATAL_ERROR
+        "Windows Stage2 is an executable: SULTANC_REQUESTED_OUTPUT must end in .exe")
+endif()
+get_filename_component(SULTANC_STAGE2_OUTPUT_DIRECTORY
+    "${SULTANC_STAGE2_OUTPUT}" DIRECTORY)
+
+file(CONFIGURE
+    OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/sultanc-stage2-target.txt"
+    CONTENT "${SULTANC_STAGE2_TARGET}\n${SULTANC_STAGE2_BACKEND}\n${SULTANC_COMPILER_CAPABILITY}\n${SULTANC_RELEASE_VERSION}\n")
+
+# SULTANC_STAGE1_LINK_INPUTS: extra link inputs Stage1 needs (wasm route: the
+# LLVM library for an LLVM-enabled Stage2, see Stage1Wasm.cmake; C route: none).
+# Only Stage1 generates Stage2. Backend selection is explicit; Windows native
+# is not currently supported, and LLVM is never selected as a fallback.
+# The producer backend (SULTANC_STAGE2_BACKEND) and the produced compiler's
+# capability (SULTANC_COMPILER_LLVM, passed as SULTANC_COMPILER_CAPABILITY_ARGS)
+# are independent: Stage1 can generate a Native-only or a full Stage2 with
+# either backend.
+set(_sultanc_stage2_runtime_copy "")
+set(_sultanc_stage2_runtime_prepare "")
+set(_sultanc_stage2_runtime_dep "")
+# (The wasm route's Stage1 has no LLVM and needs no LLVM-C.dll.)
+if(WIN32 AND SULTANC_BOOTSTRAP STREQUAL "c")
+    set(_sultanc_stage2_runtime_dep "${SULTANC_LLVM_DLL}")
+    # The DLL may have changed without relinking Stage1. Refresh it before
+    # executing Stage1 (which always includes LLVM).
+    list(APPEND _sultanc_stage2_runtime_prepare
+        COMMAND "${CMAKE_COMMAND}" -E copy_if_different
+            "${SULTANC_LLVM_DLL}" "$<TARGET_FILE_DIR:sultanc-stage1-executable>/LLVM-C.dll")
+    # Only an LLVM-enabled Stage2 imports LLVM-C.dll; deploy it beside that image.
+    if(SULTANC_COMPILER_LLVM)
+        list(APPEND _sultanc_stage2_runtime_copy
+            COMMAND "${CMAKE_COMMAND}" -E copy_if_different
+                "${SULTANC_LLVM_DLL}" "${SULTANC_STAGE2_OUTPUT_DIRECTORY}/LLVM-C.dll")
+    endif()
+endif()
+# The wasm route's Stage1 writes through WASI Preview 1, which cannot set
+# permission bits: make Stage2 executable before anything runs or copies it.
+set(_sultanc_stage2_make_executable "")
+if(SULTANC_BOOTSTRAP STREQUAL "wasm" AND NOT WIN32)
+    set(_sultanc_stage2_make_executable COMMAND chmod 0755 "${SULTANC_STAGE2_OUTPUT}")
+endif()
+add_custom_command(
+    OUTPUT "${SULTANC_STAGE2_OUTPUT}"
+    COMMAND "${CMAKE_COMMAND}" -E make_directory "${SULTANC_STAGE2_OUTPUT_DIRECTORY}"
+    ${_sultanc_stage2_runtime_prepare}
+    COMMAND "$<TARGET_FILE:sultanc-stage1-executable>"
+        "--backend=${SULTANC_STAGE2_BACKEND}"
+        "--target=${SULTANC_STAGE2_TARGET}"
+        --emit=exe
+        ${SULTANC_COMPILER_CAPABILITY_ARGS}
+        -o "${SULTANC_STAGE2_OUTPUT}"
+        compiler/main.sn
+        ${SULTANC_STAGE1_LINK_INPUTS}
+    ${_sultanc_stage2_make_executable}
+    ${_sultanc_stage2_runtime_copy}
+    DEPENDS sultanc-stage1-executable ${SULTANC_COMPILER_SOURCES}
+        "${CMAKE_CURRENT_BINARY_DIR}/sultanc-stage2-target.txt"
+        ${_sultanc_stage2_runtime_dep}
+    WORKING_DIRECTORY "${SULTANC_SOURCE_ROOT}"
+    COMMENT "Stage1 self-hosts SultanC as Stage2"
+    VERBATIM
+)
+set(_sultanc_stage2_products "${SULTANC_STAGE2_OUTPUT}")
+if(SULTANC_EXPORT_DIRECTORY AND NOT SULTANC_STAGE2_OUTPUT_EXPLICIT)
+    sultanc_export_destination("sultanc${CMAKE_EXECUTABLE_SUFFIX}"
+        "${SULTANC_EXPORT_DIRECTORY}" SULTANC_STAGE2_EXPORT)
+    # An export directory that is the internal output directory names the
+    # product itself: no copy (and no second rule for that file) is needed.
+    cmake_path(ABSOLUTE_PATH SULTANC_STAGE2_EXPORT BASE_DIRECTORY "${CMAKE_BINARY_DIR}"
+        NORMALIZE OUTPUT_VARIABLE _sultanc_stage2_export_normal)
+    cmake_path(ABSOLUTE_PATH SULTANC_STAGE2_OUTPUT BASE_DIRECTORY "${CMAKE_BINARY_DIR}"
+        NORMALIZE OUTPUT_VARIABLE _sultanc_stage2_output_normal)
+    if(NOT _sultanc_stage2_export_normal STREQUAL _sultanc_stage2_output_normal)
+        set(_sultanc_stage2_export_kind "")
+        if(NOT SULTANC_COMPILER_LLVM)
+            set(_sultanc_stage2_export_kind NATIVE_ONLY)
+        endif()
+        sultanc_export_executable("${SULTANC_STAGE2_OUTPUT}" "${SULTANC_STAGE2_EXPORT}"
+            "Exporting Stage2 to ${SULTANC_STAGE2_EXPORT}" ${_sultanc_stage2_export_kind})
+        list(APPEND _sultanc_stage2_products "${SULTANC_STAGE2_EXPORT}")
+    endif()
+endif()
+# Stage2 is part of the default build only when it (or verify) was requested.
+if(SULTANC_REQUESTED_STAGE STREQUAL "stage2" OR
+   SULTANC_REQUESTED_STAGE STREQUAL "verify")
+    add_custom_target(sultanc-stage2 ALL DEPENDS ${_sultanc_stage2_products})
+else()
+    add_custom_target(sultanc-stage2 DEPENDS ${_sultanc_stage2_products})
+endif()

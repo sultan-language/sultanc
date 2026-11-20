@@ -1,0 +1,43 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/language/numeric/narrow_signed_registers.sn
+// Narrow signed integers in the machine interpreter on AArch64 hosts. AArch64 code keeps
+// an i8/i16/i32 sign-extended in its 64-bit register and compares whole registers; the
+// interpreter's AArch64 translation left narrow arithmetic, division by a constant,
+// integer and float-to-integer conversions zero-extended, so a local i32 equal to
+// -2147483647 - 1 compared unequal to a module constant of the same value (loaded
+// sign-extended), and normalize(255) below was not -1.
+public let NEG: i32 = -2147483647 - 1;
+
+def sub32(a: i32, b: i32): i32 { return a - b; }
+def neg8(a: i8): i8 { return 0 - a; }
+def normalize(value: i64): i32 {
+    let narrow: i8 = value as i8;
+    let widened: i64 = narrow;
+    return widened as i32;
+}
+def third(a: i32): i32 { return a / 3; }
+def toward_zero(x: f64): i32 { return x as i32; }
+def to_u32(v: i64): u32 { return v as u32; }
+
+def main(): int {
+    let a: i32 = -2147483647 - 1;
+    let m: i32 = NEG;
+    if (a != m) { return 1; };
+    if (m + 1 != -2147483647) { return 2; };
+    let c: i32 = -2147483647;
+    if (c - 1 != a) { return 3; };
+    if (sub32(0, 1) != -1) { return 4; };
+    if (!(sub32(0, 5) < 3)) { return 5; };
+    let wide: i64 = sub32(0, 1);
+    if (wide != -1) { return 6; };
+    if (neg8(5) != -5) { return 7; };
+    if (normalize(255) != -1) { return 8; };
+    if (normalize(127) != 127) { return 9; };
+    if (third(-9) != -3) { return 10; };
+    if (toward_zero(-7.5) != -7) { return 11; };
+    if (to_u32(-1) != 4294967295) { return 12; };
+    return 42;
+}

@@ -1,0 +1,20 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 1
+// تفاضلي: نعم
+// بيئة: SULTANC_LANG=ar
+// خرج-قياسي: <فارغ>
+// خطأ-قياسي-ملف: overflow_ar.stderr
+// نظير: tests/ar/runtime/failure/overflow_ar.sn
+// An integer operation whose result does not fit its type (docs/en/reference/errors.md,
+// "Runtime checks") stops the program through the panic path: the frame "the
+// program stopped", then the kind and the place of the operation, exit status 1.
+def increment(value: i8): i8 {
+    return value + 1;
+}
+
+def main(): int {
+    let largest: i8 = 127;
+    let next: i8 = increment(largest);
+    return next as int;
+}

@@ -1,0 +1,18 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/language/numeric/widened_constant.sn
+// A module constant of a narrower integer type widens to the declared type
+// with the same value, as in a function; a literal `-0` fits unsigned types.
+let K1: int = (250 as u8) + 3;
+let K2: u8 = -0;
+let K3: u64 = (7 as u16) * 6;
+
+def main(): int {
+    let x: u8 = 250;
+    let y: int = x + 3;
+    if (K1 != 253 || y != K1) { return 1; };
+    if (K2 != 0) { return 2; };
+    return K3 as int;
+}

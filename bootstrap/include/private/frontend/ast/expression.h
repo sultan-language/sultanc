@@ -17,6 +17,9 @@ typedef enum
     __Ast_Literal_Character__,
     /* Represents the AST literal string value. */
     __Ast_Literal_String__,
+    /* A decimal float literal; __String__ holds its digits (separators
+     * removed), which LLVM parses exactly (no host float arithmetic). */
+    __Ast_Literal_Float__,
     /* Represents the AST literal undefined value. */
     __Ast_Literal_Undefined__
 } __Ast_Literal_Kind__;
@@ -36,10 +39,12 @@ struct __Ast_Literal__
         /* Defines the struct structure. */
         struct
         {
-            /* Stores the value. */
+            /* Stores the value; an unsigned-wide literal stores its 64-bit pattern. */
             int64_t __Value__;
             /* Stores the spelling. */
             __Text_Slice__ __Spelling__;
+            /* Marks a literal above INT64_MAX, typed only as a 64-bit unsigned value. */
+            int __Unsigned_Wide__;
         } __Integer__;
         /* Stores the character. */
         uint32_t __Character__;
@@ -54,7 +59,10 @@ typedef enum
     /* Represents the AST lvalue base identifier value. */
     __Ast_Lvalue_Base_Identifier__,
     /* Represents the AST lvalue base temporary value. */
-    __Ast_Lvalue_Base_Temporary__
+    __Ast_Lvalue_Base_Temporary__,
+    /* The result of a call, a temporary no local owns (`make().f`,
+     * `words()[1]`, `make().callback(3)`, `adder(1)(2)`). */
+    __Ast_Lvalue_Base_Call__
 } __Ast_Lvalue_Base_Kind__;
 
 /* Defines the AST lvalue kind values. */
@@ -101,6 +109,12 @@ struct __Ast_Lvalue__
     __Ast_Header__ __Header__;
     /* Stores the kind. */
     __Ast_Lvalue_Kind__ __Kind__;
+    /* Exports semantic analysis's move-fact choke point
+     * (__Body_Safety_Move_Atom__) to LLVM lowering: set true exactly when
+     * this specific lvalue read moved an owning value out of its source.
+     * Reused by drop elaboration instead of recomputing ownership flow;
+     * not part of the self-hosted ownership checkpoint, Stage0-only. */
+    int __Drop_Elaboration_Moved__;
     /* Defines the struct structure. */
     union
     {
@@ -116,6 +130,7 @@ struct __Ast_Lvalue__
                 __Text_Slice__ __Identifier__;
                 /* Stores the temporary. */
                 __Temporary_Id__ __Temporary__;
+                __Ast_Expression__ *__Call__;
             } __As__;
         } __Base__;
         /* Defines the struct structure. */
@@ -131,8 +146,8 @@ struct __Ast_Lvalue__
         {
             /* References the parent. */
             __Ast_Lvalue__ *__Parent__;
-            /* Tracks the index. */
-            __Ast_Atom__ __Index__;
+            /* References the index expression. */
+            __Ast_Expression__ *__Index__;
         } __Index__;
         /* References the dereference parent. */
         __Ast_Lvalue__ *__Dereference_Parent__;
@@ -164,6 +179,8 @@ typedef enum
     __Binary_Shift_Left_Logical__,
     /* Represents the binary shift right logical value. */
     __Binary_Shift_Right_Logical__,
+    /* `>>>`: the sign bit fills (canonical إزاحة_حسابية_يمنى). */
+    __Binary_Shift_Right_Arithmetic__,
     /* Represents the binary add value. */
     __Binary_Add__,
     /* Represents the binary subtract value. */
@@ -223,6 +240,8 @@ struct __Ast_Expression__
     __Ast_Type__ *__Contextual_Type__;
     /* Semantic side effects such as moves/releases are applied at most once. */
     int __Semantic_Effects_Applied__;
+    /* Type-checked contextual raw null; never represents a source lvalue. */
+    int __Semantic_Null_Pointer__;
     /* Defines the struct structure. */
     union
     {

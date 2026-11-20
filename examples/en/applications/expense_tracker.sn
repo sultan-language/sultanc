@@ -1,0 +1,28 @@
+// An expense tracker: add up all the expenses and, separately, the ones in one category.
+import std.io.println;
+import std.text.number;
+import std.text.compare;
+
+type Expense = { category: string, cents: int };
+
+def main(): int {
+    let expenses: vector Expense = [
+        { category: "food", cents: 1299 },
+        { category: "travel", cents: 450 },
+        { category: "food", cents: 251 }
+    ];
+    let total: mutable int = 0;
+    let food: mutable int = 0;
+    let i: mutable int = 0;
+    while (i < length(expenses)) {
+        total := total + expenses[i].cents;
+        let cat: string = "food";
+        if (texts_equal(&expenses[i].category, &cat)) {
+            food := food + expenses[i].cents;
+        };
+        i := i + 1;
+    };
+    if (total != 2000 || food != 1550) { return 1; };
+    println(int_to_text(total));
+    return 0;
+}

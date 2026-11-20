@@ -1,0 +1,20 @@
+// Reading a line from standard input. Try: echo Noor | ./program
+import std.io.println;
+import std.io.read_line;
+import std.text.transform;
+
+def main(): int {
+    match read_line() with
+    | result.ok(line) -> {
+        let name: string = trim(&line);
+        if (length(name) == 0) {
+            println("no input");
+        } else {
+            let parts: vector string = ["Hello, ", name];
+            let nothing: string = "";
+            println(join(&parts, &nothing));
+        };
+    }
+    | result.err(_) -> { println("no input"); };
+    return 0;
+}

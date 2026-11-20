@@ -1,0 +1,24 @@
+// اختبار: رفض
+// تشخيص: SULTANC-OWNERSHIP-USE-AFTER-MOVE
+// نظير: tests/ar/diagnostics/safety/reborrow_through_parameter.sn
+// `first` reads through `source`; the call may grow the vector it points into.
+type table = {
+    items: vector int
+};
+
+def grow(target: &mutable table): int {
+    append((*target).items, 9);
+    return 0;
+}
+
+def probe(source: &mutable table): int {
+    let first: &int = &(*source).items[0];
+    let ignored: int = grow(source);
+    return *first;
+}
+
+def main(): int {
+    let start: vector int = [1, 2, 3];
+    let value: mutable table = { items: start };
+    return probe(&mutable value);
+}

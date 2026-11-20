@@ -1,0 +1,8 @@
+def main(): int {
+    let x: mutable int = 40;
+    let p: *mutable int = & mutable x;
+    unsafe {
+        *p := *p + 2;
+    }
+    return x;
+}

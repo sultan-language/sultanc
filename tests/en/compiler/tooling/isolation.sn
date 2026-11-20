@@ -1,0 +1,152 @@
+// اختبار: تشغيل
+// خروج: 42
+// نظير: tests/ar/compiler/tooling/isolation.sn
+// Failures stay with their sources. In this workspace (root.sn is the root;
+// selective.sn and unknown.sn join it):
+//   failed.sn       declares a function twice (its declarations cannot be collected);
+//   dependent.sn    imports failed.sn: one function uses the failed module, one does not;
+//   independent.sn  depends on nothing that failed;
+//   selective.sn    selects a name std.io does not export;
+//   unknown.sn      uses an unknown name in one of its two functions.
+// A tooling request sets aside only the declarations that use what is missing:
+// the dependent's and unknown.sn's other functions keep their Types, the
+// independent module and the root are complete, and the result does not fall
+// back to Name facts alone. A compilation is still rejected.
+import compiler.driver.source_inputs;
+import compiler.frontend.semantic_pipeline;
+import compiler.frontend.tooling_queries;
+import compiler.frontend.tooling_facts;
+import compiler.frontend.cancellation;
+import compiler.frontend.module_loading.logical_environment;
+import compiler.frontend.names.identifiers;
+import compiler.frontend.names.reference_queries;
+import compiler.backend.target.target_model;
+import compiler.backend.target.target_registry;
+import compiler.diagnostics.engine;
+import compiler.source.span;
+import std.text.search;
+import std.text.transform;
+
+def host(): اختياري واصف_هدف {
+    match حل_هدف_المضيف_المسجل() with
+    | نتيجة_حل_هدف.غير_مسجل -> { return اختياري.لا_شيء(); }
+    | نتيجة_حل_هدف.محلول(target) -> { return اختياري.موجود(target); };
+}
+
+def path_of(name: string): string {
+    let parts: vector string = ["tests/en/compiler/tooling/isolation/", name];
+    let separator: string = "";
+    return صل_النصوص(&parts, &separator);
+}
+
+def analyse(tooling: bool): نتيجة_بناء_واجهة_قابلة_للإلغاء {
+    let root: string = path_of("root.sn");
+    let extras: vector string = [path_of("selective.sn"), path_of("unknown.sn")];
+    match ابن_إعداد_تجميع_مباشر(&root, &extras) with
+    | نتيجة_إعداد_تجميع_مباشر.غير_صالح -> { return نتيجة_بناء_واجهة_قابلة_للإلغاء.ملغاة(); }
+    | نتيجة_إعداد_تجميع_مباشر.جاهز({ البيئة: env, المفتاح_الجذري: key, المفاتيح_المباشرة: keys }) -> {
+        let more: mutable vector مفتاح_وحدة_مقنن = [];
+        let i: mutable uint = 1;
+        while (i < (length(keys) as uint)) {
+            ألحق(more, انسخ_مفتاح_وحدة_مقنن(&keys[i]));
+            i := i + 1;
+        }
+        let request: طلب_واجهة_وحدة = { البيئة: env, المفتاح_الجذري: key, احتفظ_بحقائق_الأدوات: tooling };
+        let cancel: حالة_إلغاء_واجهة = حالة_إلغاء_واجهة_جديدة();
+        return ابن_واجهة_وحدة_بهدف_قابلة_للإلغاء(request, host(), &more, &cancel);
+    };
+}
+
+def source_named(frontend: &نتيجة_واجهة_وحدة, name: string): uint {
+    let i: mutable uint = 0;
+    while (i < (length((*frontend).الوحدات) as uint)) {
+        let id: uint = (*frontend).الوحدات[i].معرف_المصدر;
+        match اسم_مصدر_واجهة_بمعرف(frontend, id) with
+        | اختياري.موجود(spelled) -> { if (ينتهي_بـ(&spelled, &name)) { return id; } }
+        | اختياري.لا_شيء -> { };
+        i := i + 1;
+    }
+    return 1000000;
+}
+
+// The Symbol declared or used at the first `needle` of a source.
+def symbol_in(frontend: &نتيجة_واجهة_وحدة, source: uint, needle: string): اختياري معرف_رمز {
+    match مصدر_واجهة_بمعرف(frontend, source) with
+    | اختياري.لا_شيء -> { return اختياري.لا_شيء(); }
+    | اختياري.موجود(found) -> {
+        let content: string = استنسخ(&found.المحتوى);
+        match ابحث_نصا(&content, &needle) with
+        | اختياري.لا_شيء -> { return اختياري.لا_شيء(); }
+        | اختياري.موجود(at) -> { return رمز_واجهة_عند_بايت(frontend, source, at); };
+    };
+}
+
+def typed(frontend: &نتيجة_واجهة_وحدة, source: uint, needle: string): bool {
+    match symbol_in(frontend, source, needle) with
+    | اختياري.لا_شيء -> { return false; }
+    | اختياري.موجود(symbol) -> {
+        match نوع_رمز_واجهة(frontend, symbol) with
+        | اختياري.موجود(_) -> { return true; }
+        | اختياري.لا_شيء -> { return false; };
+    };
+}
+
+def complete(state: &اكتمال_مصدر_أدوات): bool {
+    return (*state).التحميل && (*state).الأسماء && (*state).الأنواع;
+}
+
+def main(): int {
+    match analyse(true) with
+    | نتيجة_بناء_واجهة_قابلة_للإلغاء.مكتملة(frontend) -> {
+        let root: uint = source_named(&frontend, "isolation/root.sn");
+        let failed: uint = source_named(&frontend, "isolation/failed.sn");
+        let dependent: uint = source_named(&frontend, "isolation/dependent.sn");
+        let independent: uint = source_named(&frontend, "isolation/independent.sn");
+        let selective: uint = source_named(&frontend, "isolation/selective.sn");
+        let unknown: uint = source_named(&frontend, "isolation/unknown.sn");
+        if (root == 1000000 || failed == 1000000 || dependent == 1000000) { return 1; }
+        if (independent == 1000000 || selective == 1000000 || unknown == 1000000) { return 2; }
+        let of_failed: اكتمال_مصدر_أدوات = اكتمال_مصدر_واجهة(&frontend, failed);
+        let of_dependent: اكتمال_مصدر_أدوات = اكتمال_مصدر_واجهة(&frontend, dependent);
+        let of_independent: اكتمال_مصدر_أدوات = اكتمال_مصدر_واجهة(&frontend, independent);
+        let of_root: اكتمال_مصدر_أدوات = اكتمال_مصدر_واجهة(&frontend, root);
+        let of_selective: اكتمال_مصدر_أدوات = اكتمال_مصدر_واجهة(&frontend, selective);
+        let of_unknown: اكتمال_مصدر_أدوات = اكتمال_مصدر_واجهة(&frontend, unknown);
+        // Declaration collection and the selective import failed: no Names, no Types.
+        if (of_failed.الأسماء || of_failed.الأنواع) { return 5; }
+        if (of_selective.الأسماء || of_selective.الأنواع) { return 6; }
+        // The dependent is bound whole; one of its functions was set aside.
+        if (!of_dependent.الأسماء || of_dependent.الأنواع) { return 7; }
+        // unknown.sn is bound but for its unknown name; one function set aside.
+        if (of_unknown.الأسماء || of_unknown.الأنواع) { return 8; }
+        // Nothing missing reaches these.
+        if (!complete(&of_independent) || !complete(&of_root)) { return 9; }
+        // The other functions keep their Types; the set-aside function keeps
+        // its signature.
+        if (!typed(&frontend, dependent, "kept_value")) { return 10; }
+        if (!typed(&frontend, dependent, "uses_broken")) { return 11; }
+        if (!typed(&frontend, unknown, "kept_here")) { return 12; }
+        if (!typed(&frontend, independent, "independent_value")) { return 13; }
+        // The use of the failed module's function is still a reference.
+        match symbol_in(&frontend, dependent, "broken_value") with
+        | اختياري.لا_شيء -> { return 14; }
+        | اختياري.موجود(symbol) -> {
+            let references: vector مرجع_رمز_دلالي = مراجع_رمز_واجهة(&frontend, symbol);
+            let in_dependent: mutable bool = false;
+            let r: mutable uint = 0;
+            while (r < (length(references) as uint)) {
+                if ((references[r].النطاق.البداية.المصدر as uint) == dependent) { in_dependent := true; }
+                r := r + 1;
+            }
+            if (!in_dependent) { return 15; }
+        };
+        // Not the last resort, and not complete.
+        if (frontend.حقائق_الأدوات.الأنواع_متوقفة) { return 16; }
+        if (frontend.كاملة_دلاليا) { return 17; }
+    }
+    | _ -> { return 18; };
+    match analyse(false) with
+    | نتيجة_بناء_واجهة_قابلة_للإلغاء.مرفوضة(_) -> { }
+    | _ -> { return 19; };
+    return 42;
+}

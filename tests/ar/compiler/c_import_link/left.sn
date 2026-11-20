@@ -1,0 +1,5 @@
+// جزء من tests/ar/compiler/c_import_link/main.sn: الوحدة التي تستورد left.c
+// (وleft.c وحده).
+استورد "left.c";
+
+عام عرف من_اليسار(ق: ص32): ص32 { أرجع use_left(ق); }

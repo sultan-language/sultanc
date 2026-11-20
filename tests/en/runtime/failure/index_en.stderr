@@ -1,0 +1,2 @@
+error[SULTANC-RUNTIME-PROGRAM-STOPPED]: the program stopped
+index 5 out of range for length 3 at tests/en/runtime/failure/index_en.sn:15:12

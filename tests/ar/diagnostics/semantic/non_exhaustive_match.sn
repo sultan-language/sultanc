@@ -1,0 +1,8 @@
+// اختبار: رفض
+// تشخيص: SULTANC-PATTERN-NON-EXHAUSTIVE
+// نظير: tests/en/diagnostics/semantic/non_exhaustive_match.sn
+عرف الرئيسية(): ص32 {
+    دع القيمة: نتيجة ص32, ص32 = نتيجة.نجح(42);
+    طابق القيمة مع
+    | نتيجة.نجح(س) -> { أرجع س; }
+}

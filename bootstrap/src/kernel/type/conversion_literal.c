@@ -65,6 +65,39 @@ int __Type_Integer_Literal_Fits__(__Semantic_Context__ *__Context__,
 }
 
 /* Classifies the type conversion. */
+int __Type_Unsigned_Wide_Literal_Fits__(__Semantic_Context__ *__Context__,
+                                        __Ast_Type__ *__Target_Type__)
+{
+    __Resolved_Type__ __Resolved__;
+    if (__Context__ == NULL || __Target_Type__ == NULL ||
+        !__Type_Resolve__(__Context__, __Target_Type__, &__Resolved__))
+    {
+        return 0;
+    }
+    return __Resolved__.__Kind__ == __Resolved_Type_Unsigned_Integer__ && __Resolved__.__Bits__ == 64U;
+}
+
+int __Type_Is_Byte_Vector_To_Text_Move__(__Semantic_Context__ *__Context__,
+                                         __Ast_Type__ *__Source__,
+                                         __Ast_Type__ *__Target__)
+{
+    __Resolved_Type__ __Source_Type__;
+    __Resolved_Type__ __Target_Type__;
+    __Resolved_Type__ __Element_Type__;
+    if (__Context__ == NULL || __Source__ == NULL || __Target__ == NULL ||
+        !__Type_Resolve__(__Context__, __Source__, &__Source_Type__) ||
+        !__Type_Resolve__(__Context__, __Target__, &__Target_Type__) ||
+        __Source_Type__.__Kind__ != __Resolved_Type_Vector__ ||
+        __Target_Type__.__Kind__ != __Resolved_Type_String__ ||
+        __Source_Type__.__Inner__ == NULL ||
+        !__Type_Resolve__(__Context__, __Source_Type__.__Inner__, &__Element_Type__))
+    {
+        return 0;
+    }
+    return __Element_Type__.__Kind__ == __Resolved_Type_Unsigned_Integer__ &&
+           __Element_Type__.__Bits__ == 8U;
+}
+
 __Type_Conversion_Class__ __Type_Conversion_Classify__(__Semantic_Context__ *__Context__,
                                                        __Ast_Type__ *__Source__,
                                                        __Ast_Type__ *__Target__)
@@ -86,6 +119,31 @@ __Type_Conversion_Class__ __Type_Conversion_Classify__(__Semantic_Context__ *__C
         !__Type_Resolve__(__Context__, __Target__, &__Target_Type__))
     {
         return __Type_Conversion_Invalid__;
+    }
+
+    /* Canonical هل_نقل_متجه_بايتات_إلى_نص (compiler/frontend/types/compatibility.sn):
+     * an explicit cast moves an owned byte vector into the owned text header.
+     * Both share the {data, length, capacity} layout; nothing is copied. */
+    if (__Type_Is_Byte_Vector_To_Text_Move__(__Context__, __Source__, __Target__))
+    {
+        return __Type_Conversion_Explicit_Safe__;
+    }
+
+    if (__Source_Type__.__Kind__ == __Resolved_Type_Reference__ &&
+        __Target_Type__.__Kind__ == __Resolved_Type_Pointer__)
+    {
+        __Ast_Type__ *__Target_Inner__ = __Target_Type__.__Inner__;
+        int __Target_Mutable__ =
+            __Target_Inner__ != NULL && __Target_Inner__->__Kind__ == __Ast_Type_Mutable__;
+        if (!__Type_Compatible__(__Context__, __Source_Type__.__Inner__, __Target_Inner__))
+        {
+            return __Type_Conversion_Invalid__;
+        }
+        if (__Target_Mutable__ && !__Source_Type__.__Reference_Mutable__)
+        {
+            return __Type_Conversion_Invalid__;
+        }
+        return __Type_Conversion_Implicit_Safe__;
     }
 
     if (__Source_Type__.__Kind__ == __Resolved_Type_Reference__ &&
@@ -128,6 +186,24 @@ __Type_Conversion_Class__ __Type_Conversion_Classify__(__Semantic_Context__ *__C
     }
     if (__Source_Type__.__Kind__ == __Resolved_Type_Signed_Integer__ &&
         __Target_Type__.__Kind__ == __Resolved_Type_Unsigned_Integer__)
+    {
+        return __Type_Conversion_Explicit_Safe__;
+    }
+    /* Float casts (docs/en/reference/type-system.md, "Numeric casts"): float <-> integer
+     * and f32 <-> f64, as Rust's `as`. */
+    if ((__Source_Type__.__Kind__ == __Resolved_Type_Float__ &&
+         (__Target_Type__.__Kind__ == __Resolved_Type_Float__ ||
+          __Target_Type__.__Kind__ == __Resolved_Type_Signed_Integer__ ||
+          __Target_Type__.__Kind__ == __Resolved_Type_Unsigned_Integer__)) ||
+        (__Target_Type__.__Kind__ == __Resolved_Type_Float__ &&
+         (__Source_Type__.__Kind__ == __Resolved_Type_Signed_Integer__ ||
+          __Source_Type__.__Kind__ == __Resolved_Type_Unsigned_Integer__)))
+    {
+        return __Type_Conversion_Explicit_Safe__;
+    }
+    /* ط8 -> حرف: the code point. */
+    if (__Source_Type__.__Kind__ == __Resolved_Type_Unsigned_Integer__ &&
+        __Source_Type__.__Bits__ == 8U && __Target_Type__.__Kind__ == __Resolved_Type_Character__)
     {
         return __Type_Conversion_Explicit_Safe__;
     }

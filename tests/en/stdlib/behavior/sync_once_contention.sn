@@ -1,0 +1,67 @@
+// اختبار: تشغيل
+// أهداف: x86_64-linux
+// خروج: 0
+// std.sync.once: 8 threads race to initialize. call_once runs its closure
+// exactly once (an atomic counts the runs), and every caller returns after
+// it has run (each sees the flag it set). A OnceLock is set once by the
+// first get_or_init; every thread reads that value. Counterpart:
+// tests/ar/stdlib/behavior/sync_once_contention.sn. No pair directive: the
+// interpreter runs one thread.
+import std.sync.arc;
+import std.sync.atomic;
+import std.sync.once;
+import std.thread.thread;
+
+type state = { once: once, runs: atomic_u64, ready: atomic_u64, seen: atomic_u64, cell: once_lock<i64> };
+
+def initialize(s: &arc<state>): void {
+    let shared: &state = arc_get(s);
+    let old: u64 = atomic_u64_fetch_add(&(*shared).runs, 1 as u64, memory_ordering.seq_cst());
+    // Slow down the winner so the others really wait.
+    let i: mutable i64 = 0;
+    while (i < 100000) { i := i + 1; }
+    atomic_u64_store(&(*shared).ready, 1 as u64, memory_ordering.seq_cst());
+}
+
+def forty_two(): i64 { return 42; }
+
+def contend(s: arc<state>): void {
+    let shared: &state = arc_get(&s);
+    call_once(&(*shared).once, fn(): void -> initialize(&s));
+    if (atomic_u64_load(&(*shared).ready, memory_ordering.seq_cst()) == (1 as u64)) {
+        let seen: u64 = atomic_u64_fetch_add(&(*shared).seen, 1 as u64, memory_ordering.seq_cst());
+    };
+    let v: &i64 = once_lock_get_or_init(&(*shared).cell, fn(): i64 -> forty_two());
+    if (*v != (42 as i64)) {
+        let wrong: u64 = atomic_u64_fetch_add(&(*shared).seen, 1000 as u64, memory_ordering.seq_cst());
+    };
+}
+
+def main(): i32 {
+    let value: state = {
+        once: once_new(), runs: atomic_u64_new(0 as u64), ready: atomic_u64_new(0 as u64),
+        seen: atomic_u64_new(0 as u64), cell: once_lock_new()
+    };
+    let s: arc<state> = arc_new(value);
+    let handles: mutable vector join_handle = [];
+    let t: mutable i32 = 0;
+    while (t < 8) {
+        let mine: arc<state> = arc_clone(&s);
+        match spawn(fn(): void -> contend(mine)) with
+        | result.ok(h) -> { append(handles, h); }
+        | result.err(_) -> { return 1; };
+        t := t + 1;
+    }
+    let j: mutable uint = 0;
+    while (j < (length(handles) as uint)) { join(&mutable handles[j]); j := j + 1; }
+    let shared: &state = arc_get(&s);
+    if (atomic_u64_load(&(*shared).runs, memory_ordering.seq_cst()) != (1 as u64)) { return 2; };
+    if (atomic_u64_load(&(*shared).seen, memory_ordering.seq_cst()) != (8 as u64)) { return 3; };
+    if (!once_is_completed(&(*shared).once)) { return 4; };
+    match once_lock_get(&(*shared).cell) with
+    | option.some(v) -> { if (*v != (42 as i64)) { return 5; }; }
+    | option.none -> { return 6; };
+    // A second set is refused: the cell keeps its first value.
+    if (once_lock_set(&(*shared).cell, 7 as i64)) { return 7; };
+    return 0;
+}

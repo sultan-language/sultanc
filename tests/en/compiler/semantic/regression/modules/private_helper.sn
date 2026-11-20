@@ -1,0 +1,1 @@
+def secret(): int { return 42; }

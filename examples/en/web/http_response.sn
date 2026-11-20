@@ -1,0 +1,19 @@
+// Parsing an HTTP/1.1 response from raw bytes, without a network.
+import std.io.println;
+import std.text.number;
+import std.text.from_bytes;
+import std.http.client;
+import std.http.headers;
+
+def main(): int {
+    let raw: vector u8 = bytes_from_text("HTTP/1.1 200 OK\r\nContent-Length: 5\r\nContent-Type: text/plain\r\n\r\nhello");
+    match parse_http1_response(&raw, true, 1024) with
+    | result.err(_) -> { println("invalid response"); return 1; }
+    | result.ok(parsed) -> {
+        // The parts by name: a record field has one (Arabic) name.
+        println(uint_to_text(http_response_status(parsed_http_response_value(&parsed))));
+        let body: vector u8 = http_response_body(parsed_http_response_value(&parsed));
+        println(from_bytes(&body));
+    };
+    return 0;
+}

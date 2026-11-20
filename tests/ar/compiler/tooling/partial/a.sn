@@ -1,0 +1,2 @@
+// مُثبّت tests/ar/compiler/tooling/partial_project.sn (ليس اختبارا).
+عام عرف ف(): عدد { أرجع 1; }

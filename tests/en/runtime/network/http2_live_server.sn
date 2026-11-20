@@ -1,0 +1,96 @@
+// Fixture for the runner's live HTTP/2 check (tests/runner/suites/system.sn):
+// http2_live_server <port> <connections> [<pkcs12> <password>] serves that many
+// connections on 127.0.0.1 - HTTP/1, h2c with prior knowledge, or with an
+// identity HTTPS with ALPN h2/http1.1 - then exits 42.
+import std.text.from_bytes;
+import std.text.number;
+import std.text.compare;
+import std.fs.read_file;
+import std.process.argument;
+import std.net.socket_address;
+import std.net.options;
+import std.net.tcp;
+import std.http.model;
+import std.http.body;
+import std.http.limits;
+import std.http.transport;
+import std.http.server;
+import std.tls.config;
+
+def arg(i: uint): string {
+    match argument(i) with
+    | option.some(v) -> { return v; }
+    | option.none -> { return ""; };
+}
+
+def handle(state: &int, request: &buffered_http_request): buffered_http_response {
+    let out: mutable vector u8 = [];
+    match (*request).الإصدار with
+    | http_version.http_2 -> { append_text_bytes(&mutable out, "h2 "); }
+    | _ -> { append_text_bytes(&mutable out, "h1 "); };
+    append_text_bytes(&mutable out, copy_text(&(*request).الطريقة));
+    append_text_bytes(&mutable out, " ");
+    append_text_bytes(&mutable out, copy_text(&(*request).الهدف));
+    append_text_bytes(&mutable out, " ");
+    append_text_bytes(&mutable out, uint_to_text(length((*request).الجسم) as uint));
+    append(out, 10);
+    let big: string = "/big";
+    if (texts_equal(&(*request).الهدف, &big)) {
+        let i: mutable uint = 0;
+        while (i < 100000) { append(out, (97 + (i % 26)) as u8); i := i + 1; }
+        append(out, 10);
+    };
+    let kind: string = "text/plain";
+    return bytes_http_response(200, out, &kind);
+}
+
+def main(): int {
+    let port_text: string = arg(1);
+    let count: mutable uint = 0;
+    let count_text: string = arg(2);
+    match parse_uint(&count_text) with
+    | result.ok(v) -> { count := v; }
+    | result.err(_) -> { return 2; };
+    let p12: string = arg(3);
+    let password: string = arg(4);
+    let address_bytes: mutable vector u8 = bytes_from_text("127.0.0.1:");
+    append_text_bytes(&mutable address_bytes, port_text);
+    let address_text: string = from_bytes(&address_bytes);
+    let address: mutable socket_addr;
+    match parse_socket_addr(&address_text) with
+    | result.ok(v) -> { address := v; }
+    | result.err(_) -> { return 6; };
+    let options: mutable vector socket_option = [];
+    append(options, reuse_address(true));
+    let secure: bool = length(p12) > 0;
+    let identity: mutable vector u8 = [];
+    if (secure) {
+        match read_bytes(&p12) with
+        | result.ok(der) -> { identity := der; }
+        | result.err(_) -> { return 3; };
+    };
+    let tls: mutable tls_server_config = tls_server_config_new(tls_server_identity_pkcs12(identity, &password));
+    let protocols: vector string = ["h2", "http/1.1"];
+    tls_server_config_set_protocols(&mutable tls, &protocols);
+    let limits: http_limits = default_http_limits();
+    let state: int = 0;
+    match tcp_bind_with_options(&address, 16, &options) with
+    | result.err(_) -> { return 4; }
+    | result.ok(listener) -> {
+        let served: mutable uint = 0;
+        while (served < count) {
+            match tcp_accept(&listener) with
+            | result.err(_) -> { return 5; }
+            | result.ok(stream) -> {
+                if (secure) {
+                    let ignored: result int, http_server_error = serve_https_connection(stream, &tls, &limits, &state, handle);
+                } else {
+                    let ignored: result int, http_server_error = serve_http_connection(http_transport.tcp(stream), &limits, &state, handle);
+                };
+                served := served + 1;
+            };
+        }
+        let ignored: result int, int = tcp_listener_close(listener);
+    };
+    return 42;
+}

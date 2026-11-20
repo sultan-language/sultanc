@@ -1,0 +1,6 @@
+error[SULTANC-CALL-ARGUMENT-COUNT-MISMATCH]: call argument count does not match — The function expects no arguments, but the call passes 11 arguments. The call supplies a different number of arguments than the function accepts.
+  --> tests/en/diagnostics/e2e/argument_count_none.sn:7:26..7:65
+   |
+ 7 | def main(): i32 { return zero(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11); }
+   |                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |

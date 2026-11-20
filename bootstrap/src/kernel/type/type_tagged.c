@@ -92,8 +92,9 @@ int __Type_Tagged_Find_Constructor__(__Ast_Type__ *__Type__,
         {
             return __Type_Tagged_Fill__(__Type__, 0U, __Out_Constructor__);
         }
+        /* موجود is canonical; بعض is its deprecated alias for one release. */
         if (__Text_Equals_Cstr__(__Name__, "some") || __Text_Equals_Cstr__(__Name__, "Some") ||
-            __Text_Equals_Cstr__(__Name__, "بعض"))
+            __Text_Equals_Cstr__(__Name__, "موجود") || __Text_Equals_Cstr__(__Name__, "بعض"))
         {
             return __Type_Tagged_Fill__(__Type__, 1U, __Out_Constructor__);
         }

@@ -1,0 +1,71 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 0
+// نظير: tests/ar/ispeak/check_context_subsets.sn
+import compiler.diagnostics.schema;
+import std.text.from_bytes;
+import compiler.ispeak.ispeak;
+import compiler.diagnostics.identity;
+import compiler.diagnostics.reason;
+import compiler.ispeak.format.facts;
+import std.text.builder;
+
+// Sweep 262,144 distinct mixed subsets of the 22 canonical fields across
+// both locales using one reused builder. Full 2^22 exhaustive coverage
+// is substantially slower; exact wording is asserted in the other fixtures.
+def field_from_mask(mask: u32, bit: u32, text: &string): option قيمة_حجة_رسالة {
+    if ((mask & bit) != (0 as u32)) {
+        return option.some(قيمة_حجة_رسالة.نصية(انسخ_نص(text)));
+    };
+    return option.none();
+}
+
+def context_from_mask(index: u32, value: &string): حقائق_سياق_رسالة {
+    let context: حقائق_سياق_رسالة = {
+        القيمة: field_from_mask(index, (1 as u32), value),
+        المتوقع: field_from_mask(index, (2 as u32), value),
+        الاستبدال: field_from_mask(index, (4 as u32), value),
+        الموجود: field_from_mask(index, (8 as u32), value),
+        الفهرس: field_from_mask(index, (16 as u32), value),
+        الطول: field_from_mask(index, (32 as u32), value),
+        المجال: field_from_mask(index, (64 as u32), value),
+        النمط: field_from_mask(index, (128 as u32), value),
+        المسار: field_from_mask(index, (256 as u32), value),
+        الرمز: field_from_mask(index, (512 as u32), value),
+        النوع: field_from_mask(index, (1024 as u32), value),
+        السياق: field_from_mask(index, (2048 as u32), value),
+        المرحلة: field_from_mask(index, (4096 as u32), value),
+        الهدف: field_from_mask(index, (8192 as u32), value),
+        الدالة: field_from_mask(index, (16384 as u32), value),
+        الكتلة: field_from_mask(index, (32768 as u32), value),
+        التعليمة: field_from_mask(index, (65536 as u32), value),
+        العملية: field_from_mask(index, (131072 as u32), value),
+        البدائي: field_from_mask(index, (262144 as u32), value),
+        المصدر: field_from_mask(index, (524288 as u32), value),
+        الوجهة: field_from_mask(index, (1048576 as u32), value),
+        السبب: field_from_mask(index, (2097152 as u32), value)
+    };
+    return context;
+}
+
+def main(): int {
+    let value: string = "FACT";
+    let key: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.مسير_غير_صالح());
+    let builder: mutable text_builder = new_text_builder_with_capacity(1024 as uint);
+    let mask: mutable u32 = 0 as u32;
+    while (mask < (262144 as u32)) {
+        // Permute the 18-bit counter into a 22-bit context mask so every
+        // field, including the highest four, participates in this sweep.
+        let index: u32 = ((mask << 4) | (mask >> 14)) & (4194303 as u32);
+        text_builder_clear(&mutable builder);
+        if (!ألحق_تشخيص_بسياق(&mutable builder, لغة_تشخيص.الإنجليزية(), key, context_from_mask(index, &value))) { return 1; };
+        let english_length: uint = text_builder_length(&builder);
+        if (english_length < 12 || english_length > 1500) { return 2; };
+        text_builder_clear(&mutable builder);
+        if (!ألحق_تشخيص_بسياق(&mutable builder, لغة_تشخيص.العربية(), key, context_from_mask(index, &value))) { return 3; };
+        let arabic_length: uint = text_builder_length(&builder);
+        if (arabic_length < 12 || arabic_length > 1500) { return 4; };
+        mask := mask + (1 as u32);
+    }
+    return 0;
+}

@@ -1,0 +1,27 @@
+// A small sort: split the input into lines, sort them and print them back.
+import std.io.println;
+import std.process.argument_count;
+import std.process.argument;
+import std.text.number;
+import std.text.transform;
+import std.collections.sort;
+
+def read_input(default: string): string {
+    if (argument_count() > 1) {
+        match argument(1) with
+        | option.some(text) -> {
+            if (length(text) > 0) { return text; };
+        }
+        | option.none -> { };
+    };
+    return default;
+}
+
+def main(): int {
+    let text: string = read_input("pear\napple\nbanana");
+    let lines: mutable vector string = split(&text, &"\n");
+    sort_texts(&mutable lines);
+    let separator: string = "\n";
+    println(join(&lines, &separator));
+    return 0;
+}

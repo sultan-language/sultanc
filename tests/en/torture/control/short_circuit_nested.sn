@@ -1,0 +1,17 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// فئة: control
+def safe(flag: bool): bool {
+    return flag && ((84 / 2) == 42);
+}
+
+def main(): int {
+    let first: bool = false && ((1 / 0) > 0);
+    let second: bool = true || ((1 / 0) > 0);
+    if (first) { return 1; };
+    if (!second) { return 2; };
+    if (!(safe(true) && (false || true))) { return 3; };
+    return 42;
+}

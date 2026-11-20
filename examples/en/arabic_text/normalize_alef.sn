@@ -1,0 +1,16 @@
+// Normalizing alef: replace أ, إ and آ with a bare ا.
+import std.io.println;
+import std.text.number;
+import std.text.transform;
+
+def main(): int {
+    let source: string = "أإآا";
+    let bare: string = "ا";
+    let one: string = "أ";
+    let two: string = "إ";
+    let three: string = "آ";
+    let a: string = replace(&source, &one, &bare);
+    let b: string = replace(&a, &two, &bare);
+    println(replace(&b, &three, &bare));
+    return 0;
+}

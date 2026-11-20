@@ -1,0 +1,10 @@
+// اختبار: رفض
+// تشخيص: SULTANC-PATTERN-NON-EXHAUSTIVE
+// نظير: tests/en/diagnostics/semantic/non_exhaustive_integer_range.sn
+// القيمة 101 خارج المديين.
+عرف الرئيسية(): ص32 {
+    دع المستوى: ط8 = 7;
+    طابق المستوى مع
+    | مدى 0 إلى 100 -> { أرجع 0; }
+    | مدى 102 إلى 255 -> { أرجع 1; }
+}

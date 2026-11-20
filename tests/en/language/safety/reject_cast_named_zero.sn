@@ -1,0 +1,13 @@
+// اختبار: رفض
+// أهداف: arm64-darwin,x86_64-linux
+// تشخيص: SULTANC-SAFETY-UNSAFE-OPERATION
+// نظير: tests/ar/language/safety/reject_cast_named_zero.sn
+// A named zero is not the null literal: it needs unsafe.
+type First = { value: int };
+type Second = { other: int };
+
+def main(): int {
+    let zero: u64 = 0;
+    let p: *First = zero as *First;
+    return 0;
+}

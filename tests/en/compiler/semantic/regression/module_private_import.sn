@@ -1,0 +1,6 @@
+// اختبار: رفض
+// خروج: 1
+import "modules/private_helper.sn";
+def main(): int {
+    return secret();
+}

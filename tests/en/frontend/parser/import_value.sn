@@ -1,0 +1,2 @@
+import "same.sn";
+def main(): int { return 42; }

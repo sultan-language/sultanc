@@ -1,0 +1,7 @@
+error[SULTANC-NAME-UNKNOWN]: unknown name: `اكتب_الكل` — The required name was not found during resolution.
+  --> tests/ar/diagnostics/e2e/missing_import_hint.sn:10:23..10:32
+    |
+ 10 |     دع المكتوب: ص32 = اكتب_الكل(3);
+    |                       ^^^^^^^^^
+    |
+  = help: this name is declared `public` in a standard library module that this module does not import; import that module — The affected path is `std.io.writer`.

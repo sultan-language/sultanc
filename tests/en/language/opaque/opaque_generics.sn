@@ -1,0 +1,41 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/language/opaque/opaque_generics.sn
+// Generic code that uses an opaque type argument only through pointers:
+// null tests, comparisons, a vector of pointers, and a generic record whose
+// fields are pointers. Each instance is checked on its own body.
+type Db = opaque;
+type Node<A> = { item: *A, next: *Node<A> };
+
+def open_at(word: u64): *Db {
+    unsafe { return word as *Db; };
+}
+def is_null<A>(p: *A): bool { return p == 0 as *A; }
+def same<A>(a: *A, b: *A): bool { return a == b; }
+def count_live<A>(all: &vector *A): int {
+    let n: mutable int = 0;
+    let i: mutable uint = 0;
+    while (i < (length(*all) as uint)) {
+        if (!is_null((*all)[i])) { n := n + 1; };
+        i := i + 1;
+    }
+    return n;
+}
+def first<A>(all: &vector *A): *A { return (*all)[0]; }
+
+def main(): int {
+    let none: *Db = 0 as *Db;
+    let db: *Db = open_at(4096);
+    let all: mutable vector *Db = [];
+    append(all, db);
+    append(all, none);
+    append(all, db);
+    let node: Node<Db> = { item: db, next: 0 as *Node<Db> };
+    let total: mutable int = 0;
+    if (is_null(none) && !is_null<Db>(first(&all))) { total := total + 10; };
+    if (same(first(&all), db) && same(node.item, db)) { total := total + 10; };
+    total := total + count_live(&all) * 11;
+    return total;
+}

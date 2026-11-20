@@ -1,0 +1,10 @@
+// Integer math exercise: interpolation.
+import std.io.println;
+import std.text.number;
+
+def interpolate(a: int, b: int, t: int): int { return a + (b - a) * t / 100; }
+
+def main(): int {
+    println(int_to_text(interpolate(10, 110, 56)));
+    return 0;
+}

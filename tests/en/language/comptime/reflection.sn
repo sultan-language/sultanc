@@ -1,0 +1,20 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/language/comptime/reflection.sn
+// Type facts of the referenced type, folded for the target.
+import std.meta.reflect;
+
+type Pair = { left: i32, right: i32 };
+type Shape = | Circle | Square | Triangle;
+
+def main(): int {
+    let p: Pair = { left: 1, right: 2 };
+    let s: Shape = Shape.Square();
+    let size: u64 = size_of(&p);
+    let align: u64 = align_of(&p);
+    let fields: u64 = field_count(&p);
+    let ctors: u64 = constructor_count(&s);
+    return (size + align + fields + ctors + 25) as int;
+}

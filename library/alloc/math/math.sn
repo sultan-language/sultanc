@@ -1,0 +1,12 @@
+// The root file of library/alloc/math: the Arabic spellings of its modules
+// (docs/en/reference/modules-and-imports.md, "Module spellings"). The
+// standard library is three libraries (docs/en/reference/std-layers.md); this
+// file names only this library's own children.
+
+module trigonometry { ar: مثلثات };
+
+// Re-exported: these children are modules and folders of core, at the same
+// paths (docs/en/reference/std-layers.md). One file, one module.
+module float = core.math.float { ar: عشري };
+module integer = core.math.integer { ar: صحيح };
+module wrapping = core.math.wrapping { ar: التفاف };

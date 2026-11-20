@@ -1,0 +1,10 @@
+// The library of a package with a library and a program: src/main.sn, the
+// program, lies in the library's source root (tests/runner/suites/testing.sn).
+import std.debug.assert;
+
+public def triple(x: int): int { return x * 3; }
+
+@@test
+def library_triples(): void {
+    assert(triple(1) == 3);
+}

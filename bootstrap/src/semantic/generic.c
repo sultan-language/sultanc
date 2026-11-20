@@ -147,6 +147,7 @@ __Ast_Type__ *__Semantic_Generic_Substitute_Type__(__Semantic_Context__ *__Conte
 
     switch (__Type__->__Kind__)
     {
+        case __Ast_Type_Pointer__:
         case __Ast_Type_Reference__:
         case __Ast_Type_Vector__:
         case __Ast_Type_Box__:
@@ -558,12 +559,28 @@ static __Ast_Statement__ *__Generic_Clone_Statement__(__Semantic_Context__ *__Co
                 __Context__, __Source__->__As__.__Copy__.__Expression__, __Parameters__, __Arguments__,
                 __Argument_Count__, __Unit__);
             break;
+        case __Ast_Statement_Unsafe__:
+            __Result__->__As__.__Unsafe__ = __Generic_Clone_Block__(
+                __Context__, __Source__->__As__.__Unsafe__, __Parameters__, __Arguments__,
+                __Argument_Count__, __Unit__);
+            break;
+        case __Ast_Statement_Block__:
+            __Result__->__As__.__Block__ = __Generic_Clone_Block__(
+                __Context__, __Source__->__As__.__Block__, __Parameters__, __Arguments__,
+                __Argument_Count__, __Unit__);
+            break;
+        case __Ast_Statement_Break__:
+        case __Ast_Statement_Continue__:
+            break;
         case __Ast_Statement_While__:
             __Result__->__As__.__While__.__Condition__ = __Generic_Clone_Expression__(
                 __Context__, __Source__->__As__.__While__.__Condition__, __Parameters__, __Arguments__,
                 __Argument_Count__, __Unit__);
             __Result__->__As__.__While__.__Body__ = __Generic_Clone_Block__(
                 __Context__, __Source__->__As__.__While__.__Body__, __Parameters__, __Arguments__,
+                __Argument_Count__, __Unit__);
+            __Result__->__As__.__While__.__Step__ = __Generic_Clone_Block__(
+                __Context__, __Source__->__As__.__While__.__Step__, __Parameters__, __Arguments__,
                 __Argument_Count__, __Unit__);
             break;
         case __Ast_Statement_If__:
@@ -619,6 +636,27 @@ static __Ast_Statement__ *__Generic_Clone_Statement__(__Semantic_Context__ *__Co
             {
                 __Result__->__As__.__Record__.__Fields__[__Index__] =
                     __Source__->__As__.__Record__.__Fields__[__Index__];
+                if (__Source__->__As__.__Record__.__Fields__[__Index__].__Is_Vector__)
+                {
+                    /* A vector literal field: atoms are shared, as a vector
+                     * initializer's; element expressions are cloned. */
+                    __Ast_Record_Input__ *__Input__ = &__Result__->__As__.__Record__.__Fields__[__Index__];
+                    size_t __Element__;
+                    if (__Input__->__Vector_Expressions__ != NULL)
+                    {
+                        __Ast_Expression__ **__Elements__ = (__Ast_Expression__ **)__Generic_Allocate__(
+                            __Context__, __Input__->__Vector_Count__ * sizeof(__Ast_Expression__ *),
+                            alignof(__Ast_Expression__ *));
+                        if (__Elements__ == NULL)
+                            return NULL;
+                        for (__Element__ = 0U; __Element__ < __Input__->__Vector_Count__; ++__Element__)
+                            __Elements__[__Element__] = __Generic_Clone_Expression__(
+                                __Context__, __Input__->__Vector_Expressions__[__Element__], __Parameters__,
+                                __Arguments__, __Argument_Count__, __Unit__);
+                        __Input__->__Vector_Expressions__ = __Elements__;
+                    }
+                    continue;
+                }
                 __Result__->__As__.__Record__.__Fields__[__Index__].__Value__ =
                     __Generic_Clone_Expression__(
                         __Context__,
@@ -629,7 +667,26 @@ static __Ast_Statement__ *__Generic_Clone_Statement__(__Semantic_Context__ *__Co
             }
             break;
         case __Ast_Statement_Initialize_Vector__:
+            if (__Source__->__As__.__Aggregate__.__Expressions__ != NULL)
+            {
+                __Result__->__As__.__Aggregate__.__Expressions__ = (__Ast_Expression__ **)__Generic_Allocate__(
+                    __Context__,
+                    __Source__->__As__.__Aggregate__.__Value_Count__ * sizeof(__Ast_Expression__ *),
+                    alignof(__Ast_Expression__ *));
+                if (__Result__->__As__.__Aggregate__.__Expressions__ == NULL)
+                    return NULL;
+                for (__Index__ = 0U; __Index__ < __Source__->__As__.__Aggregate__.__Value_Count__; ++__Index__)
+                {
+                    __Result__->__As__.__Aggregate__.__Expressions__[__Index__] = __Generic_Clone_Expression__(
+                        __Context__, __Source__->__As__.__Aggregate__.__Expressions__[__Index__],
+                        __Parameters__, __Arguments__, __Argument_Count__, __Unit__);
+                }
+            }
+            break;
         case __Ast_Statement_Initialize_Box__:
+            __Result__->__As__.__Box__.__Expression__ = __Generic_Clone_Expression__(
+                __Context__, __Source__->__As__.__Box__.__Expression__, __Parameters__, __Arguments__,
+                __Argument_Count__, __Unit__);
             break;
     }
     return __Result__;

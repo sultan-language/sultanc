@@ -1,0 +1,53 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// A closure body has a drop frame like a function: the owned parameters it
+// does not consume (text, a record, a vector, a function value) are dropped
+// when it returns, and one it returns is not. 10^5 rounds leave the
+// allocator's live bytes where they were.
+// Counterpart: tests/ar/language/surface/closure_drop_rss_flat.sn. It has no
+// pair directive: the interpreter does not use the std allocator whose
+// counters this reads.
+import std.os.allocation;
+import std.text.number;
+
+type Named = { name: string, id: int };
+
+def size_of(s: string): int { return length(s) as int; }
+
+def round(i: uint): int {
+    // A closure whose owned parameters are text, a record and a vector.
+    let measure: fn(string): int = fn(s: string): int -> size_of(s);
+    let ident: fn(Named): int = fn(n: Named): int -> n.id + (length(n.name) as int);
+    let count: fn(vector int): int = fn(v: vector int): int -> length(v) as int;
+    // A parameter the body moves out is not dropped by the closure.
+    let pass: fn(string): string = fn(s: string): string -> s;
+    // A function-value parameter holds one reference.
+    let call: fn(fn(int): int, int): int = fn(f: fn(int): int, x: int): int -> f(x);
+    let total: mutable int = 0;
+    total := total + measure(uint_to_text(i));
+    let n: Named = { name: uint_to_text(i), id: 2 };
+    total := total + ident(n);
+    let v: mutable vector int = [];
+    append(v, 1);
+    append(v, 2);
+    total := total + count(v);
+    let kept: string = pass(uint_to_text(i + 1));
+    total := total + (length(kept) as int);
+    total := total + call(fn(x: int): int -> x + 1, 1);
+    return total;
+}
+
+def main(): int {
+    let warm_up: int = round(0);
+    if (warm_up < 0) { return 1; };
+    let before: u64 = بايتات_حية_مخصص_النظام();
+    let i: mutable uint = 0;
+    while (i < 100000) {
+        if (round(i) < 0) { return 2; };
+        i := i + 1;
+    }
+    let after: u64 = بايتات_حية_مخصص_النظام();
+    if (after != before) { return 3; };
+    return 42;
+}

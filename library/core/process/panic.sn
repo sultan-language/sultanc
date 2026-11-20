@@ -1,0 +1,27 @@
+// The stop primitive إنهيار / panic (docs/en/reference/errors.md, layer 1c): a program
+// that cannot go on stops. Like Rust's core::panic!, this is core's: it needs
+// neither the heap nor the OS, so core and alloc may panic too.
+//
+// What a panic does is the program's panic handler, a function marked
+// `@@panic_handler` (`@@معالج_الانهيار`) that takes the message and never
+// returns, as Rust's #[panic_handler]. The compiler makes every call of
+// إنهيار a call of the handler (msir/semantic_lowering.sn,
+// اربط_معالج_الانهيار_مسير). std supplies the default
+// (std.process.panic_handler): it writes the iSpeak frame "the program
+// stopped" in the program's language with the message under it to standard
+// error, then ends the process with status 1. A program may supply its own;
+// a bare-metal program, which has no std, supplies one to report anything.
+//
+// It never returns: the compiler ends the caller's path after the call
+// (msir/lowering/statements.sn), so a function returning a value needs no
+// return after it. The process ends at once (abort semantics, Rust's
+// panic=abort): owned values that are still alive are not dropped, and the
+// operating system reclaims the process's memory. Without a handler (and in
+// the handler itself) there is nowhere to report to: the program waits here
+// forever.
+
+عام عرف إنهيار(الرسالة: نص): فراغ {
+    طالما (صواب) { }
+}
+
+عام مرادف panic = إنهيار;

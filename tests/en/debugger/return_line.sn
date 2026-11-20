@@ -1,0 +1,28 @@
+// اختبار: تشغيل
+// أهداف: x86_64-linux
+// خروج: 0
+// نظير: tests/ar/debugger/سطر_الإرجاع.sn
+// Program for return_line.dbg (tools/tests/debugger_tests.sh): a return
+// statement whose value is already computed has a line of its own in the
+// line table (the block terminator carries it), so a debugger stops on it.
+import std.io.println;
+import std.text.number;
+
+// Large enough that the optimizer keeps it a function at every level.
+def twice(value: int): int {
+    let doubled: int = value * 2;
+    println(int_to_text(value));
+    println(int_to_text(doubled));
+    println(int_to_text(doubled + value));
+    println(int_to_text(doubled * value));
+    println(int_to_text(doubled - value));
+    println(int_to_text(doubled / 2));
+    println(int_to_text(doubled % 5));
+    return doubled;                                         // BP:return_twice
+}
+
+def main(): int {
+    let result: int = twice(21);                            // BP:return_call
+    println(int_to_text(result));
+    return result - 42;
+}

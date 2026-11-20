@@ -1,5 +1,10 @@
-// Single compiler-facing version owner. SultanC has not declared a numbered
-// stable release yet, so the source build reports its development status plainly.
-عام عرف إصدار_سلطان_سي(): نص {
-    أرجع «development»;
+// Single compiler-facing version owner. This source is a development build:
+// لا_شيء, whose status the driver prints in the selected language (iSpeak
+// حالة_إصدار_تطويري). A release build replaces this module with one that
+// returns its version: CMake's SULTANC_RELEASE_VERSION (./build.sh
+// --release-version=VERSION) writes it and binds compiler.version to it with
+// --module-source (cmake/CMakeLists.txt), as the LLVM capability is bound.
+// Stage0 always compiles this source.
+عام عرف إصدار_السلطان(): اختياري نص {
+    أرجع اختياري.لا_شيء();
 }

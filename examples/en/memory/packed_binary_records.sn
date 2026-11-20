@@ -1,0 +1,16 @@
+// Packing a 32-bit number into bytes in little-endian order with shifts and masks.
+import std.io.println;
+import std.text.number;
+
+def main(): int {
+    let number: u32 = 0x12345678 as u32;
+    let bytes: vector u8 = [
+        (number & 0xff) as u8,
+        ((number >> 8) & 0xff) as u8,
+        ((number >> 16) & 0xff) as u8,
+        ((number >> 24) & 0xff) as u8
+    ];
+    if (bytes[0] != 0x78 as u8 || bytes[3] != 0x12 as u8) { return 1; };
+    println(int_to_text(bytes[0] as int));
+    return 0;
+}

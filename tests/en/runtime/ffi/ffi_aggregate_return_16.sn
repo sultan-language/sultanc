@@ -1,0 +1,9 @@
+type LDivResult = { quotient: int, remainder: int };
+extern def ldiv(numerator: int, denominator: int): LDivResult;
+
+def main(): int {
+    unsafe {
+        let division: LDivResult = ldiv(85, 2);
+        return division.quotient;
+    }
+}

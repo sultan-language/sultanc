@@ -1,0 +1,7 @@
+// اختبار: رفض
+// تشخيص: SULTANC-TYPE-ADDRESS-OF-NON-LVALUE
+// نظير: tests/en/diagnostics/semantic/address_of_value.sn
+عرف الرئيسية(): ص32 {
+    دع المرجع: & ص32 = &5;
+    أرجع 0;
+}

@@ -1,0 +1,22 @@
+// The root file of library/alloc/text: the Arabic spellings of its modules
+// (docs/en/reference/modules-and-imports.md, "Module spellings"). The
+// standard library is three libraries (docs/en/reference/std-layers.md); this
+// file names only this library's own children.
+
+module bidi { ar: اتجاه };
+module builder { ar: باني };
+module float { ar: عشري };
+module format { ar: تنسيق };
+module from_bytes { ar: من_بايتات };
+module language { ar: لغة };
+module messages { ar: رسائل };
+module number { ar: أعداد };
+module radix { ar: أساس };
+module substring { ar: مقطع };
+module transform { ar: تحويل };
+
+// Re-exported: these children are modules and folders of core, at the same
+// paths (docs/en/reference/std-layers.md). One file, one module.
+module compare = core.text.compare { ar: مقارنة };
+module range = core.text.range { ar: نطاق };
+module search = core.text.search { ar: بحث };

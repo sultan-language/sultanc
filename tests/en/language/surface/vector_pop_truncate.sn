@@ -1,0 +1,132 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/language/surface/vector_pop_truncate.sn
+// pop / truncate (Rust's Vec::pop and Vec::truncate): pop moves the last
+// element out as an option (none when empty), truncate drops the elements
+// past n and does nothing when n is at or past the length. Owned elements
+// (text, nested vectors, closures, records) move or drop exactly once; a
+// vector a pop or truncate empties is reused; a vector behind a reference, in
+// a record field, inside a generic function and at compile time.
+type Item = { name: string, parts: vector int };
+
+def adder(k: int): fn(int): int { return fn(x: int): int -> x + k; }
+
+def last_or<T>(values: &mutable vector T, fallback: T): T {
+    match pop(*values) with
+    | option.some(v) -> { return v; }
+    | option.none -> { return fallback; };
+}
+
+def keep_first<T>(values: &mutable vector T, n: uint): uint {
+    truncate(*values, n);
+    return length(*values) as uint;
+}
+
+def texts_equal(a: &string, b: &string): bool {
+    if (length(*a) != length(*b)) { return false; };
+    let i: mutable uint = 0;
+    while (i < (length(*a) as uint)) { if ((*a)[i] != (*b)[i]) { return false; }; i := i + 1; }
+    return true;
+}
+
+def stack_sum(n: int): int {
+    let stack: mutable vector int = [];
+    let i: mutable int = 1;
+    while (i <= n) { append(stack, i); i := i + 1; }
+    let sum: mutable int = 0;
+    let going: mutable bool = true;
+    while (going) {
+        match pop(stack) with
+        | option.some(v) -> { sum := sum + v; }
+        | option.none -> { going := false; };
+    }
+    return sum;
+}
+
+def main(): int {
+    // Integers.
+    let numbers: mutable vector int = [1, 2, 3, 4, 5];
+    match pop(numbers) with
+    | option.some(v) -> { if (v != 5) { return 1; }; }
+    | option.none -> { return 2; };
+    truncate(numbers, 2);
+    if (length(numbers) != 2 || numbers[1] != 2) { return 3; };
+    truncate(numbers, 10);
+    if (length(numbers) != 2) { return 4; };
+    truncate(numbers, 0);
+    if (length(numbers) != 0) { return 5; };
+    match pop(numbers) with
+    | option.some(_) -> { return 6; }
+    | option.none -> { };
+    append(numbers, 7);
+    if (length(numbers) != 1 || numbers[0] != 7) { return 7; };
+
+    // Text: the popped text is owned by the caller.
+    let words: mutable vector string = [];
+    append(words, "alpha");
+    append(words, "beta");
+    append(words, "gamma");
+    let beta: string = "beta";
+    let popped: string = last_or(&mutable words, "none");
+    let gamma: string = "gamma";
+    if (!texts_equal(&popped, &gamma)) { return 8; };
+    let second: string = last_or(&mutable words, "none");
+    if (!texts_equal(&second, &beta)) { return 9; };
+    let first: string = last_or(&mutable words, "none");
+    let fallback: string = last_or(&mutable words, "none");
+    let none_text: string = "none";
+    if (length(first) != 5 || !texts_equal(&fallback, &none_text)) { return 10; };
+
+    // Nested vectors and records.
+    let grid: mutable vector vector int = [];
+    let r: mutable int = 0;
+    while (r < 4) {
+        let row: mutable vector int = [];
+        append(row, r); append(row, r * 10);
+        append(grid, row);
+        r := r + 1;
+    }
+    match pop(grid) with
+    | option.some(row) -> { if (length(row) != 2 || row[1] != 30) { return 11; }; }
+    | option.none -> { return 12; };
+    if (keep_first(&mutable grid, 1) != 1 || grid[0][0] != 0) { return 13; };
+    let items: mutable vector Item = [];
+    let k: mutable int = 0;
+    while (k < 3) {
+        let parts: vector int = [k, k + 1];
+        let item: Item = { name: "item", parts: parts };
+        append(items, item);
+        k := k + 1;
+    }
+    match pop(items) with
+    | option.some(it) -> { if (it.parts[1] != 3) { return 14; }; }
+    | option.none -> { return 15; };
+    truncate(items, 1);
+    if (length(items) != 1 || items[0].parts[0] != 0) { return 16; };
+
+    // Closures: a popped closure keeps its environment; truncated ones drop.
+    let fs: mutable vector fn(int): int = [];
+    append(fs, adder(1));
+    append(fs, adder(10));
+    append(fs, adder(100));
+    match pop(fs) with
+    | option.some(f) -> { if (f(1) != 101) { return 17; }; }
+    | option.none -> { return 18; };
+    truncate(fs, 1);
+    let g: fn(int): int = fs[0];
+    if (g(1) != 2) { return 19; };
+
+    // Through a record field, and a stack drained by pop.
+    let held: vector int = [9, 8, 7];
+    let holder: mutable Item = { name: "h", parts: held };
+    truncate(holder.parts, 1);
+    if (length(holder.parts) != 1 || holder.parts[0] != 9) { return 20; };
+    if (stack_sum(100) != 5050) { return 21; };
+
+    // Compile time.
+    let folded: int = comptime stack_sum(10);
+    if (folded != 55) { return 22; };
+    return 42;
+}

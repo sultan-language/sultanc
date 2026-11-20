@@ -1,0 +1,39 @@
+// A file pipeline with tasks: write a file, count its lines in an asynchronous task, then
+// delete the file.
+import std.io.println;
+import std.text.number;
+import std.async.runtime;
+import std.fs.write_file;
+import std.fs.read_file;
+import std.fs.mutation;
+import std.text.transform;
+
+def read_and_count(): int {
+    yield_task();
+    let path: string = "pipeline-input.txt";
+    match read_file(&path) with
+    | result.ok(text) -> {
+        let parts: vector string = split(&text, &"\n");
+        return length(parts) - 1;
+    }
+    | result.err(_) -> { return -1; };
+}
+
+def main(): int {
+    let path: string = "pipeline-input.txt";
+    let text: string = "alpha\nbeta\ngamma\n";
+    match write_file(&path, &text) with
+    | result.ok(_) -> { }
+    | result.err(_) -> { return 1; };
+    let job: mutable task<int> = spawn_task(fn(): int -> read_and_count());
+    let count: mutable int = -1;
+    match await_task(&mutable job) with
+    | option.some(n) -> { count := n; }
+    | option.none -> { return 2; };
+    match remove_file(&path) with
+    | result.ok(_) -> { }
+    | result.err(_) -> { return 3; };
+    if (count != 3) { return 4; };
+    println(int_to_text(count));
+    return 0;
+}

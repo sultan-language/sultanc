@@ -1,0 +1,8 @@
+// اختبار: رفض
+// تشخيص: SULTANC-SAFETY-INDEX-OUT-OF-BOUNDS
+// نظير: tests/en/diagnostics/semantic/known_vector_bounds.sn
+// متجه غير قابل للتغيير مهيأ من حرفي بثلاثة عناصر.
+عرف الرئيسية(): ص32 {
+    دع القيم: متجه ص32 = [1, 2, 3];
+    أرجع القيم[2] + القيم[3];
+}

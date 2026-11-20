@@ -1,0 +1,37 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// Twin: tests/ar/compiler/c_import_opaque/main.sn (no `نظير` header: the
+// pair step interprets both twins, and the interpreter cannot call the
+// functions of an imported .c file).
+// C handles are opaque types (compiler/jisr/emit.sn): handles.h declares
+// `typedef struct db db;`, `typedef struct stmt stmt;` and `struct cursor;`,
+// and only handles.c defines them, so each is `public type NAME = opaque;`
+// and its pointers are `*mutable NAME` (`*NAME` for `const NAME *`, which a
+// `*mutable NAME` is passed to as in C), one type per struct through the
+// forward declaration, the typedef and the definition. NULL is `0 as *T`:
+// returned, passed and compared; `db **` is an out-parameter; C code calls C
+// code through a function pointer that receives the handle.
+import "handles.c";
+
+def main(): int {
+    let d: *mutable db = db_open(7);
+    if (d == 0 as *mutable db) { return 1; };
+    if (db_id(d) != 7 || db_is_null(d) != 0) { return 2; };
+    let none: *mutable db = db_null();
+    if (none != 0 as *mutable db || db_is_null(none) != 1 || db_is_null(0 as *mutable db) != 1 || db_id(none) != -1) { return 3; };
+    let other: mutable *mutable db = 0 as *mutable db;
+    if (db_open_into(9, &mutable other) != 0 || db_id(other) != 9) { return 4; };
+    let s: *mutable stmt = db_prepare(d, 3);
+    let rows: mutable int = 0;
+    while (stmt_step(s) != 0) { rows := rows + 1; }
+    if (rows != 3) { return 5; };
+    stmt_finalize(s);
+    let c: *mutable cursor = db_cursor(other);
+    if (cursor_close(c) != 9) { return 6; };
+    // 7 * (1 + 2 + 3), through a C callback given the handle.
+    if (db_sum(d) != 42) { return 7; };
+    db_close(other);
+    db_close(d);
+    return 42;
+}

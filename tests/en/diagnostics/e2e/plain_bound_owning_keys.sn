@@ -1,0 +1,14 @@
+// اختبار: رفض
+// تشخيص: SULTANC-OWNERSHIP-MOVE-OUT-OF-REFERENCE
+// نظير: tests/ar/diagnostics/e2e/plain_bound_owning_keys.sn
+// خرج-تشخيص-عربي: plain_bound_owning_keys.ar.stderr
+// خرج-تشخيص-إنجليزي: plain_bound_owning_keys.en.stderr
+// A generic function that copies its keys takes only plain keys: named at the call.
+import std.collections.btree_map;
+import std.text.compare;
+
+def main(): int {
+    let counts: btree_map<string, int> = new_btree_map(compare_texts_lexicographically);
+    let keys: vector string = btree_map_keys(&counts);
+    return length(keys) as int;
+}

@@ -1,0 +1,44 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/stdlib/behavior/process_kill.sn
+// try_wait / kill_child / wait_timeout on a real child (Linux waitid
+// WNOHANG and kill, Darwin waitpid WNOHANG and kill).
+// Differential: the interpreter spawns the child as the executable does
+// (clone forks the interpreter process; the child runs execve).
+import std.process.child;
+import std.time.duration;
+
+def main(): int {
+    let program: string = "/bin/sleep";
+    let arguments: vector string = ["5"];
+    let child: mutable child_process = { المعرف: 0 };
+    match spawn(&program, &arguments) with
+    | result.err(_) -> { return 1; }
+    | result.ok(started) -> { child := started; };
+    match try_wait(&mutable child) with
+    | result.err(_) -> { return 2; }
+    | result.ok(option.some(_)) -> { return 3; }
+    | result.ok(option.none) -> { };
+    match kill_child(&mutable child) with
+    | result.err(_) -> { return 4; }
+    | result.ok(option.some(_)) -> { return 5; }
+    | result.ok(option.none) -> { };
+    match wait_owned(&mutable child) with
+    | result.err(_) -> { return 6; }
+    | result.ok(حالة_إنهاء.إشارة(9)) -> { }
+    | result.ok(_) -> { return 7; };
+    let quick: string = "/bin/sh";
+    let quick_arguments: vector string = ["-c", "exit 3"];
+    let other: mutable child_process = { المعرف: 0 };
+    match spawn(&quick, &quick_arguments) with
+    | result.err(_) -> { return 8; }
+    | result.ok(started) -> { other := started; };
+    let limit: duration = duration_from_nanoseconds(5000000000);
+    match wait_timeout(&mutable other, &limit) with
+    | result.err(_) -> { return 9; }
+    | result.ok(option.some(حالة_إنهاء.خرج(3))) -> { }
+    | result.ok(_) -> { return 10; };
+    return 42;
+}

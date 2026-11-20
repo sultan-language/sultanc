@@ -1,0 +1,11 @@
+// Read the process argument count.
+import std.io.println;
+import std.text.number;
+import std.process.argument_count;
+
+
+def main(): int {
+    let count: uint = argument_count();
+    println(uint_to_text(count));
+    return 0;
+}

@@ -1,0 +1,29 @@
+// A to-do list kept in a file: write the tasks, read them back and count them, then delete
+// the file.
+import std.io.println;
+import std.text.number;
+import std.fs.write_file;
+import std.fs.read_file;
+import std.fs.mutation;
+import std.text.transform;
+
+def main(): int {
+    let path: string = "tasks.snc";
+    let tasks: string = "[ ] Ship compiler\n[x] Write examples\n";
+    match write_file(&path, &tasks) with
+    | result.ok(_) -> { }
+    | result.err(_) -> { return 1; };
+    let count: mutable int = 0;
+    match read_file(&path) with
+    | result.ok(text) -> {
+        let lines: vector string = split(&text, &"\n");
+        count := length(lines) - 1;
+    }
+    | result.err(_) -> { return 2; };
+    match remove_file(&path) with
+    | result.err(_) -> { return 3; }
+    | _ -> { };
+    if (count != 2) { return 4; };
+    println(int_to_text(count));
+    return 0;
+}

@@ -1,0 +1,18 @@
+// The root file of library/alloc/collections: the Arabic spellings of its modules
+// (docs/en/reference/modules-and-imports.md, "Module spellings"). The
+// standard library is three libraries (docs/en/reference/std-layers.md); this
+// file names only this library's own children.
+
+module bitset { ar: مجموعة_بتات };
+module btree_map { ar: خريطة_شجرية };
+module btree_set { ar: مجموعة_شجرية };
+module map { ar: خريطة };
+module set { ar: مجموعة };
+module sort { ar: ترتيب };
+module text_index_map { ar: خريطة_نص_فهرس };
+
+// Re-exported: these children are modules and folders of core, at the same
+// paths (docs/en/reference/std-layers.md). One file, one module.
+module deque = core.collections.deque { ar: رتل_مزدوج };
+module heap = core.collections.heap { ar: كومة };
+module vector = core.collections.vector { ar: متجهات };

@@ -1,0 +1,20 @@
+// TAR archive example: archive_roundtrip (parse, 3 file entries).
+import std.io.println;
+import std.text.number;
+import std.archive.tar;
+
+
+def main(): int {
+    let entries: mutable vector tar_entry = [];
+    append(entries, new_tar_file("archive_roundtrip_0.txt", [65 as u8, 10 as u8]));
+    append(entries, new_tar_file("archive_roundtrip_1.txt", [66 as u8, 10 as u8]));
+    append(entries, new_tar_file("archive_roundtrip_2.txt", [67 as u8, 10 as u8]));
+    match tar_encode(&entries) with
+    | result.err(_) -> { return 1; }
+    | result.ok(data) -> {
+        match tar_decode(&data) with
+        | result.err(_) -> { return 2; }
+        | result.ok(decoded) -> { println(uint_to_text(length(decoded) as uint)); };
+    };
+    return 0;
+}

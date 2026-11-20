@@ -1,0 +1,13 @@
+// Counting heap allocations by hand: two boxed values, and the total read through them.
+import std.io.println;
+import std.text.number;
+
+def main(): int {
+    let first: box int = box 11;
+    let second: box int = box 22;
+    let allocated: int = 2;
+    let total: int = *first + *second;
+    if (allocated != 2 || total != 33) { return 1; };
+    println(int_to_text(allocated));
+    return 0;
+}

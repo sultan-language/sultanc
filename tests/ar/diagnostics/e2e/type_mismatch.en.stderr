@@ -1,0 +1,6 @@
+error[SULTANC-TYPE-MISMATCH]: expected `i32`, found `string` — The value does not match the declared type of its destination.
+  --> tests/ar/diagnostics/e2e/type_mismatch.sn:7:21..7:25
+   |
+ 7 |     دع العدد: ص32 = «نص»;
+   |                     ^^^^
+   |

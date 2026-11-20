@@ -1,0 +1,50 @@
+// اختبار: تشغيل
+// أهداف: x86_64-linux,x86_64-windows-msvc,x86_64-darwin,aarch64-linux-gnu,aarch64-android,x86_64-android,x86_64-freebsd,aarch64-freebsd
+// خروج: 42
+// نظير: tests/ar/codegen/x86_64_windows/stack_probe_threads.sn
+// A frame of several pages, in the main thread and in threads. Windows
+// commits a stack one guard page at a time, so the native prologue touches
+// every page of a large frame in order before moving the stack pointer; the
+// threads start through CreateThread with the closure's C entry, which keeps
+// the registers Windows preserves.
+import std.thread.thread;
+
+// 64, 512, 4096 and 8192 bytes.
+type W = { a: u64, b: u64, c: u64, d: u64, e: u64, f: u64, g: u64, h: u64 };
+type X = { a: W, b: W, c: W, d: W, e: W, f: W, g: W, h: W };
+type Y = { a: X, b: X, c: X, d: X, e: X, f: X, g: X, h: X };
+type Z = { first: Y, second: Y };
+
+def w(s: u64): W { return { a: s, b: s, c: s, d: s, e: s, f: s, g: s, h: s }; }
+def x(s: u64): X { let v: W = w(s); return { a: v, b: v, c: v, d: v, e: v, f: v, g: v, h: v }; }
+def y(s: u64): Y { let v: X = x(s); return { a: v, b: v, c: v, d: v, e: v, f: v, g: v, h: v }; }
+
+def deep(seed: u64): u64 {
+    let z: mutable Z = { first: y(seed), second: y(seed + 1) };
+    z.second.h.h.h := seed * 2;
+    return z.first.a.a.a + z.second.a.b.c + z.first.h.h.g + z.second.h.h.h;
+}
+
+def main(): int {
+    if (deep(1) != 1 + 2 + 1 + 2) { return 1; };
+    let handles: mutable vector value_join_handle<u64> = [];
+    let i: mutable u64 = 0;
+    while (i < 3) {
+        let n: u64 = i;
+        match spawn_value(fn(): u64 -> deep(n)) with
+        | result.ok(h) -> { append(handles, h); }
+        | result.err(_) -> { return 2; };
+        i := i + 1;
+    }
+    let total: mutable u64 = 0;
+    let j: mutable uint = 0;
+    while (j < 3) {
+        match join_value(&mutable handles[j]) with
+        | option.some(value) -> { total := total + value; }
+        | option.none -> { return 3; };
+        j := j + 1;
+    }
+    // deep(n) = n + (n + 1) + n + 2n for n = 0, 1, 2.
+    if (total != 1 + 6 + 11) { return 4; };
+    return 42;
+}

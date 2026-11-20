@@ -1,0 +1,27 @@
+// A command-line Base64 encoder: encode the first argument, or "abc" when there is none.
+import std.io.println;
+import std.process.argument_count;
+import std.process.argument;
+import std.text.number;
+import std.text.transform;
+import std.text.from_bytes;
+import std.encoding.base64;
+
+def read_input(default: string): string {
+    if (argument_count() > 1) {
+        match argument(1) with
+        | option.some(text) -> {
+            if (length(text) > 0) { return text; };
+        }
+        | option.none -> { };
+    };
+    return default;
+}
+
+def main(): int {
+    let text: string = read_input("abc");
+    let bytes: vector u8 = bytes_from_text(text);
+    let encoded: string = base64_encode(&bytes);
+    println(encoded);
+    return 0;
+}

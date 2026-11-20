@@ -1,0 +1,32 @@
+استورد compiler.diagnostics.schema;
+استورد compiler.diagnostics.record;
+استورد compiler.diagnostics.builder;
+استورد compiler.frontend.types.type_identity;
+استورد compiler.frontend.types.type_registry;
+استورد compiler.frontend.types.type_context;
+استورد compiler.frontend.types.tooling_queries;
+استورد compiler.frontend.names.symbols;
+
+// A Type fact on a diagnostic is printed by the one Type printer in both
+// languages; `--lang` picks one when the message is rendered. When a Type
+// cannot be printed (an invalid ID, or a named Type whose Name facts are no
+// longer available) the numeric Type ID is kept so no fact is lost.
+عام عرف أضف_نوع_تشخيص(
+    التشخيص: &متغير تشخيص,
+    المفتاح: مفتاح_حجة_تشخيص,
+    الأنواع: &سجل_أنواع,
+    الأسماء: &متجه اسم_مقنن,
+    الرموز: &متجه رمز_دلالي,
+    النوع: معرف_نوع
+): منطقي {
+    طابق تهجئة_نوع_بلغة(الأنواع, الأسماء, الرموز, لغة_تشخيص.الإنجليزية(), النوع) مع
+    | اختياري.موجود(الإنجليزية) -> {
+        طابق تهجئة_نوع_بلغة(الأنواع, الأسماء, الرموز, لغة_تشخيص.العربية(), النوع) مع
+        | اختياري.موجود(العربية) -> {
+            أرجع أضف_حجة_ثنائية_اللغة(التشخيص, المفتاح, الإنجليزية, العربية);
+        }
+        | اختياري.لا_شيء -> { };
+    }
+    | اختياري.لا_شيء -> { };
+    أرجع أضف_حجة_طبيعية(التشخيص, المفتاح, النوع.القيمة);
+}

@@ -1,0 +1,10 @@
+// اختبار: رفض
+// تشخيص: SULTANC-SAFETY-UNSAFE-OPERATION
+// نظير: tests/en/diagnostics/safety/raw_pointer_reference_cast.sn
+// Turning a raw pointer into a reference needs an unsafe scope.
+عرف الرئيسية(): ص32 {
+    دع القيمة: متغير ص32 = 42;
+    دع المؤشر: *متغير ص32 = & متغير القيمة;
+    دع المرجع: &متغير ص32 = المؤشر مثل &متغير ص32;
+    أرجع *المرجع;
+}

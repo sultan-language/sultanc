@@ -1,0 +1,12 @@
+// Call the actual C library function atoi; link with -l c.
+import std.io.println;
+import std.text.number;
+
+extern def atoi(data: *u8): i32;
+def main(): int {
+    let data: mutable vector u8 = [49 as u8, 50 as u8, 51 as u8, 0 as u8];
+    let number: mutable i32 = 0 as i32;
+    unsafe { number := atoi(&data[0]); }
+    println(int_to_text(number as int));
+    return 0;
+}

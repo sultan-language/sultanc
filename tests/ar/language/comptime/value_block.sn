@@ -1,0 +1,32 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/en/language/comptime/value_block.sn
+عرف sum_squares(limit: عدد): عدد {
+    دع total: متغير عدد = 0;
+    دع i: متغير عدد = 1;
+    طالما (i <= limit) {
+        total := total + i * i;
+        i := i + 1;
+    }
+    أرجع total;
+}
+
+عرف الرئيسية(): عدد {
+    دع base: عدد = وقت_الترجمة {
+        دع k: متغير عدد = 0;
+        دع acc: متغير عدد = 0;
+        طالما (k < 3) {
+            acc := acc + sum_squares(k + 1);
+            k := k + 1;
+        }
+        acc
+    };
+    دع result: متغير عدد = 0;
+    result := وقت_الترجمة {
+        دع extra: عدد = 22;
+        extra
+    };
+    أرجع base + result;
+}

@@ -1,0 +1,72 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// فئة: closures
+// Closure environments are reference counted: copies, captured closures,
+// closures in records, vectors and options, reassignment and clone all keep
+// exactly one reference per owner, and the last owner destroys the
+// environment together with the closures it captured.
+type Handler = { callback: fn(int): int, bias: int };
+type Choice = | Plain of int | Call of fn(int): int;
+
+def adder(k: int): fn(int): int { return fn(x: int): int -> x + k; }
+def compose(f: fn(int): int, g: fn(int): int): fn(int): int { return fn(x: int): int -> f(g(x)); }
+def apply(f: fn(int): int, v: int): int { return f(v); }
+def keep(f: fn(int): int): fn(int): int { return f; }
+def square(x: int): int { return x * x; }
+def run_handler(h: Handler, v: int): int { return h.callback(v) + h.bias; }
+def pick(c: Choice): int {
+    match c with
+    | Choice.Plain(v) -> { return v; }
+    | Choice.Call(f) -> { return f(1); };
+}
+
+def round(i: int): int {
+    let total: mutable int = 0;
+    let a: fn(int): int = adder(i);
+    let b: fn(int): int = a;
+    let c: fn(int): int = compose(a, b);
+    total := total + c(1);
+    let fresh: fn(int): int = compose(adder(1), adder(2));
+    total := total + fresh(0);
+    total := total + apply(a, 2) + apply(adder(3), 4) + apply(square, 3);
+    let k: fn(int): int = keep(a);
+    total := total + k(5);
+    let h: Handler = { callback: adder(i), bias: i };
+    let h2: Handler = h;
+    total := total + run_handler(h, 1) + run_handler(h2, 2);
+    let fs: mutable vector fn(int): int = [];
+    append(fs, a);
+    append(fs, adder(7));
+    append(fs, square);
+    let j: mutable uint = 0;
+    while (j < (length(fs) as uint)) { let fj: fn(int): int = fs[j]; total := total + fj(2); j := j + 1; }
+    let ch: Choice = Choice.Call(c);
+    total := total + pick(ch) + pick(Choice.Call(adder(1))) + pick(Choice.Plain(3));
+    match ch with
+    | Choice.Call(f) -> { total := total + f(0); }
+    | _ -> { };
+    let o: option fn(int): int = option.some(adder(9));
+    match o with
+    | option.some(g) -> { total := total + g(0); }
+    | option.none -> { };
+    let r: mutable fn(int): int = a;
+    r := adder(2);
+    r := c;
+    total := total + r(0);
+    let cl: fn(int): int = clone(&a);
+    total := total + cl(0);
+    let nested: fn(int): fn(int): int = fn(x: int): fn(int): int -> compose(adder(x), a);
+    let n1: fn(int): int = nested(1);
+    total := total + n1(1);
+    return total;
+}
+
+def main(): int {
+    let i: mutable int = 0;
+    let sum: mutable int = 0;
+    while (i < 2000) { sum := sum + round(i % 10); i := i + 1; }
+    if (sum % 251 != 147) { return 1; };
+    return 42;
+}

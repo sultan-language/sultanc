@@ -1,0 +1,3 @@
+// اختبار: رفض
+// تشخيص: SULTANC-PARSE-SYNTAX
+def value(x): int { return 42; }

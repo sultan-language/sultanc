@@ -1,0 +1,40 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// نظير: tests/ar/language/surface/constructor_alias_patterns.sn
+// A constructor reached through an alias matches in a pattern as it builds in
+// an expression, also nested inside another constructor.
+import std.process.child;
+import std.json.value;
+
+type signal = | quiet | loud of int;
+alias signal.calm = signal.quiet;
+alias signal.noisy = signal.loud;
+
+def status_score(found: result exit_status, int): int {
+    match found with
+    | result.ok(exit_status.exited(3)) -> { return 10; }
+    | result.ok(exit_status.exited(code)) -> { return code; }
+    | result.ok(exit_status.signaled(number)) -> { return 100 + number; }
+    | result.err(code) -> { return code; }
+}
+
+def kind_score(kind: json_error_kind): int {
+    match kind with
+    | json_error_kind.unexpected_eof -> { return 20; }
+    | json_error_kind.trailing_text() -> { return 1; }
+    | _ -> { return 2; }
+}
+
+def signal_score(value: signal): int {
+    match value with
+    | signal.calm -> { return 1; }
+    | signal.noisy(level) -> { return level; }
+}
+
+def main(): int {
+    let found: result exit_status, int = result.ok(exit_status.exited(3));
+    let kind: json_error_kind = json_error_kind.unexpected_eof();
+    let value: signal = signal.noisy(12);
+    return status_score(found) + kind_score(kind) + signal_score(value);
+}

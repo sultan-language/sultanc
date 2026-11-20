@@ -1,292 +1,169 @@
 #!/bin/sh
+# Optional convenience entry point. All build configuration and stage policy
+# belongs to cmake/; this script only invokes CMake.
 set -eu
 
-PROJECT=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
-BOOTSTRAP="$PROJECT/bootstrap"
-BUILD_DIR="$PROJECT/build"
-CC_BIN=${CC:-cc}
-
-usage() {
-    cat >&2 <<'USAGE'
-usage:
-  ./build.sh
-  ./build.sh [--target=<target>] [output]
-  ./build.sh stage0 [--target=<llvm-target>] [output]
-  ./build.sh stage1 [--target=<llvm-target>] [output]
-  ./build.sh bootstrap [--target=<llvm-target>] [output-directory]
-
-Production targets:
-    arm64-darwin
-    x86_64-linux
-
-Normal source build:
-  ./build.sh
-  ./build.sh --target=x86_64-linux build/sultanc-linux
-
-For a normal source build, --target selects the production native target of the
-final self-hosted compiler. Stage0 itself remains a host-native C executable.
-
-For stage0 mode, --target sets the Stage0 compiler's default LLVM object target.
-Direct Stage0 invocations may also pass --target=<alias-or-LLVM-triple>.
-
-For stage1/bootstrap mode, --target selects the LLVM target used for the Stage1
-object and its custom executable finalizer. Targets without an implemented
-finalizer fail explicitly instead of falling back to the host.
-USAGE
-}
-
-llvm_flags() {
-    LLVM_CFLAGS=
-    LLVM_LIBS=
-    LLVM_DISCOVERY=
-    LLVM_TOOL=
-
-    if [ -n "${LLVM_CONFIG:-}" ]; then
-        if [ ! -x "$LLVM_CONFIG" ]; then
-            echo "sultanc-bootstrap: LLVM_CONFIG is not executable: $LLVM_CONFIG" >&2
-            exit 1
-        fi
-        LLVM_TOOL=$LLVM_CONFIG
-    elif command -v llvm-config >/dev/null 2>&1; then
-        LLVM_TOOL=$(command -v llvm-config)
-    fi
-
-    if [ -n "$LLVM_TOOL" ]; then
-        LLVM_CFLAGS=$($LLVM_TOOL --cflags)
-        # Stage0 initializes every target configured into this LLVM installation.
-        # Ask llvm-config for the installation's complete supported link set rather
-        # than deriving target libraries from the host or a target-name list.
-        LLVM_LIBS=$($LLVM_TOOL --ldflags --libs all --system-libs)
-        LLVM_DISCOVERY="llvm-config=$LLVM_TOOL"
-    else
-        LLVM_LIBS=${SULTANC_LLVM_LIBRARY:--lLLVM}
-        if [ -n "${SULTANC_LLVM_LIBRARY:-}" ]; then
-            LLVM_DISCOVERY="compiler/system headers; SULTANC_LLVM_LIBRARY=$SULTANC_LLVM_LIBRARY"
-        else
-            LLVM_DISCOVERY="compiler/system headers and libraries (-lLLVM)"
-        fi
-    fi
-}
-
-validate_target() {
-    case "$1" in
-        arm64-darwin|x86_64-linux)
-            ;;
-        *)
-            echo "sultanc-build: unsupported target: $1" >&2
-            exit 2
-            ;;
-    esac
-}
-
-host_target() {
-    HOST_OS=$(uname -s)
-    HOST_ARCH=$(uname -m)
-    case "$HOST_OS:$HOST_ARCH" in
-        Darwin:arm64|Darwin:aarch64)
-            printf '%s\n' arm64-darwin
-            ;;
-        Linux:x86_64|Linux:amd64)
-            printf '%s\n' x86_64-linux
-            ;;
-        *)
-            echo "sultanc-bootstrap: unsupported host target: $HOST_OS/$HOST_ARCH" >&2
-            return 1
-            ;;
-    esac
-}
-
-build_stage0() {
-    S0_OUT=$1
-    S0_DEFAULT_TARGET=${2:-}
-    S0_TMP=${TMPDIR:-/tmp}/sultanc-stage0-build.$$
-    trap 'rm -rf "$S0_TMP"' EXIT HUP INT TERM
-    mkdir -p "$S0_TMP" "$(dirname -- "$S0_OUT")"
-
-    if [ -n "$S0_DEFAULT_TARGET" ]; then
-        case "$S0_DEFAULT_TARGET" in
-            *[!A-Za-z0-9_.+-]*)
-                echo "sultanc-bootstrap: invalid Stage0 default target spelling: $S0_DEFAULT_TARGET" >&2
-                exit 2
-                ;;
-        esac
-    fi
-
-    find "$BOOTSTRAP/src" -name '*.c' -type f | LC_ALL=C sort > "$S0_TMP/sources"
-
-    llvm_flags
-    # Stage0 is the only temporary host bridge. LLVM owns target-specific object
-    # lowering; an optional build target only changes Stage0's default object target.
-    # shellcheck disable=SC2086
-    if [ -n "$S0_DEFAULT_TARGET" ]; then
-        "$CC_BIN" -std=c11 -O1 -Wall -Wextra -Werror \
-            -I"$BOOTSTRAP/include/private" -I"$BOOTSTRAP/include/public" \
-            "-DSULTANC_BOOTSTRAP_DEFAULT_TARGET=\"$S0_DEFAULT_TARGET\"" \
-            $LLVM_CFLAGS $(cat "$S0_TMP/sources") $LLVM_LIBS -o "$S0_OUT"
-    else
-        "$CC_BIN" -std=c11 -O1 -Wall -Wextra -Werror \
-            -I"$BOOTSTRAP/include/private" -I"$BOOTSTRAP/include/public" \
-            $LLVM_CFLAGS $(cat "$S0_TMP/sources") $LLVM_LIBS -o "$S0_OUT"
-    fi
-    printf '%s\n' "$S0_OUT"
-    printf 'LLVM discovery: %s\n' "$LLVM_DISCOVERY" >&2
-    rm -rf "$S0_TMP"
-    trap - EXIT HUP INT TERM
-}
-build_stage1_with_stage0() {
-    S1_OUT=$1
-    S0_BIN=$2
-    S1_TARGET=$3
-
-    mkdir -p "$(dirname -- "$S1_OUT")"
-    S1_DIR=$(CDPATH= cd -- "$(dirname -- "$S1_OUT")" && pwd)
-    S1_ABS=$S1_DIR/$(basename -- "$S1_OUT")
-    S0_DIR=$(CDPATH= cd -- "$(dirname -- "$S0_BIN")" && pwd)
-    S0_ABS=$S0_DIR/$(basename -- "$S0_BIN")
-
-    S1_TMP=${TMPDIR:-/tmp}/sultanc-stage1-object.$$
-    trap 'rm -rf "$S1_TMP"' EXIT HUP INT TERM
-    mkdir -p "$S1_TMP"
-
-    (
-        cd "$PROJECT"
-        "$S0_ABS" compiler/main.sn --target="$S1_TARGET" -o "$S1_TMP/compiler.o"
-        "$S0_ABS" --finalize-stage1 "$S1_TMP/compiler.o" "$S1_ABS" "$S1_TARGET"
-    )
-
-    chmod +x "$S1_ABS"
-    rm -rf "$S1_TMP"
-    trap - EXIT HUP INT TERM
-    printf '%s\n' "$S1_ABS"
-}
-
-build_stage1() {
-    S1_OUT=$1
-    S1_TARGET=$2
-    S1_TMP_STAGE0=${TMPDIR:-/tmp}/sultanc-stage1-stage0.$$
-    trap 'rm -f "$S1_TMP_STAGE0"' EXIT HUP INT TERM
-    build_stage0 "$S1_TMP_STAGE0" >/dev/null
-    build_stage1_with_stage0 "$S1_OUT" "$S1_TMP_STAGE0" "$S1_TARGET"
-    rm -f "$S1_TMP_STAGE0"
-    trap - EXIT HUP INT TERM
-}
-
-build_bootstrap() {
-    OUT_DIR=$1
-    S1_TARGET=$2
-    mkdir -p "$OUT_DIR"
-    build_stage0 "$OUT_DIR/sultanc-stage0"
-    build_stage1_with_stage0 "$OUT_DIR/sultanc-stage1" "$OUT_DIR/sultanc-stage0" "$S1_TARGET"
-}
-
-build_current_compiler() {
-    OUTPUT=$1
-    OUTPUT_TARGET=$2
-    BOOTSTRAP_OUT="$BUILD_DIR/bootstrap"
-    HOST_BOOTSTRAP_TARGET=$(host_target)
-    mkdir -p "$BUILD_DIR" "$BOOTSTRAP_OUT" "$(dirname -- "$OUTPUT")"
-
-    # The Stage1 compiler used by this source build must remain host-native so it can execute here.
-    build_bootstrap "$BOOTSTRAP_OUT" "$HOST_BOOTSTRAP_TARGET"
-
-    # The requested production target applies here: host-native Stage1 cross-compiles
-    # the final self-hosted compiler using SultanC's registered native Target layer.
-    (
-        cd "$PROJECT"
-        "$BOOTSTRAP_OUT/sultanc-stage1" \
-            --target="$OUTPUT_TARGET" \
-            -o "$OUTPUT" \
-            compiler/main.sn
-    )
-
-    if [ ! -f "$OUTPUT" ]; then
-        echo "sultanc-build: compiler output was not produced: $OUTPUT" >&2
-        exit 1
-    fi
-    if [ ! -x "$OUTPUT" ]; then
-        echo "sultanc-build: compiler output is not executable: $OUTPUT" >&2
-        exit 1
-    fi
-    printf '%s\n' "$OUTPUT"
-}
-
-MODE=${1:-build}
-if [ "$MODE" = "stage0" ] || [ "$MODE" = "stage1" ] || [ "$MODE" = "bootstrap" ]; then
-    shift
-else
-    MODE=build
+source_directory=${0%/*}
+if [ "$source_directory" = "$0" ]; then
+    source_directory=.
 fi
 
-TARGET=
-TARGET_SET=0
-OUTPUT=
+stage=stage2
+case "${1:-}" in
+    stage0|stage1|stage2|bootstrap|verify)
+        stage=$1
+        shift
+        ;;
+esac
+
+target=
+output=
+# Compiler-build capability of the self-hosted compiler (SULTANC_COMPILER_LLVM):
+# Native-only unless --enable-llvm is given.
+compiler_llvm=OFF
+# --release-version=VERSION (SULTANC_RELEASE_VERSION): the version the built
+# compiler reports; empty is a development build.
+release_version=
+# Stage1 bootstrap route (SULTANC_BOOTSTRAP): c = bootstrap/ (C Stage0),
+# wasm = bootstrap-wasm/ (WebAssembly seed translated to C).
+bootstrap_route=c
+# --bootstrap=existing: the compiler that stands in for Stage1 (default build/sultanc).
+existing_compiler=
+# Producer backend (SULTANC_STAGE2_BACKEND): the backend Stage1 uses to
+# generate Stage2 (on Windows, also the verify stages' backend). It selects the
+# code generator of the compiler build only; it is not the backends the built
+# compiler contains (that is --enable-llvm) nor the backend of programs the
+# built compiler compiles (their own --backend). Empty keeps the build tree's
+# cached value (native when the tree is new).
+backend=
 while [ "$#" -gt 0 ]; do
     case "$1" in
-        --target=*)
-            TARGET=${1#--target=}
-            TARGET_SET=1
-            if [ -z "$TARGET" ]; then
-                echo "sultanc-build: --target requires a value" >&2
-                exit 2
-            fi
-            ;;
-        --target)
+        --enable-llvm) compiler_llvm=ON ;;
+        --release-version=*) release_version=${1#--release-version=} ;;
+        --bootstrap=*) bootstrap_route=${1#--bootstrap=} ;;
+        --with=*) existing_compiler=${1#--with=} ;;
+        --backend=*) backend=${1#--backend=} ;;
+        --backend)
             if [ "$#" -lt 2 ]; then
-                echo "sultanc-build: --target requires a value" >&2
+                printf '%s\n' 'build.sh: --backend requires native or llvm' >&2
                 exit 2
             fi
-            TARGET=$2
-            TARGET_SET=1
-            if [ -z "$TARGET" ]; then
-                echo "sultanc-build: --target requires a value" >&2
-                exit 2
-            fi
+            backend=$2
             shift
             ;;
-        build)
-            echo "sultanc-build: omit 'build'; use ./build.sh [--target=<target>] [output]" >&2
-            exit 2
-            ;;
-        -h|--help|help)
-            usage
-            exit 0
-            ;;
-        *)
-            if [ -n "$OUTPUT" ]; then
-                echo "sultanc-build: unexpected argument: $1" >&2
+        --bootstrap)
+            if [ "$#" -lt 2 ]; then
+                printf '%s\n' 'build.sh: --bootstrap requires c or wasm' >&2
                 exit 2
             fi
-            OUTPUT=$1
+            bootstrap_route=$2
+            shift
+            ;;
+        --target=*) target=${1#--target=} ;;
+        --target)
+            if [ "$#" -lt 2 ]; then
+                printf '%s\n' 'build.sh: --target requires a value' >&2
+                exit 2
+            fi
+            target=$2
+            shift
+            ;;
+        -h|--help|help)
+            printf '%s\n' \
+                'usage: ./build.sh [stage0|stage1|stage2|bootstrap|verify] [--target=TRIPLE] [--enable-llvm]' \
+                '                  [--backend=native|llvm] [--bootstrap=c|wasm|existing [--with=PATH]]' \
+                '                  [--release-version=VERSION] [OUTPUT]' \
+                'All stages are configured and built by CMake in cmake/.' \
+                '  bootstrap  Stage0 + Stage1 only (the bootstrap compiler)' \
+                '  verify     Stage2, then Stage3/Stage4 convergence (LLVM convergence needs --enable-llvm)' \
+                '  --enable-llvm  include the LLVM backend in the built compiler (default: Native-only,' \
+                '             no libLLVM dependency); with --bootstrap=c, Stage0/Stage1 always use LLVM' \
+                '  --release-version=VERSION  the version the built compiler reports' \
+                '             (SULTANC_RELEASE_VERSION; default: a development build)' \
+                '  --backend=native|llvm  backend Stage1 uses to generate Stage2' \
+                '             (SULTANC_STAGE2_BACKEND; default llvm with --enable-llvm when Stage1 has it,' \
+                '             else native). Windows has no Native backend:' \
+                '             use --bootstrap=c --enable-llvm --backend=llvm there' \
+                '  --bootstrap=c     Stage1 from the C Stage0 in bootstrap/ (default; needs LLVM)' \
+                '  --bootstrap=wasm  Stage1 from the WebAssembly seed in bootstrap-wasm/' \
+                '             (translated to C; needs only a C compiler unless --enable-llvm)' \
+                '  --bootstrap=existing  Stage1 is an already-built compiler (--with=PATH, default' \
+                '             build/sultanc): one self-host step, the fast route for development' \
+                '             (as Go uses GOROOT_BOOTSTRAP). Use c or wasm on a new system, when the' \
+                '             existing compiler is too old for the sources, and to verify a release' \
+                'Products stay in build/bootstrap/cmake/bin (cmake-wasm/bin for --bootstrap=wasm);' \
+                'the requested stage is also' \
+                'copied to build/sultanc (Stage2) or build/bootstrap/ (Stage0/Stage1).' \
+                'LLVM selection: LLVM_CONFIG=/path/to/llvm-config, or -DLLVM_DIR via cmake.' \
+                'For direct builds: cmake -S cmake -B build/bootstrap/cmake' \
+                '                   cmake --build build/bootstrap/cmake --target sultanc-stage2'
+            exit 0
+            ;;
+        -*)
+            printf 'build.sh: unexpected option: %s\n' "$1" >&2
+            exit 2
+            ;;
+        *)
+            if [ -n "$output" ]; then
+                printf 'build.sh: unexpected argument: %s\n' "$1" >&2
+                exit 2
+            fi
+            output=$1
             ;;
     esac
     shift
 done
 
-case "$MODE" in
-    build)
-        if [ "$TARGET_SET" -eq 0 ]; then
-            TARGET=$(host_target)
-        fi
-        validate_target "$TARGET"
-        build_current_compiler "${OUTPUT:-$BUILD_DIR/sultanc}" "$TARGET"
-        ;;
-    stage0)
-        build_stage0 "${OUTPUT:-$BUILD_DIR/bootstrap/sultanc-stage0}" "$TARGET"
-        ;;
-    stage1)
-        if [ "$TARGET_SET" -eq 0 ]; then
-            TARGET=$(host_target)
-        fi
-        build_stage1 "${OUTPUT:-$BUILD_DIR/bootstrap/sultanc-stage1}" "$TARGET"
-        ;;
-    bootstrap)
-        if [ "$TARGET_SET" -eq 0 ]; then
-            TARGET=$(host_target)
-        fi
-        build_bootstrap "${OUTPUT:-$BUILD_DIR/bootstrap}" "$TARGET"
-        ;;
+# With --enable-llvm, Stage2 is generated by the LLVM backend (-O2) when
+# Stage1 has it: the C route's Stage1 always does, an existing compiler when
+# it lists the llvm backend. The interpreter (sultanc run) and the compile-time
+# evaluator run several times faster in an optimized compiler. The wasm seed's
+# Stage1 has no LLVM backend and generates Stage2 natively.
+if [ -z "$backend" ] && [ "$compiler_llvm" = ON ]; then
+    case "$bootstrap_route" in
+        c) backend=llvm ;;
+        existing)
+            candidate=${existing_compiler:-$source_directory/build/sultanc}
+            if [ -x "$candidate" ] && "$candidate" --version 2>/dev/null | grep -q llvm; then
+                backend=llvm
+            fi
+            ;;
+    esac
+fi
+
+case "$backend" in
+    ''|native|llvm) ;;
     *)
-        usage
+        printf 'build.sh: --backend must be native or llvm, not %s\n' "$backend" >&2
         exit 2
         ;;
 esac
+
+case "$bootstrap_route" in
+    c) build_directory="$source_directory/build/bootstrap/cmake" ;;
+    wasm) build_directory="$source_directory/build/bootstrap/cmake-wasm" ;;
+    existing) build_directory="$source_directory/build/bootstrap/cmake-existing" ;;
+    *)
+        printf 'build.sh: --bootstrap must be c, wasm or existing, not %s\n' "$bootstrap_route" >&2
+        exit 2
+        ;;
+esac
+
+cmake -S "$source_directory/cmake" -B "$build_directory" \
+    "-DSULTANC_BOOTSTRAP:STRING=$bootstrap_route" \
+    "-DSULTANC_REQUESTED_STAGE:STRING=$stage" \
+    "-DSULTANC_REQUESTED_TARGET:STRING=$target" \
+    "-DSULTANC_REQUESTED_OUTPUT:STRING=$output" \
+    "-DSULTANC_COMPILER_LLVM:BOOL=$compiler_llvm" \
+    "-DSULTANC_RELEASE_VERSION:STRING=$release_version" \
+    ${backend:+"-DSULTANC_STAGE2_BACKEND:STRING=$backend"} \
+    ${existing_compiler:+"-DSULTANC_EXISTING_COMPILER:FILEPATH=$existing_compiler"}
+
+# One compile job per core (the seed route translates the seed into units
+# that build in parallel), unless CMAKE_BUILD_PARALLEL_LEVEL says otherwise.
+if [ -z "${CMAKE_BUILD_PARALLEL_LEVEL:-}" ]; then
+    jobs=$(getconf _NPROCESSORS_ONLN 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 2)
+    CMAKE_BUILD_PARALLEL_LEVEL=$jobs
+    export CMAKE_BUILD_PARALLEL_LEVEL
+fi
+cmake --build "$build_directory" --target "sultanc-$stage"

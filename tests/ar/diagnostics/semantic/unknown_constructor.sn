@@ -1,0 +1,8 @@
+// اختبار: رفض
+// تشخيص: SULTANC-NAME-UNKNOWN
+// نظير: tests/en/diagnostics/semantic/unknown_constructor.sn
+نوع لون = | أحمر | أخضر;
+عرف الرئيسية(): ص32 {
+    دع اللون: لون = لون.أزرق();
+    أرجع 0;
+}

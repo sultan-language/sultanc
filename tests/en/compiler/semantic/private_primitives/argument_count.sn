@@ -1,0 +1,7 @@
+// اختبار: رفض
+// خروج: 1
+// تشخيص: SULTANC-NAME-UNKNOWN
+def main(): int {
+    argument_count();
+    return 0;
+}

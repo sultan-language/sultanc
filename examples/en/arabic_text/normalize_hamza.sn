@@ -1,0 +1,15 @@
+// Normalizing hamza on its seat: replace ؤ with و and ئ with ي.
+import std.io.println;
+import std.text.number;
+import std.text.transform;
+
+def main(): int {
+    let source: string = "مسؤول بريئة";
+    let first: string = "ؤ";
+    let first_replacement: string = "و";
+    let second: string = "ئ";
+    let second_replacement: string = "ي";
+    let stage: string = replace(&source, &first, &first_replacement);
+    println(replace(&stage, &second, &second_replacement));
+    return 0;
+}

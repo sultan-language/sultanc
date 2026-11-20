@@ -1,0 +1,37 @@
+error[SULTANC-NAME-UNKNOWN]: unknown name: `العدذ` — The required name was not found during resolution.
+  --> tests/ar/diagnostics/e2e/unknown_names_suggest.sn:16:21..16:26
+    |
+ 16 |     دع الأول: ص32 = العدذ + 1;
+    |                     ^^^^^
+    |
+  = help: a name with a similar spelling is visible here — The suggested replacement is `العدد`.
+
+error[SULTANC-NAME-UNKNOWN]: unknown name: `مساعذ` — The required name was not found during resolution.
+  --> tests/ar/diagnostics/e2e/unknown_names_suggest.sn:17:22..17:27
+    |
+ 17 |     دع الثاني: ص32 = مساعذ(2);
+    |                      ^^^^^
+    |
+  = help: a name with a similar spelling is visible here — The suggested replacement is `مساعد`.
+
+error[SULTANC-NAME-UNKNOWN]: unknown name: `عداد_الأسطور` — The required name was not found during resolution.
+  --> tests/ar/diagnostics/e2e/unknown_names_suggest.sn:18:22..18:34
+    |
+ 18 |     دع الثالث: ص32 = عداد_الأسطور + 1;
+    |                      ^^^^^^^^^^^^
+    |
+  = help: a name with a similar spelling is visible here — The suggested replacement is `عداد_الأسطر`.
+
+error[SULTANC-NAME-UNKNOWN]: unknown name: `المجموغ` — The required name was not found during resolution.
+  --> tests/ar/diagnostics/e2e/unknown_names_suggest.sn:19:23..19:30
+    |
+ 19 |     دع المجموع: ص32 = المجموغ;
+    |                       ^^^^^^^
+    |
+
+error[SULTANC-NAME-UNKNOWN]: unknown name: `قيمة_مفقودة` — The required name was not found during resolution.
+  --> tests/ar/diagnostics/e2e/unknown_names_suggest.sn:20:46..20:57
+    |
+ 20 |     أرجع الأول + الثاني + الثالث + المجموع + قيمة_مفقودة;
+    |                                              ^^^^^^^^^^^
+    |

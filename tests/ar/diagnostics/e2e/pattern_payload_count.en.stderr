@@ -1,0 +1,6 @@
+error[SULTANC-PATTERN-PAYLOAD-COUNT-MISMATCH]: pattern constructor payload count does not match — The constructor has 1 payload, but the pattern binds 2 payloads.
+  --> tests/ar/diagnostics/e2e/pattern_payload_count.sn:10:7..10:22
+    |
+ 10 |     | ربما.قيمة(أ, ب) -> { أرجع أ; }
+    |       ^^^^^^^^^^^^^^^
+    |

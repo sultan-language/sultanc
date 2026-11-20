@@ -1,0 +1,42 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// Allocator: adjacent free large blocks are merged and split, a block at the
+// top lowers it, and a block grows into its free neighbour.
+import std.os.allocation;
+
+def main(): int {
+    // A and B (large) separated from the top by a small guard block.
+    let a: u64 = خصص_ذاكرة_التشغيل(65536);
+    let b: u64 = خصص_ذاكرة_التشغيل(65536);
+    let guard: u64 = خصص_ذاكرة_التشغيل(16);
+    if (a == 0 || b == 0 || guard == 0) { return 1; };
+    حرر_ذاكرة_التشغيل(a);
+    حرر_ذاكرة_التشغيل(b);
+    // A and B merged: a request bigger than either fits at A.
+    let c: u64 = خصص_ذاكرة_التشغيل(120000);
+    if (c != a) { return 2; };
+    // The rest after C was split off: a 5000-byte request lands right after C.
+    let d: u64 = خصص_ذاكرة_التشغيل(5000);
+    if (d <= c || d >= guard) { return 3; };
+    // Releasing the block at the top lowers the top: the next block reuses it.
+    let e: u64 = خصص_ذاكرة_التشغيل(300000);
+    حرر_ذاكرة_التشغيل(e);
+    let f: u64 = خصص_ذاكرة_التشغيل(200000);
+    if (f != e) { return 4; };
+    // Growing into a free neighbour keeps the address.
+    let g: u64 = خصص_ذاكرة_التشغيل(10000);
+    let h: u64 = خصص_ذاكرة_التشغيل(10000);
+    let i: u64 = خصص_ذاكرة_التشغيل(16);
+    حرر_ذاكرة_التشغيل(h);
+    if (أعد_تخصيص_ذاكرة_التشغيل(g, 19000) != g) { return 5; };
+    // Null is ignored.
+    حرر_ذاكرة_التشغيل(0);
+    حرر_ذاكرة_التشغيل(c);
+    حرر_ذاكرة_التشغيل(d);
+    حرر_ذاكرة_التشغيل(f);
+    حرر_ذاكرة_التشغيل(g);
+    حرر_ذاكرة_التشغيل(i);
+    حرر_ذاكرة_التشغيل(guard);
+    return 42;
+}

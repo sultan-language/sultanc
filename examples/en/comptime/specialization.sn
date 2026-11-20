@@ -1,0 +1,25 @@
+// A `comptime` parameter makes one specialized copy of the function per value.
+import std.io.println;
+import std.text.number;
+
+def scale(comptime factor: int, value: int): int {
+    return value * factor;
+}
+
+def power(comptime exponent: int, base: int): int {
+    let result_value: mutable int = 1;
+    let i: mutable int = 0;
+    while (i < exponent) {
+        result_value := result_value * base;
+        i := i + 1;
+    }
+    return result_value;
+}
+
+def main(): int {
+    let seven: int = 7;
+    println(int_to_text(scale(3, seven)));
+    println(int_to_text(scale(5, seven)));
+    println(int_to_text(power(3, 4)));
+    return 0;
+}

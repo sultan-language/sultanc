@@ -1,0 +1,14 @@
+// Control flow: match enums.
+import std.io.println;
+import std.text.number;
+
+type Signal = | Red | Amber | Green;
+
+def main(): int {
+    let current: Signal = Signal.Green();
+    match current with
+    | Signal.Red -> { println("stop"); }
+    | Signal.Amber -> { println("wait"); }
+    | Signal.Green -> { println("go"); };
+    return 0;
+}

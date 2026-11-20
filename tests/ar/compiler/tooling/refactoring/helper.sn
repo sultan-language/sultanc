@@ -1,0 +1,4 @@
+// مُثبّت tests/ar/compiler/tooling/refactoring_queries.sn (ليس اختبارا).
+عام عرف ضاعف(القيمة: عدد): عدد {
+    أرجع القيمة * 2;
+}

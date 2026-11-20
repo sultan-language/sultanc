@@ -1,0 +1,197 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/stdlib/behavior/process_spawn.sn
+// std.process.command streaming (Rust Command::spawn with Stdio::piped):
+// an interactive line-by-line echo through cat, 2 MB of output read while
+// the child writes it, 256 KiB of input, separate stdout and stderr with
+// wait_with_output, exit codes, try_wait/kill, and a write to a child that
+// closed its input, which must fail with EPIPE instead of ending this
+// process with SIGPIPE. The interpreter spawns the child as the executable
+// does (clone forks the interpreter; the child runs execve).
+import std.process.command;
+import std.process.child;
+import std.text.from_bytes;
+import std.text.compare;
+
+// Reads from the child's stdout until a newline arrives.
+def read_line_from(c: &mutable command_child): result string, int {
+    let line: mutable vector u8 = [];
+    let buf: mutable vector u8 = [0];
+    while (true) {
+        match child_read_stdout(c, &mutable buf, 0, 1) with
+        | result.err(_) -> { return result.err(1); }
+        | result.ok(0) -> { return result.err(2); }
+        | result.ok(_) -> {
+            append(line, buf[0]);
+            if (buf[0] == 10) { return result.ok(from_bytes(&line)); };
+        };
+    }
+    return result.err(3);
+}
+
+def main(): int {
+    // 1. Interactive echo: write a line, read it back, three times.
+    let cat_name: string = "cat";
+    let echo: mutable command = new_command(&cat_name);
+    command_stdin(&mutable echo, stdio.piped());
+    command_stdout(&mutable echo, stdio.piped());
+    let c: mutable command_child;
+    match command_spawn(&echo) with
+    | result.err(_) -> { return 1; }
+    | result.ok(started) -> { c := started; };
+    if (child_id(&c) <= 0) { return 2; };
+    let lines: vector string = ["first\n", "second line\n", "third\n"];
+    let i: mutable uint = 0;
+    while (i < 3) {
+        let bytes: vector u8 = bytes_from_text(copy_text(&lines[i]));
+        match child_write_stdin(&mutable c, &bytes) with
+        | result.err(_) -> { return 3; }
+        | result.ok(_) -> {};
+        match read_line_from(&mutable c) with
+        | result.err(_) -> { return 4; }
+        | result.ok(got) -> { if (!texts_equal(&got, &lines[i])) { return 5; }; };
+        i := i + 1;
+    }
+    // Closing stdin is cat's end of file: it exits 0 and stdout ends.
+    child_close_stdin(&mutable c);
+    let rest: mutable vector u8 = [0, 0, 0, 0];
+    match child_read_stdout(&mutable c, &mutable rest, 0, 4) with
+    | result.err(_) -> { return 6; }
+    | result.ok(n) -> { if (n != 0) { return 7; }; };
+    match child_wait(&mutable c) with
+    | result.err(_) -> { return 8; }
+    | result.ok(status) -> { if (!exit_success(&status)) { return 9; }; };
+    child_close_streams(&mutable c);
+
+    // 2. 2,000,000 bytes of output, read as the child writes them.
+    let sh: string = "sh";
+    let big: mutable command = new_command(&sh);
+    let big_script: vector string = ["-c", "dd if=/dev/zero bs=1000 count=2000 2>/dev/null"];
+    command_args(&mutable big, &big_script);
+    command_stdout(&mutable big, stdio.piped());
+    let b: mutable command_child;
+    match command_spawn(&big) with
+    | result.err(_) -> { return 10; }
+    | result.ok(started) -> { b := started; };
+    let chunk: mutable vector u8 = [];
+    let k: mutable uint = 0;
+    while (k < 65536) { append(chunk, 0); k := k + 1; }
+    let total: mutable int = 0;
+    let reading: mutable bool = true;
+    while (reading) {
+        match child_read_stdout(&mutable b, &mutable chunk, 0, 65536) with
+        | result.err(_) -> { return 11; }
+        | result.ok(0) -> { reading := false; }
+        | result.ok(n) -> { total := total + n; };
+    }
+    if (total != 2000000) { return 12; };
+    match child_wait(&mutable b) with
+    | result.err(_) -> { return 13; }
+    | result.ok(status) -> { if (!exit_success(&status)) { return 14; }; };
+    child_close_streams(&mutable b);
+
+    // 3. 256 KiB of input (four times a pipe's buffer) to wc -c.
+    let wc: mutable command = new_command(&sh);
+    let wc_script: vector string = ["-c", "wc -c | tr -d ' '"];
+    command_args(&mutable wc, &wc_script);
+    command_stdin(&mutable wc, stdio.piped());
+    command_stdout(&mutable wc, stdio.piped());
+    let w: mutable command_child;
+    match command_spawn(&wc) with
+    | result.err(_) -> { return 15; }
+    | result.ok(started) -> { w := started; };
+    let block: mutable vector u8 = [];
+    k := 0;
+    while (k < 4096) { append(block, 120); k := k + 1; }
+    k := 0;
+    while (k < 64) {
+        match child_write_stdin(&mutable w, &block) with
+        | result.err(_) -> { return 16; }
+        | result.ok(_) -> {};
+        k := k + 1;
+    }
+    match child_wait_with_output(w) with
+    | result.err(_) -> { return 17; }
+    | result.ok(output) -> {
+        let counted: string = from_bytes(&output.الخرج);
+        let expected: string = "262144\n";
+        if (!texts_equal(&counted, &expected)) { return 18; };
+    };
+
+    // 4. stdout and stderr apart, and the exit code.
+    let both: mutable command = new_command(&sh);
+    let both_script: vector string = ["-c", "echo out; echo err >&2; echo more; exit 7"];
+    command_args(&mutable both, &both_script);
+    command_stdout(&mutable both, stdio.piped());
+    command_stderr(&mutable both, stdio.piped());
+    match command_spawn(&both) with
+    | result.err(_) -> { return 19; }
+    | result.ok(started) -> {
+        match child_wait_with_output(started) with
+        | result.err(_) -> { return 20; }
+        | result.ok(output) -> {
+            let out: string = from_bytes(&output.الخرج);
+            let err: string = from_bytes(&output.الخطأ);
+            let want_out: string = "out\nmore\n";
+            let want_err: string = "err\n";
+            if (!texts_equal(&out, &want_out)) { return 21; };
+            if (!texts_equal(&err, &want_err)) { return 22; };
+            match output.الحالة with
+            | حالة_إنهاء.خرج(7) -> {}
+            | _ -> { return 23; };
+        };
+    };
+
+    // 5. try_wait while running, kill, then wait reports SIGKILL.
+    let sleeper_name: string = "sleep";
+    let sleeper: mutable command = new_command(&sleeper_name);
+    let five: string = "5";
+    command_arg(&mutable sleeper, &five);
+    let s: mutable command_child;
+    match command_spawn(&sleeper) with
+    | result.err(_) -> { return 24; }
+    | result.ok(started) -> { s := started; };
+    match child_try_wait(&mutable s) with
+    | result.err(_) -> { return 25; }
+    | result.ok(option.some(_)) -> { return 26; }
+    | result.ok(option.none) -> {};
+    match child_kill(&mutable s) with
+    | result.err(_) -> { return 27; }
+    | result.ok(_) -> {};
+    match child_wait(&mutable s) with
+    | result.err(_) -> { return 28; }
+    | result.ok(حالة_إنهاء.إشارة(9)) -> {}
+    | result.ok(_) -> { return 29; };
+    // A second wait reports the same status.
+    match child_wait(&mutable s) with
+    | result.ok(حالة_إنهاء.إشارة(9)) -> {}
+    | _ -> { return 30; };
+
+    // 6. Writing to a child that closed its input is EPIPE, not SIGPIPE.
+    let quitter: mutable command = new_command(&sh);
+    let quit_script: vector string = ["-c", "exec 0<&-; exit 0"];
+    command_args(&mutable quitter, &quit_script);
+    command_stdin(&mutable quitter, stdio.piped());
+    let q: mutable command_child;
+    match command_spawn(&quitter) with
+    | result.err(_) -> { return 31; }
+    | result.ok(started) -> { q := started; };
+    match child_take_stdin(&mutable q) with
+    | option.none -> { return 32; }
+    | option.some(input) -> {
+        // Let it exit first: then no reader is left on the pipe.
+        match child_wait(&mutable q) with
+        | result.err(_) -> { return 33; }
+        | result.ok(_) -> {};
+        let data: vector u8 = [1, 2, 3];
+        match child_stdin_write(&input, &data, 0, 3) with
+        | result.err(code) -> { if (code != -32) { return 34; }; }
+        | result.ok(_) -> { return 35; };
+        match child_stdin_close(input) with
+        | result.err(_) -> { return 36; }
+        | result.ok(_) -> {};
+    };
+    return 42;
+}

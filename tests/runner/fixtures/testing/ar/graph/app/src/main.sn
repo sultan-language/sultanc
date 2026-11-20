@@ -1,0 +1,9 @@
+// `sultanc test --package-graph` (tests/runner/suites/testing.sn): اختبار في
+// حزمة الجذر يستعمل اعتمادية. المتوقع: الحالة 0.
+استورد lib.lib;
+استورد std.debug.assert;
+
+@@اختبار
+عرف يضاعف_ثلاثا(): فراغ {
+    تأكد(ثلث_مضاعف(2) == 6);
+}

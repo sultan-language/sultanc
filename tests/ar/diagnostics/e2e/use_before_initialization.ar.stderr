@@ -1,0 +1,11 @@
+خطأ[SULTANC-FLOW-USE-BEFORE-INITIALIZATION]: استخدام قبل التهيئة — القيمة المستخدمة قبل التهيئة هي ⁨`س`⁩. تُستخدم القيمة قبل تهيئتها.
+  --> tests/ar/diagnostics/e2e/use_before_initialization.sn:9:10..9:11
+   |
+ 9 |     أرجع س;
+   |          ^ الاستخدام غير الصالح
+   |
+  ::: tests/ar/diagnostics/e2e/use_before_initialization.sn:8:5..8:15
+   |
+ 8 |     دع س: عدد;
+   |     ^^^^^^^^^^ صُرّح به هنا
+   |

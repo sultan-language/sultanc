@@ -1,0 +1,10 @@
+type TripleBytes = { first: u8, second: u8, third: u8 };
+
+def select_third(value: TripleBytes): u8 {
+    return value.third;
+}
+
+def main(): u8 {
+    let value: TripleBytes = { first: 40, second: 1, third: 2 };
+    return select_third(value);
+}

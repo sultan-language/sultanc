@@ -1,0 +1,13 @@
+// Sorting Arabic names with sort_texts and joining them for printing.
+import std.io.println;
+import std.text.number;
+import std.text.transform;
+import std.collections.sort;
+
+def main(): int {
+    let values: mutable vector string = ["يوسف", "أحمد", "زيد"];
+    sort_texts(&mutable values);
+    let sep: string = " | ";
+    println(join(&values, &sep));
+    return 0;
+}

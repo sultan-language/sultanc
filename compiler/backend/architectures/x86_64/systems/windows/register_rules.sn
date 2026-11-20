@@ -1,0 +1,53 @@
+استورد compiler.backend.abi.abi_model;
+استورد compiler.backend.codegen.allocation_contract;
+استورد compiler.backend.architectures.x86_64.systems.linux.register_rules;
+
+// Native x86-64 Windows register rules. Calls between SultanC functions keep
+// SultanC's internal register convention, the System V one (as Go keeps its
+// own ABIInternal on Windows); only calls to declared external functions
+// (kernel32, ntdll, the C runtime) use the Microsoft x64 convention. The two
+// share one plan vocabulary, so the Microsoft argument registers have their
+// own logical indexes: integer parameter slot p (0-3) is index
+// 6 + p (RCX, RDX, R8, R9), and the hidden result address is index 1 (RCX).
+// Floating slot p is XMMp in both. Every register the internal convention
+// may clobber that Windows preserves (RDI, RSI, XMM6-XMM15; RBX, RBP and
+// R12-R15 are callee-saved in both) is saved at the C-to-SultanC boundaries:
+// the thread entry trampoline; the process entry never returns.
+عام عرف فهرس_سجل_معامل_مايكروسوفت_إكس(الموضع: طبيعي): طبيعي {
+    أرجع 6 + الموضع;
+}
+
+عام عرف فهرس_عنوان_ناتج_مايكروسوفت_إكس(): طبيعي {
+    أرجع 1;
+}
+
+عام عرف سجل_واجهة_ويندوز_إلى_إكس(
+    المرجع: &مرجع_سجل_واجهة
+): اختياري معرف_سجل_فعلي {
+    دع ر: مرجع_سجل_واجهة = *المرجع;
+    طابق ر.الدور مع
+    | دور_سجل_واجهة.معامل -> {
+        إذا (ر.الفئة == فئة_سجل_واجهة.عدد_صحيح()) {
+            إذا (ر.الفهرس == 6) { أرجع اختياري.موجود(سجل_إكس_فعلي_من(1)); };
+            إذا (ر.الفهرس == 7) { أرجع اختياري.موجود(سجل_إكس_فعلي_من(2)); };
+            إذا (ر.الفهرس == 8) { أرجع اختياري.موجود(سجل_إكس_فعلي_من(8)); };
+            إذا (ر.الفهرس == 9) { أرجع اختياري.موجود(سجل_إكس_فعلي_من(9)); };
+        };
+    }
+    | دور_سجل_واجهة.عنوان_نتيجة_غير_مباشرة -> {
+        إذا (ر.الفئة == فئة_سجل_واجهة.نتيجة_غير_مباشرة() && ر.الفهرس == 1) {
+            أرجع اختياري.موجود(سجل_إكس_فعلي_من(1));
+        };
+    }
+    | _ -> { };
+    أرجع سجل_واجهة_سيستم_في_إلى_إكس(المرجع);
+}
+
+// The callee-saved registers the allocator may use on Windows: RBX, R12-R14
+// and RBP, which both conventions preserve (R15 is the closure environment's
+// register). RDI and RSI, also preserved by Windows, are System V argument
+// registers of the internal convention, so they stay caller-saved inside
+// SultanC code; the C entry saves them for Windows callers.
+عام عرف سجلات_محفوظة_ويندوز_إكس(): متجه معرف_سجل_فعلي {
+    أرجع سجلات_محفوظة_سيستم_في_إكس();
+}

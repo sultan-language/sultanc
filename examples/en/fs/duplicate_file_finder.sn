@@ -1,0 +1,40 @@
+// Finding duplicate files: two files whose contents are equal are reported as duplicates.
+import std.io.println;
+import std.text.number;
+import std.fs.write_file;
+import std.fs.read_file;
+import std.fs.mutation;
+import std.fs.metadata;
+import std.fs.walk;
+import std.fs.path;
+import std.text.transform;
+import std.text.compare;
+
+def main(): int {
+    let one: string = "sultanc-duplicate-a.tmp";
+    let two: string = "sultanc-duplicate-b.tmp";
+    let content: string = "same payload";
+    match write_file(&one, &content) with
+    | result.err(_) -> { return 1; }
+    | _ -> { };
+    match write_file(&two, &content) with
+    | result.err(_) -> { return 2; }
+    | _ -> { };
+    let same: mutable bool = false;
+    match read_file(&one) with
+    | result.ok(a) -> {
+        match read_file(&two) with
+        | result.ok(b) -> { same := texts_equal(&a, &b); }
+        | _ -> { };
+    }
+    | _ -> { };
+    match remove_file(&one) with
+    | result.err(_) -> { return 3; }
+    | _ -> { };
+    match remove_file(&two) with
+    | result.err(_) -> { return 4; }
+    | _ -> { };
+    if (!same) { return 5; };
+    println("duplicate detected");
+    return 0;
+}

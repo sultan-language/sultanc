@@ -1,0 +1,10 @@
+// اختبار: رفض
+// أهداف: arm64-darwin,x86_64-linux
+// تشخيص: SULTANC-TYPE-OPAQUE-BY-VALUE
+// نظير: tests/en/language/opaque/reject_vector_element.sn
+// متجه عنصره نوع معتم (متجه المؤشرات جائز).
+نوع قاعدة = معتم;
+عرف الرئيسية(): عدد {
+    دع الكل: متجه قاعدة = [];
+    أرجع 0;
+}

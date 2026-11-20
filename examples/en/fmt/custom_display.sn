@@ -1,0 +1,10 @@
+// Format a value with explicit specifiers: custom_display.
+import std.fmt.fmt;
+import std.io.print_formatted;
+
+
+def main(): int {
+    let text: string = "Sultan";
+    let r: result uint, fmt_error = println_fmt("{0:>8}", [fmt_arg.text(&text)]);
+    return 0;
+}

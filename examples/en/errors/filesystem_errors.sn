@@ -1,0 +1,15 @@
+// Handling a file-system error: reading a file that does not exist gives an error result,
+// and the program handles it.
+import std.io.println;
+import std.text.number;
+import std.fs.read_file;
+import std.fs.write_file;
+import std.fs.mutation;
+
+def main(): int {
+    let path: string = "sultanc-this-file-does-not-exist-0123456789.tmp";
+    match read_file(&path) with
+    | result.err(_) -> { println("missing file handled"); }
+    | result.ok(_) -> { return 1; };
+    return 0;
+}

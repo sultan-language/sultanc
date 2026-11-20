@@ -1,0 +1,33 @@
+// A small uniq: drop lines that repeat the line before them and count the lines left.
+import std.io.println;
+import std.process.argument_count;
+import std.process.argument;
+import std.text.number;
+import std.text.transform;
+import std.text.compare;
+
+def read_input(default: string): string {
+    if (argument_count() > 1) {
+        match argument(1) with
+        | option.some(text) -> {
+            if (length(text) > 0) { return text; };
+        }
+        | option.none -> { };
+    };
+    return default;
+}
+
+def main(): int {
+    let text: string = read_input("one\none\ntwo\ntwo\nthree");
+    let lines: vector string = split(&text, &"\n");
+    let distinct: mutable vector string = [];
+    let i: mutable int = 0;
+    while (i < length(lines)) {
+        if (i == 0 || !texts_equal(&lines[i], &lines[i - 1])) {
+            append(distinct, clone(&lines[i]));
+        };
+        i := i + 1;
+    };
+    println(int_to_text(length(distinct)));
+    return 0;
+}

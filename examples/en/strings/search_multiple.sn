@@ -1,0 +1,11 @@
+// Checking a string prefix: search_multiple.
+import std.io.println;
+import std.text.search;
+
+
+def main(): int {
+    let text: string = "SultanC language";
+    let part: string = "SultanC";
+    if (starts_with(&text, &part)) { println("prefix found"); };
+    return 0;
+}

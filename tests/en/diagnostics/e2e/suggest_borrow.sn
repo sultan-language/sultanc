@@ -1,0 +1,13 @@
+// اختبار: رفض
+// تشخيص: SULTANC-CALL-ARGUMENT-TYPE-MISMATCH
+// نظير: tests/ar/diagnostics/e2e/suggest_borrow.sn
+// خرج-تشخيص-عربي: suggest_borrow.ar.stderr
+// خرج-تشخيص-إنجليزي: suggest_borrow.en.stderr
+// A reference parameter given the value: a help and a fix that borrows it.
+def take(value: &i32): i32 {
+    return *value;
+}
+def main(): i32 {
+    let count: i32 = 3;
+    return take(count);
+}

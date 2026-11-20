@@ -1,0 +1,20 @@
+type Payload = | Empty | Value of int;
+
+def main(): int {
+    let result: int = 20;
+    let option: int = 10;
+    let vector: int = 12;
+    let maybe: option int = option.some(42);
+    let outcome: result int, int = result.ok(42);
+    let values: vector int = [40, 2];
+    let casted: i32 = 42 as i32;
+    match maybe with
+    | option.some(value) -> {
+        if ((value == 42) && (values[0] + values[1] == 42)) {
+            return result + option + vector;
+        } else {
+            return 1;
+        };
+    }
+    | option.none() -> { return 2; };
+}

@@ -1,0 +1,15 @@
+// JSON parse and serialize: json_encode.
+import std.io.println;
+import std.json.parse;
+import std.json.stringify;
+
+
+def main(): int {
+    let source: string = "{\"name\":\"SultanC\",\"id\":2}";
+    match parse_json(&source) with
+    | result.ok(document) -> { match stringify_json(&document) with
+      | result.ok(encoded) -> { println(encoded); }
+      | result.err(_) -> { return 1; }; }
+    | result.err(_) -> { return 1; };
+    return 0;
+}

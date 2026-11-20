@@ -1,0 +1,7 @@
+// اختبار: رفض
+// خروج: 1
+def main(): int {
+    let a: box int = box 42;
+    let b: box int = a;
+    return *a;
+}

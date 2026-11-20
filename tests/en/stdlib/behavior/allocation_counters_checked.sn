@@ -1,0 +1,49 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 0
+// بيئة: SULTANC_INTERPRETER=checked
+// نظير: tests/ar/stdlib/behavior/allocation_counters_checked.sn
+// std's allocation counters under the checked interpreter (SULTANC_INTERPRETER=checked),
+// the same program as allocation_counters_run.sn: the checked interpreter serves the
+// program's storage itself and answers a call to one of std's counters from its own counts
+// (compiler/interpreter/memory/memory.sn عدادات_التخزين), as the machine interpreter does,
+// so the answers agree with the executable. Before, std's own counters, which that storage
+// never updates, were read (and an address-of-local comparison stopped the interpreter).
+import std.os.allocation;
+import std.os.allocation_cache;
+import std.text.number;
+import std.io.print;
+import std.io.println;
+
+def work(i: int): uint {
+    let t: string = int_to_text(i * 1000003);
+    return length(t) as uint;
+}
+
+def check(label: string, ok: bool): int {
+    print(label);
+    if (ok) { println(": yes"); return 0; };
+    println(": no");
+    return 1;
+}
+
+def main(): int {
+    let a0: u64 = allocation_count();
+    let tf0: u64 = thread_free_count();
+    let tb0: u64 = thread_requested_bytes();
+    let reads: bool = allocation_count() == a0 && thread_free_count() == tf0;
+    let f0: u64 = free_count();
+    let b0: u64 = requested_bytes();
+    let i: mutable int = 0;
+    let total: mutable uint = 0;
+    while (i < 100) { total := total + work(i); i := i + 1; }
+    let failed: mutable int = 0;
+    failed := failed + check("reading the counters allocates nothing", reads);
+    failed := failed + check("allocations counted", allocation_count() >= a0 + 100);
+    failed := failed + check("frees counted", free_count() >= f0 + 100);
+    failed := failed + check("requested bytes counted", requested_bytes() > b0);
+    failed := failed + check("this thread's frees counted", thread_free_count() >= tf0 + 100);
+    failed := failed + check("this thread's requested bytes counted", thread_requested_bytes() > tb0);
+    if (total == 0) { return 100; };
+    return failed;
+}

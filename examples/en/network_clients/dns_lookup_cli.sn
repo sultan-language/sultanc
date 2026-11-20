@@ -1,0 +1,13 @@
+// Resolving a host name to an IPv4 socket address: look up localhost on port 8080.
+import std.io.println;
+import std.net.dns;
+
+def main(): int {
+    let host: string = "localhost";
+    match resolve_host_ipv4(&host, 8080 as u16) with
+    | result.ok(_) -> {
+        println("resolved localhost");
+        return 0;
+    }
+    | result.err(_) -> { return 1; };
+}

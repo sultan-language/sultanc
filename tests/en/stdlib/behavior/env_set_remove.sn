@@ -1,0 +1,113 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/stdlib/behavior/env_set_remove.sn
+// std.env set/remove (Rust env::set_var/remove_var, Go os.Setenv/Unsetenv):
+// a set variable is read back, replaced, listed once, removed; invalid names
+// and values are refused; a child started without an explicit environment
+// inherits the change, and TMPDIR set by the program is the temp directory.
+import std.env.environment;
+import std.env.variables;
+import std.process.command;
+import std.text.from_bytes;
+import std.text.compare;
+
+def count_named(name: &string): int {
+    match environment_variables() with
+    | result.err(_) -> { return -1; }
+    | result.ok(all) -> {
+        let n: mutable int = 0;
+        let i: mutable uint = 0;
+        while (i < (length(all) as uint)) {
+            if (texts_equal(&all[i].الاسم, name)) { n := n + 1; };
+            i := i + 1;
+        }
+        return n;
+    };
+}
+
+def main(): int {
+    let name: string = "SULTANC_SET_TEST";
+    let first: string = "one";
+    let second: string = "two words";
+    match get_environment_variable(&name) with
+    | result.ok(option.none) -> {}
+    | _ -> { return 1; };
+    match set_environment_variable(&name, &first) with
+    | result.err(_) -> { return 2; }
+    | result.ok(_) -> {};
+    match get_environment_variable(&name) with
+    | result.ok(option.some(value)) -> { if (!texts_equal(&value, &first)) { return 3; }; }
+    | _ -> { return 4; };
+    match set_environment_variable(&name, &second) with
+    | result.err(_) -> { return 5; }
+    | result.ok(_) -> {};
+    if (count_named(&name) != 1) { return 6; };
+    match get_environment_variable(&name) with
+    | result.ok(option.some(value)) -> { if (!texts_equal(&value, &second)) { return 7; }; }
+    | _ -> { return 8; };
+
+    // The startup environment is still there.
+    let path: string = "PATH";
+    match get_environment_variable(&path) with
+    | result.ok(option.some(_)) -> {}
+    | _ -> { return 9; };
+
+    // Invalid names and values change nothing.
+    let bad_name: string = "A=B";
+    match set_environment_variable(&bad_name, &first) with
+    | result.err(_) -> {}
+    | result.ok(_) -> { return 10; };
+    let empty: string = "";
+    match set_environment_variable(&empty, &first) with
+    | result.err(_) -> {}
+    | result.ok(_) -> { return 11; };
+
+    // A child inherits the change.
+    let shell: string = "sh";
+    let cmd: mutable command = new_command(&shell);
+    let script: vector string = ["-c", "echo \"$SULTANC_SET_TEST\""];
+    command_args(&mutable cmd, &script);
+    match command_output_of(&cmd) with
+    | result.err(_) -> { return 12; }
+    | result.ok(output) -> {
+        let out: string = from_bytes(&output.الخرج);
+        let expected: string = "two words\n";
+        if (!texts_equal(&out, &expected)) { return 13; };
+    };
+
+    // TMPDIR set by the program is the temporary directory.
+    let tmp_name: string = "TMPDIR";
+    let tmp_value: string = "/sultanc-tmp-test";
+    match set_environment_variable(&tmp_name, &tmp_value) with
+    | result.err(_) -> { return 14; }
+    | result.ok(_) -> {};
+    match temporary_directory() with
+    | result.ok(dir) -> { if (!texts_equal(&dir, &tmp_value)) { return 15; }; }
+    | result.err(_) -> { return 16; };
+
+    // Removal: gone for the program and for a child.
+    match remove_environment_variable(&name) with
+    | result.err(_) -> { return 17; }
+    | result.ok(_) -> {};
+    match get_environment_variable(&name) with
+    | result.ok(option.none) -> {}
+    | _ -> { return 18; };
+    if (count_named(&name) != 0) { return 19; };
+    let check: mutable command = new_command(&shell);
+    let check_script: vector string = ["-c", "test -z \"${SULTANC_SET_TEST+set}\" && echo unset"];
+    command_args(&mutable check, &check_script);
+    match command_output_of(&check) with
+    | result.err(_) -> { return 20; }
+    | result.ok(output) -> {
+        let out: string = from_bytes(&output.الخرج);
+        let expected: string = "unset\n";
+        if (!texts_equal(&out, &expected)) { return 21; };
+    };
+    // Removing a variable that is not set is not an error.
+    match remove_environment_variable(&name) with
+    | result.err(_) -> { return 22; }
+    | result.ok(_) -> {};
+    return 42;
+}

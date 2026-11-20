@@ -1,0 +1,6 @@
+خطأ[SULTANC-NAME-UNKNOWN]: الاسم ⁨`missing`⁩ غير معروف — الاسم المطلوب مفقود أثناء حل المراجع.
+  --> tests/en/diagnostics/e2e/unknown_name.sn:7:12..7:19
+   |
+ 7 |     return missing;
+   |            ^^^^^^^
+   |

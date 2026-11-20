@@ -1,0 +1,22 @@
+// Finding the winner of tic-tac-toe: check the eight winning lines of the board.
+import std.io.println;
+import std.text.number;
+
+def winner(board: vector int): int {
+    let wins: vector int = [0, 1, 2, 3, 4, 5, 6, 7, 8, 0, 3, 6, 1, 4, 7, 2, 5, 8, 0, 4, 8, 2, 4, 6];
+    let i: mutable int = 0;
+    while (i < 24) {
+        let a: int = board[wins[i]];
+        if (a != 0 && a == board[wins[i + 1]] && a == board[wins[i + 2]]) { return a; };
+        i := i + 3;
+    };
+    return 0;
+}
+
+def main(): int {
+    let board: vector int = [1, 1, 1, 0, 2, 0, 2, 0, 0];
+    let w: int = winner(board);
+    if (w != 1) { return 1; };
+    println(int_to_text(w));
+    return 0;
+}

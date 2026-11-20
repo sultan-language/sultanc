@@ -1,0 +1,23 @@
+// Compressing repetitive data with gzip and getting the original back.
+import std.io.println;
+import std.text.number;
+import std.text.compare;
+import std.text.from_bytes;
+import std.text.transform;
+import std.compression.gzip;
+
+def main(): int {
+    let unit: string = "SultanC ";
+    let original_text: string = repeat_text(&unit, 50);
+    let original: vector u8 = bytes_from_text(clone(&original_text));
+    let packed: vector u8 = gzip_compress(&original);
+    println(uint_to_text(length(original) as uint));
+    if ((length(packed) as uint) < (length(original) as uint)) { println("compressed is smaller"); };
+    match gzip_decompress(&packed) with
+    | result.ok(restored) -> {
+        let restored_text: string = from_bytes(&restored);
+        if (texts_equal(&restored_text, &original_text)) { println("round trip ok"); };
+    }
+    | result.err(_) -> { println("corrupt data"); return 1; };
+    return 0;
+}

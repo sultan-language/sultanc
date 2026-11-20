@@ -1,0 +1,20 @@
+// اختبار: تشغيل
+// أهداف: x86_64-linux
+// خروج: 42
+// نظير: tests/ar/stdlib/behavior/sync_channel_ends_by_name.sn
+// The ends of a channel by name in English code (docs/en/reference/concurrency.md,
+// "Channels"): channel_ends_sender and channel_ends_receiver borrow the two
+// fields, which keep their Arabic names, as `&ends.المرسل` does.
+import std.sync.channel;
+
+def main(): int {
+    let ends: channel_ends<int> = channel<int>();
+    match send(channel_ends_sender(&ends), 42) with
+    | result.err(_) -> { return 1; }
+    | result.ok(_) -> { };
+    let received: mutable int = 0;
+    match recv(channel_ends_receiver(&ends)) with
+    | result.err(_) -> { return 2; }
+    | result.ok(value) -> { received := value; };
+    return received;
+}

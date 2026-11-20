@@ -1,0 +1,34 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// نظير: tests/ar/compiler/c_import_target/main.sn
+// Jisr's C view follows the target the program is compiled for (the
+// runner builds this test as an x86_64-linux executable and as an
+// arm64-darwin object): target.h's predefined-macro branch and its static
+// assertions (sizes, long double, char signedness) are those of the target,
+// and its constants and record sizes are the target's. On a host without
+// the target's C headers, the host's stand in only for system headers;
+// target.h itself still sees the target's macros. `check --target T` also
+// passes for x86_64-darwin, aarch64-linux-gnu, x86_64-windows-msvc,
+// aarch64-windows-msvc and i686-linux-gnu.
+import "target.h";
+
+if (target.triple == "aarch64-apple-darwin") {
+    def expected_platform(): i32 { return 1; }
+    def expected_probe(): i32 { return 24; }
+}
+if (target.triple == "x86_64-unknown-linux-gnu") {
+    def expected_platform(): i32 { return 3; }
+    def expected_probe(): i32 { return 24; }
+}
+if (target.triple != "aarch64-apple-darwin" && target.triple != "x86_64-unknown-linux-gnu") {
+    def expected_platform(): i32 { return PLATFORM; }
+    def expected_probe(): i32 { return PROBE_BYTES; }
+}
+
+def main(): int {
+    if (PLATFORM != expected_platform() || PLATFORM == 0) { return 1; };
+    if (PROBE_BYTES != expected_probe()) { return 2; };
+    if (LONG_BYTES != 8 || POINTER_BYTES != 8 || SIZE_BYTES != 8 || INT64_IS_LONG != 1) { return 3; };
+    return 42;
+}

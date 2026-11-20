@@ -1,0 +1,10 @@
+// اختبار: رفض
+// أهداف: arm64-darwin,x86_64-linux
+// تشخيص: SULTANC-TYPE-OPAQUE-BY-VALUE
+// نظير: tests/en/language/opaque/reject_construct.sn
+// بناء قيمة من نوع معتم.
+نوع قاعدة = معتم;
+عرف الرئيسية(): عدد {
+    دع ق: قاعدة = {};
+    أرجع 0;
+}

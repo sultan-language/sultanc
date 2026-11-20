@@ -1,0 +1,169 @@
+# Promotion: main -> beta, beta -> master. Started by hand ("Run workflow",
+# from main); GitHub lets only people with write access start a run. Nothing
+# else moves beta or master, and nothing ever pushes to them directly.
+#
+# The rules come from mature compilers:
+#   - test the exact commit, then move the branch to it (Rust's "not rocket
+#     science" rule: bors tests the merge commit, then fast-forwards master);
+#   - promotion moves a branch to a commit that already exists upstream,
+#     never makes a new one (Rust moves master to beta and beta to stable at
+#     each release; LLVM release branches are cut from main), so the commit
+#     keeps its SHA and its qualification on every branch;
+#   - the wide matrix runs once per commit (Go: every presubmit builder is a
+#     post-submit builder; Rust: about 80 jobs per landed commit), never again
+#     for a promotion of the same commit.
+#
+#   target  source  needs                                     then
+#   beta    main    the head of main qualified: a passing     beta := that commit
+#                   nightly, or the full tier run here now     (fast-forward only)
+#   master  beta    the head of beta qualified (always so,    master := that commit
+#                   unless beta was moved by hand)             (fast-forward only)
+#
+# The commit is the head of the source branch when the run starts; a push to
+# main during qualification does not change what is promoted. The move is a
+# fast-forward (force=false): if the target holds a commit the source does
+# not, the move fails and nothing changes.
+#
+# Releases are not made here: the owner tags and releases master by hand.
+#
+# Setup (CI.md, "Repository settings"): the secret PROMOTE_TOKEN in the
+# environment `promotion` (a fine-grained token of the owner: this repository,
+# Contents read and write), and a ruleset on beta and master that allows
+# updates only by the owner (bypass: repository admin), with no force push.
+name: SultanC Promote
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: beta (from main) or master (from beta)
+        type: choice
+        options: [beta, master]
+        required: true
+
+permissions:
+  contents: read
+  pull-requests: read
+  statuses: read
+
+concurrency:
+  group: sultanc-promote
+  cancel-in-progress: false
+
+jobs:
+  resolve:
+    name: Resolve
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      source: ${{ steps.resolve.outputs.source }}
+      sha: ${{ steps.resolve.outputs.sha }}
+      exists: ${{ steps.resolve.outputs.exists }}
+      identical: ${{ steps.resolve.outputs.identical }}
+      evidence: ${{ steps.resolve.outputs.evidence }}
+      qualify: ${{ steps.resolve.outputs.qualify }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github
+      - name: Resolve the commit
+        id: resolve
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          RUN_REF: ${{ github.ref }}
+          TARGET: ${{ inputs.target }}
+        run: |
+          fail() { echo "::error::$1"; echo "Not promoted: $1" >> "$GITHUB_STEP_SUMMARY"; exit 1; }
+          [ "$RUN_REF" = refs/heads/main ] || fail "run this workflow from main (it ran from $RUN_REF)"
+          case "$TARGET" in
+            beta) source=main ;;
+            master) source=beta ;;
+            *) fail "unknown target $TARGET" ;;
+          esac
+          sha=$(gh api "repos/$REPO/git/ref/heads/$source" --jq .object.sha) || fail "cannot read $source"
+          exists=true
+          identical=false
+          if target_sha=$(gh api "repos/$REPO/git/ref/heads/$TARGET" --jq .object.sha 2>/dev/null); then
+            status=$(gh api "repos/$REPO/compare/$target_sha...$sha" --jq .status) || fail "cannot compare $TARGET with $source"
+            case "$status" in
+              identical) identical=true ;;
+              ahead) ;;
+              *) fail "$TARGET ($target_sha) has commits $source ($sha) does not (compare says $status). Promotion only fast-forwards: point $TARGET at $source once by hand, CI.md, \"One-time setup of the branches\"" ;;
+            esac
+          else
+            exists=false
+          fi
+          evidence=$(sh .github/ci/evidence.sh "$sha")
+          qualify=false
+          if [ -z "$evidence" ]; then
+            [ "$TARGET" = beta ] || fail "$sha (head of beta) has no qualification; promote it to beta again first"
+            qualify=true
+          fi
+          {
+            echo "source=$source"
+            echo "sha=$sha"
+            echo "exists=$exists"
+            echo "identical=$identical"
+            echo "evidence=$evidence"
+            echo "qualify=$qualify"
+          } >> "$GITHUB_OUTPUT"
+          {
+            echo "## Promote $source -> $TARGET"
+            echo
+            echo "- commit: \`$sha\` (head of $source)"
+            if [ "$identical" = true ]; then echo "- $TARGET is already at this commit: nothing to move"; fi
+            if [ -n "$evidence" ]; then echo "- qualified by $evidence: no matrix runs"; fi
+            if [ "$qualify" = true ]; then echo "- not qualified yet: the full tier runs on it now"; fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  qualify:
+    name: Qualify
+    needs: resolve
+    if: needs.resolve.outputs.qualify == 'true' && needs.resolve.outputs.identical != 'true'
+    permissions:
+      contents: read
+      pull-requests: read
+      statuses: write
+    uses: ./.github/workflows/ci.yml
+    with:
+      scope: full
+      extended: true
+      ref: ${{ needs.resolve.outputs.sha }}
+      qualify: true
+
+  move:
+    name: Move ${{ inputs.target }}
+    needs: [resolve, qualify]
+    if: >-
+      always() && needs.resolve.result == 'success' && needs.resolve.outputs.identical != 'true'
+      && (needs.qualify.result == 'success' || needs.qualify.result == 'skipped')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    environment: promotion
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github
+      - name: Qualified, then fast-forward
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PROMOTE_TOKEN: ${{ secrets.PROMOTE_TOKEN }}
+          REPO: ${{ github.repository }}
+          TARGET: ${{ inputs.target }}
+          SHA: ${{ needs.resolve.outputs.sha }}
+          EXISTS: ${{ needs.resolve.outputs.exists }}
+        run: |
+          fail() { echo "::error::$1"; echo "Not promoted: $1" >> "$GITHUB_STEP_SUMMARY"; exit 1; }
+          evidence=$(sh .github/ci/evidence.sh "$SHA")
+          [ -n "$evidence" ] || fail "$SHA has no qualification"
+          [ -n "$PROMOTE_TOKEN" ] || fail "the secret PROMOTE_TOKEN is not set in the environment promotion (CI.md)"
+          if [ "$EXISTS" = true ]; then
+            # force=false: GitHub refuses anything but a fast-forward.
+            GH_TOKEN=$PROMOTE_TOKEN gh api -X PATCH "repos/$REPO/git/refs/heads/$TARGET" \
+              -f sha="$SHA" -F force=false > /dev/null || fail "GitHub refused to fast-forward $TARGET to $SHA"
+          else
+            GH_TOKEN=$PROMOTE_TOKEN gh api -X POST "repos/$REPO/git/refs" \
+              -f ref="refs/heads/$TARGET" -f sha="$SHA" > /dev/null || fail "GitHub refused to create $TARGET at $SHA"
+          fi
+          echo "Promoted: $TARGET is now \`$SHA\` (qualified by $evidence)" >> "$GITHUB_STEP_SUMMARY"

@@ -1,0 +1,12 @@
+// اختبار: رفض
+// أهداف: arm64-darwin,x86_64-linux
+// تشخيص: SULTANC-TYPE-OPAQUE-TYPE-ARGUMENT
+// نظير: tests/ar/language/opaque/reject_generic_vector.sn
+// An instance that holds (and so destroys) a vector of its opaque type
+// argument.
+type Db = opaque;
+def collect<A>(p: *A): int {
+    let values: vector A = [];
+    return length(values);
+}
+def main(): int { return collect(0 as *Db); }

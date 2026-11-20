@@ -1,0 +1,9 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/language/comptime/nested_constant_expression.sn
+def main(): int {
+    let x: int = comptime (comptime 20) + (comptime { 22; });
+    return x;
+}

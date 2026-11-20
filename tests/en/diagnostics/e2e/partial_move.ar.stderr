@@ -1,0 +1,11 @@
+خطأ[SULTANC-OWNERSHIP-PARTIAL-MOVE]: النقل الجزئي لعضو مملوك غير مسموح — القيمة التي يُنقل منها عضو هي ⁨`parts`⁩. لا يمكن نقل هذه القيمة هنا.
+  --> tests/en/diagnostics/e2e/partial_move.sn:9:17..9:25
+   |
+ 9 |     return take(parts[1]);
+   |                 ^^^^^^^^ الاستخدام غير الصالح
+   |
+  ::: tests/en/diagnostics/e2e/partial_move.sn:8:5..8:52
+   |
+ 8 |     let parts: vector string = ["first", "second"];
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ صُرّح به هنا
+   |

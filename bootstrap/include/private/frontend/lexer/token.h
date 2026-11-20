@@ -16,12 +16,15 @@ typedef enum
 #define SULTANC__KEYWORD__(Name, English, Arabic)
 /* Expands the bool keyword macro. */
 #define SULTANC__BOOL_KEYWORD__(English, Arabic, Value)
+/* Expands the deprecated keyword spelling macro. */
+#define SULTANC__KEYWORD_DEPRECATED__(Name, Old, New)
 /* Expands the operator macro. */
 #define SULTANC__OPERATOR__(Name, Spelling)
 #include "token_registry.def"
 #undef SULTANC__TOKEN__
 #undef SULTANC__KEYWORD__
 #undef SULTANC__BOOL_KEYWORD__
+#undef SULTANC__KEYWORD_DEPRECATED__
 #undef SULTANC__OPERATOR__
     /* Represents the token kind count value. */
     __Token_Kind_Count__
@@ -73,10 +76,13 @@ typedef enum
 /* Defines the integer literal structure. */
 typedef struct
 {
-    /* Stores the value. */
+    /* Stores the value; an unsigned-wide literal stores its 64-bit pattern. */
     int64_t __Value__;
     /* Stores the spelling. */
     __Text_Slice__ __Spelling__;
+    /* Marks a literal above INT64_MAX: canonical unsigned literal token
+     * (compiler/frontend/lexer/numbers.sn, قيمة_عدد_صحيح_رمز.طبيعي). */
+    int __Unsigned_Wide__;
 } __Integer_Literal__;
 
 /* Defines the token payload union. */

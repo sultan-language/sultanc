@@ -1,0 +1,23 @@
+// The root file of library/core: the Arabic spellings of its modules
+// (docs/en/reference/modules-and-imports.md, "Module spellings"). The
+// standard library is three libraries (docs/en/reference/std-layers.md); this
+// file names only this library's own children.
+
+module archive { ar: أرشيف };
+module bytes { ar: بايتات, fr: octets };
+module chars { ar: حروف, fr: caracteres };
+module checksum { ar: مجاميع_تحقق };
+module collections { ar: مجموعات };
+module crypto { ar: تشفير };
+module encoding { ar: ترميز, fr: encodage };
+module hash { ar: تجزئة };
+module io { ar: دخ, fr: entree_sortie, es: entrada_salida };
+module math { ar: رياضيات };
+module memory { ar: ذاكرة, fr: memoire };
+module meta { ar: انعكاس };
+module process { ar: عمليات };
+module random { ar: عشوائي };
+module sync { ar: تزامن };
+module text { ar: نصوص, fr: texte, es: texto };
+module time { ar: وقت };
+module unicode { ar: يونيكود };

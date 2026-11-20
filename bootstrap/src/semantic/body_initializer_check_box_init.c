@@ -28,7 +28,19 @@ int __Body_Check_Box_Init__(__Semantic_Body_Context__ *__Context__,
             __Context__, __E0400_Mismatched_Types__, __Statement__->__Header__.__Span__);
     }
 
-    if (!__Body_Check_Atom_Compatible__(__Context__,
+    if (__Statement__->__As__.__Box__.__Expression__ != NULL)
+    {
+        if (!__Body_Check_Expression_Compatible__(__Context__, __Resolved__.__Inner__,
+                                                  __Statement__->__As__.__Box__.__Expression__,
+                                                  __Statement__->__Header__.__Span__) ||
+            (__Safety_Type_Is_Move_Only__(__Context__->__Semantic__, __Resolved__.__Inner__) &&
+             !__Body_Safety_Move_Expression__(__Context__, __Statement__->__As__.__Box__.__Expression__,
+                                              NULL)))
+        {
+            return 0;
+        }
+    }
+    else if (!__Body_Check_Atom_Compatible__(__Context__,
                                         __Resolved__.__Inner__,
                                         &__Statement__->__As__.__Box__.__Value__,
                                         __Statement__->__Header__.__Span__) ||

@@ -1,0 +1,109 @@
+// Canonical compiler/runtime ABI symbol ownership. Source declarations use these
+// symbols as ordinary typed externs; backend providers resolve only this ABI identity.
+استورد compiler.runtime.primitive_identity;
+استورد المكتبة.نصوص.من_بايتات;
+
+عام عرف اسم_بدائي_تشغيل_أساسي(البدائي: هوية_بدائي_مترجم): متجه ط8 {
+    طابق البدائي مع
+    | هوية_بدائي_مترجم.طول -> { دع ن: متجه ط8 = بايتات_من_نص(«تشغيل_طول»); أرجع ن; }
+    | هوية_بدائي_مترجم.إلحاق -> { دع ن: متجه ط8 = بايتات_من_نص(«تشغيل_إلحاق»); أرجع ن; }
+    | هوية_بدائي_مترجم.تحرير -> { دع ن: متجه ط8 = بايتات_من_نص(«تشغيل_تحرير»); أرجع ن; }
+    | _ -> { دع ن: متجه ط8 = []; أرجع ن; };
+}
+
+// Canonical spelling of the source-defined std.os.process exit provider. MSIR
+// lowering binds the unique public definition with this name as the program's
+// process-exit fact; the native Linux entry calls that definition directly.
+// This is an ABI spelling, not OS code.
+عام عرف اسم_خروج_عملية_نظام_أساسي(): متجه ط8 {
+    دع الاسم: متجه ط8 = بايتات_من_نص(«اخرج_من_عملية_النظام»);
+    أرجع الاسم;
+}
+
+// Canonical spelling of the std.async task context switch
+// `(الحفظ: ط64, المكدس_الجديد: ط64): ط64`. MSIR binds its unique public
+// definition as a program fact; the native and LLVM backends that can switch
+// stacks (x86_64 System V, arm64 AAPCS) replace its body with a fixed routine:
+// with a zero stack it answers the address of the task trampoline, otherwise
+// it pushes the callee-saved registers, stores the stack pointer at `الحفظ`,
+// loads `المكدس_الجديد` and pops the registers saved there. Every other
+// target keeps the source body, which answers 0 (no task switching).
+// Canonical spellings of std's allocation counters: the process's
+// allocations, frees, reallocations and requested bytes, then the calling
+// thread's. MSIR binds each unique public definition as a program fact
+// (دوال_عدادات_التخصيص) for an interpreter that serves storage itself.
+عام عرف أسماء_عدادات_التخصيص_أساسية(): متجه متجه ط8 {
+    دع الناتج: متغير متجه متجه ط8 = [];
+    ألحق(الناتج, بايتات_من_نص(«عدد_تخصيصات_النظام»));
+    ألحق(الناتج, بايتات_من_نص(«عدد_تحريرات_النظام»));
+    ألحق(الناتج, بايتات_من_نص(«عدد_إعادات_تخصيص_النظام»));
+    ألحق(الناتج, بايتات_من_نص(«بايتات_مطلوبة_النظام»));
+    ألحق(الناتج, بايتات_من_نص(«عدد_تخصيصات_الخيط»));
+    ألحق(الناتج, بايتات_من_نص(«عدد_تحريرات_الخيط»));
+    ألحق(الناتج, بايتات_من_نص(«عدد_إعادات_تخصيص_الخيط»));
+    ألحق(الناتج, بايتات_من_نص(«بايتات_مطلوبة_الخيط»));
+    أرجع الناتج;
+}
+
+عام عرف اسم_تبديل_سياق_المهام_أساسي(): متجه ط8 {
+    دع الاسم: متجه ط8 = بايتات_من_نص(«بدل_سياق_المهام_التشغيل»);
+    أرجع الاسم;
+}
+
+// ELF startup boundaries are linker-defined addresses, not STD services.
+// The executable entry walks these linker-owned ranges before الرئيسية.
+عام عرف اسم_بداية_منشئات_إلف_أساسي(): متجه ط8 {
+    دع الاسم: متجه ط8 = بايتات_من_نص(«__init_array_start»);
+    أرجع الاسم;
+}
+
+عام عرف اسم_نهاية_منشئات_إلف_أساسي(): متجه ط8 {
+    دع الاسم: متجه ط8 = بايتات_من_نص(«__init_array_end»);
+    أرجع الاسم;
+}
+
+// One process-startup ABI for backend-produced executables. These are
+// process-lifetime data symbols (u64 argc, pointer argv, pointer envp), not
+// libc/OS service implementations. STD reads them through ordinary externs.
+عام عرف اسم_عدد_وسائط_إقلاع_أساسي(): متجه ط8 {
+    دع الاسم: متجه ط8 = بايتات_من_نص(«sultanc.bootstrap.argc»);
+    أرجع الاسم;
+}
+
+عام عرف اسم_مؤشر_وسائط_إقلاع_أساسي(): متجه ط8 {
+    دع الاسم: متجه ط8 = بايتات_من_نص(«sultanc.bootstrap.argv»);
+    أرجع الاسم;
+}
+
+عام عرف اسم_مؤشر_بيئة_إقلاع_أساسي(): متجه ط8 {
+    دع الاسم: متجه ط8 = بايتات_من_نص(«sultanc.bootstrap.envp»);
+    أرجع الاسم;
+}
+
+// Import reference, relative to the trusted std root, of the module defining
+// the process-exit provider above: `os/process.sn`, the same bytes the module
+// loader forms for `استورد os.process;` inside std. A program whose process
+// start SultanC emits itself needs that provider; the driver loads this
+// module as an additional root.
+عام عرف مسار_وحدة_خروج_عملية_نظام_أساسي(): متجه ط8 {
+    دع المسار: متجه ط8 = بايتات_من_نص(«os/process.sn»);
+    أرجع المسار;
+}
+
+// The canonical allocator interface (library/core/memory/allocator.sn) has
+// no names here: its three entry points are the functions marked
+// `@@global_alloc`, `@@global_realloc` and `@@global_dealloc`, which MSIR
+// lowering binds as a program fact (compiler/msir/semantic_lowering.sn,
+// اربط_المخصص_العام_مسير); the backends then call those definitions for the
+// compiler's storage services. The operands and result are pointer-width
+// unsigned integers (linear-memory offsets on wasm32); 0 means allocation
+// failure, on which generated code traps.
+
+// Import reference, relative to the trusted std root, of the module defining
+// std's allocation providers: `os/allocation_cache.sn` (the allocator of
+// os/allocation.sn with per-thread caches; an older compiler binds that
+// module's plain, locked entry points by their names without the suffix).
+عام عرف مسار_وحدة_مزودات_الذاكرة_أساسي(): متجه ط8 {
+    دع المسار: متجه ط8 = بايتات_من_نص(«os/allocation_cache.sn»);
+    أرجع المسار;
+}

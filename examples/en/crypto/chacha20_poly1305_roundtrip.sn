@@ -1,0 +1,23 @@
+// ChaCha20-Poly1305 round trip: seal a message with associated data, open it and print the
+// clear text.
+import std.io.println;
+import std.text.number;
+import std.text.from_bytes;
+import std.crypto.chacha20_poly1305;
+
+def main(): int {
+    let key: mutable vector u8 = [];
+    let i: mutable int = 0;
+    while (i < 32) {
+        append(key, i as u8);
+        i := i + 1;
+    };
+    let nonce: vector u8 = [0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8];
+    let aad: vector u8 = bytes_from_text("header");
+    let plain: vector u8 = bytes_from_text("encrypted message");
+    let sealed: vector u8 = chacha20_poly1305_seal(&key, &nonce, &aad, &plain);
+    match chacha20_poly1305_open(&key, &nonce, &aad, &sealed) with
+    | option.some(clear) -> { println(from_bytes(&clear)); }
+    | option.none -> { return 1; };
+    return 0;
+}

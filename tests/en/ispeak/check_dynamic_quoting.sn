@@ -1,0 +1,75 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 0
+// نظير: tests/ar/ispeak/check_dynamic_quoting.sn
+import std.text.compare;
+import std.text.from_bytes;
+import compiler.diagnostics.identity;
+import compiler.diagnostics.reason;
+import compiler.ispeak.format.facts;
+import compiler.diagnostics.schema;
+import compiler.ispeak.ispeak;
+
+// Quoted facts must not introduce a delimiter, line break or terminal control.
+// UTF-8 text outside ASCII controls remains byte-for-byte unchanged.
+def check(language: لغة_تشخيص, key: مفتاح_رسالة_تشخيص, facts: حقائق_رسالة, expected: string): bool {
+    match رسالة_تشخيص_بحجج(language, key, facts) with
+    | option.some(output) -> { return texts_equal(&output, &expected); }
+    | option.none -> { return false; };
+}
+
+def name_facts(name: &string): حقائق_اسم_غير_معروف {
+    let values: حقائق_اسم_غير_معروف = { الاسم: انسخ_نص(name) };
+    return values;
+}
+
+def type_value(name: &string): حقائق_نوعان_غير_متوافقين {
+    let values: حقائق_نوعان_غير_متوافقين = { المتوقع: انسخ_نص(name), الموجود: "f`32" };
+    return values;
+}
+
+def option_value_text(name: &string): حقائق_نص_محدد {
+    let values: حقائق_نص_محدد = { القيمة: انسخ_نص(name) };
+    return values;
+}
+
+def control_fact(control_text: &string): حقائق_اسم_غير_معروف {
+    let values: حقائق_اسم_غير_معروف = { الاسم: انسخ_نص(control_text) };
+    return values;
+}
+
+def main(): int {
+    let bytes: mutable vector u8 = [];
+    append_text_bytes(&mutable bytes, «a`b\\»);
+    append(bytes, 0x0A);
+    append(bytes, 0x0D);
+    append(bytes, 0x09);
+    append(bytes, 0x1B);
+    append(bytes, 0x7F);
+    append_text_bytes(&mutable bytes, "ع");
+    let name: string = from_bytes(&bytes);
+    let name_key: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.اسم_غير_معروف());
+    if (!check(لغة_تشخيص.الإنجليزية(), name_key, حقائق_رسالة.اسم_غير_معروف(name_facts(&name)), «unknown name: `a\`b\\\\\n\r\t\x1B\x7Fع`»)) { return 1; };
+    if (!check(لغة_تشخيص.العربية(), name_key, حقائق_رسالة.اسم_غير_معروف(name_facts(&name)), «الاسم `a\`b\\\\\n\r\t\x1B\x7Fع` غير معروف»)) { return 2; };
+
+    let type_key: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.نوعان_غير_متوافقين());
+    if (!check(لغة_تشخيص.الإنجليزية(), type_key, حقائق_رسالة.نوعان_غير_متوافقين(type_value(&name)), «expected `a\`b\\\\\n\r\t\x1B\x7Fع`, found `f\`32`»)) { return 3; };
+    if (!check(لغة_تشخيص.العربية(), type_key, حقائق_رسالة.نوعان_غير_متوافقين(type_value(&name)), «النوع الموجود `f\`32` لا يطابق النوع المتوقع `a\`b\\\\\n\r\t\x1B\x7Fع`»)) { return 4; };
+
+    let option_key: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.خيار_مترجم_غير_معروف());
+    if (!check(لغة_تشخيص.الإنجليزية(), option_key, حقائق_رسالة.نص_محدد(option_value_text(&name)), «unknown option `a\`b\\\\\n\r\t\x1B\x7Fع`»)) { return 5; };
+    if (!check(لغة_تشخيص.العربية(), option_key, حقائق_رسالة.نص_محدد(option_value_text(&name)), «خيار غير معروف `a\`b\\\\\n\r\t\x1B\x7Fع`»)) { return 6; };
+
+    // Exhaustive ASCII C0 and DEL bytes, including embedded NUL.
+    let control_characters: mutable vector u8 = [];
+    let b: mutable u8 = 0;
+    while (b < (32 as u8)) {
+        append(control_characters, b);
+        b := b + (1 as u8);
+    }
+    append(control_characters, 0x7F);
+    let control_text: string = from_bytes(&control_characters);
+    if (!check(لغة_تشخيص.الإنجليزية(), name_key, حقائق_رسالة.اسم_غير_معروف(control_fact(&control_text)), «unknown name: `\x00\x01\x02\x03\x04\x05\x06\x07\x08\t\n\x0B\x0C\r\x0E\x0F\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1A\x1B\x1C\x1D\x1E\x1F\x7F`»)) { return 7; };
+    if (!check(لغة_تشخيص.العربية(), name_key, حقائق_رسالة.اسم_غير_معروف(control_fact(&control_text)), «الاسم `\x00\x01\x02\x03\x04\x05\x06\x07\x08\t\n\x0B\x0C\r\x0E\x0F\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1A\x1B\x1C\x1D\x1E\x1F\x7F` غير معروف»)) { return 8; };
+    return 0;
+}
