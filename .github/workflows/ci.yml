@@ -1,6 +1,6 @@
 # SultanC CI: one definition of every job, in tiers. The same .github is on
-# main, beta and master (promotion is a fast-forward, so a commit keeps its
-# SHA on every branch); each entry workflow filters on its own branch.
+# main, beta and master (promotion carries the qualified files to each
+# branch); each entry workflow filters on its own branch.
 #
 #   trigger                         tier     runs
 #   push to main                    quick    the smoke set: lint; Seed /
@@ -265,6 +265,8 @@ jobs:
             build/tests-ci/*.log
             build/ispeak-tests-*/summary.txt
             build/ispeak-tests-*/*.log
+            build/ispeak-tests-*/*.diff
+            build/ispeak-tests-*/*.stderr
             build/tests-sultanc/*.out
             build/tests-sultanc/*.err
           retention-days: 14
@@ -386,6 +388,8 @@ jobs:
             build/tests-ci/*.log
             build/ispeak-tests-*/summary.txt
             build/ispeak-tests-*/*.log
+            build/ispeak-tests-*/*.diff
+            build/ispeak-tests-*/*.stderr
             build/tests-sultanc/*.out
             build/tests-sultanc/*.err
           retention-days: 14

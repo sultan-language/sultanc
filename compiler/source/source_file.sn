@@ -34,6 +34,26 @@
     أرجع الناتج;
 }
 
+// A path with `/` between its parts on every host: a Windows host joins
+// with `\`, and its file APIs take `/` as well, while no Windows file name
+// holds a `\`. Source names (what diagnostics print) and Jisr's paths use
+// this form, so they read and compare the same everywhere.
+إذا (الهدف.المنصة == «windows») {
+    عام عرف مسار_بشرطة_أمامية(المسار: &نص): نص {
+        دع البايتات: متغير متجه ط8 = [];
+        دع ف: متغير طبيعي = 0;
+        طالما (ف < (الطول(*المسار) مثل طبيعي)) {
+            دع ب: ط8 = (*المسار)[ف];
+            إذا (ب == 0x5C) { ألحق(البايتات, 0x2F); } وإلا { ألحق(البايتات, ب); };
+            ف := ف + 1;
+        }
+        أرجع من_بايتات(&البايتات);
+    }
+}
+إذا (الهدف.المنصة != «windows») {
+    عام عرف مسار_بشرطة_أمامية(المسار: &نص): نص { أرجع انسخ_نص(المسار); }
+}
+
 عام عرف متاح_في_المصدر(
     المصدر: &مصدر,
     الموضع: طبيعي,
@@ -123,4 +143,28 @@
         الطول: (*القيمة).الطول
     };
     أرجع الناتج;
+}
+
+// Whether a source's name ends with a path given with `/` (`core/process/panic.sn`),
+// whichever separator the host joined it with: a Windows host names std's
+// files `library\core\process/panic.sn`. The part before must end at a
+// separator, so `xcore/process/panic.sn` is not `core/process/panic.sn`.
+عام عرف اسم_مصدر_ينتهي_بمسار(الاسم: &نص, المسار: &نص): منطقي {
+    دع عدد_المسار: طبيعي = الطول(*المسار) مثل طبيعي;
+    دع عدد_الاسم: طبيعي = الطول(*الاسم) مثل طبيعي;
+    إذا (عدد_المسار == 0 || عدد_المسار > عدد_الاسم) { أرجع خطأ; };
+    دع البداية: طبيعي = عدد_الاسم - عدد_المسار;
+    إذا (البداية > 0) {
+        دع قبل: ط8 = (*الاسم)[البداية - 1];
+        إذا (قبل != 0x2F && قبل != 0x5C) { أرجع خطأ; };
+    };
+    دع ف: متغير طبيعي = 0;
+    طالما (ف < عدد_المسار) {
+        دع أ: ط8 = (*الاسم)[البداية + ف];
+        دع ب: ط8 = (*المسار)[ف];
+        دع متساويان: منطقي = أ == ب || (ب == 0x2F && أ == 0x5C);
+        إذا (!متساويان) { أرجع خطأ; };
+        ف := ف + 1;
+    }
+    أرجع صواب;
 }

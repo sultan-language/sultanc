@@ -16,6 +16,7 @@
 استورد المكتبة.رياضيات.التفاف;
 استورد المكتبة.ملفات.قراءة_ملف;
 استورد compiler.diagnostics.foreign_c;
+استورد compiler.source.source_file;
 استورد compiler.diagnostics.identity;
 استورد compiler.diagnostics.reason;
 استورد compiler.diagnostics.registry;
@@ -402,11 +403,22 @@
 
 // The directory a quoted `#include` in المسار searches first (C17 6.10.2:
 // the including file's directory; `.`, the working directory, for a file
-// named without one). The parent is std's أب_المسار.
+// named without one). Jisr's paths have `/` between their parts on every
+// host (مسار_بشرطة_أمامية): the paths it prints, and the ones it compares
+// to tell a file's own headers from the ones it only reads, are the same on
+// Windows.
 عام عرف دليل_مسار_جسر(المسار: &نص): نص {
-    طابق أب_المسار(المسار) مع
+    دع الموحد: نص = مسار_بشرطة_أمامية(المسار);
+    طابق أب_المسار_بصيغة(&الموحد, صيغة_مسار.يونكس()) مع
     | اختياري.موجود(الدليل) -> { أرجع الدليل; }
     | اختياري.لا_شيء -> { أرجع «.»; };
+}
+
+// الدليل/الاسم, with `/` (دليل_مسار_جسر).
+عام عرف صل_مسار_جسر(الدليل: &نص, الاسم: &نص): نص {
+    دع اليسار: نص = مسار_بشرطة_أمامية(الدليل);
+    دع اليمين: نص = مسار_بشرطة_أمامية(الاسم);
+    أرجع صل_المسار_بصيغة(&اليسار, &اليمين, صيغة_مسار.يونكس());
 }
 
 // A signed 64-bit word as decimal text.

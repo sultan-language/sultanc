@@ -1,5 +1,6 @@
 استورد compiler.source.span;
 استورد compiler.source.source_map;
+استورد compiler.source.source_file;
 استورد compiler.backend.target.target_model;
 استورد compiler.frontend.ast.unit;
 استورد compiler.frontend.names.identifiers;
@@ -84,7 +85,7 @@
             // re-exports it as std.error.failure.
             دع اللاحقة: نص = «alloc/error/failure.sn»;
             دع اللاحقة_القديمة: نص = «std/error/failure.sn»;
-            إذا (!ينتهي_بـ(&الملف, &اللاحقة) && !ينتهي_بـ(&الملف, &اللاحقة_القديمة)) { أرجع خطأ; };
+            إذا (!اسم_مصدر_ينتهي_بمسار(&الملف, &اللاحقة) && !اسم_مصدر_ينتهي_بمسار(&الملف, &اللاحقة_القديمة)) { أرجع خطأ; };
             دع البايتات: متجه ط8 = بايتات_من_نص(انسخ_نص(&(*الخريطة).المصادر[المصدر].المحتوى));
             دع الاسم: متغير متجه ط8 = [];
             دع ف: متغير طبيعي = النطاق.البداية.البايت مثل طبيعي;

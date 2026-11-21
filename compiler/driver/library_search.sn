@@ -1,6 +1,7 @@
 استورد المكتبة.ملفات.بيانات_وصفية;
 استورد المكتبة.ملفات.مسار;
 استورد المكتبة.نصوص.من_بايتات;
+استورد المكتبة.ترميز.يوتيف16;
 استورد compiler.backend.target.target_model;
 
 // cc-style library search for -l <name>. For each -L directory, then the
@@ -124,6 +125,29 @@
         د := د + 1;
     }
     أرجع الملف;
+}
+
+// Whether the system's DLL search finds الملف (a bare <name>.dll): the
+// application's folder, the system folders and PATH, as SearchPathW walks
+// them (the order LoadLibraryW's standard search follows for a bare name).
+// Only a Windows host can ask; elsewhere the answer is left to the loader.
+إذا (الهدف.المنصة == «windows») {
+    خارجي «kernel32.dll» عرف SearchPathW(
+        المسار: *ط16, الاسم: *ط16, الامتداد: *ط16, الطول: ط32, المخزن: *متغير ط16, الجزء: *متغير ط64
+    ): ط32;
+
+    عام عرف دي_إل_إل_يجده_النظام(الملف: &نص): منطقي {
+        طابق نص_إلى_يوتيف16(الملف) مع
+        | نتيجة.خطأ(_) -> { أرجع صواب; }
+        | نتيجة.نجح(الوحدات) -> {
+            دع الاسم: متغير متجه ط16 = الوحدات;
+            ألحق(الاسم, 0);
+            أرجع SearchPathW(الفارغ, &الاسم[0], الفارغ, 0, الفارغ, الفارغ) != 0;
+        };
+    }
+}
+إذا (الهدف.المنصة != «windows») {
+    عام عرف دي_إل_إل_يجده_النظام(الملف: &نص): منطقي { أرجع صواب; }
 }
 
 // Whether programs for the target name the C library (and the math library)

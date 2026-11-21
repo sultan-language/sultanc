@@ -2,27 +2,26 @@
 # from main); GitHub lets only people with write access start a run. Nothing
 # else moves beta or master, and nothing ever pushes to them directly.
 #
-# The rules come from mature compilers:
-#   - test the exact commit, then move the branch to it (Rust's "not rocket
-#     science" rule: bors tests the merge commit, then fast-forwards master);
-#   - promotion moves a branch to a commit that already exists upstream,
-#     never makes a new one (Rust moves master to beta and beta to stable at
-#     each release; LLVM release branches are cut from main), so the commit
-#     keeps its SHA and its qualification on every branch;
-#   - the wide matrix runs once per commit (Go: every presubmit builder is a
-#     post-submit builder; Rust: about 80 jobs per landed commit), never again
-#     for a promotion of the same commit.
+# The rules:
+#   - test the exact tree, then move the branch to it (Rust's "not rocket
+#     science" rule: bors tests the merge commit, then moves master);
+#   - the wide matrix runs once per tree, never again for a promotion of the
+#     same tree (Go: every presubmit builder is a post-submit builder);
+#   - nothing is forced: every move keeps the target's history.
 #
 #   target  source  needs                                     then
-#   beta    main    the head of main qualified: a passing     beta := that commit
-#                   nightly, or the full tier run here now     (fast-forward only)
-#   master  beta    the head of beta qualified (always so,    master := that commit
-#                   unless beta was moved by hand)             (fast-forward only)
+#   beta    main    the head of main qualified: a passing     main merged into beta
+#                   nightly, or the full tier run here now
+#   master  beta    the head of beta qualified (always so,    beta merged into master
+#                   unless beta was moved by hand)
 #
 # The commit is the head of the source branch when the run starts; a push to
-# main during qualification does not change what is promoted. The move is a
-# fast-forward (force=false): if the target holds a commit the source does
-# not, the move fails and nothing changes.
+# main during qualification does not change what is promoted. When the target
+# is an ancestor of the commit, the target fast-forwards to it. Otherwise the
+# move is a merge commit whose tree is the qualified commit's tree, with the
+# target and the commit as parents: the target ends with exactly the tested
+# files, keeps its history, and the merge carries the commit's qualification
+# (same tree). A target whose tree already equals the commit's is left alone.
 #
 # Releases are not made here: the owner tags and releases master by hand.
 #
@@ -60,6 +59,7 @@ jobs:
       sha: ${{ steps.resolve.outputs.sha }}
       exists: ${{ steps.resolve.outputs.exists }}
       identical: ${{ steps.resolve.outputs.identical }}
+      mode: ${{ steps.resolve.outputs.mode }}
       evidence: ${{ steps.resolve.outputs.evidence }}
       qualify: ${{ steps.resolve.outputs.qualify }}
     steps:
@@ -84,13 +84,18 @@ jobs:
           sha=$(gh api "repos/$REPO/git/ref/heads/$source" --jq .object.sha) || fail "cannot read $source"
           exists=true
           identical=false
+          mode=create
           if target_sha=$(gh api "repos/$REPO/git/ref/heads/$TARGET" --jq .object.sha 2>/dev/null); then
+            tree=$(gh api "repos/$REPO/git/commits/$sha" --jq .tree.sha) || fail "cannot read $sha"
+            target_tree=$(gh api "repos/$REPO/git/commits/$target_sha" --jq .tree.sha) || fail "cannot read $TARGET"
             status=$(gh api "repos/$REPO/compare/$target_sha...$sha" --jq .status) || fail "cannot compare $TARGET with $source"
-            case "$status" in
-              identical) identical=true ;;
-              ahead) ;;
-              *) fail "$TARGET ($target_sha) has commits $source ($sha) does not (compare says $status). Promotion only fast-forwards: point $TARGET at $source once by hand, CI.md, \"One-time setup of the branches\"" ;;
-            esac
+            if [ "$status" = identical ] || [ "$tree" = "$target_tree" ]; then
+              identical=true
+            elif [ "$status" = ahead ]; then
+              mode=forward
+            else
+              mode=merge
+            fi
           else
             exists=false
           fi
@@ -105,6 +110,7 @@ jobs:
             echo "sha=$sha"
             echo "exists=$exists"
             echo "identical=$identical"
+            echo "mode=$mode"
             echo "evidence=$evidence"
             echo "qualify=$qualify"
           } >> "$GITHUB_OUTPUT"
@@ -112,7 +118,8 @@ jobs:
             echo "## Promote $source -> $TARGET"
             echo
             echo "- commit: \`$sha\` (head of $source)"
-            if [ "$identical" = true ]; then echo "- $TARGET is already at this commit: nothing to move"; fi
+            if [ "$identical" = true ]; then echo "- $TARGET already holds these files: nothing to move"; fi
+            if [ "$mode" = merge ]; then echo "- $source is merged into $TARGET (a merge commit with these files)"; fi
             if [ -n "$evidence" ]; then echo "- qualified by $evidence: no matrix runs"; fi
             if [ "$qualify" = true ]; then echo "- not qualified yet: the full tier runs on it now"; fi
           } >> "$GITHUB_STEP_SUMMARY"
@@ -141,29 +148,51 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     environment: promotion
+    permissions:
+      contents: read
+      statuses: write
     steps:
       - uses: actions/checkout@v4
         with:
           sparse-checkout: .github
-      - name: Qualified, then fast-forward
+      - name: Qualified, then move
         env:
           GH_TOKEN: ${{ github.token }}
           PROMOTE_TOKEN: ${{ secrets.PROMOTE_TOKEN }}
           REPO: ${{ github.repository }}
           TARGET: ${{ inputs.target }}
           SHA: ${{ needs.resolve.outputs.sha }}
-          EXISTS: ${{ needs.resolve.outputs.exists }}
+          SOURCE: ${{ needs.resolve.outputs.source }}
+          MODE: ${{ needs.resolve.outputs.mode }}
         run: |
           fail() { echo "::error::$1"; echo "Not promoted: $1" >> "$GITHUB_STEP_SUMMARY"; exit 1; }
           evidence=$(sh .github/ci/evidence.sh "$SHA")
           [ -n "$evidence" ] || fail "$SHA has no qualification"
           [ -n "$PROMOTE_TOKEN" ] || fail "the secret PROMOTE_TOKEN is not set in the environment promotion (CI.md)"
-          if [ "$EXISTS" = true ]; then
-            # force=false: GitHub refuses anything but a fast-forward.
-            GH_TOKEN=$PROMOTE_TOKEN gh api -X PATCH "repos/$REPO/git/refs/heads/$TARGET" \
-              -f sha="$SHA" -F force=false > /dev/null || fail "GitHub refused to fast-forward $TARGET to $SHA"
-          else
-            GH_TOKEN=$PROMOTE_TOKEN gh api -X POST "repos/$REPO/git/refs" \
-              -f ref="refs/heads/$TARGET" -f sha="$SHA" > /dev/null || fail "GitHub refused to create $TARGET at $SHA"
-          fi
-          echo "Promoted: $TARGET is now \`$SHA\` (qualified by $evidence)" >> "$GITHUB_STEP_SUMMARY"
+          head=$SHA
+          case "$MODE" in
+            create)
+              GH_TOKEN=$PROMOTE_TOKEN gh api -X POST "repos/$REPO/git/refs" \
+                -f ref="refs/heads/$TARGET" -f sha="$SHA" > /dev/null || fail "GitHub refused to create $TARGET at $SHA"
+              ;;
+            forward | merge)
+              if [ "$MODE" = merge ]; then
+                # A merge commit with the qualified tree; the target is its
+                # first parent, so moving the target to it is a fast-forward.
+                tree=$(gh api "repos/$REPO/git/commits/$SHA" --jq .tree.sha) || fail "cannot read $SHA"
+                target_sha=$(gh api "repos/$REPO/git/ref/heads/$TARGET" --jq .object.sha) || fail "cannot read $TARGET"
+                head=$(GH_TOKEN=$PROMOTE_TOKEN gh api -X POST "repos/$REPO/git/commits" \
+                  -f message="Merge $SOURCE into $TARGET" -f tree="$tree" \
+                  -f "parents[]=$target_sha" -f "parents[]=$SHA" --jq .sha) || fail "GitHub refused the merge commit"
+                # Same tree as the qualified commit: the same qualification.
+                gh api -X POST "repos/$REPO/statuses/$head" -f state=success -f context=sultanc/qualification \
+                  -f target_url="$evidence" -f description="same files as ${SHA%"${SHA#????????????}"}, qualified" > /dev/null ||
+                  fail "cannot record the qualification on the merge commit"
+              fi
+              # force=false: GitHub refuses anything but a fast-forward.
+              GH_TOKEN=$PROMOTE_TOKEN gh api -X PATCH "repos/$REPO/git/refs/heads/$TARGET" \
+                -f sha="$head" -F force=false > /dev/null || fail "GitHub refused to move $TARGET to $head"
+              ;;
+            *) fail "unknown move $MODE" ;;
+          esac
+          echo "Promoted: $TARGET is now \`$head\` (files of \`$SHA\`, qualified by $evidence)" >> "$GITHUB_STEP_SUMMARY"

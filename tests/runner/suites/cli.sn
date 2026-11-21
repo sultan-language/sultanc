@@ -404,7 +404,7 @@
         دع اسم_مضيف: نص = اجمع_نصوص(&أجزاء_مضيف);
         دع و_مضيف: متجه نص = [
             «SULTANC_C_COMPILER=cc», مسار_المترجم(), «--lang», انسخ_نص_اختبار(&اللغة),
-            «tests/en/compiler/c_import_units/main.sn», «--target», «x86_64-windows-msvc»,
+            «tests/en/compiler/c_import_units/main.sn», «--target», هدف_غير_المضيف(),
             «-o», «build/tests-sultanc/c-host-only.exe»
         ];
         دع مضيف: نتيجة_أمر = نفذ_أمرا(&البيئة, &و_مضيف, &اسم_مضيف);

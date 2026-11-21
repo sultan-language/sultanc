@@ -18,6 +18,7 @@
 استورد compiler.frontend.types.type_context;
 استورد compiler.msir.semantic_lowering;
 استورد compiler.source.source_map;
+استورد compiler.source.source_file;
 استورد compiler.source.span;
 استورد compiler.source.provenance;
 استورد compiler.msir.identifiers;
@@ -672,8 +673,11 @@
         إذا ((الطول(المجلد) مثل طبيعي) == 0) { أرجع صواب; };
         // Both cleaned lexically, as the loader names sources: the root
         // file is `main.sn` and its imports `./util.sn` under the folder `.`.
-        دع الاسم: نص = نظف_المسار(&(*الخريطة).المصادر[المعرف].الاسم);
-        دع المجلد_النظيف: نص = نظف_المسار(&المجلد);
+        // Compared with `/` between parts (a Windows host cleans to `\`).
+        دع الاسم_المضيف: نص = نظف_المسار(&(*الخريطة).المصادر[المعرف].الاسم);
+        دع المجلد_المضيف: نص = نظف_المسار(&المجلد);
+        دع الاسم: نص = مسار_بشرطة_أمامية(&الاسم_المضيف);
+        دع المجلد_النظيف: نص = مسار_بشرطة_أمامية(&المجلد_المضيف);
         دع النقطة: نص = «.»;
         دع الصعود: نص = «../»;
         دع صعود_فقط: نص = «..»;
