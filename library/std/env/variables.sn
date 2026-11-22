@@ -9,9 +9,7 @@
 استورد بيئة.جدول;
 
 // The whole environment, setting and removing variables, the home directory
-// and changing the working directory (Rust env::vars, env::set_var,
-// env::remove_var, env::home_dir, env::set_current_dir; Go os.Environ,
-// os.Setenv, os.Unsetenv, os.UserHomeDir, os.Chdir). Setting or removing a
+// and changing the working directory. Setting or removing a
 // variable changes the table std keeps (std.env.table); every later read,
 // and every child started without an explicit environment, sees it.
 
@@ -82,7 +80,7 @@
     أرجع لا_شيء;
 }
 
-// Sets a variable of this process (Rust env::set_var, Go os.Setenv). The
+// Sets a variable of this process. The
 // name must be non-empty and hold no '=' and no NUL, the value no NUL;
 // otherwise nothing changes and the error is إدخال_غير_صالح.
 عام عرف اضبط_متغير_بيئة(الاسم: &نص, القيمة: &نص): نتيجة عدد, فئة_خطأ_نظام {
@@ -95,8 +93,8 @@
     أرجع نتيجة.نجح(0);
 }
 
-// Removes a variable of this process (Rust env::remove_var, Go
-// os.Unsetenv); removing a variable that is not set is not an error.
+// Removes a variable of this process; removing a variable that is not set
+// is not an error.
 عام عرف أزل_متغير_بيئة(الاسم: &نص): نتيجة عدد, فئة_خطأ_نظام {
     إذا (!اسم_متغير_بيئة_نظام_صالح(الاسم)) { أرجع نتيجة.خطأ(فئة_خطأ_نظام.إدخال_غير_صالح()); };
     دع الاسم_بايتات: متجه ط8 = بايتات_من_نص(انسخ_نص(الاسم));

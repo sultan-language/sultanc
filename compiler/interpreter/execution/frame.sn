@@ -15,8 +15,7 @@
 
 // Every activation owns one canonical Value-ID indexed slot table plus frame-local storage cells.
 // A frame's position in the stack keeps both tables when the frame returns,
-// and the next activation at that position reuses them (CPython and Lua
-// likewise reuse their frame and register storage): only the first
+// and the next activation at that position reuses them: only the first
 // عدد_المحليات cells belong to the live activation.
 عام نوع إطار_تفسير_مسير = {
     التفعيل: معرف_تفعيل_مفسر,

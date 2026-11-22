@@ -1,5 +1,5 @@
-// TLS 1.3 client handshake (RFC 8446 2, 4.1-4.4, 7.1), following the state
-// sequence of Go crypto/tls handshake_client_tls13.go and Rustls.
+// TLS 1.3 client handshake (RFC 8446 2, 4.1-4.4, 7.1), following the
+// state sequence of the RFC.
 //
 // Offered: TLS 1.3 only; TLS_CHACHA20_POLY1305_SHA256, TLS_AES_128_GCM_SHA256
 // and TLS_AES_256_GCM_SHA384; X25519, secp256r1 and secp384r1 key exchange
@@ -10,7 +10,7 @@
 // on (the default) the chain is validated against the configured roots or,
 // when none are configured, the system anchors, and the leaf must name the
 // configured server; with it off only the CertificateVerify signature is
-// checked against the leaf key, as with Go's InsecureSkipVerify.
+// checked against the leaf key.
 
 استورد تشفير.ملخص;
 استورد تشفير.شا256;
@@ -258,7 +258,7 @@
     طابق (*الإعداد).اسم_الخادم مع
     | اختياري.موجود(الاسم_النصي) -> { الاسم := بايتات_من_نص(انسخ_نص(&الاسم_النصي)); }
     | اختياري.لا_شيء -> { };
-    // Verification needs a reference identity (Go: ServerName or InsecureSkipVerify).
+    // Verification needs a reference identity.
     إذا (التحقق && (الطول(الاسم) مثل طبيعي) == 0) { أرجع نتيجة.خطأ(خطأ_هوية_الخادم_تي_إل_إس()); };
     // ALPN protocol names are 1..255 bytes (RFC 7301 3.1).
     دع ب_: متغير طبيعي = 0;

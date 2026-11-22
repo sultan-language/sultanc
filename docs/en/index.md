@@ -13,7 +13,7 @@ The [README](README.md) gives a short overview of the project and its build rout
 
 | Page | What it covers |
 | --- | --- |
-| [Why SultanC](story.md) | The story of the language: why it started, how its compiler moved from OCaml to C and then to SultanC itself, and its goal |
+| [Why SultanC](story.md) | The story of the language: why it started, how its compiler moved from a first prototype to C and then to SultanC itself, and its goal |
 | [The SultanC Book](book/SUMMARY.md) | The language from installation to complete programs, chapter by chapter, with projects; every example is compiled and run by `tools/docs/check_guide.py` |
 
 ## Reference
@@ -28,7 +28,7 @@ The [README](README.md) gives a short overview of the project and its build rout
 | [Modules and imports](reference/modules-and-imports.md) | Import forms, packages and module identity |
 | [Concurrency](reference/concurrency.md) | Threads, atomics, `Arc`, `Mutex`, `RwLock`, `Condvar`, `Once`, channels and the capture check |
 | [Formatting](reference/formatting.md) | `std.fmt`: format strings, arguments, custom formatters and the compile-time check |
-| [Standard library coverage](reference/std-coverage.md) | What std provides, module by module, compared with Rust and Go |
+| [Standard library coverage](reference/std-coverage.md) | What std provides, module by module |
 | [Targets](reference/targets.md) | Supported operating systems and architectures, and which backend serves each |
 | [Platform dependencies](reference/platform-dependencies.md) | Every system function std imports, and what std implements itself |
 | [Arabic terminology](reference/arabic-terminology.md) | The canonical Arabic vocabulary of the language, std and diagnostics |
@@ -40,6 +40,7 @@ The [README](README.md) gives a short overview of the project and its build rout
 | [Compiler architecture](internals/compiler-architecture.md) | The pipeline from source to executable and the layout of `compiler/` |
 | [MSIR and code generation](internals/msir-and-codegen.md) | The verified intermediate representation, the native and LLVM backends, and the linkers |
 | [Safety flow](internals/safety-flow.md) | How moves, borrows, lifetimes and escapes are checked |
+| [Ownership analysis](internals/ownership-analysis.md) | How initial MSIR states ownership and drop elaboration decides destruction |
 | [Interpreter](internals/interpreter.md) | `sultanc run`: execution model, memory model and host calls |
 | [Bootstrap](internals/bootstrap.md) | The C Stage0, the WebAssembly seed, the build routes and how CI proves each one |
 | [TLS and cryptography](internals/tls.md) | The TLS 1.3 implementation in std and its cryptographic primitives |

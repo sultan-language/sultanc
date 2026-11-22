@@ -190,7 +190,7 @@
     عرف مضيف_بتنفيذي_فقط_آلة(): منطقي { أرجع خطأ; }
 }
 
-// A WASI host (the wasm32-wasi compiler under Node's WASI or a browser
+// A WASI host (the wasm32-wasi compiler under a WASI runtime or a browser
 // shim) can neither build nor start a process: `sultanc run` never takes the
 // executable route there; the driver reports SULTANC-RUN-NEEDS-PROCESS for
 // a program only an executable runs.

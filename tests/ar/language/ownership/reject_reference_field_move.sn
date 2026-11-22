@@ -2,7 +2,7 @@
 // تشخيص: SULTANC-OWNERSHIP-MOVE-OUT-OF-REFERENCE
 // نظير: tests/en/language/ownership/reject_reference_field_move.sn
 // `ش.الاسم` عبر مرجع مشترك هي `(*ش).الاسم`: نقل الحقل المالك من المرجع
-// خطأ (E0507 في Rust).
+// خطأ.
 نوع شخص = { الاسم: نص, العمر: عدد };
 
 عرف خذ(ش: &شخص): نص {

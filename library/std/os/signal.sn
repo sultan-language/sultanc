@@ -1,6 +1,6 @@
 // Shutdown signals (Nahr item 16): SIGINT (Ctrl+C) and SIGTERM, for a
-// graceful stop. As Go's os/signal funnels signals to a channel instead of
-// running code inside a handler, std takes them synchronously:
+// graceful stop. Instead of running code inside a handler, std takes them
+// synchronously:
 //
 //   1. احجب_إشارات_الإيقاف() first in main, before any thread is spawned
 //      (threads inherit the mask, so every thread then leaves the signals

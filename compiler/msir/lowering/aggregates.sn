@@ -31,6 +31,7 @@
 استورد compiler.msir.lowering.model;
 استورد compiler.msir.lowering.msir_context;
 استورد compiler.msir.lowering.drops;
+استورد compiler.msir.lowering.borrow_events;
 استورد compiler.msir.lowering.expressions;
 
 استورد compiler.frontend.types.type_context;
@@ -165,10 +166,8 @@
                 | نتيجة_خفض_تعبير.قيمة(القيمة) -> { المصدر_المقنن := القيمة; }
                 | نتيجة_خفض_تعبير.مرفوض(الخطأ) -> { أرجع اختياري.موجود(الخطأ); }
                 | نتيجة_خفض_تعبير.بلا_قيمة -> { أرجع اختياري.موجود(خطأ_خفض_مسير.عبارة_غير_مدعومة(النطاق)); };
-                // An owner destroys its old value first. The drop is gated by the
-                // local's run-time drop flag, so it is emitted even where lowering
-                // no longer tracks the value (loop bodies, after merges, locals
-                // declared without an initializer): an unset flag skips it.
+                // An owner's old value is an obligation first (drops.sn); drop
+                // elaboration decides whether the owner still holds one there.
                 طابق أسقط_قبل_إسناد_محلي_خفض(البرنامج, الحالة, الرمز) مع
                 | اختياري.موجود(الخطأ) -> { أرجع اختياري.موجود(الخطأ); }
                 | اختياري.لا_شيء -> { };
@@ -191,8 +190,6 @@
                 طابق أكمل_إسناد_محلي_خفض(البرنامج, الحالة, الرمز) مع
                 | اختياري.موجود(الخطأ) -> { أرجع اختياري.موجود(الخطأ); }
                 | اختياري.لا_شيء -> { };
-                تأكد_محليات_خفض_فريدة(الحالة);
-                (*الحالة).المحليات[الموضع].القيمة := اختياري.موجود(المصدر_المقنن.المعرف);
                 دع دالة_التصحيح: معرف_دالة_مسير = (*الحالة).الدالة;
                 اربط_رمز_بقيمة_تصحيح_مسير(
                     التصحيح, دالة_التصحيح, الرمز, المصدر_المقنن.المعرف,
@@ -218,6 +215,7 @@
     الوجهة: &تعبير,
     المصدر: &تعبير,
     الأنواع: &سجل_أنواع,
+    أنواع_الرموز: &سياق_أنواع_رموز,
     أنواع_التعبيرات: &سياق_أنواع_تعبيرات,
     روابط_الأسماء: &سياق_روابط_أسماء,
     دوال_الخفض: &سياق_دوال_خفض,
@@ -255,6 +253,12 @@
             };
         }
         | _ -> { };
+        // The value a local declared without `mutable` is given may make
+        // it a borrowed view (borrow_events.sn).
+        اكتشف_عرض_إسناد_خفض(
+            البرنامج, الحالة, الوجهة, المصدر, القيمة.المعرف, الأنواع, أنواع_الرموز,
+            أنواع_التعبيرات, روابط_الأسماء, دوال_الخفض
+        );
         أرجع اخفض_قيمة_إلى_وجهة(
             البرنامج, التصحيح, الحالة, النطاق, الوجهة, القيمة,
             الأنواع, أنواع_التعبيرات, روابط_الأسماء, دوال_الخفض,
@@ -439,7 +443,7 @@
         نوع_العنصر := النوع;
     };
     // `let s: [] T = [...]` builds a vector with an anonymous owner in the
-    // enclosing block (as Rust extends a temporary's lifetime) and the slice
+    // enclosing block (the temporary lives as long as that block) and the slice
     // views it. The initializer's destination spans the whole declaration.
     دع نوع_البناء: متغير معرف_نوع = نوع_الوجهة;
     دع بناء_مملوك: متغير منطقي = خطأ;

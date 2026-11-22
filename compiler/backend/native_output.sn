@@ -1491,8 +1491,8 @@
         | نتيجة.نجح(ت) -> { التوقيع := ت; };
         // The import module is the library the declaration names
         // (`خارجي «wasi_snapshot_preview1» عرف ...`), with an explicit
-        // import name; otherwise `env`, the default of wasm-ld, clang and
-        // rustc for an import with no declared module.
+        // import name; otherwise `env`, wasm-ld's default for an import with
+        // no declared module.
         دع الوحدة: متغير متجه ط8 = انسخ_بايتات(&وحدة_البيئة);
         دع صريح: متغير منطقي = خطأ;
         طابق (*الخارجية).المكتبة مع

@@ -1,4 +1,4 @@
-// std's panic handler (Rust's std panic handler under #[panic_handler]): what
+// std's panic handler: what
 // core's إنهيار / panic does in a program that runs on an operating system.
 // It writes the iSpeak frame "the program stopped" in the program's language
 // with the message under it to standard error (std.process.failure, the one

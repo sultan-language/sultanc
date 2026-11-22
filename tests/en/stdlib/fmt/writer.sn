@@ -3,8 +3,8 @@
 // خروج: 42
 // تفاضلي: نعم
 // نظير: tests/ar/stdlib/fmt/writer.sn
-// std.fmt into a std.io writer (Rust's write! on io::Write, Go's
-// fmt.Fprintf): lines written to a file handle through write_fmt and, with
+// std.fmt into a std.io writer (write_fmt on any std.io writer):
+// lines written to a file handle through write_fmt and, with
 // one reused formatter, write_fmt_with, then read back; a writer's failure is
 // write_failed with the writer's status, and a format error writes nothing.
 import std.fmt.fmt;

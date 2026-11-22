@@ -319,8 +319,8 @@
 ): نتيجة_تفسير_مسير {
     // The instruction stream is read in place: the verified program is
     // borrowed for the whole run, and each step borrows the current
-    // instruction instead of copying it (wasm3 and Pulley likewise dispatch
-    // on the code in place).
+    // instruction instead of copying it (dispatch runs on the code in
+    // place).
     دع الدوال: &متجه دالة_مسير = &(*المسير).المسير.الدوال;
     دع تقييم_مسبق: منطقي = نمط_تقييم_مسبق;
     طالما (صواب) {

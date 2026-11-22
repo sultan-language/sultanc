@@ -201,8 +201,7 @@
     الدعم: مستوى_دعم_هدف,
     // The program defines the canonical allocator interface's entry points
     // itself (std/memory/allocator.sn): the driver sets it once MSIR bound
-    // them, so a target without std's allocator (bare metal) has a heap too,
-    // as Rust's #[global_allocator] gives a no_std program one.
+    // them, so a target without std's allocator (bare metal) has a heap too.
     مخصص_البرنامج: منطقي
 };
 

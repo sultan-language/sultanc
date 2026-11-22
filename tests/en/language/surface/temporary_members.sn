@@ -6,7 +6,7 @@
 // Members, elements and calls of a call result (a temporary): `make().name`
 // moves the field out, `make().id` copies it, `make().inner.name` reaches a
 // nested member, `make().callback(3)` calls a closure field, `words()[1]`
-// reads an element, `adder(1)(2)` calls a returned closure. Rust's rules for
+// reads an element, `adder(1)(2)` calls a returned closure. The rules for
 // temporaries apply: the rest of the temporary is destroyed.
 import std.text.number;
 

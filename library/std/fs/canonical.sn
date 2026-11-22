@@ -6,8 +6,8 @@
 استورد نصوص.من_بايتات;
 استورد نظام_التشغيل.أخطاء;
 
-// Absolute and canonical paths (Rust std::path::absolute and fs::canonicalize,
-// Go filepath.Abs and filepath.EvalSymlinks). The path flavor is the host's.
+// Absolute paths (lexical) and canonical paths (links resolved). The path
+// flavor is the host's.
 
 // صيغة_مسار_المضيف, the host flavor, is defined by std.fs.path.
 

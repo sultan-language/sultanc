@@ -4,7 +4,7 @@
 // تفاضلي: نعم
 // نظير: tests/ar/language/ownership/text_argument_borrow.sn
 // A `string` argument for a `&string` parameter is borrowed for the call, as
-// if written `&t` (Rust's println! borrows its arguments): println and print
+// if written `&t`: println and print
 // take `&string`, so a text printed twice is not moved. `&t`, a literal and a
 // call result work as well. Only text is borrowed implicitly.
 import std.io.print;

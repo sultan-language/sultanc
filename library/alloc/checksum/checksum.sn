@@ -1,6 +1,6 @@
 // Pure data-integrity checksums. These are not cryptographic hashes.
 // Table-driven CRC-32 (IEEE 802.3, reflected polynomial 0xEDB88320), one
-// table lookup per byte as zlib's and Go's hash/crc32 generic path.
+// table lookup per byte as zlib's generic path.
 // Arabic spellings of this folder's modules (docs/en/reference/modules-and-imports.md,
 // "Module spellings"): `استورد المكتبة....` names the same modules as `import std....`.
 module checksum { ar: مجاميع_تحقق };
@@ -36,7 +36,7 @@ module checksum { ar: مجاميع_تحقق };
 عام مرادف crc32_table_new = أنشئ_جدول_سي_ار_سي32;
 
 // Continues a CRC-32 over البايتات[البداية..النهاية): السابق is the CRC of
-// the bytes before (0 to start), as Go's crc32.Update.
+// the bytes before (0 to start).
 عام عرف حدث_سي_ار_سي32(السابق: ط32, البايتات: &متجه ط8, البداية: طبيعي, النهاية: طبيعي): ط32 {
     دع القيمة: متغير ط32 = السابق ^ 0xFFFFFFFF;
     دع ف: متغير طبيعي = البداية;
@@ -68,7 +68,7 @@ module checksum { ar: مجاميع_تحقق };
 }
 
 // CRC-64/XZ (ECMA-182 polynomial, reflected 0xC96C5795D7870F42, initial and
-// final value all ones): the .xz check type 4, as Go's hash/crc64 ECMA table.
+// final value all ones): the .xz check type 4.
 عرف جدول_سي_ار_سي64(): متجه طبيعي {
     دع الجدول: متغير متجه طبيعي = [];
     دع ف: متغير طبيعي = 0;

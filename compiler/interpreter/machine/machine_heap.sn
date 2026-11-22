@@ -4,7 +4,7 @@
 // the host maps; every block is 16-byte aligned and has a 16-byte header
 // whose first word is its class. A freed block goes back to its class's list
 // and is reused; nothing returns to the host before the program ends, as a
-// size-class allocator's arenas (Go's mcache, jemalloc's bins) keep theirs.
+// size-class allocator's arenas keep theirs.
 //
 // Classes 1..64 hold 16 * class bytes (up to 1 KiB); class 64 + k holds
 // 1024 << k bytes. The header's second word is a mark: release and

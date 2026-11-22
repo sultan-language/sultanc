@@ -74,19 +74,21 @@ def main(): int {
 ```
 
 The program compiles, because the compiler cannot always know the values. But when it runs, it stops at
-the addition and prints nothing:
+the addition, and says what went wrong and where:
 
 ```console
 $ sultanc main.sn -o overflow
 $ ./overflow
-Illegal instruction
+error[SULTANC-RUNTIME-PROGRAM-STOPPED]: the program stopped
+integer overflow at main.sn:6:22
 $ echo $?
-132
+1
 ```
 
-The program does not continue with a wrong number. That is a deliberate choice: a wrong value that goes
-unnoticed spreads through the rest of a program, while a stopped program shows you exactly where the
-problem is. The same happens when a `uint` goes below zero (`0 - 1`), and when dividing by zero.
+`main.sn:6:22` is the file, line and column of `big + 1`. The program does not continue with a wrong
+number. That is a deliberate choice: a wrong value that goes unnoticed spreads through the rest of a
+program, while a stopped program shows you exactly where the problem is. The same happens when a
+`uint` goes below zero (`0 - 1`), and when dividing by zero, with `division by zero at …` in the message.
 
 When wrapping around is what you want, for example in a hash function, `std.math.wrapping` has a
 function for each operation and type. Its `checked_` functions return an `option` instead, which is

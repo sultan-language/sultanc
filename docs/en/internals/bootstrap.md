@@ -36,8 +36,7 @@ Stage2 directly with SultanC's own backend; there is no intermediate C build of 
 
 The C route and the wasm route build a compiler from nothing but sources and are the reference
 routes. Use them on a new system, when the existing compiler is too old for the sources (new syntax
-or primitives), and to verify a release. The existing route is the fast development route, as Go
-uses `GOROOT_BOOTSTRAP`: it skips Stage0 and the seed translation and takes one self-host step from
+or primitives), and to verify a release. The existing route is the fast development route: it skips Stage0 and the seed translation and takes one self-host step from
 the existing compiler to the new Stage2.
 
 ### build.sh
@@ -126,7 +125,7 @@ The seed bootstrap commits a WebAssembly build of the compiler and translates it
 SultanC needs only a C compiler.
 
 ```text
-seed/sultanc.wasm.zst --wasm2c.c (+ zstd_decoder.h)--> C --cc + wasi.c--> sultanc-stage1
+seed/sultanc.wasm.zst --wasm2c/--> C (10 files) --cc + runtime/--> sultanc-stage1
 sultanc-stage1 --compiler/main.sn--> sultanc-stage2 (native) --> Stage3 == Stage4
 ```
 
@@ -135,14 +134,15 @@ sultanc-stage1 --compiler/main.sn--> sultanc-stage2 (native) --> Stage3 == Stage
 | File | Role |
 |---|---|
 | `bootstrap-wasm/seed/sultanc.wasm.zst` | the seed: the compiler built for `wasm32-wasi`, Native-only (LLVM provider bound to `unavailable.sn`), compressed with `zstd -19` |
-| `bootstrap-wasm/wasm2c.c`, `zstd_decoder.h` | translator from the seed to C99, with an in-tree zstd decoder (MIT) |
-| `bootstrap-wasm/wasi.c` | the WASI host that the translated seed links with (POSIX and Windows) |
+| `bootstrap-wasm/wasm2c/` | `sultanc-wasm2c`, the translator from the seed to C99: `stream.c` (module bytes, LEB128, loading, with the in-tree zstd decoder `zstd_decoder.h`, MIT), `module.c` (module model, parser, what is accepted), `funcgen.c` (one function body to C), `output.c` (the generated files), `main.c` |
+| `bootstrap-wasm/runtime/` | what the translated seed links with: `w2c.h` and `w2c.c` (memory, checked integer operations, traps, call depth) and `wasi.c` (the WASI host, POSIX and Windows) |
 | `bootstrap-wasm/bootstrap.c` | the standalone driver: seed to Stage1 to Stage2, plus `--verify`, `--check-seed` and `--update-seed` |
 | `cmake/modules/WasmSeed.cmake` | the `sultanc-wasm2c` translator and the translated Stage1 |
 | `cmake/modules/Stage1Wasm.cmake` | the wasm route of the main build and the `sultanc-check-seed` target |
 | `cmake/scripts/CheckSeed.cmake` | the comparison behind `sultanc-check-seed` |
 
-The seed is about 3.2 MB compressed and the module about 12 MB. The main build with
+The seed is about 4.9 MB compressed and the module about 24 MB (of which 12 MB is DWARF, which the
+translation ignores). The main build with
 `-DSULTANC_BOOTSTRAP=wasm` provides `sultanc-stage1`, `sultanc-stage2`, `sultanc-verify` and
 `sultanc-check-seed`. The seed check uses Stage2 when it runs on the host and otherwise Stage1
 itself (Windows, and hosts without a Native backend). For a cross build, pass
@@ -204,7 +204,7 @@ cc -o build-bootstrap bootstrap-wasm/bootstrap.c
 
 ### Components
 
-**`wasm2c.c`** translates WebAssembly to C99.
+**`wasm2c/`** translates WebAssembly to C99.
 
 - Accepted input is what SultanC's wasm32 backend can emit (`compiler/backend/architectures/wasm32/`):
   the integer MVP and the sign-extension operators; f32 and f64 constants, loads, stores, `+ - * /`,
@@ -214,15 +214,27 @@ cc -o build-bootstrap bootstrap-wasm/bootstrap.c
 - Imports are bound by name, and each signature is checked against what `wasi.c` implements.
 - Stack slots become typed C locals by static stack translation. Every instruction is type-checked,
   so a malformed module or a translator bug fails at translation time.
+- The C is written to be read. An operand stays an expression until it must be stored, so
+  `local.get 3; i32.const 16; i32.add; local.set 4` is `v4 = v3 + 16u;`. An expression is stored
+  before a local it reads changes, and one that can trap or reads memory or a global is evaluated
+  before the next side effect, so evaluation order and traps are exactly the module's. An integer
+  operation or conversion on constants is folded to its constant (division, which can trap, is not).
+  Float arithmetic stays one operation per statement.
+- Control flow keeps its shape: an `if` is C's `if`/`else` (`else if` for chains, a guard
+  `if (!c) { ... }` first when the else-branch is the shorter one and never falls through), a loop is
+  a labeled block, and a `block` is a label after its end. Indentation shows the ifs and loops.
 - Memory accesses in the generated C are bounds-checked. Arithmetic uses only defined C: no signed
   overflow and no implementation-defined shifts or conversions. Big-endian hosts are handled with
   byte swaps.
-- Every call between module functions counts against a fixed limit of 100000 nested calls and checks
-  the native stack bound that the host set (`w2c_limit_native_stack`). Deep recursion traps with
+- Every translated function counts its frame (`w2c_enter`, `w2c_leave` in `w2c.h`) against a fixed
+  limit of 100000 nested calls and checks the native stack bound that the host set
+  (`w2c_limit_native_stack`). Deep recursion traps with
   `call stack exhausted (more than 100000 nested calls)`, or `(native stack)` on a host whose stack
   is smaller than the limit needs, instead of crashing. The guest's own shadow stack (8 MiB in linear
   memory) traps as an out-of-bounds access when it overflows first, as on wasmtime.
-- Output is deterministic and sharded for parallel compilation. The utility mode
+- Output is deterministic: `sultanc.h` (prototypes), `sultanc-module.c` (memory size, globals, the
+  indirect-call table, data, `w2c_run`) and 8 function units `sultanc-1.c` to `sultanc-8.c`,
+  balanced by code size so they compile in parallel (`--units=N`). The utility mode
   `--decompress FILE.zst OUT` serves the build drivers and the seed check.
 
 **`zstd_decoder.h`** is a Zstandard (RFC 8878) decoder written from the specification for this
@@ -230,7 +242,13 @@ project, with no reference-implementation code. It supports all block, literal a
 encodings, multiple and skippable frames, and verifies the XXH64 content checksum. It does not
 support dictionaries.
 
-**`wasi.c`** implements the 25 WASI Preview 1 functions that std can import, on one portable layer
+**`runtime/w2c.h`, `w2c.c`** are the runtime the generated C is written against: bounds-checked
+little-endian loads and stores, the integer operations whose C form needs care (multiplication,
+signed division and shifts without signed overflow), `memory.grow`, `memory.copy` and
+`memory.fill`, traps and the call-depth guard. They are ordinary source files, reviewed like any
+other.
+
+**`runtime/wasi.c`** implements the 25 WASI Preview 1 functions that std can import, on one portable layer
 with two OS backends.
 
 - The POSIX backend covers Linux, macOS, the BSDs, illumos, Haiku and Cygwin.

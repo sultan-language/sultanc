@@ -1,0 +1,67 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/language/ownership/borrow_within_owner_scope.sn
+// A borrow of an owner is valid while its last use comes before the owner's
+// scope ends (docs/en/reference/ownership.md, "Borrow regions"): a
+// reference read inside the branch that owns the text, a plain value copied
+// out through a reference before the text is destroyed, a reference given a
+// new value in each iteration before it is read, and given an outer value
+// again before it is read after the loop, and a vector of references
+// declared before the text it holds, destroyed after it and read before.
+def read_in_branch(flag: bool): int {
+    let fallback: string = "x";
+    let reader: mutable &string = &fallback;
+    let seen: mutable int = 0;
+    if (flag) {
+        let text: string = "abcd";
+        reader := &text;
+        seen := length(*reader) as int;
+    };
+    return seen;
+}
+
+def copied_out(): int {
+    let count: mutable int = 0;
+    let i: mutable uint = 0;
+    while (i < 2) {
+        let text: string = "abc";
+        let inner: &string = &text;
+        count := count + (length(*inner) as int);
+        i := i + 1;
+    }
+    return count;
+}
+
+def set_before_read(): int {
+    let fallback: string = "xy";
+    let reader: mutable &string = &fallback;
+    let total: mutable int = 0;
+    let i: mutable uint = 0;
+    while (i < 3) {
+        let text: string = "abcde";
+        reader := &text;
+        total := total + (length(*reader) as int);
+        i := i + 1;
+    }
+    reader := &fallback;
+    return total + (length(*reader) as int);
+}
+
+def held_before_owner(flag: bool): int {
+    let count: mutable int = 0;
+    if (flag) {
+        let held: mutable vector &string = [];
+        let text: string = "abcdefg";
+        held := [&text];
+        count := length(*held[0]) as int;
+    };
+    return count;
+}
+
+def main(): int {
+    // 4 + 6 + 17 + 7 = 34; 0 when the branch is not taken
+    return read_in_branch(true) + read_in_branch(false) + copied_out() + set_before_read()
+        + held_before_owner(true) + 8;
+}

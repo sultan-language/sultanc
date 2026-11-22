@@ -1,5 +1,5 @@
-// Reader-writer lock (docs/en/reference/concurrency.md, "RwLock"), after Rust's
-// std::sync::RwLock, in the simple form of one 32-bit futex word:
+// Reader-writer lock (docs/en/reference/concurrency.md, "RwLock"), in the
+// simple form of one 32-bit futex word:
 //
 //   0            unlocked
 //   1 .. 2^30    that many readers hold it
@@ -8,8 +8,7 @@
 // Readers increment the count with a compare-exchange while no writer holds
 // it; a writer moves 0 -> 0xFFFFFFFF. A thread that cannot take the lock
 // sleeps on the word until it changes (std.os.wait_address); the last reader
-// and the writer wake every sleeper when they release it. Unlike Rust's
-// futex RwLock (std/src/sys/sync/rwlock/futex.rs) there is no writer
+// and the writer wake every sleeper when they release it. There is no writer
 // preference: a steady stream of readers can delay a writer. Like Mutex,
 // the value is reached only inside a closure that runs with the lock held,
 // and nothing is poisoned (a panic ends the process).
@@ -26,7 +25,7 @@
 
 عرف كاتب_قفل_قراءة_كتابة(): ط32 { أرجع 4294967295; }
 
-// Rust's RwLock::new.
+// A new reader-writer lock guarding القيمة.
 عام عرف أنشئ_قفل_قراءة_كتابة<ق>(القيمة: ق): قفل_قراءة_كتابة<ق> {
     دع العلامة: متجه ط8 = [];
     دع الناتج: قفل_قراءة_كتابة<ق> = {
@@ -74,7 +73,7 @@
     غير_آمن { أرجع العمل(&متغير (*المؤشر)); }
 }
 
-// Rust's RwLock::read: run العمل with shared access; other readers may run
+// Runs العمل with shared access; other readers may run
 // at the same time.
 عام عرف نفذ_مع_قراءة<ق, ن>(القفل: &قفل_قراءة_كتابة<ق>, العمل: دالة(&ق): ن): ن {
     اقفل_للقراءة(&(*القفل).الحالة);
@@ -84,7 +83,7 @@
 }
 عام مرادف with_read = نفذ_مع_قراءة;
 
-// Rust's RwLock::write: run العمل with exclusive, mutable access.
+// Runs العمل with exclusive, mutable access.
 عام عرف نفذ_مع_كتابة<ق, ن>(القفل: &قفل_قراءة_كتابة<ق>, العمل: دالة(&متغير ق): ن): ن {
     اقفل_للكتابة(&(*القفل).الحالة);
     دع الناتج: ن = اكتب_بالمؤشر(مؤشر_مشترك(&(*القفل).القيمة), العمل);

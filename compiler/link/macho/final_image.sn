@@ -192,7 +192,7 @@
 // the very input that defines it, as LLD's Mach-O writer binds a DylibSymbol to
 // its DylibFile ordinal. An undefined import binds to the dylib its
 // declaration names (`خارجي «/usr/lib/libSystem.B.dylib» عرف ...`, the
-// install name, as Go's cgo_import_dynamic names it per symbol); without one
+// install name, per symbol); without one
 // it keeps ordinal 1, the system library that ابن_اعتمادات_ماتشو always
 // writes first.
 عرف ترتيب_مدخل_مكتبة_ماتشو(
@@ -902,7 +902,7 @@
 }
 
 // An executable's export trie: __mh_execute_header at offset 0 (the Mach
-// header), as Apple's ld64 and Zig's linker write for every executable.
+// header), as Apple's ld64 writes for every executable.
 // dyld answers lookups in an image with an export trie from the trie
 // (dlsym(RTLD_DEFAULT, ...) searches the main executable first; AppKit's
 // HIServices does so during -[NSApplication init]), not from its nlist table.
@@ -3061,8 +3061,7 @@
     // system frameworks compare it with their linked-on-or-after thresholds
     // (dyld_program_sdk_at_least), and an SDK of 0 makes AppKit and its peers
     // treat the program as linked against no SDK at all. With no SDK to read
-    // it from, the version is the minimum OS version, as Apple's ld64 and
-    // Zig's linker (link/MachO/load_commands.zig, writeBuildVersionLC) write.
+    // it from, the version is the minimum OS version, as Apple's ld64 writes.
     ألحق_ط32_ماتشو_ربط(&متغير الصورة, 0x32);
     ألحق_ط32_ماتشو_ربط(&متغير الصورة, 32);
     ألحق_ط32_ماتشو_ربط(&متغير الصورة, 1);

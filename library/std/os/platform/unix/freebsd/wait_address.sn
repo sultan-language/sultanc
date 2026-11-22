@@ -1,7 +1,6 @@
 // Waiting on an address (std.os.wait_address) on FreeBSD: _umtx_op, the
-// primitive FreeBSD's libthr builds its mutexes and condition variables on,
-// and the one Rust's std (sys/pal/unix/futex.rs) and Go's runtime
-// (os_freebsd.go, futexsleep1) use. UMTX_OP_WAIT_UINT_PRIVATE sleeps while
+// primitive FreeBSD's libthr builds its mutexes and condition variables on.
+// UMTX_OP_WAIT_UINT_PRIVATE sleeps while
 // the 32-bit cell holds the expected value (the check and the sleep are one
 // kernel step); UMTX_OP_WAKE_PRIVATE wakes up to N sleepers. A timed wait
 // passes uaddr1 = 0 and uaddr2 = a relative struct timespec, which the kernel

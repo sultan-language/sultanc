@@ -6,8 +6,7 @@
 // An independent copy of a byte vector: new storage holding the same bytes.
 // Owned values are never duplicated by reading them through a reference
 // (docs/en/reference/ownership.md); a copy is this explicit allocation.
-// One allocation of exactly the length and one block copy, as Rust's
-// Vec::clone.
+// One allocation of exactly the length and one block copy.
 عام عرف انسخ_بايتات(البايتات: &متجه ط8): متجه ط8 {
     دع النسخة: متغير متجه ط8 = [];
     دع العدد: طبيعي = الطول(*البايتات) مثل طبيعي;

@@ -19,7 +19,6 @@ query. Add it to `src/search.sn`, with a `search` that returns nothing yet:
 
 ```sultan ignore
 import std.debug.assert;
-import std.text.compare;
 
 public def search(query: &string, contents: &string): vector string {
     let found: vector string = [];
@@ -31,7 +30,7 @@ def one_result(): void {
     let contents: string = "Slow and steady.\nsafe, fast, productive.\nPick three.";
     let found: vector string = search(&"fast", &contents);
     assert(length(found) == 1);
-    assert(texts_equal(&found[0], &"safe, fast, productive."));
+    assert(found[0] == "safe, fast, productive.");
 }
 ```
 
@@ -39,15 +38,15 @@ def one_result(): void {
 $ supax test --lib
      Running lib src/finder.sn
 FAIL one_result: exit status 1
-    --> /projects/finder/src/search.sn:13:5
-    note: the test is declared at /projects/finder/src/search.sn:10:5
+    --> /projects/finder/src/search.sn:12:5
+    note: the test is declared at /projects/finder/src/search.sn:9:5
     error[SULTANC-RUNTIME-PROGRAM-STOPPED]: the program stopped — An assertion failed.
 
 test result: FAILED. passed: 0; failed: 1; filtered out: 0
 error: test failed; to rerun pass "--lib"
 ```
 
-It fails at line 13, the check that exactly one line was found. That is the failure we expected.
+It fails at line 12, the check that exactly one line was found. That is the failure we expected.
 
 ## Making the test pass
 
@@ -59,7 +58,6 @@ one text contains another:
 
 ```sultan test
 import std.debug.assert;
-import std.text.compare;
 import std.text.search;
 import std.text.transform;
 
@@ -89,7 +87,7 @@ def one_result(): void {
     let contents: string = "Slow and steady.\nsafe, fast, productive.\nPick three.";
     let found: vector string = search(&"fast", &contents);
     assert(length(found) == 1);
-    assert(texts_equal(&found[0], &"safe, fast, productive."));
+    assert(found[0] == "safe, fast, productive.");
 }
 ```
 
@@ -111,12 +109,12 @@ returns, and the returned vector must own its strings.
 ```sultan ignore
 def run(config: &Config): result int, string {
     let contents: string;
-    match read_file(&(*config).file_path) with
+    match read_file(&config.file_path) with
     | result.ok(text) -> { contents := text; }
-    | result.err(_) -> { return result.err(concat(&"could not read ", &(*config).file_path)); };
-    let found: vector string = search(&(*config).query, &contents);
+    | result.err(_) -> { return result.err(concat(&"could not read ", &config.file_path)); };
+    let found: vector string = search(&config.query, &contents);
     for (let i: mutable int = 0; i < length(found); i := i + 1) {
-        println(clone(&found[i]));
+        println(found[i]);
     }
     return result.ok(0);
 }

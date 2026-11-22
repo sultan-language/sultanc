@@ -161,11 +161,11 @@
     }
     | اختياري.لا_شيء -> { };
 
-    // The short-circuit edge can reach the merge without evaluating the RHS.
-    // RHS lowering may lazily materialize local places, so carrying its local-state cache
-    // across the merge would expose values that do not dominate the shortcut path.
-    // Source expressions do not assign locals; preserve the pre-branch canonical local state
-    // and merge only the expression result through the block argument.
+    // The short-circuit edge can reach the merge without evaluating the RHS,
+    // so nothing the RHS's lowering state learned holds after the merge.
+    // Source expressions do not assign locals, and every local lives in its
+    // place; preserve the pre-branch canonical local state and merge only the
+    // expression result through the block argument.
     (*الحالة).الكتلة := كتلة_الدمج;
     (*الحالة).نشطة := صواب;
     دع الناتج: قيمة_خفض_مسير = { المعرف: معامل_الدمج, النوع: النوع };

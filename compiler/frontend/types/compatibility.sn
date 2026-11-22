@@ -243,7 +243,7 @@
 
 // `x as T` between two scalar Types (bool, char, integers, floats, text):
 // whether no conversion joins them. Allowed: identity, integer <-> integer,
-// float <-> integer and float <-> float (Rust's numeric `as`), char ->
+// float <-> integer and float <-> float (the numeric `as`/`مثل`), char ->
 // an unsigned integer of at least 32 bits, and u8 -> char. A Type that is
 // not scalar is left to lowering (references, pointers, byte vectors).
 عام عرف تحويل_سلمي_مرفوض(

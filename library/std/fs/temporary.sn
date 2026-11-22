@@ -10,8 +10,7 @@
 استورد نظام_التشغيل.عشوائية;
 استورد نظام_التشغيل.سمات_الملف;
 
-// Uniquely named temporary directories and files (Go os.MkdirTemp and
-// os.CreateTemp; Rust's tempfile crate). A name is the prefix followed by 16
+// Uniquely named temporary directories and files. A name is the prefix followed by 16
 // lowercase hexadecimal digits from the system CSPRNG. The directory is
 // created with mkdir and the file with exclusive creation, so an existing
 // path is never reused; a collision is retried with a new name. Nothing is
@@ -96,8 +95,7 @@
     أرجع نتيجة.خطأ(فئة_خطأ_نظام.موجود_مسبقا());
 }
 
-// Without TMPDIR, Unix falls back to /tmp (Android: /data/local/tmp), as Go's
-// os.TempDir and Rust's env::temp_dir do; Windows (GetTempPathW) and WASI
+// Without TMPDIR, Unix falls back to /tmp (Android: /data/local/tmp); Windows (GetTempPathW) and WASI
 // report their own errors.
 إذا (الهدف.المنصة == «linux» || الهدف.المنصة == «freebsd» || الهدف.المنصة == «macos») {
     عرف دليل_مؤقت_افتراضي(): اختياري نص { أرجع اختياري.موجود(«/tmp»); }

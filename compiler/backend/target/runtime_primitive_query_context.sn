@@ -172,7 +172,7 @@
 // (FMADD.D), POWER (FMADD), z/Architecture (MADBR) and LoongArch (FMADD.D).
 // Elsewhere LLVM would call libm's floor or fma, which SultanC executables do
 // not link, so std.math selects its exact software forms on those
-// architectures (library/core/math/float.sn), as Rust's libm does.
+// architectures (library/core/math/float.sn).
 عام عرف يدعم_عملية_عائمة_للهدف(الهدف: &واصف_هدف, العملية: عملية_عائمة_بدائية): منطقي {
     دع المعمارية: هوية_معمارية = (*الهدف).المعمارية.الهوية;
     إذا (عملية_عائمة_تقريب_صحيح(العملية)) {

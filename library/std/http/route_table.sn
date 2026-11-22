@@ -1,5 +1,5 @@
-// Route tables built at compile time (Nahr item 11), as matchit and
-// httprouter build their radix trees, but before the program runs: the
+// Route tables built at compile time (Nahr item 11): a radix tree built
+// before the program runs: the
 // patterns go through ابن_جدول_مسارات inside `comptime { ... }`, and the
 // program holds only the encoded table, a vector of integers. Matching
 // walks it segment by segment without allocating: a captured parameter is

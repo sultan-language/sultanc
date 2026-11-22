@@ -1,7 +1,7 @@
 // اختبار: تشغيل
 // أهداف: x86_64-linux
 // خروج: 0
-// std.sync.channel disconnection, as Rust's mpsc reports it: try_recv on an
+// std.sync.channel disconnection, as the channel reports it: try_recv on an
 // empty channel is empty while a sender lives and disconnected once none
 // does (after the queued messages are drained); recv_timeout times out;
 // send hands the value back once the receiver is gone; a receiver blocked in

@@ -16,9 +16,9 @@ source
   -> AST                         compiler/frontend/parser, ast, desugar, annotations
   -> modules and names           compiler/frontend/module_loading, names
   -> types and patterns          compiler/frontend/types, pattern
-  -> memory and safety (SSF)     compiler/frontend/memory, ssf
+  -> memory classification       compiler/frontend/memory
   -> semantic lowering           compiler/msir/lowering
-  -> MSIR + verifier             compiler/msir
+  -> MSIR + verifier, ownership   compiler/msir (ssf/, drop_elaboration)
   -> code generation             compiler/backend (Native or LLVM provider), or the interpreter
   -> object files                compiler/backend/object
   -> linker                      compiler/link
@@ -47,7 +47,6 @@ identities and have no language-specific semantic paths.
 | `compiler/frontend/types` | Semantic type identity, compatibility, call signatures, unsafe-operation and thread-capture checks |
 | `compiler/frontend/pattern` | Pattern semantics, exhaustiveness and reachability |
 | `compiler/frontend/memory` | Memory classification and ownership properties |
-| `compiler/frontend/ssf` | Move, borrow, lifetime and control-flow safety state |
 | `compiler/frontend/semantic_pipeline.sn` | Runs the frontend stages in order and collects their diagnostics |
 | `compiler/msir` | The verified, target-neutral execution representation, its lowering, optimizer, promotion and verifier |
 | `compiler/backend/target` | Target identity, registry and platform/backend composition, runtime query contexts |
@@ -87,9 +86,10 @@ result of that analysis, not source-pattern syntax that a backend would have to 
 
 ### Memory and safety
 
-Memory classification determines properties such as whether a type owns resources. SSF uses
-those facts to track value state, moves, borrows, escapes and control-flow merges. See
-[Safety Flow](safety-flow.md).
+Memory classification determines properties such as whether a type owns resources. The ownership
+legality analysis on MSIR uses those facts to decide value state, moves, borrows, escapes and
+control-flow merges. See [Safety Flow](safety-flow.md) and
+[Ownership Analysis](ownership-analysis.md).
 
 ## MSIR
 
@@ -237,12 +237,10 @@ wasmtime run --dir=. build/sultanc.wasm --backend=native compiler/main.sn \
     --target=arm64-darwin "$NATIVE_ONLY" -o build/sultanc-arm64-darwin
 ```
 
-### Comparison with other compilers
+### Backend loading and LLVM targets
 
-rustc includes its LLVM backend only with the `llvm` Cargo feature (`rustc_interface/Cargo.toml`,
-`llvm = ['dep:rustc_codegen_llvm']`, and `get_codegen_backend` in `rustc_interface/src/util.rs`),
-and `rustc_codegen_cranelift` is an alternative backend selected by name. SultanC does not adopt
-dynamic backend loading. LLVM's own CMake (`llvm/docs/CMake.rst`, `LLVM_TARGETS_TO_BUILD`)
+The set of backends is fixed when the compiler is built: the LLVM provider is either compiled in or
+replaced by its unavailable stub, and SultanC does not load backends dynamically. LLVM's own CMake (`llvm/docs/CMake.rst`, `LLVM_TARGETS_TO_BUILD`)
 makes the target components of a libLLVM a property of that library's build, which is why target
 support of the LLVM backend stays a target and libLLVM fact and not a compiler-build capability.
 

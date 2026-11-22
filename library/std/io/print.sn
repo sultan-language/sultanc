@@ -50,7 +50,7 @@
     أرجع الناتج;
 }
 
-// The text is borrowed (Rust's print! borrows its arguments): a `string`
+// The text is borrowed: a `string`
 // argument is borrowed for the call, as if written `&text`
 // (docs/en/reference/ownership.md, "Implicit dereference and borrow").
 عام عرف اطبع(النص: &نص): نتيجة عدد, عدد {

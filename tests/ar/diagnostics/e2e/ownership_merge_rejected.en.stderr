@@ -1,0 +1,20 @@
+error[SULTANC-ICE-MISSING-SEMANTIC-FACT]: required canonical semantic fact is missing — The missing semantic fact concerns symbol `النص`. This occurred during phase `ssf`. Ownership state conflicts prevent a control-flow merge.
+  --> tests/ar/diagnostics/e2e/ownership_merge_rejected.sn:12:5..12:17
+    |
+ 12 |     دع النص: نص;
+    |     ^^^^^^^^^^^^
+    |
+
+error[SULTANC-ICE-MISSING-SEMANTIC-FACT]: required canonical semantic fact is missing — The missing semantic fact concerns symbol `النص`. This occurred during phase `ssf`. Ownership state conflicts prevent a control-flow merge.
+  --> tests/ar/diagnostics/e2e/ownership_merge_rejected.sn:21:5..21:23
+    |
+ 21 |     دع النص: نص = «ب»;
+    |     ^^^^^^^^^^^^^^^^^^
+    |
+
+error[SULTANC-ICE-MISSING-SEMANTIC-FACT]: required canonical semantic fact is missing — The missing semantic fact concerns symbol `القيمة`. This occurred during phase `ssf`. Ownership state conflicts prevent a control-flow merge.
+  --> tests/ar/diagnostics/e2e/ownership_merge_rejected.sn:31:5..31:30
+    |
+ 31 |     دع القيمة: متغير عدد = 1;
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^
+    |

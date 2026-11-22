@@ -21,9 +21,8 @@
 استورد compiler.interpreter.execution.load_libraries;
 
 // ---- The foreign-call bridge ------------------------------------------------
-// An extern call of the interpreted program runs on the host, as Miri runs
-// the foreign functions it supports and as libffi/ctypes call a resolved
-// symbol. Every argument becomes one word (host_externs_generated.sn spells
+// An extern call of the interpreted program runs on the host, a call of the
+// resolved symbol. Every argument becomes one word (host_externs_generated.sn spells
 // pointer parameters as words):
 //   - an integer passes as is (a boolean as 0 or 1), a null pointer as 0;
 //   - a pointer into a host region (memory the host returned, memory.sn
@@ -40,10 +39,10 @@
 // errno (macOS) / the last-error code (Windows) in a cell of its own that
 // it hands to the host before each call and takes back after, so the
 // interpreter's own host work between a call and the program's errno read
-// cannot change it, as Miri keeps its own errno place.
+// cannot change it: the program has its own errno place.
 //
 // Functions whose results point into host memory with an extent only their
-// contract gives are shims (Miri's term), below: errno, DIR streams,
+// contract gives are shims, below: errno, DIR streams,
 // getaddrinfo's list, dladdr's strings, a CERT context, the environment
 // block, the command line. On WASI std's own imports are shims where their
 // arguments are not flat (the iovec records of fd_read, fd_write, sock_recv

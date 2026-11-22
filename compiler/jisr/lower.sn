@@ -921,8 +921,7 @@
 }
 
 // Whether the function compiled here for entity الكيان is compiled with the C
-// calling convention (`@@c_abi`, as Zig's translate-c gives every translated
-// function callconv(.c)): then a pointer to it is its machine address
+// calling convention (`@@c_abi`, which every translated function has): then a pointer to it is its machine address
 // (c_function_address), which C calls directly, as a qsort comparator or a
 // window procedure. Not for a variadic definition (its variadic arguments
 // are 8-byte slots, not C's variadic convention), nor one that takes or
@@ -1461,9 +1460,8 @@
 
 // A call of the C function at the machine address المؤشر (a word), with
 // the parameter and result types of نوع_الدالة: Jisr's call through a C
-// function pointer. As Zig lowers a call through `*const fn (...)
-// callconv(.c)` exactly as a direct extern call (its airCall takes the
-// function type from the pointer and runs the one C-ABI lowering), the call
+// function pointer. Like a direct external call (the function type comes
+// from the pointer and the one C-ABI lowering runs), the call
 // goes through a typed call shape, `extern def ...(address: u64, the C
 // parameters): R = "*"` (msir: دالة_خارجية_مسير.عند_عنوان), and the backend
 // applies the plan of an external call: records by value classified per the

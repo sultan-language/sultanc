@@ -1,0 +1,12 @@
+// اختبار: تشغيل
+// خروج: 42
+// نظير: tests/ar/language/ownership/move_after_read_same_statement.sn
+// Operands are evaluated left to right: a statement may read a local and then
+// move it, the read coming first. Here the left operand reads the text's
+// length and the right one moves the text into `consume`.
+def consume(text: string): int { return (length(text) as int) * 10; }
+
+def main(): int {
+    let text: string = "four";
+    return (length(text) as int) - 2 + consume(text);
+}

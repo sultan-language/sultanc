@@ -79,8 +79,8 @@
     دع البداية: طبيعي = (*المكرر).الموضع;
     دع المفكوك: فك_يوتيف8 = فك_محرف_يوتيف8(&(*المكرر).النص, البداية);
     إذا (!المفكوك.صالح || (المفكوك.العرض == 0)) {
-        // Invalid byte sequences must advance the iterator. Rust separates
-        // strict UTF-8 validation from lossy decoding for this reason.
+        // Invalid byte sequences must advance the iterator. Strict UTF-8
+        // validation is kept apart from lossy decoding for this reason.
         (*المكرر).الموضع := البداية + 1;
         أرجع خطوة_مكرر_محارف_يوتيف8.يوتيف8_غير_صالح(البداية);
     };

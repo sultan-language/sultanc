@@ -86,9 +86,9 @@
 // (pq_block_sigpipe / pq_reset_sigpipe): SIGPIPE is blocked in this thread
 // for the write, so a reader that went away gives EPIPE instead of ending
 // the process; the SIGPIPE that write left pending is then taken with a
-// zero-timeout rt_sigtimedwait, and the old mask is restored. Rust's std
-// gets EPIPE by ignoring SIGPIPE for the whole process and resetting it in
-// every child; blocking it per write changes no process-wide state.
+// zero-timeout rt_sigtimedwait, and the old mask is restored. Blocking it
+// per write changes no process-wide state, unlike ignoring SIGPIPE for the
+// whole process.
 // sigset_t is a word array whose bit (signal - 1) is the signal: SIGPIPE
 // (13) is in the first 64-bit word on every ABI, of 8 bytes or (MIPS,
 // FreeBSD) 16.

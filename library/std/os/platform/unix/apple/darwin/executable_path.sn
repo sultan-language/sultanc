@@ -1,8 +1,8 @@
 استورد نظام_التشغيل.أخطاء;
 
 // The path of this process's executable on Darwin: dyld's
-// _NSGetExecutablePath (<mach-o/dyld.h>), which Rust's std::env::current_exe
-// calls before canonicalizing. It fills the buffer and returns 0, or returns
+// _NSGetExecutablePath (<mach-o/dyld.h>), called before canonicalizing.
+// It fills the buffer and returns 0, or returns
 // -1 with *bufsize set to the size it needs.
 خارجي «/usr/lib/libSystem.B.dylib» عرف _NSGetExecutablePath(المخزن: *متغير ط8, الحجم: *متغير ط32): ص32;
 

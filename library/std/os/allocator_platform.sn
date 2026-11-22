@@ -1,7 +1,7 @@
 // std.os.allocator_platform (المكتبة.نظام_التشغيل.منصة_المخصص): what the heap
 // allocator (std.os.allocation) needs from the operating system, and nothing
-// else. Rust keeps the same boundary in std::sys::alloc, one file per
-// platform behind one interface; a new platform implements these functions
+// else: one file per platform behind one interface; a new platform
+// implements these functions
 // and the allocator runs on it unchanged:
 //
 //   Page source (native targets):

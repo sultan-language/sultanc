@@ -5,7 +5,7 @@
 // نظير: tests/ar/stdlib/behavior/text_time_vector.sn
 // std.text additions (split_whitespace, splitn, replacen, strip_prefix and
 // strip_suffix, ASCII case, count_matches, char_count, eq_ignore_ascii_case),
-// std.time.duration_text (Go's duration notation both ways) and
+// std.time.duration_text and
 // std.collections.vector.
 import std.text.transform;
 import std.text.search;

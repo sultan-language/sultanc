@@ -23,16 +23,14 @@ A scan of `compiler/` and `library/` (tests excluded) finds 997 single-character
 
 Multi-character readable text written as byte codes has already been replaced with text literals through `std.text.from_bytes` (`bytes_from_text`, `nul_terminated_bytes_from_text`, `append_text_bytes`).
 
-## Mature precedent
+## Design constraint
 
-Rust keeps the two meanings apart with separate literal forms:
+The two meanings need separate literal forms:
 
 - `'a'` has type `char`, a Unicode scalar value.
-- `b'a'` has type `u8`, accepts only ASCII or `\xNN` escapes, and has no implicit conversion between the two.
+- a byte character literal has type `u8`, accepts only ASCII or `\xNN` escapes, and has no implicit conversion between the two.
 
-Go writes `'/'` as an untyped constant that converts to `byte` only when the value fits.
-
-The directive excludes an implicit `char` → `u8` conversion. So the Rust-style explicit form is the candidate.
+The directive excludes an implicit `char` → `u8` conversion. So an explicit byte literal form is the candidate.
 
 ## Candidate grammar
 

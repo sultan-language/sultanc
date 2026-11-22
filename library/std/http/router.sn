@@ -13,8 +13,7 @@
 // Router core. Route patterns use /literal/{param}/{*tail}. Static segments
 // outrank parameters, and catch-all routes rank below non-catch-all routes.
 //
-// The routes also form a segment tree (as axum's matchit, one node per path
-// segment): a node's literal children, at most one parameter child, the
+// The routes also form a segment tree (one node per path segment): a node's literal children, at most one parameter child, the
 // routes that end at it and the catch-all routes that start at it. A
 // request path is split once into byte ranges (no copies), and only the
 // branches whose segments match are followed, so dispatch does not grow
@@ -352,8 +351,8 @@
     أرجع (الطول((*المرشح).الأجزاء) مثل طبيعي) > (الطول((*الحالي).الأجزاء) مثل طبيعي);
 }
 
-// Dispatches through the router and request references, as axum's Router
-// borrows its routes: neither the router (its state and routes) nor the
+// Dispatches through the router and request references, borrowing the
+// routes: neither the router (its state and routes) nor the
 // request is copied, so state that holds atomics or locks stays one value.
 عام عرف وجه_طلب_ويب<S>(الموجه: &موجه_ويب<S>, الطلب: &طلب_ويب_مخزن): استجابة_ويب_مخزنة {
     // The path is read in place when the target is origin-form ("/p?q");

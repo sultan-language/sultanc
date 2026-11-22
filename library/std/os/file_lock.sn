@@ -1,15 +1,14 @@
 استورد نظام_التشغيل.أخطاء;
 
-// Advisory whole-file locks on an open file (Rust 1.89 File::lock,
-// lock_shared, try_lock, try_lock_shared, unlock), one guarded branch per
+// Advisory whole-file locks on an open file (exclusive or shared, waiting
+// or not, and unlock), one guarded branch per
 // OS. The handle is the OS's own: a Unix descriptor or a Windows HANDLE.
 //
-// - Linux, Android, FreeBSD: flock(2), as Rust's std does on these
-//   systems. The lock belongs to the open file description: it is shared by
+// - Linux, Android, FreeBSD: flock(2). The lock belongs to the open file description: it is shared by
 //   duplicated descriptors and released when the last one closes.
 // - macOS: flock from libSystem.
 // - Windows: LockFileEx / UnlockFileEx over the whole range (offset 0,
-//   length 2^64 - 1), as Rust does. A shared and an exclusive lock taken
+//   length 2^64 - 1). A shared and an exclusive lock taken
 //   by the same handle are two locks there; unlock releases one.
 // - WASI preview 1 has no file locks (ENOTSUP 58).
 //
@@ -88,7 +87,7 @@
 
     // A lock held elsewhere makes a LOCKFILE_FAIL_IMMEDIATELY request fail
     // with ERROR_LOCK_VIOLATION (33), or ERROR_IO_PENDING (997) on a handle
-    // opened for overlapped I/O; both are "would block", as in Rust.
+    // opened for overlapped I/O; both are "would block".
     عام عرف اقفل_ملف_نظام(المقبض: ط64, حصري: منطقي, بلا_انتظار: منطقي): نتيجة منطقي, خطأ_حد_نظام {
         طابق اقفل_ملف_ويندوز(المقبض, حصري, بلا_انتظار) مع
         | نتيجة.نجح(_) -> { أرجع نتيجة.نجح(صواب); }

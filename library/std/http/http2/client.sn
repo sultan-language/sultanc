@@ -1,4 +1,4 @@
-// The HTTP/2 client (RFC 9113 8, Go's x/net/http2 Transport): h2 over TLS
+// The HTTP/2 client (RFC 9113 8): h2 over TLS
 // negotiated with ALPN, or h2c with prior knowledge over plain TCP (3.3);
 // requests and responses use std.http's model shared with HTTP/1, with
 // الإصدار = اثنان. Several requests sent together travel as concurrent

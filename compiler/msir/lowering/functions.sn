@@ -31,6 +31,7 @@
 استورد compiler.debuginfo.model;
 استورد compiler.msir.lowering.model;
 استورد compiler.msir.lowering.msir_context;
+استورد compiler.msir.lowering.borrow_events;
 استورد compiler.msir.lowering.drops;
 استورد compiler.msir.lowering.statements;
 استورد compiler.msir.lowering.variadic_link_name;
@@ -471,7 +472,10 @@
         هدف_متابعة_حلقة: كتلة_الدخول,
         عدد_محليات_متابعة_حلقة: 0,
         المحليات_مشتركة: خطأ,
-        إطار_الإسقاط: اختياري.لا_شيء()
+        إطار_الإسقاط: اختياري.لا_شيء(),
+        العروض: [],
+        يجد_العروض: صواب,
+        للتحليل: (*دوال_الخفض).للتحليل
     };
     // Drop elaboration: owner storage in the entry block, the body in a fresh
     // block, returns through the exit block (drops.sn).
@@ -520,9 +524,15 @@
         }
         | اختياري.لا_شيء -> { };
         // A parameter passed by value is owned by the callee.
-        طابق سجل_مالكا_خفض(البرنامج, &متغير الحالة, رمز_المعامل, الأنواع, دوال_الخفض) مع
+        دع موقع_المعامل: اختياري معرف_موقع_تصحيح = موقع_تصريح_محلي_للخفض(
+            التصحيح, الأصول, &الحالة, المعامل.الاسم.النطاق
+        );
+        طابق ثبّت_محلي_خفض(
+            البرنامج, &متغير الحالة, رمز_المعامل, الأنواع, دوال_الخفض, صواب, موقع_المعامل
+        ) مع
         | اختياري.موجود(الخطأ) -> { أرجع اختياري.موجود(الخطأ); }
         | اختياري.لا_شيء -> { };
+        سجل_معامل_استعارة_خفض(البرنامج, &الحالة, دوال_الخفض, رمز_المعامل, نوع_المعامل);
         ف := ف + 1;
     }
     // A parameter kept in a frame slot (an owned aggregate's owner slot,
@@ -762,7 +772,7 @@
 
 // Marks the function just declared (the last binding of دوال_الخفض) in
 // المعلمة (برنامج_مسير.دوال_اتفاقية_سي) when it is defined `@@c_abi`: it is
-// compiled with the C calling convention, Zig's callconv(.c).
+// compiled with the platform's C calling convention.
 عام عرف علم_دالة_باتفاقية_سي_للخفض(
     الدالة: &تصريح_دالة,
     دوال_الخفض: &سياق_دوال_خفض,

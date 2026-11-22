@@ -1,6 +1,6 @@
 // Waiting on an address (std.os.wait_address) on macOS: the ulock calls of
-// libsystem_kernel (re-exported by libSystem), which Rust's std uses on
-// macOS before 14.4 (sys/pal/unix/futex.rs, `__ulock_wait2`/`__ulock_wake`)
+// libsystem_kernel (re-exported by libSystem), `__ulock_wait2`/`__ulock_wake`
+// (the public os_sync_wait_on_address needs macOS 14.4)
 // and on which libc++'s std::atomic::wait and Apple's own os_unfair_lock are
 // built. os_sync_wait_on_address appeared in macOS 14.4 and is not in the
 // 11.3 SDK std targets; __ulock_wait2 (macOS 11) and __ulock_wake are

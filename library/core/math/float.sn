@@ -6,10 +6,10 @@
 //
 // sqrt, abs, copysign, minimum and maximum are the compiler's float primitives
 // (docs/en/reference/type-system.md, "Float operations"): one instruction on every target
-// (SQRTSD, FSQRT, f64.sqrt, llvm.sqrt.*), as Rust's f64::sqrt. floor, ceil,
+// (SQRTSD, FSQRT, f64.sqrt, llvm.sqrt.*). floor, ceil,
 // trunc and round-ties-even are primitives where the instruction set has them
 // (AArch64 FRINT*, WebAssembly f64.floor ...); elsewhere (baseline x86-64 has
-// no ROUNDSD) they are the exact bit-level forms below, as Rust's libm. mul_add
+// no ROUNDSD) they are the exact bit-level forms below. mul_add
 // is the FMADD primitive on AArch64, RISC-V, POWER, z/Architecture and
 // LoongArch, and an exact integer emulation elsewhere. Every form gives the
 // same result on every target and in the interpreter.
@@ -617,7 +617,7 @@
 عام مرادف sqrt2_f32 = جذر2_32;
 
 // Rounding to an integral value. On AArch64 and WebAssembly each is one
-// instruction; elsewhere it works on the bits as Rust's libm does: the
+// instruction; elsewhere it works on the bits: the
 // fraction bits below the binary point are cleared, and one unit of the
 // integral part is added when the mode moves away from zero (same-sign float
 // bits are ordered like their magnitudes, so that add carries into the
@@ -687,8 +687,8 @@
     عام عرف تقريب_زوجي32(القيمة: ع32): ع32 { أرجع قرب32_إلى_صحيح(القيمة, 3); }
 }
 
-// Fused multiply-add a * b + c, rounded once (IEEE 754 fusedMultiplyAdd,
-// Rust's f64::mul_add). One FMADD where the instruction set has it.
+// Fused multiply-add a * b + c, rounded once (IEEE 754 fusedMultiplyAdd).
+// One FMADD where the instruction set has it.
 إذا (الهدف.المعمارية == «aarch64» || الهدف.المعمارية == «riscv64» || الهدف.المعمارية == «powerpc64»
     || الهدف.المعمارية == «systemz» || الهدف.المعمارية == «loongarch64») {
     عام عرف ضرب_جمع_مدمج64(أ: ع64, ب: ع64, ج: ع64): ع64 { أرجع ضرب_جمع_مدمج_عائم_بدائيا(أ, ب, ج); }
@@ -1631,8 +1631,7 @@
 عام مرادف product_f64 = حاصل_ضرب64;
 عام مرادف rms_f64 = متوسط_تربيعي64;
 
-// IEEE 754 bit patterns (Rust's f64::to_bits / from_bits, Go's
-// math.Float64bits / Float64frombits): the compiler's bit-reinterpret
+// IEEE 754 bit patterns: the compiler's bit-reinterpret
 // intrinsics, reached through private aliases.
 مرادف بتات_ع64_بدائيا = بدائي_بتات_ع64;
 مرادف ع64_من_بتات_بدائيا = بدائي_ع64_من_بتات;

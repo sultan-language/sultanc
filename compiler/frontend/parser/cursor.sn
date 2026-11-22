@@ -85,7 +85,7 @@
 }
 
 // The `>` that closes a type-argument list. A `>>` token closes two nested
-// lists, as `مشترك<قفل<ط64>>` does in Rust, C++11 and Java: the inner list
+// lists, as in `مشترك<قفل<ط64>>`: the inner list
 // takes its first half (the cursor stays on it, marked), the outer list its
 // second half.
 عام عرف اغلق_زاوية_وسيطات_نوع(الرموز: &متجه رمز_مصدر, المؤشر: &متغير مؤشر): منطقي {

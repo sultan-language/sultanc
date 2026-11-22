@@ -113,8 +113,7 @@
 }
 
 // A reusable gzip compressor: the DEFLATE compressor's tables and the
-// CRC-32 table, kept between responses (one per worker thread, as a
-// sync.Pool of gzip.Writer in Go).
+// CRC-32 table, kept between responses (one per worker thread).
 عام نوع ضاغط_جي_زيب = {
     الديفليت: ضاغط_ديفليت,
     جدول_سي_ار_سي: متجه ط32

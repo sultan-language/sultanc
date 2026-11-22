@@ -1,0 +1,67 @@
+خطأ[SULTANC-BORROW-REFERENCE-ESCAPE]: المرجع يهرب من نطاق صلاحيته — المرجع الخارج عن نطاق صلاحيته هو ⁨`القارئ`⁩. يبقى مرجع بعد انتهاء القيمة التي يشير إليها.
+  --> tests/ar/diagnostics/e2e/borrow_outlives_owner_in_order.sn:18:5..18:6
+    |
+ 18 |     };
+    |     ^
+    |
+  ::: tests/ar/diagnostics/e2e/borrow_outlives_owner_in_order.sn:16:9..16:29
+    |
+ 16 |         دع النص: نص = «أبج»;
+    |         ^^^^^^^^^^^^^^^^^^^^ المالك الأصلي
+    |
+  ::: tests/ar/diagnostics/e2e/borrow_outlives_owner_in_order.sn:19:17..19:23
+    |
+ 19 |     أرجع الطول(*القارئ) مثل عدد;
+    |                 ^^^^^^ الاستخدام غير الصالح
+    |
+
+خطأ[SULTANC-BORROW-REFERENCE-ESCAPE]: المرجع يهرب من نطاق صلاحيته — المرجع الخارج عن نطاق صلاحيته هو ⁨`القارئ`⁩. يبقى مرجع بعد انتهاء القيمة التي يشير إليها.
+  --> tests/ar/diagnostics/e2e/borrow_outlives_owner_in_order.sn:30:5..30:6
+    |
+ 30 |     }
+    |     ^
+    |
+  ::: tests/ar/diagnostics/e2e/borrow_outlives_owner_in_order.sn:27:9..27:29
+    |
+ 27 |         دع النص: نص = «أبج»;
+    |         ^^^^^^^^^^^^^^^^^^^^ المالك الأصلي
+    |
+  ::: tests/ar/diagnostics/e2e/borrow_outlives_owner_in_order.sn:31:17..31:23
+    |
+ 31 |     أرجع الطول(*القارئ) مثل عدد;
+    |                 ^^^^^^ الاستخدام غير الصالح
+    |
+
+خطأ[SULTANC-BORROW-REFERENCE-ESCAPE]: المرجع يهرب من نطاق صلاحيته — المرجع الخارج عن نطاق صلاحيته هو ⁨`القارئ`⁩. يبقى مرجع بعد انتهاء القيمة التي يشير إليها.
+  --> tests/ar/diagnostics/e2e/borrow_outlives_owner_in_order.sn:44:5..44:6
+    |
+ 44 |     }
+    |     ^
+    |
+  ::: tests/ar/diagnostics/e2e/borrow_outlives_owner_in_order.sn:41:9..41:29
+    |
+ 41 |         دع النص: نص = «أبج»;
+    |         ^^^^^^^^^^^^^^^^^^^^ المالك الأصلي
+    |
+  ::: tests/ar/diagnostics/e2e/borrow_outlives_owner_in_order.sn:40:38..40:44
+    |
+ 40 |         المجموع := المجموع + (الطول(*القارئ) مثل عدد);
+    |                                      ^^^^^^ الاستخدام غير الصالح
+    |
+
+خطأ[SULTANC-BORROW-REFERENCE-ESCAPE]: المرجع يهرب من نطاق صلاحيته — المرجع الخارج عن نطاق صلاحيته هو ⁨`المحفوظ`⁩. يبقى مرجع بعد انتهاء القيمة التي يشير إليها.
+  --> tests/ar/diagnostics/e2e/borrow_outlives_owner_in_order.sn:55:5..55:6
+    |
+ 55 |     };
+    |     ^
+    |
+  ::: tests/ar/diagnostics/e2e/borrow_outlives_owner_in_order.sn:52:9..52:29
+    |
+ 52 |         دع النص: نص = «أبج»;
+    |         ^^^^^^^^^^^^^^^^^^^^ المالك الأصلي
+    |
+  ::: tests/ar/diagnostics/e2e/borrow_outlives_owner_in_order.sn:56:17..56:24
+    |
+ 56 |     أرجع الطول(*المحفوظ) مثل عدد;
+    |                 ^^^^^^^ الاستخدام غير الصالح
+    |

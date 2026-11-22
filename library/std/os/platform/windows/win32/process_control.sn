@@ -28,7 +28,7 @@
 خارجي «shell32.dll» عرف CommandLineToArgvW(السطر: *ط16, العدد: *متغير ص32): **ط16;
 خارجي «kernel32.dll» عرف LocalFree(المؤشرات: **ط16): **ط16;
 // DWORD GetModuleFileNameW(HMODULE, LPWSTR, DWORD): the path of the
-// executable for a NULL module, as Rust's std::env::current_exe reads it.
+// executable for a NULL module.
 // A result equal to the size means the path was truncated.
 خارجي «kernel32.dll» عرف GetModuleFileNameW(الوحدة: ط64, المخزن: *متغير ط16, الحجم: ط32): ط32;
 

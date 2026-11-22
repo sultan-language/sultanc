@@ -452,8 +452,8 @@
     أرجع !أ_أصغر || متساويان;
 }
 
-// Float <-> integer and float <-> float conversions (`x as T`), with Rust's
-// semantics since 1.45 (docs/en/reference/type-system.md, "Numeric casts").
+// Float <-> integer and float <-> float conversions (`x as T`), with the
+// semantics of docs/en/reference/type-system.md, "Numeric casts".
 
 // The integer `x as iN`/`uN` of a float, as width-masked two's-complement
 // bits: truncated toward zero, saturated to the type's range, NaN -> 0.

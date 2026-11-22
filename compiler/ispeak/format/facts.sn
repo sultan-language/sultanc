@@ -9,6 +9,14 @@
     الاسم: نص
 };
 
+// A constructor read as a value without its call
+// (SULTANC-NAME-CONSTRUCTOR-NOT-CALLED): the constructor as written
+// (`Color.Red`) and the number of arguments its call takes (its payloads).
+عام نوع حقائق_منشئ_غير_مستدعى = {
+    المنشئ: نص,
+    الحمولات: طبيعي
+};
+
 // An inferred plain bound broken at a call: the generic function, its type
 // parameter and the owning type given to it (SULTANC-OWNERSHIP-MOVE-OUT-OF-REFERENCE).
 عام نوع حقائق_قيد_عادي = {
@@ -117,6 +125,7 @@
     | عدد_حجج_غير_مطابق بنوع حقائق_عدد_حجج_غير_مطابق
     | عامل_غير_معرف بنوع حقائق_عامل_غير_معرف
     | قيد_عادي بنوع حقائق_قيد_عادي
+    | منشئ_غير_مستدعى بنوع حقائق_منشئ_غير_مستدعى
 ;
 
 // Empty optional facts carry no message text. Avoid allocating a text builder

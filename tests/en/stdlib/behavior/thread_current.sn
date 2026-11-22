@@ -3,7 +3,7 @@
 // خروج: 42
 // تفاضلي: نعم
 // نظير: tests/ar/stdlib/behavior/thread_current.sn
-// std.thread without a spawn: sleep (Rust's thread::sleep), yield_now, the
+// std.thread without a spawn: sleep, yield_now, the
 // current thread's id and available_parallelism. The program sleeps one
 // millisecond and checks on the monotonic clock that the time passed, that
 // the id is stable and not zero, and that there is at least one CPU.

@@ -1,5 +1,4 @@
-// Per-request deadlines and cancellation (Go's Request.Context with
-// http.TimeoutHandler, axum/tower's TimeoutLayer). A server whose limits set
+// Per-request deadlines and cancellation. A server whose limits set
 // أقصى_زمن_معالج_بالمللي gives each request a deadline in its context and,
 // when the handler returns after it, answers 503 instead (with "connection:
 // close"). Nothing interrupts a handler: it checks هل_ألغي_الطلب_ويب between

@@ -250,8 +250,7 @@
 // carries the DLL name, so the PE writer builds its import descriptor as for
 // a DLL given on the command line (imported by name with hint 0,
 // final_image.sn معلومات_استيراد_مدخل_كوف). No DLL or import library file is
-// read; rustc's raw-dylib likewise imports by (DLL, name) without the SDK's
-// import libraries.
+// read: the import is by (DLL, name), without the SDK's import libraries.
 عرف مدخل_مكتبة_مصرحة_كوف(
     السياق: &متغير سياق_ربط,
     الأسماء: &متغير متجه متجه ط8,

@@ -1,13 +1,12 @@
 // Vector helpers over any element type, by swapping slots or through a
-// caller-supplied predicate, equality or ordering (Go slices, Rust slice and
-// Vec methods). Vectors grow with ألحق and shrink with أزل_الأخير / pop and
+// caller-supplied predicate, equality or ordering. Vectors grow with ألحق and shrink with أزل_الأخير / pop and
 // اقتطع / truncate; the helpers here reorder, search, and remove in place.
 // Removed elements are dropped (their storage released) exactly once.
-// A vector keeps its buffer when it shrinks, as Rust's Vec does: سعة /
+// A vector keeps its buffer when it shrinks: سعة /
 // capacity reads it, احجز_سعة / reserve_exact and احجز_في_المتجه / reserve
 // grow it, قلص_المتجه / shrink_to_fit gives the unused part back.
 
-// Reverses the order in place (Rust reverse, Go slices.Reverse).
+// Reverses the order in place.
 عام عرف اعكس_المتجه<ق>(القيم: &متغير متجه ق): فراغ {
     دع العدد: طبيعي = الطول(*القيم) مثل طبيعي;
     إذا (العدد < 2) { أرجع; };
@@ -20,7 +19,7 @@
     }
 }
 
-// The first position whose element equals المطلوب (Go slices.IndexFunc).
+// The first position whose element equals المطلوب.
 عام عرف ابحث_في_المتجه<ق>(
     القيم: &متجه ق, المطلوب: &ق, التساوي: دالة(&ق, &ق): منطقي
 ): اختياري طبيعي {
@@ -71,7 +70,7 @@
     أرجع اختياري.موجود(الأفضل);
 }
 
-// Moves the first المقدار elements to the end (Rust rotate_left), by three
+// Moves the first المقدار elements to the end, by three
 // reversals.
 عام عرف دور_المتجه_يسارا<ق>(القيم: &متغير متجه ق, المقدار: طبيعي): فراغ {
     دع العدد: طبيعي = الطول(*القيم) مثل طبيعي;
@@ -94,8 +93,8 @@
     }
 }
 
-// Keeps the elements الشرط accepts, in their order, and drops the others
-// (Rust Vec::retain, Go slices.DeleteFunc with the predicate negated). Each
+// Keeps the elements الشرط accepts, in their order, and drops the others.
+// Each
 // kept element is swapped once into place, then the tail is truncated.
 عام عرف احتفظ_في_المتجه<ق>(القيم: &متغير متجه ق, الشرط: دالة(&ق): منطقي): فراغ {
     دع العدد: طبيعي = الطول(*القيم) مثل طبيعي;
@@ -112,7 +111,7 @@
 }
 
 // Removes consecutive elements that التساوي finds equal to the element kept
-// before them (Rust Vec::dedup_by, Go slices.CompactFunc); the first of
+// before them; the first of
 // each run stays.
 عام عرف أزل_المتكرر_المتتالي<ق>(القيم: &متغير متجه ق, التساوي: دالة(&ق, &ق): منطقي): فراغ {
     دع العدد: طبيعي = الطول(*القيم) مثل طبيعي;
@@ -129,8 +128,8 @@
     اقتطع(*القيم, المكتوب);
 }
 
-// Removes and returns the element at الموضع, shifting the later ones down
-// (Rust Vec::remove, Go slices.Delete); nothing when الموضع is out of range.
+// Removes and returns the element at الموضع, shifting the later ones down;
+// nothing when الموضع is out of range.
 عام عرف أزل_عند<ق>(القيم: &متغير متجه ق, الموضع: طبيعي): اختياري ق {
     دع العدد: طبيعي = الطول(*القيم) مثل طبيعي;
     إذا (الموضع >= العدد) { أرجع اختياري.لا_شيء(); };
@@ -143,7 +142,7 @@
 }
 
 // Removes and returns the element at الموضع, moving the last element into
-// its place: O(1), the order changes (Rust Vec::swap_remove).
+// its place: O(1), the order changes.
 عام عرف أزل_بالتبديل<ق>(القيم: &متغير متجه ق, الموضع: طبيعي): اختياري ق {
     دع العدد: طبيعي = الطول(*القيم) مثل طبيعي;
     إذا (الموضع >= العدد) { أرجع اختياري.لا_شيء(); };
@@ -151,8 +150,7 @@
     أرجع أزل_الأخير(*القيم);
 }
 
-// Inserts القيمة at الموضع, shifting the later elements up (Rust Vec::insert,
-// Go slices.Insert). A position past the end appends at the end: the value
+// Inserts القيمة at الموضع, shifting the later elements up. A position past the end appends at the end: the value
 // is never lost.
 عام عرف أدرج_عند<ق>(القيم: &متغير متجه ق, الموضع: طبيعي, القيمة: ق): فراغ {
     ألحق(*القيم, القيمة);
@@ -163,20 +161,19 @@
     }
 }
 
-// Removes every element (Rust Vec::clear, Go clear on a slice).
+// Removes every element.
 عام عرف امسح_المتجه<ق>(القيم: &متغير متجه ق): فراغ {
     اقتطع(*القيم, 0);
 }
 
-// A vector with room for at least السعة elements before it reallocates
-// (Rust Vec::with_capacity, Go make([]T, 0, n)).
+// A vector with room for at least السعة elements before it reallocates.
 عام عرف متجه_بسعة<ق>(السعة: طبيعي): متجه ق {
     دع الناتج: متغير متجه ق = [];
     احجز_سعة(الناتج, السعة);
     أرجع الناتج;
 }
 
-// Room for at least الإضافي more elements (Rust Vec::reserve). When the
+// Room for at least الإضافي more elements. When the
 // buffer grows, it at least doubles, so repeated reserves stay amortized
 // O(1) per element, as appends are.
 عام عرف احجز_في_المتجه<ق>(القيم: &متغير متجه ق, الإضافي: طبيعي): فراغ {
@@ -188,7 +185,7 @@
     احجز_سعة(*القيم, المطلوب - العدد);
 }
 
-// Gives back the capacity beyond the length (Rust Vec::shrink_to_fit): the
+// Gives back the capacity beyond the length: the
 // elements move, in order, into a buffer of exactly their count; an empty
 // vector releases its buffer.
 عام عرف قلص_المتجه<ق>(القيم: &متغير متجه ق): فراغ {

@@ -424,7 +424,7 @@
 عام مرادف http_serve_async = شغل_خادم_ويب_غير_متزامن;
 
 // Serves one accepted connection over a transport (HTTP/1, or HTTP/2 when it
-// starts with the client preface) and closes it; as Go's Server.ServeConn.
+// starts with the client preface) and closes it.
 عام عرف خدم_اتصال_ويب<S>(
     الناقل: ناقل_ويب,
     الحدود: &حدود_ويب,
@@ -510,8 +510,8 @@
 
 // The HTTPS server: each accepted connection runs the TLS handshake with
 // ALPN offering "h2" and "http/1.1" (unless the configuration lists its own
-// protocols), then HTTP/2 or HTTP/1 by the negotiated protocol, as Go's
-// http.Server.ServeTLS. Connections are served one at a time.
+// protocols), then HTTP/2 or HTTP/1 by the negotiated protocol.
+// Connections are served one at a time.
 عام عرف شغل_خادم_ويب_آمن<S>(
     الإعداد: &إعداد_خادم_ويب,
     إعداد_الأمان: &إعداد_خادم_تي_إل_إس,
@@ -570,7 +570,7 @@
 // connection server keeps a thread per client, so an idle or slow client
 // holds a whole thread. This server instead keeps every connection
 // non-blocking in one readiness poller (std.os.poll: epoll, kqueue), the
-// design of Go's netpoller, Rust's mio/tokio and nginx:
+// design of nginx:
 //
 // - N worker threads (default: the available parallelism) all wait on the
 //   one poller. Every descriptor is armed one-shot, so an event hands its
@@ -1119,8 +1119,7 @@
 }
 
 // The event-driven HTTP server (HTTP/1, and h2c by prior knowledge): the
-// state is shared by every worker thread through an Arc, as a Go handler's
-// or an axum State's. الخيوط 0 uses the available parallelism. It returns
+// state is shared by every worker thread through an Arc. الخيوط 0 uses the available parallelism. It returns
 // only on a setup failure.
 عام عرف شغل_خادم_ويب_بأحداث<S>(
     الإعداد: &إعداد_خادم_ويب,
@@ -1149,7 +1148,7 @@
 // A worker's listener, poller and connection table. With a balancing
 // SO_REUSEPORT (Linux, FreeBSD) every worker binds its own listener on the
 // address and owns its own context: no table or poller is shared between
-// threads (shard-per-core, as nginx's reuseport, Seastar and actix-web).
+// threads (shard-per-core, as nginx's reuseport).
 // Elsewhere (macOS) one acceptor hands connections to the workers
 // (شغل_خادم_ويب_بموزع).
 عرف أنشئ_سياق_حدثي_ويب(
@@ -1298,7 +1297,7 @@
     // listeners of another process on the same address (a second copy of
     // this server), splitting its connections. First the address must be
     // free: a bind without SO_REUSEPORT fails there with "address already in
-    // use", as uvicorn, Go's net/http and actix-web fail by default.
+    // use", as most servers fail by default.
     // A refused plain bind can also mean only connections a previous run
     // left in TIME_WAIT (they keep SO_REUSEPORT, which a plain bind does not
     // pass): then a connection to the address is refused, and the shards
@@ -1361,7 +1360,7 @@
 
 // Without a balancing SO_REUSEPORT (macOS): one listener, and a worker that
 // accepted until "would block" would take a whole burst of connections and
-// leave the other workers idle. So, as libuv's and tokio's acceptors, this
+// leave the other workers idle. So, as libuv's acceptor, this
 // thread only accepts: each connection goes to the worker with the fewest
 // open connections (ties in turn), into that worker's own table and poller,
 // and stays there. The workers never watch the listener: no wake-up herd,

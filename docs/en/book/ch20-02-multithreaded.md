@@ -11,10 +11,10 @@ it, add a page that is slow on purpose: `/sleep` waits five seconds before answe
 <sub>Listing 20-2: a slow page. Filename: src/main.sn</sub>
 
 ```sultan ignore
-    if (texts_equal(&request_line, &"GET / HTTP/1.1")) {
+    if (request_line == "GET / HTTP/1.1") {
         status := "HTTP/1.1 200 OK";
         file_name := "hello.html";
-    } else if (texts_equal(&request_line, &"GET /sleep HTTP/1.1")) {
+    } else if (request_line == "GET /sleep HTTP/1.1") {
         match sleep_ns(5000000000) with
         | result.ok(_) -> { }
         | result.err(_) -> { };

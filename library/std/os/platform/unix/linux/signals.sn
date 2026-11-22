@@ -1,6 +1,5 @@
 // Shutdown signals (SIGINT, SIGTERM) on Linux, Android and FreeBSD, on raw
-// system calls (Nahr item 16). There is no signal handler: as Go's runtime
-// funnels signals to one goroutine and signal-hook's sigwait mode does, the
+// system calls (Nahr item 16). There is no signal handler: the
 // signals are blocked (rt_sigprocmask, FreeBSD sigprocmask) and then taken
 // synchronously (rt_sigtimedwait, FreeBSD sigtimedwait) by whichever thread
 // waits for them. A blocked signal stays pending until it is taken, so none

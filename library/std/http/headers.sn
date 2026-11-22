@@ -77,7 +77,7 @@
     أرجع صواب;
 }
 
-// In place, as Rust's Vec::retain: kept headers move forward in order (a
+// In place: kept headers move forward in order (a
 // swap moves, it copies nothing), removed ones end past the new length and
 // are dropped by the truncation.
 عام عرف احذف_رأس_ويب(الرؤوس: &متغير متجه رأس_ويب, الاسم: &نص): طبيعي {

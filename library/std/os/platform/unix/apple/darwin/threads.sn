@@ -2,9 +2,7 @@
 استورد نظام_التشغيل.منصات.يونكس.آبل.داروين.واصفات_الملفات;
 
 // macOS OS threads (docs/en/reference/concurrency.md) through libSystem's documented
-// POSIX thread API, as Rust's std (library/std/src/sys/pal/unix/thread.rs)
-// and Go's runtime (runtime/os_darwin.go, newosproc) start threads there:
-// pthread_create with a 2 MiB stack (pthread_attr_setstacksize; Darwin's own
+// POSIX thread API: pthread_create with a 2 MiB stack (pthread_attr_setstacksize; Darwin's own
 // default for secondary threads is 512 KiB), pthread_join to wait. The start
 // routine is the C entry of a closure (بدائي_مدخل_سي_لدالة) and its argument
 // the closure's environment, so libpthread calls the closure as a C caller
@@ -25,7 +23,7 @@
 خارجي «/usr/lib/libSystem.B.dylib» عرف pthread_attr_setstack(السمات: *متغير ط64, العنوان: ط64, الحجم: ط64): ص32;
 خارجي «/usr/lib/libSystem.B.dylib» عرف pthread_attr_destroy(السمات: *متغير ط64): ص32;
 // int pthread_threadid_np(pthread_t, uint64_t *): the system-wide unique
-// id of a thread (NULL: the calling thread), Rust's ThreadId source on Apple.
+// id of a thread (NULL: the calling thread).
 خارجي «/usr/lib/libSystem.B.dylib» عرف pthread_threadid_np(المقبض: ط64, المعرف: *متغير ط64): ص32;
 // void pthread_yield_np(void): give up the processor (sched_yield's
 // Darwin spelling).

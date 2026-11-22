@@ -13,8 +13,8 @@
     كلمة_المرور: متجه ط8
 };
 
-// البروتوكولات is the ALPN list (RFC 7301), most preferred first, as
-// Go's tls.Config.NextProtos: a client offers it, a server picks its own
+// البروتوكولات is the ALPN list (RFC 7301), most preferred first: a client
+// offers it, a server picks its own
 // first entry the client offered. Empty: ALPN is not used.
 عام نوع إعداد_عميل_تي_إل_إس = {
     تحقق_النظير: منطقي,

@@ -110,6 +110,12 @@ def interpreter_primitive_payload(): حقائق_رسالة {
     return حقائق_رسالة.بدائي_تفسير(primitive_values());
 }
 
+// A constructor read as a value: without payloads and with two.
+def constructor_payload(count: uint): حقائق_رسالة {
+    let values: حقائق_منشئ_غير_مستدعى = { المنشئ: "Color.Red", الحمولات: count };
+    return حقائق_رسالة.منشئ_غير_مستدعى(values);
+}
+
 def main(): int {
     let key_1: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.اسم_غير_معروف());
     if (!check(key_1, unknown_name_payload(), unknown_name_payload(), true)) { return 31; };
@@ -320,6 +326,12 @@ def main(): int {
     if (!check(key_21, keyword_suggestion_payload(), keyword_suggestion_payload(), false)) { return 51; };
     if (!check(key_21, syntax_expectation_payload(), syntax_expectation_payload(), false)) { return 51; };
     if (!check(key_21, interpreter_primitive_payload(), interpreter_primitive_payload(), true)) { return 51; };
+    let key_22: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.منشئ_غير_مستدعى());
+    if (!check(key_22, constructor_payload(0 as uint), constructor_payload(0 as uint), true)) { return 52; };
+    if (!check(key_22, constructor_payload(2 as uint), constructor_payload(2 as uint), true)) { return 52; };
+    if (!check(key_22, unknown_name_payload(), unknown_name_payload(), false)) { return 52; };
+    if (!check(key_22, specific_text_payload(), specific_text_payload(), false)) { return 52; };
+    if (!check(key_1, constructor_payload(0 as uint), constructor_payload(0 as uint), false)) { return 52; };
     let reason_text: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.سبب(سبب_تشخيص.سبب_مسير_وسم_حالة_مكرر());
     if (!check(reason_text, حقائق_رسالة.بلا_حجج(), حقائق_رسالة.بلا_حجج(), true)) { return 90; };
     if (!check(reason_text, unknown_name_payload(), unknown_name_payload(), false)) { return 91; };

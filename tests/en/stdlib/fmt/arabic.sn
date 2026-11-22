@@ -5,9 +5,9 @@
 // نظير: tests/ar/stdlib/fmt/arabic.sn
 // std.fmt and Arabic text: width and precision count extended grapheme
 // clusters (UAX #29), so a letter with its harakat is one character and a
-// precision never separates a letter from its marks; Rust counts Unicode
-// scalar values and would give these texts less padding. Debug keeps the
-// harakat (Rust escapes them) and escapes direction marks. No direction
+// precision never separates a letter from its marks; counting Unicode scalar
+// values would give these texts less padding. Debug keeps the
+// harakat and escapes direction marks. No direction
 // marks are inserted. Bytes format as text (ill-formed UTF-8 as U+FFFD) or
 // as hex digits.
 import std.fmt.fmt;

@@ -13,11 +13,11 @@ Here is a module, in the file `geometry.sn`:
 public type Rectangle = { width: int, height: int };
 
 public def area(r: &Rectangle): int {
-    return (*r).width * (*r).height;
+    return r.width * r.height;
 }
 
 public def perimeter(r: &Rectangle): int {
-    return double((*r).width + (*r).height);
+    return double(r.width + r.height);
 }
 
 def double(value: int): int {

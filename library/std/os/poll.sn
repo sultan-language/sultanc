@@ -1,8 +1,7 @@
 // The readiness poller (docs/en/reference/concurrency.md, "Readiness polling"):
 // one kernel object that tells which of many non-blocking descriptors can be
 // read or written, so one thread serves thousands of connections instead of
-// one blocked thread per connection. After Rust's mio (Poll, Registry,
-// Events), the layer under tokio, and Go's runtime netpoll:
+// one blocked thread per connection:
 //
 // - Linux, Android: epoll (epoll_create1, epoll_ctl, epoll_pwait).
 // - FreeBSD: kqueue and kevent, as raw system calls.

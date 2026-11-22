@@ -40,19 +40,21 @@
     المتغيرات: متجه اختياري معرف_متغير_تصحيح
 };
 
-// A local lowering keeps in a frame slot (a loop-carried mutable local moved
-// there before control flow, statements.sn ثبّت_أماكن_محليات_قبل_تفرع_التحكم,
-// or a local whose address is taken): its function, source symbol and slot
-// (the place value). The pipeline binds the slot to its variable
-// (اربط_أماكن_محليات_تصحيح_مسير): at -O0 it is the variable's memory for the
-// rest of the function; at other levels the binding comes before promotion,
-// which passes it to the values stored into the slot and to the block
-// parameters it adds, and a slot it keeps stays the variable's memory.
+// The place of a source local (every local lowering declares has one,
+// msir_model.sn, مكان_محلي_مسير): its function, source symbol and slot (the
+// place value). The pipeline binds the slot of a local that is not an owner
+// to its variable (اربط_أماكن_محليات_تصحيح_مسير): at -O0 it is the
+// variable's memory for the rest of the function; at other levels the
+// binding comes before promotion, which passes it to the values stored into
+// the slot and to the block parameters it adds, and a slot it keeps stays the
+// variable's memory. An owner's slot is recorded with its symbol but not
+// bound: its value is valid only while the owner holds one.
 عام نوع مكان_محلي_تصحيح_مسير = {
     الدالة: معرف_دالة_مسير,
     الرمز: معرف_رمز,
     المكان: معرف_قيمة_مسير,
-    الموقع: اختياري معرف_موقع_تصحيح
+    الموقع: اختياري معرف_موقع_تصحيح,
+    المالك: منطقي
 };
 
 // Compact MSIR bridge. Rich records stay in compiler/debuginfo; this contract only
@@ -535,19 +537,22 @@
     }
 }
 
-// Records a local moved into a frame slot (مكان_محلي_تصحيح_مسير).
+// Records the place of a source local (مكان_محلي_تصحيح_مسير).
 عام عرف سجل_مكان_محلي_تصحيح_مسير(
     التصحيح: &متغير بيانات_تصحيح_مسير,
     الدالة: معرف_دالة_مسير,
     الرمز: معرف_رمز,
     المكان: معرف_قيمة_مسير,
-    الموقع: اختياري معرف_موقع_تصحيح
+    الموقع: اختياري معرف_موقع_تصحيح,
+    المالك: منطقي
 ): فراغ {
-    دع السجل: مكان_محلي_تصحيح_مسير = { الدالة: الدالة, الرمز: الرمز, المكان: المكان, الموقع: الموقع };
+    دع السجل: مكان_محلي_تصحيح_مسير = {
+        الدالة: الدالة, الرمز: الرمز, المكان: المكان, الموقع: الموقع, المالك: المالك
+    };
     ألحق((*التصحيح).العقد.أماكن_المحليات, السجل);
 }
 
-// Each local kept in a frame slot is bound to that slot
+// Each local's slot, but an owner's, is bound to its variable
 // (msir_optimization_pipeline.sn, every level): at -O0 its memory for the
 // rest of the function, so a debugger reads the variable in the loop on every
 // iteration; at other levels before promotion (see مكان_محلي_تصحيح_مسير).
@@ -555,7 +560,9 @@
     دع ف: متغير طبيعي = 0;
     طالما (ف < (الطول((*التصحيح).العقد.أماكن_المحليات) مثل طبيعي)) {
         دع السجل: مكان_محلي_تصحيح_مسير = (*التصحيح).العقد.أماكن_المحليات[ف];
-        اربط_رمز_بقيمة_تصحيح_مسير(التصحيح, السجل.الدالة, السجل.الرمز, السجل.المكان, السجل.الموقع);
+        إذا (!السجل.المالك) {
+            اربط_رمز_بقيمة_تصحيح_مسير(التصحيح, السجل.الدالة, السجل.الرمز, السجل.المكان, السجل.الموقع);
+        };
         ف := ف + 1;
     }
 }

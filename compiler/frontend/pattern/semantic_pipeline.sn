@@ -39,7 +39,7 @@
 // arms.
 عام نوع مطابقة_غير_شاملة = {
     النطاق: نطاق,
-    // The scrutinee, which the diagnostic marks (as rustc marks E0004's).
+    // The scrutinee, which the diagnostic marks.
     نطاق_المميز: نطاق,
     نوع_المميز: اختياري معرف_نوع,
     الناقصة: متجه طبيعي,

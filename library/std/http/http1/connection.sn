@@ -61,12 +61,12 @@
 }
 
 // The Date header an origin server with a clock sends (RFC 9110 §6.6.1;
-// Nahr item 18), as Go's net/http and hyper add it on the server side only:
+// Nahr item 18), added on the server side only:
 // the current time as an IMF-fixdate, unless the service already set one.
 // 1xx responses carry none. Without a working clock nothing is added.
 //
 // The text changes once a second, so it is formatted at most once a second
-// and kept for every thread (Nahr item 4; hyper keeps a cached date too). The
+// and kept for every thread (Nahr item 4). The
 // cache is a seqlock (Linux seqcount): an odd sequence means a write is in
 // progress; a reader that sees the sequence change formats the date itself.
 مرادف احمل_ذري_تاريخ_ويب = بدائي_ذري_حمل;

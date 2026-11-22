@@ -131,42 +131,6 @@ Passing a value to a function is like assigning it to the function's parameter: 
 into the function. That is why this program, which looks harmless, does not compile:
 
 ```sultan fail
-import std.io.println;
-
-def main(): int {
-    let greeting: string = "hello";
-    println(greeting);
-    println(greeting);
-    return 0;
-}
-```
-
-```text
-error[SULTANC-OWNERSHIP-USE-AFTER-MOVE]: use after move — The value used after being moved is `greeting`. The value is used after its ownership was moved.
-  --> main.sn:6:13..6:21
-   |
- 6 |     println(greeting);
-   |             ^^^^^^^^ invalid use
-   |
-  ::: main.sn:4:5..4:36
-   |
- 4 |     let greeting: string = "hello";
-   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ original owner
-   |
-  ::: main.sn:5:13..5:21
-   |
- 5 |     println(greeting);
-   |             ^^^^^^^^ value moved here
-   |
-```
-
-`println` takes its `string` by value, so the first call moved `greeting` into `println`, which freed it
-when it finished. The second call has nothing to print. The next section shows two ways around this:
-borrowing, and making a copy.
-
-The same happens with any function:
-
-```sultan fail
 def count(values: vector int): int {
     return length(values);
 }
@@ -197,7 +161,11 @@ error[SULTANC-OWNERSHIP-USE-AFTER-MOVE]: use after move — The value used after
    |
 ```
 
-`count` became the owner of the vector, and freed it when it returned.
+`count` became the owner of the vector, and freed it when it returned. The next section shows two ways
+around this: borrowing, and making a copy.
+
+`println` does not have this problem: you can print the same string twice. That is because `println`
+only borrows its text, as the next section explains.
 
 ## Returning values moves them out
 

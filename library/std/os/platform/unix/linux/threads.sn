@@ -1,5 +1,5 @@
 // Linux OS threads (docs/en/reference/concurrency.md), on raw system calls with no libc,
-// the way Go's runtime and musl start a thread. A thread is a `clone` with a
+// the way musl starts a thread. A thread is a `clone` with a
 // shared address space, file table, signal handlers and thread group, onto a
 // stack std maps itself with a guard page; `join` is a futex wait on the tid
 // the kernel clears when the thread exits (CLONE_CHILD_CLEARTID). The clone
@@ -25,7 +25,7 @@
 
 // A thread stack: 2 MiB of RW pages with a PROT_NONE guard page at the low
 // end, so an overflow faults instead of corrupting another thread's memory
-// (Rust's and glibc's default thread stack is 2 MiB, Go's g0 8 KiB grows).
+// (2 MiB is also glibc's default thread stack).
 // The highest 64 bytes hold the thread's bookkeeping word (the tid cell the
 // kernel writes and clears, or FreeBSD's thr_exit state), below which the
 // stack starts; it lives as long as the mapping, which join unmaps after
@@ -118,7 +118,7 @@
     أرجع مستقبل_لينكس(العنوان, العملية, القيمة);
 }
 
-// sched_yield: the same call on Linux and FreeBSD (Rust's yield_now).
+// sched_yield: the same call on Linux and FreeBSD.
 عام عرف تنازل_لينكس(): فراغ {
     دع تجاهل: ط64;
     غير_آمن {
@@ -213,9 +213,8 @@
         أرجع الخام & 0xFFFFFFFF;
     }
 
-    // sched_getaffinity(0, 128, mask): the CPUs this thread may run on, as
-    // Rust's available_parallelism counts them (CPU_COUNT over a 1024-bit
-    // cpu_set_t). The kernel answers the number of mask bytes it wrote.
+    // sched_getaffinity(0, 128, mask): the CPUs this thread may run on
+    // (CPU_COUNT over a 1024-bit cpu_set_t). The kernel answers the number of mask bytes it wrote.
     عام عرف عدد_المعالجات_لينكس(): نتيجة ط64, خطأ_نظام_أصلي {
         دع القناع: متغير متجه ط64 = [];
         دع ف: متغير طبيعي = 0;

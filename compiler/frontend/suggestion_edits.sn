@@ -22,7 +22,8 @@
 //   - `mutable` for a `let` binding that is written to;
 //   - the `import` of a std module that declares an unknown name public;
 //   - `&`, `*` or an explicit `as` conversion when the expected and the
-//     found Type say exactly which one fits.
+//     found Type say exactly which one fits;
+//   - `()` after a constructor without payloads read as a value.
 // Every edit is checked against the source bytes before it is offered, and
 // its keywords are written in the source's own surface (English or Arabic).
 
@@ -102,9 +103,33 @@
     أرجع نطاق_مصدر_تشخيص_من_خريطة(النطاق, المحمل, المعرف, المقتطف);
 }
 
+// ---- the call of a constructor read as a value ----
+
+// SULTANC-NAME-CONSTRUCTOR-NOT-CALLED: `()` right after a constructor
+// without payloads that is read as a value (`Color.Red` -> `Color.Red()`).
+// A call is the only meaning such a constructor has, so the fix is
+// machine-applicable when its payload count is known (القابلية is the
+// producer's). نطاق_المنشئ is the constructor's name as written.
+عام عرف أضف_إصلاح_استدعاء_منشئ(
+    التشخيص: &متغير تشخيص,
+    المحمل: &خريطة_مصادر,
+    نطاق_المنشئ: نطاق,
+    القابلية: قابلية_تطبيق_إصلاح
+): منطقي {
+    دع المعرف: طبيعي = نطاق_المنشئ.النهاية.المصدر مثل طبيعي;
+    إذا (!مصدر_موجود(المحمل, المعرف)) { أرجع خطأ; };
+    طابق مصدر_إدراج(المحمل, المعرف, نطاق_المنشئ.النهاية.البايت مثل طبيعي) مع
+    | اختياري.لا_شيء -> { أرجع خطأ; }
+    | اختياري.موجود(المصدر) -> {
+        أرجع أضف_إصلاحا(
+            التشخيص, المصدر, «()», القابلية, مفتاح_صياغة.مساعدة_استدع_المنشئ()
+        );
+    };
+}
+
 // ---- the missing arms of a match that is not exhaustive ----
 
-// SULTANC-PATTERN-NON-EXHAUSTIVE (rustc's E0004 fix): an arm `| <case> ->
+// SULTANC-PATTERN-NON-EXHAUSTIVE: an arm `| <case> ->
 // { }` for each case no arm covers, each on its own line after the last
 // arm, indented as that arm is. نمط_الأخيرة is the last arm's pattern,
 // جسم_الأخيرة its body; الحالات are the patterns as the source writes them.

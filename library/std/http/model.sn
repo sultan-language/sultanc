@@ -20,7 +20,7 @@
 };
 
 // العنوان_البعيد is the client's address as "ip:port" ("[ip]:port" for
-// IPv6), as Go's Request.RemoteAddr: the std servers fill it from the
+// IPv6): the std servers fill it from the
 // accepted socket (Nahr item 15); it is empty for a request a program builds
 // itself, such as a client request.
 عام نوع طلب_ويب<B> = {

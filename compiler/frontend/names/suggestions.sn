@@ -14,8 +14,7 @@
 // is visible from the same scope in the same namespace, found by spelling
 // distance over canonical identifier identities (identifier_identity.sn: the
 // same Arabic normalization the resolver compares with), and resolved again
-// before it is offered, so it is never invented. Like rustc's
-// `find_best_match_for_name`: the distance limit is a third of the name's
+// before it is offered, so it is never invented. The distance limit is a third of the name's
 // length, and names shorter than three characters get no suggestion.
 
 // The identity as Unicode scalars (a byte that is not UTF-8 stays one unit).
@@ -113,8 +112,8 @@
 
 // A local declared in the statement that holds the use (`let count = cuont`
 // declares `count` before its initializer is bound): no `;`, `{` or `}` lies
-// between its name and the use. It is not offered, as rustc does not offer a
-// binding inside its own initializer.
+// between its name and the use. It is not offered: a binding is not offered
+// inside its own initializer.
 عرف محلي_في_عبارة_الاستخدام(
     سياق_الأسماء: &سياق_أسماء,
     الرمز: معرف_رمز,

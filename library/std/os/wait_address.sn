@@ -1,6 +1,6 @@
 // Waiting on an address (docs/en/reference/concurrency.md, "Waiting and waking"): the one
 // blocking primitive std.sync's Mutex, Condvar, Once, RwLock and channels are
-// built on, after Rust's sys/sync/futex and Go's runtime/sema. A thread
+// built on. A thread
 // sleeps while a 32-bit atomic cell holds an expected value, and another
 // thread wakes one or every sleeper on that cell. The check and the sleep are
 // one step in the kernel, so a wake that happens between a caller's load and

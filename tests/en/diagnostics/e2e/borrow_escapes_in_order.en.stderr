@@ -1,0 +1,34 @@
+error[SULTANC-BORROW-REFERENCE-ESCAPE]: reference escapes its valid scope — The escaping reference is `value`. A reference outlives the value it points to.
+  --> tests/en/diagnostics/e2e/borrow_escapes_in_order.sn:12:5..12:24
+    |
+ 12 |     let value: int = 1;
+    |     ^^^^^^^^^^^^^^^^^^^
+    |
+
+error[SULTANC-BORROW-REFERENCE-ESCAPE]: reference escapes its valid scope — The escaping reference is `reference`. A reference outlives the value it points to.
+  --> tests/en/diagnostics/e2e/borrow_escapes_in_order.sn:18:5..18:34
+    |
+ 18 |     let reference: &int = &value;
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+error[SULTANC-BORROW-REFERENCE-ESCAPE]: reference escapes its valid scope — The escaping reference is `view`. A reference outlives the value it points to.
+  --> tests/en/diagnostics/e2e/borrow_escapes_in_order.sn:24:5..24:36
+    |
+ 24 |     let view: &vector int = &local;
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+error[SULTANC-BORROW-REFERENCE-ESCAPE]: reference escapes its valid scope — The escaping reference is `reference`. A reference outlives the value it points to.
+  --> tests/en/diagnostics/e2e/borrow_escapes_in_order.sn:30:5..30:34
+    |
+ 30 |     let reference: &int = &value;
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+error[SULTANC-BORROW-REFERENCE-ESCAPE]: reference escapes its valid scope — The escaping reference is `target`. A reference outlives the value it points to.
+  --> tests/en/diagnostics/e2e/borrow_escapes_in_order.sn:35:21..35:41
+    |
+ 35 | def mutable_capture(target: &mutable int): fn(int): int {
+    |                     ^^^^^^^^^^^^^^^^^^^^
+    |

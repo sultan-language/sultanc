@@ -3,7 +3,7 @@
 // تشخيص: SULTANC-FORMAT-STRING
 // نظير: tests/ar/stdlib/fmt/reject_format_missing_argument.sn
 // خرج-تشخيص-إنجليزي: reject_format_missing_argument.en.txt
-// Rust: invalid reference to positional argument 1.
+// Reason: format.missing-argument (positional argument 1).
 import std.fmt.fmt;
 
 def main(): int {

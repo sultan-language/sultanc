@@ -3,8 +3,7 @@
 استورد compiler.backend.architectures.x86_64.systems.linux.register_rules;
 
 // Native x86-64 Windows register rules. Calls between SultanC functions keep
-// SultanC's internal register convention, the System V one (as Go keeps its
-// own ABIInternal on Windows); only calls to declared external functions
+// SultanC's internal register convention, the System V one; only calls to declared external functions
 // (kernel32, ntdll, the C runtime) use the Microsoft x64 convention. The two
 // share one plan vocabulary, so the Microsoft argument registers have their
 // own logical indexes: integer parameter slot p (0-3) is index

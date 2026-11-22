@@ -21,8 +21,8 @@
 استورد المكتبة.ترميز.مواضع;
 استورد المكتبة.نصوص.من_بايتات;
 
-// `@@track_caller` (`@@يتتبع_المستدعي`, docs/en/reference/testing.md), as
-// Rust's `#[track_caller]`. A marked function's last parameter is a
+// `@@track_caller` (`@@يتتبع_المستدعي`, docs/en/reference/testing.md): a
+// marked function reports its caller's place. A marked function's last parameter is a
 // std.debug.location `موقع_مصدر`: { a reference to the file's path, the
 // line, the column }, a plain record. The Type pass gives every use of the
 // function its Type without that parameter (types/semantic_pipeline.sn,
@@ -33,8 +33,7 @@
 //   - a direct call inside another marked function passes the location that
 //     function received, so a helper reports its own caller's place;
 //   - a function value of a marked function is its shim, a function of the
-//     other parameters that calls it with the place of its definition (Rust's
-//     fn-pointer shim).
+//     other parameters that calls it with the place of its definition.
 // Each file's path is one immutable text global; the location refers to it.
 
 عرف معرف_نوع_نص_موقع(): معرف_نوع { أرجع معرف_نوع_من(رقم_نوع_بدائي(نوع_بدائي_مقنن.نص())); }

@@ -1,6 +1,6 @@
 // The process id and terminal checks on Linux, Android and FreeBSD, on raw
 // system calls with no libc (Nahr items 17): getpid, and isatty(3) the way
-// musl and Go's x/term test a descriptor, an ioctl that reads the terminal
+// musl tests a descriptor, an ioctl that reads the terminal
 // attributes (Linux TCGETS, FreeBSD TIOCGETA) and fails with ENOTTY on
 // anything that is not a terminal.
 استورد نظام_التشغيل.منصات.يونكس.لينكس.نداءات_النظام.نتيجة_النواة;

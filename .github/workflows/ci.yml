@@ -19,9 +19,9 @@
 #   workflow_call                   scope    nightly.yml, promote.yml, beta.yml
 #                                            (full, opt-in suites on, qualify)
 #
-# This is Rust's shape (a few Linux jobs on a pull request, every tier-1 host
-# once per commit before it lands) and LLVM's (presubmit builds what changed;
-# the wide matrix runs after the commit lands). plan.py has the details.
+# A few Linux jobs run on a change and every host once per commit before it
+# is promoted; as in LLVM's CI, presubmit builds what changed and the wide
+# matrix runs after the commit lands. plan.py has the details.
 #
 # Qualification: a full-tier run called with `qualify: true` that passes its
 # gate sets the commit status `sultanc/qualification` on the commit it tested

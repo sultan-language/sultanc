@@ -42,8 +42,8 @@
 //
 // Spellings of the modules inside a package are no part of the graph: a
 // folder's root file declares them with `module` (module_spellings.sn).
-// A source_root is cleaned lexically (std.fs.path نظف_المسار, as Cargo
-// does), so `app/../util` is `util` in every source name and diagnostic,
+// A source_root is cleaned lexically (std.fs.path نظف_المسار), so
+// `app/../util` is `util` in every source name and diagnostic,
 // and two packages whose source roots clean to one directory are an error.
 
 عام نوع تهجئة_رسم_حزم = {
@@ -381,7 +381,7 @@
 }
 
 // A path as written: absolute, or relative to the graph file's directory,
-// cleaned lexically without following symbolic links (as Cargo does), so
+// cleaned lexically without following symbolic links, so
 // `app/../util` is `util`: source names and diagnostics never carry `..`.
 عرف مسار_نسبة_إلى_رسم(مسار_الرسم: &نص, المكتوب: &نص): نص {
     إذا (مسار_مطلق(المكتوب)) { أرجع نظف_المسار(المكتوب); };

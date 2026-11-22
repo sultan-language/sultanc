@@ -16,7 +16,8 @@
 استورد المكتبة.نصوص.من_بايتات;
 
 // Runtime checks that report (docs/en/reference/errors.md, "Runtime
-// checks"), as Rust's overflow and bounds-check panics. MSIR's checked
+// checks"): an overflow or an index out of bounds names what failed and
+// where, instead of only stopping the program. MSIR's checked
 // integer operations and lowering's bounds checks trap; a trap ends the
 // program with no word of why. This pass, which the driver runs once
 // compile-time work is discharged and before the optimization pipeline

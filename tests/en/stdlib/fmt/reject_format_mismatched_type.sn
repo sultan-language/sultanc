@@ -3,7 +3,7 @@
 // تشخيص: SULTANC-FORMAT-STRING
 // نظير: tests/ar/stdlib/fmt/reject_format_mismatched_type.sn
 // خرج-تشخيص-إنجليزي: reject_format_mismatched_type.en.txt
-// Rust: the trait UpperHex is not implemented for str.
+// Reason: format.mismatched-type (`X` of text).
 import std.fmt.fmt;
 
 def main(): int {

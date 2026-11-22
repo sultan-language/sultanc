@@ -3,7 +3,7 @@
 // prefix integers (5.1), string literals with the canonical Huffman code of
 // Appendix B (5.2), and the four field representations (6).
 //
-// Decoding is bounded the way Go's x/net/http2/hpack and nghttp2 bound it:
+// Decoding is bounded the way nghttp2 bounds it:
 // a header list larger than the caller's limit (SETTINGS_MAX_HEADER_LIST_SIZE,
 // counted as name + value + 32 per field, RFC 9113 6.5.2) ends with an
 // error as soon as it is exceeded, string lengths are checked against the

@@ -1,0 +1,43 @@
+// اختبار: رفض
+// تشخيص: SULTANC-ICE-MISSING-SEMANTIC-FACT
+// نظير: tests/ar/diagnostics/e2e/ownership_merge_rejected.sn
+// خرج-تشخيص-عربي: ownership_merge_rejected.ar.stderr
+// خرج-تشخيص-إنجليزي: ownership_merge_rejected.en.stderr
+// Control flow cannot join a local that holds no value on one path and was
+// moved out on another, one moved out on one path and released on another,
+// or one borrowed exclusively on one path and shared on another by holders
+// used after the join: the analysis rejects the merge. One error each.
+def consume(text: string): int { return length(text) as int; }
+
+def moved_or_unset(flag: bool): int {
+    let text: string;
+    if (flag) {
+        text := "a";
+        let used: int = consume(text);
+    };
+    return 0;
+}
+
+def moved_or_released(flag: bool): int {
+    let text: string = "b";
+    if (flag) {
+        let used: int = consume(text);
+    } else {
+        release(text);
+    };
+    return 0;
+}
+
+def shared_or_exclusive(flag: bool): int {
+    let value: mutable int = 1;
+    let writer: &mutable int;
+    let reader: &int;
+    if (flag) {
+        writer := &mutable value;
+    } else {
+        reader := &value;
+    };
+    return *writer + *reader;
+}
+
+def main(): int { return 0; }

@@ -7,7 +7,7 @@
 // LPOVERLAPPED); BOOL UnlockFileEx(HANDLE, DWORD dwReserved, DWORD, DWORD,
 // LPOVERLAPPED). OVERLAPPED is 32 bytes on the 64-bit ABIs; its Offset and
 // OffsetHigh (bytes 16..23) are the start of the range: 0 here. The range
-// is the whole file, 2^64 - 1 bytes from 0, as Rust's File::lock takes it.
+// is the whole file, 2^64 - 1 bytes from 0.
 خارجي «kernel32.dll» عرف LockFileEx(
     المقبض: ط64, الأعلام: ط32, المحجوز: ط32, الطول_الأدنى: ط32, الطول_الأعلى: ط32,
     التراكب: *متغير ط64

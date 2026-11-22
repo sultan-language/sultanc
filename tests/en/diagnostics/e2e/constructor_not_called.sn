@@ -1,0 +1,15 @@
+// اختبار: رفض
+// تشخيص: SULTANC-NAME-CONSTRUCTOR-NOT-CALLED
+// نظير: tests/ar/diagnostics/e2e/constructor_not_called.sn
+// خرج-تشخيص-عربي: constructor_not_called.ar.stderr
+// خرج-تشخيص-إنجليزي: constructor_not_called.en.stderr
+// A constructor without payloads read as a value: it is called with `()`.
+// A help, and a machine-applicable fix that inserts `()` (JSON "fixes").
+type Color = | Red | Green;
+
+def main(): i32 {
+    let c: Color = Color.Red;
+    match c with
+    | Color.Red -> { return 42; }
+    | Color.Green -> { return 0; };
+}

@@ -3,9 +3,9 @@
 // خروج: 42
 // تفاضلي: نعم
 // نظير: tests/en/stdlib/behavior/fs_lock.sn
-// std.fs.lock بين عمليتين (File::lock وlock_shared وtry_lock وtry_lock_shared
-// وunlock في Rust؛ flock على يونكس). يشغل البرنامج نسخة ثانية من نفسه عبر
-// std.process.command وstd.env.executable (env::current_exe في Rust):
+// std.fs.lock بين عمليتين (القفل والقفل المشترك ومحاولتهما
+// وفك القفل؛ flock على يونكس). يشغل البرنامج نسخة ثانية من نفسه عبر
+// std.process.command وstd.env.executable:
 // التنفيذي يشغل نفسه؛ وفي المفسر argv[0] هو هذا المصدر والتنفيذي الحالي هو
 // المفسر، فالنسخة هي المفسر يشغله مرة أخرى (`interpret <المصدر> -- ...`) على
 // كل مضيف. تفتح النسخة الملف نفسه وتبلغ بحالة خروجها (10: ستحظر، 11: قفلت)

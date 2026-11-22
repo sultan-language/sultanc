@@ -15,8 +15,8 @@
 استورد المكتبة.نصوص.من_بايتات;
 
 // Function decorators (AT-01..AT-04). A decorator is an ordinary function
-// applied to the decorated function at its definition, as in Python
-// (`@d def f` binds f to d applied to f), but resolved and type-checked
+// applied to the decorated function at its definition
+// (`@d def f` binds f to d applied to f), resolved and type-checked
 // statically and with the decorated function passed as a value:
 //
 //   @d(a1, ..., ak) def f(x1: T1, ..., xn: Tn): R { body }

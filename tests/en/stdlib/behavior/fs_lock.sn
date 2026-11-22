@@ -3,10 +3,10 @@
 // خروج: 42
 // تفاضلي: نعم
 // نظير: tests/ar/stdlib/behavior/fs_lock.sn
-// std.fs.lock between two processes (Rust File::lock, lock_shared,
-// try_lock, try_lock_shared, unlock; flock on Unix). The program starts a
+// std.fs.lock between two processes (lock, lock_shared, try_lock,
+// try_lock_shared, unlock; flock on Unix). The program starts a
 // second copy of itself with std.process.command through
-// std.env.executable (Rust's env::current_exe): the executable runs itself;
+// std.env.executable: the executable runs itself;
 // under the interpreter argv[0] is this source and the current executable
 // is the interpreter, so the copy is the interpreter running it again
 // (`interpret <source> -- ...`), on every host. The copy opens the same

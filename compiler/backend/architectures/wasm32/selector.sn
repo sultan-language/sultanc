@@ -1050,7 +1050,7 @@
 }
 
 // Float conversions (docs/en/reference/type-system.md, "Numeric casts"): the non-trapping
-// saturating truncations (iNN.trunc_sat_fMM_*, NaN -> 0) are Rust's `as`;
+// saturating truncations (iNN.trunc_sat_fMM_*, NaN -> 0) are SultanC's `as`;
 // 8- and 16-bit results are clamped with fMM.min/max first (a NaN stays one).
 عرف أصدر_تحويل_عائم_ويب_أسمبلي(
     ح: &متغير حالة_اختيار_ويب_أسمبلي,
@@ -1509,7 +1509,7 @@
     أرجع نتيجة.نجح(الناتج);
 }
 
-// A vector literal allocates exactly its element count (Rust's vec![...]);
+// A vector literal allocates exactly its element count;
 // the count is checked before multiplying by the stride or allocating.
 عرف سعة_تهيئة_متجه_ويب_أسمبلي(العدد: طبيعي, حجم_العنصر: طبيعي): اختياري طبيعي {
     إذا (العدد == 0) { أرجع اختياري.موجود(0); };
@@ -1775,7 +1775,7 @@
     أصدر_ويب_أسمبلي(ح, 0x0B); // end
 }
 
-// Reserve (Rust's Vec::reserve_exact): when length + additional exceeds the
+// Reserve: when length + additional exceeds the
 // capacity, the buffer is reallocated to exactly that many elements with the
 // std reallocation provider, as append grows it.
 عرف أصدر_حجز_سعة_ويب_أسمبلي(

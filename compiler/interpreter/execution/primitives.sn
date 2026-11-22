@@ -156,8 +156,7 @@
     طابق (*قيم_الحجج)[0] مع
     | قيمة_تشغيل.مرجع(م) -> { المرجع_الأصلي := انسخ_مكان_تشغيل(&م); }
     | _ -> { أرجع فشل_حجة_بدائي(الهوية, 0); };
-    // An atomic writes through a shared reference (interior mutability, as
-    // Rust's atomics take &self): the place is written even when the
+    // An atomic writes through a shared reference (interior mutability): the place is written even when the
     // reference that names it is shared.
     دع المكان: متغير مكان_تشغيل = المرجع_الأصلي;
     المكان.قابل_للكتابة := صواب;
@@ -906,11 +905,11 @@
 // ---- The foreign-call bridge ------------------------------------------------
 // On hosts where std calls C functions (Windows, macOS) an extern call runs
 // the host function itself through the generated table
-// (host_externs_generated.sn), as ctypes or libffi call a resolved symbol:
+// (host_externs_generated.sn), a call of the resolved symbol:
 // integer arguments pass as words, a null pointer as null, and a pointer to
 // integer storage as the address of a host copy of the elements it
 // designates; copies the callee changed are written back. A few functions
-// whose results point into host memory are shims, as in Miri: the command
+// whose results point into host memory are shims: the command
 // line std reads at startup is the interpreted program's own.
 
 // Masks a raw result word to an integer result Type's width.
@@ -937,7 +936,7 @@
 // A raw kernel call that std's contract table does not describe (a user
 // program's own call, clone, execve, wait, mmap, socket options, ...) runs on
 // the host with its operands marshalled from their runtime values, the way
-// Miri's shims and libffi marshal a foreign call: an integer passes as is, a
+// a foreign call is marshalled: an integer passes as is, a
 // null pointer as 0, a pointer to integer storage (a u8 or integer vector
 // from the referenced element, or one integer variable) as the address of a
 // host copy of those bytes, and a pointer to a table of string pointers (the

@@ -3,11 +3,11 @@
 // خروج: 42
 // تفاضلي: نعم
 // نظير: tests/ar/stdlib/behavior/vector_capacity.sn
-// Vector capacity as Rust's Vec keeps it: capacity, reserve_exact,
+// Vector capacity as a vector keeps it: capacity, reserve_exact,
 // with_capacity, reserve and shrink_to_fit; truncate(0), pop to empty and
 // clear_vector keep the buffer, which the next appends reuse; on integers
 // and on owned text. The growth policy (compiler/runtime/vector_memory_policy.sn)
-// starts the first buffer at 8 elements of 1 byte (as Rust's RawVec), 2 of
+// starts the first buffer at 8 elements of 1 byte, 2 of
 // 2 to 1024 bytes, 1 above 1 KiB, then the capacity doubles.
 // extend_from grows by the same policy, amortized: to the larger of length +
 // count and twice the capacity (at least the minimum); reserve_exact and a
@@ -72,7 +72,7 @@ def main(): int {
     append(words, int_to_text(9));
     shrink_to_fit(&mutable words);
     if (capacity(words) != 2 || length(words[0]) != 2 || length(words[1]) != 1) { return 15; };
-    // A literal holds exactly its elements (Rust's vec![...]); the first
+    // A literal holds exactly its elements; the first
     // append doubles it.
     let literal: mutable vector int = [1, 2, 3];
     if (capacity(literal) != 3) { return 16; };

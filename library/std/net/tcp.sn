@@ -81,8 +81,8 @@
 عرف قيمة_تدفق_تي_سي_بي(التدفق: &تدفق_تي_سي_بي): عدد { أرجع **التدفق; }
 عرف قيمة_مستمع_تي_سي_بي(المستمع: &مستمع_تي_سي_بي): عدد { أرجع **المستمع; }
 
-// The OS descriptor (a Winsock SOCKET on Windows), for std.os.poll, as
-// Rust's AsRawFd. The stream or listener still owns it.
+// The OS descriptor (a Winsock SOCKET on Windows), for std.os.poll. The
+// stream or listener still owns it.
 عام عرف واصف_تدفق_تي_سي_بي(التدفق: &تدفق_تي_سي_بي): عدد { أرجع قيمة_تدفق_تي_سي_بي(التدفق); }
 عام عرف واصف_مستمع_تي_سي_بي(المستمع: &مستمع_تي_سي_بي): عدد { أرجع قيمة_مستمع_تي_سي_بي(المستمع); }
 
@@ -130,8 +130,8 @@
     أرجع اتصل_تي_سي_بي_بخيارات(العنوان, &الخيارات);
 }
 
-// A listening socket gets SO_REUSEADDR on Unix-like systems, as Rust's std
-// and most servers do: a server restarted on its port binds again while the
+// A listening socket gets SO_REUSEADDR on Unix-like systems, as most
+// servers do: a server restarted on its port binds again while the
 // old connections are still in TIME_WAIT. Windows' SO_REUSEADDR lets another
 // socket take a bound port, so it is not set there. The caller's own options
 // are applied after it and win.

@@ -59,7 +59,7 @@
 
 // The platform library of an external function is declared in std, at the
 // declaration (`خارجي «kernel32.dll» عرف ...`,
-// as Rust's `#[link(name = ...)]`): the WebAssembly import module, the PE DLL or
+// the library it names): the WebAssembly import module, the PE DLL or
 // the Mach-O dylib travels from MSIR (دالة_خارجية_مسير.المكتبة) to the object
 // writers and linkers (link/model.sn استيراد_مكتبة_مصرح_ربط). The compiler
 // holds no table of std's symbols. Previously this module mapped every

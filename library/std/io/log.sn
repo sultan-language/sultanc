@@ -60,7 +60,7 @@
     أرجع اطبع_سطر_خطأ(&النص);
 }
 
-// A formatted entry (Rust's log::info!("…", args), Go's log.Printf): the
+// A formatted entry: the
 // level prefix and the std.fmt text are built in one buffer and written to
 // standard error in one write. Below the logger's level nothing is formatted.
 عام عرف سجل_منسقا(

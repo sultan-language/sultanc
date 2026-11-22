@@ -4,7 +4,7 @@
 
 // A path flavor is explicit where a path belongs to another system (the
 // compiler may name target paths on a different host): the _بصيغة forms.
-// The unqualified forms use the host's flavor, as Rust's std::path does: on
+// The unqualified forms use the host's flavor: on
 // Windows "\\" and "/" both separate and drive and UNC prefixes are roots,
 // everywhere else only "/" separates. A program built for POSIX keeps the
 // exact POSIX rules.
@@ -289,7 +289,7 @@
 
 عام عرف طبع_المسار(المسار: &نص): نص { أرجع طبع_المسار_بصيغة(المسار, صيغة_مسار_المضيف()); }
 
-// Lexical cleaning, as Go's filepath.Clean and Cargo's normalize_path: the
+// Lexical cleaning: the
 // path is normalized (طبع_المسار_بصيغة), then each ".." removes the
 // component before it without asking the file system, so "link/.." is
 // cleaned to "." even when link is a symbolic link. A ".." with nothing
@@ -525,8 +525,7 @@
 }
 
 // The path that leads from the directory الأصل to الهدف: joined onto الأصل
-// (صل_المسار_بصيغة) it names الهدف, as Python's os.path.relpath(target,
-// start) and Rust's pathdiff::diff_paths(target, base). It is lexical, not a
+// (صل_المسار_بصيغة) it names الهدف. It is lexical, not a
 // file-system query: both paths are normalized first (طبع_المسار_بصيغة,
 // which keeps ".." because "link/.." is not generally the link's parent),
 // components compare byte for byte (no Windows case folding), and symlinks

@@ -23,7 +23,13 @@ module + name + type + pattern + safety analysis
 semantic lowering
   |
   v
-MSIR  -->  scalar promotion
+initial MSIR  -->  structural verification
+  |
+  v
+drop elaboration + ownership glue   (ownership-analysis.md)
+  |
+  v
+finalized MSIR  -->  scalar promotion
   |
   v
 MSIR verifier
@@ -105,12 +111,27 @@ initializer and a writability flag. Native output materializes their layout once
 data model, and backends refer to the same global identity. The object writers decide how that
 identity is represented in Mach-O, ELF or WebAssembly.
 
+An immutable top-level value built by an enum constructor (`let c: Color = Color.Red();`,
+`let s: Shape = Shape.Circle(2);`, `let o: option int = option.some(3);`) has no MSIR constant, since
+MSIR has no tagged constant. Lowering evaluates it once into a tagged value of constants
+(`ثابت_موسوم_خفض`, `compiler/msir/lowering/constant_evaluation.sn`: the constructor's ordinal, the
+value's Type, and each payload as a number, boolean, character, text, null pointer or nested
+constructor value), and every read builds the value where it is read with the instructions of the
+constructor call itself: its payload constants, then the tagged construction
+(`compiler/msir/lowering/expressions.sn`, `اخفض_ثابتا_موسوما_إلى_مسير`). A read used as a place gets
+a temporary place, as a scalar constant does. Finalized MSIR thus holds only ordinary instructions,
+which the native backends, the LLVM provider, the wasm backend and the interpreter already handle;
+no consumer reads a tagged global. A value that names another such value declared before it copies
+it. A `mutable` one, a vector whose elements are built by constructors, and a constructor whose
+argument is no such constant (a call, a vector) are `SULTANC-COMPTIME-NON-CONSTANT` with the reason
+`comptime.module-constructor-not-constant`, a user error at the declaration.
+
 ### Pattern dispatch
 
 A `match` whose arms are constructor patterns of the scrutinee's type, with or without payload
 patterns and optionally ending in one irrefutable arm, lowers to one multiway branch on the
-constructor tag (`compiler/msir/lowering/statements.sn`, as rustc switches on the discriminant
-before testing sub-patterns). The branch enters the first arm of each tag. A failing payload test
+constructor tag (`compiler/msir/lowering/statements.sn`), before any sub-pattern is
+tested. The branch enters the first arm of each tag. A failing payload test
 continues with the next arm of the same tag and then with the final irrefutable arm or a trap.
 Other matches keep ordered tests.
 
@@ -130,24 +151,29 @@ Each consumer handles the multiway branch its own way.
 
 ### Member reads through places
 
-A read of a member of storage that has a place is lowered through that place. Storage with a place
-is an owner local or parameter (owners live in storage, `drops.sn`), a local whose address was
-taken, a global, a dereference or a raw-pointer element. The read goes through any chain of record
+A read of a member of storage is lowered through its place. Such storage is an owner local or
+parameter (owners live in storage, `drops.sn`), a local whose address or member was taken, a local
+alive across control flow, a global, a dereference or a raw-pointer element. Every local has a
+place ([Ownership Analysis](ownership-analysis.md), "Source locals in initial MSIR"), but one read
+only whole so far is not such storage. The read goes through any chain of record
 field and vector element projections (`x.a.b`, `v[i].f`, `(*r).f`) as `مكان_حقل` or `مكان_فهرس`
 followed by one `تحميل` of the member (`جذر_مكان_قراءة_للخفض`,
-`compiler/msir/lowering/expressions.sn`), as rustc reads through a place projection. Loading the
+`compiler/msir/lowering/expressions.sn`), a read through a place projection. Loading the
 whole root and extracting the member would make every backend copy the whole aggregate and the
-interpreter copy its member list. A local that is still an SSA value keeps the extraction, which
-addresses the member in the value's storage without a copy. A use of the root local that SSF
-recorded as a move still gives up the owner's value.
+interpreter copy its member list. A local read only whole keeps the whole load and the extraction:
+promotion replaces the load by the stored value, and the extraction addresses the member in the
+value's storage without a copy. A use of the root local that moves its value out still gives up
+the owner's value.
 
 ### Scalar promotion
 
-Lowering keeps every local that lives across control flow in a place
-(`statements.sn`, `ثبّت_أماكن_محليات_قبل_تفرع_التحكم`), so each use of a loop counter is a load and
-each assignment a store. One pass, `compiler/msir/msir_promotion.sn` (`رقّ_محليات_برنامج_مسير`),
-runs on lowered MSIR right before verification and promotes those places to SSA values, as LLVM's
-mem2reg does (Cytron et al., TOPLAS 1991).
+Lowering keeps every local in a place (`drops.sn`, `ثبّت_محلي_خفض`), so each use of a local is a
+load and each assignment a store. One pass, `compiler/msir/msir_promotion.sn`
+(`رقّ_محليات_برنامج_مسير`), the first of the optimization pipeline, promotes those places to SSA
+values (Cytron et al., TOPLAS 1991). At -O0 no pass runs and every local stays in its frame slot.
+A local of any other Type is promoted when it is stored once, before every load of it: each load
+becomes the stored value. A promoted place's debug variables move to its stored values and added
+parameters; a value an assignment already bound to the variable keeps that binding.
 
 A local place is promoted when its type is an integer, a float or a bool, every use is a whole
 load or store, and its loads, its stored values and the place have one exact type. Block
@@ -157,15 +183,16 @@ by the reaching value, and parameters that nothing reads are removed (pruned SSA
 the local holds no value passes the type's zero, as LLVM passes undef. The place's debug variables
 are bound to the stored values and the added parameters, so both backends still describe the local.
 
-A place whose address is taken, a member place, an aggregate, or a place in a function whose entry
-block has predecessors keeps its storage. The verifier then checks the promoted program like any
+A place whose address is taken, a member place, an aggregate stored more than once, or a place in
+a function whose entry block has predecessors keeps its storage. The verifier then checks the promoted program like any
 other. Renumbering lookups answer a dense map (entry i maps value i) by index
 (`msir_renumbering.sn`), so the pass stays linear per function.
 
 ### Float primitives
 
 The IEEE operations of [Type System](../reference/type-system.md) ("Float operations") are one
-primitive, `هوية_بدائي_مترجم.عملية_عائمة`, lowered as rustc lowers `f64::sqrt` and friends.
+primitive, `هوية_بدائي_مترجم.عملية_عائمة`, lowered to the target's float instructions or LLVM
+intrinsics.
 
 | Operation | x86-64 native | ARM64 native | WebAssembly | LLVM |
 |---|---|---|---|---|
@@ -289,7 +316,7 @@ implementation it was checked against.
 | powerpc64le | `architectures/powerpc64/systems/linux/abi_rules.sn` (ELFv2) |
 | s390x | `architectures/systemz/systems/linux/abi_rules.sn` |
 | mips64el | `architectures/mips64/systems/linux/abi_rules.sn` (n64) |
-| sparcv9 | `architectures/sparc64/systems/linux/abi_rules.sn` (float members as Clang's CoerceBuilder; packed `inreg` parts with single floats) |
+| sparcv9 | `architectures/sparc64/systems/linux/abi_rules.sn` (float members coerced to floating parts; packed `inreg` parts with single floats) |
 | ve | `architectures/ve/systems/linux/abi_rules.sn` |
 | every other target | scalars and pointers only; structures are rejected explicitly |
 
@@ -304,11 +331,11 @@ the extension requirement. The target owner also supplies the code-generation ba
 platform C ABI depends on (`أساس_توليد_شفرة_للهدف`: RV64GC/lp64d, RV32IMAC/ilp32, LoongArch64
 lp64d), which the LLVM target machine applies.
 
-SPARC V9 structures with float members split as Clang's `SparcV9ABIInfo` does. Each naturally
+SPARC V9 structures with float members are split as the SPARC V9 ABI requires. Each naturally
 aligned float or double is a floating part at its offset and the bytes around them are integer
 parts. With a single-precision member the plan marks the parts packed
 (`تصنيف_قيمة_واجهة.أجزاء_مرصوصة`), which the LLVM provider spells as `inreg` on each part and on a
-multi-part result (checked against Clang's sparcv9 code for the same C declarations). The native
+multi-part result (checked against the SPARC V9 ABI for the same C declarations). The native
 backends pass every indirect aggregate argument as the address of a per-call copy in the outgoing
 call area (the AArch64 encoder, the only native target whose C ABI passes structures by address), so
 a foreign callee may write it. x86-64 SysV passes large structures by value on the stack.
@@ -337,18 +364,17 @@ LLVM's optimization and code-generation pipelines.
 The driver passes an optimization level, so the provider runs both the `default<O2>` pipeline and
 the O2 code generator. At O2 LLVM promotes the allocas, hoists the vector data pointers and lengths
 out of loops, removes the bounds checks it can prove, and turns divisions by constants into
-multiplies. `--emit=llvm-ir` prints the optimized module before code generation, as
-`rustc --emit=llvm-ir` does.
+multiplies. `--emit=llvm-ir` prints the optimized module before code generation.
 
 With the inliner running, every instruction inside a function that has a subprogram needs a debug
 location, because LLVM keeps the callee's locations when a call site has none. Compiler-generated
-instructions therefore take a line-0 location in the function's subprogram, as Clang's artificial
-locations do (`debuginfo.sn`, `ابدأ_دالة_تصحيح_إل_إل_في_إم`).
+instructions therefore take an artificial line-0 location in the function's subprogram
+(`debuginfo.sn`, `ابدأ_دالة_تصحيح_إل_إل_في_إم`).
 
 At O2 the loop idiom recognizer turns copy and fill loops into `llvm.memcpy` and `llvm.memset`,
 which become calls of libc `memcpy` and `memset`, and SultanC executables link no C library. Before
 the passes, every defined function gets the `"no-builtins"` attribute (`optimization.sn`,
-`علّم_دوال_مستقلة_إل_إل_في_إم`), as Clang does for `-ffreestanding`. After them, each remaining
+`علّم_دوال_مستقلة_إل_إل_في_إم`), as a freestanding build requires. After them, each remaining
 constant-length `llvm.memcpy` or `llvm.memset` is switched to its `.inline` form
 (`ضمن_نسخ_مضمن_إل_إل_في_إم`), which the code generator always expands inline.
 
@@ -415,6 +441,23 @@ one lowering. Every MSIR value owns a local: a scalar, or the i32 address of agg
 shadow-stack frame. The CFG is structured over the dominator tree (`control_flow.sn`): loop headers
 become `loop` and merge nodes `block`, after Ramsey's "Beyond Relooper", and irreducible CFGs are
 rejected. Calls follow the portable SultanC ABI plan from the target ABI owner.
+
+One local per value makes most of a selected body local traffic, so each finished function goes
+through `local_optimizer.sn`, the job of Binaryen's coalesce-locals and simplify-locals and of LLVM's
+WebAssembly register coloring and stackification:
+
+1. A local written once by `const; local.set` and not live at entry is replaced by the constant
+   wherever it is read.
+2. Liveness over the function's control-flow graph gives the locals that interfere. A copy does not
+   make its two locals interfere, and the locals live at entry interfere with each other (entry is
+   where parameters and the zero of every other local are defined). Locals of one type that never
+   interfere share one local, the two sides of a copy first, and a copy within one local is deleted.
+3. `local.set x; local.get x` keeps the value on the operand stack (`local.tee x` when x is read again),
+   and a write nothing reads becomes nothing (`local.tee`) or `drop` (`local.set`).
+
+Every other instruction is kept byte for byte, so relocations, origin ranges and value locations move
+with their instruction. A body with an instruction the pass does not decode is left unchanged. On the
+compiler itself (the bootstrap seed) the pass removes 95% of the locals and 20% of the instructions.
 
 Relocatable fields are 5-byte LEB128 slots recorded as relocation intent (`encoded_code.sn`).
 `compiler/backend/object/wasm/wasm_object.sn` maps them to the tool-conventions relocations, symbols

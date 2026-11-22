@@ -3,7 +3,7 @@
 // خروج: 42
 // نظير: tests/en/language/safety/unchecked_pointer_reference.sn
 // A raw pointer carries no checked provenance, so `p as &T` inside unsafe is
-// an unchecked borrow (Rust's `&*p`): the value it points to may be written
+// an unchecked borrow: the value it points to may be written
 // while the reference is in scope, and a function may return it; the unsafe
 // block vouches for the address. The reference reads and writes the
 // pointer's address and owns nothing. Safe references keep every check

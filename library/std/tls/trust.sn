@@ -1,10 +1,10 @@
 // System trust anchors for TLS peer verification.
 //
-// The bundle and directory locations are those Go crypto/x509 searches
-// (root_linux.go, root_unix.go): the first readable bundle is used, else
+// The bundle and directory locations are the usual distribution ones
+// (std.os.trust_store): the first readable bundle is used, else
 // every certificate file of the platform directories. SSL_CERT_FILE and
 // SSL_CERT_DIR (a list separated by ':', ';' on Windows), when set, replace
-// the search as in Go and OpenSSL. On macOS the Apple-maintained PEM bundle
+// the search as in OpenSSL. On macOS the Apple-maintained PEM bundle
 // /etc/ssl/cert.pem is read; keychain trust settings are not consulted.
 // Android reads its system CA directories (one PEM file per root). Windows
 // enumerates the CryptoAPI ROOT system store (crypt32). WASI has no host

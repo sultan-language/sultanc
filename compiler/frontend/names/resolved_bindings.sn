@@ -32,6 +32,16 @@
     الجديدة: نص
 };
 
+// `Enum.Ctor` used as a value: a constructor is called, with `()` when it
+// has no payload (SULTANC-NAME-CONSTRUCTOR-NOT-CALLED). نطاق_النوع and
+// نطاق_المنشئ are the two names as written; تصريح_المنشئ is the name span of
+// the constructor's declaration, from which the frontend reads its payloads.
+عام نوع منشئ_غير_مستدعى_مؤجل = {
+    نطاق_النوع: نطاق,
+    نطاق_المنشئ: نطاق,
+    تصريح_المنشئ: نطاق
+};
+
 // A value-name occurrence that resolved to nothing. The Name pass records it
 // and goes on binding the module, so every independent unknown name of a
 // module is reported (frontend/semantic_pipeline.sn) and the module is still
@@ -39,10 +49,14 @@
 // الاقتراح: the visible name of the same namespace closest in spelling
 // (names/suggestions.sn), as written. الوحدات_المصرحة: loaded modules this
 // module does not see the name through that declare it public.
+// المنشئ_غير_المستدعى: the occurrence is no unknown name but `Enum.Ctor`
+// read as a value without its call (`Color.Red` for `Color.Red()`); then
+// النطاق is the whole expression and الاقتراح and الوحدات_المصرحة are empty.
 عام نوع اسم_مفقود_مؤجل = {
     النطاق: نطاق,
     الاقتراح: اختياري نص,
-    الوحدات_المصرحة: متجه معرف_وحدة
+    الوحدات_المصرحة: متجه معرف_وحدة,
+    المنشئ_غير_المستدعى: اختياري منشئ_غير_مستدعى_مؤجل
 };
 
 عام نوع سياق_روابط_أسماء = {

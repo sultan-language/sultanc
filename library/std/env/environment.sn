@@ -5,8 +5,7 @@
 استورد نظام_التشغيل.أخطاء;
 
 // A program's environment variables, working directory and temporary
-// directory (Rust std::env::var, current_dir, temp_dir; Go os.Getenv,
-// Getwd, TempDir). Until a variable is set or removed (std.env.variables)
+// directory. Until a variable is set or removed (std.env.variables)
 // they are read from the system (std.env.system); afterwards from the table
 // std keeps (std.env.table), which the change updated.
 

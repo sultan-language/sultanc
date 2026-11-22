@@ -19,8 +19,7 @@
 // the handle; MSIR ownership (drop elaboration and the per-Type glue every
 // backend runs) decides when the release primitive frees the storage. Freed
 // slots are reused through free lists, and a generation per slot rejects a
-// stale handle (a use after free) instead of reading reused storage, as
-// Miri's allocation IDs do.
+// stale handle (a use after free) instead of reading reused storage.
 
 // One heap buffer. Byte elements (u8 vectors and text) are stored as bytes,
 // other elements as runtime values. An interned literal is static: never
@@ -68,8 +67,8 @@
 };
 
 // A host region: memory the host returned to the interpreted program (an
-// environment block, a CERT_CONTEXT, an opaque handle), as Miri gives every
-// foreign allocation a provenance-tracked place. The bytes are mirrored in
+// environment block, a CERT_CONTEXT, an opaque handle): every foreign
+// allocation gets a place of its own whose origin is tracked. The bytes are mirrored in
 // one interpreter buffer of fixed length (u8 elements as bytes, wider
 // integers as values, a record per element for a record pointee), so every
 // read and write through a pointer into the region is bounds-checked like
@@ -283,7 +282,7 @@
 }
 
 // The capacity an append that needs room for المطلوب elements grows a buffer
-// of capacity القديمة to, as compiled code does (Rust's RawVec rule): at least
+// of capacity القديمة to, as compiled code does: at least
 // double, at least what is needed, and never below the policy's minimum.
 عرف سعة_بعد_نمو_مفسر(القديمة: طبيعي, المطلوب: طبيعي, حجم_العنصر: طبيعي): طبيعي {
     دع السياسة: سياسة_نمو_متجه = سياسة_نمو_المتجه_لعنصر(حجم_العنصر);
@@ -305,7 +304,7 @@
     دع العدد: متغير طبيعي = الطول(القيم) مثل طبيعي;
     إذا (بايتات) { العدد := الطول(البايتات) مثل طبيعي; };
     // A new buffer (a literal, a clone, a copy) holds exactly its elements,
-    // as compiled code allocates it (Rust's vec![...] and clone).
+    // as compiled code allocates it.
     دع السعة: طبيعي = العدد;
     إذا (!ثابت) { عد_سعة_مخزن_مفسر(الذاكرة, 0, السعة, حجم_العنصر); };
     طابق (*الذاكرة).رأس_المخازن_الحرة مع
@@ -387,7 +386,7 @@
 }
 
 // Reserve: the buffer holds at least its length plus الإضافي elements,
-// exactly that many when it grows (Rust's Vec::reserve_exact). Returns the
+// exactly that many when it grows. Returns the
 // handle the vector has afterwards (a static buffer is copied first, as
 // append copies it), or لا_شيء for a stale handle.
 عام عرف احجز_سعة_مخزن_مفسر(

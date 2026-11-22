@@ -1,6 +1,6 @@
 // Host operations the interpreter performs for an interpreted program where
 // the program's own operation has no interpreter-memory meaning: the shims
-// of the host bridge (Miri's term), kept apart from the interpreter's
+// of the host bridge, kept apart from the interpreter's
 // semantic memory. Each runs on the host process the interpreter is.
 
 // Flat machine memory (std's allocation provider reads and writes the words

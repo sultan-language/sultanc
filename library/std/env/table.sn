@@ -1,5 +1,4 @@
-// The process environment std owns (Rust std::env::set_var/remove_var, Go
-// os.Setenv/Unsetenv). Like Go's runtime envs (syscall.Setenv), the table is
+// The process environment std owns, which set and remove change. The table is
 // process-wide state initialised lazily from the environment the process
 // started with, the first time a variable is set or removed; until then
 // every read goes to the system as before. std.env.environment and
@@ -8,15 +7,15 @@
 //
 // - Linux, FreeBSD, Android, WASI: std holds the only copy (there is no libc
 //   environ to update).
-// - macOS: std keeps its own table and does not call libSystem's setenv, as
-//   Go does; the startup vector stays unchanged.
+// - macOS: std keeps its own table and does not call libSystem's setenv;
+//   the startup vector stays unchanged.
 // - Windows: the change is also made with SetEnvironmentVariableW, so the
 //   process environment block (which GetEnvironmentVariableW and a child's
 //   inherited environment read) agrees with the table. Names compare
 //   case-insensitively, as Windows compares them.
 //
 // Threads: once a thread has been spawned, every access to the table holds
-// one process-wide lock (Rust's ENV_LOCK, Go's envLock), the three-state
+// one process-wide lock, the three-state
 // futex lock of std.sync.mutex. A program that never spawns a thread pays
 // one branch (std.os.allocation's thread flag) and takes no lock.
 
@@ -60,8 +59,8 @@
 // entry without '=' or with an empty name is skipped, as std.env.variables
 // skips it.
 عرف هيئ_جدول_البيئة(): فراغ {
-    // The table is a writable global that is not a scalar: unsafe, as
-    // Rust's static mut (SULTAN_SAFETY_FLOW.md); no reference into it outlives a call.
+    // The table is a writable global that is not a scalar: unsafe
+    // (SULTAN_SAFETY_FLOW.md); no reference into it outlives a call.
     غير_آمن {
         إذا (جدول_بيئة_العملية_مهيأ) { أرجع; };
         جدول_بيئة_العملية_مهيأ := صواب;
@@ -92,8 +91,8 @@
 
 // The position of a variable in the table.
 عرف موضع_في_جدول_البيئة(الاسم: &متجه ط8): اختياري طبيعي {
-    // The table is a writable global that is not a scalar: unsafe, as
-    // Rust's static mut (SULTAN_SAFETY_FLOW.md); no reference into it outlives a call.
+    // The table is a writable global that is not a scalar: unsafe
+    // (SULTAN_SAFETY_FLOW.md); no reference into it outlives a call.
     غير_آمن {
         دع ف: متغير طبيعي = 0;
         طالما (ف < (الطول(مداخل_بيئة_العملية) مثل طبيعي)) {
@@ -106,8 +105,8 @@
 
 // A copy of a variable's value in the table (the table exists).
 عرف ابحث_في_جدول_البيئة_بلا_قفل(الاسم: &متجه ط8): اختياري متجه ط8 {
-    // The table is a writable global that is not a scalar: unsafe, as
-    // Rust's static mut (SULTAN_SAFETY_FLOW.md); no reference into it outlives a call.
+    // The table is a writable global that is not a scalar: unsafe
+    // (SULTAN_SAFETY_FLOW.md); no reference into it outlives a call.
     غير_آمن {
         هيئ_جدول_البيئة();
         طابق موضع_في_جدول_البيئة(الاسم) مع
@@ -125,8 +124,8 @@
 
 // Sets a variable (the name and value were validated by the caller).
 عرف اضبط_في_جدول_البيئة_بلا_قفل(الاسم: &متجه ط8, القيمة: &متجه ط8): فراغ {
-    // The table is a writable global that is not a scalar: unsafe, as
-    // Rust's static mut (SULTAN_SAFETY_FLOW.md); no reference into it outlives a call.
+    // The table is a writable global that is not a scalar: unsafe
+    // (SULTAN_SAFETY_FLOW.md); no reference into it outlives a call.
     غير_آمن {
         هيئ_جدول_البيئة();
         طابق موضع_في_جدول_البيئة(الاسم) مع
@@ -147,8 +146,8 @@
 
 // Removes every entry of a variable; nothing when it is not set.
 عرف أزل_من_جدول_البيئة_بلا_قفل(الاسم: &متجه ط8): فراغ {
-    // The table is a writable global that is not a scalar: unsafe, as
-    // Rust's static mut (SULTAN_SAFETY_FLOW.md); no reference into it outlives a call.
+    // The table is a writable global that is not a scalar: unsafe
+    // (SULTAN_SAFETY_FLOW.md); no reference into it outlives a call.
     غير_آمن {
         هيئ_جدول_البيئة();
         دع الباقية: متغير متجه مدخل_جدول_بيئة = [];
@@ -176,8 +175,8 @@
 
 // Every variable of the table as "NAME=VALUE" bytes, in the table's order.
 عرف مداخل_جدول_البيئة_بلا_قفل(): متجه متجه ط8 {
-    // The table is a writable global that is not a scalar: unsafe, as
-    // Rust's static mut (SULTAN_SAFETY_FLOW.md); no reference into it outlives a call.
+    // The table is a writable global that is not a scalar: unsafe
+    // (SULTAN_SAFETY_FLOW.md); no reference into it outlives a call.
     غير_آمن {
         هيئ_جدول_البيئة();
         دع الناتج: متغير متجه متجه ط8 = [];

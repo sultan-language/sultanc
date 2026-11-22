@@ -129,7 +129,7 @@
 // override or isolate control (U+202A..202E, U+2066..2069, "Trojan Source",
 // CVE-2021-42574), which would reorder the shown line, and a C0/C1 control or
 // DEL other than a tab, which a terminal would act on. It is shown as its
-// escape (`\u{202E}`), as rustc shows these characters in a snippet; the
+// escape (`\u{202E}`) in a snippet; the
 // diagnostic's span and columns stay those of the source.
 عرف محرف_مقتطف_مهرب(القيمة: ط32): منطقي {
     إذا ((القيمة >= 0x202A) && (القيمة <= 0x202E)) { أرجع صواب; };

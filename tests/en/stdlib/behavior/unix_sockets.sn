@@ -3,7 +3,7 @@
 // خروج: 42
 // تفاضلي: نعم
 // نظير: tests/ar/stdlib/behavior/unix_sockets.sn
-// std.net.unix (Rust std::os::unix::net) with two sockets in one process:
+// std.net.unix with two sockets in one process:
 // a listener, a connected stream and the accepted one, exchanging bytes,
 // their addresses, shutdown; datagrams between bound sockets, a connected
 // datagram socket and an unbound sender; on Linux an abstract name; and

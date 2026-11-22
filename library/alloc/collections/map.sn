@@ -498,8 +498,8 @@
 
 // The keys, each a copy made by الناسخ (`انسخ_نص` for text keys), for keys
 // that own memory: مفاتيح_الخريطة copies its keys bit for bit and so takes
-// only plain keys (docs/en/reference/ownership.md, "Generic templates"), as
-// Rust's `map.keys().map(Clone::clone)`. The copy is the caller's function:
+// only plain keys (docs/en/reference/ownership.md, "Generic templates").
+// The copy is the caller's function:
 // the C Stage0 compiles this module and has no `استنسخ`.
 عام عرف مفاتيح_الخريطة_بناسخ<م, ق>(الخريطة: &الخريطة<م, ق>, الناسخ: دالة(&م): م): متجه م {
     دع الناتج: متغير متجه م = [];

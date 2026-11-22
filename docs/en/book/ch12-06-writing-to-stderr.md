@@ -49,17 +49,17 @@ def ignore_case_requested(): bool {
 
 def run(config: &Config): result int, string {
     let contents: string;
-    match read_file(&(*config).file_path) with
+    match read_file(&config.file_path) with
     | result.ok(text) -> { contents := text; }
-    | result.err(_) -> { return result.err(concat(&"could not read ", &(*config).file_path)); };
+    | result.err(_) -> { return result.err(concat(&"could not read ", &config.file_path)); };
     let found: vector string;
-    if ((*config).ignore_case) {
-        found := search_case_insensitive(&(*config).query, &contents);
+    if (config.ignore_case) {
+        found := search_case_insensitive(&config.query, &contents);
     } else {
-        found := search(&(*config).query, &contents);
+        found := search(&config.query, &contents);
     };
     for (let i: mutable int = 0; i < length(found); i := i + 1) {
-        println(clone(&found[i]));
+        println(found[i]);
     }
     return result.ok(0);
 }

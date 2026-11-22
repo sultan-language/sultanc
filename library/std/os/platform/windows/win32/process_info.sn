@@ -1,5 +1,5 @@
-// The process id and console checks on Windows through kernel32, as Rust's
-// std (process::id, io::IsTerminal) does: GetCurrentProcessId, and
+// The process id and console checks on Windows through kernel32:
+// GetCurrentProcessId, and
 // GetConsoleMode on a standard handle, which fails for a file or a pipe.
 // MSDN: DWORD GetCurrentProcessId(void); BOOL GetConsoleMode(HANDLE, LPDWORD).
 استورد نظام_التشغيل.منصات.ويندوز.وين32.مقابض_الملفات;

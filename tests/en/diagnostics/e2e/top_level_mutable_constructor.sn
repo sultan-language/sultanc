@@ -1,0 +1,13 @@
+// اختبار: رفض
+// تشخيص: SULTANC-COMPTIME-NON-CONSTANT
+// نظير: tests/ar/diagnostics/e2e/top_level_mutable_constructor.sn
+// خرج-تشخيص-عربي: top_level_mutable_constructor.ar.stderr
+// خرج-تشخيص-إنجليزي: top_level_mutable_constructor.en.stderr
+// A module-level value built by a constructor is rebuilt where it is read,
+// so it cannot be storage a program writes: a user diagnostic at the
+// declaration, never an internal lowering error.
+type Color = | Red | Green;
+let current: mutable Color = Color.Red();
+def main(): i32 {
+    return 0;
+}

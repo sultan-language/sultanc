@@ -1,5 +1,4 @@
-// Durations as float seconds (Rust Duration::as_secs_f64 / as_secs_f32 and
-// try_from_secs_f64; Go Duration.Seconds). Kept apart from std.time.duration,
+// Durations as float seconds, both ways. Kept apart from std.time.duration,
 // which the compiler imports and the C Stage0 builds: these use the
 // language's float <-> integer conversions.
 استورد وقت.مدة;
@@ -19,7 +18,7 @@
 
 // The duration nearest a number of seconds (halves away from zero), or
 // none for NaN, an infinity or a value outside ±(2^63 - 1) nanoseconds
-// (about 292 years), as Rust's try_from_secs_f64 refuses them.
+// (about 292 years).
 عام عرف مدة_من_ثواني_ع64(الثواني: ع64): اختياري مدة {
     إذا (الثواني != الثواني) { أرجع اختياري.لا_شيء(); };
     إذا (الثواني >= 9223372036.0 || الثواني <= -9223372036.0) { أرجع اختياري.لا_شيء(); };

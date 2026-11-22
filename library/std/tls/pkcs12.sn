@@ -9,7 +9,7 @@
 // which LibreSSL and older OpenSSL produce. The MacData integrity check is
 // verified whenever present, so a wrong password fails before any key is
 // used. BER encodings (indefinite lengths, constructed strings), which
-// Windows and Java write, are normalized to DER first (encoding.der).
+// Windows and other tools write, are normalized to DER first (encoding.der).
 // Previously only RSA keys and DER containers were accepted.
 
 استورد تشفير.أيس;

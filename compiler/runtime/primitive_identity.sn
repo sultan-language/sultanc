@@ -70,7 +70,7 @@
     | زيادة_مراجع_إغلاق
     | إنقاص_مراجع_إغلاق
     | مدمر_بيئة_إغلاق
-    // Vector pop and truncate (Rust's Vec::pop and Vec::truncate). Lowering
+    // Vector pop and truncate (أزل_الأخير, اقتطع). Lowering
     // passes a mutable reference to the vector; the ownership-glue pass
     // replaces every call with a call of the vector Type's pop or truncate
     // glue (compiler/msir/lowering/ownership_glue.sn), which moves, drops and
@@ -83,16 +83,16 @@
     // pop and truncate glue emit it; every backend and the interpreter store
     // it into the vector header, as append stores the grown header.
     | ضبط_طول_متجه
-    // The capacity of a vector (Rust's Vec::capacity, Go's cap): how many
+    // The capacity of a vector (السعة): how many
     // elements its buffer holds before an append reallocates it.
     | سعة_متجه
     // Grows the buffer of the vector at the mutated place so that it holds at
     // least `length + additional` elements, allocating exactly that many when
-    // it grows (Rust's Vec::reserve_exact). Every backend and the
+    // it grows. Every backend and the
     // interpreter reallocate the buffer as append does when it is full.
     | حجز_سعة_متجه
     // Appends a range of another vector of the same integer element Type
-    // (Rust's Vec::extend_from_slice, Go's append(dst, src[a:b]...)):
+    // (a slice of it appended at once):
     // arguments are the mutated vector place, a reference to the source,
     // the first source index and the count, each a طبيعي. A range past the
     // source's end traps. A buffer too small for length + count grows once,
@@ -105,8 +105,8 @@
     // IEEE 754 operations on the float Type of the first argument (f32 or
     // f64): every operand and the result have that Type. They lower to the
     // target's instruction (x86-64 SQRTSD, AArch64 FSQRT/FRINT*/FMIN/FMADD,
-    // WebAssembly f64.sqrt/f64.floor/f64.min, LLVM llvm.sqrt.* ...), as rustc
-    // lowers f64::sqrt and friends to LLVM intrinsics.
+    // WebAssembly f64.sqrt/f64.floor/f64.min, LLVM llvm.sqrt.* ...): the LLVM
+    // backend lowers each to its LLVM intrinsic.
     | عملية_عائمة بنوع عملية_عائمة_بدائية
     // Thread support (docs/en/reference/concurrency.md). Atomic operations on the
     // integer a mutable reference refers to (32 or 64 bits); the last
@@ -123,7 +123,7 @@
     | ذري_جلب_أو_حصري
     | سياج_ذاكرة
     // A box whose cell is never freed, as a raw pointer to its payload
-    // (Rust's Box::leak / Box::into_raw): the same machine word.
+    // (the box's address kept, its ownership given up): the same machine word.
     | سرب_قيمة
     // A closure environment's address (the value keeps its reference),
     // the closure `() -> ()` at an address, and the address of a C-callable
@@ -132,8 +132,7 @@
     | دالة_من_عنوان
     | مدخل_سي_لدالة
     // The machine address of a function compiled with the C calling
-    // convention (@@c_abi), as Zig's @intFromPtr(&f) of a callconv(.c)
-    // function: C calls it directly, with no trampoline. The argument is
+    // convention (@@c_abi): C calls it directly, with no trampoline. The argument is
     // the function's name; lowering makes it the function constant.
     | عنوان_دالة_سي
     // Linux clone of a thread onto a new stack: the arguments of a raw
@@ -141,8 +140,8 @@
     // runs that closure and exits the thread when it returns.
     | استنساخ_خيط_نواة
     // A call of the C function at an address, with the platform C calling
-    // convention (Rust's address-to-`extern "C" fn` call; libffi's ffi_call
-    // with a fixed register image). Arguments: a result witness (ط64 for the
+    // convention (a call through a C function pointer, with a fixed register
+    // image). Arguments: a result witness (ط64 for the
     // integer return register, ع64 for the floating-point one; its value is
     // unused and its Type is the result Type), the address, eight integer
     // words and eight floating-point words. System V and AAPCS64 pass the
@@ -165,7 +164,7 @@
 // - copysign: the first operand with the sign of the second;
 // - fused multiply-add a * b + c, rounded once (only where the target has
 //   the instruction; runtime_primitive_query_context.sn).
-// A NaN result is a quiet NaN whose payload is not specified, as in Rust.
+// A NaN result is a quiet NaN whose payload is not specified.
 عام نوع عملية_عائمة_بدائية =
     | جذر_تربيعي
     | قيمة_مطلقة

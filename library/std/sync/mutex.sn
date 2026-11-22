@@ -1,7 +1,5 @@
-// Mutual exclusion (docs/en/reference/concurrency.md, "Mutex"), after Rust's
-// std::sync::Mutex and its futex implementation (std/src/sys/sync/mutex/
-// futex.rs), which is Ulrich Drepper's three-state mutex ("Futexes Are
-// Tricky", mutex2):
+// Mutual exclusion (docs/en/reference/concurrency.md, "Mutex"), on a futex:
+// Ulrich Drepper's three-state mutex ("Futexes Are Tricky", mutex2):
 //
 //   0  unlocked
 //   1  locked, no thread waits
@@ -9,22 +7,21 @@
 //
 // An uncontended lock is one compare-exchange 0 -> 1 and an uncontended
 // unlock one swap to 0, with no system call. A contended lock spins briefly
-// (100 rounds, as Rust), then marks the state 2 and sleeps on it
+// (100 rounds), then marks the state 2 and sleeps on it
 // (std.os.wait_address); an unlock that finds 2 wakes one sleeper.
 //
 // The protected value is reached only inside a closure that runs with the
 // lock held (`نفذ_مع_القفل` / with_lock), so the unlock cannot be forgotten
-// and no reference to the value outlives the lock: Rust's MutexGuard, scoped
-// to a call because SultanC runs no user destructor at scope exit.
+// and no reference to the value outlives the lock. The lock is scoped to a
+// call because SultanC runs no user destructor at scope exit.
 //
-// Poisoning: Rust marks a mutex poisoned when a thread panics while holding
-// it. A SultanC panic (`إنهيار`) ends the whole process (panic=abort,
+// Poisoning (marking a mutex whose holder panicked) is not needed: a SultanC panic (`إنهيار`) ends the whole process (panic=abort,
 // docs/en/reference/concurrency.md), so no thread can ever observe a mutex a panicking
 // thread held; there is nothing to poison and the lock returns the value
 // directly, not a Result.
 //
-// A mutex is shared between threads through an Arc (`مشترك<قفل<ق>>`), as in
-// Rust. It is not copyable: copying it would make two locks guard one value.
+// A mutex is shared between threads through an Arc (`مشترك<قفل<ق>>`). It
+// is not copyable: copying it would make two locks guard one value.
 استورد تزامن.ذري;
 استورد تزامن.مشترك;
 استورد نظام_التشغيل.انتظار_العنوان;
@@ -39,7 +36,7 @@
 };
 عام مرادف mutex = قفل;
 
-// Rust's Mutex::new.
+// A new mutex guarding القيمة.
 عام عرف أنشئ_قفل<ق>(القيمة: ق): قفل<ق> {
     دع العلامة: متجه ط8 = [];
     دع الناتج: قفل<ق> = {
@@ -114,7 +111,7 @@
 }
 
 // Run العمل with the lock held and the value mutably borrowed; answer what
-// it answers. Rust's `let mut g = m.lock(); f(&mut *g)`.
+// it answers.
 عام عرف نفذ_مع_القفل<ق, ن>(القفل: &قفل<ق>, العمل: دالة(&متغير ق): ن): ن {
     اقفل_خام(القفل);
     دع المؤشر: *متغير ق = مؤشر_مشترك(&(*القفل).القيمة);
@@ -124,8 +121,8 @@
 }
 عام مرادف with_lock = نفذ_مع_القفل;
 
-// Rust's Mutex::try_lock: run العمل only if the lock is free now; none
-// (Rust's WouldBlock) when another thread holds it.
+// Runs العمل only if the lock is free now; none
+// when another thread holds it.
 عام عرف حاول_القفل<ق, ن>(القفل: &قفل<ق>, العمل: دالة(&متغير ق): ن): اختياري ن {
     إذا (!حاول_القفل_ذريا(&(*القفل).الحالة)) { أرجع اختياري.لا_شيء(); };
     دع المؤشر: *متغير ق = مؤشر_مشترك(&(*القفل).القيمة);
@@ -135,8 +132,8 @@
 }
 عام مرادف try_lock = حاول_القفل;
 
-// Whether some thread holds the lock now (a snapshot; Rust has no such
-// method, but its tests read the state the same way).
+// Whether some thread holds the lock now (a snapshot, for tests and
+// diagnostics).
 عام عرف هل_القفل_مأخوذ<ق>(القفل: &قفل<ق>): منطقي {
     أرجع احمل_ط32(&(*القفل).الحالة, ترتيب_ذاكرة.مسترخ()) != (0 مثل ط32);
 }

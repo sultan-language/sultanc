@@ -322,8 +322,8 @@
     };
 }
 
-// The ALPN protocol the handshake agreed on (RFC 7301), as Go's
-// ConnectionState.NegotiatedProtocol; none before the handshake or without ALPN.
+// The ALPN protocol the handshake agreed on (RFC 7301); none before the
+// handshake or without ALPN.
 عام عرف بروتوكول_تدفق_تي_إل_إس(التدفق: &تدفق_تي_إل_إس): اختياري نص {
     دع الحالة: حالة_تدفق_تي_إل_إس = حالة_تي_إل_إس(التدفق);
     دع الناتج: متغير اختياري نص = اختياري.لا_شيء();

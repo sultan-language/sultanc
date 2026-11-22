@@ -159,6 +159,7 @@
     | معرف_تشخيص.كتابة_إلى_غير_متغير -> { أرجع «cannot write to an immutable value»; }
     | معرف_تشخيص.تصريح_مكرر -> { أرجع «duplicate declaration»; }
     | معرف_تشخيص.اسم_غير_معروف -> { أرجع «unknown name»; }
+    | معرف_تشخيص.منشئ_غير_مستدعى -> { أرجع «constructor used as a value without being called»; }
     | معرف_تشخيص.اسم_غير_محلول -> { أرجع «unresolved name»; }
     | معرف_تشخيص.استيراد_غامض -> { أرجع «ambiguous import»; }
     | معرف_تشخيص.دورة_استيراد -> { أرجع «import cycle»; }

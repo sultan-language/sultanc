@@ -79,8 +79,8 @@
 // 32-byte home area of the four register arguments. Integer slots use the
 // Windows register rules' indexes (register_rules.sn). A structure of any
 // other size than 1, 2, 4 or 8 bytes takes its position as the address of a
-// copy the caller makes for the call (the selector's حجة_نداء_إكس), as
-// Clang and Zig (x86_64/abi.zig, classifyWindows: byref_mut) pass it.
+// copy the caller makes for the call (the selector's حجة_نداء_إكس), as the
+// Microsoft x64 convention passes it.
 عرف موضع_مايكروسوفت_أصلي(
     الفئة: فئة_سجل_واجهة,
     الموضع: طبيعي,

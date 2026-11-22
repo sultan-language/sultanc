@@ -210,4 +210,6 @@ error[SULTANC-RUNTIME-PROGRAM-ERROR]: the program ended with an error
 an age must be a number
 ```
 
-The number in `result.ok(0)` is the exit status on success. The error type of `main` must be `Error`.
+The number in `result.ok(0)` is the exit status on success. The error type of `main` must be `Error`:
+a `main` that returns `result int, string` is refused, with the message marking `string` and a fix that
+writes `Error` in its place.

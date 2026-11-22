@@ -1,0 +1,16 @@
+خطأ[SULTANC-OWNERSHIP-USE-AFTER-MOVE]: استخدام بعد النقل — القيمة المستخدمة بعد نقل ملكيتها هي ⁨`النص`⁩. تُستخدم القيمة بعد نقل ملكيتها.
+  --> tests/ar/diagnostics/safety/use_after_move_same_statement.sn:12:32..12:36
+    |
+ 12 |     أرجع استهلك(النص) + (الطول(النص) مثل عدد);
+    |                                ^^^^ الاستخدام غير الصالح
+    |
+  ::: tests/ar/diagnostics/safety/use_after_move_same_statement.sn:11:5..11:27
+    |
+ 11 |     دع النص: نص = «أربعة»;
+    |     ^^^^^^^^^^^^^^^^^^^^^^ المالك الأصلي
+    |
+  ::: tests/ar/diagnostics/safety/use_after_move_same_statement.sn:12:17..12:21
+    |
+ 12 |     أرجع استهلك(النص) + (الطول(النص) مثل عدد);
+    |                 ^^^^ نقلت القيمة هنا
+    |

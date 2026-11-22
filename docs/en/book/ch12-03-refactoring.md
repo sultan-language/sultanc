@@ -87,12 +87,12 @@ def arguments(): vector string {
 }
 
 def run(config: &Config): result int, string {
-    match read_file(&(*config).file_path) with
+    match read_file(&config.file_path) with
     | result.ok(contents) -> {
         println(contents);
         return result.ok(0);
     }
-    | result.err(_) -> { return result.err(concat(&"could not read ", &(*config).file_path)); };
+    | result.err(_) -> { return result.err(concat(&"could not read ", &config.file_path)); };
 }
 
 def main(): int {

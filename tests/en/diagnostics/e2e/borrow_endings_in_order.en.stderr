@@ -1,0 +1,67 @@
+error[SULTANC-OWNERSHIP-USE-AFTER-MOVE]: use after move — The value used after being moved is `text`. The value is used after its ownership was moved.
+  --> tests/en/diagnostics/e2e/borrow_endings_in_order.sn:20:23..20:27
+    |
+ 20 |         return length(text) as int;
+    |                       ^^^^ invalid use
+    |
+  ::: tests/en/diagnostics/e2e/borrow_endings_in_order.sn:18:19..18:23
+    |
+ 18 |     | option.some(text) -> {
+    |                   ^^^^ original owner
+    |
+  ::: tests/en/diagnostics/e2e/borrow_endings_in_order.sn:19:9..19:14
+    |
+ 19 |         entry := { value: option.none(), count: 2 };
+    |         ^^^^^ value moved here
+    |
+
+error[SULTANC-OWNERSHIP-USE-AFTER-MOVE]: use after move — The value used after being moved is `first`. The value is used after its ownership was moved.
+  --> tests/en/diagnostics/e2e/borrow_endings_in_order.sn:29:13..29:18
+    |
+ 29 |     return *first;
+    |             ^^^^^ invalid use
+    |
+  ::: tests/en/diagnostics/e2e/borrow_endings_in_order.sn:26:5..26:43
+    |
+ 26 |     let first: &int = &(*source).items[0];
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ original owner
+    |
+  ::: tests/en/diagnostics/e2e/borrow_endings_in_order.sn:27:47..27:62
+    |
+ 27 |     let items: &mutable vector int = &mutable (*source).items;
+    |                                               ^^^^^^^^^^^^^^^ value moved here
+    |
+
+error[SULTANC-OWNERSHIP-USE-AFTER-MOVE]: use after move — The value used after being moved is `target`. The value is used after its ownership was moved.
+  --> tests/en/diagnostics/e2e/borrow_endings_in_order.sn:35:13..35:19
+    |
+ 35 |     return *target;
+    |             ^^^^^^ invalid use
+    |
+  ::: tests/en/diagnostics/e2e/borrow_endings_in_order.sn:32:21..32:41
+    |
+ 32 | def exclusive_moved(target: &mutable int): int {
+    |                     ^^^^^^^^^^^^^^^^^^^^ original owner
+    |
+  ::: tests/en/diagnostics/e2e/borrow_endings_in_order.sn:33:31..33:37
+    |
+ 33 |     let other: &mutable int = target;
+    |                               ^^^^^^ value moved here
+    |
+
+error[SULTANC-OWNERSHIP-USE-AFTER-MOVE]: use after move — The value used after being moved is `target`. The value is used after its ownership was moved.
+  --> tests/en/diagnostics/e2e/borrow_endings_in_order.sn:40:31..40:37
+    |
+ 40 |     let again: &mutable int = target;
+    |                               ^^^^^^ invalid use
+    |
+  ::: tests/en/diagnostics/e2e/borrow_endings_in_order.sn:38:27..38:47
+    |
+ 38 | def exclusive_moved_twice(target: &mutable int): int {
+    |                           ^^^^^^^^^^^^^^^^^^^^ original owner
+    |
+  ::: tests/en/diagnostics/e2e/borrow_endings_in_order.sn:39:31..39:37
+    |
+ 39 |     let other: &mutable int = target;
+    |                               ^^^^^^ value moved here
+    |

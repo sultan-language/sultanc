@@ -113,5 +113,7 @@ def main(): int {
     if (!check_reason(سبب_تشخيص.سبب_تنسيق_نوع_غير_مناسب(), "The placeholder's format type does not apply to the argument it formats", "نوع التنسيق في الموضع لا يناسب الوسيط الذي ينسقه")) { return 47; };
     // format.invalid-count, compiler/driver/compiler_driver.sn
     if (!check_reason(سبب_تشخيص.سبب_تنسيق_عدد_غير_صالح(), "A width or precision taken from an argument needs an integer argument", "العرض أو الدقة المأخوذان من وسيط يتطلبان وسيطا صحيحا")) { return 48; };
+    // comptime.module-constructor-not-constant, compiler/msir/lowering/diagnostics.sn
+    if (!check_reason(سبب_تشخيص.سبب_وقت_الترجمة_قيمة_عليا_منشئ_غير_ثابتة(), "A module-level value built by a constructor is immutable, and its arguments are numbers, booleans, characters, text or such constructors", "القيمة على مستوى الوحدة التي يبنيها منشئ غير قابلة للتغيير، وحججها أعداد أو قيم منطقية أو محارف أو نصوص أو منشئات مثلها")) { return 49; };
     return 0;
 }

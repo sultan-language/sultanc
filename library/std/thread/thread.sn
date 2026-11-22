@@ -1,4 +1,4 @@
-// OS threads (docs/en/reference/concurrency.md), after Rust's std::thread. `أطلق` moves a
+// OS threads (docs/en/reference/concurrency.md). `أطلق` moves a
 // closure to a new thread and returns a join handle; `انضم` waits for the
 // thread and reclaims its stack. The closure may capture only values safe to
 // move to another thread: the spawn capture check rejects at compile time a
@@ -7,14 +7,14 @@
 // "Thread capture rules"). Shared state goes through std.sync (Arc, Mutex,
 // atomics) and the channels.
 //
-// The thread owns its closure and drops it when the closure returns, as
-// Rust's spawn consumes an FnOnce: what it captured (an Arc, a channel's
+// The thread owns its closure and drops it when the closure returns: what
+// it captured (an Arc, a channel's
 // sender) is released when the thread finishes, not when (or if) it is
 // joined.
 //
-// `أطلق_بقيمة` / `انضم_بقيمة` are Rust's JoinHandle<T>: the closure's result
+// `أطلق_بقيمة` / `انضم_بقيمة`: the closure's result
 // is handed back by join. A panic (`إنهيار`) in any thread ends the whole
-// process (panic=abort), as in Rust's panic=abort, so join never observes a
+// process (panic=abort), so join never observes a
 // thread error.
 //
 // Threads start on Linux and Android (every architecture), FreeBSD, macOS
@@ -105,8 +105,8 @@ module thread { ar: خيط };
 عام عرف معرف_المقبض(المقبض: &مقبض_خيط): ط64 { أرجع (*المقبض).الخيط.المعرف; }
 عام مرادف join_handle_id = معرف_المقبض;
 
-// Rust's JoinHandle<T> (its Packet is an Arc the thread and the handle
-// share): the thread runs a wrapper that pushes the closure's result into a
+// A join handle with a value (an Arc the thread and the handle share):
+// the thread runs a wrapper that pushes the closure's result into a
 // Mutex-guarded vector both hold through an Arc (std.sync); join pops it
 // after the thread ended. The thread drops its Arc when it finishes, the
 // handle when it is dropped, and the cell is freed with the last one.
@@ -158,13 +158,13 @@ module thread { ar: خيط };
 عام مرادف join_value = انضم_بقيمة;
 
 // Puts the calling thread to sleep for at least ثوان seconds and نانو
-// nanoseconds (Rust's thread::sleep, through os.clock on every target).
+// nanoseconds.
 عام عرف نم(ثوان: ط64, نانو: ط64): فراغ {
     دع تجاهل: نتيجة عدد, خطأ_حد_نظام = نم_نانو_للنظام(((ثوان * 1000000000) + نانو) مثل عدد);
 }
 عام مرادف sleep = نم;
 
-// Gives up the processor (Rust's thread::yield_now): sched_yield on Linux
+// Gives up the processor: sched_yield on Linux
 // and FreeBSD, pthread_yield_np on macOS, SwitchToThread on Windows.
 عام عرف تنازل(): فراغ { تنازل_نظام(); }
 عام مرادف yield_now = تنازل;
@@ -175,7 +175,7 @@ module thread { ar: خيط };
 عام عرف معرف_الخيط_الحالي(): ط64 { أرجع معرف_الخيط_الحالي_نظام(); }
 عام مرادف current_id = معرف_الخيط_الحالي;
 
-// How many threads can run at once (Rust's available_parallelism): the
+// How many threads can run at once: the
 // CPUs in the affinity mask on Linux and FreeBSD, hw.logicalcpu on macOS,
 // dwNumberOfProcessors on Windows.
 عام عرف عدد_المعالجات_المتاحة(): نتيجة طبيعي, خطأ_خيط {

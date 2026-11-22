@@ -1,6 +1,5 @@
 // Async tasks (docs/en/reference/concurrency.md, "Async tasks"): stackful
-// coroutines on one thread, as Go's goroutines on one P, Java's virtual
-// threads or Lua's coroutines. A task is a closure running on a stack of its
+// coroutines on one thread. A task is a closure running on a stack of its
 // own (256 KiB reserved, the lowest 64 KiB an inaccessible guard, pages
 // committed by the system on first touch). `أطلق_مهمة` starts one and
 // answers a handle; `انتظر_مهمة` suspends the caller until that task has
@@ -527,7 +526,7 @@
 // Suspends the caller until the task has finished and answers its result;
 // a second await answers لا_شيء. One task (or the outside code) awaits a
 // given task at a time. From outside every task this runs the scheduler
-// until the task is done (Rust's block_on).
+// until the task is done.
 عام عرف انتظر_مهمة<ق>(المهمة: &متغير مهمة<ق>): اختياري ق {
     طالما (صواب) {
         طابق خذ_ناتج_مهمة(المهمة) مع

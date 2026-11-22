@@ -1,8 +1,7 @@
 استورد نصوص.أعداد;
 استورد نصوص.من_بايتات;
 
-// A place in a source file (docs/en/reference/testing.md), as Rust's
-// `std::panic::Location`. The compiler makes one at each call of a function
+// A place in a source file (docs/en/reference/testing.md). The compiler makes one at each call of a function
 // marked `@@track_caller` (`@@يتتبع_المستدعي`): such a function's last
 // parameter is a موقع_مصدر, which callers do not pass; the call passes its
 // own place (inside another marked function, the location that function

@@ -1,0 +1,16 @@
+// اختبار: رفض
+// تشخيص: SULTANC-OWNERSHIP-USE-AFTER-MOVE
+// نظير: tests/ar/diagnostics/safety/generic_specialization_move.sn
+// A generic function moves its parameter twice. Its template is checked with
+// the Type parameter owning, so the second move is rejected whatever Type an
+// instance would use.
+def twice<T>(value: T, sink: fn(T): int): int {
+    let first: int = sink(value);
+    return first + sink(value);
+}
+
+def measure(text: string): int { return length(text) as int; }
+
+def main(): int {
+    return twice("text", measure);
+}

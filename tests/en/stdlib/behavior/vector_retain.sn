@@ -3,9 +3,9 @@
 // خروج: 42
 // تفاضلي: نعم
 // نظير: tests/ar/stdlib/behavior/vector_retain.sn
-// std.collections.vector removal helpers over pop and truncate: retain
-// (Rust Vec::retain), dedup_by (Vec::dedup_by), remove_at / swap_remove /
-// insert_at (Vec::remove/swap_remove/insert) and clear_vector, on integers
+// std.collections.vector removal helpers over pop and truncate: retain,
+// dedup_by, remove_at / swap_remove /
+// insert_at and clear_vector, on integers
 // and on owned text.
 import std.collections.vector;
 import std.text.compare;

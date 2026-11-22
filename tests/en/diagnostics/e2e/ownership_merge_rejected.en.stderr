@@ -1,0 +1,20 @@
+error[SULTANC-ICE-MISSING-SEMANTIC-FACT]: required canonical semantic fact is missing — The missing semantic fact concerns symbol `text`. This occurred during phase `ssf`. Ownership state conflicts prevent a control-flow merge.
+  --> tests/en/diagnostics/e2e/ownership_merge_rejected.sn:13:5..13:22
+    |
+ 13 |     let text: string;
+    |     ^^^^^^^^^^^^^^^^^
+    |
+
+error[SULTANC-ICE-MISSING-SEMANTIC-FACT]: required canonical semantic fact is missing — The missing semantic fact concerns symbol `text`. This occurred during phase `ssf`. Ownership state conflicts prevent a control-flow merge.
+  --> tests/en/diagnostics/e2e/ownership_merge_rejected.sn:22:5..22:28
+    |
+ 22 |     let text: string = "b";
+    |     ^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+error[SULTANC-ICE-MISSING-SEMANTIC-FACT]: required canonical semantic fact is missing — The missing semantic fact concerns symbol `value`. This occurred during phase `ssf`. Ownership state conflicts prevent a control-flow merge.
+  --> tests/en/diagnostics/e2e/ownership_merge_rejected.sn:32:5..32:32
+    |
+ 32 |     let value: mutable int = 1;
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |

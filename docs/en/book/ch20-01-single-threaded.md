@@ -71,7 +71,6 @@ connection and returns it as a `tcp_stream`, `tcp_read` and `tcp_write` move byt
 ```sultan ignore
 import std.io.println;
 import std.text.number;
-import std.text.compare;
 from std.text import concat, concat3, lines, trim;
 import std.text.from_bytes;
 import std.net.socket_address;
@@ -88,11 +87,11 @@ def handle_connection(stream: tcp_stream): void {
     | result.err(_) -> { return; };
     let request: string = from_bytes(&buffer);
     let request_line: string = first_line(&request);
-    println(clone(&request_line));
+    println(request_line);
 
     let status: string;
     let file_name: string;
-    if (texts_equal(&request_line, &"GET / HTTP/1.1")) {
+    if (request_line == "GET / HTTP/1.1") {
         status := "HTTP/1.1 200 OK";
         file_name := "hello.html";
     } else {

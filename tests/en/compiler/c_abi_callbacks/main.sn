@@ -3,7 +3,7 @@
 // خروج: 42
 // Twin: tests/ar/compiler/c_abi_callbacks/main.sn (no `نظير` header: a
 // program with @@c_abi functions runs as an executable, not interpreted).
-// A function defined `@@c_abi` (Zig's callconv(.c)) is compiled with the C
+// A function defined `@@c_abi` (the C calling convention) is compiled with the C
 // calling convention, so C code calls it at its machine address,
 // c_function_address(f), with no trampoline (docs/en/internals/jisr.md,
 // "Callbacks"); SultanC also calls it directly. The callback calls a closure,

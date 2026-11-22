@@ -1,7 +1,6 @@
 // Waiting on an address (std.os.wait_address) on Windows: WaitOnAddress,
 // WakeByAddressSingle and WakeByAddressAll (Windows 8+), from the
-// synchronization API set Rust's std links (sys/pal/windows/futex.rs,
-// `synchronization` = api-ms-win-core-synch-l1-2-0.dll). WaitOnAddress
+// synchronization API set (api-ms-win-core-synch-l1-2-0.dll). WaitOnAddress
 // sleeps while the AddressSize bytes at Address equal *CompareAddress; it
 // may return spuriously, and it fails with ERROR_TIMEOUT (1460) at the
 // deadline. The timeout is in milliseconds (INFINITE = 0xFFFFFFFF).

@@ -279,10 +279,10 @@
     // Machine-memory operands are u64 (64-bit addresses and words).
     | هوية_بدائي_مترجم.قراءة_ذاكرة_آلة -> { أرجع اختياري.موجود(القيم.عدد_ط64); }
     | هوية_بدائي_مترجم.كتابة_ذاكرة_آلة -> { أرجع اختياري.موجود(القيم.عدد_ط64); }
-    // Truncate takes the new length as a طبيعي (Rust's usize); the glue's
+    // Truncate takes the new length as a طبيعي; the glue's
     // length store takes the length's own Type.
     | هوية_بدائي_مترجم.اقتطاع_متجه -> { إذا (الفهرس == 1) { أرجع اختياري.موجود(القيم.عدد_طبيعي); }; }
-    // Reserve takes the additional count as a طبيعي (Rust's usize).
+    // Reserve takes the additional count as a طبيعي.
     | هوية_بدائي_مترجم.حجز_سعة_متجه -> { إذا (الفهرس == 1) { أرجع اختياري.موجود(القيم.عدد_طبيعي); }; }
     // Extend: the first source index and the count are طبيعي values.
     | هوية_بدائي_مترجم.إلحاق_نطاق_متجه -> { إذا (الفهرس == 2 || الفهرس == 3) { أرجع اختياري.موجود(القيم.عدد_طبيعي); }; }
@@ -366,7 +366,7 @@
 }
 
 // The operands of the wrapping arithmetic primitives: an integer Type
-// (signed or unsigned, any width), as Rust's wrapping_* methods.
+// (signed or unsigned, any width).
 عرف هل_نوع_صحيح_لبدائي_ملتف(الأنواع: &سجل_أنواع, النوع: معرف_نوع): منطقي {
     طابق أزل_غلاف_متغير(الأنواع, النوع) مع
     | اختياري.موجود(المعرف) -> {
@@ -675,8 +675,7 @@
             }
             | اختياري.موجود(نوع_المصدر) -> {
                 // A byte vector also extends from a range of text (the same
-                // buffer layout: its UTF-8 bytes), as Rust's
-                // Vec<u8>::extend_from_slice(s.as_bytes()).
+                // buffer layout: its UTF-8 bytes).
                 إذا (!هل_عنصر_متجه_مطابق(الأنواع, نوع_المصدر, عنصر_الهدف, صواب)
                     && !(هل_نوع_بدائي_لامتداد(الأنواع, نوع_المصدر, نوع_بدائي_مقنن.نص())
                         && هل_نوع_بدائي_لامتداد(الأنواع, عنصر_الهدف, نوع_بدائي_مقنن.ط8()))) {
@@ -888,8 +887,9 @@
     | فئة_ناتج_بدائي.ع32 -> { أرجع معرفا_نوع_متساويان(النوع, المعروفة.عائم_ع32); }
     | فئة_ناتج_بدائي.ع64 -> { أرجع معرفا_نوع_متساويان(النوع, المعروفة.عائم_ع64); }
     | فئة_ناتج_بدائي.نص -> { أرجع معرفا_نوع_متساويان(النوع, المعروفة.النص); }
-    // Clone never reaches MSIR verification (lowering replaces it with glue);
-    // the atomics do, and read an integer (their operand is checked above).
+    // Clone reaches only the verification of initial MSIR, which admits its
+    // result (the ownership glue replaces it before finalized MSIR); the
+    // atomics read an integer (their operand is checked above).
     | فئة_ناتج_بدائي.قيمة_المرجع -> { أرجع هل_نوع_صحيح_لبدائي_ملتف(الأنواع, النوع); }
     // Only the C call at an address reaches MSIR with this category (the
     // wrapping primitives are lowered to arithmetic): its witness's Type.

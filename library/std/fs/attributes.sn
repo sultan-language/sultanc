@@ -22,7 +22,7 @@
 }
 
 // Sets the size of an existing file: bytes past الطول are discarded, and a
-// larger size reads as zero bytes (Rust File::set_len, Go os.Truncate).
+// larger size reads as zero bytes.
 عام عرف اقتطع_الملف(المسار: &نص, الطول: طبيعي): نتيجة عدد, فئة_خطأ_نظام {
     أرجع نتيجة_سمة_ملف(اقتطع_مسار_نظام(المسار, الطول));
 }
@@ -35,7 +35,7 @@
 }
 
 // Sets the access and modification times, in nanoseconds since the Unix
-// epoch (Go os.Chtimes). A final symlink is followed.
+// epoch. A final symlink is followed.
 عام عرف اضبط_أوقات_الملف(
     المسار: &نص, الوصول_نانو: عدد, التعديل_نانو: عدد
 ): نتيجة عدد, فئة_خطأ_نظام {

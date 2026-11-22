@@ -72,8 +72,11 @@ def main(): int {
 
 ```console
 $ ./primes
-Illegal instruction
+error[SULTANC-RUNTIME-PROGRAM-STOPPED]: the program stopped
+index 10 out of range for length 3 at main.sn:5:12
 ```
+
+The message gives the position, the length of the vector, and the place in the source that read it.
 
 Reading past the end of a vector is one of the oldest and most dangerous bugs in systems programming:
 the program reads whatever memory follows the vector, and goes on with garbage, or with someone else's
@@ -194,7 +197,8 @@ def main(): int {
 ## Vectors of owning values
 
 A vector of strings works the same way, with one rule from chapter 4: taking a string out of the vector
-would move it out and leave a hole, so to print one or pass it on, copy it with `clone`:
+would move it out and leave a hole. Printing one does not take it, because `println` only borrows its
+text:
 
 ```sultan
 import std.io.println;
@@ -203,7 +207,7 @@ def main(): int {
     let names: mutable vector string = ["Huda", "Adam"];
     append(names, "Zaid");
     for (let i: mutable int = 0; i < length(names); i := i + 1) {
-        println(clone(&names[i]));
+        println(names[i]);
     }
     return 0;
 }
@@ -215,7 +219,8 @@ Adam
 Zaid
 ```
 
-When the vector goes out of scope, it frees all its strings with it.
+To keep a string of your own, or to pass one to a function that keeps it, copy it with
+`clone(&names[i])`. When the vector goes out of scope, it frees all its strings with it.
 
 ## Sorting, removing and inserting
 

@@ -1,7 +1,7 @@
-// std.fmt.fmt (المكتبة.تنسيق.fmt): formatting with a format string and arguments,
-// after Rust's std::fmt (format!, write!, print!, the format-spec
-// mini-language, Display and Debug) and Go's fmt (Sprintf, Fprintf, Printf).
-// The grammar, the Rust and Go mapping and the deviations are in docs/en/reference/formatting.md.
+// std.fmt.fmt (المكتبة.تنسيق.fmt): formatting with a format string and arguments
+// (the format-spec mini-language, Display and Debug), to text, a formatter,
+// a writer or the standard streams.
+// The grammar and the behavior are in docs/en/reference/formatting.md.
 //
 // SultanC has no variadic functions and no traits, so the arguments are a
 // vector of `قيمة_تنسيق` / `fmt_arg` values: one constructor per primitive
@@ -24,8 +24,8 @@
 // Width and precision of text count extended grapheme clusters (UAX #29,
 // std.unicode.grapheme), so a letter with its harakat counts once and a
 // precision never cuts a cluster; ASCII text without CR takes a fast path.
-// Rust counts Unicode scalar values; for text without combining marks the
-// two agree. No direction marks are inserted.
+// For text without combining marks clusters and Unicode scalar values
+// agree. No direction marks are inserted.
 // Arabic spellings of this folder's modules (docs/en/reference/modules-and-imports.md,
 // "Module spellings"): `استورد المكتبة....` names the same modules as `import std....`.
 module fmt { ar: تنسيق };
@@ -115,7 +115,7 @@ module fmt { ar: تنسيق };
 };
 
 // The output buffer and the spec of the placeholder being written. Custom
-// formatters receive it (Rust's &mut Formatter); reuse one for many writes.
+// formatters receive it; reuse one for many writes.
 عام نوع منسق = {
     الناتج: متجه ط8,
     المواصفة: مواصفة_تنسيق
@@ -161,7 +161,7 @@ module fmt { ar: تنسيق };
 }
 
 // The text written so far, moved out without a copy; the formatter is left
-// empty (Rust's std::mem::take on a String).
+// empty.
 عام عرف خذ_نص_المنسق(المنسق: &متغير منسق): نص {
     دع الفارغ: متغير متجه ط8 = [];
     بدّل((*المنسق).الناتج, الفارغ);
@@ -177,8 +177,8 @@ module fmt { ar: تنسيق };
     اقتطع((*المنسق).الناتج, 0);
 }
 
-// The current placeholder's spec, for custom formatters (Rust's
-// Formatter::width, precision, fill, align, alternate, sign_plus,
+// The current placeholder's spec, for custom formatters (width, precision,
+// fill, align, alternate, sign_plus,
 // sign_aware_zero_pad, and whether {:?} asked for Debug).
 عام عرف عرض_المنسق(المنسق: &منسق): اختياري طبيعي {
     إذا ((*المنسق).المواصفة.له_عرض) { أرجع اختياري.موجود((*المنسق).المواصفة.العرض); };
@@ -206,14 +206,14 @@ module fmt { ar: تنسيق };
     | _ -> { أرجع خطأ; };
 }
 
-// Appends text as is, ignoring width and precision (Rust's write_str).
+// Appends text as is, ignoring width and precision.
 عام عرف اكتب_نصا_في_المنسق(المنسق: &متغير منسق, النص: &نص): نتيجة طبيعي, خطأ_تنسيق {
     دع العدد: طبيعي = الطول(*النص) مثل طبيعي;
     ألحق_مقطع_نص(المنسق, النص, 0, العدد);
     أرجع نتيجة.نجح(العدد);
 }
 
-// Appends one character (Rust's write_char).
+// Appends one character.
 عام عرف اكتب_حرفا_في_المنسق(المنسق: &متغير منسق, المحرف: حرف): نتيجة طبيعي, خطأ_تنسيق {
     دع قبل: طبيعي = الطول((*المنسق).الناتج) مثل طبيعي;
     ألحق_رمزا(المنسق, المحرف مثل ط32);
@@ -221,7 +221,7 @@ module fmt { ar: تنسيق };
 }
 
 // Appends text honouring the current width, fill, alignment (left by
-// default) and precision (Rust's Formatter::pad).
+// default) and precision.
 عام عرف احش_نصا(المنسق: &متغير منسق, النص: &نص): نتيجة طبيعي, خطأ_تنسيق {
     دع قبل: طبيعي = الطول((*المنسق).الناتج) مثل طبيعي;
     احش_مقطع_نص(المنسق, النص);
@@ -346,7 +346,7 @@ module fmt { ar: تنسيق };
 }
 
 // Writes the padding before content of المحارف characters and returns the
-// padding still to write after it. Center puts the odd one after (Rust).
+// padding still to write after it. Center puts the odd one after.
 عرف حشو_قبل(المنسق: &متغير منسق, المحارف: طبيعي, الافتراضية: محاذاة_تنسيق): طبيعي {
     إذا (!(*المنسق).المواصفة.له_عرض) { أرجع 0; };
     دع العرض: طبيعي = (*المنسق).المواصفة.العرض;
@@ -456,7 +456,7 @@ module fmt { ar: تنسيق };
 }
 
 // An integer: magnitude, sign and width in bits (the two's complement of a
-// negative value is taken at that width for x, X, o and b, as Rust does).
+// negative value is taken at that width for x, X, o and b).
 عرف اكتب_صحيحا(
     المنسق: &متغير منسق, الموضع: طبيعي, الخام: ط64, موقع: منطقي, البتات: طبيعي
 ): نتيجة طبيعي, خطأ_تنسيق {
@@ -526,7 +526,7 @@ module fmt { ar: تنسيق };
 }
 
 // Keeps the first المحفوظ significant digits of 0.d1d2... * 10^النقطة,
-// rounding the exact value half to even (Rust's {:.N} and {:.Ne}). Digits
+// rounding the exact value half to even. Digits
 // carry no trailing zeros, so a digit after the cut means "more follows".
 عرف قرب_أرقاما(الأرقام: &متغير متجه ط8, النقطة: &متغير عدد, المحفوظ: عدد): فراغ {
     دع العدد: عدد = الطول(*الأرقام) مثل عدد;
@@ -605,7 +605,7 @@ module fmt { ar: تنسيق };
     }
 }
 
-// Exponent form d.ddde<exp> (Rust writes no '+' and no exponent padding);
+// Exponent form d.ddde<exp> (no '+' and no exponent padding);
 // with a precision, exactly الدقة digits after the point.
 عرف ابن_أسيا(
     المنسق: &منسق, الجسم: &متغير متجه ط8, الأرقام: &متغير متجه ط8, النقطة_: عدد, كبير: منطقي
@@ -656,8 +656,7 @@ module fmt { ar: تنسيق };
 // leaves as it is): Display writes positional text
 // (no exponent, "-0" for negative zero), Debug positional with ".0" between
 // 1e-4 and 1e16 and exponent form outside, e/E exponent form. NaN carries no
-// sign; inf takes '-' or '+' like a number; zero padding applies to both, as
-// in Rust.
+// sign; inf takes '-' or '+' like a number; zero padding applies to both.
 عرف اكتب_عائما(المنسق: &متغير منسق, القيمة_: أرقام_عائم): فراغ {
     دع القيمة: متغير أرقام_عائم = القيمة_;
     دع الجسم: متغير متجه ط8 = [];
@@ -717,18 +716,18 @@ module fmt { ar: تنسيق };
     طالما (ف < العدد) { ألحق((*المنسق).الناتج, النص[ف]); ف := ف + 1; }
 }
 
-// \u{hex} with lowercase digits, as Rust's escape_debug writes.
+// \u{hex} with lowercase digits.
 عرف ألحق_هروب_يونيكود(المنسق: &متغير منسق, الرمز: ط32): فراغ {
     ألحق((*المنسق).الناتج, 0x5C); ألحق((*المنسق).الناتج, 0x75); ألحق((*المنسق).الناتج, 0x7B);
     ألحق_خانات(المنسق, الرمز مثل ط64, 16, خطأ, عدد_خانات(الرمز مثل ط64, 16));
     ألحق((*المنسق).الناتج, 0x7D);
 }
 
-// Rust's escape_debug: control, format, separator (other than space),
+// Debug escaping: control, format, separator (other than space),
 // private-use, surrogate and unassigned code points are escaped; a
 // combining mark is escaped where it starts the value (a char, or the first
-// character of a text). Rust also escapes a combining mark after a letter
-// inside text; std.fmt keeps it, so Arabic harakat stay readable.
+// character of a text). A combining mark after a letter inside text is
+// kept, so Arabic harakat stay readable.
 عرف يهرب_في_التصحيح(الرمز: ط32, في_البداية: منطقي): منطقي {
     إذا (الرمز < 0x20 || الرمز == 0x7F) { أرجع صواب; };
     إذا (الرمز < 0x7F) { أرجع خطأ; };
@@ -759,7 +758,7 @@ module fmt { ar: تنسيق };
     ألحق_رمزا(المنسق, الرمز);
 }
 
-// A quoted, escaped text ("…" for text). Width does not apply, as in Rust.
+// A quoted, escaped text ("…" for text). Width does not apply.
 عرف اكتب_نصا_للتصحيح(المنسق: &متغير منسق, النص: &نص, الاقتباس: ط8): فراغ {
     ألحق((*المنسق).الناتج, الاقتباس);
     دع العدد: طبيعي = الطول(*النص) مثل طبيعي;
@@ -784,7 +783,7 @@ module fmt { ar: تنسيق };
 }
 
 // Bytes as text: well-formed UTF-8 as is, every ill-formed byte as U+FFFD
-// (Rust's String::from_utf8_lossy, one replacement per byte).
+// (one replacement per byte).
 عرف نص_من_بايتات_بتسامح(البايتات: &متجه ط8): نص {
     دع المصدر: نص = نسخة_نصية(البايتات);
     دع الناتج: متغير متجه ط8 = [];
@@ -816,8 +815,7 @@ module fmt { ar: تنسيق };
 
 // ---- Lists (Debug) -----------------------------------------------------------
 
-// {:#?}: indents every line an element wrote after its first (Rust's
-// PadAdapter), so nested lists and multi-line custom output line up.
+// {:#?}: indents every line an element wrote after its first, so nested lists and multi-line custom output line up.
 عرف أزح_الأسطر(المنسق: &متغير منسق, البداية: طبيعي): فراغ {
     دع النهاية: طبيعي = الطول((*المنسق).الناتج) مثل طبيعي;
     دع فيه_سطر: متغير منطقي = خطأ;
@@ -898,7 +896,7 @@ module fmt { ar: تنسيق };
 }
 
 // A char: Display pads one character (precision 0 writes nothing, as
-// Rust's pad does); Debug quotes and escapes it, without width.
+// pad does); Debug quotes and escapes it, without width.
 عرف اكتب_حرفا_منسقا(المنسق: &متغير منسق, المحرف: حرف): فراغ {
     دع الرمز: ط32 = المحرف مثل ط32;
     طابق (*المنسق).المواصفة.الصيغة مع
@@ -1033,7 +1031,7 @@ module fmt { ar: تنسيق };
     };
 }
 
-// {:x} / {:X} on bytes: two hex digits per byte (Go's %x), "0x" first with #.
+// {:x} / {:X} on bytes: two hex digits per byte, "0x" first with #.
 عرف اكتب_بايتات_ست_عشرية(المنسق: &متغير منسق, البايتات: &متجه ط8, كبير: منطقي): فراغ {
     دع الجسم: متغير متجه ط8 = [];
     دع ف: متغير طبيعي = 0;
@@ -1061,7 +1059,7 @@ module fmt { ar: تنسيق };
 عرف رقم_عشري_(البايت: ط8): منطقي { أرجع البايت >= 0x30 && البايت <= 0x39; }
 
 // The start of a named argument: an ASCII letter, '_' or any non-ASCII
-// character (Rust's identifiers are XID).
+// character.
 عرف بداية_اسم(البايت: ط8): منطقي {
     أرجع (البايت >= 0x41 && البايت <= 0x5A) || (البايت >= 0x61 && البايت <= 0x7A)
         || البايت == 0x5F || البايت >= 0x80;
@@ -1075,7 +1073,7 @@ module fmt { ar: تنسيق };
     أرجع محاذاة_تنسيق.يمين();
 }
 
-// Format width and precision are at most 65535, as in Rust (u16).
+// Format width and precision are at most 65535 (16 bits).
 عرف أقصى_عدد(): طبيعي { أرجع 65535; }
 
 // Parser state for one format string.
@@ -1189,7 +1187,7 @@ module fmt { ar: تنسيق };
             المواصفة.زائد := صواب;
             (*الحالة).الموضع := (*الحالة).الموضع + 1;
         } وإلا إذا ((*الحالة).الموضع < العدد && (*القالب)[(*الحالة).الموضع] == 0x2D) {
-            // '-' is accepted and unused, as in Rust.
+            // '-' is accepted and unused.
             (*الحالة).الموضع := (*الحالة).الموضع + 1;
         };
         // ['#']
@@ -1365,7 +1363,7 @@ module fmt { ar: تنسيق };
             الحالة.الموضع := الحالة.الموضع + 1;
         };
     }
-    // Every argument must be used, as Rust requires.
+    // Every argument must be used.
     دع ف: متغير طبيعي = 0;
     طالما (ف < عدد_الوسائط) {
         إذا (!مستخدم(&الحالة, ف)) { أرجع نتيجة.خطأ(خطأ_تنسيق.وسيط_غير_مستخدم(ف)); };
@@ -1508,21 +1506,21 @@ module fmt { ar: تنسيق };
 
 // ---- Public formatting API ---------------------------------------------------
 
-// The formatted text (Rust's format!, Go's fmt.Sprintf).
+// The formatted text.
 عام عرف نسق(القالب: نص, الوسائط: متجه قيمة_تنسيق): نتيجة نص, خطأ_تنسيق {
     دع المنسق: متغير منسق = أنشئ_منسقا();
     نسق_داخليا(&متغير المنسق, &القالب, &الوسائط)؟;
     أرجع نتيجة.نجح(خذ_نص_المنسق(&متغير المنسق));
 }
 
-// Appends to a formatter and returns the bytes written (Rust's write! to a
-// String or, inside a custom formatter, to the Formatter it was given).
+// Appends to a formatter and returns the bytes written (to a formatter of
+// one's own or, inside a custom formatter, to the formatter it was given).
 عام عرف نسق_في(المنسق: &متغير منسق, القالب: نص, الوسائط: متجه قيمة_تنسيق): نتيجة طبيعي, خطأ_تنسيق {
     أرجع نسق_داخليا(المنسق, &القالب, &الوسائط);
 }
 
 // Formats into a reused formatter (cleared first) and writes the bytes to a
-// std.io writer in full (Rust's write! on an io::Write, Go's fmt.Fprintf).
+// std.io writer in full.
 عام عرف اكتب_منسقا_بمنسق<ح>(
     المنسق: &متغير منسق,
     الوجهة: &ح,

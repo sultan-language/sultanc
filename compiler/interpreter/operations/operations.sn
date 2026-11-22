@@ -3161,5 +3161,12 @@
         | نتيجة_نداء_مفسر.أخفق(الخطأ) -> {
             أرجع نتيجة_تعليمة_مفسر.أخفق(الخطأ);
         };
+    }
+    // Finalized MSIR holds no ownership operation (drop elaboration replaced
+    // it); the verifier rejects one before the interpreter runs.
+    | عملية_مسير.ملكية_مكان(_) -> {
+        أرجع نتيجة_تعليمة_مفسر.أخفق(
+            فشل_تفسير_مسير.خلل_داخلي(خلل_داخلي_مفسر.نتيجة_تعليمة_غير_متوقعة())
+        );
     };
 }

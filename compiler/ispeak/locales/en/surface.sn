@@ -43,6 +43,7 @@
     | مفتاح_نص_مترجم.خيار_قائمة_الاختبارات -> { أرجع "    --list                 With test: list the tests, run none\n"; }
     | مفتاح_نص_مترجم.خيار_تفسير_الاختبارات -> { أرجع "    --interpret            With test: run the tests in the interpreter\n"; }
     | مفتاح_نص_مترجم.خيار_فهرس_الاختبار -> { أرجع "    --test-index=<n>       With test: run only test number <n> (as --list numbers\n                           them from 0), in this process\n"; }
+    | مفتاح_نص_مترجم.خيار_منع_تشغيل_الاختبارات -> { أرجع "    --no-run               With test and -o <path>: write the test program to <path>, run\n                           nothing, and print `<index> <name>` for each test kept;\n                           `<path> <index>` then runs that test alone\n"; }
     | مفتاح_نص_مترجم.تسمية_اختبار_ناجح -> { أرجع "PASS"; }
     | مفتاح_نص_مترجم.تسمية_اختبار_فاشل -> { أرجع "FAIL"; }
     | مفتاح_نص_مترجم.تسمية_اختبار_أرجع_خطأ -> { أرجع "returned an error"; }

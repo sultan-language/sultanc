@@ -21,7 +21,7 @@ the documentation is written.
 | `tools/` | `tests/` (CI entry and checks), `generate/` (registries and generators), `audit/` |
 | `examples/` | Programs in English (`en/`) and Arabic (`ar/`) |
 | `docs/` | Documentation: `book/`, `reference/`, `internals/`, `contributing/`, `history/` |
-| `.github/` | CI: `workflows/ci.yml` with one script per host family in `ci/` |
+| `.github/` | CI: `workflows/ci.yml` (every job, in tiers), `promote.yml` (main → beta → master), one script per host family in `ci/`; the policy is `.github/CI.md` |
 
 Inside `compiler/`:
 

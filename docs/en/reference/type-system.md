@@ -63,11 +63,17 @@ The semantic model represents these composite forms:
 - named record, enum and alias types, which may take type parameters.
 
 The identity of a named record or enum is its resolved declaration, not its spelling. Generic arguments nest, and
-`arc<mutex<i64>>` closes both lists with one `>>` token, as Rust, C++11 and Java do; the parser takes it as two
+`arc<mutex<i64>>` closes both lists with one `>>` token; the parser takes it as two
 closing angle brackets. A generic call infers a type parameter from the type of the value passed, so a `mutable`
 local passed for a parameter `T` binds `T` to the value's type rather than to `mutable T`
 (`compiler/frontend/types/call_signature.sn`). A generic instance whose result type is `void` may bind and return
 that result, as in `let n: R = f(); return n;` with `R` = void: the binding holds no value.
+
+A generic call may also infer its type parameters from the type its destination expects. The result it then has is
+checked against that destination like any other value, so `let removed: int = remove_at(&mutable values, 1);`,
+whose call has the type `option int`, is `SULTANC-TYPE-MISMATCH` at the initializer (expected `int`, found
+`option int`). When the value is an option or a result holding the expected type, a help says to match on it or pass
+the absence or the error on with `?`.
 
 ```sultan
 type Pair<A, B> = { first: A, second: B };
@@ -92,6 +98,31 @@ identifiers, and they name the builtin type only in a type or constructor positi
 The old Arabic spellings `اختيار` for the type and `بعض` for the constructor are deprecated aliases. They name the
 same type and constructor, and each use is warned once with `SULTANC-SYNTAX-DEPRECATED-SPELLING`.
 
+### Enum constructors
+
+A constructor of an enum is a call: `Color.Red()` for a constructor without payloads, `Shape.Circle(2)` for one
+with a payload. The constructor read as a value without its call, `let c: Color = Color.Red;`, is
+`SULTANC-NAME-CONSTRUCTOR-NOT-CALLED` at `Color.Red` (kind `constructor-not-called`), not an unknown name: the
+message names the constructor and says that it is called with `()`, or, for a constructor with payloads, how many
+arguments it takes. A constructor without payloads also has a help and a machine-applicable fix (key
+`call-constructor`) that inserts `()` after the name; `--diagnostic-format=json` writes it in `"fixes"`, and the
+editor tooling reads the same suggestion. A constructor with payloads has a help only, with no fix: its arguments
+are the author's to write, so no edit could be applied without asking. Tooling requests report the same
+diagnostic and set aside the declaration that holds the read, as for an unknown name
+(`compiler/frontend/names/semantic_pipeline.sn`, `أجل_منشئا_غير_مستدعى`).
+
+A constructor call of constants is also a module-level value: `let c: Color = Color.Red();`,
+`let s: Shape = Shape.Circle(2);` or `let o: option int = option.some(3);` at the top of a module, with
+payloads that are numbers, booleans, characters, text, the null pointer, other such constructor calls,
+or names of constants declared before. Such a value is immutable; each read builds it where it is
+read (docs/en/internals/msir-and-codegen.md, "Constants and globals"). A `mutable` one, or one whose
+arguments are not such constants, is `SULTANC-COMPTIME-NON-CONSTANT` at the declaration.
+
+```text
+error[SULTANC-NAME-CONSTRUCTOR-NOT-CALLED]: constructor `Color.Red` is called with `()`: `Color.Red()`
+error[SULTANC-NAME-CONSTRUCTOR-NOT-CALLED]: constructor `Shape.Circle` takes 1 argument: `Shape.Circle(...)`
+```
+
 ### Slices
 
 A slice `[] T` is a non-owning view with the vector layout. A `vector T` value or place is accepted wherever `[] T`
@@ -103,8 +134,8 @@ viewing a vector place holds a shared borrow, so the vector cannot be changed wh
 the vector header with `نقل_تسلسل_مملوك`.
 
 A slice declaration initialized from a slice literal (`let s: [] T = [...]`) or from a call result builds or
-receives a vector, which an anonymous owner in the enclosing block destroys at the block's end, as Rust extends a
-temporary's lifetime. The same holds for a call result passed directly as a slice argument. A slice assigned a
+receives a vector, which an anonymous owner in the enclosing block destroys at the block's end, extending the
+temporary's lifetime to the block. The same holds for a call result passed directly as a slice argument. A slice assigned a
 literal or call result later (`s := [...]`) keeps no owner for it, so the buffer leaks instead of letting the view
 outlive it.
 
@@ -114,7 +145,7 @@ A vector literal `[a, b, c]` is an expression. It can be a call argument, a retu
 element of another literal (`[[1], [2, 3]]`), an indexed temporary (`[a, b][i]`) or an operand of a reader primitive
 (`length([..])`). `let v: T = [..];` keeps the initializer statement (`تهيئة_متجه`), which also builds slices.
 
-- **Typing.** Typing is bidirectional, as in Rust and Swift. In a `vector E` context (a parameter, a declared or
+- **Typing.** Typing is bidirectional. In a `vector E` context (a parameter, a declared or
   returned type, a field, an outer literal's element) each element is checked against `E` and `[]` is a `vector E`.
   Without such a context the first element gives `E`, so `[1, 2]` is a `vector int`, and `[]` alone is
   `SULTANC-TYPE-MISMATCH` (`ابن_نوع_حرفي_متجه_داخلي`, `compiler/frontend/types/semantic_pipeline.sn`). In any other
@@ -131,6 +162,42 @@ element of another literal (`[[1], [2, 3]]`), an indexed temporary (`[a, b][i]`)
 
 The C Stage0 seed does not parse vector literal expressions, so the compiler sources and the std modules the
 compiler imports keep `let`-bound literals.
+
+### Tuple literal expressions
+
+A tuple literal `(a, b)` (two or more elements, an optional trailing comma) is an expression. It can be a returned
+value (`return (a / b, a % b);`), a call argument, a record field or an element of another literal. A parenthesized
+single expression `(a)` stays a grouping. `let p: T = (..);` and `p := (..);` keep the initializer statement
+(`تهيئة_صف`).
+
+- **Typing.** In a tuple context (a declared or returned type, a parameter, a field) the literal must have as many
+  elements as the tuple type, and each element is checked against its element type, so `return (1, 2);` in a
+  function returning `(i8, u16)` types the integers as `i8` and `u16`. Without a context each element gives its own
+  type, so `(1, true)` is an `(int, bool)`. A count that differs is `SULTANC-TYPE-MISMATCH`.
+- **Ownership and lowering.** The same as a `let`-bound tuple: elements are evaluated left to right and moved in, the
+  literal carries every borrow its elements hold, and it lowers to one aggregate value, a fresh owned temporary like
+  a record literal expression. `tests/{ar,en}/language/surface/tuple_literal_expressions.sn` covers it.
+
+The C Stage0 seed does not parse tuple literal expressions, so the compiler sources and the std modules the compiler
+imports keep `let`-bound tuples.
+
+## Comparison operators
+
+`==` and `!=` are defined for integers, floats, booleans, characters, text, raw pointers (by address) and enums
+without payloads (by constructor). Text compares by content, byte by byte, as std's `texts_equal`
+(`نصان_متساويان`) does, so `name == "Sultan"` is true for a `string` holding those bytes. Neither operand is moved:
+a text local stays usable after the comparison, and a call result compared directly is destroyed at the end of its
+block. `<`, `<=`, `>` and `>=` are defined for integers, floats and characters. Ordering text needs
+`compare_texts_lexicographically`.
+
+Any other operand type is `SULTANC-TYPE-MISMATCH` with the reason `type.operator-not-defined`, reported at the
+operation and naming the operator and the type: "`>` is not defined for `Point`". A generic body may apply an
+operator to its type parameter (there are no trait bounds); the check then runs when the generic is instantiated,
+and the error points at the operation inside the generic with the instantiating call as a related span
+(`هل_عامل_ثنائي_معرف_للنوع`,
+`compiler/frontend/types/semantic_pipeline.sn`; the text loop is `اخفض_مساواة_نصين_إلى_مسير`,
+`compiler/msir/lowering/expressions.sn`). `tests/{ar,en}/language/surface/text_equality.sn`,
+`reject_generic_operator_not_defined.sn` and `tests/{ar,en}/diagnostics/e2e/operator_not_defined.sn` cover it.
 
 ## Opaque types
 
@@ -169,10 +236,9 @@ references, pointers or byte vectors are checked where they are lowered.
 | `f32` | `f64` | exact |
 | `f64` | `f32` | the nearest `f32`, ties to even; out of range gives an infinity; a NaN stays a NaN |
 
-The float conversions follow Rust's `as` (saturating float-to-integer, defined by rust-lang/rust#71269), which
-is also the behavior of Java's `d2l` and WebAssembly's non-trapping `iNN.trunc_sat_fMM`. Go and C leave an
-out-of-range float-to-integer result implementation-defined or undefined; SultanC does not. Integer-to-float
-rounding is IEEE 754 roundTiesToEven, as in Rust, Go, Swift and C.
+A float-to-integer conversion saturates: a value below the target's range gives its minimum, a value above
+gives its maximum, and a NaN gives 0, which is also WebAssembly's non-trapping `iNN.trunc_sat_fMM`. The result
+is defined for every input. Integer-to-float rounding is IEEE 754 roundTiesToEven.
 
 ```sultan
 def main(): int {
@@ -216,15 +282,15 @@ The bit patterns of floats are available as `f64_to_bits`, `f64_from_bits` and t
 operations (`جمع_ملتف`, `طرح_ملتف`, `ضرب_ملتف`, `إزاحة_يسرى_ملتفة`) that lower to the plain machine instruction on
 every backend. They are reached through the compiler intrinsics `بدائي_جمع_ملتف`, `بدائي_طرح_ملتف`,
 `بدائي_ضرب_ملتف`, `بدائي_إزاحة_يسرى_ملتفة` and `بدائي_إزاحة_يمنى_ملتفة`, whose two operands share one integer
-type. A shift takes its amount modulo the width, as Rust's `wrapping_shl` does.
+type. A shift takes its amount modulo the width.
 
 `std.math.wrapping` gives every integer type a wrapping form `wrapping_add_T` (and `sub`, `mul`,
 `shl`, `shr`), a checked form `checked_add_T` that returns an `option`, and a saturating form
-`saturating_add_T`, after Rust's `wrapping_*`, `checked_*` and `saturating_*`.
+`saturating_add_T`.
 
 ## Float operations
 
-Beyond `+ - * /` and the comparisons, the IEEE 754 operations that Rust exposes as `f64` methods are compiler
+Beyond `+ - * /` and the comparisons, the IEEE 754 operations below are compiler
 primitives. Each is one `هوية_بدائي_مترجم.عملية_عائمة` carrying a `عملية_عائمة_بدائية`, and its operands and result
 have the first operand's float type, `f32` or `f64`.
 
@@ -242,36 +308,35 @@ The `f32` forms exist as well. Every backend produces the same bits: the native 
 operation to the target's instruction (see [MSIR and code generation](../internals/msir-and-codegen.md)), and the
 interpreter computes it exactly on the bits. Where a target's baseline instruction set has no integral rounding
 (baseline x86-64 has no ROUNDSD) or no fused multiply-add, std.math selects an exact bit-level form by architecture
-instead of the primitive, as Rust's libm does, so no libm call is ever needed. The payload and sign of a NaN result
-are not specified, as in Rust; abs and copysign only move the sign bit.
+instead of the primitive, so no libm call is ever needed. The payload and sign of a NaN result
+are not specified; abs and copysign only move the sign bit.
 
 ## Negation and constant arithmetic
 
 Unary minus applies to signed integers and floats. On a float it is the IEEE negation, `-0.0 - x`, so `-x` of
 `+0.0` is `-0.0`. On a value of an unsigned type (`uint`, `u8`…`u64`) it is `SULTANC-TYPE-MISMATCH` with the reason
-`type.unsigned-negation`, as Rust's E0600, in a function and in a module constant alike. An integer literal keeps
+`type.unsigned-negation`, in a function and in a module constant alike. An integer literal keeps
 its own value check, so `-0` fits an unsigned type and `-1` is out of range. Subtract, or convert to a signed type
 first.
 
 A module constant is evaluated at compile time with the run-time semantics. An operation that would trap at run
 time (integer overflow, division or remainder by zero, the signed minimum divided by -1, a shift by the width or
-more) is `SULTANC-COMPTIME-EVALUATION-FAILED` with the reason `comptime.execution-trapped`, as Rust's E0080 is for a
-`const`. A constant whose declared type is wider than its expression's, such as
+more) is `SULTANC-COMPTIME-EVALUATION-FAILED` with the reason `comptime.execution-trapped`. A constant whose declared type is wider than its expression's, such as
 `let k: int = (250 as u8) + 3;`, is a widening the type checker accepts, and the constant holds the same number in
 the declared type.
 
 ## Thread capture rules
 
-A closure handed to another thread may capture only values that are safe to send there, the role Rust's
-`F: Send + 'static` bound plays on `std::thread::spawn`. SultanC has no traits, so the frontend checks the closure
+A closure handed to another thread may capture only values that are safe to send there and that outlive the
+spawning scope. SultanC has no traits, so the frontend checks the closure
 literal at the call (`compiler/frontend/types/thread_capture.sn`, run after the unsafe check and before SSF).
 
 | Captured | Verdict | Diagnostic |
 |---|---|---|
-| a value whose type holds a raw pointer (`*T`, `*mutable T`, anywhere inside records, enums, tuples, options, results, vectors or boxes) | rejected, unless the call that hands the closure over sits inside `unsafe` (the programmer vouches for the pointee's synchronization, as with `unsafe impl Send`) | `SULTANC-THREAD-CAPTURE-RAW-POINTER` |
-| a value whose type holds a borrowed reference or a slice (`&T`, `&mutable T`, `[] T`) | rejected: the thread may outlive the borrowed storage (`'static`) | `SULTANC-THREAD-CAPTURE-REFERENCE` |
-| a writable module variable named in the closure body, outside an unsafe block of that body | rejected: every thread shares it and its reads and writes are not atomic (Rust's `static mut`) | `SULTANC-THREAD-CAPTURE-NON-ATOMIC-SHARED` |
-| plain values (numbers, records of them), owned values (moved into the closure), function values and the std.sync handles built on them (`arc`, Rust's Arc, whose count is atomic), type parameters | accepted | none |
+| a value whose type holds a raw pointer (`*T`, `*mutable T`, anywhere inside records, enums, tuples, options, results, vectors or boxes) | rejected, unless the call that hands the closure over sits inside `unsafe` (the programmer vouches for the pointee's synchronization) | `SULTANC-THREAD-CAPTURE-RAW-POINTER` |
+| a value whose type holds a borrowed reference or a slice (`&T`, `&mutable T`, `[] T`) | rejected: the thread may outlive the borrowed storage | `SULTANC-THREAD-CAPTURE-REFERENCE` |
+| a writable module variable named in the closure body, outside an unsafe block of that body | rejected: every thread shares it and its reads and writes are not atomic | `SULTANC-THREAD-CAPTURE-NON-ATOMIC-SHARED` |
+| plain values (numbers, records of them), owned values (moved into the closure), function values and the std.sync handles built on them (`arc`, whose count is atomic), type parameters | accepted | none |
 
 Each diagnostic names the captured symbol and its type at its first use in the closure, in Arabic and English
 (iSpeak).
@@ -316,7 +381,7 @@ The meaning of a type stays target-neutral while its physical representation var
 - `[]` with no element and no vector context is a type mismatch.
 - A closure passed through a variable instead of a literal is not inspected by the thread-capture check, a captured
   closure is opaque (its own captures are not walked), and a writable module variable reached through a call inside
-  the closure is not seen. Rust tracks all three through auto traits and `static` rules.
+  the closure is not seen.
 - A type whose physical layout is intentionally not fixed (text, vectors, slices, function values) has no size or
   alignment; asking for one at compile time is a diagnostic ([Compile-time evaluation](comptime.md)).
 

@@ -1,7 +1,7 @@
-// Channels (docs/en/reference/concurrency.md, "Channels"), after Rust's std::sync::mpsc:
+// Channels (docs/en/reference/concurrency.md, "Channels"):
 // `قناة` / channel is unbounded, `قناة_متزامنة` / sync_channel(bound) holds
 // at most `bound` messages and makes a sender wait while it is full. Many
-// senders (copied explicitly with استنسخ_مرسل, Rust's Sender::clone), one
+// senders (copied explicitly with استنسخ_مرسل), one
 // receiver; messages arrive in the order they were sent.
 //
 // The shared state is one heap record behind an Arc: a FIFO of two vectors
@@ -10,7 +10,7 @@
 // by the three-state lock of std.sync.mutex, plus two futex sequence words
 // (std.os.wait_address): "a value is available" and "a slot is free".
 //
-// Disconnection, as in Rust: `استقبل` / recv fails once every sender is gone
+// Disconnection: `استقبل` / recv fails once every sender is gone
 // and the queue is empty; `أرسل` / send fails (handing the value back) once
 // the receiver is gone. SultanC runs no user code when a value is dropped, so
 // the channel counts its ends with two shared tokens, an Arc each held by the
@@ -21,7 +21,7 @@
 // waiting thread within a few milliseconds, as it re-checks the counts
 // between bounded sleeps (1 ms, doubling to 32 ms).
 //
-// Ends are not copyable (Rust's Receiver is not Clone; a Sender is cloned
+// Ends are not copyable (a receiver is never cloned; a sender is cloned
 // explicitly), so a spawned closure moves the end it captures.
 استورد تزامن.ذري;
 استورد تزامن.مشترك;
@@ -59,7 +59,7 @@
 };
 عام مرادف receiver = مستلم;
 
-// Both ends of a new channel (Rust returns them as a pair); take them apart
+// Both ends of a new channel; take them apart
 // with a pattern: `طابق قناة() مع | { المرسل: م, المستلم: س } -> { … }`.
 عام نوع طرفا_قناة<ق> = { المرسل: مرسل<ق>, المستلم: مستلم<ق> };
 عام مرادف channel_ends = طرفا_قناة;
@@ -74,7 +74,7 @@
 عام مرادف channel_ends_sender = مرسل_الطرفين;
 عام مرادف channel_ends_receiver = مستلم_الطرفين;
 
-// Rust's TryRecvError, RecvTimeoutError, RecvError and TrySendError.
+// Why a receive or a send did not deliver a value.
 عام نوع خطأ_محاولة_استقبال =
     | فارغة
     | منقطعة
@@ -124,7 +124,7 @@
 عام مرادف channel_receiver = مستلم_قناة;
 
 // A receiver of a sync_channel(bound) alone. A bound of 0 holds one value
-// (Rust's rendezvous channel, bound 0, is not implemented as such).
+// (a rendezvous channel, where a send waits for a receive, is not implemented).
 عام عرف مستلم_قناة_متزامنة<ق>(الحد: طبيعي): مستلم<ق> {
     دع الحد_الفعلي: متغير طبيعي = الحد;
     إذا (الحد_الفعلي == 0) { الحد_الفعلي := 1; };
@@ -141,7 +141,7 @@
 }
 عام مرادف sender_for = مرسل_لمستلم;
 
-// Rust's mpsc::channel.
+// A new unbounded channel and both its ends.
 عام عرف قناة<ق>(): طرفا_قناة<ق> {
     دع المستلم: مستلم<ق> = مستلم_قناة();
     دع المرسل: مرسل<ق> = مرسل_لمستلم(&المستلم);
@@ -150,7 +150,7 @@
 }
 عام مرادف channel = قناة;
 
-// Rust's mpsc::sync_channel.
+// A new channel of at most الحد queued values and both its ends.
 عام عرف قناة_متزامنة<ق>(الحد: طبيعي): طرفا_قناة<ق> {
     دع المستلم: مستلم<ق> = مستلم_قناة_متزامنة(الحد);
     دع المرسل: مرسل<ق> = مرسل_لمستلم(&المستلم);
@@ -159,7 +159,7 @@
 }
 عام مرادف sync_channel = قناة_متزامنة;
 
-// Rust's Sender::clone.
+// Another sender for the same channel.
 عام عرف استنسخ_مرسل<ق>(المرسل: &مرسل<ق>): مرسل<ق> {
     دع الناتج: مرسل<ق> = { الداخل: (*المرسل).الداخل, الرمز: (*المرسل).الرمز, منع_النسخ: علامة_قناة() };
     أرجع الناتج;
@@ -199,7 +199,7 @@
     أرجع أزل_الأخير((*الداخل).الصادر);
 }
 
-// Rust's Sender::send: wait for room in a bounded channel, then queue the
+// Waits for room in a bounded channel, then queues the
 // value. The value comes back as the error when the receiver is gone.
 عام عرف أرسل<ق>(المرسل: &مرسل<ق>, القيمة: ق): نتيجة منطقي, ق {
     دع الداخل: &متغير داخل_قناة<ق> = داخل_قناة_من(&(*المرسل).الداخل);
@@ -222,7 +222,7 @@
 }
 عام مرادف send = أرسل;
 
-// Rust's SyncSender::try_send: queue the value only if there is room now.
+// Queues the value only if there is room now.
 عام عرف حاول_الإرسال<ق>(المرسل: &مرسل<ق>, القيمة: ق): نتيجة منطقي, خطأ_محاولة_إرسال<ق> {
     دع الداخل: &متغير داخل_قناة<ق> = داخل_قناة_من(&(*المرسل).الداخل);
     إذا (!مستلم_حي(الداخل)) { أرجع نتيجة.خطأ(خطأ_محاولة_إرسال.منقطعة(القيمة)); };
@@ -294,7 +294,7 @@
     أرجع اختياري.لا_شيء();
 }
 
-// Rust's Receiver::recv: wait for a value; fails once every sender is gone
+// Waits for a value; fails once every sender is gone
 // and nothing is left to receive.
 عام عرف استقبل<ق>(المستلم: &مستلم<ق>): نتيجة ق, خطأ_استقبال {
     دع منقطعة: متغير منطقي = خطأ;
@@ -304,7 +304,7 @@
 }
 عام مرادف recv = استقبل;
 
-// Rust's Receiver::recv_timeout.
+// Waits for a value at most المهلة.
 عام عرف استقبل_بمهلة<ق>(المستلم: &مستلم<ق>, المهلة: مدة): نتيجة ق, خطأ_استقبال_بمهلة {
     دع منقطعة: متغير منطقي = خطأ;
     طابق استقبل_داخلي(المستلم, اختياري.موجود(المهلة.النانوثواني), &متغير منقطعة) مع
@@ -316,7 +316,7 @@
 }
 عام مرادف recv_timeout = استقبل_بمهلة;
 
-// Rust's Receiver::try_recv: a value if one is queued now.
+// A value if one is queued now.
 عام عرف حاول_الاستقبال<ق>(المستلم: &مستلم<ق>): نتيجة ق, خطأ_محاولة_استقبال {
     دع الداخل: &متغير داخل_قناة<ق> = داخل_قناة_من(&(*المستلم).الداخل);
     طابق حاول_خذ(الداخل) مع
@@ -333,7 +333,7 @@
 عام مرادف try_recv = حاول_الاستقبال;
 
 // Drop the end (moved in here) and wake the other side, which re-checks
-// the counts at once (Rust's `drop(tx)` / `drop(rx)`).
+// the counts at once.
 عرف اترك_مرسل<ق>(المرسل: مرسل<ق>): فراغ { }
 عرف اترك_مستلم<ق>(المستلم: مستلم<ق>): فراغ { }
 

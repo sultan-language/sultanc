@@ -5,7 +5,7 @@
 SultanC's qualification harness is written in SultanC and lives in `tests/runner/`. It discovers test
 programs under `tests/ar/` and `tests/en/`, runs them against a built compiler, and adds structural,
 robustness, object-format and system checks of its own. This page explains how to run the suites, what
-the runner's test directives mean, and how to add a test. Python, shell test scripts and TSV manifests
+the runner's test directives mean, and how to add a test. Scripts in other languages and TSV manifests
 are not part of the harness; the shell scripts in `tools/tests/` are entry points and
 interpreter-specific checks.
 
@@ -50,6 +50,10 @@ Environment variables:
 | `SULTANC_STAGE0_BIN` | a C Stage0 binary; enables the `// مرحلة0: نعم` comparison |
 | `SULTANC_TEST_TIMEOUT` | time limit of each command the runner starts, in seconds (default 300; 0: none). A command past it is killed, its check fails, and `TIMEOUT` with its name is printed at once; the convergence self-builds get six times the limit. Windows waits without a limit |
 | `SULTANC_TEST_JOBS` | workers for the discovered tests (default: the available processors) |
+| `SULTANC_TEST_STAGE2_BACKEND` | the backend that generated the compiler under test (`native` or `llvm`); the convergence check builds Stage3 and Stage4 with it. The CI scripts set it where Stage2 comes from LLVM |
+| `SULTANC_C_SYSROOT` | C headers for the targets the runner builds C-importing tests for; on a Windows host without it those builds (Linux and macOS targets) are skipped, as Windows has no headers of those targets |
+
+On Windows the runner starts each command itself, without a shell: std's `Command` sets its environment, folder and standard input and captures both outputs. A few system checks still use `SULTANC_TEST_SH`.
 
 The discovered tests run on `SULTANC_TEST_JOBS` workers. An English test and its Arabic twin are one
 unit of work, run by one worker, since the pair step reads the twin. A test that imports the network,
@@ -216,6 +220,7 @@ These are skipped unless the environment variable is set to `1`.
 | `tools/tests/interp_ffi_check.sh` | the interpreter's dynamic C function bridge, natively, under wine and by import audit |
 | `tools/tests/mac_interp_check.sh` | stdlib tests that meet host memory, natively and interpreted, on macOS |
 | `tools/tests/freebsd_examples.sh` | the x86_64 examples through a ptrace system-call translator on Linux |
+| `tools/tests/wine_windows.sh` | cross-builds the Windows x86_64 compiler and runs it under Wine on Linux (`smoke`: `run`, the machine engine, runtime-check reports, `test` and `test --interpret`, iSpeak output; `tests`: the whole test runner, as the Windows CI runs it) |
 
 ## See also
 

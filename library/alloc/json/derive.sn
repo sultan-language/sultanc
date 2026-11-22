@@ -1,7 +1,6 @@
 // The run-time half of derived JSON (Nahr item 23): `@@json` on a record or
 // enum type (frontend/annotations/json_derive.sn) generates, from the
-// declaration, an encoder, a decoder and a field schema, as serde's derive
-// and pydantic's models. The generated code calls these helpers. Records are
+// declaration, an encoder, a decoder and a field schema. The generated code calls these helpers. Records are
 // objects with one member per field in declaration order; options are null
 // when absent and may be missing on input; vectors are arrays; enum
 // constructors without payloads are strings, others {"tag": name, "values":
@@ -29,7 +28,7 @@
     ألحق_نص_مشتق(الناتج, &النص);
 }
 عام عرف ألحق_جسون_عشري(الناتج: &متغير متجه ط8, القيمة: ع64): فراغ {
-    // JSON has no NaN or infinities: null, as JavaScript's JSON.stringify.
+    // JSON has no NaN or infinities: they are written as null.
     إذا (القيمة != القيمة || القيمة - القيمة != 0.0) { ألحق_نص_مشتق(الناتج, &«null»); أرجع; };
     دع النص: نص = ع64_إلى_نص(القيمة);
     ألحق_نص_مشتق(الناتج, &النص);

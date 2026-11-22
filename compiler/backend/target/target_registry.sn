@@ -342,7 +342,7 @@
         الأساس.الميزات := «+m,+a,+c»;
         الأساس.الواجهة := «ilp32»;
     }
-    // i686 (Rust's i686 targets): CMPXCHG8B, so 64-bit atomics (the
+    // i686: CMPXCHG8B, so 64-bit atomics (the
     // allocator, std.sync) are inline instead of __atomic_* library calls,
     // which std does not link.
     | هوية_معمارية.إكس_ستة_وثمانون_اثنان_وثلاثون -> {

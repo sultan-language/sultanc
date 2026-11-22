@@ -161,16 +161,21 @@ def main(): int {
 
 ```text
 error[SULTANC-FLOW-USE-BEFORE-INITIALIZATION]: use before initialization — The value used before initialization is `advice`. The value is used before it is initialized.
-  --> main.sn:5:5..5:24
+  --> main.sn:9:13..9:19
+   |
+ 9 |     println(advice);
+   |             ^^^^^^ invalid use
+   |
+  ::: main.sn:5:5..5:24
    |
  5 |     let advice: string;
-   |     ^^^^^^^^^^^^^^^^^^^
+   |     ^^^^^^^^^^^^^^^^^^^ declared here
    |
 ```
 
 If the temperature were 20, `advice` would have no value when `println` uses it. The compiler finds
-this path without running the program. The message points at the declaration of `advice`, the variable
-that can be used empty; the use is the `println` below it.
+this path without running the program. The message marks the use that can find `advice` empty, and
+shows where `advice` was declared.
 
 Second, an immutable variable gets its value only once: a second `:=` to `advice` on the same path is
 the same immutability error as before.

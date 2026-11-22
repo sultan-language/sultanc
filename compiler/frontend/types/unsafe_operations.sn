@@ -390,9 +390,9 @@
 }
 
 // The uses of writable globals whose Type is not a scalar (a vector, text, a
-// record, ...), as Rust's `static mut`: any function may change such a global
+// record, ...): any function may change such a global
 // while another one holds a reference into it (an append can move its
-// buffer), which SSF, tracking locals, cannot see. Every use is therefore an
+// buffer), which the ownership analysis, tracking locals, cannot see. Every use is therefore an
 // unsafe operation; a writable scalar global (a counter, a flag, a word) is
 // read and written by value and stays safe.
 عرف عوالم_متغيرة_غير_سلمية_في_وحدة(

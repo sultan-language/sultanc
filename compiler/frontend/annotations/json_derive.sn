@@ -14,8 +14,8 @@
 استورد compiler.frontend.parser.result;
 استورد المكتبة.نصوص.من_بايتات;
 
-// Derived JSON (Nahr item 23): compile-time reflection over a declaration,
-// as serde's derive. `@@json` (`@@جسون`) on a record or enum type T
+// Derived JSON (Nahr item 23): compile-time reflection over a declaration.
+// `@@json` (`@@جسون`) on a record or enum type T
 // generates, from the declaration's own fields and constructors:
 //
 //   ألحق_جسون__T(out: &mutable vector u8, value: &T): void   (append)

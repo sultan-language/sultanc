@@ -301,7 +301,7 @@
 }
 
 // SULTANC_LLVM_VERIFY_EACH=1 turns on LLVM's per-pass verifier, for
-// debugging the compiler's IR. Off by default (clang and rustc verify once).
+// debugging the compiler's IR. Off by default (the module is verified once).
 عرف تحقق_بعد_كل_تمريرة_مطلوب_إل_إل_في_إم(): منطقي {
     دع الاسم: نص = «SULTANC_LLVM_VERIFY_EACH»;
     طابق متغير_بيئة_النظام(&الاسم) مع

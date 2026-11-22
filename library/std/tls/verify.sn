@@ -1,6 +1,6 @@
 استورد نصوص.من_بايتات;
 // Certificate path building and validation for TLS (RFC 5280 section 6,
-// profiled as Go crypto/x509 and webpki do for the Web PKI) and server
+// profiled for the Web PKI) and server
 // identity checks (RFC 6125 / RFC 9525).
 //
 // A path is built depth-first from the leaf through the peer-supplied
@@ -79,7 +79,7 @@
     أرجع طول_التسمية > 0;
 }
 
-// RFC 6125 6.4.3 as profiled by RFC 9525 / Go: the wildcard may only be
+// RFC 6125 6.4.3 as profiled by RFC 9525: the wildcard may only be
 // the complete left-most label and matches exactly one label; the pattern
 // must keep at least two further labels.
 عرف اسم_يطابق_نمطا_تحقق(النمط: &متجه ط8, الاسم: &متجه ط8): منطقي {
@@ -359,7 +359,7 @@
     إذا ((*الشهادة).الإصدار == 3) {
         إذا (!(*الشهادة).له_قيود_أساسية || !(*الشهادة).سلطة) { أرجع خطأ; };
     } وإلا {
-        // v1/v2 certificates cannot assert CA status (Go and webpki refuse them).
+        // v1/v2 certificates cannot assert CA status.
         أرجع خطأ;
     };
     إذا ((*الشهادة).له_استخدام_المفتاح && ((*الشهادة).استخدام_المفتاح & استخدام_توقيع_شهادات_إكس509()) == 0) { أرجع خطأ; };

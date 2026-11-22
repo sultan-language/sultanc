@@ -1,7 +1,6 @@
 // std.io.print_failure (المكتبة.دخ.اطبع_فشل): writes a std.error فشل to
 // standard error. std.error describes a failure as text (صف_فشل,
-// صف_فشل_بلغة) without any output, as Rust's core::error::Error is a pure
-// trait and printing one is std's (eprintln!); writing that text to the
+// صف_فشل_بلغة) without any output; writing that text to the
 // process's standard error is output, so it is here, in std.io.
 
 استورد أخطاء.فشل;

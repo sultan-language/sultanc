@@ -1013,7 +1013,7 @@
 
 // The head cases (constructor ordinals, or a boolean's 0 and 1) some value
 // of which no arm covers: each is asked as the matrix specialized to it,
-// as rustc names the witnesses of E0004. Empty when an arm's head cannot be
+// the cases the diagnostic names. Empty when an arm's head cannot be
 // classified or a question has no answer.
 عرف منشئات_ناقصة_شمول(
     الخلايا: &متجه خلية_شمول,

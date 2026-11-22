@@ -1,6 +1,5 @@
 // The process id, terminal checks and shutdown signals on macOS, through
-// libSystem as Rust's std and Go's runtime call it there (Nahr items 16
-// and 17). pthread_sigmask and sigwait return an error number instead of
+// libSystem (Nahr items 16 and 17). pthread_sigmask and sigwait return an error number instead of
 // setting errno. SIGINT is 2, SIGTERM 15; SIG_BLOCK is 1.
 استورد نظام_التشغيل.أخطاء;
 

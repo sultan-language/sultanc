@@ -101,7 +101,7 @@
 | `while` | `بينما` | `طالما` | `طالما` تعني «ما دام»، وهذا ما تختبره الحلقة. أما `بينما` فظرف زمان («أثناء»، «في حين»)، وهي ترجمة حرفية للكلمة الإنجليزية *while*. |
 | دالة الدخول `main` | لقب المشروع «القلعة» (أُزيل، بلا اسم بديل) | `الرئيسية` | `الرئيسية` تعني «الدالة الرئيسية»، وهو المصطلح المعتاد. الاسم القديم، «القلعة»، كان لقبًا للمشروع؛ ولم يعد المترجم يتعرّف عليه إطلاقًا، فالبرنامج الذي ما زالت دالة دخوله الوحيدة تحمل هذا الاسم يُبلغ عن `SULTANC-ENTRYPOINT-NOT-FOUND`. |
 | `option` | `اختيار` | `اختياري` | `اختياري` صفة بمعنى «غير إلزامي»، وهي الكلمة المعتادة لحقل أو قيمة اختيارية. أما `اختيار` فاسم يدل على فعل الاختيار نفسه (وفي المترجم يعني انتقاء التعليمات). |
-| `some` / `Some` | `بعض` (`اختيار.بعض`) | `موجود` (`اختياري.موجود`) | `موجود` تعني أن هناك قيمة موجودة. أما `بعض` بالعربية فتدل على التبعيض («بعضٌ من»، «جزءٌ من»)، في حين تعني *Some* في ML وRust أن هناك قيمة x؛ وللسبب نفسه تستعمل Haskell وElm الاسم `Just`. |
+| `some` / `Some` | `بعض` (`اختيار.بعض`) | `موجود` (`اختياري.موجود`) | `موجود` تعني أن هناك قيمة موجودة. أما `بعض` بالعربية فتدل على التبعيض («بعضٌ من»، «جزءٌ من»)، في حين يعني هذا المُنشئ أن هناك قيمة x. |
 | `none` / `None` | `لا_شيء` | `لا_شيء` (بلا تغيير) | لا يتغير إلا بادئة النوع: `اختياري.لا_شيء`. |
 | `uint` | `غير_موقع` | `طبيعي` | `طبيعي` تعني العدد الطبيعي، **وهو يشمل الصفر** («طبيعي: عدد صحيح ≥ 0، يشمل الصفر»)، مع أن كثيرًا من المصادر العربية تبدأ الأعداد الطبيعية من 1. أما `غير_موقع` فكانت ترجمة حرفية: `موقَّع` تعني الوثيقة التي عليها توقيع، لا العدد ذا الإشارة (signed). |
 | `u8`, `u16`, `u32`, `u64` | `غ8`, `غ16`, `غ32`, `غ64` | `ط8`, `ط16`, `ط32`, `ط64` | تأخذ الأنواع الطبيعية ثابتة العرض الحرف الأول من `طبيعي`، كما يأخذ `ص8` الحرف الأول من `صحيح`. |
@@ -157,7 +157,7 @@ python3 tools/rename/rename_tokens.py --wave 1 --check path/to/sources   # يع�
 
 تتبع الأسماء معجمًا للأفعال: `أنشئ` للإنشاء، و`اقرأ` للقراءة، و`اضبط` للضبط، و`أزل` لإزالة عنصر
 (بادئة أو متغير)، و`امسح` للتفريغ، و`احذف` لحذف الملفات، و`هل_…` للسؤال، و`حلل` للتحليل،
-و`حول_…_إلى_…` للتحويل، و`ابدأ` للبدء، و`خذ` لأخذ قيمة من مالكها (مثل `Option::take` في Rust)،
+و`حول_…_إلى_…` للتحويل، و`ابدأ` للبدء، و`خذ` لأخذ قيمة من مالكها وترك المالك فارغًا،
 و`تفقد` للاستطلاع دون انتظار، و`اقفل` و`افتح_قفل` للقفل وفكّه، و`حاول_…` للمحاولة دون انتظار، و`نفذ`
 لتنفيذ شيء، و`انتظر` / `أيقظ` / `نبه` للانتظار والإيقاظ والتنبيه، و`أرسل` / `استقبل` للإرسال
 والاستقبال، و`أسقط` لإسقاط طرف، و`استنسخ` للاستنساخ، و`نسق` للتنسيق.
@@ -270,10 +270,10 @@ python3 tools/rename/rename_tokens.py --wave 1 --check path/to/sources   # يع�
 | | `create_temp_file / create_temp_file_in` | `أنشئ_ملفا_مؤقتا / أنشئ_ملفا_مؤقتا_في` | ملف مؤقت جديد |
 | | `close_temp_file` | `أغلق_ملفا_مؤقتا` | إغلاقه مع الإبقاء على المسار |
 
-| std.fs.lock | `file_lock / file_lock_shared` | `اقفل_الملف / اقفل_الملف_مشتركا` | Rust `File::lock` / `lock_shared` |
+| std.fs.lock | `file_lock / file_lock_shared` | `اقفل_الملف / اقفل_الملف_مشتركا` | قفل الملف كله، حصريًا / مشتركًا |
 | | `file_try_lock / file_try_lock_shared` | `حاول_قفل_الملف / حاول_قفل_الملف_مشتركا` | `try_lock` / `try_lock_shared` |
 | | `file_unlock` | `افتح_قفل_الملف` | `unlock` |
-| | `try_lock_error (would_block, os)` | `خطأ_محاولة_قفل (ستحظر، نظام)` | Rust `TryLockError` |
+| | `try_lock_error (would_block, os)` | `خطأ_محاولة_قفل (ستحظر، نظام)` | سبب فشل محاولة القفل دون انتظار |
 
 ### البيئة (std.env)
 
@@ -283,8 +283,8 @@ python3 tools/rename/rename_tokens.py --wave 1 --check path/to/sources   # يع�
 | | `environment_variables` | `متغيرات_البيئة` | كل المتغيرات |
 | | `home_directory` | `الدليل_الرئيسي` | المجلد الرئيسي للمستخدم |
 | | `set_current_directory` | `غير_دليل_العمل` | تغيير مجلد العمل |
-| std.env.variables | `set_environment_variable` | `اضبط_متغير_بيئة` | Rust `env::set_var`، Go `os.Setenv` |
-| | `remove_environment_variable` | `أزل_متغير_بيئة` | Rust `env::remove_var`، Go `os.Unsetenv` |
+| std.env.variables | `set_environment_variable` | `اضبط_متغير_بيئة` | ضبط متغير في بيئة العملية نفسها |
+| | `remove_environment_variable` | `أزل_متغير_بيئة` | إزالة متغير من بيئة العملية نفسها |
 | std.env.system | — | `متغير_بيئة_النظام`, `دليل_العمل_للنظام`, `الدليل_المؤقت_للنظام` | البيئة كما يحتفظ بها النظام (وهي ما يقرؤه المترجم) |
 | std.env.table | — | `جدول البيئة` | جدول البيئة الذي تملكه المكتبة القياسية |
 
@@ -311,17 +311,17 @@ python3 tools/rename/rename_tokens.py --wave 1 --check path/to/sources   # يع�
 
 | الوحدة | الإنجليزية | العربية | المعنى |
 | --- | --- | --- | --- |
-| std.process.command | `command_spawn` | `ابدأ_الأمر` | Rust `Command::spawn` |
-| | `command_child` | `طفل_أمر` | عملية فرعية قيد التشغيل (Rust `Child`) |
+| std.process.command | `command_spawn` | `ابدأ_الأمر` | بدء الأمر عمليةً فرعية قيد التشغيل |
+| | `command_child` | `طفل_أمر` | عملية فرعية قيد التشغيل |
 | | `child_stdin / child_stdout / child_stderr` | `دخل_طفل / خرج_طفل / خرج_طفل` | مجرى مأخوذ من العملية الفرعية |
-| | `child_take_stdin / child_take_stdout / child_take_stderr` | `خذ_دخل_الطفل / خذ_خرج_الطفل / خذ_أخطاء_الطفل` | Rust `child.stdin.take()` |
+| | `child_take_stdin / child_take_stdout / child_take_stderr` | `خذ_دخل_الطفل / خذ_خرج_الطفل / خذ_أخطاء_الطفل` | أخذ مجرى من العملية الفرعية |
 | | `child_stdin_write / child_stdout_read` | `اكتب_دخل_طفل / اقرأ_خرج_طفل` | بصيغتي الكاتب والقارئ في std.io |
 | | `child_stdin_close / child_stdout_close` | `أغلق_دخل_طفل / أغلق_خرج_طفل` | إغلاق مجرى مأخوذ |
 | | `child_write_stdin / child_close_stdin` | `اكتب_إلى_الطفل / أغلق_دخل_الطفل` | كتابة كل البيانات إلى دخل العملية الفرعية أو إغلاقه |
 | | `child_close_streams` | `أغلق_تيارات_الطفل` | إغلاق كل الأنابيب التي ما زالت العملية الفرعية تحتفظ بها (بلا دوال هدم) |
 | | `child_read_stdout / child_read_stderr` | `اقرأ_خرج_الطفل / اقرأ_أخطاء_الطفل` | قراءة ما كتبته العملية الفرعية |
-| | `child_wait / child_try_wait / child_kill` | `انتظر_الطفل / تفقد_الطفل / اقتل_الطفل` | Rust `wait`، `try_wait`، `kill` |
-| | `child_wait_with_output` | `انتظر_خرج_الطفل` | Rust `wait_with_output` |
+| | `child_wait / child_try_wait / child_kill` | `انتظر_الطفل / تفقد_الطفل / اقتل_الطفل` | الانتظار، والاستطلاع دون انتظار، والقتل |
+| | `child_wait_with_output` | `انتظر_خرج_الطفل` | الانتظار وجمع الخرج المتبقي |
 | | `child_id` | `معرف_عملية_الطفل` | معرّف العملية |
 
 ### الشبكات (std.net)
@@ -337,7 +337,7 @@ python3 tools/rename/rename_tokens.py --wave 1 --check path/to/sources   # يع�
 
 | الوحدة | الإنجليزية | العربية | المعنى |
 | --- | --- | --- | --- |
-| std.net.unix | `unix_socket_addr (unnamed, pathname, abstract_name)` | `عنوان_يونكس (بلا_اسم، مسار، مجرد)` | Rust `std::os::unix::net::SocketAddr` |
+| std.net.unix | `unix_socket_addr (unnamed, pathname, abstract_name)` | `عنوان_يونكس (بلا_اسم، مسار، مجرد)` | عنوان مقبس Unix: بلا اسم، أو مسار، أو اسم مجرد |
 | | `unix_listener / unix_stream / unix_datagram` | `مستمع_يونكس / تدفق_يونكس / مقبس_رسائل_يونكس` | `UnixListener` / `UnixStream` / `UnixDatagram` |
 | | `unix_listener_bind / unix_accept / unix_connect` | `اربط_مستمع_يونكس / اقبل_يونكس / اتصل_يونكس` | (وكذلك `…_بعنوان` / `…_addr`) |
 | | `unix_read / unix_write / unix_shutdown` | `اقرأ_يونكس / اكتب_يونكس / أوقف_يونكس` | الدخل والخرج عبر التدفق |
@@ -351,7 +351,7 @@ python3 tools/rename/rename_tokens.py --wave 1 --check path/to/sources   # يع�
 
 | الوحدة | الإنجليزية | العربية | المعنى |
 | --- | --- | --- | --- |
-| std.time.duration_text | `format_duration / parse_duration` | `نسق_المدة / حلل_المدة` | صيغة المدد في Go |
+| std.time.duration_text | `format_duration / parse_duration` | `نسق_المدة / حلل_المدة` | المدد نصًّا مثل `1h2m3.5s` |
 | | `duration_error (invalid_format, unknown_unit, overflow)` | `خطأ_مدة (صيغة_غير_صالحة، وحدة_مجهولة، تجاوز)` | أخطاء التحليل |
 | | `duration_abs / duration_divide` | `مطلق_المدة / اقسم_المدة` | القيمة المطلقة والقسمة مع التحقق |
 | std.time.duration_float | `duration_seconds_f64 / duration_from_seconds_f64` (وكذلك f32) | `ثواني_المدة_ع64 / مدة_من_ثواني_ع64` (وكذلك ع32) | الثواني عددًا عائمًا |
@@ -382,14 +382,14 @@ python3 tools/rename/rename_tokens.py --wave 1 --check path/to/sources   # يع�
 | std.collections.vector | `reverse_vector / rotate_left` | `اعكس_المتجه / دور_المتجه_يسارا` | إعادة الترتيب في المكان نفسه |
 | | `index_of_by / contains_by` | `ابحث_في_المتجه / هل_يحتوي_المتجه` | البحث بدالة مساواة |
 | | `position_min_by / position_max_by` | `موضع_الأصغر_في_المتجه / موضع_الأكبر_في_المتجه` | القيم القصوى بدالة ترتيب |
-| اللغة | `pop(v)` | `أزل_الأخير(م)` | مثل `Vec::pop` في Rust: العنصر الأخير قيمةً من نوع `اختياري` (انظر [الملكية](ownership.md)، قسم «الإزالة من الآخر والاقتطاع») |
-| | `truncate(v, n)` | `اقتطع(م, ن)` | مثل `Vec::truncate` في Rust: إسقاط العناصر بعد `n` (`ن: طبيعي`)؛ وهو فعل `اقتطع_الملف` نفسه |
-| std.collections.vector | `retain / dedup_by` | `احتفظ_في_المتجه / أزل_المتكرر_المتتالي` | Rust `Vec::retain` / `Vec::dedup_by`، Go `slices.DeleteFunc` / `CompactFunc` |
-| | `remove_at / swap_remove / insert_at` | `أزل_عند / أزل_بالتبديل / أدرج_عند` | Rust `Vec::remove` / `swap_remove` / `insert` |
-| | `clear_vector` | `امسح_المتجه` | Rust `Vec::clear` (يحتفظ بالمخزن) |
-| اللغة | `capacity(v)` | `سعة(م)` | Rust `Vec::capacity`، Go `cap`: عدد العناصر التي يتسع لها المخزن قبل أن تعيد الإضافةُ تخصيصه |
-| | `reserve_exact(v, n)` | `احجز_سعة(م, ن)` | مثل `Vec::reserve_exact` في Rust: مساحة لـ `ن` عنصرًا إضافيًا بالضبط (`ن: طبيعي`) |
-| std.collections.vector | `with_capacity / reserve / shrink_to_fit` | `متجه_بسعة / احجز_في_المتجه / قلص_المتجه` | Rust `Vec::with_capacity` / `reserve` (بتكلفة موزعة) / `shrink_to_fit` |
+| اللغة | `pop(v)` | `أزل_الأخير(م)` | إزالة العنصر الأخير وإعادته قيمةً من نوع `اختياري` (انظر [الملكية](ownership.md)، قسم «الإزالة من الآخر والاقتطاع») |
+| | `truncate(v, n)` | `اقتطع(م, ن)` | إسقاط العناصر بعد `n` (`ن: طبيعي`)؛ وهو فعل `اقتطع_الملف` نفسه |
+| std.collections.vector | `retain / dedup_by` | `احتفظ_في_المتجه / أزل_المتكرر_المتتالي` | إبقاء العناصر التي يقبلها شرط / إسقاط المتكررات المتتالية |
+| | `remove_at / swap_remove / insert_at` | `أزل_عند / أزل_بالتبديل / أدرج_عند` | الإزالة عند موضع (مع الإزاحة) / الإزالة بوضع الأخير مكانه / الإدراج عند موضع |
+| | `clear_vector` | `امسح_المتجه` | إزالة كل العناصر (يحتفظ بالمخزن) |
+| اللغة | `capacity(v)` | `سعة(م)` | عدد العناصر التي يتسع لها المخزن قبل أن تعيد الإضافةُ تخصيصه |
+| | `reserve_exact(v, n)` | `احجز_سعة(م, ن)` | مساحة لـ `ن` عنصرًا إضافيًا بالضبط (`ن: طبيعي`) |
+| std.collections.vector | `with_capacity / reserve / shrink_to_fit` | `متجه_بسعة / احجز_في_المتجه / قلص_المتجه` | متجه جديد بمساحة لـ n / حجز مساحة (بتكلفة موزعة) / تحرير المساحة غير المستعملة |
 
 ### النصوص والأعداد العائمة (std.text)
 
@@ -408,12 +408,12 @@ python3 tools/rename/rename_tokens.py --wave 1 --check path/to/sources   # يع�
 
 | الوحدة | الإنجليزية | العربية | المعنى |
 | --- | --- | --- | --- |
-| std.fmt.fmt | `format` / `format_into` | `نسق` / `نسق_في` | مثل `format!` / `write!` في Rust إلى String أو Formatter |
+| std.fmt.fmt | `format` / `format_into` | `نسق` / `نسق_في` | التنسيق إلى نص جديد / إلى نص أو منسق موجود |
 | | `write_fmt` / `write_fmt_with` | `اكتب_منسقا` / `اكتب_منسقا_بمنسق` | `write!` إلى كاتب في std.io (بمنسِّق يُعاد استعماله) |
 | | `print_fmt` / `println_fmt` / `eprint_fmt` / `eprintln_fmt` | `اطبع_منسقا` / `اطبع_سطرا_منسقا` / `اطبع_خطأ_منسقا` / `اطبع_سطر_خطأ_منسقا` | `print!` / `println!` / `eprint!` / `eprintln!` |
 | | `fmt_arg` (`int`, `uint`, `i8`…`u64`, `f32`, `f64`, `bool`, `char`, `text`, `bytes`, `ints`, `texts`, `list`, `custom`) | `قيمة_تنسيق` (`عدد`، `طبيعي`، `ص8`…`ط64`، `ع32`، `ع64`، `منطقي`، `حرف`، `نص`، `بايتات`، `أعداد`، `نصوص`، `قائمة`، `مخصص`) | وسيط واحد؛ و`مخصص` يحمل دالة مغلقة (closure) تعرض نوعًا يعرّفه المستخدم بصيغة العرض أو التصحيح |
 | | `fmt_error` (`unclosed_brace`, `unmatched_close_brace`, `invalid_spec`, `unknown_type`, `named_argument`, `missing_argument`, `unused_argument`, `mismatched_type`, `invalid_count`, `write_failed`, `custom_failed`) | `خطأ_تنسيق` (`قوس_غير_مغلق`، `قوس_إغلاق_منفرد`، `مواصفة_غير_صالحة`، `نوع_غير_معروف`، `وسيط_مسمى`، `وسيط_مفقود`، `وسيط_غير_مستخدم`، `نوع_غير_مناسب`، `عدد_غير_صالح`، `فشل_الكتابة`، `فشل_مخصص`) | خطأ في صيغة التنسيق أو في التنسيق |
-| | `formatter` / `fmt_spec` | `منسق` / `مواصفة_تنسيق` | `Formatter` في Rust ومواصفته |
+| | `formatter` / `fmt_spec` | `منسق` / `مواصفة_تنسيق` | المنسق ومواصفة التنسيق |
 | | `fmt_alignment` (`unknown`, `left`, `center`, `right`) | `محاذاة_تنسيق` (`بلا`، `يسار`، `وسط`، `يمين`) | `fmt::Alignment` |
 | | `fmt_kind` (`display`, `debug`, `lower_hex`, `upper_hex`, `octal`, `binary`, `lower_exp`, `upper_exp`, `debug_lower_hex`, `debug_upper_hex`) | `صيغة_تنسيق` (`عرض`، `تصحيح`، `ست_عشري`، `ست_عشري_كبير`، `ثماني`، `ثنائي`، `أسي`، `أسي_كبير`، `تصحيح_ست_عشري`، `تصحيح_ست_عشري_كبير`) | نوع العنصر النائب: `{}` `{:?}` `{:x}` `{:X}` `{:o}` `{:b}` `{:e}` `{:E}` `{:x?}` `{:X?}` |
 | | `new_formatter` / `formatter_with_capacity` | `أنشئ_منسقا` / `أنشئ_منسقا_بسعة` | منسِّق |
@@ -454,24 +454,24 @@ python3 tools/rename/rename_tokens.py --wave 1 --check path/to/sources   # يع�
 
 ### الخيوط والتزامن (std.sync، std.os.wait_address)
 
-أسماء الأنواع أسماء بالمعنى النحوي: `مشترك` (Arc في Rust)، و`قفل` (Mutex)، و`قفل_قراءة_كتابة` (RwLock)، و`شرط_انتظار` (Condvar)، و`مرة` (once)، و`خلية_مرة` (OnceLock)، و`قناة` (channel)، و`مرسل` / `مستلم` (sender / receiver؛ لأن `مستقبل` اسم مستعمل أصلًا لـ futex في جداول استدعاءات النظام). والأفعال من المعجم: `أنشئ`، و`استنسخ` (الاستنساخ)، و`اقرأ` (القراءة عبره)، و`نفذ` (تنفيذ شيء)، و`حاول` (المحاولة)، و`انتظر` / `أيقظ` / `نبه` (الانتظار / الإيقاظ / التنبيه)، و`أرسل` / `استقبل`، و`أسقط` (إسقاط طرف)، و`اضبط` (الضبط).
+أسماء الأنواع أسماء بالمعنى النحوي: `مشترك` (arc)، و`قفل` (mutex)، و`قفل_قراءة_كتابة` (rwlock)، و`شرط_انتظار` (condvar)، و`مرة` (once)، و`خلية_مرة` (once_lock)، و`قناة` (channel)، و`مرسل` / `مستلم` (sender / receiver؛ لأن `مستقبل` اسم مستعمل أصلًا لـ futex في جداول استدعاءات النظام). والأفعال من المعجم: `أنشئ`، و`استنسخ` (الاستنساخ)، و`اقرأ` (القراءة عبره)، و`نفذ` (تنفيذ شيء)، و`حاول` (المحاولة)، و`انتظر` / `أيقظ` / `نبه` (الانتظار / الإيقاظ / التنبيه)، و`أرسل` / `استقبل`، و`أسقط` (إسقاط طرف)، و`اضبط` (الضبط).
 
 | الوحدة | الإنجليزية | العربية | المعنى |
 | --- | --- | --- | --- |
-| std.sync.arc | `arc`, `arc_new`, `arc_clone`, `arc_get` | `مشترك`, `أنشئ_مشترك`, `استنسخ_مشترك`, `اقرأ_مشترك` | Rust `Arc`، `Arc::new`، `Arc::clone`، `Deref` |
+| std.sync.arc | `arc`, `arc_new`, `arc_clone`, `arc_get` | `مشترك`, `أنشئ_مشترك`, `استنسخ_مشترك`, `اقرأ_مشترك` | المقبض المشترك؛ الإنشاء، واستنساخ مقبض، وقراءة القيمة |
 | | `arc_strong_count`, `arc_ptr_eq`, `arc_as_ptr` | `عدد_مراجع_مشترك`, `هل_المشترك_نفسه`, `مؤشر_مشترك` | `Arc::strong_count`، `Arc::ptr_eq`، `Arc::as_ptr` |
-| std.sync.mutex | `mutex`, `mutex_new`, `with_lock`, `try_lock`, `mutex_is_locked` | `قفل`, `أنشئ_قفل`, `نفذ_مع_القفل`, `حاول_القفل`, `هل_القفل_مأخوذ` | `Mutex` في Rust؛ القفل محجوز طوال دالة مغلقة واحدة (نطاق الحارس) |
-| std.sync.rwlock | `rwlock`, `rwlock_new`, `with_read`, `with_write` | `قفل_قراءة_كتابة`, `أنشئ_قفل_قراءة_كتابة`, `نفذ_مع_قراءة`, `نفذ_مع_كتابة` | Rust `RwLock::read` / `write` |
-| std.sync.condvar | `condvar`, `condvar_new`, `condvar_wait`, `condvar_wait_timeout`, `condvar_wait_while` | `شرط_انتظار`, `أنشئ_شرط_انتظار`, `انتظر_الشرط`, `انتظر_الشرط_بمهلة`, `انتظر_طالما` | Rust `Condvar::wait`، `wait_timeout`، `wait_while` |
+| std.sync.mutex | `mutex`, `mutex_new`, `with_lock`, `try_lock`, `mutex_is_locked` | `قفل`, `أنشئ_قفل`, `نفذ_مع_القفل`, `حاول_القفل`, `هل_القفل_مأخوذ` | قفل إقصاء متبادل؛ القفل محجوز طوال دالة مغلقة واحدة |
+| std.sync.rwlock | `rwlock`, `rwlock_new`, `with_read`, `with_write` | `قفل_قراءة_كتابة`, `أنشئ_قفل_قراءة_كتابة`, `نفذ_مع_قراءة`, `نفذ_مع_كتابة` | قفل قراءة وكتابة؛ تنفيذ دالة مغلقة بوصول مشترك / حصري |
+| std.sync.condvar | `condvar`, `condvar_new`, `condvar_wait`, `condvar_wait_timeout`, `condvar_wait_while` | `شرط_انتظار`, `أنشئ_شرط_انتظار`, `انتظر_الشرط`, `انتظر_الشرط_بمهلة`, `انتظر_طالما` | متغير شرط؛ الانتظار، والانتظار بمهلة، والانتظار ما دام شرط ما صحيحًا |
 | | `condvar_notify_one`, `condvar_notify_all` | `نبه_واحدا`, `نبه_الكل` | `notify_one`، `notify_all` |
-| std.sync.once | `once`, `once_new`, `call_once`, `once_is_completed` | `مرة`, `أنشئ_مرة`, `نفذ_مرة`, `هل_اكتملت_المرة` | Rust `Once` |
-| | `once_lock`, `once_lock_new`, `once_lock_get`, `once_lock_get_or_init`, `once_lock_set` | `خلية_مرة`, `أنشئ_خلية_مرة`, `اقرأ_خلية_مرة`, `اقرأ_أو_هيئ_خلية_مرة`, `اضبط_خلية_مرة` | Rust `OnceLock` |
-| std.sync.channel | `channel`, `sync_channel`, `channel_ends` | `قناة`, `قناة_متزامنة`, `طرفا_قناة` (`المرسل`, `المستلم`) | `mpsc::channel` و`sync_channel` في Rust والزوج الذي تعيدانه |
+| std.sync.once | `once`, `once_new`, `call_once`, `once_is_completed` | `مرة`, `أنشئ_مرة`, `نفذ_مرة`, `هل_اكتملت_المرة` | تنفيذ تهيئة مرة واحدة بالضبط |
+| | `once_lock`, `once_lock_new`, `once_lock_get`, `once_lock_get_or_init`, `once_lock_set` | `خلية_مرة`, `أنشئ_خلية_مرة`, `اقرأ_خلية_مرة`, `اقرأ_أو_هيئ_خلية_مرة`, `اضبط_خلية_مرة` | خلية تُكتب مرة واحدة على الأكثر |
+| std.sync.channel | `channel`, `sync_channel`, `channel_ends` | `قناة`, `قناة_متزامنة`, `طرفا_قناة` (`المرسل`, `المستلم`) | قناة غير محدودة وقناة محدودة، وزوج الطرفين الذي تعيدانه |
 | | `sender`, `receiver`, `sender_clone`, `sender_for`, `channel_receiver`, `sync_channel_receiver` | `مرسل`, `مستلم`, `استنسخ_مرسل`, `مرسل_لمستلم`, `مستلم_قناة`, `مستلم_قناة_متزامنة` | الطرفان؛ مستلم وحده ومرسل يُنشأ له |
-| | `send`, `try_send`, `recv`, `try_recv`, `recv_timeout` | `أرسل`, `حاول_الإرسال`, `استقبل`, `حاول_الاستقبال`, `استقبل_بمهلة` | توابع Rust التي تحمل الأسماء نفسها |
-| | `drop_sender`, `drop_receiver` | `أسقط_مرسل`, `أسقط_مستلم` | Rust `drop(tx)` / `drop(rx)` |
-| | `try_recv_error (empty, disconnected)`, `recv_timeout_error (timeout, disconnected)`, `recv_error (disconnected)`, `try_send_error (full, disconnected)` | `خطأ_محاولة_استقبال (فارغة، منقطعة)`, `خطأ_استقبال_بمهلة (انتهت_المهلة، منقطعة)`, `خطأ_استقبال (منقطعة)`, `خطأ_محاولة_إرسال (ممتلئة، منقطعة)` | Rust `TryRecvError`، `RecvTimeoutError`، `RecvError`، `TrySendError` |
-| std.sync.atomic | `memory_ordering.relaxed / release / acquire / acq_rel / seq_cst` | `ترتيب_ذاكرة.مسترخ / إطلاق / اكتساب / اكتساب_وإطلاق / تسلسلي` | Rust `Ordering` |
+| | `send`, `try_send`, `recv`, `try_recv`, `recv_timeout` | `أرسل`, `حاول_الإرسال`, `استقبل`, `حاول_الاستقبال`, `استقبل_بمهلة` | الإرسال، والإرسال دون انتظار، والاستقبال، والاستقبال دون انتظار، والاستقبال بمهلة |
+| | `drop_sender`, `drop_receiver` | `أسقط_مرسل`, `أسقط_مستلم` | إسقاط طرف واحد، فتنقطع القناة من جهته |
+| | `try_recv_error (empty, disconnected)`, `recv_timeout_error (timeout, disconnected)`, `recv_error (disconnected)`, `try_send_error (full, disconnected)` | `خطأ_محاولة_استقبال (فارغة، منقطعة)`, `خطأ_استقبال_بمهلة (انتهت_المهلة، منقطعة)`, `خطأ_استقبال (منقطعة)`, `خطأ_محاولة_إرسال (ممتلئة، منقطعة)` | سبب عدم تسليم قيمة في الاستقبال أو الإرسال |
+| std.sync.atomic | `memory_ordering.relaxed / release / acquire / acq_rel / seq_cst` | `ترتيب_ذاكرة.مسترخ / إطلاق / اكتساب / اكتساب_وإطلاق / تسلسلي` | ترتيبات الذاكرة للعمليات الذرية |
 | std.os.wait_address | `wait_on_address`, `wake_by_address_single`, `wake_by_address_all`, `wait_on_address_supported` | `انتظر_عند_العنوان`, `أيقظ_واحدا_عند_العنوان`, `أيقظ_الكل_عند_العنوان`, `هل_الانتظار_عند_العنوان_مدعوم` | انتظار وإيقاظ futex (بأسماء `WaitOnAddress` في Windows) |
 | | `wait_on_cell`, `wake_one_on_cell` | `انتظر_عند_الخلية`, `أيقظ_واحدا_عند_الخلية` | الشيء نفسه على خلية مجردة بعرض 32 بت |
 | رسائل التشخيص | التقاط الخيط | `التقاط_خيط_مؤشر_خام`, `التقاط_خيط_مرجع`, `التقاط_خيط_مشترك_غير_ذري` | `SULTANC-THREAD-CAPTURE-RAW-POINTER`، `…-REFERENCE`، `…-NON-ATOMIC-SHARED` |

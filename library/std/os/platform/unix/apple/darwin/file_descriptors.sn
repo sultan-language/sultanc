@@ -8,8 +8,8 @@
 // the Win32 provider's kernel32 declarations. No libc stdio is used.
 // Variadic entry points (open/fcntl) are only called with their fixed
 // arguments: on Apple arm64 variadic arguments travel on the stack.
-// Every declaration names libSystem's install name, as Go's darwin port names
-// "/usr/lib/libSystem.B.dylib" in each cgo_import_dynamic directive.
+// Every declaration names libSystem's install name,
+// "/usr/lib/libSystem.B.dylib".
 // Signatures follow the macOS SDK headers (<unistd.h>, <fcntl.h>,
 // <sys/stat.h>, <stdio.h> for rename): mode_t is u16, off_t i64, size_t u64.
 خارجي «/usr/lib/libSystem.B.dylib» عرف __error(): *متغير ص32;
@@ -48,8 +48,8 @@
 // std reads the 64-bit-inode struct stat (اقرأ_معلومات_مسار_داروين). arm64
 // macOS has only that ABI, under the plain name. x86_64 macOS keeps the
 // legacy 32-bit-inode `stat` under the plain name, and <sys/stat.h> binds the
-// 64-bit-inode one to `stat$INODE64` (__DARWIN_INODE64), as Rust's libc does
-// with link_name = "stat$INODE64".
+// 64-bit-inode one to `stat$INODE64` (__DARWIN_INODE64), which std binds
+// by link name.
 إذا (الهدف.المعمارية == «x86_64») {
     خارجي «/usr/lib/libSystem.B.dylib» عرف stat(المسار: *ط8, المعلومات: *متغير ط8): ص32 = «stat$INODE64»;
 } وإلا {

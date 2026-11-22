@@ -15,10 +15,10 @@
 استورد compiler.msir.lowering.msir_context;
 
 // Ownership glue: the per-Type MSIR functions that implement explicit copy
-// (`استنسخ`). The model is Rust's compiler-generated shims (Clone/Drop glue in
-// rustc_mir_transform/src/shim.rs): one ordinary function per concrete Type,
-// built from the Type's structure, so every backend and the interpreter run
-// the same verified MSIR and no backend implements a deep copy of its own.
+// (`استنسخ`) and destruction (drop glue). The compiler generates one ordinary
+// MSIR function per concrete Type, built from the Type's structure, so every
+// backend and the interpreter run the same verified MSIR and no backend
+// implements a deep copy or a destruction of its own.
 //
 // Expression lowering emits each `استنسخ(&x)` as a call of the compiler
 // primitive; اخفض_غراء_الملكية_مسير then rewrites that call, in place, into a
@@ -218,6 +218,10 @@
     | صنف_شكل_نوع_دلالي.تعداد -> { أرجع يملك_تخزينا_موسوم_للغراء(الأنواع, النوع, مع_الإغلاقات); }
     | صنف_شكل_نوع_دلالي.اختيار -> { أرجع يملك_تخزينا_موسوم_للغراء(الأنواع, النوع, مع_الإغلاقات); }
     | صنف_شكل_نوع_دلالي.نتيجة -> { أرجع يملك_تخزينا_موسوم_للغراء(الأنواع, النوع, مع_الإغلاقات); }
+    // A generic template's Type parameter may stand for an owning Type: its
+    // template is analyzed with it owning (ssf/template_legality.sn), unless an
+    // inferred plain bound reclassifies it. No instance holds one.
+    | صنف_شكل_نوع_دلالي.معامل_نوع -> { أرجع نتيجة.نجح(صواب); }
     | _ -> { أرجع نتيجة.نجح(خطأ); };
 }
 
@@ -412,9 +416,8 @@
     طابق قيمة_غراء(أصدر_ثابتا_مسير(البرنامج, &البناء, الدالة, المدخل, ثابت_مسير.صحيح_موقع(0), نوع_العدد)) مع
     | نتيجة.خطأ(خ) -> { أرجع نتيجة.خطأ(خ); }
     | نتيجة.نجح(المعرف) -> { الصفر := المعرف; };
-    // The copy's buffer is reserved once at the source's length (Rust's
-    // Vec::clone allocates with_capacity(len)), so the appends below never
-    // reallocate.
+    // The copy's buffer is reserved once at the source's length, so the
+    // appends below never reallocate.
     دع الفارغ_المحمل: معرف_قيمة_مسير;
     طابق قيمة_غراء(أصدر_تحميل_مسير(البرنامج, &البناء, الدالة, المدخل, الخانة, نوع_الناتج)) مع
     | نتيجة.خطأ(خ) -> { أرجع نتيجة.خطأ(خ); }
@@ -993,8 +996,9 @@
     };
 
     // A buffer with capacity is released through a reference to its first
-    // element: an empty vector keeps its buffer after pop or truncate (as
-    // Rust's Vec does), and a vector that never allocated has capacity zero.
+    // element: an empty vector keeps its buffer after pop or truncate
+    // (docs/en/reference/ownership.md, "Capacity"), and a vector that never
+    // allocated has capacity zero.
     دع الإطلاق: معرف_كتلة_مسير;
     طابق كتلة_غراء(البرنامج, الدالة) مع
     | نتيجة.خطأ(خ) -> { أرجع نتيجة.خطأ(خ); }

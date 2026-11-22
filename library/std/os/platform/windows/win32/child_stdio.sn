@@ -22,8 +22,8 @@
 ): ص32;
 
 // The child inherits its three standard handles and nothing else: a
-// PROC_THREAD_ATTRIBUTE_HANDLE_LIST in STARTUPINFOEXW names them, as Go's
-// os/exec does (syscall.StartProcess), so an inheritable handle another
+// PROC_THREAD_ATTRIBUTE_HANDLE_LIST in STARTUPINFOEXW names them, so an
+// inheritable handle another
 // part of the process made at the same time does not leak into the child.
 // The attribute list is opaque and sized by the system; it is allocated
 // from the process heap and passed by address. UpdateProcThreadAttribute
@@ -130,7 +130,7 @@
 }
 
 // An argument is quoted (ألحق_وسيطة_عملية_ويندوز) only when it is empty or
-// holds a space, tab, newline or '"', as Rust's std does: programs with
+// holds a space, tab, newline or '"': programs with
 // their own parser, cmd.exe first of all, read a bare word as written.
 عرف ألحق_وسيطة_عند_الحاجة_ويندوز(السطر: &متغير متجه ط16, الوسيطة: &متجه ط16): منطقي {
     دع يحتاج: متغير منطقي = (الطول(*الوسيطة) مثل طبيعي) == 0;

@@ -3,7 +3,7 @@
 // خروج: 42
 // تفاضلي: نعم
 // نظير: tests/ar/language/ownership/reference_field_access.sn
-// `r.f` through a reference means `(*r).f`, as in Rust and Go: a plain field
+// `r.f` through a reference means `(*r).f`: a plain field
 // is copied out, a field is borrowed through the reference (and the borrow
 // may be returned, it borrows the referent), `&mutable` writes through, and
 // a reference to a reference is dereferenced twice.

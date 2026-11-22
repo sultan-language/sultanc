@@ -11,9 +11,8 @@
 عام مرادف duration_abs = نص_المدة_الأساس.duration_abs;
 عام مرادف duration_divide = نص_المدة_الأساس.duration_divide;
 
-// Durations as text in Go's notation ("1h2m3.5s", "1.5ms", "-2µs", "0s"),
-// and checked absolute value and division (Go time.Duration.String and
-// time.ParseDuration; Rust Duration::checked_div).
+// Durations as text ("1h2m3.5s", "1.5ms", "-2µs", "0s"), and checked
+// absolute value and division.
 
 عام نوع خطأ_مدة =
     | صيغة_غير_صالحة
@@ -51,7 +50,7 @@
     طالما (ف > البداية) { ف := ف - 1; ألحق(*البايتات, الأرقام[ف]); }
 }
 
-// Go's Duration.String: below one second a single unit (ns, µs, ms) with a
+// Formatting: below one second a single unit (ns, µs, ms) with a
 // decimal fraction; otherwise hours, minutes and seconds ("72h3m0.5s"), with
 // zero leading units left out ("1m0s", "2s"). Zero is "0s".
 عام عرف نسق_المدة(المدة: &مدة): نص {
@@ -65,7 +64,7 @@
         ألحق(البايتات, 110); ألحق(البايتات, 115);
     } وإلا إذا (المقدار < 1000000) {
         ألحق_كسرا_عشريا(&متغير البايتات, المقدار, 3);
-        // µ is U+00B5 (0xC2 0xB5), as Go prints it.
+        // µ is U+00B5 (0xC2 0xB5).
         ألحق(البايتات, 0xC2); ألحق(البايتات, 0xB5); ألحق(البايتات, 115);
     } وإلا إذا (المقدار < 1000000000) {
         ألحق_كسرا_عشريا(&متغير البايتات, المقدار, 6);
@@ -121,7 +120,7 @@
     أرجع (الكسر * المعامل) / (المقياس / القوة);
 }
 
-// Go's ParseDuration: an optional sign, then one or more decimal numbers
+// Parsing: an optional sign, then one or more decimal numbers
 // (with an optional fraction) each followed by a unit: ns, us (µs, μs),
 // ms, s, m, h. "0" alone is zero. The total must fit in a signed 64-bit
 // nanosecond count.

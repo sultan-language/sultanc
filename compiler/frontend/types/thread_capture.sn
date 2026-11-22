@@ -20,18 +20,16 @@
 استورد compiler.frontend.names.resolved_bindings;
 استورد compiler.runtime.primitive_identity;
 
-// The spawn capture check (docs/en/reference/type-system.md, "Thread capture rules"),
-// Rust's `F: Send` bound on std::thread::spawn. A closure handed to another
+// The spawn capture check (docs/en/reference/type-system.md, "Thread capture rules").
+// A closure handed to another
 // thread may not capture:
 //
-// 1. a raw pointer (Rust's *const T / *mut T are !Send), unless the call
+// 1. a raw pointer, unless the call
 //    that hands it over sits inside `غير_آمن`, where the programmer vouches
 //    for the pointee's synchronization;
-// 2. a borrowed reference or a slice (it would outlive the spawning frame:
-//    Rust's 'static bound);
+// 2. a borrowed reference or a slice (it would outlive the spawning frame);
 // 3. a non-atomic shared value: a writable module variable, which every
-//    thread reads and writes without synchronization (Rust's `static mut`,
-//    whose every access is unsafe). Shared state goes through an atomic, a
+//    thread reads and writes without synchronization. Shared state goes through an atomic, a
 //    Mutex or an Arc (std.sync).
 //
 // Which calls hand a closure to another thread is not a list of names: the

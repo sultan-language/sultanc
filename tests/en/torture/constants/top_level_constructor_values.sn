@@ -1,0 +1,59 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux,aarch64-linux-gnu,x86_64-darwin,x86_64-windows-msvc,riscv64-linux-gnu,i686-linux-gnu,wasm32-wasi
+// خروج: 42
+// تفاضلي: نعم
+// فئة: constants
+// نظير: tests/ar/torture/constants/top_level_constructor_values.sn
+// Module-level values built by enum constructors: without payloads, with
+// constant payloads (numbers, text, a nested constructor), option values,
+// and one named by another. MSIR has no tagged constant, so each read
+// builds the value where it is read; every backend and the interpreter see
+// the instructions of a constructor call.
+type Color = | Red | Green | Blue;
+type Shape = | Circle of i32 | Square of (i32, i32) | Tinted of (Color, i32) | Empty;
+type Label = | Named of string | Unnamed;
+
+let favorite: Color = Color.Green();
+let same: Color = favorite;
+let circle: Shape = Shape.Circle(20);
+let square: Shape = Shape.Square(3, 2 * 2);
+let tinted: Shape = Shape.Tinted(Color.Blue(), 5);
+let label: Label = Label.Named("sultan");
+let present: option i32 = option.some(2);
+let absent: option i32 = option.none();
+
+def color_points(color: Color): i32 {
+    match color with
+    | Color.Green -> { return 1; }
+    | Color.Blue -> { return 0; }
+    | Color.Red -> { return 100; };
+}
+
+def main(): i32 {
+    let total: mutable i32 = color_points(favorite) + color_points(same);
+    match circle with
+    | Shape.Circle(radius) -> { total := total + radius; }
+    | _ -> { return 1; };
+    match square with
+    | Shape.Square(width, height) -> { total := total + width * height; }
+    | _ -> { return 2; };
+    match tinted with
+    | Shape.Tinted(color, amount) -> {
+        match color with
+        | Color.Blue -> { total := total + amount; }
+        | _ -> { return 3; };
+    }
+    | _ -> { return 4; };
+    match label with
+    | Label.Named(text) -> { total := total + (length(text) as i32) - 5; }
+    | Label.Unnamed -> { return 5; };
+    match present with
+    | option.some(value) -> { total := total + value; }
+    | option.none -> { return 6; };
+    match absent with
+    | option.some(_) -> { return 7; }
+    | option.none -> { };
+    let local: Color = favorite;
+    if (color_points(local) != 1) { return 8; };
+    return total;
+}

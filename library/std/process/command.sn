@@ -14,11 +14,11 @@
 
 // A command to run as a child process: its program and arguments, its
 // environment, its working directory and what its standard streams are
-// connected to (Rust std::process::Command, Go os/exec.Cmd).
+// connected to.
 //
 // A stream is inherited from this process, connected to the null device,
 // or captured (piped). ابدأ_الأمر starts the child and hands back the
-// pipes (Rust Command::spawn, below); شغل_الأمر and اجمع_خرج_الأمر run it to
+// pipes; شغل_الأمر and اجمع_خرج_الأمر run it to
 // completion, collecting a captured output in memory. A captured input is
 // fed from bytes set on the command, or is a pipe the caller writes. Set
 // bytes are staged in an already-removed temporary file, as shells do for
@@ -126,7 +126,7 @@
     (*الأمر).البيئة := الباقية;
 }
 
-// Sets one variable for the child (Rust Command::env).
+// Sets one variable for the child.
 عام عرف اضبط_بيئة_للأمر(الأمر: &متغير أمر, الاسم: &نص, القيمة: &نص): نتيجة عدد, فئة_خطأ_نظام {
     إذا (!اسم_بيئة_صالح(الاسم)) { أرجع نتيجة.خطأ(فئة_خطأ_نظام.إدخال_غير_صالح()); };
     طابق خذ_بيئة_للأمر(الأمر) مع
@@ -138,7 +138,7 @@
     أرجع نتيجة.نجح(0);
 }
 
-// Removes one variable from the child's environment (Rust env_remove).
+// Removes one variable from the child's environment.
 عام عرف أزل_بيئة_من_الأمر(الأمر: &متغير أمر, الاسم: &نص): نتيجة عدد, فئة_خطأ_نظام {
     طابق خذ_بيئة_للأمر(الأمر) مع
     | نتيجة.خطأ(الفئة) -> { أرجع نتيجة.خطأ(الفئة); }
@@ -147,14 +147,14 @@
     أرجع نتيجة.نجح(0);
 }
 
-// The child starts with an empty environment (Rust env_clear).
+// The child starts with an empty environment.
 عام عرف امسح_بيئة_الأمر(الأمر: &متغير أمر): فراغ {
     دع فارغة: متجه مدخل_بيئة = [];
     (*الأمر).البيئة := فارغة;
     (*الأمر).بيئة_مخصصة := صواب;
 }
 
-// The child's working directory (Rust current_dir). Empty keeps this
+// The child's working directory. Empty keeps this
 // process's. A relative program path is resolved by the platform.
 عام عرف اضبط_دليل_الأمر(الأمر: &متغير أمر, الدليل: &نص): فراغ {
     (*الأمر).الدليل := انسخ_نص(الدليل);
@@ -214,7 +214,7 @@
     };
 }
 
-// A child started by ابدأ_الأمر (Rust std::process::Child): its process and
+// A child started by ابدأ_الأمر: its process and
 // this process's ends of the streams that were piped. A piped input is a
 // pipe the parent writes (ChildStdin); piped outputs are pipes the parent
 // reads (ChildStdout, ChildStderr). Each handle is لا_شيء once taken or
@@ -314,8 +314,7 @@
     ف := 0;
     إذا (!بيئة_مخصصة && هل_جدول_البيئة_مهيأ()) {
         // A child started without an explicit environment inherits this
-        // process's, which is std's table once a variable was set or removed
-        // (Go's os/exec passes os.Environ() the same way).
+        // process's, which is std's table once a variable was set or removed.
         دع المداخل: متجه متجه ط8 = مداخل_جدول_البيئة();
         طالما (ف < (الطول(المداخل) مثل طبيعي)) { ألحق(البيئة, من_بايتات(&المداخل[ف])); ف := ف + 1; }
         بيئة_مخصصة := صواب;
@@ -356,19 +355,19 @@
 }
 
 // Starts the command with its streams as configured and returns the
-// running child (Rust Command::spawn). A piped stream is a pipe between the
+// running child. A piped stream is a pipe between the
 // two processes, read or written through the child.
 عام عرف ابدأ_الأمر(الأمر: &أمر): نتيجة طفل_أمر, خطأ_أمر {
     أرجع ابدأ_بتيارات(الأمر, (*الأمر).الدخل, (*الأمر).الخرج, (*الأمر).الخطأ);
 }
 
-// The child's process ID (Rust Child::id).
+// The child's process ID.
 عام عرف معرف_عملية_الطفل(الطفل: &طفل_أمر): عدد {
     أرجع (*الطفل).رقم_العملية;
 }
 
-// Takes the child's standard input, output or error out of the child
-// (Rust's child.stdin.take()): لا_شيء if it was not piped or was taken.
+// Takes the child's standard input, output or error out of the child:
+// لا_شيء if it was not piped or was taken.
 عام عرف خذ_دخل_الطفل(الطفل: &متغير طفل_أمر): اختياري دخل_طفل {
     طابق (*الطفل).الدخل مع
     | اختياري.لا_شيء -> { أرجع اختياري.لا_شيء(); }
@@ -430,8 +429,7 @@
     | نتيجة.نجح(_) -> { أرجع نتيجة.نجح(0); };
 }
 
-// Writes all of البيانات to the child's piped input (Rust's
-// child.stdin.as_mut().unwrap().write_all). An input that was not piped, or
+// Writes all of البيانات to the child's piped input. An input that was not piped, or
 // was taken or closed, is إدخال_غير_صالح; a child that closed its input
 // gives the broken-pipe error.
 عام عرف اكتب_إلى_الطفل(الطفل: &متغير طفل_أمر, البيانات: &متجه ط8): نتيجة عدد, خطأ_أمر {
@@ -452,15 +450,15 @@
     أرجع نتيجة.نجح(الكلي);
 }
 
-// Closes the child's piped input: the child reads end of file (Rust's
-// drop(child.stdin.take())). Nothing happens if there is none.
+// Closes the child's piped input: the child reads end of file. Nothing
+// happens if there is none.
 عام عرف أغلق_دخل_الطفل(الطفل: &متغير طفل_أمر): فراغ {
     أغلق_مقبض_اختياري((*الطفل).الدخل);
     (*الطفل).الدخل := اختياري.لا_شيء();
 }
 
-// Closes the pipes the child still holds: its input, output and error
-// (Rust drops them with the Child). SultanC has no destructors: a child
+// Closes the pipes the child still holds: its input, output and error.
+// SultanC has no destructors: a child
 // waited for with انتظر_الطفل keeps its output pipes open until this or
 // until they are taken and closed. انتظر_خرج_الطفل closes them itself.
 عام عرف أغلق_تيارات_الطفل(الطفل: &متغير طفل_أمر): فراغ {
@@ -498,8 +496,8 @@
     أرجع اقرأ_مقبض_الطفل((*الطفل).الأخطاء, المخزن, الإزاحة, العدد);
 }
 
-// Waits for the child to exit (Rust Child::wait). Its input is closed first,
-// as Rust does, so a child reading to the end of its input can finish. The
+// Waits for the child to exit. Its input is closed first,
+// so a child reading to the end of its input can finish. The
 // outputs stay open for reading.
 عام عرف انتظر_الطفل(الطفل: &متغير طفل_أمر): نتيجة حالة_إنهاء, خطأ_أمر {
     أغلق_دخل_الطفل(الطفل);
@@ -515,8 +513,8 @@
     };
 }
 
-// The child's exit status if it has exited, without waiting (Rust
-// Child::try_wait): لا_شيء while it runs.
+// The child's exit status if it has exited, without waiting: لا_شيء while
+// it runs.
 عام عرف تفقد_الطفل(الطفل: &متغير طفل_أمر): نتيجة اختياري حالة_إنهاء, خطأ_أمر {
     طابق (*الطفل).الحالة مع
     | اختياري.موجود(الحالة) -> { أرجع نتيجة.نجح(اختياري.موجود(الحالة)); }
@@ -531,8 +529,7 @@
     };
 }
 
-// Kills the child (Rust Child::kill: SIGKILL on Unix, TerminateProcess on
-// Windows). A child that already exited is not an error. Wait for it
+// Kills the child (SIGKILL on Unix, TerminateProcess on Windows). A child that already exited is not an error. Wait for it
 // afterwards to collect its status.
 عام عرف اقتل_الطفل(الطفل: &متغير طفل_أمر): نتيجة عدد, خطأ_أمر {
     طابق (*الطفل).الحالة مع
@@ -549,7 +546,7 @@
 
 // Closes the input, reads the piped output and error to their ends as they
 // arrive (poll on Unix, a PeekNamedPipe loop on Windows, so a child filling
-// one pipe never blocks), and waits (Rust Child::wait_with_output). An
+// one pipe never blocks), and waits. An
 // output that was not piped, or was taken, is empty.
 عام عرف انتظر_خرج_الطفل(الطفل_المملوك: طفل_أمر): نتيجة ناتج_أمر, خطأ_أمر {
     دع الطفل: متغير طفل_أمر = الطفل_المملوك;
@@ -634,16 +631,16 @@
     | نتيجة.نجح(الطفل) -> { أرجع انتظر_خرج_الطفل(الطفل); };
 }
 
-// Runs the command with its streams as configured and returns how it ended
-// (Rust Command::status). Captured outputs are read and dropped.
+// Runs the command with its streams as configured and returns how it ended.
+// Captured outputs are read and dropped.
 عام عرف شغل_الأمر(الأمر: &أمر): نتيجة حالة_إنهاء, خطأ_أمر {
     طابق نفذ_بتيارات(الأمر, (*الأمر).الدخل, (*الأمر).الخرج, (*الأمر).الخطأ) مع
     | نتيجة.خطأ(الخطأ) -> { أرجع نتيجة.خطأ(الخطأ); }
     | نتيجة.نجح(الناتج) -> { أرجع نتيجة.نجح(الناتج.الحالة); };
 }
 
-// Runs the command and collects its standard output and error (Rust
-// Command::output): both are captured, and an inherited input becomes the
+// Runs the command and collects its standard output and error: both are
+// captured, and an inherited input becomes the
 // null device; a null or captured input is kept.
 عام عرف اجمع_خرج_الأمر(الأمر: &أمر): نتيجة ناتج_أمر, خطأ_أمر {
     دع الدخل: متغير مصدر_تيار = (*الأمر).الدخل;

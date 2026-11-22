@@ -2,18 +2,16 @@
 """Plans one CI run: which jobs and hosts run for this trigger.
 
 The tiers (.github/workflows/ci.yml; the policy is written out in CI.md).
-They follow what mature compilers run, checked in their CI files:
-  Rust (src/ci/github-actions/jobs.yml): a pull request runs a few Linux jobs
-    (the `pr` set); the full set of about 80 jobs (`auto`, every tier-1 host)
-    runs once per commit before it lands; PR jobs are a subset of auto jobs.
-    master -> beta -> stable move by promotion of tested commits.
+The principles:
+  A change runs a few Linux jobs; the full set (every host) runs once per
+    commit before it is promoted; the small set is a subset of the full set.
+    main -> beta -> master move by promotion of tested commits.
   LLVM (.github/workflows/premerge.yaml, .ci/compute-projects.sh): presubmit
     builds only what the change touches; the wide matrix runs after the
     commit lands, on post-commit builders; release branches run the same
     workflows.
-  Go (x/build dashboard): every TryBot (presubmit) builder is also a
-    post-submit builder, never the other way round.
-SultanC pushes straight to main, so main gets Rust's PR shape: a smoke set on
+  Every presubmit host is also a post-submit host, never the other way round.
+SultanC pushes straight to main, so main gets the small set: a smoke set on
 Linux, widened only where a change touches another host's code. The whole
 matrix runs once per commit: nightly on main, and when a commit is qualified
 for promotion to beta (promote.yml). beta and master hold only commits that
@@ -33,7 +31,7 @@ passed it, so they never run it again.
 
 Every host and route is defined once (HOSTS); a tier only selects from them,
 so a tier never changes what a selected job does, and every host of a smaller
-tier is also in the full tier (Go's rule). The jobs themselves are the same
+tier is also in the full tier. The jobs themselves are the same
 steps, the same scripts (linux.sh, macos.sh, windows.ps1) and the same
 canonical build and test commands in every tier.
 
@@ -93,7 +91,7 @@ COMPONENTS = [
      {"llvm_tests": ["linux-x86_64"]}),
 ]
 
-# The smoke set (push to main): Linux x86_64 only, as Rust's PR jobs. The
+# The smoke set (push to main): Linux x86_64 only. The
 # seed route runs the test suite; the LLVM route builds and converges.
 QUICK_SEED = ["linux-x86_64"]
 QUICK_LLVM = ["linux-x86_64"]

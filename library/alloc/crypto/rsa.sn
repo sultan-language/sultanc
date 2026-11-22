@@ -5,7 +5,7 @@
 // crypto.bignum's fixed-window Montgomery ladder over exponents padded to
 // the prime length, recombines with Garner's formula and checks the result
 // against the public key before releasing it (the fault-attack check used by
-// Go crypto/rsa and BoringSSL). Moduli from 1024 to 8192 bits are accepted.
+// BoringSSL). Moduli from 1024 to 8192 bits are accepted.
 
 استورد تشفير.أعداد_كبيرة;
 استورد تشفير.ملخص;

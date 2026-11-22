@@ -10,7 +10,7 @@
 // x86_64 the plain names are the legacy 32-bit-inode ABI (d_ino u32,
 // d_namlen u8 @7); <dirent.h> binds the 64-bit-inode ones to
 // `opendir$INODE64` (__DARWIN_ALIAS_I) and `readdir$INODE64`
-// (__DARWIN_INODE64), as Rust's libc does with link_name. closedir, mkdir and
+// (__DARWIN_INODE64), which std binds by link name. closedir, mkdir and
 // rmdir have no inode variant on x86_64.
 إذا (الهدف.المعمارية == «x86_64») {
     خارجي «/usr/lib/libSystem.B.dylib» عرف opendir(المسار: *ط8): *متغير ط8 = «opendir$INODE64»;

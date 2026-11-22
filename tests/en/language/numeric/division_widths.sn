@@ -3,10 +3,10 @@
 // خروج: 42
 // تفاضلي: نعم
 // نظير: tests/ar/language/numeric/division_widths.sn
-// Division and remainder of every integer width (truncating, as Rust and
+// Division and remainder of every integer width (truncating toward zero, as
 // C99): the LLVM backend expands them where the target has no divide
 // instruction (ARMv7-A, AVR, MSP430, Hexagon, Lanai) and does narrow
-// division in 64 bits on SPARC V9. Expected values computed in Python.
+// division in 64 bits on SPARC V9. Expected values computed independently.
 def div_i8(a: i8, b: i8): i8 { return a / b; }
 def rem_i8(a: i8, b: i8): i8 { return a % b; }
 def div_i16(a: i16, b: i16): i16 { return a / b; }

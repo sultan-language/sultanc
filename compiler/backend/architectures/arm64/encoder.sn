@@ -560,7 +560,7 @@
 }
 
 // Float conversions (docs/en/reference/type-system.md, "Numeric casts"). FCVTZS/FCVTZU
-// already saturate and give 0 for NaN at 32 and 64 bits, which is Rust's
+// already saturate and give 0 for NaN at 32 and 64 bits, which is SultanC's
 // `as`; 8- and 16-bit results are first clamped in the float domain with
 // FMIN/FMAX (which keep a NaN a NaN). d0 and d1 are scratch; so is the
 // destination, after the source has been read.

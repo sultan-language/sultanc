@@ -208,8 +208,7 @@
 عام مرادف lines = أسطر_النص;
 عام مرادف repeat_text = كرر_النص;
 
-// Splits on runs of Unicode white space (Rust split_whitespace, Go
-// strings.Fields): no empty pieces, leading and trailing space ignored.
+// Splits on runs of Unicode white space: no empty pieces, leading and trailing space ignored.
 // Invalid UTF-8 bytes are kept inside pieces.
 عام عرف قسم_بالفراغات(القيمة: &نص): متجه نص {
     دع النص: نص = *القيمة;
@@ -244,8 +243,8 @@
     أرجع الناتج;
 }
 
-// At most الحد pieces: the last one holds the rest unsplit (Rust splitn, Go
-// strings.SplitN with n > 0). الحد 0 gives no pieces.
+// At most الحد pieces: the last one holds the rest unsplit. الحد 0 gives no
+// pieces.
 عام عرف قسم_النص_بحد(القيمة: &نص, الفاصل: &نص, الحد: طبيعي): متجه نص {
     دع الناتج: متغير متجه نص = [];
     إذا (الحد == 0) { أرجع الناتج; };
@@ -268,8 +267,7 @@
     أرجع الناتج;
 }
 
-// Replaces the first الحد non-overlapping matches (Rust replacen, Go
-// strings.Replace with n >= 0).
+// Replaces the first الحد non-overlapping matches.
 عام عرف استبدل_في_النص_بحد(القيمة: &نص, المطلوب: &نص, البديل: &نص, الحد: طبيعي): نص {
     دع عدد_القيمة: طبيعي = الطول(*القيمة) مثل طبيعي;
     دع عدد_المطلوب: طبيعي = الطول(*المطلوب) مثل طبيعي;
@@ -291,8 +289,7 @@
     أرجع من_بايتات(&البايتات);
 }
 
-// The text without البادئة, or nothing when it does not start with it
-// (Rust strip_prefix, Go strings.CutPrefix).
+// The text without البادئة, or nothing when it does not start with it.
 عام عرف أزل_البادئة(القيمة: &نص, البادئة: &نص): اختياري نص {
     إذا (!يبدأ_بـ(القيمة, البادئة)) { أرجع اختياري.لا_شيء(); };
     دع البداية: طبيعي = الطول(*البادئة) مثل طبيعي;
@@ -304,8 +301,8 @@
     أرجع مقطع_نص(القيمة, 0, (الطول(*القيمة) مثل طبيعي) - (الطول(*اللاحقة) مثل طبيعي));
 }
 
-// ASCII letters A-Z / a-z mapped; every other byte unchanged (Rust
-// to_ascii_lowercase / to_ascii_uppercase). std.unicode.case_mapping maps
+// ASCII letters A-Z / a-z mapped; every other byte unchanged.
+// std.unicode.case_mapping maps
 // every script.
 عام عرف حول_النص_إلى_صغير_أسكي(القيمة: &نص): نص {
     دع البايتات: متغير متجه ط8 = [];

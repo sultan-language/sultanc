@@ -2,8 +2,7 @@
 استورد نظام_التشغيل.منصات.ويندوز.وين32.أخطاء;
 استورد نظام_التشغيل.منصات.ويندوز.وين32.مقابض_الملفات;
 
-// Windows OS threads (docs/en/reference/concurrency.md) through kernel32, as Rust's std
-// does (library/std/src/sys/pal/windows/thread.rs): CreateThread with a
+// Windows OS threads (docs/en/reference/concurrency.md) through kernel32: CreateThread with a
 // 2 MiB stack reservation (STACK_SIZE_PARAM_IS_A_RESERVATION), then
 // WaitForSingleObject(INFINITE) to join, GetExitCodeThread to confirm the
 // thread ended, and CloseHandle. The start routine is the C entry of a

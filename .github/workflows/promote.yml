@@ -3,10 +3,9 @@
 # else moves beta or master, and nothing ever pushes to them directly.
 #
 # The rules:
-#   - test the exact tree, then move the branch to it (Rust's "not rocket
-#     science" rule: bors tests the merge commit, then moves master);
+#   - test the exact tree, then move the branch to it;
 #   - the wide matrix runs once per tree, never again for a promotion of the
-#     same tree (Go: every presubmit builder is a post-submit builder);
+#     same tree (every presubmit host is a post-submit host);
 #   - nothing is forced: every move keeps the target's history.
 #
 #   target  source  needs                                     then

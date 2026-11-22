@@ -1,7 +1,6 @@
 // std.io.print_formatted (المكتبة.دخ.اطبع_منسقا): formatted output to standard
-// output and standard error, after Rust's print!, println!, eprint! and
-// eprintln!, which live in std::io (`std::io::_print`) while the formatting
-// itself is core::fmt.
+// output and standard error. The formatting itself is std.fmt's; the
+// output is std.io's.
 //
 // std.fmt only formats: into a text, a formatter or a std.io writer, with no
 // process stream and no OS. Writing to the process's standard streams is
@@ -28,8 +27,7 @@
     أرجع اكتب_بايتات_خرج(البايتات);
 }
 
-// Rust's print!, println!, eprint!, eprintln! (Go's Printf and Fprintf to
-// os.Stderr); the line forms add "\n".
+// Print to standard output or standard error; the line forms add "\n".
 عام عرف اطبع_منسقا(القالب: نص, الوسائط: متجه قيمة_تنسيق): نتيجة طبيعي, خطأ_تنسيق {
     أرجع اطبع_إلى(القالب, الوسائط, خطأ, خطأ);
 }

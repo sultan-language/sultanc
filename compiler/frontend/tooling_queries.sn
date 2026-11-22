@@ -13,7 +13,8 @@
 استورد compiler.frontend.types.type_registry;
 استورد compiler.frontend.types.compatibility;
 استورد compiler.frontend.types.expression_types;
-استورد compiler.frontend.ssf.ownership_facts;
+// The ownership legality of tooling requests (moved names, ownership errors).
+استورد compiler.msir.ssf.ownership_tooling;
 استورد compiler.frontend.ast.unit;
 استورد compiler.source.span;
 استورد compiler.source.source_file;
@@ -23,8 +24,8 @@
 // Refactoring queries over one tooling Frontend result (نتيجة_واجهة_وحدة built
 // with احتفظ_بحقائق_الأدوات). This module only composes facts the canonical
 // layers already own: Name (Symbols, scopes, resolved occurrences), the AST
-// trees, Type (Symbol and expression Types), SSF (moves) and the SourceMap
-// (positions). It holds no state, copies no owner and is imported by no
+// trees, Type (Symbol and expression Types), the ownership analysis on MSIR
+// (moves, msir/ssf/ownership_tooling.sn) and the SourceMap (positions). It holds no state, copies no owner and is imported by no
 // compiler phase, so a compilation that does not call it pays nothing.
 
 // ---- Positions ------------------------------------------------------------------
@@ -143,8 +144,10 @@
 
 // ---- References -----------------------------------------------------------------
 
-// Every reference of الرمز with its role. Moves are SSF's: a read that SSF
-// proves moves the local's value out is reported as نقل.
+// Every reference of الرمز with its role. Moves are the ownership analysis's
+// (msir/ssf/ownership_tooling.sn): a read that moves the local's value out is
+// reported as نقل. In a function the analysis left out
+// (ملكية_دالة_محققة_واجهة is false) no read is known to move.
 عام عرف مراجع_رمز_واجهة(
     الواجهة: &نتيجة_واجهة_وحدة,
     الرمز: معرف_رمز
@@ -163,7 +166,7 @@
         طالما (ف < (الطول(المراجع) مثل طبيعي)) {
             دع المرجع: مرجع_رمز_دلالي = المراجع[ف];
             إذا (المرجع.الدور == دور_مرجع.قراءة()
-                && هل_نقل_ملكية(&(*الواجهة).حقائق_الملكية, &المرجع.النطاق)) {
+                && اسم_منقول_واجهة(الواجهة, &المرجع.النطاق)) {
                 دع المنقول: مرجع_رمز_دلالي = {
                     النطاق: المرجع.النطاق,
                     الاسم: المرجع.الاسم,
@@ -341,7 +344,8 @@
 // ---- Extract function -------------------------------------------------------------
 
 // A shared local with its Type (as declared, `mutable T` included), whether it
-// is writable, and whether one of its uses in the section moves it (SSF).
+// is writable, and whether one of its uses in the section moves it (the
+// ownership analysis's moved names).
 عام نوع متغير_استخراج_واجهة = {
     الرمز: معرف_رمز,
     الاسم: معرف_اسم,
@@ -385,7 +389,7 @@
         دع ك: متغير طبيعي = 0;
         طالما (ك < (الطول((*الأصل).الاستخدامات) مثل طبيعي)) {
             دع النطاق: نطاق = (*الأصل).الاستخدامات[ك];
-            إذا (هل_نقل_ملكية(&(*الواجهة).حقائق_الملكية, &النطاق)) { منقول := صواب; };
+            إذا (اسم_منقول_واجهة(الواجهة, &النطاق)) { منقول := صواب; };
             ألحق(الاستخدامات, النطاق);
             ك := ك + 1;
         }

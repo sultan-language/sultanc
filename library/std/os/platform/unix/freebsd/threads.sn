@@ -131,7 +131,7 @@
     أرجع المعرف[0];
 }
 
-// The CPUs this process may run on, as Rust counts them on FreeBSD:
+// The CPUs this process may run on:
 // cpuset_getaffinity(CPU_LEVEL_WHICH 3, CPU_WHICH_PID 2, -1, 128, mask)
 // over a 1024-bit cpuset_t, then sysctl hw.ncpu when that fails.
 عام عرف عدد_المعالجات_فري_بي_إس_دي(): نتيجة ط64, خطأ_نظام_أصلي {

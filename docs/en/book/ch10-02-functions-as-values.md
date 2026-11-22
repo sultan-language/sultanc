@@ -71,8 +71,12 @@ fig, apple, banana
 
 ## Generics and function values together
 
-A generic function cannot compare two values of type `T` itself, because `T` may be a type with no
-order. So it asks the caller for the comparison:
+A generic function may write `>` between two values of type `T`. The compiler checks it each time the
+function is used with a type: used with `int`, it compiles; used with `City`, the record below, it is
+the error "`>` is not defined for `City`", marked at the `>` inside the function, with the call that
+chose `City` shown beside it. A record has no order of its own, and which order is meant, by population
+or by name, is for the caller to say. So a generic function that should work for any type asks the
+caller for the comparison:
 
 ```sultan
 import std.io.println;
@@ -98,7 +102,7 @@ def bigger_number(a: &int, b: &int): bool {
 }
 
 def bigger_city(a: &City, b: &City): bool {
-    return (*a).population > (*b).population;
+    return a.population > b.population;
 }
 
 def main(): int {
@@ -111,7 +115,7 @@ def main(): int {
         { name: "Riyadh", population: 7700000 }
     ];
     match largest(&cities, bigger_city) with
-    | option.some(city) -> { println(clone(&city.name)); }
+    | option.some(city) -> { println(city.name); }
     | option.none -> { println("empty"); };
     return 0;
 }

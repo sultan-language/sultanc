@@ -73,12 +73,11 @@ The consumers are `std.http.client` (HTTPS), the HTTP/2 client and the HTTPS ser
   rsa_pss_rsae_sha256/384/512. Certificates may additionally be signed with PKCS#1 v1.5
   SHA-256/384/512, RSASSA-PSS or Ed25519. SHA-1 and MD5 signatures are rejected.
 - No PSK, resumption, 0-RTT, post-handshake client authentication or record padding on output.
-  Middlebox compatibility mode (a session ID and one dummy change_cipher_spec) is used, as in Go and
-  Rustls.
+  Middlebox compatibility mode (a session ID and one dummy change_cipher_spec) is used.
 
 ### ALPN
 
-ALPN (RFC 7301) follows Go's `NextProtos`. A client configuration's `البروتوكولات` list
+In ALPN (RFC 7301), a client configuration's `البروتوكولات` list
 (`tls_client_config_set_protocols`, names of 1 to 255 bytes) is offered in the ClientHello. The
 selected protocol must be one name the client offered, in EncryptedExtensions, or the handshake fails
 with illegal_parameter.
@@ -87,19 +86,19 @@ A server with a list picks its own first protocol that the client offered and an
 EncryptedExtensions. When the client offered ALPN and nothing matches, the handshake fails with
 no_application_protocol (alert 120, status `tls_error_no_application_protocol`, -2014). A server without a
 list, or a client offering none, ignores ALPN. The agreed protocol is
-`tls_negotiated_protocol` (Go's `ConnectionState.NegotiatedProtocol`).
+`tls_negotiated_protocol`.
 `std.http` offers `h2` and `http/1.1` and dispatches on the result.
 
 ### Certificate verification
 
 The client builds a chain from the leaf through the peer's intermediates to the configured roots or,
-when none are configured, the system bundle (`SSL_CERT_FILE` or the Go bundle locations on Linux,
+when none are configured, the system bundle (`SSL_CERT_FILE` or the usual distribution bundle locations on Linux, such as `/etc/ssl/certs/ca-certificates.crt`,
 `/etc/ssl/cert.pem` on macOS). It enforces validity periods, basicConstraints, keyUsage keyCertSign,
 path length, EKU along the path, DNS and IP name constraints, and unknown critical extensions.
 
 The server name is matched against SAN dNSName (a single left-most wildcard label) or SAN iPAddress;
 the common name is ignored. Disabling peer verification (`tls_client_config_set_verify(false)`) still
-checks the CertificateVerify signature against the leaf key, as Go's InsecureSkipVerify does.
+checks the CertificateVerify signature against the leaf key.
 
 ### Server identity and client certificates
 
@@ -135,7 +134,7 @@ the Native and the LLVM backend.
 
 - Crypto vectors: Ed25519 (RFC 8032 tests 1 and 3, and a tampered message rejected), X25519
   (RFC 7748 section 6.1), and ECDSA P-256/SHA-256 and P-384/SHA-384 signing equal to RFC 6979
-  deterministic signatures (cross-checked with Python `cryptography`). Public-key derivation, ECDH
+  deterministic signatures (cross-checked with an independent implementation). Public-key derivation, ECDH
   shared secrets and rejection of an off-curve peer key are covered as well.
 - The runner's TLS qualification programs `tests/en/runtime/darwin/network_tls_{server,client}.sn`
   (exit 42 on both sides) for every server and client backend pairing, with the runner's RSA-2048
@@ -144,7 +143,7 @@ the Native and the LLVM backend.
   TLS_AES_128_GCM_SHA256, TLS_AES_256_GCM_SHA384 and TLS_CHACHA20_POLY1305_SHA256; RSA-PSS, ECDSA and
   Ed25519 CertificateVerify; X25519, secp256r1 and secp384r1; and HelloRetryRequest when the client's
   only share is an unsupported group. SultanC's client against `openssl s_server` for the same
-  suites, all four key types, and HelloRetryRequest to secp256r1 and secp384r1. Python `ssl` (OpenSSL)
+  suites, all four key types, and HelloRetryRequest to secp256r1 and secp384r1. A second OpenSSL-based
   client and server.
 - Negative case: the client fails against a certificate outside its trust roots (exit 4) and sends
   unknown_ca.
@@ -169,7 +168,7 @@ the Native and the LLVM backend.
 - There is no client identity: client certificates are verified by the server only.
 - Name constraints other than dNSName and iPAddress subtrees make the constraining certificate
   unusable (fail closed).
-- Certificate revocation (CRL and OCSP) is not checked, as in the defaults of Go and Rustls.
+- Certificate revocation (CRL and OCSP) is not checked.
 
 ## References
 
@@ -179,9 +178,8 @@ RFC 8439 (ChaCha20-Poly1305), RFC 7748 (X25519), RFC 8032 and 8410 (Ed25519), RF
 (HKDF), RFC 8018 (PKCS#5), RFC 7292 (PKCS#12), RFC 5958 (PKCS#8), FIPS 180-4, FIPS 197,
 NIST SP 800-38D, FIPS 186-5, SEC 1 and 2, RFC 2268 (RC2) and SP 800-67 (3DES).
 
-Mature implementations consulted for structure and policy: Go `crypto/tls` and `crypto/x509`,
-Rustls and webpki, TweetNaCl (field arithmetic layout, Ed25519 structure), poly1305-donna, and the
-Renes-Costello-Batina complete addition formulas.
+Implementations consulted for structure: TweetNaCl (field arithmetic layout, Ed25519 structure),
+poly1305-donna, and the Renes-Costello-Batina complete addition formulas.
 
 ## See also
 

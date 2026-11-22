@@ -8,8 +8,7 @@
 استورد compiler.msir.identifiers;
 استورد compiler.runtime.primitive_identity;
 
-// Fast paths of the dispatch loop, after the specialized handlers of CPython
-// 3.11's adaptive interpreter and Lua's integer opcodes: the instructions a
+// Fast paths of the dispatch loop, specialized handlers for the instructions a
 // program executes most (integer constants, arithmetic, comparisons and
 // conversions, loads and stores through the common places, element places,
 // and branches with at most one edge argument) run here in one step each:

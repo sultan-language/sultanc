@@ -87,8 +87,7 @@
 
 // SultanC's internal convention (اتفاقية_نداء_واجهة.داخلية) on SysV AMD64:
 // an aggregate argument larger than this many bytes, one pointer, is passed
-// as a hidden reference (as Rust's ABI passes large aggregates indirectly,
-// PassMode::Indirect). Measured with callgrind on the self-built compiler
+// as a hidden reference. Measured with callgrind on the self-built compiler
 // (Ir of run empty/fib/loop/map and check of a 30k-line program): 8 bytes
 // beat 16 (two eightbytes, the largest aggregate SysV passes in registers)
 // by 0.6-1.6%, and 16 beat 32. The native code keeps aggregates in memory,

@@ -50,8 +50,7 @@
     المعرف: معرف_دالة_منتقاة,
     عدد_السجلات_الافتراضية: طبيعي,
     // Defined `@@c_abi` (برنامج_مسير.دوال_اتفاقية_سي): its frame also saves
-    // the registers the C convention preserves that SultanC code may change,
-    // Zig's getCalleePreservedRegs(cc).
+    // the registers the C convention preserves that SultanC code may change.
     اتفاقية_سي: منطقي
 };
 

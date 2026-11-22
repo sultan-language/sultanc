@@ -5,14 +5,14 @@
 استورد std.text.from_bytes;
 
 // The standard library is three libraries (docs/en/reference/std-layers.md),
-// after Rust's core, alloc and std: library/core (الأساس) needs neither the
+// core, alloc and std: library/core (الأساس) needs neither the
 // heap nor the OS, library/alloc (التخصيص) needs the heap only, library/std
 // (المكتبة) is the rest and re-exports both. The compiler enforces the
 // layering (each library sees only itself and the libraries beneath it);
 // this suite checks it again from the sources, and checks what the compiler
 // does not:
 //
-// - Platform code (Rust's tidy check src/tools/tidy/src/pal.rs): externs,
+// - Platform code: externs,
 //   raw kernel calls, kernel threads and wasm memory growth appear only
 //   under library/std/os, and only library/std/os imports std.os.platform.
 //   A target guard outside std/os is allowed only in the std files listed
@@ -434,8 +434,8 @@
     أرجع اختياري.موجود(المكتبة);
 }
 
-// std files outside std/os that still choose code by target (Rust's tidy
-// "Temporary std exceptions"); the list may only shrink.
+// std files outside std/os that still choose code by target (temporary
+// exceptions); the list may only shrink.
 عرف حراس_أهداف_مسموحة_طبقات(): متجه نص {
     دع القائمة: متجه نص = [
         «library/std/async/runtime.sn», «library/std/env/environment.sn», «library/std/env/executable.sn»,

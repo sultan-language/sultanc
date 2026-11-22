@@ -1,6 +1,5 @@
 // Float text: parsing a decimal into the nearest f64/f32 and formatting a
-// float as the shortest decimal that reads back to it (Rust's f64::from_str
-// and Display, Go's strconv.ParseFloat and FormatFloat(f, 'g', -1, 64)).
+// float as the shortest decimal that reads back to it.
 //
 // Parsing is exact: the decimal D * 10^E is turned into a 64-bit binary
 // quotient with a remainder bit using big integers, then rounded half to
@@ -35,8 +34,7 @@
 // A decimal D * 10^E (D an integer of the input's digits) is rounded to the
 // nearest float, half to even, exactly: D * 5^E * 2^E for E >= 0, and the
 // quotient of D * 2^s by 5^-E with a remainder bit for E < 0, as the big
-// integer fallback of Clinger's algorithm (and Go's strconv, Rust's dec2flt)
-// computes it. Integers are base-2^32 limbs, least significant first.
+// integer fallback of Clinger's algorithm computes it. Integers are base-2^32 limbs, least significant first.
 
 // The integer times المضروب (below 2^32) plus الإضافة (below 2^32).
 عرف اضرب_وأضف_أطرافا(الأطراف: &متغير متجه طبيعي, المضروب: طبيعي, الإضافة: طبيعي): فراغ {
@@ -525,8 +523,7 @@
 // double-conversion's fast-dtoa.cc). It either gives the shortest decimal
 // in the rounding interval that is closest to the value, the same digits
 // the exact algorithm below finds, or says it cannot be sure (about 0.5% of
-// values), and the exact algorithm decides. Rust's flt2dec does the same
-// (grisu::format_shortest_opt, then dragon::format_shortest).
+// values), and the exact algorithm decides (Grisu, then Dragon).
 
 // 10^k for k = -348, -340, ..., 340: 64-bit significands rounded to nearest
 // and their binary exponents (10^k ~ significand * 2^exponent).
@@ -708,7 +705,7 @@
 // RoundWeedCounted): a fixed number of correctly rounded digits, or none
 // when the multiplication's error leaves the rounding in doubt (an exact
 // tie included), where the exact digits decide. ثابتة: الخانات digits after
-// the point (Rust's {:.N}); otherwise الخانات significant digits ({:.Ne}).
+// the point; otherwise الخانات significant digits ({:.Ne}).
 عرف أرقام_معدودة_جريسو(الدلالة: طبيعي, الأس: عدد, ثابتة: منطقي, الخانات: طبيعي): اختياري عمل_عشري {
     دع و: عائم_جريسو = طبع_عائم_جريسو(الدلالة مثل ط64, الأس);
     دع أدنى_أس: عدد = -60 - (و.الأس + 64);
@@ -941,9 +938,9 @@
 // A float as decimal digits: the value is 0.d1d2...dk * 10^النقطة (digits
 // 0-9, most significant first, no leading or trailing zeros; zero has no
 // digits). الصنف is 0 for a finite value, 1 for an infinity, 2 for NaN.
-// The shortest form is the one ع64_إلى_نص prints (Rust's Display digits);
+// The shortest form is the one ع64_إلى_نص prints;
 // the exact form is every digit of the binary value, which formatters round
-// to a precision (Rust's {:.N} and {:.Ne} round the exact value half to even).
+// to a precision ({:.N} and {:.Ne} round the exact value half to even).
 عام نوع أرقام_عائم = {
     الأرقام: متجه ط8,
     النقطة: عدد,
@@ -1009,7 +1006,7 @@
 عام عرف أرقام_ع64_الدقيقة(القيمة: ع64): أرقام_عائم { أرجع أرقام_عائم_ببتات(بتات_ع64(القيمة), 52, 11, 1, 0); }
 عام عرف أرقام_ع32_الدقيقة(القيمة: ع32): أرقام_عائم { أرجع أرقام_عائم_ببتات(بتات_ع32(القيمة) مثل طبيعي, 23, 8, 1, 0); }
 
-// The value rounded half to even (exactly, as Rust's {:.N} and {:.Ne}):
+// The value rounded half to even (exactly, as {:.N} and {:.Ne} need):
 // to الخانات digits after the point, or to الخانات significant digits. A
 // Grisu fast path gives the digits when it can be sure of the rounding.
 عام عرف أرقام_ع64_بخانات_كسرية(القيمة: ع64, الخانات: طبيعي): أرقام_عائم { أرجع أرقام_عائم_ببتات(بتات_ع64(القيمة), 52, 11, 2, الخانات); }
@@ -1025,7 +1022,7 @@
 ;
 
 // [+-] (digits [. digits] | . digits) [(e|E) [+-] digits], or inf,
-// infinity, nan (any case), as Rust's f64::from_str; no spaces.
+// infinity, nan (any case); no spaces.
 عرف حلل_عائما_ببتات(النص: &نص, العرض: طبيعي): نتيجة طبيعي, خطأ_تحليل_عائم {
     دع البايتات: متجه ط8 = بايتات_من_نص(انسخ_نص(النص));
     دع العدد: طبيعي = الطول(البايتات) مثل طبيعي;

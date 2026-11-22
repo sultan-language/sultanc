@@ -1,0 +1,44 @@
+// اختبار: رفض
+// تشخيص: SULTANC-OWNERSHIP-USE-AFTER-MOVE
+// نظير: tests/ar/diagnostics/e2e/borrow_endings_in_order.sn
+// خرج-تشخيص-عربي: borrow_endings_in_order.ar.stderr
+// خرج-تشخيص-إنجليزي: borrow_endings_in_order.en.stderr
+// A borrow ends where the storage it reads is written: a match binding that
+// views a member of a local ends at an assignment to that local, and a
+// reference read through a reference ends at a mutable borrow through that
+// reference. An exclusive reference moves when it is passed on by value. A
+// later use of either is a use after move. Each function reports its first
+// error.
+type slot = { value: option string, count: int };
+type table = { items: vector int };
+
+def binding_ended_by_write(): int {
+    let entry: mutable slot = { value: option.some("a"), count: 1 };
+    match entry.value with
+    | option.some(text) -> {
+        entry := { value: option.none(), count: 2 };
+        return length(text) as int;
+    }
+    | option.none -> { return 0; };
+}
+
+def reborrow_ends_holder(source: &mutable table): int {
+    let first: &int = &(*source).items[0];
+    let items: &mutable vector int = &mutable (*source).items;
+    append(*items, 4);
+    return *first;
+}
+
+def exclusive_moved(target: &mutable int): int {
+    let other: &mutable int = target;
+    *other := 1;
+    return *target;
+}
+
+def exclusive_moved_twice(target: &mutable int): int {
+    let other: &mutable int = target;
+    let again: &mutable int = target;
+    return *other + *again;
+}
+
+def main(): int { return 0; }

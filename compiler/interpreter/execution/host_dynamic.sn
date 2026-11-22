@@ -6,11 +6,9 @@
 // ---- Dynamic symbols of the foreign-call bridge ------------------------------
 // A C function a program declares (`خارجي «library» عرف f(...)`) that is not
 // in the generated table of std's externs (host_externs_generated.sn) is
-// found at run time and called at its address, as Python's ctypes opens a
-// library with dlopen and finds a function with dlsym (Lib/ctypes, Modules/
-// _ctypes/callproc.c), Miri's native-lib mode loads the shared object the
-// user names, and libffi's ffi_call loads the registers from a prepared
-// call interface:
+// found at run time and called at its address: the library is opened with
+// dlopen, the function found with dlsym, and the registers loaded from a
+// prepared call interface:
 //
 // - the library is opened once with the host's loader: dlopen on Linux and
 //   macOS (libSystem; glibc 2.34 moved dlopen into libc), LoadLibraryW on
@@ -30,11 +28,10 @@
 // library, and a process that the kernel started without a dynamic loader
 // cannot load a shared object soundly: glibc's libc.so.6 needs ld.so's state
 // (its TLS, IFUNC resolution from ld.so's CPU features, its link map), so a
-// small ELF loader in SultanC (as Go's linker reads shared objects for
-// cgo-free dynamic imports) would work
+// small ELF loader in SultanC would work
 // only for self-contained objects, not for libc or libm. The interpreter
 // therefore calls dynamic C functions only where the host provides a loader,
-// as Go programs do (a static Go binary cannot dlopen either): a compiler
+// (a static binary cannot dlopen either): a compiler
 // that the system's dynamic loader started (an LLVM-enabled build is linked
 // against libLLVM, so the C library is in the process) finds dlopen, dlsym,
 // dlerror and __errno_location in the C library already mapped into it
@@ -465,7 +462,7 @@
         أرجع الناتج;
     }
 
-    // dlopen(name, RTLD_NOW), as ctypes opens a library (RTLD_LOCAL).
+    // dlopen(name, RTLD_NOW).
     عام عرف افتح_مكتبة_مضيف(المحمل: &متغير محمل_ديناميكي_مضيف, الاسم: &متجه ط8): ط64 {
         إذا (!هيئ_محمل_ديناميكي_مضيف(المحمل)) { أرجع 0 مثل ط64; };
         أرجع نادي_بنص_مضيف((*المحمل).عنوان_الفتح, 0, خطأ, الاسم, 2, صواب);

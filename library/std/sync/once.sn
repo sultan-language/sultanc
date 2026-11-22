@@ -1,6 +1,5 @@
-// One-time initialization (docs/en/reference/concurrency.md, "Once and OnceLock"), after
-// Rust's std::sync::Once / OnceLock and their futex implementation
-// (std/src/sys/sync/once/futex.rs). The state is one 32-bit cell:
+// One-time initialization (docs/en/reference/concurrency.md, "Once and OnceLock"), on a
+// futex. The state is one 32-bit cell:
 //
 //   0  incomplete
 //   1  running (one thread runs the closure)
@@ -22,7 +21,7 @@
 };
 عام مرادف once = مرة;
 
-// Rust's Once::new.
+// A new, incomplete once.
 عام عرف أنشئ_مرة(): مرة {
     دع العلامة: متجه ط8 = [];
     دع الناتج: مرة = { الحالة: أنشئ_ذرة_ط32(0 مثل ط32), منع_النسخ: العلامة };
@@ -30,13 +29,13 @@
 }
 عام مرادف once_new = أنشئ_مرة;
 
-// Rust's Once::is_completed.
+// Whether the once has run to completion.
 عام عرف هل_اكتملت_المرة(المرة: &مرة): منطقي {
     أرجع احمل_ط32(&(*المرة).الحالة, ترتيب_ذاكرة.اكتساب()) == (3 مثل ط32);
 }
 عام مرادف once_is_completed = هل_اكتملت_المرة;
 
-// Rust's Once::call_once: run العمل once over the whole program, however
+// Runs العمل once over the whole program, however
 // many threads call this at the same time; every caller returns after it
 // has run.
 عام عرف نفذ_مرة(المرة: &مرة, العمل: دالة(): فراغ): فراغ {
@@ -64,7 +63,7 @@
 }
 عام مرادف call_once = نفذ_مرة;
 
-// Rust's OnceLock<T>: a cell written once, then read by every thread. The
+// A cell written once, then read by every thread. The
 // value lives in a vector of at most one element: an element is a place, so
 // a reader borrows it in place; it is appended once, under the Once, and the
 // vector never grows again, so its address stays put.
@@ -74,7 +73,7 @@
 };
 عام مرادف once_lock = خلية_مرة;
 
-// Rust's OnceLock::new.
+// A new, empty once cell.
 عام عرف أنشئ_خلية_مرة<ق>(): خلية_مرة<ق> {
     دع الفارغة: متجه ق = [];
     دع الناتج: خلية_مرة<ق> = { المرة: أنشئ_مرة(), القيمة: أنشئ_مشترك(الفارغة) };
@@ -93,7 +92,7 @@
     غير_آمن { أرجع &(*المؤشر)[0]; }
 }
 
-// Rust's OnceLock::get: the value, if a thread has set it.
+// The value, if a thread has set it.
 عام عرف اقرأ_خلية_مرة<ق>(الخلية: &خلية_مرة<ق>): اختياري &ق {
     إذا (!هل_اكتملت_المرة(&(*الخلية).المرة)) { أرجع اختياري.لا_شيء(); };
     أرجع اختياري.موجود(المخزنة_في_خلية_مرة(الخلية));
@@ -106,7 +105,7 @@
     غير_آمن { ألحق(*المؤشر, القيمة); }
 }
 
-// Rust's OnceLock::get_or_init: the value, made by الصانع the first time;
+// The value, made by الصانع the first time;
 // a racing thread waits for the first one and reads its value.
 عام عرف اقرأ_أو_هيئ_خلية_مرة<ق>(الخلية: &خلية_مرة<ق>, الصانع: دالة(): ق): &ق {
     إذا (!هل_اكتملت_المرة(&(*الخلية).المرة)) {
@@ -117,7 +116,7 @@
 }
 عام مرادف once_lock_get_or_init = اقرأ_أو_هيئ_خلية_مرة;
 
-// Rust's OnceLock::set: store القيمة unless a value is already there (or
+// Stores القيمة unless a value is already there (or
 // being made); answers whether this call stored it.
 عام عرف اضبط_خلية_مرة<ق>(الخلية: &خلية_مرة<ق>, القيمة: ق): منطقي {
     دع المؤشر: *متغير متجه ق = قيمة_خلية_مرة(الخلية);

@@ -1,5 +1,5 @@
-// The HTTP/2 server side of one connection (RFC 9113 8, Go's
-// x/net/http2 Server): it reads the client preface, answers every complete
+// The HTTP/2 server side of one connection (RFC 9113 8): it reads the
+// client preface, answers every complete
 // request stream with the std.http service - the same خدمة_ويب HTTP/1
 // uses, with requests whose الإصدار is اثنان - and interleaves the
 // responses' DATA within both flow-control windows. Malformed requests

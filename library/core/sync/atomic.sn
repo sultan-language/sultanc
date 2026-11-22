@@ -1,12 +1,12 @@
 // Atomic integers (docs/en/reference/concurrency.md). The compiler's atomic intrinsics
-// (بدائي_ذري_*) operate on the integer a reference refers to, like Rust's
-// std::sync::atomic: they read and write through a *shared* reference, which
+// (بدائي_ذري_*) operate on the integer a reference refers to: they read
+// and write through a *shared* reference, which
 // is the one sound point of interior mutability, so N threads sharing an
 // `&ذرة_ط64` (through an Arc) may all fetch-add it. Every backend lowers them
 // to the architecture's atomic instructions at sequentially-consistent
 // strength; the interpreter, which runs one thread, performs them plainly.
 //
-// Memory orderings follow Rust's Ordering (and C/C++11). The backends treat
+// Memory orderings follow the C11 memory model. The backends treat
 // every ordering as SeqCst, which is always sound; the order a caller asks
 // for is recorded and honoured on targets whose weaker forms differ once the
 // backends relax them.
@@ -21,7 +21,7 @@
 مرادف اجلب_أو_حصري_ذري_بدائي = بدائي_ذري_جلب_أو_حصري;
 مرادف سياج_ذري_بدائي = بدائي_سياج_ذاكرة;
 
-// Rust's Ordering. The code is the value the intrinsic takes.
+// The memory ordering. The code is the value the intrinsic takes.
 عام نوع ترتيب_ذاكرة =
     | مسترخ
     | إطلاق
@@ -129,7 +129,7 @@
     عام مرادف atomic_u32_compare_exchange = قارن_وبدّل_ط32;
 }
 
-// ----- pointer-width atomic (Rust's AtomicUsize) -----
+// ----- pointer-width atomic -----
 // طبيعي is 64 bits on every target, so these follow the 64-bit atomics.
 إذا (!(الهدف.المعمارية == «arm» && الهدف.المنصة == «freestanding»)) {
     عام نوع ذرة_طبيعي = { القيمة: طبيعي };

@@ -619,7 +619,7 @@
     أرجع نوع_عنصر_شريحة_دلالي(&(*الحقائق).الأنواع, النوع);
 }
 
-// A vector literal allocates exactly its element count (Rust's vec![...]);
+// A vector literal allocates exactly its element count;
 // appends grow it by the policy. The count is checked before multiplying by
 // the element stride: a wrapped size would produce an undersized buffer.
 عرف احسب_سعة_تهيئة_متجه_إل_إل_في_إم(
@@ -1553,8 +1553,8 @@
 }
 
 // The float primitives (primitive_identity.sn, عملية_عائمة_بدائية) as the
-// LLVM intrinsics rustc emits for f64::sqrt, abs, floor, ceil, trunc,
-// round_ties_even, minimum, maximum, copysign and mul_add.
+// LLVM intrinsics for square root, absolute value, floor, ceiling, truncation,
+// rounding ties to even, minimum, maximum, sign copy and fused multiply-add.
 عرف ابن_عملية_عائمة_إل_إل_في_إم(
     الحالة: &متغير حالة_مزود_إل_إل_في_إم,
     الدالة: &متغير حالة_دالة_إل_إل_في_إم,
@@ -1813,8 +1813,7 @@
 }
 
 // The C call at an address (بدائي_نداء_عنوان_سي): an indirect call with the C
-// calling convention, as Rust lowers a call through an `extern "C" fn`
-// pointer. The arguments are the result witness (its LLVM type, i64 or
+// calling convention, as a call through a C function pointer. The arguments are the result witness (its LLVM type, i64 or
 // double, is the result type), the address, eight integer words and eight
 // float words. The call type differs by ABI:
 // - System V x86-64: `ret (...)`, every word a variadic argument, so LLVM
@@ -1831,8 +1830,7 @@
 // the C function at the address the first argument holds, called through a
 // pointer with the function type and call-site attributes of the C plan of
 // the other arguments and the result (records by value, sret), as a direct
-// external call is and as Zig's airCall lowers a call through a C function
-// pointer: one lowering for both. A variadic shape gets the variadic
+// external call is: one lowering for both. A variadic shape gets the variadic
 // function type of its fixed parameters.
 عرف ابن_نداء_شكل_عنوان_إل_إل_في_إم(
     الحالة: &متغير حالة_مزود_إل_إل_في_إم,
@@ -1974,8 +1972,7 @@
 // aligned top of the new stack, which becomes the child's stack pointer; the
 // child loads it from there, calls the closure's code with it as the first
 // argument and leaves with the thread-only exit system call when the closure
-// returns, as musl's __clone does (src/thread/<arch>/clone.s; Go's
-// runtime·clone). s390x takes the stack before the flags (CLONE_BACKWARDS2).
+// returns. s390x takes the stack before the flags (CLONE_BACKWARDS2).
 عرف ابن_استنساخ_خيط_إل_إل_في_إم(
     الحالة: &متغير حالة_مزود_إل_إل_في_إم,
     الدالة: &متغير حالة_دالة_إل_إل_في_إم,
@@ -2678,8 +2675,8 @@
 }
 
 // Float conversions (docs/en/reference/type-system.md, "Numeric casts"). float -> integer
-// is llvm.fptosi.sat / llvm.fptoui.sat, which LLVM defines exactly as Rust's
-// `as` (saturating, NaN -> 0); integer -> float is sitofp/uitofp (round to
+// is llvm.fptosi.sat / llvm.fptoui.sat, which LLVM defines exactly as the
+// language's conversion (saturating, NaN -> 0); integer -> float is sitofp/uitofp (round to
 // nearest even); f32 <-> f64 is fpext/fptrunc.
 عرف ابن_تحويل_عائم_تعليمة_إل_إل_في_إم(
     الحالة: &متغير حالة_مزود_إل_إل_في_إم,
@@ -3066,6 +3063,8 @@
             نتيجة.نجح(ق) -> { ن := ق; }; طابق ابن_بناء_إغلاق_إل_إل_في_إم(الحالة, الدالة, المسير, الحقائق, الهدف,
                 سجل_التخطيط, &العملية) مع | نتيجة.خطأ(خ) -> { أرجع اختياري.موجود(خ); } | نتيجة.نجح(ق) -> {
             ضع_قيمة_إل_إل_في_إم(الدالة, ن, ق); }; }
+    // Finalized MSIR holds no ownership operation (msir_verifier.sn).
+    | عملية_مسير.ملكية_مكان(_) -> { أرجع اختياري.موجود(فشل_مزود_إل_إل_في_إم.عملية_مسير_غير_مدعومة()); }
     | عملية_مسير.استخراج_التقاط(العملية) -> { دع ن: معرف_قيمة_مسير; طابق
             معرف_ناتج_مطلوب_إل_إل_في_إم((*التعليمة).الناتج) مع | نتيجة.خطأ(خ) -> { أرجع اختياري.موجود(خ); } |
             نتيجة.نجح(ق) -> { ن := ق; }; طابق ابن_استخراج_التقاط_إل_إل_في_إم(الحالة, الدالة, المسير, الحقائق, الهدف,
@@ -3150,7 +3149,7 @@
     دع واحد: مرجع_قيمة_إل_إل_في_إم = ثابت_صحيح_إل_إل_في_إم(نوع_العداد, 1, خطأ);
     // On a target with threads the count changes atomically (atomicrmw,
     // sequentially consistent), so closures and std.sync's مشترك may be
-    // copied and dropped on several threads at once (Swift's retain/release).
+    // copied and dropped on several threads at once.
     // A freestanding target has no threads and no atomic run-time support.
     إذا (هدف_بخيوط_إل_إل_في_إم(الهدف)) {
         // atomicrmw add = 1, sub = 2.
@@ -3312,7 +3311,7 @@
         مؤشر_اسم_سي_لإل_إل_في_إم(&متغير اسم));
 }
 
-// Reserve (Rust's Vec::reserve_exact): when length + additional exceeds the
+// Reserve (حجز_سعة_متجه): when length + additional exceeds the
 // capacity, the buffer is reallocated to exactly that many elements, through
 // the same allocation service and checks as append's growth. Extend reuses
 // this lowering with مطفأ, growing to the policy's amortized capacity instead.

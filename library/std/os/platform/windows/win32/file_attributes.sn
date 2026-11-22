@@ -84,8 +84,7 @@
 
 // SYMBOLIC_LINK_FLAG_DIRECTORY (1) when the target, resolved against the
 // link's directory, is a directory; SYMBOLIC_LINK_FLAG_ALLOW_UNPRIVILEGED_
-// CREATE (2) lets Developer Mode create links without elevation (Go and
-// Rust pass it too).
+// CREATE (2) lets Developer Mode create links without elevation.
 عام عرف أنشئ_وصلة_رمزية_ويندوز(
     الهدف_المرجعي: &نص, المسار: &نص
 ): نتيجة عدد, خطأ_سمات_ملف_ويندوز {
@@ -201,7 +200,7 @@
 }
 
 // Windows has one permission bit, FILE_ATTRIBUTE_READONLY (1): it is set
-// when the owner-write bit (0o200) is clear, as in Go and Rust.
+// when the owner-write bit (0o200) is clear.
 عام عرف اضبط_أذونات_مسار_ويندوز(
     المسار: &نص, الوضع: ط64
 ): نتيجة عدد, خطأ_سمات_ملف_ويندوز {
@@ -222,7 +221,7 @@
     };
 }
 
-// Go's Windows FileMode: 0o444 when read-only, else 0o666; directories add
+// The mode on Windows: 0o444 when read-only, else 0o666; directories add
 // the search bits 0o111.
 عام عرف اقرأ_أذونات_مسار_ويندوز(المسار: &نص): نتيجة ط64, خطأ_سمات_ملف_ويندوز {
     طابق سمات_مسار_ويندوز(المسار) مع

@@ -3,7 +3,7 @@
 // خروج: 42
 // تفاضلي: نعم
 // نظير: tests/ar/stdlib/behavior/env_set_remove.sn
-// std.env set/remove (Rust env::set_var/remove_var, Go os.Setenv/Unsetenv):
+// std.env set/remove:
 // a set variable is read back, replaced, listed once, removed; invalid names
 // and values are refused; a child started without an explicit environment
 // inherits the change, and TMPDIR set by the program is the temp directory.

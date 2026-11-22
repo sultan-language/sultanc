@@ -209,13 +209,17 @@ def main(): int {
 ```
 
 ```text
-error[SULTANC-PATTERN-NON-EXHAUSTIVE]: non-exhaustive pattern
-  --> main.sn:2:5..4:26
+error[SULTANC-PATTERN-NON-EXHAUSTIVE]: non-exhaustive pattern: `_` not covered — Every value of the matched type must match one of the arms.
+  --> main.sn:2:11..2:12
    |
  2 |     match n with
-   |     ^
+   |           ^
    |
+  = help: add an arm for each case that is not covered
 ```
+
+The message marks the value being matched, `n`. `_` in it stands for all the numbers no branch takes;
+a branch `| _ -> { … }` at the end handles them.
 
 This check is what made chapter 2's `match` on `read_line()` require a branch for the error. It is most
 useful with enums, in [chapter 6](ch06-02-match.md): when you add a new case to an enum, the compiler

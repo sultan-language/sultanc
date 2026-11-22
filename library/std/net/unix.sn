@@ -5,16 +5,16 @@
 استورد نظام_التشغيل.أخطاء;
 استورد نصوص.من_بايتات;
 
-// Unix domain sockets (Rust std::os::unix::net): a listener and the
+// Unix domain sockets: a listener and the
 // streams it accepts or connects (UnixListener, UnixStream), and
 // datagram sockets (UnixDatagram). An address is a filesystem path, an
 // abstract name (Linux and Android: a name in the kernel with no file), or
 // unnamed (an unbound socket). Binding a path creates the socket file;
-// nothing removes it on close, as in Rust: remove it with std.fs. Linux,
+// nothing removes it on close: remove it with std.fs. Linux,
 // Android, FreeBSD and macOS; Windows 10 1803+ has stream sockets only (no
 // datagrams, no abstract names); WASI has none (غير_مدعوم). Errors are
 // negative codes, as for TCP. Streams and datagram sockets use
-// std.net.tcp's اتجاه_إيقاف_تي_سي_بي (Rust's std::net::Shutdown).
+// std.net.tcp's اتجاه_إيقاف_تي_سي_بي.
 
 عام نوع عنوان_يونكس =
     | بلا_اسم
@@ -120,7 +120,7 @@
 
 // ---- Listener and streams ----
 
-// Binds a listening stream socket to العنوان (Rust UnixListener::bind_addr).
+// Binds a listening stream socket to العنوان.
 // A path that exists already, even a stale socket file, is EADDRINUSE.
 عام عرف اربط_مستمع_يونكس_بعنوان(العنوان: &عنوان_يونكس): نتيجة مستمع_يونكس, عدد {
     طابق مقبس_يونكس_بعنوان(1, العنوان, صواب) مع

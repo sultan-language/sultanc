@@ -112,19 +112,17 @@ pointers to the address words the compiled code uses, inside `unsafe`.
 
 ### Callbacks: functions with the C calling convention
 
-As Zig's translate-c gives every translated C function `callconv(.c)` (`pub export fn`, or `pub fn ... callconv(.c)`
-for a `static` one), Jisr compiles a function with SultanC's C calling convention, `@@c_abi`. A pointer to such a
+Jisr compiles every translated C function, `static` ones included, with SultanC's C calling convention, `@@c_abi`. A pointer to such a
 function is its machine address, `c_function_address(f)`, so C code calls it directly: a `qsort` comparator, a thread
-start routine, a window procedure. There is no trampoline. As in Zig's backends, where one routine
-(`resolveCallingConventionValues`) places a function's own parameters and every call to it, and the prologue saves
-`getCalleePreservedRegs(cc)`:
+start routine, a window procedure. There is no trampoline. One convention places a function's own parameters and
+every call to it, and the prologue saves the registers that convention preserves:
 
 - MSIR records the convention per function (`برنامج_مسير.دوال_اتفاقية_سي`), and the one convention query
   (`اتفاقية_دالة_مسير_للواجهة`) gives such a function the target's foreign C plan, for its own entry and for every
   call to it, on every backend.
 - Its frame saves the registers the C convention preserves that SultanC code may change: R15 (the closure
   environment's register) on x86-64, and RDI, RSI and XMM6-XMM15 on Windows (`أضف_محفوظة_اتفاقية_سي_إكس`,
-  `عائمة_اتفاقية_سي_إكس`; Zig's x86_64 backend leaves the XMM registers as an open item). On AArch64 the internal
+  `عائمة_اتفاقية_سي_إكس`). On AArch64 the internal
   convention already preserves the AAPCS64 callee-saved registers.
 - The LLVM provider declares it without the hidden closure-environment parameter, like the process entry.
 - `c_function_address(f)` lowers to the function constant typed `u64` (`اخفض_عنوان_دالة_سي_مسير`).
@@ -150,11 +148,9 @@ call through a pointer first compares the pointer with those candidates and call
 C function at a machine address: one returned by `dlsym`, or the address of a C library function, such as `labs` or
 `objc_msgSend`. Its address is its symbol's, reached through the GOT on Mach-O and ELF.
 
-Jisr is not a foreign-function layer: as with Zig's translate-c, C becomes SultanC source and the compiler's own
-backends lower it. Zig types a C function pointer as `*const fn (...) callconv(.c) T` and its LLVM backend lowers a
-call through it with the same per-target ABI code as a direct call (`airCall`, `ParamTypeIterator`, `firstParamSRet`),
-since the convention belongs to the function type, not to the callee's name. SultanC does the same with a **call
-shape at an address**: an extern whose link name is `*` (or `*...N` for a C variadic call with N fixed parameters).
+Jisr is not a foreign-function layer: C becomes SultanC source and the compiler's own backends lower it. A call
+through a C function pointer is lowered with the same per-target ABI code as a direct call, since the convention
+belongs to the function type, not to the callee's name. SultanC expresses this with a **call shape at an address**: an extern whose link name is `*` (or `*...N` for a C variadic call with N fixed parameters).
 Its first parameter is the address; the others and the result are the C signature
 (`نادِ_عنوانا_جسر`, `شكل_عنوان_ل_جسر`):
 

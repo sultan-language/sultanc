@@ -11,7 +11,8 @@
 // --filter; a target this host cannot run (built, not run); --interpret;
 // --package-graph; and an ordinary run of the same program, which runs main
 // and no test. -b llvm runs when the compiler includes the LLVM backend.
-// Then --test, --tests-in, definition-time decorators in a test and
+// Then --test, --no-run -o (the test program kept, not run, and run alone
+// with its index), --tests-in, definition-time decorators in a test and
 // --package-graph=- (اختبر_اختيار_الاختبارات_لغة).
 
 // One compiler run: its status, and markers its output or standard error
@@ -200,6 +201,32 @@
     سجل_نجاح(الملخص, الاسم);
 }
 
+// The path `test --no-run -o` writes the test program of the language ل
+// to (`.exe` on a Windows host).
+عرف مسار_برنامج_اختبارات_محفوظ(ل: &نص): نص {
+    دع المسار: متغير نص = ضم(«build/tests-sultanc/test-no-run-», استنسخ(ل));
+    طابق الهدف_المضيف() مع
+    | اختياري.موجود(المضيف) -> {
+        إذا (هدف_ويندوز(&المضيف)) { المسار := ضم(المسار, «.exe»); };
+    }
+    | اختياري.لا_شيء -> { };
+    أرجع المسار;
+}
+
+// The kept test program run with one argument: its status.
+عرف تحقق_برنامج_اختبارات_محفوظ(
+    الملخص: &متغير ملخص_اختبارات, الاسم: نص, البرنامج: &نص, الوسيطة: نص, الحالة: عدد
+): فراغ {
+    دع الوسائط: متجه نص = [الوسيطة];
+    دع النتيجة: نتيجة_أمر = نفذ_أمرا(البرنامج, &الوسائط, &الاسم);
+    إذا (النتيجة.الحالة != الحالة) {
+        دع سبب: نص = «حالة برنامج الاختبارات المحفوظ لا تطابق المتوقع»;
+        سجل_فشل(الملخص, &الاسم, &سبب);
+        أرجع;
+    };
+    سجل_نجاح(الملخص, &الاسم);
+}
+
 // --test (exact names, any spelling), --tests-in (a package whose program
 // lies in its library's source root), definition-time decorators before a
 // test, and --package-graph=- (the graph on standard input, its relative
@@ -230,6 +257,29 @@
     تحقق_اختبار(الملخص, اسم_حالة_اختبار(&ل, «--test مكرر مع --list»),
         [«--lang», استنسخ(&ل), «test», «--list», «--test», استنسخ(&اسم_دقيق), ضم(«--test=», استنسخ(&اسم_ثان)), استنسخ(&الرئيسي)], 0,
         [استنسخ(&اسم_دقيق), استنسخ(&اسم_ثان)]);
+    // --no-run -o: the program of the one test named is written, at -O0,
+    // and not run; `<index> <name>` says how to run it, and `<path> <index>`
+    // runs that test alone (it passes: status 0).
+    دع المحفوظ: نص = مسار_برنامج_اختبارات_محفوظ(&ل);
+    تحقق_اختبار(الملخص, اسم_حالة_اختبار(&ل, «--no-run -o»),
+        [«--lang», استنسخ(&ل), «test», ضم(«--test=», استنسخ(&اسم_دقيق)), «-O0», «-o», استنسخ(&المحفوظ), «--no-run», استنسخ(&الرئيسي)], 0,
+        [ضم(«0 », استنسخ(&اسم_دقيق))]);
+    تحقق_برنامج_اختبارات_محفوظ(الملخص, اسم_حالة_اختبار(&ل, «برنامج --no-run يشغل اختباره وحده»), &المحفوظ, «0», 0);
+    // -o without --no-run, --no-run without -o, and --no-run with --list:
+    // usage errors that name --no-run.
+    تحقق_اختبار(الملخص, اسم_حالة_اختبار(&ل, «-o دون --no-run»),
+        [«--lang», استنسخ(&ل), «--color», «never», «test», «-o», استنسخ(&المحفوظ), استنسخ(&الرئيسي)], 2,
+        [«SULTANC-CLI-CONFLICTING-MODES», «--no-run»]);
+    تحقق_اختبار(الملخص, اسم_حالة_اختبار(&ل, «--no-run دون -o»),
+        [«--lang», استنسخ(&ل), «--color», «never», «test», «--no-run», استنسخ(&الرئيسي)], 2,
+        [«SULTANC-CLI-CONFLICTING-MODES», «--no-run»]);
+    تحقق_اختبار(الملخص, اسم_حالة_اختبار(&ل, «--no-run مع --list»),
+        [«--lang», استنسخ(&ل), «--color», «never», «test», «--list», «--no-run», «-o», استنسخ(&المحفوظ), استنسخ(&الرئيسي)], 2,
+        [«SULTANC-CLI-CONFLICTING-MODES», «--no-run»]);
+    // --no-run belongs to test.
+    تحقق_اختبار(الملخص, اسم_حالة_اختبار(&ل, «--no-run مع أمر غير test»),
+        [«--lang», استنسخ(&ل), «--color», «never», «check», «--no-run», استنسخ(&الرئيسي)], 2,
+        [«SULTANC-CLI-CONFLICTING-MODES», «--no-run»]);
     // A name no test has.
     تحقق_اختبار(الملخص, اسم_حالة_اختبار(&ل, «--test لاسم لا اختبار له»),
         [«--lang», استنسخ(&ل), «--color», «never», «test», «--test=no_such_test», استنسخ(&الرئيسي)], 2,

@@ -3,7 +3,7 @@
 // تشخيص: SULTANC-FORMAT-STRING
 // نظير: tests/ar/stdlib/fmt/reject_format_invalid_count.sn
 // A width taken from an argument needs an integer argument.
-// Rust: expected usize.
+// Reason: format.invalid-count.
 import std.fmt.fmt;
 
 def main(): int {

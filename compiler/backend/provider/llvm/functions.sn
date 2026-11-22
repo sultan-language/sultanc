@@ -359,7 +359,7 @@
     // All ordinary SultanC functions use one hidden closure-environment
     // parameter. The process entry keeps the plain C ABI its caller (the
     // process start, dyld or the WASI host) uses, and so does a function
-    // defined `@@c_abi` (Zig's callconv(.c)), which C calls at its address
+    // defined `@@c_abi` (the C calling convention), which C calls at its address
     // with exactly its own parameters; direct calls to either pass none
     // (القيد.له_بيئة_إغلاق).
     دع له_بيئة: منطقي = !هو_مدخل_البرنامج
@@ -636,8 +636,8 @@
         | اختياري.لا_شيء -> { };
         // A WebAssembly import from the module the declaration names (its
         // library, `خارجي «wasi_snapshot_preview1» عرف ...`), field = the
-        // linker symbol, as clang's import_module/import_name attributes and
-        // Rust's #[link(wasm_import_module)]. Without a declared module LLVM
+        // linker symbol (LLVM's wasm-import-module and wasm-import-name
+        // attributes). Without a declared module LLVM
         // imports from `env`. Placed on the function index (~0).
         دع وحدة_مصرحة: متغير اختياري متجه ط8 = اختياري.لا_شيء();
         إذا ((*الهدف).صيغة_الكائن == صيغة_كائن_هدف.ويب_أسمبلي()) {

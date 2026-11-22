@@ -85,7 +85,7 @@
 // one predictable-not-taken branch per allocation, no atomic.
 //
 // Once threads exist the lock is std.sync's three-state futex mutex
-// (sync/mutex.sn; Drepper's mutex2, as Rust's futex Mutex): 0 unlocked,
+// (sync/mutex.sn; Drepper's mutex2): 0 unlocked,
 // 1 locked, 2 locked with possible sleepers. An uncontended lock is one
 // compare-exchange and an uncontended unlock one swap, no system call. A
 // contended lock spins briefly (the critical section is a few hundred
@@ -475,7 +475,7 @@
     مرادف احمل_ذري_مخصص = بدائي_ذري_حمل;
 
     // Spin while the holder runs without sleepers (it is likely to release
-    // the lock soon), at most 100 rounds as Rust; answer the last state seen.
+    // the lock soon), at most 100 rounds; answer the last state seen.
     عرف دور_على_قفل_المخصص(): ط32 {
         دع المرات: متغير عدد = 100;
         طالما (صواب) {

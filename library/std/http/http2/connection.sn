@@ -4,7 +4,7 @@
 // (6.5), PING (6.7), GOAWAY (6.8), RST_STREAM (6.4), header blocks over
 // HEADERS and CONTINUATION (6.2, 6.10) through HPACK, and DATA (6.1).
 //
-// Like Go's x/net/http2 it is single-owner and synchronous: the caller
+// It is single-owner and synchronous: the caller
 // alternates reading one frame (اقرأ_وعالج_إطار_ويب2) and pushing pending
 // output (ادفع_بيانات_ويب2), so many streams progress on one connection.
 // Limits (حدود_ويب2): the frame size this side accepts, the header list
@@ -37,7 +37,7 @@
     أقصى_جسم: طبيعي
 };
 
-// Defaults close to Go's and nghttp2's: 16 KiB frames, a 64 KiB header
+// Defaults close to nghttp2's: 16 KiB frames, a 64 KiB header
 // list, 100 concurrent streams, 1 MiB windows and 16 MiB bodies.
 عام عرف حدود_ويب2_افتراضية(): حدود_ويب2 {
     دع الحدود: حدود_ويب2 = {

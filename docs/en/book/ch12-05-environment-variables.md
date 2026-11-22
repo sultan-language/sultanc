@@ -16,7 +16,6 @@ third field, `ignore_case`, which `build_config` receives from its caller. Here 
 
 ```sultan test
 import std.debug.assert;
-import std.text.compare;
 import std.text.search;
 import std.text.transform;
 
@@ -62,7 +61,7 @@ def one_result(): void {
     let contents: string = "Slow and steady.\nsafe, fast, productive.\nPick three.";
     let found: vector string = search(&"fast", &contents);
     assert(length(found) == 1);
-    assert(texts_equal(&found[0], &"safe, fast, productive."));
+    assert(found[0] == "safe, fast, productive.");
 }
 
 @@test
@@ -124,10 +123,10 @@ The pattern `result.ok(option.some(_))` matches two levels at once: an `ok` that
 
 ```sultan ignore
     let found: vector string;
-    if ((*config).ignore_case) {
-        found := search_case_insensitive(&(*config).query, &contents);
+    if (config.ignore_case) {
+        found := search_case_insensitive(&config.query, &contents);
     } else {
-        found := search(&(*config).query, &contents);
+        found := search(&config.query, &contents);
     };
 ```
 

@@ -5,6 +5,7 @@
 استورد compiler.runtime.primitive_identity;
 استورد compiler.runtime.primitive_semantic_contract;
 استورد compiler.source.provenance;
+استورد compiler.source.span;
 استورد compiler.debuginfo.model;
 استورد compiler.msir.debug_contract;
 استورد المكتبة.عمليات.انهيار;
@@ -99,7 +100,7 @@
     | إزاحة_يمنى
     | إزاحة_حسابية_يمنى
     // Wrapping (modular) arithmetic: the result modulo 2^N of the operand
-    // type, never a trap (Rust's wrapping_add/sub/mul/shl).
+    // type, never a trap.
     // The shift amount of إزاحة_يسرى_ملتفة is already below N (lowering
     // masks it, as wrapping_shl does).
     | جمع_ملتف
@@ -197,12 +198,11 @@
 };
 
 // Conversions between a float and an integer, or between the two float
-// widths, as Rust's `as` defines them since 1.45 (and Swift's
-// Int(clamping:), Java's d2l):
+// widths (docs/en/reference/type-system.md, "Numeric casts"):
 // - float -> integer truncates toward zero and saturates: a value below the
 //   integer type's range gives its minimum, above it its maximum, NaN gives 0;
 // - integer -> float rounds to nearest, ties to even (IEEE 754
-//   roundTiesToEven), as Go's and C's conversions do;
+//   roundTiesToEven);
 // - f32 -> f64 is exact; f64 -> f32 rounds to nearest, ties to even
 //   (overflow gives an infinity, a NaN stays a NaN).
 // The integer side's width comes from its value's Type; its signedness is
@@ -315,8 +315,13 @@
 
 // Places are abstract typed storage identities in the value-id namespace. A place-producing
 // instruction is never a first-class value; verifier enforces the distinction structurally.
+// The place of a source local (a `let`, a parameter, a pattern binding, a
+// closure parameter or capture) names that local's symbol: the symbol is the
+// local's identity in MSIR (docs/en/internals/ownership-analysis.md, "Source
+// locals"). A place lowering makes for itself (a temporary) names none.
 عام نوع مكان_محلي_مسير = {
-    قابل_للكتابة: منطقي
+    قابل_للكتابة: منطقي,
+    المحلي: اختياري معرف_رمز
 };
 
 عام نوع مكان_عام_مسير = {
@@ -420,6 +425,35 @@
     الفهرس: طبيعي
 };
 
+// Ownership operations of initial MSIR (docs/en/internals/ownership-analysis.md).
+// They name a function-local place (مكان_محلي). The last three name an owner
+// place: one that owns the value stored in it and must destroy it. Lowering
+// states what the language does with the owner; it inserts no drop flag and
+// no conditional drop.
+//   تصريح   the declaration of a source local, at the point it executes: the
+//           local's place (owner or not) holds no value from here on. Its
+//           debug location is the declaration's.
+//   تهيئة   the place now holds a value its owner must destroy (after the
+//           store that initialized or assigned it)
+//   تسليم   the value left the owner: it was moved out or released
+//   إسقاط   a potential destruction obligation (a scope exit, an exit block,
+//           the old value before an assignment): destroy the value if the
+//           owner still holds it, after which it holds none
+// Drop elaboration (compiler/msir/drop_elaboration.sn) replaces every one of
+// them, so finalized MSIR, the only MSIR a backend, the interpreter or
+// compile-time evaluation receives, holds none (msir_verifier.sn).
+عام نوع حدث_ملكية_مسير =
+    | تصريح
+    | تهيئة
+    | تسليم
+    | إسقاط
+;
+
+عام نوع ملكية_مكان_مسير = {
+    الحدث: حدث_ملكية_مسير,
+    المكان: معرف_قيمة_مسير
+};
+
 عام نوع عملية_مسير =
     | ثابت بنوع ثابت_مسير
     | حساب_صحيح بنوع حساب_صحيح_مسير
@@ -451,6 +485,7 @@
     | بناء_إغلاق بنوع بناء_إغلاق_مسير
     | استخراج_التقاط بنوع استخراج_التقاط_مسير
     | نداء بنوع نداء_مسير
+    | ملكية_مكان بنوع ملكية_مكان_مسير
 ;
 
 // The debug location and the debug scope an instruction refers to, in 32
@@ -707,8 +742,8 @@
     // SultanC's internal hidden references (اتفاقية_دالة_مسير_للواجهة in
     // compiler/backend/target/selection_query_context.sn).
     دوال_اتفاقية_المنصة: متجه منطقي,
-    // The functions defined with the C calling convention (@@c_abi, Zig's
-    // callconv(.c)), indexed by FunctionID (shorter when the last functions
+    // The functions defined with the C calling convention (@@c_abi),
+    // indexed by FunctionID (shorter when the last functions
     // are not): their own parameters and every call to them use the
     // target's foreign C plan, and their prologue saves the registers the C
     // convention preserves, so C calls them at their address
@@ -729,7 +764,133 @@
     دالة_فشل_فحص_التشغيل: اختياري معرف_دالة_مسير,
     // The source places lowering gives the checks (runtime_checks.sn), read
     // once by that pass and then cleared.
-    مواقع_فحوص_التشغيل: متجه موقع_فحص_تشغيل_مسير
+    مواقع_فحوص_التشغيل: متجه موقع_فحص_تشغيل_مسير,
+    // The sources of the uses the ownership legality analysis
+    // (ssf/ownership_legality.sn) may report, by FunctionID (shorter when the
+    // last functions have none), each function's in emission order; and the
+    // source function each function was lowered from. Lowering records them;
+    // the analysis reads them once and clears them.
+    مصادر_الاستخدامات: متجه متجه استخدام_مصدري_مسير,
+    دوال_المصدر: متجه أصل_دالة_مصدرية_مسير,
+    // What the source states about borrows (حدث_استعارة_مسير), by
+    // FunctionID like مصادر_الاستخدامات: recorded by lowering, read once by
+    // the legality analysis and cleared.
+    أحداث_الاستعارة: متجه متجه حدث_استعارة_مسير
+};
+
+// One use of a source place that the ownership legality analysis
+// (ssf/ownership_legality.sn) may report, recorded by lowering where it emits the
+// instruction: instruction الموضع of block الكتلة of its function, the Symbol
+// the place is rooted at (0xFFFFFFFF for none), the name of that local or
+// module value as written in the use (الاسم) and the whole expression
+// (التعبير). الصنف is one of the kinds below.
+عام نوع استخدام_مصدري_مسير = {
+    الكتلة: ط32,
+    الموضع: ط32,
+    الرمز: ط32,
+    الصنف: ط32,
+    الاسم: نطاق,
+    التعبير: نطاق
+};
+
+// A read of a source local or module value, a borrow of it, a write into a
+// member of it, or a call argument read from it (checked against the state
+// the uses before it left, in the order operands are evaluated).
+عام عرف صنف_استخدام_قراءة_مسير(): ط32 { أرجع 0; }
+// A give-up lowering states itself (a match that moves its scrutinee, a
+// returned field that moves its whole local): الاسم is where the value moves.
+عام عرف صنف_استخدام_تسليم_مسير(): ط32 { أرجع 1; }
+// The store of an assignment to a local declared without `mutable`.
+عام عرف صنف_استخدام_إسناد_ثابت_مسير(): ط32 { أرجع 2; }
+// A read of a captured local where its closure is made: checked when the
+// closure is constructed, after the other uses of the statement.
+عام عرف صنف_استخدام_التقاط_مسير(): ط32 { أرجع 3; }
+// The declaration (تصريح) of a local that owns its value: one whose Type owns
+// storage and that is no borrowed view, also in code without drop
+// elaboration (a compile-time block).
+عام عرف صنف_استخدام_مالك_مسير(): ط32 { أرجع 4; }
+// The destruction obligation (إسقاط) of an owner where its scope ends: the end
+// of its block, a `break` or `continue` leaving it, the end of a match arm or
+// of a loop's initializer. الاسم and التعبير are that end. The obligation
+// before an assignment (the old value) is no such use.
+عام عرف صنف_استخدام_إتلاف_نطاق_مسير(): ط32 { أرجع 5; }
+
+// One borrow event of the source (docs/en/internals/ownership-analysis.md,
+// "Borrows"), recorded by lowering where the source states it: it applies
+// before the instruction at الموضع of block الكتلة (after the block's last
+// instruction when الموضع is their number). الصنف is one of the kinds
+// below; الرمز the local (or module value) it names; الثاني a second Symbol
+// or a borrow kind; الأعلام the kind's flags; النطاق the source span a
+// diagnostic names (where a value moves, or the written destination);
+// الحدود the terms whose origins, in order and each once, make a value's.
+عام نوع حدث_استعارة_مسير = {
+    الكتلة: ط32,
+    الموضع: ط32,
+    الصنف: ط32,
+    الرمز: ط32,
+    الثاني: ط32,
+    الأعلام: ط32,
+    النطاق: نطاق,
+    الحدود: متجه حد_أصل_مسير
+};
+
+// One term of a value's origins: الصنف 0 the origins of local الرمز, 1
+// those of local الرمز or, when it has none, a borrow of it (exclusive when
+// الأعلام has bit 1), 2 a read through reference local الرمز (bit 2 of
+// الأعلام: its Type carries a borrow), 3 a parameter's own origin.
+عام نوع حد_أصل_مسير = {
+    الصنف: ط32,
+    الرمز: ط32,
+    الأعلام: ط32
+};
+
+// The kinds of borrow events. Kind 1 is the analysis's own (where a holder's
+// borrows end, ssf/borrow_liveness.sn): lowering records no scope's end.
+// The storage of local الرمز is changed in place: it may not be borrowed.
+عام عرف صنف_استعارة_تغيير_مسير(): ط32 { أرجع 2; }
+// The storage of local الرمز is written: the borrowed views of it end.
+عام عرف صنف_استعارة_كتابة_مسير(): ط32 { أرجع 3; }
+// Storage behind reference local الرمز may be written: every value reading
+// through it ends.
+عام عرف صنف_استعارة_كتابة_مرجع_مسير(): ط32 { أرجع 4; }
+// Local الرمز is passed by value (الأعلام: bit 1 the value always moves,
+// bit 2 it moves when it carries an exclusive borrow, bit 4 it owns storage).
+عام عرف صنف_استعارة_نقل_مسير(): ط32 { أرجع 5; }
+// Local الرمز is released.
+عام عرف صنف_استعارة_تحرير_مسير(): ط32 { أرجع 6; }
+// The origins of الحدود are taken now, for the next assignment
+// (صنف_استعارة_إسناد_مسير) of the same statement.
+عام عرف صنف_استعارة_أصول_مسير(): ط32 { أرجع 7; }
+// Local الرمز is given a value with the origins last taken (الأعلام: bit 1
+// a module value, bit 2 its Type carries a borrow, bit 4 a shared and bit 8
+// an exclusive reference).
+عام عرف صنف_استعارة_إسناد_مسير(): ط32 { أرجع 8; }
+// Local الرمز is declared with the origins of الحدود (a parameter, a
+// pattern binding).
+عام عرف صنف_استعارة_تصريح_مسير(): ط32 { أرجع 9; }
+// Local الرمز is a borrowed view: it borrows the locals among the origins of
+// الحدود and reference local الثاني (0xFFFFFFFF for none).
+عام عرف صنف_استعارة_عرض_مسير(): ط32 { أرجع 10; }
+// A call borrows local الرمز while it runs (الثاني: 1 exclusive, 0 shared;
+// الأعلام bit 1: an earlier argument of the call borrows the same place).
+عام عرف صنف_استعارة_مؤقتة_مسير(): ط32 { أرجع 11; }
+// The value of local الرمز leaves the function (الأعلام bit 1: its Type
+// carries a borrow).
+عام عرف صنف_استعارة_هروب_محلي_مسير(): ط32 { أرجع 12; }
+// A value with the origins of الحدود leaves the function.
+عام عرف صنف_استعارة_هروب_مسير(): ط32 { أرجع 13; }
+// A closure captures local الرمز (الأعلام: bit 1 its Type owns storage,
+// bit 2 it is borrowed, bit 4 it holds an exclusive borrow).
+عام عرف صنف_استعارة_التقاط_مسير(): ط32 { أرجع 14; }
+
+// The source function a function of the program was lowered from: the
+// Symbol of a function declared without Type parameters (0xFFFFFFFF for
+// none: an instance of a generic template, or code lowering synthesized),
+// or, for a closure or a compile-time block, the function it is written in
+// (الأم, 0xFFFFFFFF for none).
+عام نوع أصل_دالة_مصدرية_مسير = {
+    الرمز: ط32,
+    الأم: ط32
 };
 
 // The place of one runtime check, recorded by lowering: an integer
@@ -985,7 +1146,8 @@
     | عملية_مسير.بناء_صندوق(ح0) -> { أرجع عملية_مسير.بناء_صندوق(ح0); }
     | عملية_مسير.بناء_إغلاق(ح0) -> { أرجع عملية_مسير.بناء_إغلاق(انسخ_مملوكا_بناء_إغلاق_مسير(&ح0)); }
     | عملية_مسير.استخراج_التقاط(ح0) -> { أرجع عملية_مسير.استخراج_التقاط(ح0); }
-    | عملية_مسير.نداء(ح0) -> { أرجع عملية_مسير.نداء(انسخ_مملوكا_نداء_مسير(&ح0)); };
+    | عملية_مسير.نداء(ح0) -> { أرجع عملية_مسير.نداء(انسخ_مملوكا_نداء_مسير(&ح0)); }
+    | عملية_مسير.ملكية_مكان(ح0) -> { أرجع عملية_مسير.ملكية_مكان(ح0); };
 }
 
 عام عرف انسخ_مملوكا_تجميع_مسير(القيمة: &تجميع_مسير): تجميع_مسير {
@@ -1152,7 +1314,11 @@
         أصول_مواقع_التصحيح: انسخ_أصول_مواقع_مسير(&(*القيمة).أصول_مواقع_التصحيح),
         البيئات_الساكنة: انسخ_بيئات_ساكنة_مسير(&(*القيمة).البيئات_الساكنة),
         دالة_فشل_فحص_التشغيل: (*القيمة).دالة_فشل_فحص_التشغيل,
-        مواقع_فحوص_التشغيل: انسخ_مواقع_فحوص_مسير(&(*القيمة).مواقع_فحوص_التشغيل)
+        مواقع_فحوص_التشغيل: انسخ_مواقع_فحوص_مسير(&(*القيمة).مواقع_فحوص_التشغيل),
+        // Lowering facts for the legality analysis, which runs before any copy.
+        مصادر_الاستخدامات: [],
+        دوال_المصدر: [],
+        أحداث_الاستعارة: []
     };
     أرجع الناتج;
 }

@@ -1,6 +1,5 @@
 // Waiting on an address (std.os.wait_address) on Linux and Android: the
-// private futex, as Rust's std/src/sys/pal/unix/futex.rs and Go's
-// runtime/os_linux.go (futexsleep/futexwakeup) use it. FUTEX_WAIT_PRIVATE
+// private futex. FUTEX_WAIT_PRIVATE
 // sleeps while the 32-bit cell still holds the expected value; the check and
 // the sleep are one atomic step in the kernel, so a wake between the
 // caller's load and the wait is never lost. FUTEX_WAKE_PRIVATE wakes up to N
@@ -58,7 +57,7 @@
 // The raw result: 0 when woken (or spuriously), -EAGAIN when the cell did
 // not hold the expected value, -EINTR on a signal, -ETIMEDOUT at the
 // deadline. Only the timeout answers خطأ: every other outcome lets the caller
-// re-check its condition, as Rust's futex_wait does.
+// re-check its condition.
 عام عرف انتظر_عند_عنوان_لينكس(الخلية: &ط32, المتوقعة: ط32, المهلة_بالنانو: اختياري عدد): منطقي {
     دع الخام: متغير ط64 = 0;
     طابق المهلة_بالنانو مع

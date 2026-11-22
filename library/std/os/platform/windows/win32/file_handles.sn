@@ -130,8 +130,7 @@
     | نتيجة.خطأ(الخطأ) -> { أرجع نتيجة.خطأ(خطأ_مقبض_ملف_ويندوز.مسار(الخطأ)); }
     | نتيجة.نجح(الوحدات) -> {
         دع الاسم: متغير متجه ط16 = الوحدات;
-        // FILE_SHARE_READ | WRITE | DELETE (7), Rust's default share mode
-        // (OpenOptions::share_mode): other processes may open the file
+        // FILE_SHARE_READ | WRITE | DELETE (7): other processes may open the file
         // too, which std.fs.lock relies on.
         دع المقبض: ط64 = CreateFileW(
             &متغير الاسم[0], 0x80000000, 7, الفارغ,

@@ -191,8 +191,7 @@
         );
     };
     // Unbounded recursion ends with a runtime failure at a fixed frame
-    // limit, as CPython's recursion limit and Lua's LUAI_MAXCCALLS do, rather
-    // than growing the heap-allocated frame stack until host memory runs out.
+    // limit rather than growing the heap-allocated frame stack until host memory runs out.
     إذا (!تقييم_مسبق &&
         عدد_أطر_مفسر(الحالة) >= حد_أطر_تشغيل_مفسر()) {
         أرجع نتيجة_نداء_مفسر.أخفق(

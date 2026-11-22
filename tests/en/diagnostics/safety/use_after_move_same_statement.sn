@@ -1,0 +1,13 @@
+// اختبار: رفض
+// تشخيص: SULTANC-OWNERSHIP-USE-AFTER-MOVE
+// نظير: tests/ar/diagnostics/safety/use_after_move_same_statement.sn
+// خرج-تشخيص-عربي: use_after_move_same_statement.ar.stderr
+// خرج-تشخيص-إنجليزي: use_after_move_same_statement.en.stderr
+// Operands are evaluated left to right: the left operand moves the text into
+// `consume`, so the right operand reads a moved value in the same statement.
+def consume(text: string): int { return length(text) as int; }
+
+def main(): int {
+    let text: string = "four";
+    return consume(text) + (length(text) as int);
+}

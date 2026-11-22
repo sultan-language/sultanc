@@ -1,5 +1,5 @@
-// Graceful shutdown of the std HTTP servers, as Go's http.Server.Shutdown and
-// uvicorn on SIGINT/SIGTERM: once requested, every std server stops accepting
+// Graceful shutdown of the std HTTP servers, also on SIGINT/SIGTERM: once
+// requested, every std server stops accepting
 // connections, lets each request in progress finish and its response go out
 // (with "connection: close"), closes keep-alive connections that wait between
 // requests, and then its run function returns. The evented server gives

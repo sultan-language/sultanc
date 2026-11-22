@@ -11,7 +11,7 @@
 عام مرادف tan_f32 = مثلثات_الأساس.tan_f32;
 
 // Sine, cosine and tangent of an angle in radians, in SultanC arithmetic
-// (no libm). binary64: Go's math package (Cephes polynomials on [-pi/4,
+// (no libm). binary64: Cephes polynomials (on [-pi/4,
 // pi/4]); the argument is reduced with Cody-Waite (pi/4 split in three)
 // below 2^29 and with Payne-Hanek (1280 bits of 4/pi) above, so even
 // sin(1e300) is correctly reduced. binary32: Cephes sinf/cosf/tanf with
@@ -21,7 +21,7 @@
 // so the Payne-Hanek step builds the mantissa and the 128-bit product from
 // exact float steps and 32-bit halves.
 
-// 4/pi = sum of word[i] * 2^(-64 i) (Go's mPi4), generated from 4/pi.
+// 4/pi = sum of word[i] * 2^(-64 i), generated from 4/pi.
 عرف كلمات_أربعة_على_باي(): متجه ط64 {
     دع ك: متغير متجه ط64 = [];
     ألحق(ك, 0x0000000000000001); ألحق(ك, 0x45f306dc9c882a53); ألحق(ك, 0xf84eafa3ea69bb81);
@@ -53,7 +53,7 @@
 }
 
 // The top 53 significant bits of a ط64 as a binary64 (lower bits are
-// truncated, as Go's reduction truncates).
+// truncated, as the reduction requires).
 عرف عائم_من_ط64(القيمة: ط64): ع64 {
     دع الناتج: متغير ع64 = 0.0;
     دع الوحدة: متغير ع64 = 9223372036854775808.0;
@@ -134,7 +134,7 @@
     أرجع القيمة >> الإزاحة;
 }
 
-// Payne-Hanek (Go's trigReduce) for x >= 2^29.
+// Payne-Hanek for x >= 2^29.
 عرف اختزل_كبيرا64(س: ع64): مختزل_مثلثي {
     // x = m * 2^e with 2^52 <= m < 2^53: exact halvings.
     دع ص: متغير ع64 = س;
@@ -142,7 +142,7 @@
     طالما (ص >= 9007199254740992.0) { ص := ص * 0.5; الأس := الأس + 1; }
     طالما (ص < 4503599627370496.0) { ص := ص * 2.0; الأس := الأس - 1; }
     دع م: ط64 = ط64_من_عائم(ص);
-    // Go's exp is e (unbiased exponent minus 52); here x >= 2^29 gives
+    // The exponent e is the unbiased exponent minus 52; here x >= 2^29 gives
     // e >= -23, so e + 61 >= 38.
     دع الموضع: ط64 = (الأس + 61) مثل ط64;
     دع الرقم: طبيعي = (الموضع / 64) مثل طبيعي;

@@ -80,7 +80,7 @@
 عام مرادف rfind = ابحث_نصا_عكسيا;
 عام مرادف contains = يحتوي_نصا;
 
-// Non-overlapping occurrences of المطلوب (Go strings.Count); an empty
+// Non-overlapping occurrences of المطلوب; an empty
 // المطلوب occurs before every Unicode scalar and at the end.
 عام عرف عد_تكرارات_النص(القيمة: &نص, المطلوب: &نص): طبيعي {
     دع عدد_المطلوب: طبيعي = الطول(*المطلوب) مثل طبيعي;
@@ -110,8 +110,8 @@
     أرجع العدد;
 }
 
-// Equal when ASCII letters are compared without case (Rust
-// eq_ignore_ascii_case); other bytes must match exactly.
+// Equal when ASCII letters are compared without case; other bytes must
+// match exactly.
 عام عرف نصان_متساويان_بلا_حالة_أسكي(الأول: &نص, الثاني: &نص): منطقي {
     دع العدد: طبيعي = الطول(*الأول) مثل طبيعي;
     إذا (العدد != (الطول(*الثاني) مثل طبيعي)) { أرجع خطأ; };

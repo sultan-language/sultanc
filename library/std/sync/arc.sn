@@ -1,5 +1,5 @@
-// Shared ownership across threads (docs/en/reference/concurrency.md, "Arc"), after Rust's
-// std::sync::Arc: one heap value, any number of handles, an atomic reference
+// Shared ownership across threads (docs/en/reference/concurrency.md, "Arc"):
+// one heap value, any number of handles, an atomic reference
 // count, and the value dropped exactly once, when the last handle goes.
 //
 // SultanC has no user destructors, so the count and the drop are the ones the
@@ -9,12 +9,12 @@
 // reference atomically (LOCK XADD, LDADDAL, LLVM atomicrmw), dropping it
 // removes one, and the environment's destructor drops the box with the last
 // reference. The closure answers the address of the boxed value, which every
-// handle reads through. The value is reached only through a shared reference
-// (Rust's Deref): mutation across threads goes through a Mutex, an RwLock or
+// handle reads through. The value is reached only through a shared reference:
+// mutation across threads goes through a Mutex, an RwLock or
 // an atomic stored inside.
 //
-// Copying a handle is Rust's Arc::clone (closures are copyable values in
-// SultanC); استنسخ_مشترك spells it out. A handle is safe to move to another
+// Copying a handle clones it (closures are copyable values in SultanC);
+// استنسخ_مشترك spells it out. A handle is safe to move to another
 // thread (its count is atomic), so a spawned closure may capture it
 // (docs/en/reference/type-system.md, "Thread capture rules").
 //
@@ -34,7 +34,7 @@
     أرجع المؤشر;
 }
 
-// Rust's Arc::new.
+// Boxes القيمة behind a first handle.
 عام عرف أنشئ_مشترك<ق>(القيمة: ق): مشترك<ق> {
     دع الصندوق: صندوق متغير ق = صندوق القيمة;
     دع المؤشر: *متغير ق = &متغير (*الصندوق);
@@ -44,14 +44,14 @@
 }
 عام مرادف arc_new = أنشئ_مشترك;
 
-// Rust's Arc::clone: one more handle to the same value.
+// One more handle to the same value.
 عام عرف استنسخ_مشترك<ق>(المشترك: &مشترك<ق>): مشترك<ق> {
     دع الناتج: مشترك<ق> = *المشترك;
     أرجع الناتج;
 }
 عام مرادف arc_clone = استنسخ_مشترك;
 
-// The shared value (Rust's Deref). The reference lives as long as the handle
+// The shared value. The reference lives as long as the handle
 // it was read through.
 عام عرف اقرأ_مشترك<ق>(المشترك: &مشترك<ق>): &ق {
     دع المؤشر: *متغير ق = مؤشر_مشترك(المشترك);
@@ -67,14 +67,14 @@
 }
 عام مرادف arc_as_ptr = مؤشر_مشترك;
 
-// Rust's Arc::ptr_eq: whether two handles share one value.
+// Whether two handles share one value.
 عام عرف هل_المشترك_نفسه<ق>(الأول: &مشترك<ق>, الثاني: &مشترك<ق>): منطقي {
     أرجع عدد_مراجع_حمولة_مشترك(الأول, صواب) == عدد_مراجع_حمولة_مشترك(الثاني, صواب);
 }
 عام مرادف arc_ptr_eq = هل_المشترك_نفسه;
 
-// Rust's Arc::strong_count: how many handles exist now. Another thread may
-// change it at any moment, so it is a snapshot (Rust documents the same).
+// How many handles exist now. Another thread may
+// change it at any moment, so it is a snapshot.
 // The count is the environment's reference count, the 8-byte slot after the
 // code pointer (docs/en/reference/ownership.md, "Closure environments").
 عام عرف عدد_مراجع_مشترك<ق>(المشترك: &مشترك<ق>): طبيعي {

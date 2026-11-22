@@ -1,0 +1,12 @@
+// اختبار: رفض
+// تشخيص: SULTANC-COMPTIME-NON-CONSTANT
+// نظير: tests/en/diagnostics/e2e/top_level_mutable_constructor.sn
+// خرج-تشخيص-عربي: top_level_mutable_constructor.ar.stderr
+// خرج-تشخيص-إنجليزي: top_level_mutable_constructor.en.stderr
+// قيمة على مستوى الوحدة يبنيها منشئ تُبنى من جديد حيث تُقرأ، فلا تكون مخزنا
+// يكتب فيه البرنامج: تشخيص للمستخدم عند التصريح، لا خطأ خفض داخلي.
+نوع لون = | أحمر | أخضر;
+دع الحالي: متغير لون = لون.أحمر();
+عرف الرئيسية(): ص32 {
+    أرجع 0;
+}

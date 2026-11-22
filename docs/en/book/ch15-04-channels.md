@@ -54,6 +54,11 @@ The worker thread owns the sender, captured by its closure. When the thread fini
 the sender are freed, the channel has no senders left, and `recv` returns an error instead of waiting
 forever. That is how `main` knows that nothing more will come.
 
+`channel<T>()` makes both ends at once, as one `channel_ends<T>` value. `channel_ends_sender(&ends)` and
+`channel_ends_receiver(&ends)` borrow each end, as in `send(channel_ends_sender(&ends), 7)`. To give
+each end its own owner, as the program above does, make them one at a time with `channel_receiver` and
+`sender_for`.
+
 `sender_clone` makes another sender for the same channel, so that several threads can send to one
 receiver. The `examples/en/sync` folder of the repository has a program for every primitive in
 `std.sync`: atomics, read-write locks, condition variables, bounded queues.

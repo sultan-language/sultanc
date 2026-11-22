@@ -215,9 +215,8 @@
 // linker name (the MSIR external's name, without a format's C prefix), المكتبة
 // the library as the target's loader names it: a PE DLL (`kernel32.dll`) or a
 // Mach-O install name (`/usr/lib/libSystem.B.dylib`). The COFF and Mach-O
-// linkers import a symbol no input defines from its declared library, as
-// rustc's raw-dylib import libraries and Go's cgo_import_dynamic directives
-// carry the library of each import to the linker; WebAssembly objects carry
+// linkers import a symbol no input defines from its declared library (the
+// library of each import travels to the linker); WebAssembly objects carry
 // their import modules themselves. Previously the compiler held fixed
 // per-target symbol tables (runtime_symbol_query_context.sn).
 عام نوع استيراد_مكتبة_مصرح_ربط = {

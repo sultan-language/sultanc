@@ -20,8 +20,8 @@
 // stack, at [sp], while fixed arguments use x0-x7; x86-64 passes it in a
 // register like a fixed one. So on arm64 the call names six unused fixed
 // arguments (x2-x7) and the value as a ninth, 8-byte argument, which the
-// standard ABI places exactly at [sp] (Nahr item 13), as Go's darwin
-// trampolines and Rust's libc call it; on x86-64 it is the third argument.
+// standard ABI places exactly at [sp] (Nahr item 13); on x86-64 it is the
+// third argument.
 إذا (الهدف.المعمارية == «aarch64») {
     خارجي «/usr/lib/libSystem.B.dylib» عرف fcntl_داروين(
         الواصف: ص32, الأمر: ص32,
@@ -44,7 +44,7 @@
 ): ص32;
 
 // Apple getaddrinfo returns an owned linked list. Apple's <netdb.h> (the BSD
-// layout, as FreeBSD and Rust's libc for Apple) declares struct addrinfo as
+// layout, as FreeBSD) declares struct addrinfo as
 // ai_flags, ai_family, ai_socktype, ai_protocol, ai_addrlen (socklen_t),
 // ai_canonname, ai_addr, ai_next: ai_canonname at 24 precedes ai_addr at 32,
 // the reverse of glibc's Linux layout. Previously the record followed the

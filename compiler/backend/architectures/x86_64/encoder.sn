@@ -2057,7 +2057,7 @@
     ألحق_بايت_إكس(البايتات, الرمز); ألحق_بايت_إكس(البايتات, المسافة);
 }
 
-// float -> iN/uN, Rust `as`: truncate, saturate at the type's bounds, NaN -> 0.
+// float -> iN/uN, `as`: truncate, saturate at the type's bounds, NaN -> 0.
 // Bounds are compared as floats (exact powers of two), so CVTT only ever
 // sees an in-range value; u64 above 2^63 converts x - 2^63 and sets bit 63.
 عرف ألحق_عائم_إلى_صحيح_إكس(
@@ -3246,7 +3246,7 @@
 // rdi=flags, rsi=stack, rdx=parent tid, r10=child tid, r8=tls, r9=closure):
 // the closure is pushed on the child's stack, and the child pops it into
 // the closure-environment register (R15), calls it, and exits the thread
-// (musl src/thread/x86_64/clone.s; Go runtime·clone).
+// (as musl src/thread/x86_64/clone.s does).
 عرف ألحق_ذيل_استنساخ_خيط_إكس(البايتات: &متغير متجه ط8): فراغ {
     // and rsi,-16; sub rsi,8; mov [rsi],r9
     ألحق_بايت_إكس(البايتات, 0x48); ألحق_بايت_إكس(البايتات, 0x83); ألحق_بايت_إكس(البايتات, 0xE6); ألحق_بايت_إكس(البايتات, 0xF0);

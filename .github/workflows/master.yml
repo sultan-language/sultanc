@@ -1,4 +1,4 @@
-# master: what the owner releases, as Rust's stable branch. It moves only by
+# master: what the owner releases, the stable branch. It moves only by
 # promotion from beta (promote.yml), so every commit on it is a commit of beta
 # that passed the full tier. This workflow runs no matrix: it checks that the
 # commit on master is qualified, and fails loudly when it is not (master was

@@ -357,8 +357,8 @@
     الناتج: نوع_تركيبي
 ): اختياري تصريح_دالة {
     إذا (خارجية) {
-        // `= «symbol»` binds the declaration to an exact linker symbol (Rust's
-        // link_name, an asm label in C) when it differs from the source name.
+        // `= «symbol»` binds the declaration to an exact linker symbol (an asm
+        // label in C) when it differs from the source name.
         دع اسم_الربط: متغير اختياري متجه ط8 = اختياري.لا_شيء();
         إذا (اقبل(الرموز, المؤشر, رمز.فاصل_تعريف())) {
             طابق حلل_نص_ربط_أصلي(الرموز, المؤشر) مع
@@ -485,8 +485,7 @@
     دع البداية: نطاق = نطاق_الحالي(الرموز, المؤشر);
     دع خارجية: منطقي = اقبل(الرموز, المؤشر, رمز.خارجي());
     // `خارجي «library» عرف`: the platform library that exports the function,
-    // named at the declaration (as Rust names it with
-    // `#[link(name = ...)]` on an extern block).
+    // named at the declaration.
     دع المكتبة: متغير اختياري متجه ط8 = اختياري.لا_شيء();
     إذا (خارجية && نوع_الحالي(الرموز, المؤشر) == رمز.حرفي_نص()) {
         طابق حلل_نص_ربط_أصلي(الرموز, المؤشر) مع
@@ -1044,7 +1043,7 @@
 // `module NAME { lang: spelling, ... };` (`وحدة`): spellings a folder's root
 // file declares for its direct children. `module NAME = LIBRARY.path { ... };`
 // (the spellings optional) re-exports another library's module or folder as
-// the child NAME, as Rust's `pub use core::...;` in std. They name no declaration, so the
+// the child NAME (std re-exports parts of core so). They name no declaration, so the
 // parser checks the shape and keeps only the keyword's span
 // (وحدة_مصدر.تصريحات_الوحدات), by which a declaration outside a root file
 // is reported. Module loading reads the content from the root file

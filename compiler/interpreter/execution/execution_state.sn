@@ -51,8 +51,8 @@
     // The foreign-call bridge's dynamic symbols (host_dynamic.sn): the
     // host's loader, the libraries opened by name, and the address found for
     // each extern by its ID (0 until it is first called). Each library is
-    // opened and each function found once, as ctypes keeps a CDLL handle
-    // and caches its function pointers.
+    // opened and each function found once: the handles and the function
+    // pointers are kept.
     المحمل_الديناميكي: محمل_ديناميكي_مضيف,
     المكتبات_المفتوحة: متجه مكتبة_مفتوحة_مفسر,
     عناوين_الخارجيات: متجه ط64,
@@ -101,8 +101,7 @@
 };
 
 // What the interpreter needs of a function on every call and every operand
-// read, derived once from the verified program, as CPython keeps it in a
-// code object and Lua in a Proto: the slot count, the entry block, the
+// read, derived once from the verified program: the slot count, the entry block, the
 // parameter Value IDs, and one numeric descriptor per Value resolved from
 // its Type through the registry (وصف_رقمي_لنوع_مفسر) instead of on every
 // read. صالح is false when the program lacks something a call needs; the

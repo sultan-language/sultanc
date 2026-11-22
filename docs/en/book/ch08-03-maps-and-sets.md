@@ -140,8 +140,7 @@ def main(): int {
         append(shown, int_to_text(keys[i]));
     }
     println(join(&shown, &" "));
-    let wanted: int = 20;
-    match btree_map_get(&ranks, &wanted) with
+    match btree_map_get(&ranks, &20) with
     | option.some(name) -> { println(name); }
     | option.none -> { println("missing"); };
     return 0;
@@ -154,8 +153,9 @@ second
 ```
 
 The keys were inserted as 30, 10, 20, and come out sorted. `btree_map_keys` copies the keys into a new
-vector, so it needs a plain key type such as `int`; for text keys, keep a `text_set` of the keys beside
-the map, as in the word count.
+vector, so it needs a plain key type such as `int`; the compiler refuses it at the call for a key type
+that owns memory, and names the function. For such keys, text for example, `btree_map_keys_cloned`
+returns a copy of each key, in order.
 
 ## Sets of any type
 
@@ -241,7 +241,7 @@ def main(): int {
 
 - `vector T` holds values in order; `append` adds, `v[i]` reads, `length` counts.
 - `string` is UTF-8 text: `length` counts bytes, `char_count` characters, and positions are bytes.
-- Text is joined with `concat`, `concat3` and `join`, compared with `texts_equal`, and cut apart with
+- Text is joined with `concat`, `concat3` and `join`, compared with `==`, and cut apart with
   `trim`, `split`, `replace` and `substring`.
 - Maps find values by key, sets keep distinct values. Lookups return an `option`, inserts a `result`.
 - Collections of any type take functions to compare or hash their keys.

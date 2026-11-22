@@ -1,5 +1,5 @@
-// TLS 1.3 server handshake (RFC 8446 2, 4.1-4.4, 7.1), following the state
-// sequence of Go crypto/tls handshake_server_tls13.go.
+// TLS 1.3 server handshake (RFC 8446 2, 4.1-4.4, 7.1), following the
+// state sequence of the RFC.
 //
 // The identity comes from a PKCS#12 container (std.tls.pkcs12). The server
 // signs CertificateVerify with the scheme its key allows and the client
@@ -13,8 +13,7 @@
 // HelloRetryRequest asks for it. Previously only RSA keys and X25519 were
 // accepted. PSKs are ignored (full handshake); early data, which requires a
 // ticket this server never issues, is refused. With protocols configured the
-// server selects ALPN (RFC 7301) by its own preference, as Go's crypto/tls,
-// and refuses a client whose list has none of them (no_application_protocol).
+// server selects ALPN (RFC 7301) by its own preference, and refuses a client whose list has none of them (no_application_protocol).
 // With client verification
 // enabled a CertificateRequest is sent and the client chain is validated for
 // clientAuth against the configured client roots (or the system anchors).
@@ -340,7 +339,7 @@
         ألحق_بايتات_تشفير(&متغير النص, &الرسالة);
     };
 
-    // ALPN: the server's first protocol the client offered (Go's negotiateALPN).
+    // ALPN: the server's first protocol the client offered.
     إذا ((الطول((*الإعداد).البروتوكولات) مثل طبيعي) > 0 && (الطول(الترحيب.البروتوكولات) مثل طبيعي) > 0) {
         دع ب: متغير طبيعي = 0;
         دع وجد: متغير منطقي = خطأ;

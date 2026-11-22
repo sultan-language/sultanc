@@ -782,9 +782,9 @@
         | صنف_نوع_دوارف.مؤشر(الداخل) -> { ألحق_ليب128_دوارف(ب, 7); ألحق_اسم_دوارف(ب, السياسة, بيانات_السلاسل, السلاسل, رقع_الأقسام, اسم_النوع); ألحق_ليب128_دوارف(ب, (*وصف_النوع).الحجم); ألحق_مرجع_نوع_مؤجل_دوارف(ب, السياسة, الرقع, الداخل); }
         // A SultanC reference is dereferenced explicitly (`*target`), as a C
         // pointer is, so it is a DW_TAG_pointer_type named after the source
-        // type (`&mutable int`), as Rust describes `&mut T` and as the LLVM
-        // provider does: gdb and lldb then print `*target`, which a C++
-        // reference type (DW_TAG_reference_type) refuses.
+        // type (`&mutable int`), as the LLVM provider does: gdb and lldb then
+        // print `*target`, which a reference type (DW_TAG_reference_type)
+        // refuses.
         | صنف_نوع_دوارف.مرجع(الداخل) -> { ألحق_ليب128_دوارف(ب, 7); ألحق_اسم_دوارف(ب, السياسة, بيانات_السلاسل, السلاسل, رقع_الأقسام, اسم_النوع); ألحق_ليب128_دوارف(ب, (*وصف_النوع).الحجم); ألحق_مرجع_نوع_مؤجل_دوارف(ب, السياسة, الرقع, الداخل); }
         | صنف_نوع_دوارف.صندوق(الداخل) -> { ألحق_ليب128_دوارف(ب, 7); ألحق_اسم_دوارف(ب, السياسة, بيانات_السلاسل, السلاسل, رقع_الأقسام, اسم_النوع); ألحق_ليب128_دوارف(ب, (*وصف_النوع).الحجم); ألحق_مرجع_نوع_مؤجل_دوارف(ب, السياسة, الرقع, الداخل); }
         | صنف_نوع_دوارف.اسم_مستعار(الداخل) -> {

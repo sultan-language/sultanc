@@ -140,8 +140,10 @@
 ): متجه منطقي {
     طابق المستوى مع
     | مستوى_تحسين_مسير.بلا -> {
-        // Locals kept in frame slots are read from them (debug_contract.sn).
+        // Locals kept in frame slots are read from them, and only from them
+        // (debug_contract.sn).
         اربط_أماكن_محليات_تصحيح_مسير(التصحيح);
+        اجعل_الخانات_مواقع_المحليات_تصحيح_مسير(البرنامج, الأنواع, التصحيح);
         // No optimization, but capture-free closures still get static
         // environments (a function without an allocator relies on it).
         دع المبقاة: متجه منطقي = دوال_محسنة_مسير(البرنامج, النطاق);

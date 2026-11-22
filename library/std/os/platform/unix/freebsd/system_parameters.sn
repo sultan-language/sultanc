@@ -35,8 +35,7 @@
 
 // kern.proc.pathname of this process (CTL_KERN 1, KERN_PROC 14,
 // KERN_PROC_PATHNAME 12, pid -1: sys/sys/sysctl.h), the path the kernel
-// recorded when it executed the image, as Rust's std::env::current_exe
-// reads it on FreeBSD. The bytes exclude the terminating NUL.
+// recorded when it executed the image. The bytes exclude the terminating NUL.
 عام عرف اقرأ_مسار_البرنامج_فري_بي_إس_دي(): نتيجة متجه ط8, خطأ_نظام_أصلي {
     دع الاسم: متغير متجه ص32 = [];
     ألحق(الاسم, 1);
@@ -67,8 +66,8 @@
     };
 }
 
-// hw.ncpu (CTL_HW, HW_NCPU 3: an int), the number of CPUs; Rust's
-// available_parallelism falls back to it when cpuset_getaffinity fails.
+// hw.ncpu (CTL_HW, HW_NCPU 3: an int), the number of CPUs; the available
+// parallelism falls back to it when cpuset_getaffinity fails.
 عام عرف اقرأ_عدد_المعالجات_فري_بي_إس_دي(): نتيجة ط64, خطأ_نظام_أصلي {
     دع الاسم: متغير متجه ص32 = [];
     ألحق(الاسم, متغير_عتاد_فري_بي_إس_دي() مثل ص32);

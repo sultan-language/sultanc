@@ -8,9 +8,7 @@
 استورد نظام_التشغيل.أخطاء;
 
 // Local and peer addresses of sockets, and datagrams to and from any
-// address on an unconnected UDP socket (Rust UdpSocket::send_to,
-// recv_from, local_addr, peer_addr; Go net.UDPConn.WriteTo, ReadFrom,
-// LocalAddr, RemoteAddr). Binding to port 0 and reading the local address
+// address on an unconnected UDP socket. Binding to port 0 and reading the local address
 // gives the port the system chose. Errors are std.net's numeric statuses.
 
 // A received datagram: its length and who sent it.

@@ -120,8 +120,8 @@
 
 // Linux- and FreeBSD-kernel ELF executables SultanC's own ELF linker does
 // not lay out (i686, ARMv7, PowerPC 64, s390x, MIPS64 and SPARC V9). The LLVM provider emits their
-// `_start` and an external LLD links them (driver/external_linker.sn), the
-// split rustc makes between code generation and system linking.
+// `_start` and an external LLD links them (driver/external_linker.sn): code
+// generation and system linking are split.
 عام عرف يستخدم_رابط_إلف_خارجي(الهدف: &واصف_هدف): منطقي {
     إذا ((*الهدف).صيغة_الكائن != صيغة_كائن_هدف.إلف()) { أرجع خطأ; };
     إذا (يستخدم_رابط_إلف_الداخلي(الهدف)) { أرجع خطأ; };

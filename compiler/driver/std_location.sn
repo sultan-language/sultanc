@@ -1,4 +1,4 @@
-// Where the standard library is, as Go finds GOROOT and rustc its sysroot:
+// Where the standard library is:
 //
 //   1. $SULTANC_STD, the library directory (the one holding std/). Set, it
 //      is the answer even when it is wrong, so its error names it.
@@ -100,8 +100,8 @@
     };
     دع الحزم: متغير متجه حزمة_رسم = [];
     ألحق(الحزم, الحزمة);
-    // The libraries beneath std, when the library directory has them (Rust's
-    // alloc and core): alloc/ (التخصيص) and core/ (الأساس), in that order.
+    // The libraries beneath std, when the library directory has them (alloc
+    // and core): alloc/ (التخصيص) and core/ (الأساس), in that order.
     // std sees both, alloc sees core, core sees nothing else
     // (package_environment.sn).
     دع السفلى: متجه نص = [«alloc», «core»];

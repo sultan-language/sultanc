@@ -1,0 +1,59 @@
+error[SULTANC-TYPE-MISMATCH]: expected `int`, found `string` — The value does not match the declared type of its destination.
+  --> tests/en/diagnostics/e2e/ownership_errors_in_order.sn:39:22..39:28
+    |
+ 39 |     let count: int = "text";
+    |                      ^^^^^^
+    |
+
+error[SULTANC-BORROW-CONFLICT]: borrow conflict — The conflicting borrowed value is `values`. The value is already borrowed mutably, so it cannot be borrowed again.
+  --> tests/en/diagnostics/e2e/ownership_errors_in_order.sn:14:5..14:46
+    |
+ 14 |     let values: mutable vector int = [40, 2];
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+error[SULTANC-OWNERSHIP-USE-AFTER-MOVE]: use after move — The value used after being moved is `text`. The value is used after its ownership was moved.
+  --> tests/en/diagnostics/e2e/ownership_errors_in_order.sn:24:24..24:28
+    |
+ 24 |     return a + consume(text);
+    |                        ^^^^ invalid use
+    |
+  ::: tests/en/diagnostics/e2e/ownership_errors_in_order.sn:22:5..22:32
+    |
+ 22 |     let text: string = "twice";
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ original owner
+    |
+  ::: tests/en/diagnostics/e2e/ownership_errors_in_order.sn:23:26..23:30
+    |
+ 23 |     let a: int = consume(text);
+    |                          ^^^^ value moved here
+    |
+
+error[SULTANC-OWNERSHIP-USE-AFTER-MOVE]: use after move — The value used after being moved is `value`. The value is used after its ownership was moved.
+  --> tests/en/diagnostics/e2e/ownership_errors_in_order.sn:29:25..29:30
+    |
+ 29 |     return first + sink(value);
+    |                         ^^^^^ invalid use
+    |
+  ::: tests/en/diagnostics/e2e/ownership_errors_in_order.sn:27:22..27:30
+    |
+ 27 | def generic_twice<T>(value: T, sink: fn(T): int): int {
+    |                      ^^^^^^^^ original owner
+    |
+  ::: tests/en/diagnostics/e2e/ownership_errors_in_order.sn:28:27..28:32
+    |
+ 28 |     let first: int = sink(value);
+    |                           ^^^^^ value moved here
+    |
+
+error[SULTANC-FLOW-USE-BEFORE-INITIALIZATION]: use before initialization — The value used before initialization is `text`. The value is used before it is initialized.
+  --> tests/en/diagnostics/e2e/ownership_errors_in_order.sn:35:20..35:24
+    |
+ 35 |     return consume(text);
+    |                    ^^^^ invalid use
+    |
+  ::: tests/en/diagnostics/e2e/ownership_errors_in_order.sn:33:5..33:22
+    |
+ 33 |     let text: string;
+    |     ^^^^^^^^^^^^^^^^^ declared here
+    |

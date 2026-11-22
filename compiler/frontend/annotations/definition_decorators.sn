@@ -14,8 +14,8 @@
 استورد compiler.frontend.parser.result;
 استورد المكتبة.نصوص.من_بايتات;
 
-// Definition-time decorators (Nahr item 22), as Python's decorators that
-// register a function and Go's init: `@@d(a1, ..., ak) def f` keeps f as
+// Definition-time decorators (Nahr item 22), which register a function when
+// the program starts: `@@d(a1, ..., ak) def f` keeps f as
 // written and generates
 //
 //   def مسجل_تعريف__<source>_<n>__f(): void { d(a1, ..., ak, f); }
@@ -85,7 +85,7 @@
 
 // `@@track_caller` / `@@يتتبع_المستدعي` marks a function whose last
 // parameter is a std.debug.location source location that each call fills
-// with its own place, as Rust's `#[track_caller]`: one built-in attribute,
+// with its own place: one built-in attribute,
 // no arguments. It leaves the declaration here and sets يتتبع_المستدعي; the
 // Type pass checks the signature and the calls (types/semantic_pipeline.sn)
 // and lowering passes the location (msir/lowering/caller_location.sn).
@@ -98,7 +98,7 @@
 }
 
 // `@@panic_handler` / `@@معالج_الانهيار` marks the program's panic handler,
-// as Rust's `#[panic_handler]`: one built-in attribute, no arguments. The
+// one built-in attribute, no arguments. The
 // function takes the message (نص) and never returns; core's إنهيار calls it
 // (msir/semantic_lowering.sn, اربط_معالج_الانهيار_مسير). std's,
 // std.process.panic_handler, is bound by name; a program's own replaces it.
@@ -111,8 +111,8 @@
 }
 
 // `@@c_abi` / `@@اصطلاح_سي` compiles the function with the C calling
-// convention, as Zig's callconv(.c) (translate-c gives every translated C
-// function that convention): one built-in attribute, no arguments. C calls
+// convention (Jisr gives every translated C function that convention): one
+// built-in attribute, no arguments. C calls
 // such a function directly at its address (بدائي_عنوان_دالة_سي), as a
 // callback such as a qsort comparator or a window procedure.
 عام عرف سمة_اتفاقية_سي(الأصل: &متجه ط8, السمة: &سمة_تصريح): منطقي {
@@ -125,9 +125,8 @@
 
 // `@@global_alloc`, `@@global_realloc`, `@@global_dealloc` (`@@تخصيص_عام`,
 // `@@إعادة_تخصيص_عام`, `@@تحرير_عام`) mark the global allocator's three
-// entry points (library/core/memory/allocator.sn), as Rust's
-// #[global_allocator] names the GlobalAlloc whose alloc, realloc and dealloc
-// generated code calls: one built-in attribute each, no arguments. The
+// entry points (library/core/memory/allocator.sn), the allocate, reallocate
+// and release functions generated code calls: one built-in attribute each, no arguments. The
 // result is the entry point (1, 2, 3), or 0. std's are std.os.
 // allocation_cache's; a program that marks its own replaces them.
 عام عرف دور_سمة_المخصص(الأصل: &متجه ط8, السمة: &سمة_تصريح): ط8 {

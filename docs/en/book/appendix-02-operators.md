@@ -12,8 +12,8 @@ and English programs; only `?` has an Arabic spelling too, `؟`.
 | `+` `-` `*` `/` | `a + b` | arithmetic; integer `/` rounds toward zero | [3.2](ch03-02-data-types.md) |
 | `%` | `a % b` | remainder, with the sign of `a` | [3.2](ch03-02-data-types.md) |
 | `-` | `-a` | negation | [3.2](ch03-02-data-types.md) |
-| `==` `!=` | `a == b` | equal, not equal | [3.2](ch03-02-data-types.md) |
-| `<` `<=` `>` `>=` | `a < b` | order comparisons | [3.2](ch03-02-data-types.md) |
+| `==` `!=` | `a == b` | equal, not equal; text compares by contents | [3.2](ch03-02-data-types.md), [8.2](ch08-02-strings.md) |
+| `<` `<=` `>` `>=` | `a < b` | order comparisons, for numbers and characters | [3.2](ch03-02-data-types.md) |
 | `&&` `\|\|` | `a && b` | and, or; the right side is evaluated only when needed | [3.2](ch03-02-data-types.md) |
 | `!` | `!a` | not | [3.2](ch03-02-data-types.md) |
 | `&` `\|` `^` | `a & b` | bitwise and, or, exclusive or | [3.2](ch03-02-data-types.md) |
@@ -38,7 +38,7 @@ and English programs; only `?` has an Arabic spelling too, `؟`.
 | `{ }` | `{ x: 1, y: 2 }` | a block; a record type or value | [3.5](ch03-05-control-flow.md), [5.1](ch05-01-defining-records.md) |
 | `( )` | `f(x)`, `(1, 2)` | a call; a tuple; grouping | [3.3](ch03-03-how-functions-work.md) |
 | `[ ]` | `[1, 2]`, `v[0]` | a vector; a position | [8.1](ch08-01-vectors.md) |
-| `.` | `p.x`, `std.io` | a field; a path | [5.1](ch05-01-defining-records.md), [7.3](ch07-03-import-forms.md) |
+| `.` | `p.x`, `std.io` | a field, also through a reference; a path | [5.1](ch05-01-defining-records.md), [5.3](ch05-03-functions-on-records.md), [7.3](ch07-03-import-forms.md) |
 | `,` | `f(a, b)` | separates items | |
 | `\|` | `\| Red \| Green` | starts an enum case or a `match` branch; "or" in a pattern | [6.1](ch06-01-defining-an-enum.md) |
 | `->` | `\| 0 -> { … }` | introduces a `match` branch's block, or an anonymous function's body | [6.2](ch06-02-match.md), [10.3](ch10-03-closures.md) |

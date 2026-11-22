@@ -241,16 +241,15 @@ without looking at `add_bonus` itself.
 
 ## Returning two values
 
-A function returns one value, but that value can be a tuple. Build the tuple in a variable, then return
-the variable:
+A function returns one value, but that value can be a tuple. Write the parts in parentheses after
+`return`:
 
 ```sultan
 import std.io.println;
 import std.text.number;
 
 def divide(a: int, b: int): (int, int) {
-    let answer: (int, int) = (a / b, a % b);
-    return answer;
+    return (a / b, a % b);
 }
 
 def main(): int {

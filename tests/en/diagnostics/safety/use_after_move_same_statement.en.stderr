@@ -1,0 +1,16 @@
+error[SULTANC-OWNERSHIP-USE-AFTER-MOVE]: use after move — The value used after being moved is `text`. The value is used after its ownership was moved.
+  --> tests/en/diagnostics/safety/use_after_move_same_statement.sn:12:36..12:40
+    |
+ 12 |     return consume(text) + (length(text) as int);
+    |                                    ^^^^ invalid use
+    |
+  ::: tests/en/diagnostics/safety/use_after_move_same_statement.sn:11:5..11:31
+    |
+ 11 |     let text: string = "four";
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^ original owner
+    |
+  ::: tests/en/diagnostics/safety/use_after_move_same_statement.sn:12:20..12:24
+    |
+ 12 |     return consume(text) + (length(text) as int);
+    |                    ^^^^ value moved here
+    |

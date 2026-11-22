@@ -1,5 +1,5 @@
-// Handing a connection to the program (Nahr item 14), as Go's http.Hijacker
-// and hyper's upgrade hand the socket over. The std servers call a
+// Handing a connection, its socket included, to the program (Nahr item 14).
+// The std servers call a
 // مسلم_اتصال_ويب after they wrote the response head when:
 //
 //   - the response switches protocols: status 101 (WebSocket) or a 2xx answer

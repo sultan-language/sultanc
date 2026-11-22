@@ -1,0 +1,41 @@
+error[SULTANC-BORROW-CONFLICT]: borrow conflict — The conflicting borrowed value is `value`. The value is borrowed for reading, so it cannot be borrowed mutably.
+  --> tests/en/diagnostics/e2e/borrow_conflicts_in_order.sn:15:5..15:32
+    |
+ 15 |     let value: mutable int = 1;
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+error[SULTANC-BORROW-CONFLICT]: borrow conflict — The conflicting borrowed value is `value`. The value is already borrowed mutably, so it cannot be borrowed again.
+  --> tests/en/diagnostics/e2e/borrow_conflicts_in_order.sn:22:5..22:32
+    |
+ 22 |     let value: mutable int = 1;
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+error[SULTANC-BORROW-CONFLICT]: borrow conflict — The conflicting borrowed value is `value`. The value is already borrowed mutably, so it cannot be borrowed again.
+  --> tests/en/diagnostics/e2e/borrow_conflicts_in_order.sn:29:5..29:24
+    |
+ 29 |     let value: int = 1;
+    |     ^^^^^^^^^^^^^^^^^^^
+    |
+
+error[SULTANC-BORROW-CONFLICT]: borrow conflict — The conflicting borrowed value is `value`. The value is borrowed for reading, so it cannot be borrowed mutably.
+  --> tests/en/diagnostics/e2e/borrow_conflicts_in_order.sn:36:5..36:32
+    |
+ 36 |     let value: mutable int = 1;
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+error[SULTANC-BORROW-CONFLICT]: borrow conflict — The conflicting borrowed value is `value`. The value is already borrowed mutably, so it cannot be borrowed again.
+  --> tests/en/diagnostics/e2e/borrow_conflicts_in_order.sn:41:5..41:32
+    |
+ 41 |     let value: mutable int = 1;
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+error[SULTANC-BORROW-CONFLICT]: borrow conflict — The conflicting borrowed value is `items`. The value is already borrowed mutably, so it cannot be borrowed again.
+  --> tests/en/diagnostics/e2e/borrow_conflicts_in_order.sn:48:5..48:41
+    |
+ 48 |     let items: mutable vector int = [1];
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |

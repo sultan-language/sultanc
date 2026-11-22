@@ -3,8 +3,8 @@
 // نظير: tests/ar/diagnostics/safety/thread_capture_global.sn
 // The spawn capture check (docs/en/reference/type-system.md, "Thread capture rules"): a
 // writable module variable is shared by every thread and is not atomic, so
-// a closure handed to another thread may not use it outside an unsafe block
-// (Rust's static mut). Use an atomic, a Mutex or an Arc.
+// a closure handed to another thread may not use it outside an unsafe block.
+// Use an atomic, a Mutex or an Arc.
 import std.thread.thread;
 
 let hits: mutable i64 = 0;

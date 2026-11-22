@@ -27,7 +27,7 @@
 // file may hold `module` declarations.
 //
 // A declaration may also re-export another library's module or folder as one
-// of the folder's children, as Rust's std declares `pub use core::...;`:
+// of the folder's children, as std does for parts of core:
 //
 //   module compare = core.text.compare { ar: مقارنة };
 //   module json = alloc.json { ar: جيسون };

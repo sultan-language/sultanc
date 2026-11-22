@@ -729,7 +729,7 @@
 // The keys in order, each a copy (`استنسخ`), for keys that own memory
 // (`نص`, a vector): مفاتيح_خريطة_شجرة_بي copies its keys bit for bit and so
 // takes only plain keys (docs/en/reference/ownership.md, "Generic
-// templates"), as Rust's `map.keys().cloned()` against `Copy` keys.
+// templates").
 عام عرف مفاتيح_خريطة_شجرة_بي_منسوخة<م, ق>(الخريطة: &خريطة_شجرة_بي<م, ق>): متجه م {
     دع الناتج: متغير متجه م = [];
     إذا ((*الخريطة).العدد > 0) {

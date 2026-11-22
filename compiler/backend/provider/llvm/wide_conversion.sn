@@ -12,7 +12,7 @@
 // - i64/u64 -> f32: the magnitude, cut to 53 bits with the lost bits kept as
 //   a sticky bit (so the single f64 -> f32 rounding is correct), scaled back;
 // - f32/f64 -> i64/u64: the magnitude split at 2^32 into two u32
-//   conversions (the subtraction is exact), then Rust's saturation.
+//   conversions (the subtraction is exact), then the saturation of `as`.
 // Every comparison and select is branch-free; no out-of-range value ever
 // reaches a 32-bit conversion.
 
@@ -95,7 +95,7 @@
     أرجع LLVMBuildSelect(الباني, سالب, المنفي, الضيق, &متغير ف[0]);
 }
 
-// f32/f64 -> i64/u64 with Rust's saturating semantics (NaN -> 0).
+// f32/f64 -> i64/u64 with the saturating semantics of `as` (NaN -> 0).
 عام عرف عائم_إلى_صحيح64_برمجي_إل_إل_في_إم(
     الحالة: &حالة_مزود_إل_إل_في_إم,
     المصدر: مرجع_قيمة_إل_إل_في_إم,

@@ -29,6 +29,10 @@
 استورد compiler.msir.msir_optimization_pipeline;
 استورد compiler.msir.runtime_checks;
 استورد compiler.msir.msir_text;
+استورد compiler.msir.ssf.ownership_legality;
+استورد compiler.msir.ssf.template_legality;
+استورد compiler.driver.ownership_diagnostics;
+استورد compiler.frontend.later_phase_facts;
 استورد compiler.backend.native_output;
 استورد compiler.backend.diagnostic_translation;
 استورد compiler.msir.diagnostic_translation;
@@ -1250,10 +1254,12 @@
     }
     | _ -> { };
 
-    // `sultanc test` runs the root package's tests only, as Cargo runs a
-    // crate's own tests and never its dependencies': the source folder of the
-    // root module's package, read before the environment moves to the Frontend.
+    // `sultanc test` runs the root package's tests only, never its
+    // dependencies': the source folder of the root module's package, read before the environment moves to the Frontend.
     دع دليل_الحزمة_الجذرية: متغير اختياري نص = اختياري.لا_شيء();
+    // The warnings before the Frontend's, which stand alone when the
+    // ownership legality analysis rejects the program.
+    دع تحذيرات_قبل_الواجهة: متغير مجموعة_تشخيصات = مجموعة_تشخيصات_جديدة();
     طابق الإعداد مع
     | {
         البيئة: البيئة,
@@ -1283,6 +1289,9 @@
         دع الجذور_المطلوبة: متجه مفتاح_وحدة_مقنن =
             مفاتيح_جذور_مطلوبة_لطلب(&الطلب, &هدف_الواجهة, &طلب_الواجهة.البيئة);
         دع إلغاء_الواجهة: متغير حالة_إلغاء_واجهة = السياق.الإلغاء;
+        // The Frontend states the ownership errors of a program it
+        // rejects for others with the analysis on MSIR.
+        سجل_محلل_ملكية_أدوات(حلل_ملكية_واجهة_للواجهة_مسير);
         دع نتيجة_الواجهة: نتيجة_بناء_واجهة_قابلة_للإلغاء =
             ابن_واجهة_وحدة_بهدف_قابلة_للإلغاء(
                 طلب_الواجهة, اختياري.موجود(هدف_الواجهة), &الجذور_المطلوبة,
@@ -1307,7 +1316,9 @@
             );
         }
         | نتيجة_بناء_واجهة_قابلة_للإلغاء.مكتملة(الواجهة) -> {
-            // A completed Frontend reports only non-fatal diagnostics here.
+            // A completed Frontend reports only non-fatal diagnostics here,
+            // unless the analysis on MSIR rejects the program (below).
+            تحذيرات_قبل_الواجهة := انسخ_مملوكا_مجموعة_تشخيصات(التحذيرات);
             ادمج_مجموعة_تشخيصات(التحذيرات, &الواجهة.تشخيصات_الأدوات);
             طابق ثبت_واجهة_التجميع(السياق, الواجهة) مع
             | اختياري.لا_شيء -> { أرجع نتيجة_خطأ_سياق_تجميع(); }
@@ -1315,7 +1326,7 @@
         };
     };
 
-    دع الواجهة: نتيجة_واجهة_وحدة;
+    دع الواجهة: متغير نتيجة_واجهة_وحدة;
     طابق خذ_واجهة_التجميع(السياق) مع
     | نتيجة_خذ_واجهة_التجميع.غير_صالح -> {
         أرجع نتيجة_خطأ_سياق_تجميع();
@@ -1387,6 +1398,12 @@
             السياق, نتيجة_تجميع_مترجم.فشل_مسير(التشخيصات)
         );
     }
+    | نتيجة_خفض_واجهة_مسير.مرفوض_للملكية(التشخيصات) -> {
+        *التحذيرات := تحذيرات_قبل_الواجهة;
+        أرجع اختم_سياق_التجميع(
+            السياق, نتيجة_تجميع_مترجم.فشل_واجهة(التشخيصات)
+        );
+    }
     | نتيجة_خفض_واجهة_مسير.ناجح(الحمولة) -> {
         طابق ثبت_مسير_التجميع(السياق, الحمولة) مع
         | اختياري.لا_شيء -> { أرجع نتيجة_خطأ_سياق_تجميع(); }
@@ -1410,7 +1427,13 @@
     | اختياري.لا_شيء -> { };
 
     // From lowered MSIR to what every consumer receives, in this order:
-    //   1. the lowered program is verified (the canonical verifier);
+    //   0. the lowered program is initial MSIR: it is verified structurally
+    //      (تحقق_برنامج_مسير_أولي, which admits its ownership operations),
+    //      then its ownership is finalized (أتمم_ملكية_مسير_مخفض: drop
+    //      elaboration from the initialization dataflow, then ownership
+    //      glue), so nothing below receives unchecked or unfinalized MSIR;
+    //   1. the finalized program is verified (the canonical verifier, which
+    //      rejects any ownership operation left);
     //   2. its compile-time work is executed (compile_time.sn), on verified
     //      MSIR as lowered, so the budget counts, failures and diagnostics are
     //      those of the program as written;
@@ -1426,6 +1449,35 @@
     //      facts and their callers (the rest is unchanged since 1 or 3);
     //   6. it is handed to `check`, the interpreter or code generation.
     // `check` keeps no function, so it stops after 3.
+    طابق تحقق_برنامج_مسير_أولي(&الحمولة_المخفضة.المسير, &الحمولة_المخفضة.الأنواع) مع
+    | نتيجة_تحقق_مسير.مرفوض(أخطاء_الأولي) -> {
+        أرجع اختم_سياق_التجميع(
+            السياق, نتيجة_تجميع_مترجم.فشل_داخلي(حول_أخطاء_تحقق_مسير_إلى_تشخيصات(&أخطاء_الأولي))
+        );
+    }
+    | نتيجة_تحقق_مسير.صالح -> { };
+    // The ownership legality analysis: moves and initialization
+    // (msir/ssf/ownership_legality.sn), before drop elaboration.
+    دع أخطاء_الشرعية: متجه خطأ_ملكية_دالة_مسير = حلل_شرعية_ملكية_برنامج_مسير(
+        &متغير الحمولة_المخفضة.المسير, &الحمولة_المخفضة.الأنواع
+    );
+    إذا (ملكية_مرفوضة_مترجم(&أخطاء_الشرعية, &الحمولة_المخفضة.القوالب)) {
+        *التحذيرات := تحذيرات_قبل_الواجهة;
+        أرجع اختم_سياق_التجميع(
+            السياق, نتيجة_تجميع_مترجم.فشل_واجهة(تشخيصات_ملكية_مترجم(
+                &أخطاء_الشرعية, &الحمولة_المخفضة.القوالب, &الحمولة_المخفضة.رتب_الدوال, &الحمولة_المخفضة.الأسماء,
+                &الحمولة_المخفضة.المصادر, &الحمولة_المخفضة.الأنواع
+            ))
+        );
+    };
+    الحمولة_المخفضة.الأسماء := اختياري.لا_شيء();
+    طابق أتمم_ملكية_مسير_مخفض(
+        &متغير الحمولة_المخفضة.المسير, &متغير الحمولة_المخفضة.الأنواع, &الحمولة_المخفضة.المصادر
+    ) مع
+    | اختياري.موجود(التشخيصات) -> {
+        أرجع اختم_سياق_التجميع(السياق, نتيجة_تجميع_مترجم.فشل_مسير(التشخيصات));
+    }
+    | اختياري.لا_شيء -> { };
     طابق تحقق_مسير_التجميع(&الحمولة_المخفضة.المسير, &الحمولة_المخفضة.الأنواع) مع
     | اختياري.موجود(التشخيصات) -> {
         أرجع اختم_سياق_التجميع(السياق, نتيجة_تجميع_مترجم.فشل_داخلي(التشخيصات));
@@ -1438,7 +1490,7 @@
     دع أصول_وقت_الترجمة: سجل_أصول_مصدر;
     دع تصحيح_وقت_الترجمة: متغير بيانات_تصحيح_مسير;
     طابق الحمولة_المخفضة مع
-    | { المسير: مسير, الأنواع: الأنواع, المصادر: المصادر, الأصول: الأصول, التصحيح: التصحيح } -> {
+    | { المسير: مسير, الأنواع: الأنواع, المصادر: المصادر, الأصول: الأصول, التصحيح: التصحيح, الأسماء: _, القوالب: _, رتب_الدوال: _ } -> {
         مسير_وقت_الترجمة := مسير;
         أنواع_وقت_الترجمة := الأنواع;
         مصادر_وقت_الترجمة := المصادر;
@@ -1571,7 +1623,10 @@
         الأنواع: أنواع_وقت_الترجمة,
         المصادر: مصادر_وقت_الترجمة,
         الأصول: أصول_وقت_الترجمة,
-        التصحيح: تصحيح_وقت_الترجمة
+        التصحيح: تصحيح_وقت_الترجمة,
+        الأسماء: اختياري.لا_شيء(),
+        القوالب: ناتج_شرعية_قوالب_مسير_فارغ(),
+        رتب_الدوال: []
     };
 
     طابق الطلب مع

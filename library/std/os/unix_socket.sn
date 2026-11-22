@@ -15,7 +15,7 @@
 //   sun_path[108] (<afunix.h>). No abstract names here.
 //
 // A pathname address is the path, then a terminating NUL, which the
-// address length includes (Rust's std::os::unix::net does the same); the
+// address length includes; the
 // path must leave room for that NUL. Kinds: 0 unnamed, 1 pathname,
 // 2 abstract.
 

@@ -16,7 +16,7 @@
 
 // Every entry as UTF-8 "NAME=VALUE" bytes. The per-drive working-directory
 // entries Windows keeps under names starting with '=' ("=C:=C:\x") are not
-// variables and are skipped, as .NET does. At most 1 MiB units are read.
+// variables and are skipped. At most 1 MiB units are read.
 عام عرف اقرأ_كتلة_بيئة_ويندوز(): نتيجة متجه متجه ط8, خطأ_كتلة_بيئة_ويندوز {
     دع الكتلة: *ط16 = GetEnvironmentStringsW();
     إذا (الكتلة == الفارغ) { أرجع نتيجة.خطأ(خطأ_كتلة_بيئة_ويندوز.نظام(التقط_خطأ_وين32())); };

@@ -1,7 +1,7 @@
 استورد نظام_التشغيل.أخطاء;
 
 // OS threads, one guarded branch per OS (docs/en/reference/concurrency.md); std.thread
-// builds Rust's std::thread surface on it. A started thread runs a
+// builds its API on it. A started thread runs a
 // `() -> ()` closure given by the address of its environment
 // (بدائي_عنوان_دالة, taken by std.thread's spawn, which is what makes the
 // spawn capture check treat spawn's closure as sent to another thread). The
@@ -269,7 +269,7 @@
         أرجع نتيجة.خطأ(أنشئ_خطأ_نظام_أصلي(مصدر_خطأ_نظام.واسي(), 58));
     }
     عام عرف انضم_خيط_نظام(الخيط: &خيط_نظام): فراغ { }
-    // The one thread's id, as Rust numbers the main thread 1.
+    // The one thread's id: the main thread is 1.
     عام عرف معرف_الخيط_الحالي_نظام(): ط64 { أرجع 1; }
     عام عرف تنازل_نظام(): فراغ { }
     عام عرف عدد_المعالجات_نظام(): نتيجة ط64, خطأ_نظام_أصلي {

@@ -155,7 +155,10 @@
             أرجع اختياري.موجود(«ملف خرج التشخيص المتوقع مفقود أو فارغ»);
         };
         إذا (!نصان_متساويان(&المتوقع, &النتيجة.الخطأ)) {
-            دع أجزاء: متجه نص = [«خرج التشخيص لا يطابق », انسخ_نص_اختبار(&المسار_المتوقع)];
+            دع أجزاء: متجه نص = [
+                «خرج التشخيص لا يطابق », انسخ_نص_اختبار(&المسار_المتوقع),
+                وصف_أول_اختلاف(&المتوقع, &النتيجة.الخطأ)
+            ];
             أرجع اختياري.موجود(اجمع_نصوص(&أجزاء));
         };
         أرجع اختياري.لا_شيء();
@@ -521,8 +524,8 @@
 // A run test only compiled here (its targets leave the host out) that
 // imports C, on a Windows host: Windows has no C headers of the targets the
 // runner builds it for (Linux, macOS), as a Linux host lends its own for
-// macOS, so it needs those targets' headers through SULTANC_C_SYSROOT (Zig
-// bundles a libc's headers per target; Rust's tests name a sysroot they
+// macOS, so it needs those targets' headers through SULTANC_C_SYSROOT (a
+// sysroot holding a libc's headers for each target the tests
 // need). Skipped without one.
 عرف سبب_تجاوز_ترويسات_سي(الوصف: &وصف_اختبار, المضيف: &نص): اختياري نص {
     إذا (!هدف_ويندوز(المضيف) || !اختبار_تجميع_فقط(الوصف, المضيف)) { أرجع اختياري.لا_شيء(); };

@@ -3,7 +3,7 @@
 // خروج: 42
 // تفاضلي: نعم
 // نظير: tests/en/stdlib/behavior/text_time_vector.sn
-// إضافات std.text وstd.time.duration_text (صيغة مدد Go في الاتجاهين)
+// إضافات std.text وstd.time.duration_text (المدد نصا في الاتجاهين)
 // وstd.collections.vector.
 استورد المكتبة.نصوص.تحويل;
 استورد المكتبة.نصوص.بحث;

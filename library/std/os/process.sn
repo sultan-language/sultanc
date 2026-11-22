@@ -96,7 +96,7 @@
     }
 
     // WaitForSingleObject(h, 0): None while the child runs; Some closes the
-    // HANDLE, as a blocking wait does (Rust's Process::try_wait).
+    // HANDLE, as a blocking wait does.
     عام عرف تفقد_عملية_نظام(
         العملية: &متغير عملية_نظام
     ): نتيجة اختياري عدد, خطأ_حد_نظام {
@@ -121,11 +121,11 @@
         };
     }
 
-    // TerminateProcess(h, 1), as Rust's Process::kill: Some when the child
+    // TerminateProcess(h, 1): Some when the child
     // had already exited (it is reaped), None when it was terminated and the
     // caller still waits for it. A child that exits between the check and
     // TerminateProcess makes the call fail with ERROR_ACCESS_DENIED (5);
-    // that is not an error, as in Rust.
+    // that is not an error.
     عام عرف اقتل_عملية_نظام(
         العملية: &متغير عملية_نظام
     ): نتيجة اختياري عدد, خطأ_حد_نظام {
@@ -246,7 +246,7 @@
         أرجع أرسل_إشارة_عملية_نظام(العملية, صواب);
     }
 
-    // The child's process ID (Rust Child::id).
+    // The child's process ID.
     عام عرف معرف_عملية_نظام(العملية: &عملية_نظام): عدد { أرجع (*العملية).المعرف; }
 }
 
@@ -570,7 +570,7 @@
         أرجع أرسل_إشارة_عملية_نظام(العملية, صواب);
     }
 
-    // The child's process ID (Rust Child::id).
+    // The child's process ID.
     عام عرف معرف_عملية_نظام(العملية: &عملية_نظام): عدد { أرجع (*العملية).المعرف; }
 
     عام عرف اخرج_من_عملية_النظام(الرمز: عدد): فراغ {

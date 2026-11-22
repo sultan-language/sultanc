@@ -248,6 +248,7 @@
     ألحق(الناتج, «SULTANC-TRACK-CALLER-EXPLICIT-LOCATION»);
     ألحق(الناتج, «SULTANC-C-ABI-MISUSE»);
     ألحق(الناتج, «SULTANC-RUN-NEEDS-PROCESS»);
+    ألحق(الناتج, «SULTANC-NAME-CONSTRUCTOR-NOT-CALLED»);
     أرجع الناتج;
 }
 
@@ -488,6 +489,7 @@
     ألحق(الناتج, «track-caller-explicit-location»);
     ألحق(الناتج, «c-abi-misuse»);
     ألحق(الناتج, «run-needs-process»);
+    ألحق(الناتج, «constructor-not-called»);
     أرجع الناتج;
 }
 

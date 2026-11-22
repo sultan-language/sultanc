@@ -39,9 +39,9 @@
     | مكتبة_مشتركة
     | كائن_مترابط
     | وحدة_هدف
-    // Target assembly text (--emit=asm), as llc -filetype=asm / rustc --emit=asm.
+    // Target assembly text (--emit=asm).
     | نص_تجميع
-    // The optimized LLVM IR of the module (--emit=llvm-ir), as rustc --emit=llvm-ir.
+    // The optimized LLVM IR of the module (--emit=llvm-ir).
     | نص_وحدة_إل_إل_في_إم
     // The optimized MSIR program as text (--emit=msir, msir/msir_text.sn),
     // written to stdout unless -o names a file.
@@ -349,9 +349,10 @@
     // `sultanc test`: the source and further sources, the target and
     // backend choices, the module source bindings, the -l names and -L
     // directories, the -O level, the selection (--filter, --test,
-    // --tests-in), --list, --interpret, and --test-index (run only that
-    // test, in this process: what the driver runs in each child of an
-    // interpreted run).
+    // --tests-in), --list, --interpret, --test-index (run only that test,
+    // in this process: what the driver runs in each child of an interpreted
+    // run), and the path of `--no-run -o <path>` (write the test program
+    // there and run nothing).
     | اختبار بنوع (
         نص,
         متجه نص,
@@ -364,7 +365,8 @@
         اختيار_اختبارات,
         منطقي,
         منطقي,
-        اختياري طبيعي
+        اختياري طبيعي,
+        اختياري نص
     )
 ;
 
