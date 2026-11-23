@@ -15,16 +15,16 @@
 عرف adder(k: عدد): دالة(عدد): عدد { أرجع دالة(x: عدد): عدد -> x + k; }
 
 عرف make(i: عدد): Rec {
-    دع items: متغير متجه نص = [];
+    ليكن items: متغير متجه نص = [];
     ألحق(items, عدد_إلى_نص(i));
     ألحق(items, عدد_إلى_نص(i + 10));
-    دع inner: Inner = { name: عدد_إلى_نص(i * 2), n: i };
-    دع r: Rec = { name: عدد_إلى_نص(i), id: i, callback: adder(i), inner: inner, items: items };
+    ليكن inner: Inner = { name: عدد_إلى_نص(i * 2), n: i };
+    ليكن r: Rec = { name: عدد_إلى_نص(i), id: i, callback: adder(i), inner: inner, items: items };
     أرجع r;
 }
 
 عرف words(i: عدد): متجه نص {
-    دع w: متغير متجه نص = [];
+    ليكن w: متغير متجه نص = [];
     ألحق(w, عدد_إلى_نص(i));
     ألحق(w, عدد_إلى_نص(i + 100));
     أرجع w;
@@ -33,27 +33,27 @@
 عرف size(s: نص): عدد { أرجع الطول(s) مثل عدد; }
 
 عرف round(i: عدد): عدد {
-    دع total: متغير عدد = make(i).id;
-    دع name: نص = make(i).name;
+    ليكن total: متغير عدد = make(i).id;
+    ليكن name: نص = make(i).name;
     total := total + size(name) + make(i).callback(3);
-    دع f: دالة(عدد): عدد = make(i).callback;
+    ليكن f: دالة(عدد): عدد = make(i).callback;
     total := total + f(1) + size(make(i).inner.name) + make(i).inner.n;
     total := total + (الطول(make(i).items) مثل عدد) + size(make(i).items[0]);
-    دع w: نص = words(i)[1];
+    ليكن w: نص = words(i)[1];
     total := total + size(w) + adder(i)(2);
     أرجع total;
 }
 
 عرف الرئيسية(): عدد {
-    دع warm_up: عدد = round(0);
+    ليكن warm_up: عدد = round(0);
     إذا (warm_up < 0) { أرجع 1; };
-    دع before: ط64 = بايتات_حية_مخصص_النظام();
-    دع i: متغير عدد = 0;
+    ليكن before: ط64 = بايتات_حية_مخصص_النظام();
+    ليكن i: متغير عدد = 0;
     طالما (i < 100000) {
         إذا (round(i) < 0) { أرجع 2; };
         i := i + 1;
     }
-    دع after: ط64 = بايتات_حية_مخصص_النظام();
+    ليكن after: ط64 = بايتات_حية_مخصص_النظام();
     إذا (after != before) { أرجع 3; };
     أرجع 42;
 }

@@ -4,10 +4,10 @@
  18 |     };
     |     ^
     |
-  ::: tests/ar/diagnostics/e2e/borrow_outlives_owner_in_order.sn:16:9..16:29
+  ::: tests/ar/diagnostics/e2e/borrow_outlives_owner_in_order.sn:16:9..16:31
     |
- 16 |         دع النص: نص = «أبج»;
-    |         ^^^^^^^^^^^^^^^^^^^^ المالك الأصلي
+ 16 |         ليكن النص: نص = «أبج»;
+    |         ^^^^^^^^^^^^^^^^^^^^^^ المالك الأصلي
     |
   ::: tests/ar/diagnostics/e2e/borrow_outlives_owner_in_order.sn:19:17..19:23
     |
@@ -21,10 +21,10 @@
  30 |     }
     |     ^
     |
-  ::: tests/ar/diagnostics/e2e/borrow_outlives_owner_in_order.sn:27:9..27:29
+  ::: tests/ar/diagnostics/e2e/borrow_outlives_owner_in_order.sn:27:9..27:31
     |
- 27 |         دع النص: نص = «أبج»;
-    |         ^^^^^^^^^^^^^^^^^^^^ المالك الأصلي
+ 27 |         ليكن النص: نص = «أبج»;
+    |         ^^^^^^^^^^^^^^^^^^^^^^ المالك الأصلي
     |
   ::: tests/ar/diagnostics/e2e/borrow_outlives_owner_in_order.sn:31:17..31:23
     |
@@ -38,10 +38,10 @@
  44 |     }
     |     ^
     |
-  ::: tests/ar/diagnostics/e2e/borrow_outlives_owner_in_order.sn:41:9..41:29
+  ::: tests/ar/diagnostics/e2e/borrow_outlives_owner_in_order.sn:41:9..41:31
     |
- 41 |         دع النص: نص = «أبج»;
-    |         ^^^^^^^^^^^^^^^^^^^^ المالك الأصلي
+ 41 |         ليكن النص: نص = «أبج»;
+    |         ^^^^^^^^^^^^^^^^^^^^^^ المالك الأصلي
     |
   ::: tests/ar/diagnostics/e2e/borrow_outlives_owner_in_order.sn:40:38..40:44
     |
@@ -55,10 +55,10 @@
  55 |     };
     |     ^
     |
-  ::: tests/ar/diagnostics/e2e/borrow_outlives_owner_in_order.sn:52:9..52:29
+  ::: tests/ar/diagnostics/e2e/borrow_outlives_owner_in_order.sn:52:9..52:31
     |
- 52 |         دع النص: نص = «أبج»;
-    |         ^^^^^^^^^^^^^^^^^^^^ المالك الأصلي
+ 52 |         ليكن النص: نص = «أبج»;
+    |         ^^^^^^^^^^^^^^^^^^^^^^ المالك الأصلي
     |
   ::: tests/ar/diagnostics/e2e/borrow_outlives_owner_in_order.sn:56:17..56:24
     |

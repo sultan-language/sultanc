@@ -13,29 +13,29 @@ warning[SULTANC-SYNTAX-DEPRECATED-SPELLING]: the spelling `غير_موقع` is d
    |
 
 warning[SULTANC-SYNTAX-DEPRECATED-SPELLING]: the spelling `غ8` is deprecated; use `ط8`
-  --> tests/ar/diagnostics/deprecated/uint_old_spelling.sn:14:11..14:13
+  --> tests/ar/diagnostics/deprecated/uint_old_spelling.sn:14:13..14:15
     |
- 14 |     دع ث: غ8 = 1;
-    |           ^^
+ 14 |     ليكن ث: غ8 = 1;
+    |             ^^
     |
 
 warning[SULTANC-SYNTAX-DEPRECATED-SPELLING]: the spelling `غ16` is deprecated; use `ط16`
-  --> tests/ar/diagnostics/deprecated/uint_old_spelling.sn:15:11..15:14
+  --> tests/ar/diagnostics/deprecated/uint_old_spelling.sn:15:13..15:16
     |
- 15 |     دع س: غ16 = 2;
-    |           ^^^
+ 15 |     ليكن س: غ16 = 2;
+    |             ^^^
     |
 
 warning[SULTANC-SYNTAX-DEPRECATED-SPELLING]: the spelling `غ32` is deprecated; use `ط32`
-  --> tests/ar/diagnostics/deprecated/uint_old_spelling.sn:16:11..16:14
+  --> tests/ar/diagnostics/deprecated/uint_old_spelling.sn:16:13..16:16
     |
- 16 |     دع ع: غ32 = 3;
-    |           ^^^
+ 16 |     ليكن ع: غ32 = 3;
+    |             ^^^
     |
 
 warning[SULTANC-SYNTAX-DEPRECATED-SPELLING]: the spelling `غ64` is deprecated; use `ط64`
-  --> tests/ar/diagnostics/deprecated/uint_old_spelling.sn:17:11..17:14
+  --> tests/ar/diagnostics/deprecated/uint_old_spelling.sn:17:13..17:16
     |
- 17 |     دع ف: غ64 = 4;
-    |           ^^^
+ 17 |     ليكن ف: غ64 = 4;
+    |             ^^^
     |

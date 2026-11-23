@@ -6,6 +6,6 @@
 // A declared local initialized with a value of another type is a mismatch
 // with its destination, not a call argument at some position.
 عرف الرئيسية(): عدد {
-    دع س: عدد = «مرحبا»;
+    ليكن س: عدد = «مرحبا»;
     أرجع س;
 }

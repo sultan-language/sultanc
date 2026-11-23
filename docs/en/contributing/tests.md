@@ -106,7 +106,7 @@ or modules of other tests.
 | `// خرج-تشخيص-عربي: <file>`, `// خرج-تشخيص-إنجليزي: <file>` | the exact human output of `check --lang ar\|en --color never`, stored in that file beside the test |
 | `// خرج-قياسي: <text>`, `// خطأ-قياسي: <text>` | expected standard output or error of the run; `<فارغ>` means empty |
 | `// خطأ-قياسي-ملف: <file>` | the exact standard error of the run, stored in a file beside the test |
-| `// بيئة: NAME=value` | one environment assignment for the test program's runs, native and interpreted |
+| `// بيئة: NAME=value` | environment assignments for the test program's runs, native and interpreted; several are separated by spaces (`NAME=value OTHER=value`) |
 | `// ربط: c,m` | libraries the test's executable and its interpretation link (`-l c -l m`): SultanC links no C library on its own, so a test that calls one through a C import names it |
 | `// تفاضلي: نعم` | on a differential test, also compare standard error between native and interpreted runs |
 | `// نظير: tests/ar/…` | the Arabic or English counterpart of the test |

@@ -563,6 +563,44 @@ static void op_compare(unsigned t, const char *op, const char *negop, int is_sig
         x = operand_text(&a, ha);
         y = operand_text(&b, hb);
     }
+    /* Integer comparisons whose result the operands already decide (the
+     * module computes `x < x`, or an unsigned `x < 0`): the constant, so the
+     * C has no self-comparison or always-false unsigned test for a compiler
+     * to warn about (-Wtautological-compare, -Wtype-limits). An operand that
+     * is not a plain name (a load, which may trap, or any other expression)
+     * is still evaluated, once, as before: `((void)(x), 0)`. */
+    if (t == T_I32 || t == T_I64) {
+        int decided = -1;
+        const char *kept = NULL;
+        int b_zero = b.kind != V_SLOT && b.is_const && b.bits == 0 && !is_signed;
+        int a_zero = a.kind != V_SLOT && a.is_const && a.bits == 0 && !is_signed;
+        if (strcmp(x, y) == 0) {
+            decided = strcmp(op, "==") == 0 || strcmp(op, "<=") == 0 || strcmp(op, ">=") == 0;
+            kept = x;
+        } else if (b_zero && (strcmp(op, "<") == 0 || strcmp(op, ">=") == 0)) {
+            decided = strcmp(op, ">=") == 0;
+            kept = x;
+        } else if (a_zero && (strcmp(op, ">") == 0 || strcmp(op, "<=") == 0)) {
+            decided = strcmp(op, "<=") == 0;
+            kept = y;
+        }
+        if (decided >= 0) {
+            char *text, *neg;
+            if (strchr(kept, '(')) {
+                text = xprintf("((void)(%s), %d)", kept, decided);
+                neg = xprintf("((void)(%s), %d)", kept, !decided);
+            } else {
+                text = xprintf("%d", decided);
+                neg = xprintf("%d", !decided);
+            }
+            push_bool(text, neg, kind_of(a.kind, b.kind), &a, a.reads_local || b.reads_local, reads_upper_slot(&b));
+            free(x);
+            free(y);
+            finish_pop(&a);
+            finish_pop(&b);
+            return;
+        }
+    }
     if (t == T_F32 || t == T_F64)
         push_bool(xprintf("%s %s %s", x, op, y), xprintf("!(%s %s %s)", x, op, y), kind_of(a.kind, b.kind), &a,
                   a.reads_local || b.reads_local, reads_upper_slot(&b));
@@ -1466,6 +1504,29 @@ static void declare(Buf *out, unsigned t, const char *const *names, uint32_t cou
     buf_puts(out, ";\n");
 }
 
+/* Whether every occurrence of the identifier NAME in the code is the target
+ * of a plain assignment (`NAME = ...`, not `NAME == ...`): a temporary that is
+ * set and never read. */
+static int is_ident_char(char c) {
+    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_';
+}
+
+static int only_assigned(const char *code, size_t n, const char *name) {
+    size_t len = strlen(name), i;
+    int seen = 0;
+    if (!code) return 0;
+    for (i = 0; i + len <= n; i++) {
+        size_t j;
+        if (memcmp(code + i, name, len) != 0) continue;
+        if (i > 0 && is_ident_char(code[i - 1])) continue;
+        if (i + len < n && is_ident_char(code[i + len])) continue;
+        seen = 1;
+        j = i + len;
+        if (!(j + 2 < n && code[j] == ' ' && code[j + 1] == '=' && code[j + 2] == ' ')) return 0;
+    }
+    return seen;
+}
+
 void translate_function(Buf *out, uint32_t idx) {
     static const unsigned value_types[4] = {T_I32, T_I64, T_F32, T_F64};
     Buf scratch = {0}, code = {0};
@@ -1523,6 +1584,19 @@ void translate_function(Buf *out, uint32_t idx) {
         for (i = 0; i < count; i++) free(names[i]);
     }
     free(names);
+    /* A parameter the body never reads, and a stack temporary it only
+     * assigns, are marked used (-Wunused-parameter,
+     * -Wunused-but-set-variable): `(void)&t` takes no value, so it reads no
+     * uninitialized temporary, and compiles to nothing. */
+    for (i = 0; i < ft->nparams; i++)
+        if (!local_used[i]) bprintf(out, "%*s(void)v%" PRIu32 ";\n", INDENT_WIDTH, "", i);
+    for (k = 0; k < 4; k++)
+        for (i = 0; i < stack_cap; i++)
+            if (slot_used[k][i]) {
+                char name[24];
+                snprintf(name, sizeof(name), "%c%" PRIu32, tchar(value_types[k]), i);
+                if (only_assigned(code.s, code.n, name)) bprintf(out, "%*s(void)&%s;\n", INDENT_WIDTH, "", name);
+            }
     bprintf(out, "%*sw2c_enter();\n", INDENT_WIDTH, "");
     buf_put(out, code.s ? code.s : "", code.n);
     buf_puts(out, "}\n");

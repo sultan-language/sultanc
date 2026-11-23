@@ -1,6 +1,6 @@
 استورد المكتبة.نصوص.من_بايتات;
 عام عرف اسم_مخرج_كوف_المشترك_الافتراضي(): متجه ط8 {
-    دع الاسم: متجه ط8 = بايتات_من_نص(«sultanc.dll»);
+    ليكن الاسم: متجه ط8 = بايتات_من_نص(«sultanc.dll»);
     أرجع الاسم;
 }
 
@@ -10,6 +10,6 @@
 // the ELF and WASI process starts. Previously the image entered through the
 // C runtime's mainCRTStartup/wmainCRTStartup, which called main or wmain.
 عام عرف اسم_رمز_بدء_عملية_كوف(): متجه ط8 {
-    دع الاسم: متجه ط8 = بايتات_من_نص(«_start»);
+    ليكن الاسم: متجه ط8 = بايتات_من_نص(«_start»);
     أرجع الاسم;
 }

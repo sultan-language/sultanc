@@ -62,7 +62,7 @@ split would need a `_` fallback per domain file and lose compile-time totality.
 ## Tests
 
 ```
-tests/ar/ispeak/            Arabic surface syntax (عرف، دع، أرجع ...)
+tests/ar/ispeak/            Arabic surface syntax (عرف، ليكن، أرجع ...)
 tests/en/ispeak/            the same tests in English surface syntax (def, let, return ...)
   check_*.sn                22 behavioral tests          (// اختبار: تشغيل)
   bench/bench_*.sn          17 cost benchmarks           (// اختبار: تشغيل)

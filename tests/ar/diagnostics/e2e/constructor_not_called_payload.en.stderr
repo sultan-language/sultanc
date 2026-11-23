@@ -1,7 +1,7 @@
 error[SULTANC-NAME-CONSTRUCTOR-NOT-CALLED]: constructor `شكل.دائرة` takes 1 argument: `شكل.دائرة(...)`
-  --> tests/ar/diagnostics/e2e/constructor_not_called_payload.sn:11:17..11:26
+  --> tests/ar/diagnostics/e2e/constructor_not_called_payload.sn:11:19..11:28
     |
- 11 |     دع ش: شكل = شكل.دائرة;
-    |                 ^^^^^^^^^
+ 11 |     ليكن ش: شكل = شكل.دائرة;
+    |                   ^^^^^^^^^
     |
   = help: call the constructor with its arguments between `(` and `)`

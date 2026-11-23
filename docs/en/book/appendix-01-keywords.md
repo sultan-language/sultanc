@@ -20,7 +20,7 @@ is the compiler's own (`tools/generate/registry/token_registry.def`).
 | `undefined` | `غير_معرف` | reserved |
 | `def` | `عرف` | defines a function |
 | `alias` | `مرادف` | declares another name for a declaration |
-| `let` | `دع` | declares a variable or a constant |
+| `let` | `ليكن` | declares a variable or a constant |
 | `return` | `أرجع` | ends a function, giving back a value |
 | `else` | `وإلا` | the branch of `if` taken otherwise |
 | `if` | `إذا` | runs a block when a condition is true |

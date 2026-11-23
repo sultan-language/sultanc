@@ -1,29 +1,29 @@
 error[SULTANC-BORROW-REFERENCE-ESCAPE]: reference escapes its valid scope — The escaping reference is `القيمة`. A reference outlives the value it points to.
-  --> tests/ar/diagnostics/e2e/borrow_escapes_in_order.sn:10:5..10:24
+  --> tests/ar/diagnostics/e2e/borrow_escapes_in_order.sn:10:5..10:26
     |
- 10 |     دع القيمة: عدد = 1;
-    |     ^^^^^^^^^^^^^^^^^^^
+ 10 |     ليكن القيمة: عدد = 1;
+    |     ^^^^^^^^^^^^^^^^^^^^^
     |
 
 error[SULTANC-BORROW-REFERENCE-ESCAPE]: reference escapes its valid scope — The escaping reference is `المرجع`. A reference outlives the value it points to.
-  --> tests/ar/diagnostics/e2e/borrow_escapes_in_order.sn:16:5..16:31
+  --> tests/ar/diagnostics/e2e/borrow_escapes_in_order.sn:16:5..16:33
     |
- 16 |     دع المرجع: &عدد = &القيمة;
-    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^
+ 16 |     ليكن المرجع: &عدد = &القيمة;
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     |
 
 error[SULTANC-BORROW-REFERENCE-ESCAPE]: reference escapes its valid scope — The escaping reference is `العرض`. A reference outlives the value it points to.
-  --> tests/ar/diagnostics/e2e/borrow_escapes_in_order.sn:22:5..22:35
+  --> tests/ar/diagnostics/e2e/borrow_escapes_in_order.sn:22:5..22:37
     |
- 22 |     دع العرض: &متجه عدد = &المحلي;
-    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ 22 |     ليكن العرض: &متجه عدد = &المحلي;
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     |
 
 error[SULTANC-BORROW-REFERENCE-ESCAPE]: reference escapes its valid scope — The escaping reference is `المرجع`. A reference outlives the value it points to.
-  --> tests/ar/diagnostics/e2e/borrow_escapes_in_order.sn:28:5..28:31
+  --> tests/ar/diagnostics/e2e/borrow_escapes_in_order.sn:28:5..28:33
     |
- 28 |     دع المرجع: &عدد = &القيمة;
-    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^
+ 28 |     ليكن المرجع: &عدد = &القيمة;
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     |
 
 error[SULTANC-BORROW-REFERENCE-ESCAPE]: reference escapes its valid scope — The escaping reference is `الهدف`. A reference outlives the value it points to.

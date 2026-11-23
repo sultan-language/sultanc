@@ -3,7 +3,7 @@
 // نظير: tests/en/diagnostics/safety/raw_pointer_index.sn
 // Indexing a raw pointer reads memory it only claims: it needs an unsafe scope.
 عرف الرئيسية(): عدد {
-    دع القيمة: متغير عدد = 40;
-    دع المؤشر: *متغير عدد = & متغير القيمة;
+    ليكن القيمة: متغير عدد = 40;
+    ليكن المؤشر: *متغير عدد = & متغير القيمة;
     أرجع المؤشر[0];
 }

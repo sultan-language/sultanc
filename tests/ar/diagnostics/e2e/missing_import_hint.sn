@@ -7,6 +7,6 @@
 // the help names the module to import (std.io.print loads std.io.writer).
 استورد المكتبة.دخ.اطبع;
 عرف الرئيسية(): ص32 {
-    دع المكتوب: ص32 = اكتب_الكل(3);
+    ليكن المكتوب: ص32 = اكتب_الكل(3);
     أرجع 0;
 }

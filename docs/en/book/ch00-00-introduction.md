@@ -50,7 +50,7 @@ text before it.
 ## The editions
 
 This English edition uses the English keywords: `def`, `let`, `if`, `match`. The
-[Arabic edition](../../ar/book/ch00-00-introduction.md) uses the Arabic ones: `عرف`, `دع`, `إذا`,
+[Arabic edition](../../ar/book/ch00-00-introduction.md) uses the Arabic ones: `عرف`, `ليكن`, `إذا`,
 `طابق`. Both describe one language: a program may mix the two, and the compiler treats `def` and `عرف`
 as the same word. Appendix A lists every pair.
 

@@ -6,7 +6,7 @@
 // Non-ASCII separators between tokens: NBSP, BOM/ZWNBSP, LRM, RLM, ALM,
 // ideographic space. Explicit bidi overrides stay rejected (not tested here).
 عرف الرئيسية(): عدد {﻿
-    دع‏س: عدد = 40;‎
-    دع؜ص: عدد = 2;　
+    ليكن‏س: عدد = 40;‎
+    ليكن؜ص: عدد = 2;　
     أرجع س + ص;
 }

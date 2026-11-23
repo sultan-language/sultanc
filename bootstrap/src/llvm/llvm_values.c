@@ -1119,7 +1119,7 @@ static int __LLVM_Lvalue_Reads_Through_Reference__(__LLVM_Emitter__ *emitter, __
  *     Lvalue-kind dereference reached through an Lvalue parent chain --
  *     see __LLVM_Lvalue_Reads_Through_Reference__);
  *   - a `*عملية_وحدوية` Unary-Dereference EXPRESSION (`*مرجع`), which is
- *     how a bare `دع ق: نص = *الحجة;` dereference of a Reference-typed
+ *     how a bare `ليكن ق: نص = *الحجة;` dereference of a Reference-typed
  *     operand is actually represented at the expression level (not as an
  *     Atom-Lvalue) -- confirmed against __LLVM_Expression_Type__'s own
  *     __Unary_Dereference__ handling, which this mirrors. Missing this

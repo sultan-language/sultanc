@@ -14,7 +14,7 @@ int __Parser_Push_Statement__(__Parser__ *__Parser_State__,
 int __Parser_Parse_Return__(__Parser__ *__Parser_State__, __Vector__ *__Statements__);
 
 /* Parses the parser variable. */
-/* Parses `لكل (دع …; condition; place := value) { … }` (canonical حلل_لكل). */
+/* Parses `لكل (ليكن …; condition; place := value) { … }` (canonical حلل_لكل). */
 int __Parser_Parse_For__(__Parser__ *__Parser_State__, __Vector__ *__Statements__);
 
 int __Parser_Parse_Variable__(__Parser__ *__Parser_State__, __Vector__ *__Statements__);

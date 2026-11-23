@@ -4,8 +4,8 @@
  9 |     أرجع س;
    |          ^ الاستخدام غير الصالح
    |
-  ::: tests/ar/diagnostics/e2e/use_before_initialization.sn:8:5..8:15
+  ::: tests/ar/diagnostics/e2e/use_before_initialization.sn:8:5..8:17
    |
- 8 |     دع س: عدد;
-   |     ^^^^^^^^^^ صُرّح به هنا
+ 8 |     ليكن س: عدد;
+   |     ^^^^^^^^^^^^ صُرّح به هنا
    |

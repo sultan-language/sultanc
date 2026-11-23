@@ -152,6 +152,7 @@ SULTANC-OWNERSHIP-USE-AFTER-MOVE
 | `SULTANC-OWNERSHIP-PARTIAL-MOVE` | لا يُسمح بنقل عضو مملوك واحد من تجميع. انقل القيمة كاملة أو انسخها. |
 | `SULTANC-OWNERSHIP-RESOURCE-RELEASED` | يُستخدم المورد بعد تحريره. استخدمه قبل التحرير أو أجّل تحريره. |
 | `SULTANC-OWNERSHIP-USE-AFTER-MOVE` | استُخدمت القيمة بعد نقل ملكيتها. راجع موضع النقل المرتبط. |
+| `SULTANC-OWNERSHIP-MERGE-CONFLICT` | حالة المتغير في مسار تخالف حالته في آخر (قيمة أو لا قيمة، نقل، تحرير، استعارة)، ثم يلتقيان. وحّد حالته قبل الالتقاء. |
 
 ## الاستعارة
 

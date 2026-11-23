@@ -24,6 +24,7 @@ Waves (naming spec, Part A):
   7  (A7) the entry function "the castle" (ال+قلعة) -> الرئيسية: the identifier itself, not a
      field or constructor named so and not a longer identifier. It has no
      deprecated alias; comments and docs that name it are edited by hand.
+  8  keyword دع -> ليكن (the binding keyword). It has no deprecated alias.
 
 --check rewrites nothing: it counts the old-spelling tokens that remain and
 exits 1 when there is any. A file holding the marker `rename_tokens:
@@ -45,7 +46,9 @@ from sn_tokens import ROOT, Token, identity, keyword_identity, significant, toke
 
 KEEP_MARKER = "rename_tokens: keep-deprecated"
 SKIP_DIRS = {".git", "build"}
-MARKDOWN_FENCE = re.compile(r"^(\s*)```(\S*)\s*$")
+# The tag is the info string's first word: the book's `sultan ignore`,
+# `sultan fail` and `sultan stdin=…` blocks are SultanC too.
+MARKDOWN_FENCE = re.compile(r"^(\s*)```(\S*)(?:\s+\S.*)?\s*$")
 MARKDOWN_CODE_TAGS = {"", "sultanc", "sultan", "sn"}
 
 # Keyword renames by wave: old spelling -> new spelling (both are keyword tokens).
@@ -54,6 +57,7 @@ KEYWORD_RENAMES: dict[int, dict[str, str]] = {
     2: {},
     3: {"غير_موقع": "طبيعي", "غ8": "ط8", "غ16": "ط16", "غ32": "ط32", "غ64": "ط64"},
     7: {},
+    8: {"دع": "ليكن"},
 }
 
 # Wave 7 (A7): the program entry function.
@@ -79,10 +83,14 @@ SEGMENT_SINGLES = {"غ8": "ط8", "غ16": "ط16", "غ32": "ط32", "غ64": "ط64"}
 
 
 def keyword_edits(tokens: list[Token], renames: dict[str, str]) -> list[tuple[Token, str]]:
+    """A wave without a deprecated alias (8) removes the old spelling from
+    the registry, so it now lexes as an identifier. Under the old registry
+    it could only have been the keyword, so an identifier token spelled
+    exactly so is the old keyword too (sources not yet migrated)."""
     table = {identity(old): new for old, new in renames.items()}
     edits = []
     for token in tokens:
-        if token.kind == "keyword" and identity(token.text) in table:
+        if token.kind in ("keyword", "ident") and identity(token.text) in table:
             edits.append((token, table[identity(token.text)]))
     return edits
 
@@ -315,9 +323,16 @@ def main() -> int:
 
     per_area: Counter[str] = Counter()
     skipped: list[Path] = []
+    undecodable: list[Path] = []
     total = 0
     for path in files_under(args.paths):
-        text = path.read_text(encoding="utf-8")
+        try:
+            text = path.read_text(encoding="utf-8")
+        except UnicodeDecodeError:
+            # An invalid-encoding fixture: the lexer rejects it, so it is
+            # edited by hand.
+            undecodable.append(path)
+            continue
         if keeps_wave(text, args.wave):
             skipped.append(path)
             continue
@@ -343,6 +358,8 @@ def main() -> int:
         print(f"{per_area[name]:8d}  {name}")
     for path in skipped:
         print(f"  skipped (keeps deprecated spellings): {path.as_posix()}")
+    for path in undecodable:
+        print(f"  skipped (not UTF-8; edit by hand): {path.as_posix()}")
     return 1 if args.check and total else 0
 
 

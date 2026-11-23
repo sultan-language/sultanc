@@ -1,7 +1,7 @@
 خطأ[SULTANC-NAME-CONSTRUCTOR-NOT-CALLED]: المنشئ ⁨`لون.أحمر`⁩ يُستدعى بـ⁨`()`⁩: ⁨`لون.أحمر()`⁩
-  --> tests/ar/diagnostics/e2e/constructor_not_called.sn:11:17..11:25
+  --> tests/ar/diagnostics/e2e/constructor_not_called.sn:11:19..11:27
     |
- 11 |     دع ل: لون = لون.أحمر;
-    |                 ^^^^^^^^
+ 11 |     ليكن ل: لون = لون.أحمر;
+    |                   ^^^^^^^^
     |
   = مساعدة: استدع المنشئ: أضف ⁨`()`⁩ بعده

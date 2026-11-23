@@ -1,6 +1,6 @@
 error[SULTANC-TYPE-MISMATCH]: expected `int`, found `string` — The value does not match the declared type of its destination.
-  --> tests/ar/diagnostics/e2e/initializer_type_mismatch.sn:9:17..9:24
+  --> tests/ar/diagnostics/e2e/initializer_type_mismatch.sn:9:19..9:26
    |
- 9 |     دع س: عدد = «مرحبا»;
-   |                 ^^^^^^^
+ 9 |     ليكن س: عدد = «مرحبا»;
+   |                   ^^^^^^^
    |

@@ -34,7 +34,7 @@ def main() -> None:
         "    عام عرف نفذ_نداء_نواة_مضيف(",
         PARAMS.replace("\n    ", "\n        ").replace("    القناع", "        القناع", 1).rstrip("\n"),
         "    ): ط64 {",
-        "        دع الناتج: متغير ط64 = 0;",
+        "        ليكن الناتج: متغير ط64 = 0;",
     ]
     for mask in range(64):
         args = ", ".join(slot(mask, i) for i in range(1, 7))

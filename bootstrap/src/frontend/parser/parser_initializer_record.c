@@ -37,7 +37,7 @@ int __Parser_Parse_Record_Initializer__(__Parser__ *__Parser_State__,
         }
         if (__Parser_Accept__(__Parser_State__, __Token_LEFT_BRACKET_OPERATOR__))
         {
-            /* A vector literal field value: its elements, as in `دع x = [...]`. */
+            /* A vector literal field value: its elements, as in `ليكن x = [...]`. */
             __Field__.__Is_Vector__ = 1;
             if (!__Parser_Parse_Aggregate_Elements__(__Parser_State__,
                                                      __Token_RIGHT_BRACKET_OPERATOR__,

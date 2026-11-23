@@ -4,10 +4,10 @@ error[SULTANC-OWNERSHIP-USE-AFTER-MOVE]: use after move — The value used after
  12 |     أرجع استهلك(النص) + (الطول(النص) مثل عدد);
     |                                ^^^^ invalid use
     |
-  ::: tests/ar/diagnostics/safety/use_after_move_same_statement.sn:11:5..11:27
+  ::: tests/ar/diagnostics/safety/use_after_move_same_statement.sn:11:5..11:29
     |
- 11 |     دع النص: نص = «أربعة»;
-    |     ^^^^^^^^^^^^^^^^^^^^^^ original owner
+ 11 |     ليكن النص: نص = «أربعة»;
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^ original owner
     |
   ::: tests/ar/diagnostics/safety/use_after_move_same_statement.sn:12:17..12:21
     |

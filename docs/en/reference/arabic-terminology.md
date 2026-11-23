@@ -19,7 +19,7 @@ alef forms آ, أ and إ to ا and ignores tatweel
 | English | Arabic | Meaning |
 | --- | --- | --- |
 | `def` | `عرف` | Function definition |
-| `let` | `دع` | Value declaration |
+| `let` | `ليكن` | Value declaration |
 | `return` | `أرجع` | Return from a function |
 | `if` | `إذا` | Conditional branch |
 | `else` | `وإلا` | Alternate branch |
@@ -100,6 +100,7 @@ spelling silently). English spellings never change.
 | --- | --- | --- | --- |
 | `while` | `بينما` | `طالما` | `طالما` means "as long as", which is what the loop tests. `بينما` is a time adverb ("during", "whereas"), a calque of English *while*. |
 | entry function `main` | the project nickname "the castle" (removed, no alias) | `الرئيسية` | `الرئيسية` means "the main (function)", the standard term. The old name, "the castle", was a project nickname; it is no longer recognised at all, so a program whose only entry function still has it reports `SULTANC-ENTRYPOINT-NOT-FOUND`. |
+| `let` | `دع` (removed, no alias) | `ليكن` | `ليكن` is how Arabic states "let": «ليكن س عددًا صحيحًا» ("let x be an integer") is the mathematics textbook phrasing, and a binding declares what a name is. `دع` is the imperative of «ودع», "leave, let go" («دعنا نحسب», «دع هذا»), so `دع العدد…` read as "leave the number…". `دع` is no longer a keyword at all: it lexes as an ordinary identifier, so `دع س: عدد = 1;` is a syntax error. |
 | `option` | `اختيار` | `اختياري` | `اختياري` means "optional", the standard word for an optional field or value. `اختيار` is the noun "choice" (and, in the compiler, instruction *selection*). |
 | `some` / `Some` | `بعض` (`اختيار.بعض`) | `موجود` (`اختياري.موجود`) | `موجود` says "a value is present". Arabic `بعض` is partitive ("some of", "part of"), while the constructor means "there is a value x". |
 | `none` / `None` | `لا_شيء` | `لا_شيء` (unchanged) | Only the type prefix changes: `اختياري.لا_شيء`. |
@@ -111,6 +112,7 @@ The deprecated keyword spellings are rows of `tools/generate/registry/token_regi
 ```sh
 python3 tools/rename/rename_tokens.py --wave 1 path/to/sources   # بينما -> طالما
 python3 tools/rename/rename_tokens.py --wave 7 path/to/sources   # the entry function -> الرئيسية
+python3 tools/rename/rename_tokens.py --wave 8 path/to/sources   # دع -> ليكن
 python3 tools/rename/rename_tokens.py --wave 2 path/to/sources   # اختيار -> اختياري, اختيار.بعض -> اختياري.موجود
 python3 tools/rename/rename_tokens.py --wave 3 path/to/sources   # غير_موقع -> طبيعي, غN -> طN
 python3 tools/rename/rename_tokens.py --wave 3 --segments path/to/sources   # أصغر_غير_موقع -> أصغر_طبيعي

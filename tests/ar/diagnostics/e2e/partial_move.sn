@@ -5,7 +5,7 @@
 // خرج-تشخيص-إنجليزي: partial_move.en.stderr
 // Moving one element out of an owned vector is marked at the element.
 عرف الرئيسية(): عدد {
-    دع الأجزاء: متجه نص = [«الأول», «الثاني»];
+    ليكن الأجزاء: متجه نص = [«الأول», «الثاني»];
     أرجع خذ(الأجزاء[1]);
 }
 

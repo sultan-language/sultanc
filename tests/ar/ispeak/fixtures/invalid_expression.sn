@@ -5,6 +5,6 @@
 // خرج-تشخيص-إنجليزي: invalid_expression.en.stderr
 // Intentionally invalid. Used only to compare the compiler's live output.
 عرف الرئيسية(): عدد {
-    دع س: عدد = ;
+    ليكن س: عدد = ;
     أرجع 0;
 }

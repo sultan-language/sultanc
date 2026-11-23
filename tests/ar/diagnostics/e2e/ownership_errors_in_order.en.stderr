@@ -1,15 +1,15 @@
 error[SULTANC-TYPE-MISMATCH]: expected `int`, found `string` — The value does not match the declared type of its destination.
-  --> tests/ar/diagnostics/e2e/ownership_errors_in_order.sn:38:21..38:27
+  --> tests/ar/diagnostics/e2e/ownership_errors_in_order.sn:38:23..38:29
     |
- 38 |     دع العدد: عدد = «text»;
-    |                     ^^^^^^
+ 38 |     ليكن العدد: عدد = «text»;
+    |                       ^^^^^^
     |
 
 error[SULTANC-BORROW-CONFLICT]: borrow conflict — The conflicting borrowed value is `القيم`. The value is already borrowed mutably, so it cannot be borrowed again.
-  --> tests/ar/diagnostics/e2e/ownership_errors_in_order.sn:13:5..13:40
+  --> tests/ar/diagnostics/e2e/ownership_errors_in_order.sn:13:5..13:42
     |
- 13 |     دع القيم: متغير متجه عدد = [40, 2];
-    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ 13 |     ليكن القيم: متغير متجه عدد = [40, 2];
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     |
 
 error[SULTANC-OWNERSHIP-USE-AFTER-MOVE]: use after move — The value used after being moved is `النص`. The value is used after its ownership was moved.
@@ -18,15 +18,15 @@ error[SULTANC-OWNERSHIP-USE-AFTER-MOVE]: use after move — The value used after
  23 |     أرجع أ + استهلك(النص);
     |                     ^^^^ invalid use
     |
-  ::: tests/ar/diagnostics/e2e/ownership_errors_in_order.sn:21:5..21:27
+  ::: tests/ar/diagnostics/e2e/ownership_errors_in_order.sn:21:5..21:29
     |
- 21 |     دع النص: نص = «twice»;
-    |     ^^^^^^^^^^^^^^^^^^^^^^ original owner
+ 21 |     ليكن النص: نص = «twice»;
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^ original owner
     |
-  ::: tests/ar/diagnostics/e2e/ownership_errors_in_order.sn:22:24..22:28
+  ::: tests/ar/diagnostics/e2e/ownership_errors_in_order.sn:22:26..22:30
     |
- 22 |     دع أ: عدد = استهلك(النص);
-    |                        ^^^^ value moved here
+ 22 |     ليكن أ: عدد = استهلك(النص);
+    |                          ^^^^ value moved here
     |
 
 error[SULTANC-OWNERSHIP-USE-AFTER-MOVE]: use after move — The value used after being moved is `القيمة`. The value is used after its ownership was moved.
@@ -40,10 +40,10 @@ error[SULTANC-OWNERSHIP-USE-AFTER-MOVE]: use after move — The value used after
  26 | عرف مرتين_عامة<ن>(القيمة: ن, المستقبل: دالة(ن): عدد): عدد {
     |                   ^^^^^^^^^ original owner
     |
-  ::: tests/ar/diagnostics/e2e/ownership_errors_in_order.sn:27:30..27:36
+  ::: tests/ar/diagnostics/e2e/ownership_errors_in_order.sn:27:32..27:38
     |
- 27 |     دع الأول: عدد = المستقبل(القيمة);
-    |                              ^^^^^^ value moved here
+ 27 |     ليكن الأول: عدد = المستقبل(القيمة);
+    |                                ^^^^^^ value moved here
     |
 
 error[SULTANC-FLOW-USE-BEFORE-INITIALIZATION]: use before initialization — The value used before initialization is `النص`. The value is used before it is initialized.
@@ -52,8 +52,8 @@ error[SULTANC-FLOW-USE-BEFORE-INITIALIZATION]: use before initialization — The
  34 |     أرجع استهلك(النص);
     |                 ^^^^ invalid use
     |
-  ::: tests/ar/diagnostics/e2e/ownership_errors_in_order.sn:32:5..32:17
+  ::: tests/ar/diagnostics/e2e/ownership_errors_in_order.sn:32:5..32:19
     |
- 32 |     دع النص: نص;
-    |     ^^^^^^^^^^^^ declared here
+ 32 |     ليكن النص: نص;
+    |     ^^^^^^^^^^^^^^ declared here
     |

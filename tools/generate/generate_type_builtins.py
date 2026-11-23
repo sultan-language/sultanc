@@ -135,7 +135,7 @@ def render_contextual_surface(es: list[Contextual]) -> str:
         ";",
         "",
         "عام عرف صنف_اسم_نوع_سياقي_في_نطاق(المصدر: &مصدر, النطاق: نطاق): صنف_اسم_نوع_سياقي {",
-        "    دع الأصل: مصدر = *المصدر;",
+        "    ليكن الأصل: مصدر = *المصدر;",
     ]
     for e in es:
         spellings = [e.english, e.arabic, *e.deprecated]
@@ -165,7 +165,7 @@ def render_contextual_surface(es: list[Contextual]) -> str:
         for spelling in e.deprecated:
             lines += [
                 f"    إذا (تطابق_هوية_معرف_وشريحة(النص, البداية, النهاية, «{spelling}»)) {{",
-                f"        دع التهجئة: تهجئة_كلمة_مهجورة = {{ القديمة: «{spelling}», الجديدة: «{e.arabic}» }};",
+                f"        ليكن التهجئة: تهجئة_كلمة_مهجورة = {{ القديمة: «{spelling}», الجديدة: «{e.arabic}» }};",
                 "        أرجع اختياري.موجود(التهجئة);",
                 "    };",
             ]

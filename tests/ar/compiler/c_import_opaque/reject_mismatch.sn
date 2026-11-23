@@ -7,7 +7,7 @@
 استورد "handles.h";
 
 عرف الرئيسية(): عدد {
-    دع ع: *متغير stmt = db_prepare(db_open(1), 1);
+    ليكن ع: *متغير stmt = db_prepare(db_open(1), 1);
     db_close(ع);
     أرجع 0;
 }

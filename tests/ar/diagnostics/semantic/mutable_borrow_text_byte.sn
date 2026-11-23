@@ -4,7 +4,7 @@
 // A byte of a text is borrowed shared only: `&mutable s[i]` is rejected,
 // even in a mutable text.
 عرف الرئيسية(): ص32 {
-    دع الكلمة: متغير نص = «abc»;
-    دع ب: &متغير ط8 = &متغير الكلمة[0];
+    ليكن الكلمة: متغير نص = «abc»;
+    ليكن ب: &متغير ط8 = &متغير الكلمة[0];
     أرجع 0;
 }

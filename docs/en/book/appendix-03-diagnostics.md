@@ -151,6 +151,7 @@ Value used after move. Find the move in the related spans.
 | `SULTANC-OWNERSHIP-PARTIAL-MOVE` | Moving one owned member out of an aggregate is not allowed. Move or copy the whole value. |
 | `SULTANC-OWNERSHIP-RESOURCE-RELEASED` | The resource is used after it was released. Use it before the release, or do not release it yet. |
 | `SULTANC-OWNERSHIP-USE-AFTER-MOVE` | Value used after move. Find the move in the related spans. |
+| `SULTANC-OWNERSHIP-MERGE-CONFLICT` | A local holds a value on one path and none, moved, released or borrowed differently on another, and the paths join. Give it the same state on every path before the join. |
 
 ## Borrowing
 

@@ -479,6 +479,17 @@ analysis ran and those functions (`ملكية_محللة`, `دوال_ملكية_
 tooling whether a function's ownership was checked. No diagnostic is made for a function left out, and
 nothing about it is claimed checked.
 
+An incremental tooling session (`compiler/frontend/incremental_analysis.sn`) does not analyse every
+module on every request. A function's legality reads its own body (and, for a closure, its enclosing
+function's, in the same module) and the signatures it calls, never another module's bodies; so the
+analysis can be given the modules it covers (`حلل_ملكية_وحدات_مختارة_للأدوات_مسير`): only their bodies
+are lowered, their templates' errors, left-out functions and moved names stated, and their calls checked
+against plain bounds (every template is still analysed, as a covered call may instantiate a template of
+any module). A request that continues a kept state analyses the kept state's modules once per kept
+state (`ملكية_مخبأة_واجهة`, keyed by the state's number and module count: its modules keep their Symbol
+and source IDs in every copy, and none imports a later module) and its own modules every time
+(`حلل_ملكية_مرحلية_واجهة`). The result is that of analysing every module.
+
 The frontend does not import MSIR. It holds one registered analyzer (`سجل_محلل_ملكية_أدوات`):
 the driver registers it before a compilation, and `compiler/msir/ssf/ownership_tooling.sn` registers
 it with a definition-time decorator in every program that loads it, as `tooling_queries.sn` does.

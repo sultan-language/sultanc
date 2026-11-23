@@ -4,7 +4,7 @@
 // خرج-تشخيص-عربي: top_level_tuple_initializer.ar.stderr
 // خرج-تشخيص-إنجليزي: top_level_tuple_initializer.en.stderr
 // A top-level value has no tuple literal form either.
-دع الزوج: (عدد, نص) = (1, "x");
+ليكن الزوج: (عدد, نص) = (1, "x");
 عرف الرئيسية(): ص32 {
     أرجع 0;
 }
