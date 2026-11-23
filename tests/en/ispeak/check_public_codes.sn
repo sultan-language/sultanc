@@ -249,6 +249,7 @@ def pinned_codes(): vector string {
     append(result, "SULTANC-C-ABI-MISUSE");
     append(result, "SULTANC-RUN-NEEDS-PROCESS");
     append(result, "SULTANC-NAME-CONSTRUCTOR-NOT-CALLED");
+    append(result, "SULTANC-OWNERSHIP-MERGE-CONFLICT");
     return result;
 }
 
@@ -490,6 +491,7 @@ def pinned_kinds(): vector string {
     append(result, "c-abi-misuse");
     append(result, "run-needs-process");
     append(result, "constructor-not-called");
+    append(result, "ownership-merge-conflict");
     return result;
 }
 

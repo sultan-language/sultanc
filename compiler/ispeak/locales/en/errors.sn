@@ -182,6 +182,7 @@
     | معرف_تشخيص.نوع_إرجاع_غير_مطابق -> { أرجع «return type does not match»; }
     | معرف_تشخيص.استخدام_قبل_التهيئة -> { أرجع «use before initialization»; }
     | معرف_تشخيص.استخدام_بعد_النقل -> { أرجع «use after move»; }
+    | معرف_تشخيص.تعارض_ملكية_عند_الدمج -> { أرجع «ownership state of a local differs between paths that join»; }
     | معرف_تشخيص.مورد_محرر -> { أرجع «resource was already released»; }
     | معرف_تشخيص.تعارض_استعارة -> { أرجع «borrow conflict»; }
     | معرف_تشخيص.هروب_مرجع -> { أرجع «reference escapes its valid scope»; }

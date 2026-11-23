@@ -69,6 +69,7 @@
 عام عرف نص_شرح_نوع_إرجاع_غير_مطابق(): نص { أرجع «The returned value has a different type than the function declares.»; }
 عام عرف نص_شرح_استخدام_قبل_التهيئة(): نص { أرجع «The variable is read before it has a value. Assign it on every path before use.»; }
 عام عرف نص_شرح_استخدام_بعد_النقل(): نص { أرجع «Value used after move. Find the move in the related spans.»; }
+عام عرف نص_شرح_تعارض_ملكية_عند_الدمج(): نص { أرجع «A local holds a value on one path and none, moved, released or borrowed differently on another, and the paths join. Give it the same state on every path before the join.»; }
 عام عرف نص_شرح_مورد_محرر(): نص { أرجع «The resource is used after it was released. Use it before the release, or do not release it yet.»; }
 عام عرف نص_شرح_تعارض_استعارة(): نص { أرجع «A borrow conflicts with another active borrow of the same value. End one borrow first.»; }
 عام عرف نص_شرح_هروب_مرجع(): نص { أرجع «A reference outlives the value it points to. Return or store the value instead.»; }
@@ -231,6 +232,7 @@
     | مفتاح_شرح.نوع_إرجاع_غير_مطابق -> { أرجع نص_شرح_نوع_إرجاع_غير_مطابق(); }
     | مفتاح_شرح.استخدام_قبل_التهيئة -> { أرجع نص_شرح_استخدام_قبل_التهيئة(); }
     | مفتاح_شرح.استخدام_بعد_النقل -> { أرجع نص_شرح_استخدام_بعد_النقل(); }
+    | مفتاح_شرح.تعارض_ملكية_عند_الدمج -> { أرجع نص_شرح_تعارض_ملكية_عند_الدمج(); }
     | مفتاح_شرح.مورد_محرر -> { أرجع نص_شرح_مورد_محرر(); }
     | مفتاح_شرح.تعارض_استعارة -> { أرجع نص_شرح_تعارض_استعارة(); }
     | مفتاح_شرح.هروب_مرجع -> { أرجع نص_شرح_هروب_مرجع(); }

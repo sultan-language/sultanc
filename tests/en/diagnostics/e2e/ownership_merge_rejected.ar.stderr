@@ -1,18 +1,18 @@
-خطأ[SULTANC-ICE-MISSING-SEMANTIC-FACT]: حقيقة دلالية قانونية مطلوبة مفقودة — الحقيقة الدلالية المفقودة تتعلق بالرمز ⁨`text`⁩. حدث ذلك خلال المرحلة ⁨`ssf`⁩. تعذر دمج تدفق التحكم بسبب حالة ملكية غير متسقة.
+خطأ[SULTANC-OWNERSHIP-MERGE-CONFLICT]: تختلف حالة ملكية متغير محلي بين مسارين يلتقيان — الرمز هو ⁨`text`⁩. تعذر دمج تدفق التحكم بسبب حالة ملكية غير متسقة.
   --> tests/en/diagnostics/e2e/ownership_merge_rejected.sn:13:5..13:22
     |
  13 |     let text: string;
     |     ^^^^^^^^^^^^^^^^^
     |
 
-خطأ[SULTANC-ICE-MISSING-SEMANTIC-FACT]: حقيقة دلالية قانونية مطلوبة مفقودة — الحقيقة الدلالية المفقودة تتعلق بالرمز ⁨`text`⁩. حدث ذلك خلال المرحلة ⁨`ssf`⁩. تعذر دمج تدفق التحكم بسبب حالة ملكية غير متسقة.
+خطأ[SULTANC-OWNERSHIP-MERGE-CONFLICT]: تختلف حالة ملكية متغير محلي بين مسارين يلتقيان — الرمز هو ⁨`text`⁩. تعذر دمج تدفق التحكم بسبب حالة ملكية غير متسقة.
   --> tests/en/diagnostics/e2e/ownership_merge_rejected.sn:22:5..22:28
     |
  22 |     let text: string = "b";
     |     ^^^^^^^^^^^^^^^^^^^^^^^
     |
 
-خطأ[SULTANC-ICE-MISSING-SEMANTIC-FACT]: حقيقة دلالية قانونية مطلوبة مفقودة — الحقيقة الدلالية المفقودة تتعلق بالرمز ⁨`value`⁩. حدث ذلك خلال المرحلة ⁨`ssf`⁩. تعذر دمج تدفق التحكم بسبب حالة ملكية غير متسقة.
+خطأ[SULTANC-OWNERSHIP-MERGE-CONFLICT]: تختلف حالة ملكية متغير محلي بين مسارين يلتقيان — الرمز هو ⁨`value`⁩. تعذر دمج تدفق التحكم بسبب حالة ملكية غير متسقة.
   --> tests/en/diagnostics/e2e/ownership_merge_rejected.sn:32:5..32:32
     |
  32 |     let value: mutable int = 1;

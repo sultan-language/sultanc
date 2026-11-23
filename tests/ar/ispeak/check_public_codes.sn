@@ -249,6 +249,7 @@
     ألحق(الناتج, «SULTANC-C-ABI-MISUSE»);
     ألحق(الناتج, «SULTANC-RUN-NEEDS-PROCESS»);
     ألحق(الناتج, «SULTANC-NAME-CONSTRUCTOR-NOT-CALLED»);
+    ألحق(الناتج, «SULTANC-OWNERSHIP-MERGE-CONFLICT»);
     أرجع الناتج;
 }
 
@@ -490,6 +491,7 @@
     ألحق(الناتج, «c-abi-misuse»);
     ألحق(الناتج, «run-needs-process»);
     ألحق(الناتج, «constructor-not-called»);
+    ألحق(الناتج, «ownership-merge-conflict»);
     أرجع الناتج;
 }
 

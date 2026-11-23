@@ -1,0 +1,11 @@
+# The compiler as a library package other tools depend on (sultanc-lsp:
+# `compiler = { path = "../sultanc/compiler" }`), its modules imported as
+# `compiler.…`. The compiler itself never reads this file
+# (compiler/driver/package_graph.sn); the checkout's root Supax.toml stays
+# the `sultanc` package.
+[package]
+name = "compiler"
+version = "0.1.0-dev"
+
+[lib]
+path = "."

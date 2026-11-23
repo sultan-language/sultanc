@@ -98,6 +98,9 @@
     | نوع_إرجاع_غير_مطابق
     | استخدام_قبل_التهيئة
     | استخدام_بعد_النقل
+    // A local whose ownership state differs between the paths that join
+    // (msir/ssf/ownership_legality.sn): a user error, not an ICE.
+    | تعارض_ملكية_عند_الدمج
     | مورد_محرر
     | تعارض_استعارة
     | هروب_مرجع

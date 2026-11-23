@@ -1,5 +1,5 @@
 // اختبار: رفض
-// تشخيص: SULTANC-ICE-MISSING-SEMANTIC-FACT
+// تشخيص: SULTANC-OWNERSHIP-MERGE-CONFLICT
 // نظير: tests/en/diagnostics/e2e/ownership_merge_rejected.sn
 // خرج-تشخيص-عربي: ownership_merge_rejected.ar.stderr
 // خرج-تشخيص-إنجليزي: ownership_merge_rejected.en.stderr

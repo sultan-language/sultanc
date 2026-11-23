@@ -58,6 +58,6 @@ def main(): int {
         | _ -> { };
         number_value := number_value + 1;
     }
-    if (explanation_count != 236) { return 6; };
+    if (explanation_count != 237) { return 6; };
     return 0;
 }
