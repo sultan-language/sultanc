@@ -70,6 +70,11 @@ def ispeak_evidence(directory, name):
 
 
 def main():
+    # Test names and reasons are Arabic. A Windows runner's console encoding
+    # is cp1252, which has no Arabic: printing one (the ::error annotations,
+    # the summary on stdout) raised UnicodeEncodeError and lost the report.
+    for stream in (sys.stdout, sys.stderr):
+        stream.reconfigure(encoding="utf-8", errors="replace")
     root = sys.argv[1] if len(sys.argv) > 1 else "."
     result_path = os.path.join(root, "build", "tests-result.json")
     try:
