@@ -1,0 +1,15 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 15
+// نظير: tests/ar/language/safety/global_constant_text_by_value.sn
+// An immutable text global is a constant: each read by value is a fresh copy.
+let greeting: string = "hello";
+
+def take(value: string): int {
+    return length(value);
+}
+
+def main(): int {
+    let copy: string = greeting;
+    return length(copy) + take(greeting) + take(greeting);
+}

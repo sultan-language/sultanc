@@ -1,0 +1,15 @@
+// اختبار: رفض
+// تشخيص: SULTANC-JSON-DERIVE-UNSUPPORTED-FIELD-TYPE
+// نظير: tests/ar/diagnostics/e2e/json_derive_field.sn
+// خرج-تشخيص-عربي: json_derive_field.ar.stderr
+// خرج-تشخيص-إنجليزي: json_derive_field.en.stderr
+// A `@@json` field type the derivation cannot encode is a compile-time error
+// at the field, not a JSON null at run time.
+@@json
+type point = {
+    x: i32,
+    pair: (i32, i32)
+};
+def main(): i32 {
+    return 0;
+}

@@ -1,0 +1,19 @@
+// A singly linked list kept in a vector: follow the next links from the head and add up the
+// values.
+import std.io.println;
+import std.text.number;
+
+type Node = { value: int, next: int };
+
+def main(): int {
+    let nodes: vector Node = [{ value: 3, next: 1 }, { value: 5, next: 2 }, { value: 8, next: -1 }];
+    let at: mutable int = 0;
+    let sum: mutable int = 0;
+    while (at >= 0) {
+        sum := sum + nodes[at].value;
+        at := nodes[at].next;
+    };
+    if (sum != 16) { return 1; };
+    println(int_to_text(sum));
+    return 0;
+}

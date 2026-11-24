@@ -1,0 +1,34 @@
+// Saving settings atomically: write to a temporary file, then rename it over the final
+// path, so readers never see a half-written file.
+import std.io.println;
+import std.text.number;
+import std.fs.write_file;
+import std.fs.read_file;
+import std.fs.mutation;
+import std.fs.metadata;
+import std.fs.walk;
+import std.fs.path;
+import std.text.transform;
+import std.text.compare;
+
+def main(): int {
+    let temp: string = "sultanc-settings.tmp";
+    let final_path: string = "sultanc-settings.toml";
+    let content: string = "level = 3\n";
+    match write_file(&temp, &content) with
+    | result.err(_) -> { return 1; }
+    | _ -> { };
+    match rename(&temp, &final_path) with
+    | result.err(_) -> { return 2; }
+    | _ -> { };
+    let valid: mutable bool = false;
+    match read_file(&final_path) with
+    | result.ok(text) -> { valid := texts_equal(&content, &text); }
+    | _ -> { };
+    match remove_file(&final_path) with
+    | result.err(_) -> { return 3; }
+    | _ -> { };
+    if (!valid) { return 4; };
+    println("settings saved");
+    return 0;
+}

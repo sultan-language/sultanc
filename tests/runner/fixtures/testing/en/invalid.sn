@@ -1,0 +1,22 @@
+// `sultanc test` (tests/runner/suites/testing.sn): tests that cannot run,
+// each reported at its name; nothing is built. Expected: exit 2 with
+// SULTANC-TEST-PARAMETERS, SULTANC-TEST-RESULT-TYPE and three times
+// SULTANC-TEST-NOT-A-FUNCTION (a type, a generic function, a function with a
+// compile-time parameter).
+@@test
+def takes_a_value(x: int): void { }
+
+@@test
+def returns_text(): string { return "x"; }
+
+@@test
+type point = { x: int };
+
+@@test
+def generic_test<T>(): void { }
+
+@@test
+def compile_time_test(comptime n: int): void { }
+
+@@test
+def fine(): void { }

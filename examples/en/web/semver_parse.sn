@@ -1,0 +1,12 @@
+// URI handling: semver_parse.
+import std.io.println;
+import std.uri.uri;
+
+
+def main(): int {
+    let address: string = "https://example.com/p5?q=sultan";
+    match parse_uri(&address) with
+    | result.ok(uri) -> { println(uri_to_text(&uri)); }
+    | result.err(_) -> { return 1; };
+    return 0;
+}

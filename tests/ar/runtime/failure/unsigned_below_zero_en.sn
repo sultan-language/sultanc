@@ -1,0 +1,19 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 1
+// تفاضلي: نعم
+// بيئة: SULTANC_LANG=en
+// خرج-قياسي: <فارغ>
+// خطأ-قياسي-ملف: unsigned_below_zero_en.stderr
+// نظير: tests/en/runtime/failure/unsigned_below_zero_en.sn
+// A `uint` that would go below zero is an integer overflow
+// (docs/en/reference/errors.md, "Runtime checks"): the frame "the program
+// stopped", then the kind and the place of the subtraction, exit status 1.
+عرف الباقي(العدد: طبيعي, المأخوذ: طبيعي): طبيعي {
+    أرجع العدد - المأخوذ;
+}
+
+عرف الرئيسية(): عدد {
+    ليكن المتبقي: طبيعي = الباقي(2, 3);
+    أرجع المتبقي مثل عدد;
+}

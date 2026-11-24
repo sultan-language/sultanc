@@ -1,0 +1,10 @@
+// Output to the standard stream: output_flush.
+import std.io.println;
+import std.text.number;
+
+
+def main(): int {
+    println("output 6");
+    println(int_to_text(8));
+    return 0;
+}

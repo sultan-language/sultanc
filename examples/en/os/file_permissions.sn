@@ -1,0 +1,14 @@
+// OS API example: file_permissions.
+import std.io.println;
+import std.text.number;
+import std.os.path;
+
+
+def main(): int {
+    let path: string = "file.txt";
+    let nul_bytes: vector u8 = [102 as u8, 105 as u8, 108 as u8, 101 as u8];
+    match unix_path_to_nul_terminated_bytes(&nul_bytes) with
+    | result.ok(bytes) -> { println(uint_to_text(length(bytes) as uint)); }
+    | result.err(_) -> { return 1; };
+    return 0;
+}

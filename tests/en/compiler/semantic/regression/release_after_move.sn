@@ -1,0 +1,6 @@
+def main(): int {
+    let text: string = "hello";
+    let moved: string = text;
+    release(text);
+    return length(moved);
+}

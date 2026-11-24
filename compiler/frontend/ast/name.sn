@@ -1,5 +1,4 @@
-استورد compiler.frontend.source.position;
-استورد compiler.frontend.source.scope;
+استورد compiler.source.span;
 
 // أسماء المصدر تبقى أسماء عادية؛ تصنيف Option/Result/Vector تملكه Type لا Lexer/Parser.
 عام نوع صنف_اسم_تركيبي =
@@ -11,3 +10,16 @@
     النطاق: نطاق,
     الصنف: صنف_اسم_تركيبي
 };
+
+// Deep copies of owned values (one per Type; read the source through a
+// reference and allocate independent storage).
+
+عام عرف انسخ_مملوكا_متجه_اسم(القيمة: &متجه اسم): متجه اسم {
+    ليكن الناتج: متغير متجه اسم = [];
+    ليكن ف: متغير طبيعي = 0;
+    طالما (ف < (الطول(*القيمة) مثل طبيعي)) {
+        ألحق(الناتج, (*القيمة)[ف]);
+        ف := ف + 1;
+    }
+    أرجع الناتج;
+}

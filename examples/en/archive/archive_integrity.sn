@@ -1,0 +1,20 @@
+// ZIP archive example: archive_integrity (corrupt, 1 file entries).
+import std.io.println;
+import std.text.number;
+import std.archive.zip;
+
+
+def main(): int {
+    let entries: mutable vector zip_entry = [];
+    append(entries, new_zip_file("archive_integrity_0.txt", [65 as u8, 10 as u8], false));
+    match zip_encode(&entries) with
+    | result.err(_) -> { return 1; }
+    | result.ok(data) -> {
+        let broken: mutable vector u8 = data;
+        broken[0] := 255 as u8;
+        match zip_decode(&broken) with
+        | result.err(_) -> { println("corruption rejected"); }
+        | result.ok(_) -> { return 2; };
+    };
+    return 0;
+}

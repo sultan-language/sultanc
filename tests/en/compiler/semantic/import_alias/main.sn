@@ -1,0 +1,10 @@
+// اختبار: قبول
+// خروج: 0
+import std.chars.ascii as ascii;
+
+def main(): int {
+    let wide: i64 = 42;
+    let narrow: i32 = wide as i32;
+    if (!ascii.رقم_عشري(0x35)) { return 1; };
+    return narrow;
+}

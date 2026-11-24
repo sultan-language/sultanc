@@ -1,0 +1,6 @@
+type Holder = { item: string };
+def main(): int {
+    let holder: Holder = { item: "hello" };
+    let moved: Holder = holder;
+    return length(holder.item);
+}

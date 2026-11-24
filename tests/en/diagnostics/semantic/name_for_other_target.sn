@@ -1,0 +1,10 @@
+// اختبار: رفض
+// تشخيص: SULTANC-TARGET-FEATURE-UNSUPPORTED
+// خروج: 3
+// نظير: tests/ar/diagnostics/semantic/name_for_other_target.sn
+if (target.platform == "plan9") {
+    def plan9_value(): i32 { return 1; }
+}
+def main(): i32 {
+    return plan9_value();
+}

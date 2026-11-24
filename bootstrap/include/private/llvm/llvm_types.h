@@ -36,6 +36,11 @@ int __LLVM_Tagged_Layout__(__LLVM_Emitter__ *emitter,
                            size_t *payload_size,
                            size_t *payload_offset,
                            size_t *alignment);
+int __LLVM_Tagged_Entry_Layout__(__LLVM_Emitter__ *emitter,
+                                 __Semantic_Type_Entry__ *entry,
+                                 size_t *payload_size,
+                                 size_t *payload_offset,
+                                 size_t *alignment);
 LLVMTypeRef __LLVM_Type__(__LLVM_Emitter__ *emitter, __Ast_Type__ *type);
 __Ast_Type__ *__LLVM_Concrete_Integer_Type__(__LLVM_Emitter__ *emitter,
                                              __Ast_Type__ *candidate);

@@ -1,0 +1,6 @@
+def main(): int {
+    let values: mutable [] int = [40, 2];
+    let first: &mutable int = & mutable values[0];
+    let second: &int = &values[1];
+    return *first + *second;
+}

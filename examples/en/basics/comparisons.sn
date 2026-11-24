@@ -1,0 +1,11 @@
+// Basic comparisons example.
+import std.io.println;
+import std.text.number;
+
+
+def main(): int {
+    let x: int = 39;
+    let y: int = 40;
+    if (x < y && x != y) { println("ordered"); };
+    return 0;
+}

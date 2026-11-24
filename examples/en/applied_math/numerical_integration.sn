@@ -1,0 +1,21 @@
+// The trapezoidal rule for x² on [0, 4] with unit steps, kept in whole numbers as twice the
+// trapezoid sum (44, so the area estimate is 22).
+import std.io.println;
+import std.text.number;
+
+def square(x: int): int {
+    return x * x;
+}
+
+def main(): int {
+    let n: int = 4;
+    let total: mutable int = square(0) + square(n);
+    let i: mutable int = 1;
+    while (i < n) {
+        total := total + 2 * square(i);
+        i := i + 1;
+    };
+    if (total != 44) { return 1; };
+    println(int_to_text(total));
+    return 0;
+}

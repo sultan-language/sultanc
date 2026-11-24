@@ -1,7 +1,10 @@
 استورد compiler.frontend.types.type_identity;
 
-// Memory owns static semantic ownership classification only.
-// Flow state belongs to SSF; release execution and destruction belong to later runtime/lowering layers.
+// Memory owns static semantic ownership classification only. The flow of
+// ownership (moves, initialization, borrows and where they end) is the
+// ownership analysis on MSIR (compiler/msir/ssf); destruction is drop
+// elaboration's (compiler/msir/drop_elaboration.sn), and its execution the
+// runtime's.
 عام نوع صنف_ذاكرة =
     | عادي
     | مملوك
@@ -22,9 +25,9 @@
     | معرف_نوع_غير_صالح بنوع معرف_نوع
     | دورة_ملكية_نوع بنوع معرف_نوع
     | بنية_سجل_غير_متاحة بنوع معرف_نوع
-    | حقل_سجل_غير_متاح بنوع (معرف_نوع, غير_موقع)
+    | حقل_سجل_غير_متاح بنوع (معرف_نوع, طبيعي)
     | بنية_نوع_موسوم_غير_متاحة بنوع معرف_نوع
-    | منشئ_نوع_غير_متاح بنوع (معرف_نوع, غير_موقع)
-    | حمولة_منشئ_غير_متاحة بنوع (معرف_نوع, غير_موقع, غير_موقع)
+    | منشئ_نوع_غير_متاح بنوع (معرف_نوع, طبيعي)
+    | حمولة_منشئ_غير_متاحة بنوع (معرف_نوع, طبيعي, طبيعي)
     | شكل_نوع_غير_متوقع بنوع معرف_نوع
 ;

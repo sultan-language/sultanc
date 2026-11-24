@@ -1,0 +1,16 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 1
+// تفاضلي: نعم
+// بيئة: SULTANC_LANG=en
+// خرج-قياسي: <فارغ>
+// خطأ-قياسي-ملف: index_en.stderr
+// نظير: tests/en/runtime/failure/index_en.sn
+// An index past the end of a vector (docs/en/reference/errors.md, "Runtime checks")
+// stops the program through the panic path: the frame "the program stopped",
+// then the index, the length and the place of the indexing, exit status 1.
+عرف الرئيسية(): عدد {
+    ليكن القيم: متجه عدد = [10, 20, 30];
+    ليكن الموضع: عدد = 5;
+    أرجع القيم[الموضع];
+}

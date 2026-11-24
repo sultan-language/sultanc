@@ -1,0 +1,10 @@
+// اختبار: رفض
+// تشخيص: SULTANC-TYPE-MISMATCH
+// نظير: tests/ar/language/surface/reject_truncate_immutable.sn
+// truncate and pop write their vector: like append, they need a mutable
+// place.
+def main(): int {
+    let values: vector int = [1, 2, 3];
+    truncate(values, 1);
+    return length(values);
+}

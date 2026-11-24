@@ -1,0 +1,2 @@
+def hidden(): int { return 2; }
+public def right_value(): int { return hidden(); }

@@ -69,13 +69,11 @@ __Ast_Lvalue__ *__Parser_Parse_Lvalue__(__Parser__ *__Parser_State__)
         {
             if (__Parser_Accept__(__Parser_State__, __Token_LEFT_PARENTHESIS_OPERATOR__))
             {
-                /* Tracks whether the operation succeeded. */
-                int __Ok__ = 0;
-                /* Tracks the index. */
-                __Ast_Atom__ __Index__ = __Parser_Parse_Atom__(__Parser_State__, &__Ok__);
+                /* References the index expression. */
+                __Ast_Expression__ *__Index__ = __Parser_Parse_Expression__(__Parser_State__);
                 /* References the extended. */
                 __Ast_Lvalue__ *__Extended__ = NULL;
-                if (!__Ok__ ||
+                if (__Index__ == NULL ||
                     !__Parser_Expect__(__Parser_State__, __Token_RIGHT_PARENTHESIS_OPERATOR__))
                 {
                     return NULL;
@@ -124,13 +122,11 @@ __Ast_Lvalue__ *__Parser_Parse_Lvalue__(__Parser__ *__Parser_State__)
         }
         if (__Parser_Accept__(__Parser_State__, __Token_LEFT_BRACKET_OPERATOR__))
         {
-            /* Tracks whether the operation succeeded. */
-            int __Ok__ = 0;
-            /* Tracks the index. */
-            __Ast_Atom__ __Index__ = __Parser_Parse_Atom__(__Parser_State__, &__Ok__);
+            /* References the index expression. */
+            __Ast_Expression__ *__Index__ = __Parser_Parse_Expression__(__Parser_State__);
             /* References the extended. */
             __Ast_Lvalue__ *__Extended__ = NULL;
-            if (!__Ok__ || !__Parser_Expect__(__Parser_State__, __Token_RIGHT_BRACKET_OPERATOR__))
+            if (__Index__ == NULL || !__Parser_Expect__(__Parser_State__, __Token_RIGHT_BRACKET_OPERATOR__))
             {
                 return NULL;
             }

@@ -1,0 +1,12 @@
+// Type layout computed at compile time.
+import std.io.println;
+import std.text.number;
+import std.meta.reflect;
+
+type Pixel = { r: u8, g: u8, b: u8 };
+
+def main(): int {
+    let sample: Pixel = { r: 1, g: 2, b: 3 };
+    println(uint_to_text(field_count(&sample) as uint));
+    return 0;
+}

@@ -1,0 +1,16 @@
+// Choosing a code path with a `comptime` parameter: mode 1 squares the value, any other mode
+// adds one.
+import std.io.println;
+import std.text.number;
+
+def choose(comptime mode: int, x: int): int {
+    if (mode == 1) { return x * x; };
+    return x + 1;
+}
+
+def main(): int {
+    let answer: int = comptime choose(1, 7);
+    if (answer != 49) { return 1; };
+    println(int_to_text(answer));
+    return 0;
+}

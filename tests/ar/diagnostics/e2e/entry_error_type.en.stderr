@@ -1,0 +1,7 @@
+error[SULTANC-ENTRYPOINT-INVALID-SIGNATURE]: entry point has an invalid signature — The error type written is `string`. The error type of `main` must be `Error` (std.error).
+  --> tests/ar/diagnostics/e2e/entry_error_type.sn:7:28..7:30
+   |
+ 7 | عرف الرئيسية(): نتيجة عدد, نص {
+   |                            ^^
+   |
+  = help: return std's `Error` from `main` (import std.error.failure)

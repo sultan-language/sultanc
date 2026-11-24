@@ -1,0 +1,13 @@
+// Worked web example: uri_components.
+import std.io.println;
+import std.text.number;
+import std.uri.uri;
+
+
+def main(): int {
+    let input: string = "https://example.test/users?q=sultan";
+    match parse_uri(&input) with
+    | result.ok(uri) -> { println(uri_to_text(&uri)); }
+    | result.err(_) -> { return 1; };
+    return 0;
+}

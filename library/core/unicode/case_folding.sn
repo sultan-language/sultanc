@@ -1,0 +1,11 @@
+استورد يونيكود.خوارزميات.بحث;
+استورد يونيكود.بيانات.طي_الحالة;
+
+// Simple (scalar to scalar) case folding: no heap, so core. Full folding builds
+// vectors and text and is alloc's (alloc.unicode.case_folding), which re-exports
+// this at the same path.
+
+عام عرف طي_حالة_بسيط_يونيكود(القيمة: ط32): ط32 {
+    أرجع محرف_تحويل_بسيط_يونيكود(القيمة, &طي_حالة_بسيط_مفاتيح,
+        &طي_حالة_بسيط_بدايات, &طي_حالة_بسيط_أطوال, &طي_حالة_بسيط_قيم);
+}

@@ -1,0 +1,7 @@
+خطأ[SULTANC-PATTERN-NON-EXHAUSTIVE]: نمط غير شامل: لا تغطي الأذرع ⁨`Light.Green`⁩ و⁨`Light.Blue(_)`⁩ و⁨`Light.Violet`⁩ و1 غيرها — يجب أن تطابق كل قيمة من النوع المطابَق إحدى الأذرع.
+  --> tests/en/diagnostics/e2e/non_exhaustive_cases.sn:12:11..12:16
+    |
+ 12 |     match light with
+    |           ^^^^^
+    |
+  = مساعدة: أضف ذراعًا لكل حالة غير مغطاة

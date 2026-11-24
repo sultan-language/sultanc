@@ -1,0 +1,16 @@
+// Passing arrays to C: memcmp gets pointers to the first element of two byte vectors and
+// reports them equal.
+import std.io.println;
+import std.text.number;
+
+extern def memcmp(first: *u8, second: *u8, size: uint): i32 = «memcmp»;
+
+def main(): int {
+    let first: mutable vector u8 = [3 as u8, 4 as u8, 5 as u8];
+    let second: mutable vector u8 = [3 as u8, 4 as u8, 5 as u8];
+    let comparison: mutable i32 = 1 as i32;
+    unsafe { comparison := memcmp(&first[0], &second[0], 3 as uint); };
+    if (comparison != 0 as i32) { return 1; };
+    println("equal arrays");
+    return 0;
+}

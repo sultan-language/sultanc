@@ -1,0 +1,4 @@
+// Fixture of tests/en/compiler/tooling/refactoring_queries.sn (not a test).
+public def twice(value: int): int {
+    return value * 2;
+}

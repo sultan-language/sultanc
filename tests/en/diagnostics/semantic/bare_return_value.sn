@@ -1,0 +1,6 @@
+// اختبار: رفض
+// تشخيص: SULTANC-TYPE-RETURN-MISMATCH
+// نظير: tests/ar/diagnostics/semantic/bare_return_value.sn
+def main(): i32 {
+    return;
+}

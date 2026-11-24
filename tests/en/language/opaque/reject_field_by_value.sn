@@ -1,0 +1,8 @@
+// اختبار: رفض
+// أهداف: arm64-darwin,x86_64-linux
+// تشخيص: SULTANC-TYPE-OPAQUE-BY-VALUE
+// نظير: tests/ar/language/opaque/reject_field_by_value.sn
+// A record field of an opaque type.
+type Db = opaque;
+type Holder = { db: Db };
+def main(): int { return 0; }

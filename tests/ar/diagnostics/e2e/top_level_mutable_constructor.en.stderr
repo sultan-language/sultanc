@@ -1,0 +1,6 @@
+error[SULTANC-COMPTIME-NON-CONSTANT]: comptime expression must be a pure compile-time constant — The compile-time evaluation failure was described as follows: A module-level value built by a constructor is immutable, and its arguments are numbers, booleans, characters, text or such constructors.
+  --> tests/ar/diagnostics/e2e/top_level_mutable_constructor.sn:9:1..9:37
+   |
+ 9 | ليكن الحالي: متغير لون = لون.أحمر();
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |

@@ -1,0 +1,6 @@
+def main(): i32 {
+    let value: mutable i32 = 40;
+    let first: & mutable i32 = & mutable value;
+    let second: & i32 = &value;
+    return *first + *second + 2;
+}

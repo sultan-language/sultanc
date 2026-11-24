@@ -10,6 +10,7 @@ SULTANC_DIAGNOSTIC(__E0103_Input_File_Not_Found__, "SULTANC-IO-INPUT-NOT-FOUND",
 SULTANC_DIAGNOSTIC(__E0104_Unrecognized_Input_File_Type__, "SULTANC-CLI-UNKNOWN-INPUT-TYPE", "Unrecognized Input File Type", __Diagnostic_Severity_Error__, __Diag_Word_E0104__)
 SULTANC_DIAGNOSTIC(__E0200_Duplicate_Function__, "SULTANC-NAME-DUPLICATE-DECLARATION", "Duplicate Function", __Diagnostic_Severity_Error__, __Diag_Word_E0200__)
 SULTANC_DIAGNOSTIC(__E0201_Source_Module_Not_Found__, "SULTANC-MODULE-NOT-FOUND", "Source Module Not Found", __Diagnostic_Severity_Error__, __Diag_Word_E0201__)
+SULTANC_DIAGNOSTIC(__E0202_Import_Escapes_Root__, "SULTANC-IMPORT-ESCAPES-ROOT", "Import Escapes Root", __Diagnostic_Severity_Error__, __Diag_Word_E0202__)
 SULTANC_DIAGNOSTIC(__E0203_Main_Function_Not_Found__, "SULTANC-ENTRYPOINT-NOT-FOUND", "Main Function Not Found", __Diagnostic_Severity_Error__, __Diag_Word_E0203__)
 SULTANC_DIAGNOSTIC(__E0205_Duplicate_Declaration__, "SULTANC-NAME-DUPLICATE-DECLARATION", "Duplicate Declaration", __Diagnostic_Severity_Error__, __Diag_Word_E0205__)
 SULTANC_DIAGNOSTIC(__E0206_Duplicate_Temporary__, "SULTANC-NAME-DUPLICATE-DECLARATION", "Duplicate Temporary", __Diagnostic_Severity_Error__, __Diag_Word_E0206__)

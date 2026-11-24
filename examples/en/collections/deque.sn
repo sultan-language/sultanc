@@ -1,0 +1,21 @@
+// A double-ended queue: push and pop at both ends.
+import std.io.println;
+import std.text.number;
+import std.collections.deque;
+
+def main(): int {
+    let line: mutable deque<int> = new_deque();
+    deque_push_back(&mutable line, 2);
+    deque_push_back(&mutable line, 3);
+    deque_push_front(&mutable line, 1);
+    deque_push_back(&mutable line, 4);
+    println(uint_to_text(deque_length(&line)));
+    match deque_pop_front(&mutable line) with
+    | option.some(value) -> { println(int_to_text(value)); }
+    | option.none -> { };
+    match deque_pop_back(&mutable line) with
+    | option.some(value) -> { println(int_to_text(value)); }
+    | option.none -> { };
+    println(uint_to_text(deque_length(&line)));
+    return 0;
+}

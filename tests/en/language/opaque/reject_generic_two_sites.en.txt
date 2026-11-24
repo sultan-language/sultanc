@@ -1,0 +1,12 @@
+error[SULTANC-TYPE-OPAQUE-TYPE-ARGUMENT]: this generic instance needs the layout of an opaque type argument — The opaque type is `Db`.
+  --> tests/en/language/opaque/reject_generic_two_sites.sn:19:19..19:33
+    |
+ 19 |     return fine + peek(0 as *Db);
+    |                   ^^^^^^^^^^^^^^
+    |
+  ::: tests/en/language/opaque/reject_generic_two_sites.sn:13:14..13:31
+    |
+ 13 |     unsafe { let copy: A = *p; };
+    |              ^^^^^^^^^^^^^^^^^ related context
+    |
+  = help: pass the pointer type `*T` as the type argument instead

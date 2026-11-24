@@ -1,0 +1,12 @@
+// اختبار: رفض
+// تشخيص: SULTANC-NAME-UNKNOWN
+// نظير: tests/ar/diagnostics/e2e/missing_import_hint.sn
+// خرج-تشخيص-عربي: missing_import_hint.ar.stderr
+// خرج-تشخيص-إنجليزي: missing_import_hint.en.stderr
+// A std module the compilation loaded declares the unknown name public:
+// the help names the module to import (std.io.print loads std.io.writer).
+import std.io.print;
+def main(): i32 {
+    let written: i32 = اكتب_الكل(3);
+    return 0;
+}

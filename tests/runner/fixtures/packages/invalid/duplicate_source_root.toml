@@ -1,0 +1,12 @@
+version = 1
+root = "app"
+
+[[package]]
+id = "app"
+source_root = "../en/app/src"
+name = "app"
+
+[[package]]
+id = "copy"
+source_root = "../en/app/../app/src"
+name = "copy"

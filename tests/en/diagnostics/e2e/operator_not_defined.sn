@@ -1,0 +1,15 @@
+// اختبار: رفض
+// تشخيص: SULTANC-TYPE-MISMATCH
+// نظير: tests/ar/diagnostics/e2e/operator_not_defined.sn
+// خرج-تشخيص-عربي: operator_not_defined.ar.stderr
+// خرج-تشخيص-إنجليزي: operator_not_defined.en.stderr
+// An operator a record does not define is a type error at the operation
+// that names the operator and the type.
+type Point = { x: int, y: int };
+
+def main(): int {
+    let a: Point = { x: 1, y: 2 };
+    let b: Point = { x: 3, y: 4 };
+    if (a > b) { return 1; };
+    return 0;
+}

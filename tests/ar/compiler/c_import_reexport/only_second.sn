@@ -1,0 +1,4 @@
+// جزء من tests/ar/compiler/c_import_reexport/main.sn: تستورد second.h وحدها.
+استورد "second.h";
+
+عام عرف المجموع(العنصر: &item_t): ص32 { أرجع item_total(العنصر); }

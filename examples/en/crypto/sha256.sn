@@ -1,0 +1,11 @@
+// SHA-256 of a byte vector, printed as hexadecimal.
+import std.io.println;
+import std.crypto.sha256;
+import std.encoding.hex;
+
+def main(): int {
+    let input: vector u8 = [0x61, 0x62, 0x63];
+    let digest: vector u8 = sha256(&input);
+    println(hex_encode(&digest));
+    return 0;
+}

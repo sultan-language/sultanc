@@ -1,0 +1,16 @@
+// The module that owns the opaque handle types, as a C binding would.
+public type Connection = opaque;
+public type Statement = opaque;
+public type Handle = Connection;
+
+public def connect(address: u64): *Connection {
+    unsafe { return address as *Connection; };
+}
+
+public def prepare(connection: *Connection): *Statement {
+    unsafe { return ((connection as u64) + 16) as *Statement; };
+}
+
+public def statement_offset(connection: *Handle, statement: *Statement): u64 {
+    unsafe { return (statement as u64) - (connection as u64); };
+}

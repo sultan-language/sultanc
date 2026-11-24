@@ -1,0 +1,31 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/language/comptime/definition_decorators.sn
+// Definition-time decorators: `@@register("/a") def a` keeps a as written
+// and the entry calls register("/a", a) once before its body, in declaration
+// order, as a router registers its routes.
+type Route = { path: string, handler: fn(int): int };
+let routes: mutable vector Route = [];
+
+def register(path: string, handler: fn(int): int): void {
+    let r: Route = { path: path, handler: handler };
+    unsafe { append(routes, r); }
+}
+
+@@register("/a")
+def a(x: int): int { return x + 1; }
+
+@@register("/b")
+def b(x: int): int { return x * 2; }
+
+def main(): int {
+    let count: uint;
+    unsafe { count := length(routes) as uint; }
+    if (count != 2) { return 1; };
+    if (a(1) != 2) { return 2; };
+    let result: int;
+    unsafe { result := routes[1].handler(20) + 2; }
+    return result;
+}

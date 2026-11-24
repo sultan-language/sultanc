@@ -1,0 +1,93 @@
+// An asynchronous TCP echo on 127.0.0.1: a server task and a client task in one program
+// exchange three bytes.
+import std.io.println;
+import std.text.number;
+import std.async.runtime;
+import std.async.net;
+import std.net.socket_address;
+import std.net.tcp;
+
+def socket_address(): result socket_addr, socket_addr_parse_error {
+    let text: string = "127.0.0.1:42320";
+    return parse_socket_addr(&text);
+}
+
+def serve_once(): int {
+    let addr: socket_addr;
+    match socket_address() with
+    | result.ok(a) -> { addr := a; }
+    | result.err(_) -> { return 1; };
+    let listener: tcp_listener;
+    match tcp_listen_async(&addr, 8) with
+    | result.ok(s) -> { listener := s; }
+    | result.err(_) -> { return 2; };
+    let stream: tcp_stream;
+    match tcp_accept_async(&listener) with
+    | result.ok(s) -> { stream := s; }
+    | result.err(_) -> { return 3; };
+    let buffer: mutable vector u8 = [0 as u8, 0 as u8, 0 as u8];
+    let got: mutable int = 0;
+    while (got < 3) {
+        match tcp_read_async(&stream, &mutable buffer, got, 3 - got) with
+        | result.ok(n) -> {
+            if (n <= 0) { return 4; };
+            got := got + n;
+        }
+        | result.err(_) -> { return 5; };
+    };
+    if (buffer[0] != 65 as u8 || buffer[2] != 67 as u8) { return 6; };
+    let reply: vector u8 = [66 as u8, 67 as u8, 68 as u8];
+    match tcp_write_all_async(&stream, &reply) with
+    | result.ok(_) -> { }
+    | result.err(_) -> { return 7; };
+    let closed: result int, int = tcp_close_async(stream);
+    let stopped: result int, int = tcp_listener_close_async(listener);
+    return 0;
+}
+
+def client_once(): int {
+    sleep_task(10000000);
+    let addr: socket_addr;
+    match socket_address() with
+    | result.ok(a) -> { addr := a; }
+    | result.err(_) -> { return 8; };
+    let stream: tcp_stream;
+    match tcp_connect_async(&addr) with
+    | result.ok(s) -> { stream := s; }
+    | result.err(_) -> { return 9; };
+    let message: vector u8 = [65 as u8, 66 as u8, 67 as u8];
+    match tcp_write_all_async(&stream, &message) with
+    | result.ok(_) -> { }
+    | result.err(_) -> { return 10; };
+    let buffer: mutable vector u8 = [0 as u8, 0 as u8, 0 as u8];
+    let got: mutable int = 0;
+    while (got < 3) {
+        match tcp_read_async(&stream, &mutable buffer, got, 3 - got) with
+        | result.ok(n) -> {
+            if (n <= 0) { return 11; };
+            got := got + n;
+        }
+        | result.err(_) -> { return 12; };
+    };
+    if (buffer[0] != 66 as u8 || buffer[2] != 68 as u8) { return 13; };
+    let closed: result int, int = tcp_close_async(stream);
+    return 0;
+}
+
+def main(): int {
+    if (!tasks_supported()) { return 1; };
+    let server: mutable task<int> = spawn_task(fn(): int -> serve_once());
+    let client: mutable task<int> = spawn_task(fn(): int -> client_once());
+    match await_task(&mutable client) with
+    | option.some(code) -> {
+        if (code != 0) { return code; };
+    }
+    | option.none -> { return 21; };
+    match await_task(&mutable server) with
+    | option.some(code) -> {
+        if (code != 0) { return code; };
+    }
+    | option.none -> { return 22; };
+    println("async TCP exchange complete");
+    return 0;
+}

@@ -1,0 +1,7 @@
+// Calls answer() from libanswer.so, which `run -L <dir> -l answer` links
+// (tests/runner/suites/cli.sn); without the -l the link fails.
+extern def answer(): i32 = "answer";
+
+def main(): int {
+    return answer() as int;
+}

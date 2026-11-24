@@ -1,0 +1,12 @@
+// Worked web example: http_headers.
+import std.io.println;
+import std.text.number;
+import std.http.headers;
+
+
+def main(): int {
+    let name: string = "Content-Type";
+    let value: string = "application/json";
+    if (اسم_رأس_ويب_صالح(&name) && قيمة_رأس_ويب_صالحة(&value)) { println("header validated"); } else { return 1; };
+    return 0;
+}

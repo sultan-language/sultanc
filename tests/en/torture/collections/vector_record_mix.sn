@@ -1,0 +1,23 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// فئة: collections
+type Bucket = { values: vector int };
+
+def sum(bucket: Bucket): int {
+    let i: mutable uint = 0;
+    let total: mutable int = 0;
+    while (i < (length(bucket.values) as uint)) {
+        total := total + bucket.values[i];
+        i := i + 1;
+    }
+    return total;
+}
+
+def main(): int {
+    let values: mutable vector int = [10, 20];
+    append(values, 12);
+    let bucket: Bucket = { values: values };
+    return sum(bucket);
+}

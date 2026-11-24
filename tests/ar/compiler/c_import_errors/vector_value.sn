@@ -1,0 +1,8 @@
+// اختبار: رفض
+// تشخيص: SULTANC-C-UNSUPPORTED
+// نظير: tests/en/compiler/c_import_errors/vector_value.sn
+// يبلغ جسر عن متغير محلي من نوع متجه (__attribute__((vector_size(16)))) في شفرة سي مترجمة بالرمز
+// SULTANC-C-UNSUPPORTED مع ملفه وسطره وعموده؛ أما typedef المتجه وحده فتعليق تخط فقط.
+استورد "vector_value.c";
+
+عرف الرئيسية(): عدد { أرجع 0; }

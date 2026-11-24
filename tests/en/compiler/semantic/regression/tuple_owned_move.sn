@@ -1,0 +1,5 @@
+def main(): int {
+    let pair: (string, int) = ("hello", 2);
+    let moved: (string, int) = pair;
+    return length(pair[0]);
+}

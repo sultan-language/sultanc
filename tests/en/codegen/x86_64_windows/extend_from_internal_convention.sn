@@ -1,0 +1,30 @@
+// اختبار: تشغيل
+// أهداف: x86_64-linux,x86_64-windows-msvc
+// خروج: 42
+// نظير: tests/ar/codegen/x86_64_windows/extend_from_internal_convention.sn
+// extend_from on native x86-64 Windows: the bulk append is encoded in
+// SultanC's internal register convention, the System V one on every native
+// x86-64 target (first argument in RDI, not the Microsoft RCX), and grows
+// the buffer through the realloc service, a SultanC function. 1-, 2-, 4-
+// and 8-byte elements, ranges inside the source, repeated growth.
+def main(): int {
+    let bytes: mutable vector u8 = [1, 2];
+    let more: vector u8 = [3, 4, 5, 6, 7];
+    extend_from(bytes, &more, 1 as uint, 3 as uint);
+    if (length(bytes) != 5 || bytes[2] != 4 || bytes[4] != 6) { return 1; };
+    let halves: mutable vector u16 = [];
+    let wide: vector u16 = [500, 600, 700];
+    extend_from(halves, &wide, 1 as uint, 2 as uint);
+    if (length(halves) != 2 || halves[0] != 600 || halves[1] != 700) { return 2; };
+    let words: mutable vector i32 = [];
+    let source: vector i32 = [10, 20, 30, 40];
+    let k: mutable int = 0;
+    while (k < 50) { extend_from(words, &source, 0 as uint, 4 as uint); k := k + 1; }
+    if (length(words) != 200 || words[199] != 40 || words[101] != 20) { return 3; };
+    let longs: mutable vector i64 = [7];
+    let big: vector i64 = [1, 2, 3];
+    extend_from(longs, &big, 2 as uint, 1 as uint);
+    extend_from(longs, &big, 0 as uint, 0 as uint);
+    if (length(longs) != 2 || longs[1] != 3) { return 4; };
+    return 42;
+}

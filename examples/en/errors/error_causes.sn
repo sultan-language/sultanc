@@ -1,0 +1,12 @@
+// Typed result and recoverable error: error_causes.
+import std.io.println;
+import std.text.number;
+
+def divide(a: int, b: int): result int, int { if (b == 0) { return result.err(1); }; return result.ok(a / b); }
+
+def main(): int {
+    match divide(24, 0) with
+    | result.ok(n) -> { println(int_to_text(n)); }
+    | result.err(_) -> { println("division error"); };
+    return 0;
+}

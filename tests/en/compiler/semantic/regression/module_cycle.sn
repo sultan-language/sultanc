@@ -1,0 +1,5 @@
+// اختبار: رفض
+// خروج: 1
+// مرحلة0: نعم
+import "modules/cycle_a.sn";
+def main(): int { return 42; }

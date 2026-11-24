@@ -1,0 +1,28 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// Twin: tests/ar/compiler/c_import_shared/main.sn (no `نظير` header: the
+// pair step interprets both twins, and the interpreter of a static compiler
+// cannot call the C library functions scale.c uses).
+// Several C imports of one program declare the same things: geometry.c and
+// scale.c both include common.h (struct point, point_t, SHARED_LIMIT and
+// the prototypes) and <stdint.h>; stdio.h and stdlib.h both declare size_t
+// and NULL. Each shared declaration is written once (compiler/jisr/
+// shared.sn), so no use below is ambiguous, and the point scale_point
+// returns is the record point_sum takes.
+import "geometry.c";
+import "scale.c";
+import "stdio.h";
+import "stdlib.h";
+import "stdint.h";
+
+def main(): int {
+    let p: point_t = scale_point({ x: 1, y: 2 }, 3);
+    let sum: int32_t = point_sum(&p);
+    if (sum != 9) { return 1; };
+    let bytes: size_t = point_bytes();
+    if (bytes != 8) { return 2; };
+    let limit: i32 = SHARED_LIMIT;
+    // 40 - 9 + 8 + 3 = 42
+    return (limit - sum + (bytes as i32) + 3) as int;
+}

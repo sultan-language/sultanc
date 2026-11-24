@@ -1,0 +1,20 @@
+error[SULTANC-OWNERSHIP-MERGE-CONFLICT]: ownership state of a local differs between paths that join — The symbol is `text`. Ownership state conflicts prevent a control-flow merge.
+  --> tests/en/diagnostics/e2e/ownership_merge_rejected.sn:13:5..13:22
+    |
+ 13 |     let text: string;
+    |     ^^^^^^^^^^^^^^^^^
+    |
+
+error[SULTANC-OWNERSHIP-MERGE-CONFLICT]: ownership state of a local differs between paths that join — The symbol is `text`. Ownership state conflicts prevent a control-flow merge.
+  --> tests/en/diagnostics/e2e/ownership_merge_rejected.sn:22:5..22:28
+    |
+ 22 |     let text: string = "b";
+    |     ^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+error[SULTANC-OWNERSHIP-MERGE-CONFLICT]: ownership state of a local differs between paths that join — The symbol is `value`. Ownership state conflicts prevent a control-flow merge.
+  --> tests/en/diagnostics/e2e/ownership_merge_rejected.sn:32:5..32:32
+    |
+ 32 |     let value: mutable int = 1;
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |

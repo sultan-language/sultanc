@@ -1,0 +1,17 @@
+// The midpoint of a quadratic Bezier curve: at t = 1/2 the point is (a + 2 * control + b) / 4,
+// worked out in whole numbers.
+import std.io.println;
+import std.text.number;
+
+type Point = { x: int, y: int };
+
+def main(): int {
+    let a: Point = { x: 0, y: 0 };
+    let control: Point = { x: 4, y: 8 };
+    let b: Point = { x: 8, y: 0 };
+    let half_x: int = (a.x + 2 * control.x + b.x) / 4;
+    let half_y: int = (a.y + 2 * control.y + b.y) / 4;
+    if (half_x != 4 || half_y != 4) { return 1; };
+    println(int_to_text(half_y));
+    return 0;
+}

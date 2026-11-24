@@ -1,0 +1,155 @@
+// اختبار: تشغيل
+// خروج: 42
+// نظير: tests/ar/compiler/tooling/broken_workspace.sn
+// A workspace with two broken sources, analysed as the language server does
+// (a.sn is the root, the other sources join it): broken_import.sn names a
+// module that does not exist, and broken_tokens.sn cannot be read as tokens.
+// A tooling request records each failure as that source's diagnostics and
+// still analyses the rest: the uses of `shared_value` in b.sn and in
+// broken_import.sn are found, each source says how complete it is, and the
+// failed import statement is reported. A compilation is still rejected.
+import compiler.driver.source_inputs;
+import compiler.frontend.semantic_pipeline;
+import compiler.frontend.tooling_queries;
+import compiler.frontend.tooling_facts;
+import compiler.frontend.cancellation;
+import compiler.frontend.module_loading.logical_environment;
+import compiler.frontend.names.identifiers;
+import compiler.frontend.names.resolved_bindings;
+import compiler.frontend.names.reference_queries;
+import compiler.frontend.names.import_queries;
+import compiler.backend.target.target_model;
+import compiler.backend.target.target_registry;
+import compiler.diagnostics.engine;
+import compiler.source.span;
+import std.text.search;
+import std.text.substring;
+import std.text.compare;
+import std.text.transform;
+
+def host(): اختياري واصف_هدف {
+    match حل_هدف_المضيف_المسجل() with
+    | نتيجة_حل_هدف.غير_مسجل -> { return اختياري.لا_شيء(); }
+    | نتيجة_حل_هدف.محلول(target) -> { return اختياري.موجود(target); };
+}
+
+def path_of(name: string): string {
+    let parts: vector string = ["tests/en/compiler/tooling/broken_workspace/", name];
+    let separator: string = "";
+    return صل_النصوص(&parts, &separator);
+}
+
+def analyse(tooling: bool): نتيجة_بناء_واجهة_قابلة_للإلغاء {
+    let root: string = path_of("a.sn");
+    let extras: vector string = [path_of("b.sn"), path_of("broken_import.sn"), path_of("broken_tokens.sn")];
+    match ابن_إعداد_تجميع_مباشر(&root, &extras) with
+    | نتيجة_إعداد_تجميع_مباشر.غير_صالح -> { return نتيجة_بناء_واجهة_قابلة_للإلغاء.ملغاة(); }
+    | نتيجة_إعداد_تجميع_مباشر.جاهز({ البيئة: env, المفتاح_الجذري: key, المفاتيح_المباشرة: keys }) -> {
+        let more: mutable vector مفتاح_وحدة_مقنن = [];
+        let i: mutable uint = 1;
+        while (i < (length(keys) as uint)) {
+            ألحق(more, انسخ_مفتاح_وحدة_مقنن(&keys[i]));
+            i := i + 1;
+        }
+        let request: طلب_واجهة_وحدة = { البيئة: env, المفتاح_الجذري: key, احتفظ_بحقائق_الأدوات: tooling };
+        let cancel: حالة_إلغاء_واجهة = حالة_إلغاء_واجهة_جديدة();
+        return ابن_واجهة_وحدة_بهدف_قابلة_للإلغاء(request, host(), &more, &cancel);
+    };
+}
+
+def source_named(frontend: &نتيجة_واجهة_وحدة, name: string): uint {
+    let i: mutable uint = 0;
+    while (i < (length((*frontend).الوحدات) as uint)) {
+        let id: uint = (*frontend).الوحدات[i].معرف_المصدر;
+        match اسم_مصدر_واجهة_بمعرف(frontend, id) with
+        | اختياري.موجود(spelled) -> { if (ينتهي_بـ(&spelled, &name)) { return id; } }
+        | اختياري.لا_شيء -> { };
+        i := i + 1;
+    }
+    return 1000000;
+}
+
+def content_of(frontend: &نتيجة_واجهة_وحدة, source: uint): string {
+    match مصدر_واجهة_بمعرف(frontend, source) with
+    | اختياري.موجود(found) -> { return استنسخ(&found.المحتوى); }
+    | اختياري.لا_شيء -> { return ""; };
+}
+
+def text_of(content: &string, found_range: نطاق): string {
+    let start: uint = found_range.البداية.البايت as uint;
+    let end: uint = found_range.النهاية.البايت as uint;
+    if (end < start) { return ""; }
+    match مقطع_نص(content, start, end - start) with
+    | اختياري.موجود(part) -> { return part; }
+    | اختياري.لا_شيء -> { return ""; };
+}
+
+def uses_in(references: &vector مرجع_رمز_دلالي, source: uint): uint {
+    let count: mutable uint = 0;
+    let i: mutable uint = 0;
+    while (i < (length(*references) as uint)) {
+        if (((*references)[i].النطاق.البداية.المصدر as uint) == source && (*references)[i].الدور != دور_مرجع.تصريح()) {
+            count := count + 1;
+        }
+        i := i + 1;
+    }
+    return count;
+}
+
+def main(): int {
+    match analyse(true) with
+    | نتيجة_بناء_واجهة_قابلة_للإلغاء.مكتملة(frontend) -> {
+        let a: uint = source_named(&frontend, "broken_workspace/a.sn");
+        let b: uint = source_named(&frontend, "broken_workspace/b.sn");
+        let imports: uint = source_named(&frontend, "broken_workspace/broken_import.sn");
+        let tokens: uint = source_named(&frontend, "broken_workspace/broken_tokens.sn");
+        if (a == 1000000 || b == 1000000 || imports == 1000000 || tokens == 1000000) { return 1; }
+        // `shared_value` is still found in the sound source and in the one
+        // whose other import failed.
+        let text_a: string = content_of(&frontend, a);
+        let needle: string = "shared_value";
+        let at: mutable uint = 0;
+        match ابحث_نصا(&text_a, &needle) with
+        | اختياري.موجود(offset) -> { at := offset; }
+        | اختياري.لا_شيء -> { return 2; };
+        match رمز_واجهة_عند_بايت(&frontend, a, at) with
+        | اختياري.لا_شيء -> { return 3; }
+        | اختياري.موجود(symbol) -> {
+            let references: vector مرجع_رمز_دلالي = مراجع_رمز_واجهة(&frontend, symbol);
+            if (uses_in(&references, b) != 1) { return 4; }
+            if (uses_in(&references, imports) != 1) { return 5; }
+            if (uses_in(&references, tokens) != 0) { return 6; }
+            // The sound sources are still typed.
+            match نوع_رمز_واجهة(&frontend, symbol) with
+            | اختياري.لا_شيء -> { return 18; }
+            | اختياري.موجود(_) -> { };
+        };
+        // Completeness per source.
+        let of_a: اكتمال_مصدر_أدوات = اكتمال_مصدر_واجهة(&frontend, a);
+        let of_b: اكتمال_مصدر_أدوات = اكتمال_مصدر_واجهة(&frontend, b);
+        let of_imports: اكتمال_مصدر_أدوات = اكتمال_مصدر_واجهة(&frontend, imports);
+        let of_tokens: اكتمال_مصدر_أدوات = اكتمال_مصدر_واجهة(&frontend, tokens);
+        if (!of_a.التحميل || !of_a.الأسماء || !of_a.الأنواع) { return 7; }
+        if (!of_b.التحميل || !of_b.الأسماء || !of_b.الأنواع) { return 8; }
+        if (of_imports.التحميل || !of_imports.الأسماء || !of_imports.الأنواع) { return 9; }
+        if (of_tokens.التحميل || of_tokens.الأسماء) { return 10; }
+        // The failed import statement, and the edge that did load.
+        let failed: &vector نطاق = &frontend.حقائق_الأدوات.الاستيرادات_الفاشلة;
+        if ((length(*failed) as uint) != 1) { return 11; }
+        let text_imports: string = content_of(&frontend, imports);
+        let spelled: string = text_of(&text_imports, (*failed)[0]);
+        let expected: string = "import nowhere.missing_module;";
+        if (!نصان_متساويان(&spelled, &expected)) { return 12; }
+        let relations: vector علاقة_استيراد_وحدة = علاقات_استيراد_واجهة(&frontend, imports, true);
+        if ((length(relations) as uint) != 1 || relations[0].مصدر_المستورد_منه != a) { return 13; }
+        // Both failures are diagnostics; the analysis is not complete.
+        if (frontend.تشخيصات_الأدوات.عدد_الأخطاء < 2) { return 14; }
+        if (frontend.كاملة_دلاليا) { return 15; }
+    }
+    | _ -> { return 16; };
+    // A compilation still stops at the first error.
+    match analyse(false) with
+    | نتيجة_بناء_واجهة_قابلة_للإلغاء.مرفوضة(_) -> { }
+    | _ -> { return 17; };
+    return 42;
+}

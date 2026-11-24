@@ -1,0 +1,10 @@
+// SHA-256's constant-time digest comparison: no heap, so core. The hash itself
+// builds vectors and is alloc's (alloc.crypto.sha256), which re-exports this at
+// the same path.
+استورد تشفير.كلمات;
+
+عام عرف هاش_متساوي_بزمن_ثابت(أ: &متجه ط8, ب: &متجه ط8): منطقي {
+    أرجع بايتات_متساوية_بزمن_ثابت_تشفير(أ, ب);
+}
+
+عام مرادف constant_time_digest_equal = هاش_متساوي_بزمن_ثابت;

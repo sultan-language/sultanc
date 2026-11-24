@@ -1,0 +1,34 @@
+// A UDP loopback round trip: bind a socket, connect it to its own address, send three bytes
+// and receive them back.
+import std.io.println;
+import std.net.socket_address;
+import std.net.udp;
+
+def main(): int {
+    let addr: socket_addr;
+    match parse_socket_addr(&"127.0.0.1:40260") with
+    | result.ok(a) -> { addr := a; }
+    | result.err(_) -> { return 1; };
+    let sock: udp_socket;
+    match udp_bind(&addr) with
+    | result.ok(s) -> { sock := s; }
+    | result.err(_) -> { return 2; };
+    match udp_connect(&sock, &addr) with
+    | result.ok(_) -> { }
+    | result.err(_) -> { return 3; };
+    let payload: vector u8 = [65 as u8, 66 as u8, 67 as u8];
+    match udp_send(&sock, &payload, 0, 3) with
+    | result.ok(n) -> {
+        if (n != 3) { return 4; };
+    }
+    | result.err(_) -> { return 5; };
+    let buf: mutable vector u8 = [0 as u8, 0 as u8, 0 as u8];
+    match udp_recv(&sock, &mutable buf, 0, 3) with
+    | result.ok(n) -> {
+        if (n != 3 || buf[0] != 65 as u8) { return 6; };
+    }
+    | result.err(_) -> { return 7; };
+    let done: result int, int = udp_close(sock);
+    println("udp loopback");
+    return 0;
+}

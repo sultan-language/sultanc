@@ -1,0 +1,26 @@
+// Retrying an operation that can fail: try up to five times and stop at the first success,
+// here on the third try.
+import std.io.println;
+import std.text.number;
+
+def attempt(n: int): result int, int {
+    if (n < 3) { return result.err(1); };
+    return result.ok(42);
+}
+
+def main(): int {
+    let tries: mutable int = 0;
+    let answer: mutable int = 0;
+    while (tries < 5) {
+        tries := tries + 1;
+        match attempt(tries) with
+        | result.ok(value) -> {
+            answer := value;
+            break;
+        }
+        | result.err(_) -> { };
+    };
+    if (answer != 42 || tries != 3) { return 1; };
+    println(int_to_text(tries));
+    return 0;
+}

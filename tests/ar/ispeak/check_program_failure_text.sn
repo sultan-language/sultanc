@@ -1,0 +1,32 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 0
+// نظير: tests/en/ispeak/check_program_failure_text.sn
+استورد المكتبة.نصوص.مقارنة;
+استورد المكتبة.نصوص.من_بايتات;
+استورد المكتبة.ملفات.قراءة_ملف;
+استورد compiler.diagnostics.schema;
+استورد compiler.diagnostics.identity;
+استورد compiler.driver.program_failure_text;
+
+// The words of a program's runtime failures (docs/en/reference/errors.md): the text of
+// library/core/process/failure_text.sn is exactly the compiler's rendering for
+// a program compiled in Arabic, which the compiler writes over it at every
+// compilation; the English rendering differs only in the compiled language.
+عرف الرئيسية(): عدد {
+    ليكن المسار: نص = «library/core/process/failure_text.sn»;
+    ليكن المكتوب: نص;
+    طابق اقرأ_الملف(&المسار) مع
+    | نتيجة.نجح(النص) -> { المكتوب := النص; }
+    | نتيجة.خطأ(_) -> { أرجع 1; };
+    ليكن العربي: نص = نص_وحدة_كلمات_فشل_البرنامج(لغة_تشخيص.العربية());
+    إذا (!نصان_متساويان(&المكتوب, &العربي)) { أرجع 2; };
+    ليكن الإنجليزي: نص = نص_وحدة_كلمات_فشل_البرنامج(لغة_تشخيص.الإنجليزية());
+    إذا (نصان_متساويان(&الإنجليزي, &العربي)) { أرجع 3; };
+    ليكن الإطار_العربي: نص = إطار_فشل_برنامج(
+        لغة_تشخيص.العربية(), معرف_تشخيص.انتهى_البرنامج_بخطأ(), اختياري.لا_شيء()
+    );
+    ليكن المتوقع_العربي: نص = «خطأ[SULTANC-RUNTIME-PROGRAM-ERROR]: انتهى البرنامج بخطأ»;
+    إذا (!نصان_متساويان(&الإطار_العربي, &المتوقع_العربي)) { أرجع 4; };
+    أرجع 0;
+}

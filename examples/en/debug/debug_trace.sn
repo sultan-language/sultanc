@@ -1,0 +1,12 @@
+// Self-checking example: debug_trace.
+import std.io.println;
+import std.text.number;
+
+def operation(v: int): int { return v * 3; }
+def main(): int {
+    println("enter process");
+    let result_value: int = operation(12);
+    println(int_to_text(result_value));
+    println("leave process");
+    return 0;
+}

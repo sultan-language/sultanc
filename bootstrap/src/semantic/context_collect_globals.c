@@ -5,6 +5,7 @@
 #include "kernel/name/name.h"
 #include "semantic/diagnostic.h"
 #include "semantic/context.h"
+#include "semantic/generic.h"
 
 #include <stdint.h>
 #include <stdlib.h>
@@ -44,11 +45,27 @@ static int __Semantic_Record_Type_Owner__(__Semantic_Context__ *__Context__,
     {
         /* Stores the fact. */
         __Semantic_Type_Owner_Fact__ __Fact__;
+        size_t __Argument_Index__;
         __Fact__.__Type__ = __Type__;
         __Fact__.__Unit__ = __Unit__;
-        return __Vector_Push__(&__Context__->__Type_Owners__, &__Fact__) != NULL;
+        if (__Vector_Push__(&__Context__->__Type_Owners__, &__Fact__) == NULL)
+        {
+            return 0;
+        }
+        for (__Argument_Index__ = 0U;
+             __Argument_Index__ < __Type__->__As__.__Named__.__Argument_Count__;
+             ++__Argument_Index__)
+        {
+            if (!__Semantic_Record_Type_Owner__(
+                    __Context__, __Type__->__As__.__Named__.__Arguments__[__Argument_Index__], __Unit__))
+            {
+                return 0;
+            }
+        }
+        return 1;
     }
-    if (__Type__->__Kind__ == __Ast_Type_Reference__ || __Type__->__Kind__ == __Ast_Type_Vector__ ||
+    if (__Type__->__Kind__ == __Ast_Type_Pointer__ || __Type__->__Kind__ == __Ast_Type_Reference__ ||
+        __Type__->__Kind__ == __Ast_Type_Vector__ ||
         __Type__->__Kind__ == __Ast_Type_Box__ || __Type__->__Kind__ == __Ast_Type_Option__ ||
         __Type__->__Kind__ == __Ast_Type_Mutable__)
     {
@@ -60,6 +77,22 @@ static int __Semantic_Record_Type_Owner__(__Semantic_Context__ *__Context__,
                    __Context__, __Type__->__As__.__Result__.__Ok__, __Unit__) &&
                __Semantic_Record_Type_Owner__(
                    __Context__, __Type__->__As__.__Result__.__Error__, __Unit__);
+    }
+    if (__Type__->__Kind__ == __Ast_Type_Function__)
+    {
+        size_t __Parameter_Index__;
+        for (__Parameter_Index__ = 0U;
+             __Parameter_Index__ < __Type__->__As__.__Function__.__Parameter_Count__;
+             ++__Parameter_Index__)
+        {
+            if (!__Semantic_Record_Type_Owner__(
+                    __Context__, __Type__->__As__.__Function__.__Parameters__[__Parameter_Index__], __Unit__))
+            {
+                return 0;
+            }
+        }
+        return __Semantic_Record_Type_Owner__(
+            __Context__, __Type__->__As__.__Function__.__Output__, __Unit__);
     }
     return 1;
 }
@@ -75,6 +108,11 @@ static int __Semantic_Record_Type_Declaration_Owners__(__Semantic_Context__ *__C
     if (__Declaration__ == NULL)
     {
         return 1;
+    }
+    if (__Declaration__->__Kind__ == __Ast_Type_Decl_Alias__)
+    {
+        return __Semantic_Record_Type_Owner__(
+            __Context__, __Declaration__->__As__.__Alias__, __Unit__);
     }
     if (__Declaration__->__Kind__ == __Ast_Type_Decl_Struct__)
     {
@@ -175,6 +213,18 @@ static int __Semantic_Unit_Name_Exists__(__Semantic_Context__ *__Context__,
             return 1;
         }
     }
+    for (__Index__ = 0U; __Index__ < __Context__->__Globals__.__Count__; ++__Index__)
+    {
+        /* References the entry. */
+        const __Semantic_Global_Entry__ *__Entry__ =
+            (const __Semantic_Global_Entry__ *)__Vector_At_Const__(&__Context__->__Globals__,
+                                                                   __Index__);
+        if (__Entry__ != NULL && __Entry__->__Unit__ == __Unit__ &&
+            __Identifier_Identity_Equals__(__Entry__->__Name__, __Name__))
+        {
+            return 1;
+        }
+    }
     return 0;
 }
 
@@ -202,10 +252,12 @@ int __Semantic_Collect_Globals__(__Semantic_Context__ *__Context__)
         __Range__.__Unit__ = __Unit__;
         __Range__.__Type_Begin__ = __Context__->__Types__.__Count__;
         __Range__.__Function_Begin__ = __Context__->__Functions__.__Count__;
+        __Range__.__Global_Begin__ = __Context__->__Globals__.__Count__;
         if (__Unit__ == NULL)
         {
             __Range__.__Type_End__ = __Context__->__Types__.__Count__;
             __Range__.__Function_End__ = __Context__->__Functions__.__Count__;
+            __Range__.__Global_End__ = __Context__->__Globals__.__Count__;
             if (__Vector_Push__(&__Context__->__Unit_Name_Ranges__, &__Range__) == NULL)
             {
                 return __Semantic_Fail__(
@@ -238,6 +290,10 @@ int __Semantic_Collect_Globals__(__Semantic_Context__ *__Context__)
                 memset(&__Entry__, 0, sizeof(__Entry__));
                 __Entry__.__Name__ = __Item__->__Name__;
                 __Entry__.__Declaration__ = __Item__->__As__.__Type__;
+                __Entry__.__Template_Declaration__ = __Entry__.__Declaration__;
+                __Entry__.__Is_Generic_Template__ =
+                    __Entry__.__Declaration__ != NULL &&
+                    __Entry__.__Declaration__->__Type_Parameter_Count__ != 0U;
                 __Entry__.__Unit__ = __Unit__;
                 __Entry__.__Public__ = __Item__->__Public__;
                 if (!__Semantic_Record_Type_Declaration_Owners__(
@@ -267,6 +323,10 @@ int __Semantic_Collect_Globals__(__Semantic_Context__ *__Context__)
                 memset(&__Entry__, 0, sizeof(__Entry__));
                 __Entry__.__Name__ = __Item__->__Name__;
                 __Entry__.__Function__ = __Item__->__As__.__Function__;
+                __Entry__.__Template_Function__ = __Entry__.__Function__;
+                __Entry__.__Is_Generic_Template__ =
+                    __Entry__.__Function__ != NULL &&
+                    __Entry__.__Function__->__Type_Parameter_Count__ != 0U;
                 __Entry__.__Unit__ = __Unit__;
                 __Entry__.__Public__ = __Item__->__Public__;
                 if (!__Semantic_Record_Function_Signature_Owners__(
@@ -280,7 +340,54 @@ int __Semantic_Collect_Globals__(__Semantic_Context__ *__Context__)
                 __Entry__.__Reference_Return_Parameter__ = SIZE_MAX;
                 __Entry__.__Composite_View_Return_Parameter__ = SIZE_MAX;
                 __Entry__.__Index__ = __Function_Index__++;
+                if (!__Entry__.__Is_Generic_Template__)
+                {
+                    __Entry__.__Callable_Type__ =
+                        __Semantic_Make_Function_Type__(__Context__, __Entry__.__Function__);
+                    if (__Entry__.__Callable_Type__ == NULL)
+                    {
+                        return __Semantic_Fail__(__Context__, __E1100_Internal_Context_Error__,
+                                                 __Item__->__Header__.__Span__);
+                    }
+                }
                 if (__Vector_Push__(&__Context__->__Functions__, &__Entry__) == NULL)
+                {
+                    return __Semantic_Fail__(__Context__,
+                                             __E1100_Internal_Context_Error__,
+                                             __Item__->__Header__.__Span__);
+                }
+            }
+            else if (__Item__->__Kind__ == __Ast_Module_Item_Global__)
+            {
+                /* Stores the entry. */
+                __Semantic_Global_Entry__ __Entry__;
+
+                if (__Item__->__As__.__Global__ == NULL)
+                {
+                    return __Semantic_Fail__(__Context__,
+                                             __E1100_Internal_Context_Error__,
+                                             __Item__->__Header__.__Span__);
+                }
+                if (__Semantic_Unit_Name_Exists__(__Context__, __Unit__, __Item__->__Name__))
+                {
+                    return __Semantic_Fail__(__Context__,
+                                             __E0205_Duplicate_Declaration__,
+                                             __Item__->__Header__.__Span__);
+                }
+                memset(&__Entry__, 0, sizeof(__Entry__));
+                __Entry__.__Name__ = __Item__->__Name__;
+                __Entry__.__Declaration__ = __Item__->__As__.__Global__;
+                __Entry__.__Unit__ = __Unit__;
+                __Entry__.__Public__ = __Item__->__Public__;
+                /* The declared Type names resolve in the declaring unit's scope. */
+                if (!__Semantic_Record_Type_Owner__(
+                        __Context__, __Entry__.__Declaration__->__Type__, __Unit__))
+                {
+                    return __Semantic_Fail__(__Context__,
+                                             __E1100_Internal_Context_Error__,
+                                             __Item__->__Header__.__Span__);
+                }
+                if (__Vector_Push__(&__Context__->__Globals__, &__Entry__) == NULL)
                 {
                     return __Semantic_Fail__(__Context__,
                                              __E1100_Internal_Context_Error__,
@@ -290,6 +397,7 @@ int __Semantic_Collect_Globals__(__Semantic_Context__ *__Context__)
         }
         __Range__.__Type_End__ = __Context__->__Types__.__Count__;
         __Range__.__Function_End__ = __Context__->__Functions__.__Count__;
+        __Range__.__Global_End__ = __Context__->__Globals__.__Count__;
         if (__Vector_Push__(&__Context__->__Unit_Name_Ranges__, &__Range__) == NULL)
         {
             return __Semantic_Fail__(
@@ -311,7 +419,8 @@ int __Semantic_Collect_Globals__(__Semantic_Context__ *__Context__)
         /* References the entry. */
         __Semantic_Function_Entry__ *__Entry__ = (__Semantic_Function_Entry__ *)__Vector_At__(
             &__Context__->__Functions__, __Function_Index__);
-        if (__Entry__ != NULL && __Entry__->__Unit__ == __Root_Unit__ &&
+        if (__Entry__ != NULL && !__Entry__->__Is_Generic_Template__ &&
+            __Entry__->__Unit__ == __Root_Unit__ &&
             __Semantic_Is_Main_Name__(__Entry__->__Name__))
         {
             __Context__->__Main__ = __Entry__;

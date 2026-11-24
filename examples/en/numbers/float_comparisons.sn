@@ -1,0 +1,11 @@
+// Floating-point float comparisons.
+import std.io.println;
+import std.text.number;
+
+
+def main(): int {
+    let a: f64 = 32.5;
+    let b: f64 = 32.25;
+    if (a > b) { println("greater"); };
+    return 0;
+}

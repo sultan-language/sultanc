@@ -1,0 +1,28 @@
+// Searchable notes: save notes to a file, read them back and search them for a word.
+import std.io.println;
+import std.text.number;
+import std.fs.write_file;
+import std.fs.read_file;
+import std.fs.mutation;
+import std.text.search;
+
+def main(): int {
+    let path: string = "notes.txt";
+    let text: string = "SultanC has Arabic syntax\nThe compiler supports native programs\n";
+    match write_file(&path, &text) with
+    | result.ok(_) -> { }
+    | _ -> { return 1; };
+    let found: mutable bool = false;
+    match read_file(&path) with
+    | result.ok(note) -> {
+        let needle: string = "compiler";
+        found := contains(&note, &needle);
+    }
+    | _ -> { return 2; };
+    match remove_file(&path) with
+    | result.ok(_) -> { }
+    | _ -> { return 3; };
+    if (!found) { return 4; };
+    println("matching note found");
+    return 0;
+}

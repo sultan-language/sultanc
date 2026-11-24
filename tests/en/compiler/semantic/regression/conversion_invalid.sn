@@ -1,0 +1,5 @@
+def main(): i32 {
+    let text: string = "x";
+    let value: i32 = text as i32;
+    return value;
+}

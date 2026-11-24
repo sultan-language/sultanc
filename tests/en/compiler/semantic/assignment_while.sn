@@ -1,0 +1,9 @@
+// اختبار: قبول
+// خروج: 0
+def main(): int {
+    let x: mutable int = 0;
+    while (x < 42) {
+        x := x + 1;
+    }
+    return x;
+}

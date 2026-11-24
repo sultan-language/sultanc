@@ -1,0 +1,7 @@
+// اختبار: رفض
+// تشخيص: SULTANC-CALL-ARGUMENT-COUNT-MISMATCH
+// نظير: tests/en/diagnostics/e2e/argument_count_plural.sn
+// خرج-تشخيص-عربي: argument_count_plural.ar.stderr
+// خرج-تشخيص-إنجليزي: argument_count_plural.en.stderr
+عرف ضاعف(أ: ص32): ص32 { أرجع أ * 2; }
+عرف الرئيسية(): ص32 { أرجع ضاعف(1, 2, 3); }

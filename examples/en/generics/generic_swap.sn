@@ -1,0 +1,12 @@
+// Generic type/function instantiation: generic_swap.
+import std.io.println;
+import std.text.number;
+
+type Pair<A, B> = { first: A, second: B };
+def make_pair<A, B>(first: A, second: B): Pair<A, B> { return { first: first, second: second }; }
+
+def main(): int {
+    let pair: Pair<int, string> = make_pair(3, "pair");
+    println(int_to_text(pair.first));
+    return 0;
+}

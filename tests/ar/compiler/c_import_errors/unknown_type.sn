@@ -1,0 +1,8 @@
+// اختبار: رفض
+// تشخيص: SULTANC-C-UNKNOWN-TYPE-NAME
+// نظير: tests/en/compiler/c_import_errors/unknown_type.sn
+// يبلغ جسر عن تصريح باسم نوع غير معروف في ترويسة مستوردة بالرمز SULTANC-C-UNKNOWN-TYPE-NAME مع
+// ملف الترويسة وسطرها وعمودها، ويفشل الاستيراد وقت الترجمة.
+استورد "unknown_type.h";
+
+عرف الرئيسية(): عدد { أرجع 0; }

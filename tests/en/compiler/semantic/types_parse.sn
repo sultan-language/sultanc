@@ -1,0 +1,7 @@
+type Pair = { left: int, right: int };
+type Result = | Empty | Value of int | PairValue of (int, int);
+type Count = int;
+
+def main(): int {
+    return 42;
+}

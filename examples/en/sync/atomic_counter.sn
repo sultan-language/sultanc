@@ -1,0 +1,13 @@
+// Synchronization primitive: atomic_counter.
+import std.io.println;
+import std.text.number;
+import std.sync.atomic;
+
+
+def main(): int {
+    let counter: atomic_u32 = atomic_u32_new(0 as u32);
+    atomic_u32_store(&counter, 5 as u32, ترتيب_ذاكرة.تسلسلي());
+    let prev: u32 = atomic_u32_fetch_add(&counter, 3 as u32, ترتيب_ذاكرة.تسلسلي());
+    println(uint_to_text((prev + atomic_u32_load(&counter, ترتيب_ذاكرة.تسلسلي())) as uint));
+    return 0;
+}

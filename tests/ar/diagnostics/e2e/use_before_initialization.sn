@@ -1,0 +1,10 @@
+// اختبار: رفض
+// تشخيص: SULTANC-FLOW-USE-BEFORE-INITIALIZATION
+// نظير: tests/en/diagnostics/e2e/use_before_initialization.sn
+// خرج-تشخيص-عربي: use_before_initialization.ar.stderr
+// خرج-تشخيص-إنجليزي: use_before_initialization.en.stderr
+// A read before any assignment is marked at the read; the declaration is related.
+عرف الرئيسية(): عدد {
+    ليكن س: عدد;
+    أرجع س;
+}

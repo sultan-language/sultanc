@@ -1,0 +1,21 @@
+// Stopping on a cycle: follow next links with a visited flag per node, so a link back to a
+// seen node ends the walk.
+import std.io.println;
+import std.text.number;
+
+type Node = { value: int, next: int };
+
+def main(): int {
+    let nodes: vector Node = [{ value: 1, next: 1 }, { value: 2, next: -1 }];
+    let visited: mutable vector bool = [false, false];
+    let at: mutable int = 0;
+    let count: mutable int = 0;
+    while (at >= 0 && !visited[at]) {
+        visited[at] := true;
+        count := count + 1;
+        at := nodes[at].next;
+    };
+    if (count != 2) { return 1; };
+    println(int_to_text(count));
+    return 0;
+}

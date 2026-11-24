@@ -1,0 +1,34 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/stdlib/behavior/http_route_table.sn
+// Route tables built at compile time (std.http.route_table): building and
+// matching run inside comptime, so any mistake fails the compilation: a
+// literal segment, a parameter and its capture, literal over parameter,
+// backtracking to the parameter, a rest capture, a miss, and the length of a
+// serialized fixed response.
+import std.http.route_table;
+import std.meta.reflect;
+
+def check(): int {
+    let table: vector int = build_route_table(["/", "/users/{id}", "/users/me", "/users/{id}/posts", "/files/{*path}"]);
+    let c: mutable vector int = [];
+    match match_route_table(&table, &"/", &mutable c) with | option.some(0) -> { } | _ -> { compile_error("root"); };
+    match match_route_table(&table, &"/users/42", &mutable c) with | option.some(1) -> { } | _ -> { compile_error("param"); };
+    if (c[0] != 7 || c[1] != 2) { compile_error("capture"); };
+    match match_route_table(&table, &"/users/me", &mutable c) with | option.some(2) -> { } | _ -> { compile_error("static"); };
+    match match_route_table(&table, &"/users/me/posts", &mutable c) with | option.some(3) -> { } | _ -> { compile_error("backtrack"); };
+    match match_route_table(&table, &"/files/a/b.txt", &mutable c) with | option.some(4) -> { } | _ -> { compile_error("rest"); };
+    if (c[0] != 7 || c[1] != 7) { compile_error("rest capture"); };
+    match match_route_table(&table, &"/nope", &mutable c) with | option.none -> { } | _ -> { compile_error("miss"); };
+    let r: vector u8 = fixed_http1_response_bytes(200, "OK", "text/plain", "hi");
+    if ((length(r) as int) != 66) { compile_error("fixed"); };
+    return 42;
+}
+
+def main(): int {
+    let n: int = comptime { check() };
+    // The same checks at run time.
+    return check() + n - 42;
+}

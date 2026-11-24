@@ -1,0 +1,6 @@
+خطأ[SULTANC-TYPE-MISMATCH]: النوع الموجود ⁨`نص`⁩ لا يطابق النوع المتوقع ⁨`عدد`⁩ — القيمة لا تطابق النوع المصرح به لوجهتها.
+  --> tests/en/diagnostics/e2e/initializer_type_mismatch.sn:9:18..9:25
+   |
+ 9 |     let x: int = "hello";
+   |                  ^^^^^^^
+   |

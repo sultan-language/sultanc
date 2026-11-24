@@ -1,0 +1,29 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// نظير: tests/ar/compiler/c_import_reexport/main.sn
+// Identical generated declarations of several C imports are one: first.h
+// and second.h both include item.h, and only_first.sn imports first.h,
+// only_second.sn second.h, both.sn the two. struct item, item_t and
+// ITEM_LIMIT are declared once, by the C import written first; the other
+// imports that module (compiler/jisr/shared.sn), and the frontend counts
+// the names a C module imports from another C module among its own
+// (compiler/frontend/names/modules.sn). So only_second.sn sees item_t
+// although it does not import first.h, both.sn's item_t is one name, not
+// two ambiguous ones, and the item only_first.sn makes is the record
+// only_second.sn takes. items.c defines the functions both headers declare:
+// their externs call its compiled functions.
+import "only_first.sn";
+import "only_second.sn";
+import "both.sn";
+import "items.c";
+
+def main(): int {
+    let it: item = make(5);
+    let t: i32 = total(&it);
+    if (t != 10) { return 1; };
+    let b: i32 = both_total(6);
+    if (b != 12) { return 2; };
+    // 10 + 12 + 40 - 20 = 42
+    return (t + b + ITEM_LIMIT - 20) as int;
+}

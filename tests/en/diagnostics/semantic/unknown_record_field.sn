@@ -1,0 +1,5 @@
+type Holder = { value: i32 };
+def main(): i32 {
+    let holder: Holder = { value: 42 };
+    return holder.missing;
+}

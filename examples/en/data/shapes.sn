@@ -1,0 +1,26 @@
+// An algebraic data type whose variants carry records, destructured in `match`.
+import std.io.println;
+import std.text.number;
+
+type Point = { x: int, y: int };
+type Shape =
+    | Square of int
+    | Rectangle of Point
+    | Triangle of Point
+;
+
+def area(shape: Shape): int {
+    match shape with
+    | Shape.Square(side) -> { return side * side; }
+    | Shape.Rectangle({ x: w, y: h }) -> { return w * h; }
+    | Shape.Triangle({ x: base, y: h }) -> { return (base * h) / 2; };
+}
+
+def main(): int {
+    let sides: Point = { x: 4, y: 5 };
+    let corner: Point = { x: 6, y: 3 };
+    println(int_to_text(area(Shape.Square(3))));
+    println(int_to_text(area(Shape.Rectangle(sides))));
+    println(int_to_text(area(Shape.Triangle(corner))));
+    return 0;
+}

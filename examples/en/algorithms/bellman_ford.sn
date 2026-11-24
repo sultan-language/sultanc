@@ -1,0 +1,30 @@
+// Bellman-Ford shortest distances from node 0: relax every edge of a 3-node graph, one of
+// them with a negative weight, in two passes.
+import std.io.println;
+import std.text.number;
+
+type Edge = { origin: int, to: int, cost: int };
+
+def main(): int {
+    let edges: vector Edge = [
+        { origin: 0, to: 1, cost: 4 },
+        { origin: 0, to: 2, cost: 5 },
+        { origin: 1, to: 2, cost: -2 }
+    ];
+    let dist: mutable vector int = [0, 100, 100];
+    let pass: mutable int = 0;
+    while (pass < 2) {
+        let i: mutable int = 0;
+        while (i < length(edges)) {
+            let e: Edge = edges[i];
+            if (dist[e.origin] + e.cost < dist[e.to]) {
+                dist[e.to] := dist[e.origin] + e.cost;
+            };
+            i := i + 1;
+        };
+        pass := pass + 1;
+    };
+    if (dist[2] != 2) { return 1; };
+    println(int_to_text(dist[2]));
+    return 0;
+}

@@ -1,0 +1,13 @@
+// اختبار: رفض
+// أهداف: arm64-darwin,x86_64-linux
+// تشخيص: SULTANC-SAFETY-UNSAFE-OPERATION
+// نظير: tests/ar/language/safety/reject_cast_adds_mutable.sn
+// Adding `mutable` to a raw pointer (*T to *mutable T) needs unsafe.
+type First = { value: int };
+type Second = { other: int };
+
+def main(): int {
+    let p: *First = 0 as *First;
+    let w: *mutable First = p as *mutable First;
+    return 0;
+}

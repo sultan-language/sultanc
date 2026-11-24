@@ -1,0 +1,37 @@
+// اختبار: تشغيل
+// أهداف: x86_64-linux
+// خروج: 0
+// نظير: tests/ar/stdlib/behavior/tcp_rebind.sn
+// A server restarted on its port binds again at once (std.net.tcp sets
+// SO_REUSEADDR on Unix listeners): the server side closes
+// an accepted connection first, which leaves it in TIME_WAIT, then the same
+// address is bound again without any option.
+import std.net.socket_address;
+import std.net.tcp;
+
+def main(): int {
+    let address: socket_addr;
+    match parse_socket_addr(&"127.0.0.1:38921") with
+    | result.err(_) -> { return 1; }
+    | result.ok(a) -> { address := a; };
+    let listener: tcp_listener;
+    match tcp_bind(&address, 16) with
+    | result.err(_) -> { return 2; }
+    | result.ok(l) -> { listener := l; };
+    let client: tcp_stream;
+    match tcp_connect(&address) with
+    | result.err(_) -> { return 3; }
+    | result.ok(s) -> { client := s; };
+    let accepted: tcp_stream;
+    match tcp_accept(&listener) with
+    | result.err(_) -> { return 4; }
+    | result.ok(s) -> { accepted := s; };
+    // The server closes first: its side of the connection enters TIME_WAIT.
+    let a: result int, int = tcp_stream_close(accepted);
+    let b: result int, int = tcp_stream_close(client);
+    let c: result int, int = tcp_listener_close(listener);
+    match tcp_bind(&address, 16) with
+    | result.err(_) -> { return 5; }
+    | result.ok(again) -> { let d: result int, int = tcp_listener_close(again); };
+    return 0;
+}

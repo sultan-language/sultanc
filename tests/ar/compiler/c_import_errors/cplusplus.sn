@@ -1,0 +1,8 @@
+// اختبار: رفض
+// تشخيص: SULTANC-C-UNSUPPORTED
+// نظير: tests/en/compiler/c_import_errors/cplusplus.sn
+// يبلغ جسر عن ترويسة سي++ (`namespace geometry { ... }`) مرة واحدة بالرمز SULTANC-C-UNSUPPORTED ("شفرة
+// سي++: يقرأ جسر سي لا سي++") مع ملفها وسطرها وعمودها، لا بسلسلة أخطاء نحوية في سي.
+استورد "cplusplus.h";
+
+عرف الرئيسية(): عدد { أرجع 0; }

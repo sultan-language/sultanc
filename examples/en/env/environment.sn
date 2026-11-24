@@ -1,0 +1,19 @@
+// Reading environment variables and the working directory.
+import std.io.println;
+import std.env.environment;
+
+def main(): int {
+    let path_name: string = "PATH";
+    match get_environment_variable(&path_name) with
+    | result.ok(option.some(_)) -> { println("PATH is set"); }
+    | result.ok(option.none) -> { println("PATH is not set"); }
+    | result.err(_) -> { return 1; };
+    let missing_name: string = "SULTANC_EXAMPLE_UNSET_VARIABLE";
+    match get_environment_variable(&missing_name) with
+    | result.ok(option.none) -> { println("unset variable reported as none"); }
+    | _ -> { println("unexpected"); };
+    match current_directory() with
+    | result.ok(_) -> { println("working directory known"); }
+    | result.err(_) -> { return 2; };
+    return 0;
+}

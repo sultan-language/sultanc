@@ -1,0 +1,36 @@
+// The root file of library/alloc: the Arabic spellings of its modules
+// (docs/en/reference/modules-and-imports.md, "Module spellings"). The
+// standard library is three libraries (docs/en/reference/std-layers.md); this
+// file names only this library's own children.
+
+module archive { ar: أرشيف };
+module bytes { ar: بايتات, fr: octets };
+module checksum { ar: مجاميع_تحقق };
+module collections { ar: مجموعات };
+module compression { ar: ضغط };
+module crypto { ar: تشفير };
+module csv { ar: سي_اس_في };
+module debug { ar: تصحيح };
+module encoding { ar: ترميز, fr: encodage };
+module error { ar: أخطاء };
+module fmt { ar: تنسيق };
+module fuzz { ar: فز };
+module json { ar: جسون };
+module math { ar: رياضيات };
+module mime { ar: أنواع_وسائط };
+module text { ar: نصوص, fr: texte, es: texto };
+module time { ar: وقت };
+module toml { ar: تومل };
+module unicode { ar: يونيكود };
+module version { ar: إصدار };
+
+// Re-exported: these children are modules and folders of core, at the same
+// paths (docs/en/reference/std-layers.md). One file, one module.
+module chars = core.chars { ar: حروف, fr: caracteres };
+module hash = core.hash { ar: تجزئة };
+module io = core.io { ar: دخ, fr: entree_sortie, es: entrada_salida };
+module memory = core.memory { ar: ذاكرة, fr: memoire };
+module meta = core.meta { ar: انعكاس };
+module process = core.process { ar: عمليات };
+module random = core.random { ar: عشوائي };
+module sync = core.sync { ar: تزامن };

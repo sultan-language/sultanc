@@ -1,0 +1,10 @@
+// Combine component hashes: hash_bytes.
+import std.io.println;
+import std.text.number;
+import std.hash.combine;
+
+
+def main(): int {
+    println(uint_to_text(hash_combine2(18 as uint, 19 as uint)));
+    return 0;
+}

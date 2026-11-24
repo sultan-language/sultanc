@@ -1,0 +1,20 @@
+// اختبار: رفض
+// تشخيص: SULTANC-OWNERSHIP-USE-AFTER-MOVE
+// نظير: tests/ar/diagnostics/safety/loop_backedge_move.sn
+// The loop body moves the text and never gives it a new value: the back edge
+// brings the moved state to the next iteration's use. The program is rejected
+// before any backend or the interpreter runs it.
+def consume(value: string): int {
+    return length(value) as int;
+}
+
+def main(): int {
+    let text: string = "start";
+    let i: mutable int = 0;
+    let total: mutable int = 0;
+    while (i < 3) {
+        total := total + consume(text);
+        i := i + 1;
+    }
+    return total;
+}

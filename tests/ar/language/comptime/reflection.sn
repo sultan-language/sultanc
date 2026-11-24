@@ -1,0 +1,19 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/en/language/comptime/reflection.sn
+استورد المكتبة.انعكاس.انعكاس_الأنواع;
+
+نوع Pair = { left: ص32, right: ص32 };
+نوع Shape = | Circle | Square | Triangle;
+
+عرف الرئيسية(): عدد {
+    ليكن p: Pair = { left: 1, right: 2 };
+    ليكن s: Shape = Shape.Square();
+    ليكن size: ط64 = حجم_النوع(&p);
+    ليكن align: ط64 = محاذاة_النوع(&p);
+    ليكن fields: ط64 = عدد_حقول_النوع(&p);
+    ليكن ctors: ط64 = عدد_منشئات_النوع(&s);
+    أرجع (size + align + fields + ctors + 25) مثل عدد;
+}

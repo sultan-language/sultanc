@@ -1,0 +1,45 @@
+# master: what the owner releases, the stable branch. It moves only by
+# promotion from beta (promote.yml), so every commit on it is a commit of beta
+# that passed the full tier. This workflow runs no matrix: it checks that the
+# commit on master is qualified, and fails loudly when it is not (master was
+# moved by hand), so a release is never made from an untested commit.
+#
+#   push to master   Verdict: the qualification of that exact commit, or fail
+#   manual dispatch  the same check on the head of master
+#
+# Releases are made by hand by the owner from a passing master commit. This
+# workflow never merges, promotes, tags or releases.
+name: SultanC Master
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  statuses: read
+
+jobs:
+  verdict:
+    name: Verdict
+    if: github.ref == 'refs/heads/master'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github
+      - name: Qualified
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+        run: |
+          url=$(sh .github/ci/evidence.sh "$SHA")
+          if [ -z "$url" ]; then
+            echo "::error::master $SHA has no qualification: master takes only commits promoted from beta (promote.yml)"
+            echo "master \`$SHA\` is **not qualified**: do not release it" >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+          echo "master \`$SHA\` is qualified by $url: ready to release" >> "$GITHUB_STEP_SUMMARY"

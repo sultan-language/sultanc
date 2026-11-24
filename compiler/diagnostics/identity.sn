@@ -1,0 +1,301 @@
+// Canonical diagnostic identity and policy facts.
+// Semantic producers choose an identity; presentation never invents one.
+
+عام نوع شدة_تشخيص =
+    | خطأ
+    | تحذير
+    | ملاحظة
+;
+
+// Stable compiler diagnostic identities. Public codes are assigned only by registry.sn.
+عام نوع معرف_تشخيص =
+    | خطأ_نحوي
+    | تعبير_نحوي_غير_صالح
+    | نوع_نحوي_غير_صالح
+    | نمط_نحوي_غير_صالح
+    | عنصر_نحوي_غير_صالح
+    | خلل_محلل_داخلي
+    | فاصلة_منقوطة_في_غير_موضعها
+    | تهجئة_كلمة_محجوزة_غير_معروفة
+    | تهجئة_مهجورة
+    | عبارة_بلا_عملية
+    | نوع_ناتج_دالة_مفقود
+    | خطأ_معجمي
+    | نص_مصدر_يوتيف8_غير_صالح
+    | خلل_معجمي_داخلي
+    | لا_ناتج_تحليل
+    | استدعاء_مترجم_غير_صالح
+    | هدف_مترجم_غير_معروف
+    | مصدر_مترجم_مفقود
+    | خيار_مترجم_غير_معروف
+    | رمز_تشخيص_مترجم_غير_معروف
+    | قيمة_خيار_مترجم_مفقودة
+    | لغة_تشخيص_مترجم_غير_صالحة
+    | صيغة_تشخيص_مترجم_غير_صالحة
+    | لون_تشخيص_مترجم_غير_صالح
+    | مصدر_رئيسي_متعدد
+    | أوضاع_مترجم_متعارضة
+    | معامل_موضعي_غير_متوقع
+    | هدف_مضيف_مترجم_غير_متاح
+    | مكتبة_إل_إل_في_إم_للهدف_مفقودة
+    | رمز_إل_إل_في_إم_غير_محلول
+    | خلفية_مترجم_غير_متاحة
+    | فشل_كتابة_مخرج_مترجم
+    | فشل_مترجم_داخلي
+    | ملف_إدخال_مفقود
+    // Retired (SULTANC-PACKAGE-MANIFEST-INVALID): public codes are never reused.
+    | بيان_حزمة_غير_صالح
+    | نوع_ملف_إدخال_غير_معروف
+    | وحدة_مصدر_غير_موجودة
+    | وحدة_مصدر_غير_مقروءة
+    | مرجع_استيراد_غير_صالح
+    | جذر_مكتبة_غير_مسجل
+    | استيراد_يهرب_من_الجذر
+    | مسار_وحدة_منطقي_غير_صالح
+    | تعارض_مسار_وحدة_عام
+    | تعارض_مصدر_وحدة
+    | وحدة_مستوردة_غير_محملة
+    | رسم_وحدات_مرفوض
+    | تصدير_انتقائي_غير_موجود
+    | نقطة_دخول_مفقودة
+    | نقطة_دخول_بتوقيع_غير_صالح
+    | تصريح_خاص_غير_متاح
+    | نوع_تكراري_لانهائي
+    | فك_مرجع_غير_مؤشر
+    | أخذ_عنوان_غير_قيمة_يسرى
+    | حقل_سجل_مفقود
+    | حقل_سجل_مكرر
+    | كتابة_إلى_غير_متغير
+    | تصريح_مكرر
+    | اسم_غير_معروف
+    | اسم_غير_محلول
+    // `Enum.Ctor` read as a value: a constructor is called, `Color.Red()`.
+    | منشئ_غير_مستدعى
+    | استيراد_غامض
+    | دورة_استيراد
+    | نوعان_غير_متوافقين
+    | نوع_غير_محلول
+    | تعريف_نوع_غير_صالح
+    | تعبير_نوعي_غير_مدعوم
+    | تعبير_غير_قابل_للاستدعاء
+    | حقل_سجل_غير_معروف
+    | عدد_حمولات_نمط_غير_مطابق
+    | نمط_غير_صالح
+    | تعبير_وقت_الترجمة_غير_ثابت
+    | فشل_وقت_الترجمة_مطلوب
+    | سمة_تصريح_غير_مدعومة
+    | توقيع_يتتبع_المستدعي_غير_صالح
+    | حجة_موقع_المستدعي_صريحة
+    | استعمال_اتفاقية_سي_غير_صالح
+    | خفض_تعبير_غير_مدعوم
+    | خفض_عبارة_غير_مدعومة
+    | دالة_خفض_مفقودة
+    | ربط_اسم_خفض_مفقود
+    | نوع_خفض_مفقود
+    | هوية_منشئ_خفض_مفقودة
+    | عدد_حجج_غير_مطابق
+    | نوع_حجة_غير_مطابق
+    | نوع_إرجاع_غير_مطابق
+    | استخدام_قبل_التهيئة
+    | استخدام_بعد_النقل
+    // A local whose ownership state differs between the paths that join
+    // (msir/ssf/ownership_legality.sn): a user error, not an ICE.
+    | تعارض_ملكية_عند_الدمج
+    | مورد_محرر
+    | تعارض_استعارة
+    | هروب_مرجع
+    | عملية_غير_آمنة
+    | التقاط_خيط_مؤشر_خام
+    | التقاط_خيط_مرجع
+    | التقاط_خيط_مشترك_غير_ذري
+    | فهرس_خارج_الحدود
+    | نمط_غير_شامل
+    | نمط_غير_قابل_للوصول
+    | إرجاع_مفقود
+    // Runtime failures a compiled or interpreted program prints itself
+    // (docs/en/reference/errors.md): `main` returned an error, or the program stopped
+    // (إنهيار, a failed assertion).
+    | انتهى_البرنامج_بخطأ
+    | توقف_البرنامج
+    | تحكم_حلقة_خارج_حلقة
+    | نقل_جزئي_مملوك
+    | نقل_من_مرجع
+    | خطأ_ذاكرة_نوع
+    | مسير_غير_صالح
+    | خطأ_سياق_داخلي
+    | حقيقة_دلالية_مفقودة
+    | فهرس_تفسير_خارج_الحدود
+    | حالة_تفسير_غير_صالحة
+    | ذاكرة_تفسير_تالفة
+    | نوع_قيمة_تفسير_غير_متوقع
+    | نص_تفسير_غير_صالح
+    | عدد_حجج_بدائي_تفسير_غير_مطابق
+    | حجة_بدائي_تفسير_غير_صالحة
+    | فشل_تفسير_وقت_تشغيل
+    | فخ_تفسير
+    | هدف_لا_يدعم_الميزة
+    | بناء_غير_مدعوم_في_الخلفية
+    | مدى_ترميز_متجاوز
+    | رمز_ربط_غير_معرف
+    | رمز_دخول_ربط_مفقود
+    | رمز_ربط_مكرر
+    | موفر_وقت_تشغيل_مفقود
+    | نفاد_ذاكرة_المترجم
+    | رمز_ربط_بنوع_غير_متطابق
+    | رمز_خارجي_بتوقيعين
+    | معالج_انهيار_غير_صالح
+    | مخصص_عام_غير_صالح
+    | رمز_خارجي_غير_مدعوم
+    | إعادة_توطين_غير_مدعومة
+    | صيغة_كائن_غير_مدعومة_للهدف
+    | مخرج_ربط_غير_مدعوم
+    | مكتبة_ربط_غير_موجودة
+    | مدخل_ربط_غير_مدعوم
+    | واجهة_استدعاء_غير_متاحة_للهدف
+    | حد_صيغة_كائن_متجاوز
+    | حد_وقت_الترجمة_متجاوز
+    | سلسلة_تنسيق_غير_صالحة
+    | أثر_ممنوع_وقت_الترجمة
+    | فشل_تنفيذ_وقت_الترجمة
+    | عملية_غير_مدعومة_وقت_الترجمة
+    | ناتج_وقت_الترجمة_غير_ثابت
+    | تخطيط_غير_متاح_وقت_الترجمة
+    | عدد_حجج_وقت_الترجمة_غير_مطابق
+    | نداء_خارجي_تفسير_غير_مدعوم
+    | بدائي_آلة_تفسير_غير_مدعوم
+    // C diagnostics of Jisr (compiler/jisr), at the C file's line and column.
+    | سي_خطأ_نحوي
+    | سي_أنواع_متعارضة
+    | سي_معامل_ماكرو_مكرر
+    | سي_توجيه_خطأ
+    | سي_عمق_تضمين
+    | سي_تضمين_غير_موجود
+    | سي_عضو_ناقص
+    | سي_حقل_بتي_غير_صالح
+    | سي_شرط_غير_صالح
+    | سي_توجيه_غير_صالح
+    | سي_مصفوفة_مرنة_غير_صالحة
+    | سي_تضمين_غير_صالح
+    | سي_اسم_ماكرو_غير_صالح
+    | سي_معاملات_ماكرو_غير_صالحة
+    | سي_عدد_غير_صالح
+    | سي_لصق_غير_صالح
+    | سي_عامل_براغما_غير_صالح
+    | سي_معالج_غير_صالح
+    | سي_تنصيص_غير_صالح
+    | سي_عدد_حجج_ماكرو
+    | سي_نداء_ماكرو_غير_منته
+    | سي_نوع_مفقود
+    | سي_تعارض_اسم
+    | سي_حجم_مصفوفة_سالب
+    | سي_عضو_غير_موجود
+    | سي_ليس_ثابتا
+    | سي_إعادة_تعريف
+    | سي_تأكيد_ساكن
+    | سي_صنف_وسم_مختلف
+    | سي_غير_مصرح
+    | سي_اسم_نوع_مجهول
+    | سي_شرطي_بلا_مقابل
+    | سي_تعليق_غير_منته
+    | سي_شرطي_غير_منته
+    | سي_معاملات_عملية_غير_صالحة
+    | سي_أنواع_غير_متوافقة
+    | سي_غير_قابل_للإسناد
+    | سي_عدد_حجج_نداء
+    | سي_غير_قابل_للنداء
+    | سي_لافتة_غير_معرفة
+    | سي_قفز_غير_صالح
+    | سي_حالة_مكررة
+    | سي_مهيئ_غير_صالح
+    | سي_بناء_غير_مدعوم
+    | سي_نوع_غير_مدعوم
+    | سي_متغير_غير_مدعوم
+    | سي_متغيرة_غير_مدعومة
+    | سي_لافتة_ربط_غير_مدعومة
+    | سي_غير_متاح
+    | سي_بلا_نموذج
+    | سي_ماكرو_غير_ثابت
+    | سي_توجيه_تحذير
+    | سي_ترويسات_المضيف
+    | سي_بلا_ترويسات_نظام
+    | سي_نداء_متغير_غير_مدعوم
+    | سي_نص_يوتيف8_غير_صالح
+    | سي_محرف_معرف_غير_صالح
+    | سي_تعارض_اسم_متخطى
+    | سي_ترويسة_مقروءة_غير_مترجمة
+    // A `@@json` type with a field type the derivation cannot encode.
+    | اشتقاق_جسون_نوع_حقل_غير_مدعوم
+    // A -l library of `run`/`interpret` found only as a static archive.
+    | مكتبة_تفسير_ساكنة_فقط
+    // A -l library of `run`/`interpret` whose macOS `.tbd` stub names no install name.
+    | مكتبة_تفسير_بلا_اسم_تثبيت
+    // Retired: no longer emitted. Supax reports manifest and dependency
+    // errors (SULTANC-PACKAGE-GIT-DEPENDENCY-UNRESOLVED,
+    // SULTANC-PACKAGE-DEPENDENCY-MAP-INVALID; see بيان_حزمة_غير_صالح).
+    | اعتمادية_جت_غير_محلولة
+    | خريطة_اعتماديات_غير_صالحة
+    // A -l library of `run`/`interpret` the host's dynamic loader could not load.
+    | مكتبة_تفسير_غير_محملة
+    // `run` on a host that cannot start a process (a wasm32-wasi compiler)
+    // for a program only an executable runs (imported C files, -l
+    // libraries, C functions the interpreter cannot call).
+    | تشغيل_يلزمه_عملية
+    // The system C compiler (SULTANC_C_COMPILER=cc) asked for a target other than the host.
+    | مترجم_سي_لغير_المضيف
+    // The system C compiler failed on an imported C translation unit.
+    | فشل_مترجم_سي
+    // The C library a C import's target names was found in no library directory (a warning).
+    | مكتبة_سي_غير_موجودة
+    // An environment variable the compiler reads holds a value it does not accept.
+    | قيمة_متغير_بيئة_غير_مقبولة
+    // An opaque type used by value: a local, field, payload, parameter, result, reference or element.
+    | نوع_معتم_بالقيمة
+    // An opaque type as a type argument, written (`f<T>`, `G<T>`) or inferred.
+    | نوع_معتم_حجة_نوع
+    // `*p` where p points at an opaque type, inside unsafe too.
+    | فك_مؤشر_معتم
+    // A field access on an opaque type, through a pointer or not.
+    | حقل_عبر_مؤشر_معتم
+    // `p[i]` where p points at an opaque type: it has no element size.
+    | حساب_مؤشر_معتم
+    // A --package-graph file that cannot be used (driver/package_graph.sn),
+    // reported at its place in that file.
+    | رسم_حزم_غير_صالح
+    // No standard library where the compiler looks (driver/std_location.sn).
+    | مكتبة_قياسية_غير_موجودة
+    // A source file `sultanc fmt --check` would change.
+    | ملف_غير_منسق
+    // Module spellings (frontend/module_loading/module_spellings.sn): a
+    // `module` declaration naming no child of its folder, a spelling two
+    // children share, a reserved word as a spelling, and `module` outside a
+    // folder's root file.
+    | وحدة_معلنة_بلا_ابن
+    | تهجئة_وحدة_مشتركة
+    | إعادة_تصدير_تحجب_ابنا
+    | هدف_إعادة_تصدير_غير_متاح
+    | دورة_إعادة_تصدير
+    | تهجئة_وحدة_محجوزة
+    | تصريح_وحدة_خارج_ملف_الجذر
+    // `sultanc test` (compiler/test_mode/harness.sn): a test with parameters,
+    // a test whose result is neither nothing nor `نتيجة عدد, فشل`, and
+    // `@@test` on what is not an ordinary function (a type, a module value,
+    // a generic, compile-time or external function).
+    | اختبار_بمعاملات
+    | ناتج_اختبار_غير_صالح
+    | اختبار_ليس_دالة_عادية
+    // `sultanc test --test=<name>` naming no test of the root package, and
+    // `--tests-in=<file>` naming no source of the program
+    // (compiler/test_mode/selection.sn).
+    | اختبار_غير_موجود
+    | ملف_اختبارات_خارج_البرنامج
+;
+
+// Diagnostic classification is stable metadata, independent of presentation.
+عام نوع فئة_تشخيص =
+    | مستخدم
+    | بيئة
+    | داخلي
+    // A compiler limitation that is neither the user's mistake nor an internal
+    // failure (GCC's "sorry, unimplemented"). Shown in full, like a user error.
+    | غير_منفذ
+;

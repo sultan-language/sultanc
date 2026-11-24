@@ -1,0 +1,28 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/language/safety/pointer_mutable_coercion.sn
+// A `*mutable T` is accepted wherever a `*T` of the same T is expected: an
+// argument, a typed let, a return and a record field. It is the same address;
+// only the permission to write through it is dropped.
+type Handle = opaque;
+type Record = { value: int };
+type View = { record: *Record };
+
+def read(view: *Record): int {
+    unsafe { return (*view).value; };
+}
+def same_handle(a: *Handle, b: *Handle): bool { return a == b; }
+def as_view(record: *mutable Record): *Record { return record; }
+
+def main(): int {
+    let record: mutable Record = { value: 20 };
+    let writable: *mutable Record = (&mutable record) as *mutable Record;
+    let readable: *Record = writable;
+    let view: View = { record: writable };
+    let handle: *mutable Handle = 0 as *mutable Handle;
+    let total: mutable int = read(writable) + read(as_view(writable));
+    if (readable == view.record && same_handle(handle, handle)) { total := total + 2; };
+    return total;
+}

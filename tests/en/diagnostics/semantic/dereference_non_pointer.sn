@@ -1,0 +1,7 @@
+// اختبار: رفض
+// تشخيص: SULTANC-TYPE-DEREFERENCE-NON-POINTER
+// نظير: tests/ar/diagnostics/semantic/dereference_non_pointer.sn
+def main(): i32 {
+    let count: i32 = 1;
+    return *count;
+}

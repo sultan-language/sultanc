@@ -1,0 +1,60 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// Reading a member or element of a temporary destroys the rest of it: 10^5
+// rounds of field, nested field, closure-field call, element and returned
+// closure reads of call results leave the allocator's live bytes where they
+// were. Counterpart: tests/ar/language/surface/temporary_members_rss_flat.sn.
+// It has no pair directive: the interpreter does not use the std allocator
+// whose counters this reads.
+import std.os.allocation;
+import std.text.number;
+
+type Inner = { name: string, n: int };
+type Rec = { name: string, id: int, callback: fn(int): int, inner: Inner, items: vector string };
+
+def adder(k: int): fn(int): int { return fn(x: int): int -> x + k; }
+
+def make(i: int): Rec {
+    let items: mutable vector string = [];
+    append(items, int_to_text(i));
+    append(items, int_to_text(i + 10));
+    let inner: Inner = { name: int_to_text(i * 2), n: i };
+    let r: Rec = { name: int_to_text(i), id: i, callback: adder(i), inner: inner, items: items };
+    return r;
+}
+
+def words(i: int): vector string {
+    let w: mutable vector string = [];
+    append(w, int_to_text(i));
+    append(w, int_to_text(i + 100));
+    return w;
+}
+
+def size(s: string): int { return length(s) as int; }
+
+def round(i: int): int {
+    let total: mutable int = make(i).id;
+    let name: string = make(i).name;
+    total := total + size(name) + make(i).callback(3);
+    let f: fn(int): int = make(i).callback;
+    total := total + f(1) + size(make(i).inner.name) + make(i).inner.n;
+    total := total + (length(make(i).items) as int) + size(make(i).items[0]);
+    let w: string = words(i)[1];
+    total := total + size(w) + adder(i)(2);
+    return total;
+}
+
+def main(): int {
+    let warm_up: int = round(0);
+    if (warm_up < 0) { return 1; };
+    let before: u64 = بايتات_حية_مخصص_النظام();
+    let i: mutable int = 0;
+    while (i < 100000) {
+        if (round(i) < 0) { return 2; };
+        i := i + 1;
+    }
+    let after: u64 = بايتات_حية_مخصص_النظام();
+    if (after != before) { return 3; };
+    return 42;
+}

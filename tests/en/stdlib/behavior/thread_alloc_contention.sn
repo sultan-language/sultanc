@@ -1,0 +1,52 @@
+// اختبار: تشغيل
+// أهداف: x86_64-linux
+// خروج: 0
+// The allocator lock under contention (std/os/allocation.sn): more threads
+// than cores allocate, grow, check and free vectors at once, so the lock is
+// held while others wait and its sleep/wake path runs. Every vector keeps
+// exactly what its thread wrote, and every thread finishes. Counterpart:
+// tests/ar/stdlib/behavior/thread_alloc_contention.sn. No pair directive:
+// the interpreter runs one thread.
+import std.thread.thread;
+import std.sync.arc;
+import std.sync.atomic;
+
+def churn(seed: u64, done: &arc<atomic_u64>): void {
+    let round: mutable uint = 0;
+    while (round < 2000) {
+        let items: mutable vector u64 = [];
+        let n: uint = 1 + ((round * 7) % 300);
+        let i: mutable uint = 0;
+        while (i < n) { append(items, seed + (i as u64)); i := i + 1; }
+        i := 0;
+        while (i < n) {
+            if (items[i] != seed + (i as u64)) { return; };
+            i := i + 1;
+        }
+        round := round + 1;
+    }
+    let ignored: u64 = atomic_u64_fetch_add(arc_get(done), 1 as u64, memory_ordering.seq_cst());
+}
+
+def start(seed: u64, done: &arc<atomic_u64>): option join_handle {
+    let mine: arc<atomic_u64> = arc_clone(done);
+    match spawn(fn(): void -> churn(seed, &mine)) with
+    | result.ok(h) -> { return option.some(h); }
+    | result.err(_) -> { return option.none(); };
+}
+
+def main(): i32 {
+    let done: arc<atomic_u64> = arc_new(atomic_u64_new(0 as u64));
+    let handles: mutable vector join_handle = [];
+    let t: mutable uint = 0;
+    while (t < 8) {
+        match start((t as u64) * 1000000, &done) with
+        | option.some(h) -> { append(handles, h); }
+        | option.none -> { return 1; };
+        t := t + 1;
+    }
+    let j: mutable uint = 0;
+    while (j < (length(handles) as uint)) { join(&mutable handles[j]); j := j + 1; }
+    if (atomic_u64_load(arc_get(&done), memory_ordering.seq_cst()) != (8 as u64)) { return 2; };
+    return 0;
+}

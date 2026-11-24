@@ -1,0 +1,7 @@
+def pass(value: string): string { return value; }
+def main(): int {
+    let other: string = pass("hello");
+    let text: mutable string = "a";
+    text := other;
+    return length(text) + 37;
+}

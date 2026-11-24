@@ -1,0 +1,70 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// Counterpart: tests/ar/stdlib/behavior/thread_slots.sn
+// (no pair directive: the interpreter runs one OS thread and stops at a spawn).
+// std.thread: the program spawns eight threads; each writes a value of its
+// own into its own slot of a shared vector (an Arc of atomics, std.sync),
+// then the program joins them all and checks every slot. Each slot has one
+// writer and the stores are atomic. The program also checks that every thread
+// dropped its Arc clone when it finished. Each thread also
+// writes its id (current_id) into a second slot, and the program checks it
+// is the handle's id and differs from the main thread's.
+import std.thread.thread;
+import std.sync.arc;
+import std.sync.atomic;
+
+type slots = { values: vector atomic_u64, ids: vector atomic_u64 };
+
+def write_slot(shared: &arc<slots>, position: uint): void {
+    let value: u64 = ((position * position) + 1) as u64;
+    let s: &slots = arc_get(shared);
+    atomic_u64_store(&(*s).values[position], value, memory_ordering.seq_cst());
+    atomic_u64_store(&(*s).ids[position], current_id(), memory_ordering.seq_cst());
+}
+
+def start(shared: &arc<slots>, position: uint): option join_handle {
+    let mine: arc<slots> = arc_clone(shared);
+    match spawn(fn(): void -> write_slot(&mine, position)) with
+    | result.ok(h) -> { return option.some(h); }
+    | result.err(_) -> { return option.none(); };
+}
+
+def main(): i32 {
+    let count: uint = 8;
+    let values: mutable vector atomic_u64 = [];
+    let ids: mutable vector atomic_u64 = [];
+    let i: mutable uint = 0;
+    while (i < count) {
+        append(values, atomic_u64_new(0));
+        append(ids, atomic_u64_new(0));
+        i := i + 1;
+    }
+    let initial: slots = { values: values, ids: ids };
+    let shared: arc<slots> = arc_new(initial);
+
+    let handles: mutable vector join_handle = [];
+    i := 0;
+    while (i < count) {
+        match start(&shared, i) with
+        | option.some(h) -> { append(handles, h); }
+        | option.none -> { return 1; };
+        i := i + 1;
+    }
+    i := 0;
+    while (i < count) { join(&mutable handles[i]); i := i + 1; }
+
+    let main_id: u64 = current_id();
+    let s: &slots = arc_get(&shared);
+    i := 0;
+    while (i < count) {
+        let value: u64 = atomic_u64_load(&(*s).values[i], memory_ordering.seq_cst());
+        let id: u64 = atomic_u64_load(&(*s).ids[i], memory_ordering.seq_cst());
+        if (value != (((i * i) + 1) as u64)) { return 2; };
+        if (id != join_handle_id(&handles[i])) { return 3; };
+        if (id == main_id) { return 4; };
+        i := i + 1;
+    }
+    if (arc_strong_count(&shared) != 1) { return 5; };
+    return 42;
+}

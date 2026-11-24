@@ -1,0 +1,13 @@
+// Compile-time type introspection: type_introspection.
+import std.io.println;
+import std.text.number;
+import std.meta.reflect;
+
+type Inner = { a: int, b: int };
+type Nested = { inner: Inner, label: string };
+def main(): int {
+    let inner: Inner = { a: 1, b: 2 };
+    let sample: Nested = { inner: inner, label: "nested" };
+    println(uint_to_text(field_count(&sample) as uint));
+    return 0;
+}

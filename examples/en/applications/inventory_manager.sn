@@ -1,0 +1,24 @@
+// An inventory manager: find an item in the stock by name and add to its quantity.
+import std.io.println;
+import std.text.number;
+import std.text.compare;
+
+type Item = { name: string, quantity: int };
+
+def main(): int {
+    let stock: mutable vector Item = [
+        { name: "paper", quantity: 10 },
+        { name: "pens", quantity: 3 }
+    ];
+    let target: string = "pens";
+    let i: mutable int = 0;
+    while (i < length(stock)) {
+        if (texts_equal(&stock[i].name, &target)) {
+            stock[i].quantity := stock[i].quantity + 7;
+        };
+        i := i + 1;
+    };
+    if (stock[1].quantity != 10) { return 1; };
+    println(int_to_text(stock[1].quantity));
+    return 0;
+}

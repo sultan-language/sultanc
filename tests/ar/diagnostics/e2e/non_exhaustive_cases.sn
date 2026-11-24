@@ -1,0 +1,16 @@
+// اختبار: رفض
+// تشخيص: SULTANC-PATTERN-NON-EXHAUSTIVE
+// نظير: tests/en/diagnostics/e2e/non_exhaustive_cases.sn
+// خرج-تشخيص-عربي: non_exhaustive_cases.ar.stderr
+// خرج-تشخيص-إنجليزي: non_exhaustive_cases.en.stderr
+// A match that misses cases names up to three of them, then how many more.
+نوع ضوء =
+    | أحمر | أصفر | أخضر | أزرق بنوع عدد | بنفسجي | أبيض;
+
+عرف الرئيسية(): عدد {
+    ليكن الضوء: ضوء = ضوء.أحمر();
+    طابق الضوء مع
+    | ضوء.أحمر -> { أرجع 1; }
+    | ضوء.أصفر -> { أرجع 2; };
+    أرجع 0;
+}

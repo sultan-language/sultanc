@@ -1,0 +1,38 @@
+// `match` on integers, ranges, characters, strings and booleans.
+import std.io.println;
+
+def describe_number(value: int): string {
+    match value with
+    | 0 -> { return "zero"; }
+    | -1 | 1 -> { return "unit"; }
+    | range 2 to 9 -> { return "digit"; }
+    | _ -> { return "large"; };
+}
+
+def describe_char(value: char): string {
+    match value with
+    | range 'a' to 'z' -> { return "lowercase"; }
+    | range '0' to '9' -> { return "digit"; }
+    | 'س' | 'ص' -> { return "arabic letter"; }
+    | _ -> { return "other"; };
+}
+
+def describe_word(value: string): string {
+    match value with
+    | "yes" | "ok" -> { return "agree"; }
+    | "no" -> { return "refuse"; }
+    | _ -> { return "unknown"; };
+}
+
+def main(): int {
+    println(describe_number(0));
+    println(describe_number(-1));
+    println(describe_number(7));
+    println(describe_number(250));
+    println(describe_char('q'));
+    println(describe_char('5'));
+    println(describe_char('س'));
+    println(describe_word("ok"));
+    println(describe_word("maybe"));
+    return 0;
+}

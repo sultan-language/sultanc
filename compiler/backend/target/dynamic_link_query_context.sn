@@ -1,27 +1,213 @@
 استورد compiler.backend.target.target_model;
+استورد compiler.backend.target.target_registry;
+استورد المكتبة.نصوص.مقارنة;
 
-// Dynamic-link facts are Target-owned. Object writers consume these values and
-// never infer operating-system loader or system-library policy themselves.
+// Dynamic-loader facts are Target-owned. Libraries are explicit link inputs;
+// an unresolved symbol must never inject a system C runtime dependency.
 عام نوع إعداد_ربط_ديناميكي_هدف = {
-    مفسر_إلف: متجه غ8,
-    مكتبة_نظام_افتراضية: متجه غ8
+    مفسر_إلف: متجه ط8
 };
+
+عرف بايتات_ربط_ديناميكي_من_نص(القيمة: &نص): متجه ط8 {
+    ليكن البايتات: متغير متجه ط8 = [];
+    ليكن الفهرس: متغير طبيعي = 0;
+    طالما (الفهرس < (الطول(*القيمة) مثل طبيعي)) {
+        ألحق(البايتات, (*القيمة)[الفهرس]);
+        الفهرس := الفهرس + 1;
+    }
+    أرجع البايتات;
+}
+
+عرف إعداد_ربط_ديناميكي_بأسماء(
+    المفسر: نص
+): إعداد_ربط_ديناميكي_هدف {
+    ليكن بايتات_المفسر: متغير متجه ط8 = بايتات_ربط_ديناميكي_من_نص(&المفسر);
+    ألحق(بايتات_المفسر, 0);
+    ليكن الإعداد: إعداد_ربط_ديناميكي_هدف = {
+        مفسر_إلف: بايتات_المفسر
+    };
+    أرجع الإعداد;
+}
+
+// A 64-bit GNU/Linux target of the given byte order. The glibc program
+// interpreter depends on the ABI, and these are the facts that select it.
+عرف هدف_جنو_أربعة_وستون_بترتيب(
+    الهدف: &واصف_هدف,
+    الترتيب: ترتيب_بايت
+): منطقي {
+    أرجع (*الهدف).المنصة.البيئة == هوية_بيئة.جنو()
+        && (*الهدف).نموذج_البيانات.عرض_المؤشر == 64
+        && (*الهدف).نموذج_البيانات.ترتيب_البايت == الترتيب;
+}
+
+// The ABI name of the target's code-generation baseline
+// (target_registry.sn أساس_توليد_شفرة_للهدف). RISC-V and LoongArch glibc
+// name the program interpreter after it, so the loader is derived from the
+// same fact the code generator uses rather than restated here.
+عرف واجهة_أساس_الهدف_تساوي(الهدف: &واصف_هدف, الواجهة: نص): منطقي {
+    ليكن الأساس: أساس_توليد_هدف = أساس_توليد_شفرة_للهدف(الهدف);
+    ليكن مرجع_الواجهة: &نص = &الأساس.الواجهة;
+    أرجع نصان_متساويان(مرجع_الواجهة, &الواجهة);
+}
+
+// glibc program interpreters (PT_INTERP) of the other 64-bit GNU/Linux
+// targets, as glibc installs them and as Clang's Linux::getDynamicLinker
+// (clang/lib/Driver/ToolChains/Linux.cpp) and GCC's GLIBC_DYNAMIC_LINKER
+// definitions spell them; for mips64, powerpc64, sparcv9 and s390x glibc's
+// per-ABI loader list (libc-alpha, "dynamic linker names", 2014) gives the
+// same names:
+//   * riscv64 with the baseline ABI lp64d: /lib/ld-linux-riscv64-lp64d.so.1.
+//   * loongarch64 with the baseline ABI lp64d:
+//     /lib64/ld-linux-loongarch-lp64d.so.1.
+//   (Only the registered baseline ABI is mapped; a different ABI name in the
+//   baseline yields no interpreter until its loader is added here.)
+//   * mips64 n64 (64-bit pointers) with the legacy NaN encoding: the baseline
+//     leaves the CPU to LLVM's default for the triple, a pre-R6 CPU, so the
+//     loader is /lib64/ld.so.1 for either byte order. A NaN2008 (R6) ABI
+//     uses ld-linux-mipsn8.so.1 and is not registered.
+//   * powerpc64 little-endian, ELFv2 (the default powerpc64le ABI of LLVM
+//     and glibc; the baseline sets no other): /lib64/ld64.so.2. Big-endian
+//     powerpc64 has ELFv1 and ELFv2 loaders and no registered target, so it
+//     has no interpreter here.
+//   * sparcv9: /lib64/ld-linux.so.2.
+//   * s390x: /lib/ld64.so.1.
+//   * NEC VE (SX-Aurora, run by VEOS): /opt/nec/ve/lib/ld-linux-ve.so.1,
+//     the VE glibc loader Clang uses for the ve triple.
+// Any other ABI of these architectures has no interpreter: no loader path
+// is guessed. A static link needs none of this, and the interpreter path adds
+// no library or object to any link: it only names the target system's loader
+// in PT_INTERP of an executable that imports from shared libraries it was
+// explicitly given. SultanC's ELF linker currently links executables only for
+// Linux x86_64 and AArch64 (link/elf/target_policy.sn), so these entries are
+// not used for any output yet.
+عرف إعداد_ربط_ديناميكي_لينكس(
+    الهدف: &واصف_هدف
+): اختياري إعداد_ربط_ديناميكي_هدف {
+    طابق (*الهدف).المعمارية.الهوية مع
+    | هوية_معمارية.إكس_ستة_وثمانون_أربعة_وستون -> {
+        أرجع اختياري.موجود(إعداد_ربط_ديناميكي_بأسماء(
+            «/lib64/ld-linux-x86-64.so.2»
+        ));
+    }
+    | هوية_معمارية.ذراع_أربعة_وستون -> {
+        أرجع اختياري.موجود(إعداد_ربط_ديناميكي_بأسماء(
+            «/lib/ld-linux-aarch64.so.1»
+        ));
+    }
+    | هوية_معمارية.إكس_ستة_وثمانون_اثنان_وثلاثون -> {
+        أرجع اختياري.موجود(إعداد_ربط_ديناميكي_بأسماء(
+            «/lib/ld-linux.so.2»
+        ));
+    }
+    | هوية_معمارية.ذراع_سبعة -> {
+        طابق (*الهدف).المنصة.البيئة مع
+        | هوية_بيئة.إي_إيه_بي_آي_إتش_إف -> {
+            أرجع اختياري.موجود(إعداد_ربط_ديناميكي_بأسماء(
+                «/lib/ld-linux-armhf.so.3»
+            ));
+        }
+        | _ -> { أرجع اختياري.لا_شيء(); };
+    }
+    | هوية_معمارية.رايسك_في_أربعة_وستون -> {
+        إذا (!هدف_جنو_أربعة_وستون_بترتيب(الهدف, ترتيب_بايت.صغير())) {
+            أرجع اختياري.لا_شيء();
+        };
+        إذا (واجهة_أساس_الهدف_تساوي(الهدف, «lp64d»)) {
+            أرجع اختياري.موجود(إعداد_ربط_ديناميكي_بأسماء(
+                «/lib/ld-linux-riscv64-lp64d.so.1»
+            ));
+        };
+        أرجع اختياري.لا_شيء();
+    }
+    | هوية_معمارية.لونغ_آرتش_أربعة_وستون -> {
+        إذا (!هدف_جنو_أربعة_وستون_بترتيب(الهدف, ترتيب_بايت.صغير())) {
+            أرجع اختياري.لا_شيء();
+        };
+        إذا (واجهة_أساس_الهدف_تساوي(الهدف, «lp64d»)) {
+            أرجع اختياري.موجود(إعداد_ربط_ديناميكي_بأسماء(
+                «/lib64/ld-linux-loongarch-lp64d.so.1»
+            ));
+        };
+        أرجع اختياري.لا_شيء();
+    }
+    | هوية_معمارية.ميبس_أربعة_وستون -> {
+        إذا (!هدف_جنو_أربعة_وستون_بترتيب(الهدف, ترتيب_بايت.صغير())
+            && !هدف_جنو_أربعة_وستون_بترتيب(الهدف, ترتيب_بايت.كبير())) {
+            أرجع اختياري.لا_شيء();
+        };
+        أرجع اختياري.موجود(إعداد_ربط_ديناميكي_بأسماء(«/lib64/ld.so.1»));
+    }
+    | هوية_معمارية.باور_بي_سي_أربعة_وستون -> {
+        إذا (!هدف_جنو_أربعة_وستون_بترتيب(الهدف, ترتيب_بايت.صغير())) {
+            أرجع اختياري.لا_شيء();
+        };
+        أرجع اختياري.موجود(إعداد_ربط_ديناميكي_بأسماء(«/lib64/ld64.so.2»));
+    }
+    | هوية_معمارية.سبارك_أربعة_وستون -> {
+        إذا (!هدف_جنو_أربعة_وستون_بترتيب(الهدف, ترتيب_بايت.كبير())) {
+            أرجع اختياري.لا_شيء();
+        };
+        أرجع اختياري.موجود(إعداد_ربط_ديناميكي_بأسماء(«/lib64/ld-linux.so.2»));
+    }
+    | هوية_معمارية.سيستم_زد -> {
+        إذا (!هدف_جنو_أربعة_وستون_بترتيب(الهدف, ترتيب_بايت.كبير())) {
+            أرجع اختياري.لا_شيء();
+        };
+        أرجع اختياري.موجود(إعداد_ربط_ديناميكي_بأسماء(«/lib/ld64.so.1»));
+    }
+    | هوية_معمارية.في_إي -> {
+        إذا (!هدف_جنو_أربعة_وستون_بترتيب(الهدف, ترتيب_بايت.صغير())) {
+            أرجع اختياري.لا_شيء();
+        };
+        أرجع اختياري.موجود(إعداد_ربط_ديناميكي_بأسماء(
+            «/opt/nec/ve/lib/ld-linux-ve.so.1»
+        ));
+    }
+    | _ -> { أرجع اختياري.لا_شيء(); };
+}
+
+عرف إعداد_ربط_ديناميكي_أندرويد(
+    الهدف: &واصف_هدف
+): اختياري إعداد_ربط_ديناميكي_هدف {
+    ليكن المفسر: نص;
+    إذا ((*الهدف).نموذج_البيانات.عرض_المؤشر > 32) {
+        المفسر := «/system/bin/linker64»;
+    } وإلا {
+        المفسر := «/system/bin/linker»;
+    };
+    أرجع اختياري.موجود(إعداد_ربط_ديناميكي_بأسماء(
+        المفسر
+    ));
+}
+
+عرف إعداد_ربط_ديناميكي_فري_بي_إس_دي(
+    الهدف: &واصف_هدف
+): اختياري إعداد_ربط_ديناميكي_هدف {
+    طابق (*الهدف).المعمارية.الهوية مع
+    | هوية_معمارية.إكس_ستة_وثمانون_أربعة_وستون -> { }
+    | هوية_معمارية.ذراع_أربعة_وستون -> { }
+    | هوية_معمارية.رايسك_في_أربعة_وستون -> { }
+    | _ -> { أرجع اختياري.لا_شيء(); };
+    أرجع اختياري.موجود(إعداد_ربط_ديناميكي_بأسماء(
+        «/libexec/ld-elf.so.1»
+    ));
+}
 
 عام عرف إعداد_ربط_ديناميكي_للهدف(
     الهدف: &واصف_هدف
-): اختيار إعداد_ربط_ديناميكي_هدف {
-    طابق تركيب_الهدف_الأصلي(الهدف) مع
-    | هوية_تركيب_هدف_أصلي.إكس_ستة_وثمانون_أربعة_وستون_لينكس_إلف -> {
-        دع المفسر: متجه غ8 = [
-            0x2F,0x6C,0x69,0x62,0x36,0x34,0x2F,0x6C,0x64,0x2D,0x6C,0x69,0x6E,0x75,0x78,0x2D,
-            0x78,0x38,0x36,0x2D,0x36,0x34,0x2E,0x73,0x6F,0x2E,0x32,0
-        ];
-        دع المكتبة: متجه غ8 = [0x6C,0x69,0x62,0x63,0x2E,0x73,0x6F,0x2E,0x36];
-        دع الإعداد: إعداد_ربط_ديناميكي_هدف = {
-            مفسر_إلف: المفسر,
-            مكتبة_نظام_افتراضية: المكتبة
-        };
-        أرجع اختيار.بعض(الإعداد);
+): اختياري إعداد_ربط_ديناميكي_هدف {
+    إذا ((*الهدف).صيغة_الكائن != صيغة_كائن_هدف.إلف()) {
+        أرجع اختياري.لا_شيء();
+    };
+    طابق (*الهدف).المنصة.المنصة مع
+    | هوية_منصة.لينكس -> {
+        أرجع إعداد_ربط_ديناميكي_لينكس(الهدف);
     }
-    | _ -> { أرجع اختيار.لا_شيء(); };
+    | هوية_منصة.أندرويد -> {
+        أرجع إعداد_ربط_ديناميكي_أندرويد(الهدف);
+    }
+    | هوية_منصة.فري_بي_إس_دي -> {
+        أرجع إعداد_ربط_ديناميكي_فري_بي_إس_دي(الهدف);
+    }
+    | _ -> { أرجع اختياري.لا_شيء(); };
 }

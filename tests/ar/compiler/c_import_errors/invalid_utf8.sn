@@ -1,0 +1,8 @@
+// اختبار: رفض
+// تشخيص: SULTANC-C-INVALID-UTF8
+// نظير: tests/en/compiler/c_import_errors/invalid_utf8.sn
+// مصدر سي بصيغة UTF-8: الترميز المطول (C0 AF) في حرفي مستعمل هو
+// SULTANC-C-INVALID-UTF8 مع ملفه وسطره وعموده.
+استورد "invalid_utf8.h";
+
+عرف الرئيسية(): عدد { أرجع 0; }

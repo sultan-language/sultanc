@@ -1,0 +1,22 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// نظير: tests/ar/compiler/c_import_units/main.sn
+// Three C translation units in one import (compiler/jisr/units.sn): each
+// is preprocessed, parsed and compiled on its own, so the static `calls`
+// and `step` of even.c and odd.c are separate; units.h's struct pair and
+// prototypes are written once; and the calls between units (is_even and
+// is_odd call each other, pair_sum calls both) go to the other unit's
+// compiled function, with no C compiler and no linker symbol.
+import "even.c+odd.c+pairs.c";
+
+def main(): int {
+    if (is_even(4) != 1 || is_odd(4) != 0) { return 1; };
+    let p: pair = make_pair(17, 23);
+    // 23 + 17 + is_even(10) + is_odd(7) = 40 + 1 + 1
+    let sum: i32 = pair_sum(p);
+    if (sum != 42) { return 2; };
+    // even.c counts its own calls only.
+    if (count_calls() <= 0) { return 3; };
+    return sum as int;
+}

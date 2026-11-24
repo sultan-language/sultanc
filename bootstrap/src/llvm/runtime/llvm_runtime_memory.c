@@ -4,9 +4,6 @@
 #include "llvm/llvm_context.h"
 #include "llvm/llvm_expressions.h"
 #include "llvm/llvm_values.h"
-#include <limits.h>
-#include <stdlib.h>
-#include <string.h>
 
 /* Allocates the LLVM bytes. */
 LLVMValueRef __LLVM_Allocate_Bytes__(__LLVM_Emitter__ *emitter,
@@ -136,167 +133,83 @@ LLVMValueRef __LLVM_Reallocate_Bytes__(__LLVM_Emitter__ *emitter,
     return LLVMBuildPointerCast(emitter->builder, allocated, target_pointer_type, name);
 }
 
-/* Returns the LLVM declare runtime function. */
-LLVMValueRef __LLVM_Declare_Runtime_Function__(__LLVM_Emitter__ *emitter,
-                                                      const char *name,
-                                                      LLVMTypeRef return_type,
-                                                      LLVMTypeRef *parameters,
-                                                      unsigned parameter_count,
-                                                      LLVMTypeRef *out_function_type)
+/* Releases the LLVM heap bytes. The canonical release boundary symmetric
+ * with __LLVM_Allocate_Bytes__/__LLVM_Reallocate_Bytes__ above: it declares
+ * "free" lazily and caches it on the emitter exactly the way malloc/realloc
+ * are declared and cached, so drop elaboration reuses the existing heap
+ * boundary rather than inventing a second allocator surface. */
+int __LLVM_Free_Bytes__(__LLVM_Emitter__ *emitter, LLVMValueRef pointer)
 {
-    /* Stores the function type. */
-    LLVMTypeRef function_type;
-    /* Stores the function. */
-    LLVMValueRef function;
-    function_type = LLVMFunctionType(return_type, parameters, parameter_count, 0);
-    function = LLVMGetNamedFunction(emitter->module, name);
-    if (function == NULL)
-        function = LLVMAddFunction(emitter->module, name, function_type);
-    if (function == NULL)
-    {
-        __LLVM_Fail__("L2.8 could not declare native runtime function");
-        return NULL;
-    }
-    if (out_function_type != NULL)
-        *out_function_type = function_type;
-    return function;
-}
-
-/* Returns the LLVM runtime malloc. */
-static LLVMValueRef
-__LLVM_Runtime_Malloc__(__LLVM_Emitter__ *emitter, LLVMValueRef byte_count, const char *name)
-{
-    /* Stores the LLVM i8 type. */
-    LLVMTypeRef i8 = LLVMIntTypeInContext(emitter->context, 8U);
-    /* Stores the LLVM i8 pointer type. */
-    LLVMTypeRef i8_pointer = LLVMPointerType(i8, 0U);
+    /* Stores the byte pointer type. */
+    LLVMTypeRef byte_pointer;
     /* Stores the call arguments. */
     LLVMValueRef arguments[1];
-    if (byte_count == NULL)
-        return NULL;
-    if (emitter->malloc_function == NULL)
+
+    if (emitter == NULL || pointer == NULL)
     {
-        /* Stores the parameters. */
-        LLVMTypeRef parameters[1] = {LLVMIntTypeInContext(emitter->context, 64U)};
-        emitter->malloc_type = LLVMFunctionType(i8_pointer, parameters, 1U, 0);
-        emitter->malloc_function = LLVMGetNamedFunction(emitter->module, "malloc");
-        if (emitter->malloc_function == NULL)
-            emitter->malloc_function =
-                LLVMAddFunction(emitter->module, "malloc", emitter->malloc_type);
-        if (emitter->malloc_function == NULL)
+        return __LLVM_Fail__("L2 drop elaboration released a missing heap pointer");
+    }
+    byte_pointer = LLVMPointerType(LLVMIntTypeInContext(emitter->context, 8U), 0U);
+    if (emitter->free_function == NULL)
+    {
+        /* Stores the parameter values. */
+        LLVMTypeRef params[1];
+        params[0] = byte_pointer;
+        emitter->free_type =
+            LLVMFunctionType(LLVMVoidTypeInContext(emitter->context), params, 1U, 0);
+        emitter->free_function = LLVMGetNamedFunction(emitter->module, "free");
+        if (emitter->free_function == NULL)
         {
-            __LLVM_Fail__("L2.8 could not declare native runtime allocation");
-            return NULL;
+            emitter->free_function =
+                LLVMAddFunction(emitter->module, "free", emitter->free_type);
+        }
+        if (emitter->free_function == NULL)
+        {
+            return __LLVM_Fail__(
+                "L2 drop elaboration could not declare canonical heap release boundary");
         }
     }
-    arguments[0] = byte_count;
-    return LLVMBuildCall2(
-        emitter->builder, emitter->malloc_type, emitter->malloc_function, arguments, 1U, name);
+    arguments[0] =
+        LLVMBuildPointerCast(emitter->builder, pointer, byte_pointer, "drop.release.bytes");
+    if (LLVMBuildCall2(emitter->builder,
+                       emitter->free_type,
+                       emitter->free_function,
+                       arguments,
+                       1U,
+                       "") == NULL)
+    {
+        return __LLVM_Fail__("L2 drop elaboration heap release call failed");
+    }
+    return 1;
 }
 
-/* Returns the LLVM runtime c string. */
-LLVMValueRef
-__LLVM_Runtime_C_String__(__LLVM_Emitter__ *emitter, LLVMValueRef text, const char *name)
+LLVMValueRef __LLVM_Grow_Sequence_Bytes__(__LLVM_Emitter__ *emitter,
+                                          LLVMValueRef data,
+                                          LLVMValueRef capacity,
+                                          LLVMValueRef live_bytes,
+                                          LLVMValueRef byte_count,
+                                          LLVMTypeRef target_pointer_type,
+                                          const char *name)
 {
-    /* Stores the LLVM i8 type. */
-    LLVMTypeRef i8 = LLVMIntTypeInContext(emitter->context, 8U);
-    /* Stores the LLVM i8 pointer type. */
-    LLVMTypeRef i8_pointer = LLVMPointerType(i8, 0U);
-    /* Stores the LLVM i64 type. */
     LLVMTypeRef i64 = LLVMIntTypeInContext(emitter->context, 64U);
-    /* Stores the data. */
-    LLVMValueRef data;
-    /* Stores the length. */
-    LLVMValueRef length;
-    /* Stores the allocation size. */
-    LLVMValueRef allocation_size;
-    /* Stores the buffer. */
-    LLVMValueRef buffer;
-    /* Tracks the failed state. */
-    LLVMValueRef failed;
-    /* Stores the end. */
-    LLVMValueRef end;
-    /* Stores the indices. */
-    LLVMValueRef indices[1];
-    if (text == NULL)
+    LLVMValueRef unowned;
+    LLVMValueRef source;
+    LLVMValueRef grown;
+    LLVMValueRef copy_bytes;
+    if (data == NULL || capacity == NULL || live_bytes == NULL || byte_count == NULL)
+    {
+        __LLVM_Fail__("sequence growth is missing canonical storage facts");
         return NULL;
-    data = LLVMBuildExtractValue(emitter->builder, text, 0U, "runtime.path.data");
-    length = LLVMBuildExtractValue(emitter->builder, text, 1U, "runtime.path.length");
-    allocation_size =
-        LLVMBuildAdd(emitter->builder, length, LLVMConstInt(i64, 1U, 0), "runtime.path.size");
-    buffer = __LLVM_Runtime_Malloc__(emitter, allocation_size, name);
-    if (buffer == NULL)
+    }
+    unowned = LLVMBuildICmp(emitter->builder, LLVMIntEQ, capacity, LLVMConstInt(i64, 0U, 0),
+                            "grow.unowned");
+    source = LLVMBuildSelect(emitter->builder, unowned, LLVMConstNull(LLVMTypeOf(data)), data,
+                             "grow.source");
+    grown = __LLVM_Reallocate_Bytes__(emitter, source, byte_count, target_pointer_type, name);
+    if (grown == NULL)
         return NULL;
-    failed = LLVMBuildICmp(emitter->builder,
-                           LLVMIntEQ,
-                           buffer,
-                           LLVMConstNull(i8_pointer),
-                           "runtime.path.allocate.failed");
-    if (!__LLVM_Emit_Trap_If__(emitter, failed, "runtime.path.allocate.failure"))
-        return NULL;
-    if (LLVMBuildMemCpy(emitter->builder, buffer, 1U, data, 1U, length) == NULL)
-        return NULL;
-    indices[0] = length;
-    end = LLVMBuildGEP2(emitter->builder, i8, buffer, indices, 1U, "runtime.path.end");
-    if (end == NULL)
-        return NULL;
-    LLVMBuildStore(emitter->builder, LLVMConstInt(i8, 0U, 0), end);
-    return buffer;
-}
-
-/* Returns the LLVM runtime literal c string. */
-LLVMValueRef
-__LLVM_Runtime_Literal_C_String__(__LLVM_Emitter__ *emitter, const char *literal, const char *name)
-{
-    /* Stores the length. */
-    size_t length;
-    /* Stores the LLVM i8 type. */
-    LLVMTypeRef i8;
-    /* Stores the LLVM i8 pointer type. */
-    LLVMTypeRef i8_pointer;
-    /* Stores the array type. */
-    LLVMTypeRef array_type;
-    /* Stores the storage. */
-    LLVMValueRef storage;
-    /* Stores the constant. */
-    LLVMValueRef constant;
-    if (literal == NULL)
-        return NULL;
-    length = strlen(literal);
-    if (length > UINT_MAX - 1U)
-        return NULL;
-    i8 = LLVMIntTypeInContext(emitter->context, 8U);
-    i8_pointer = LLVMPointerType(i8, 0U);
-    array_type = LLVMArrayType(i8, (unsigned)length + 1U);
-    storage = __LLVM_Allocate_Stack__(emitter, array_type, name);
-    if (storage == NULL)
-        return NULL;
-    constant = LLVMConstStringInContext(emitter->context, literal, (unsigned)length, 0);
-    if (constant == NULL)
-        return NULL;
-    LLVMBuildStore(emitter->builder, constant, storage);
-    return LLVMBuildPointerCast(emitter->builder, storage, i8_pointer, name);
-}
-
-/* Releases the LLVM runtime. */
-int __LLVM_Runtime_Free__(__LLVM_Emitter__ *emitter, LLVMValueRef pointer)
-{
-    /* Stores the LLVM i8 type. */
-    LLVMTypeRef i8 = LLVMIntTypeInContext(emitter->context, 8U);
-    /* Stores the LLVM i8 pointer type. */
-    LLVMTypeRef i8_pointer = LLVMPointerType(i8, 0U);
-    /* Stores the parameters. */
-    LLVMTypeRef parameters[1] = {i8_pointer};
-    /* Stores the function type. */
-    LLVMTypeRef function_type;
-    /* Stores the function. */
-    LLVMValueRef function;
-    /* Stores the call arguments. */
-    LLVMValueRef arguments[1];
-    function = __LLVM_Declare_Runtime_Function__(
-        emitter, "free", LLVMVoidTypeInContext(emitter->context), parameters, 1U, &function_type);
-    if (function == NULL)
-        return 0;
-    arguments[0] = pointer;
-    return LLVMBuildCall2(emitter->builder, function_type, function, arguments, 1U, "") != NULL;
+    copy_bytes = LLVMBuildSelect(emitter->builder, unowned, live_bytes, LLVMConstInt(i64, 0U, 0),
+                                 "grow.copy.bytes");
+    LLVMBuildMemCpy(emitter->builder, grown, 1U, data, 1U, copy_bytes);
+    return grown;
 }

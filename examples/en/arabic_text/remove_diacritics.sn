@@ -1,0 +1,17 @@
+// Removing Arabic diacritics: strip the fatha, sukun and tanwin from a word.
+import std.io.println;
+import std.text.number;
+import std.text.transform;
+
+def main(): int {
+    let source: string = "مَرْحَبًا";
+    let fatha: string = "َ";
+    let sukun: string = "ْ";
+    let tanwin: string = "ً";
+    let empty: string = "";
+    let stage: string = replace(&source, &fatha, &empty);
+    let stage2: string = replace(&stage, &sukun, &empty);
+    let plain: string = replace(&stage2, &tanwin, &empty);
+    println(plain);
+    return 0;
+}

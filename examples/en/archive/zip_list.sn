@@ -1,0 +1,19 @@
+// ZIP archive example: zip_list (parse, 2 file entries).
+import std.io.println;
+import std.text.number;
+import std.archive.zip;
+
+
+def main(): int {
+    let entries: mutable vector zip_entry = [];
+    append(entries, new_zip_file("zip_list_0.txt", [65 as u8, 10 as u8], false));
+    append(entries, new_zip_file("zip_list_1.txt", [66 as u8, 10 as u8], false));
+    match zip_encode(&entries) with
+    | result.err(_) -> { return 1; }
+    | result.ok(data) -> {
+        match zip_decode(&data) with
+        | result.err(_) -> { return 2; }
+        | result.ok(decoded) -> { println(uint_to_text(length(decoded) as uint)); };
+    };
+    return 0;
+}

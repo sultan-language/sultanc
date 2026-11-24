@@ -1,0 +1,28 @@
+// Game of Life on a 3x3 grid: count the live neighbors of the center cell, treating cells
+// outside the grid as dead.
+import std.io.println;
+import std.text.number;
+
+def alive(grid: &vector int, x: int, y: int): int {
+    if (x < 0 || x >= 3 || y < 0 || y >= 3) { return 0; };
+    return (*grid)[y * 3 + x];
+}
+
+def main(): int {
+    let grid: vector int = [0, 1, 0, 0, 1, 0, 0, 1, 0];
+    let neighbors: mutable int = 0;
+    let dy: mutable int = -1;
+    while (dy <= 1) {
+        let dx: mutable int = -1;
+        while (dx <= 1) {
+            if (dx != 0 || dy != 0) {
+                neighbors := neighbors + alive(&grid, 1 + dx, 1 + dy);
+            };
+            dx := dx + 1;
+        };
+        dy := dy + 1;
+    };
+    if (neighbors != 2) { return 1; };
+    println(int_to_text(neighbors));
+    return 0;
+}

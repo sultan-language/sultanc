@@ -1,0 +1,6 @@
+error[SULTANC-JSON-DERIVE-UNSUPPORTED-FIELD-TYPE]: `@@json` cannot derive this field type — The type is `(ص32, ص32)`. JSON derivation supports integers, floats, booleans, characters, strings, named types without type arguments, and vectors and options of these.
+  --> tests/ar/diagnostics/e2e/json_derive_field.sn:11:10..11:20
+    |
+ 11 |     زوج: (ص32, ص32)
+    |          ^^^^^^^^^^
+    |

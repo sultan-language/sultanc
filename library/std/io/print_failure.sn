@@ -1,0 +1,23 @@
+// std.io.print_failure (المكتبة.دخ.اطبع_فشل): writes a std.error فشل to
+// standard error. std.error describes a failure as text (صف_فشل,
+// صف_فشل_بلغة) without any output; writing that text to the
+// process's standard error is output, so it is here, in std.io.
+
+استورد أخطاء.فشل;
+استورد نصوص.لغة;
+استورد دخ.اطبع_سطر;
+
+// Writes صف_فشل and a newline to standard error.
+عام عرف اطبع_فشل(الفشل: &فشل): فراغ {
+    ليكن السطر: نص = صف_فشل(الفشل);
+    ليكن تجاهل: نتيجة عدد, عدد = اطبع_سطر_خطأ(&السطر);
+}
+
+// Writes صف_فشل_بلغة and a newline to standard error.
+عام عرف اطبع_فشل_بلغة(الفشل: &فشل, اللغة: &لغة): فراغ {
+    ليكن السطر: نص = صف_فشل_بلغة(الفشل, اللغة);
+    ليكن تجاهل: نتيجة عدد, عدد = اطبع_سطر_خطأ(&السطر);
+}
+
+عام مرادف error_print = اطبع_فشل;
+عام مرادف error_print_in = اطبع_فشل_بلغة;

@@ -1,0 +1,8 @@
+// اختبار: رفض
+// تشخيص: SULTANC-FLOW-LOOP-CONTROL-OUTSIDE-LOOP
+// نظير: tests/en/diagnostics/semantic/loop_control_outside_loop.sn
+عرف الرئيسية(): ص32 {
+    ليكن العدد: ص32 = 1;
+    إذا (العدد == 1) { اخرج_من_حلقة; };
+    أرجع 0;
+}

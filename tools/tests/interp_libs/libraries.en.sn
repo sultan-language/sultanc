@@ -1,0 +1,18 @@
+// Loaded with `-l interp_first -l interp_second` (tools/tests/interp_libs_check.sh):
+// interp_lib_which is the first library's, as in the linked executable, and the
+// second library finds interp_lib_add in the first. With the order reversed the
+// program exits 43.
+extern def interp_lib_add(a: i32, b: i32): i32;
+extern def interp_lib_which(): i32;
+extern def interp_lib_through_first(x: i32): i32;
+
+def main(): int {
+    unsafe {
+        if (interp_lib_add(1, 2) != 1003) { return 1; };
+        if (interp_lib_through_first(5) != 10) { return 2; };
+        let which: i32 = interp_lib_which();
+        if (which == 1) { return 42; };
+        if (which == 2) { return 43; };
+    }
+    return 3;
+}

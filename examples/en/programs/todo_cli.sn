@@ -1,0 +1,14 @@
+// In-memory to-do list with add/list commands; no persisted state.
+import std.io.println;
+import std.text.number;
+
+
+def main(): int {
+    let tasks: mutable vector string = [];
+    append(tasks, "write examples");
+    append(tasks, "compile both languages");
+    let i: mutable int = 0;
+    while (i < length(tasks)) { println(clone(&tasks[i])); i := i + 1; };
+    println(uint_to_text(length(tasks) as uint));
+    return 0;
+}

@@ -1,0 +1,7 @@
+// اختبار: رفض
+// أهداف: arm64-darwin,x86_64-linux
+// تشخيص: SULTANC-TYPE-INVALID-DEFINITION
+// نظير: tests/ar/language/opaque/reject_generic_opaque.sn
+// An opaque type takes no type parameters.
+type Handle<A> = opaque;
+def main(): int { return 0; }

@@ -1,0 +1,8 @@
+// اختبار: رفض
+// تشخيص: SULTANC-C-UNSUPPORTED
+// نظير: tests/ar/compiler/c_import_errors/cplusplus.sn
+// A C++ header (`namespace geometry { ... }`) is reported once as SULTANC-C-UNSUPPORTED ("C++ code: Jisr
+// reads C, not C++") at its file:line:column, not as a cascade of C syntax errors.
+import "cplusplus.h";
+
+def main(): int { return 0; }

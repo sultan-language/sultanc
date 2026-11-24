@@ -1,13 +1,18 @@
 /* Owns Stage0 LLVM expression lowering. */
 
 #include "llvm/llvm_expressions.h"
+#include "semantic/literal.h"
+#include "semantic/body_internal.h"
 #include "llvm/llvm_aggregates.h"
 #include "llvm/llvm_builtins.h"
 #include "llvm/llvm_context.h"
 #include "llvm/llvm_functions.h"
 #include "llvm/llvm_types.h"
 #include "llvm/llvm_values.h"
+#include "llvm/runtime/llvm_runtime_memory.h"
+#include "kernel/memory/memory.h"
 #include "kernel/name/name.h"
+#include "frontend/identifier_identity.h"
 #include "kernel/type/tagged.h"
 #include "kernel/type/type.h"
 #include <stdint.h>
@@ -67,6 +72,42 @@ __LLVM_Emit_Trap_If__(__LLVM_Emitter__ *emitter, LLVMValueRef condition, const c
 
     LLVMPositionBuilderAtEnd(emitter->builder, continue_block);
     return 1;
+}
+
+static LLVMTypeRef __LLVM_Function_Type_From_Resolved__(__LLVM_Emitter__ *emitter,
+                                                       const __Resolved_Type__ *resolved)
+{
+    LLVMTypeRef *parameters = NULL;
+    LLVMTypeRef output;
+    LLVMTypeRef function_type;
+    size_t index;
+    if (resolved == NULL || resolved->__Kind__ != __Resolved_Type_Function__)
+        return NULL;
+    if (resolved->__Parameter_Count__ != 0U)
+    {
+        parameters = (LLVMTypeRef *)calloc(resolved->__Parameter_Count__, sizeof(*parameters));
+        if (parameters == NULL)
+            return NULL;
+    }
+    for (index = 0U; index < resolved->__Parameter_Count__; ++index)
+    {
+        parameters[index] = __LLVM_Type__(emitter, resolved->__Parameters__[index]);
+        if (parameters[index] == NULL)
+        {
+            free(parameters);
+            return NULL;
+        }
+    }
+    output = __LLVM_Type__(emitter, resolved->__Output__);
+    if (output == NULL)
+    {
+        free(parameters);
+        return NULL;
+    }
+    function_type = LLVMFunctionType(
+        output, parameters, (unsigned)resolved->__Parameter_Count__, 0);
+    free(parameters);
+    return function_type;
 }
 
 /* Emits the LLVM checked arithmetic. */
@@ -198,10 +239,16 @@ static LLVMValueRef __LLVM_Emit_Shift__(__LLVM_Emitter__ *emitter,
     {
         return LLVMBuildShl(emitter->builder, left, right, "shift.left");
     }
+    /* `>>` is logical for every integer Type and `>>>` fills with the sign
+     * bit (canonical إزاحة_يمنى / إزاحة_حسابية_يمنى). */
+    (void)is_signed;
     if (operation == __Binary_Shift_Right_Logical__)
     {
-        return is_signed ? LLVMBuildAShr(emitter->builder, left, right, "shift.right.arithmetic")
-                         : LLVMBuildLShr(emitter->builder, left, right, "shift.right.logical");
+        return LLVMBuildLShr(emitter->builder, left, right, "shift.right.logical");
+    }
+    if (operation == __Binary_Shift_Right_Arithmetic__)
+    {
+        return LLVMBuildAShr(emitter->builder, left, right, "shift.right.arithmetic");
     }
     __LLVM_Fail__("unsupported L2 integer shift operation");
     return NULL;
@@ -257,6 +304,55 @@ static LLVMValueRef __LLVM_Emit_Division_Or_Remainder__(__LLVM_Emitter__ *emitte
 
     return operation == __Binary_Divide__ ? LLVMBuildUDiv(emitter->builder, left, right, "udiv")
                                           : LLVMBuildURem(emitter->builder, left, right, "urem");
+}
+
+/* Emits a float literal of EXPECTED's float Type (f64 without one). */
+static __LLVM_Value__ __LLVM_Emit_Float_Literal__(__LLVM_Emitter__ *emitter,
+                                                 __Text_Slice__ digits,
+                                                 int negative,
+                                                 __Ast_Type__ *expected)
+{
+    __LLVM_Value__ result = __LLVM_Invalid_Value__();
+    __Resolved_Type__ resolved;
+    __Ast_Type__ *type = &__Body_Builtin_F64_Type__;
+    LLVMTypeRef llvm_type;
+    char spelling[512];
+    if (expected != NULL && __Type_Resolve__(emitter->semantic, expected, &resolved) &&
+        resolved.__Kind__ == __Resolved_Type_Float__)
+        type = expected;
+    llvm_type = __LLVM_Type__(emitter, type);
+    if (llvm_type == NULL || digits.__Length__ + 2U > sizeof(spelling))
+    {
+        __LLVM_Fail__("float literal has no canonical float type");
+        return result;
+    }
+    spelling[0] = '-';
+    memcpy(spelling + 1, digits.__Data__, digits.__Length__);
+    spelling[digits.__Length__ + 1U] = '\0';
+    result.value = LLVMConstRealOfStringAndSize(llvm_type, negative ? spelling : spelling + 1,
+                                                (unsigned)(digits.__Length__ + (negative ? 1U : 0U)));
+    result.type = type;
+    return result;
+}
+
+/* Answers the float Type of an operand, or NULL. */
+static __Ast_Type__ *__LLVM_Float_Operand_Type__(__LLVM_Emitter__ *emitter, __Ast_Expression__ *expression)
+{
+    __Ast_Type__ *type;
+    __Resolved_Type__ resolved;
+    if (__Semantic_Float_Literal_Expression__(expression))
+        return expression->__Contextual_Type__ != NULL &&
+                       __Type_Resolve__(emitter->semantic, expression->__Contextual_Type__, &resolved) &&
+                       resolved.__Kind__ == __Resolved_Type_Float__
+                   ? expression->__Contextual_Type__
+                   : NULL;
+    type = __LLVM_Expression_Type__(emitter, expression);
+    if (type == NULL && expression != NULL && expression->__Kind__ == __Ast_Expression_Binary__)
+        type = __LLVM_Expression_Integer_Type__(emitter, expression);
+    return type != NULL && __Type_Resolve__(emitter->semantic, type, &resolved) &&
+                   resolved.__Kind__ == __Resolved_Type_Float__
+               ? type
+               : NULL;
 }
 
 /* Emits the LLVM atom. */
@@ -315,6 +411,27 @@ __LLVM_Emit_Atom__(__LLVM_Emitter__ *emitter, __Ast_Atom__ *atom, __Ast_Type__ *
         return __LLVM_Emit_String_Literal__(
             emitter, atom->__As__.__Literal__->__As__.__String__, expected);
     }
+    if (atom->__As__.__Literal__->__Kind__ == __Ast_Literal_Character__)
+    {
+        /* A character literal is its code point. */
+        __Ast_Type__ *type = expected != NULL && __LLVM_Resolve_Integer__(emitter, expected, &bits, &is_signed)
+                                 ? expected
+                                 : &__Body_Builtin_Char_Type__;
+        if (!__LLVM_Resolve_Integer__(emitter, type, &bits, &is_signed))
+        {
+            __LLVM_Fail__("character literal has no scalar type");
+            return result;
+        }
+        result.value = LLVMConstInt(LLVMIntTypeInContext(emitter->context, bits),
+                                    (unsigned long long)atom->__As__.__Literal__->__As__.__Character__, 0);
+        result.type = type;
+        return result;
+    }
+    if (atom->__As__.__Literal__->__Kind__ == __Ast_Literal_Float__)
+    {
+        return __LLVM_Emit_Float_Literal__(emitter, atom->__As__.__Literal__->__As__.__String__, 0,
+                                           expected);
+    }
     if (atom->__As__.__Literal__->__Kind__ != __Ast_Literal_Integer__ || expected == NULL ||
         !__LLVM_Resolve_Integer__(emitter, expected, &bits, &is_signed))
     {
@@ -327,6 +444,131 @@ __LLVM_Emit_Atom__(__LLVM_Emitter__ *emitter, __Ast_Atom__ *atom, __Ast_Type__ *
                      is_signed ? 1 : 0);
     result.type = expected;
     return result;
+}
+
+/* `&f(x)` as a call argument (semantic/body_unary.c): the call's result,
+ * evaluated before the call that takes the borrow, is stored in a
+ * function-entry slot and the slot is borrowed. The slot and its type are
+ * returned so that the caller drops the value once that call has returned
+ * (__LLVM_Drop_Call_Borrows__): each evaluation of the call is released once,
+ * also in a loop, where the slot is refilled on the next iteration. */
+static __LLVM_Value__ __LLVM_Emit_Call_Borrow__(__LLVM_Emitter__ *emitter,
+                                                __Ast_Expression__ *argument,
+                                                __Ast_Type__ *parameter_type,
+                                                LLVMValueRef *out_slot,
+                                                __Ast_Type__ **out_type)
+{
+    /* Stores the borrow. */
+    __LLVM_Value__ result = __LLVM_Invalid_Value__();
+    /* References the shared reference type of the borrow. */
+    __Ast_Type__ *reference_type =
+        argument->__Contextual_Type__ != NULL ? argument->__Contextual_Type__ : parameter_type;
+    /* Stores the resolved reference type. */
+    __Resolved_Type__ resolved;
+    /* Stores the call's result. */
+    __LLVM_Value__ value;
+    /* Stores the temporary slot. */
+    LLVMValueRef slot;
+    /* Stores the slot's LLVM type. */
+    LLVMTypeRef slot_type;
+    *out_slot = NULL;
+    *out_type = NULL;
+    if (reference_type == NULL || !__Type_Resolve__(emitter->semantic, reference_type, &resolved) ||
+        resolved.__Kind__ != __Resolved_Type_Reference__ || resolved.__Inner__ == NULL)
+    {
+        __LLVM_Fail__("L2.6 call-result borrow has no canonical reference Type");
+        return result;
+    }
+    value = __LLVM_Emit_Expression__(emitter, argument->__As__.__Unary__.__Operand__, resolved.__Inner__);
+    if (value.value == NULL)
+        return result;
+    slot_type = __LLVM_Type__(emitter, resolved.__Inner__);
+    if (slot_type == NULL)
+        return result;
+    slot = __LLVM_Allocate_Stack__(emitter, slot_type, "call.borrow");
+    if (slot == NULL)
+        return result;
+    LLVMBuildStore(emitter->builder, value.value, slot);
+    *out_slot = slot;
+    *out_type = resolved.__Inner__;
+    result.value = LLVMBuildPointerCast(
+        emitter->builder, slot, __LLVM_Type__(emitter, reference_type), "reference");
+    result.type = reference_type;
+    return result;
+}
+
+/* Drops the call-result borrows of a call that has returned
+ * (__LLVM_Emit_Call_Borrow__): an owned text or vector is released; a
+ * non-owned value needs nothing. */
+static int __LLVM_Drop_Call_Borrows__(__LLVM_Emitter__ *emitter,
+                                      LLVMValueRef *slots,
+                                      __Ast_Type__ **types,
+                                      size_t count)
+{
+    /* Tracks the index. */
+    size_t index;
+    for (index = 0U; index < count; ++index)
+    {
+        if (slots[index] != NULL && types[index] != NULL &&
+            __Memory_Type_Is_Owned__(emitter->semantic, types[index]) &&
+            !__LLVM_Drop_Owned_At__(emitter, slots[index], types[index]))
+            return 0;
+    }
+    return 1;
+}
+
+
+/* Whether a source path ends with a library-relative path, either separator. */
+static int __LLVM_Path_Ends_With__(const char *path, const char *suffix)
+{
+    size_t path_length;
+    size_t suffix_length;
+    size_t index;
+    if (path == NULL)
+        return 0;
+    path_length = strlen(path);
+    suffix_length = strlen(suffix);
+    if (path_length < suffix_length)
+        return 0;
+    for (index = 0U; index < suffix_length; ++index)
+    {
+        char found = path[path_length - suffix_length + index];
+        if (found == '\\')
+            found = '/';
+        if (found != suffix[index])
+            return 0;
+    }
+    return 1;
+}
+
+/* core's إنهيار (library/core/process/panic.sn) cannot print or exit, so its
+   calls go to the panic handler, as the self-hosted compiler binds it in MSIR
+   (compiler/msir/semantic_lowering.sn, اربط_معالج_الانهيار_مسير). Stage0 only
+   builds the compiler, whose handler is std's; the handler's own calls stay. */
+static __LLVM_Function__ *__LLVM_Panic_Handler_For__(__LLVM_Emitter__ *emitter,
+                                                      __Semantic_Function_Entry__ *callee)
+{
+    size_t index;
+    if (callee == NULL || callee->__Function__ == NULL || callee->__Unit__ == NULL ||
+        !__Identifier_Identity_Equals_Cstr__(callee->__Function__->__Name__, "إنهيار") ||
+        !__LLVM_Path_Ends_With__(callee->__Unit__->__Path__, "library/core/process/panic.sn"))
+    {
+        return NULL;
+    }
+    for (index = 0U; index < emitter->function_count; ++index)
+    {
+        __Semantic_Function_Entry__ *semantic = emitter->functions[index].semantic;
+        if (semantic != NULL && semantic != emitter->current_function &&
+            semantic->__Function__ != NULL && semantic->__Unit__ != NULL &&
+            __Identifier_Identity_Equals_Cstr__(semantic->__Function__->__Name__,
+                                                "معالج_انهيار_المكتبة") &&
+            __LLVM_Path_Ends_With__(semantic->__Unit__->__Path__,
+                                    "library/std/process/panic_handler.sn"))
+        {
+            return &emitter->functions[index];
+        }
+    }
+    return NULL;
 }
 
 /* Emits the LLVM expression. */
@@ -348,25 +590,78 @@ __LLVM_Value__ __LLVM_Emit_Expression__(__LLVM_Emitter__ *emitter,
     {
         expected = expression->__Contextual_Type__;
     }
+    if (expression->__Semantic_Null_Pointer__)
+    {
+        __Resolved_Type__ resolved;
+        LLVMTypeRef llvm_type;
+        if (expected == NULL || !__Type_Resolve__(emitter->semantic, expected, &resolved) ||
+            resolved.__Kind__ != __Resolved_Type_Pointer__ ||
+            (llvm_type = __LLVM_Type__(emitter, expected)) == NULL ||
+            LLVMGetTypeKind(llvm_type) != LLVMPointerTypeKind)
+        {
+            __LLVM_Fail__("contextual null must have a verified raw pointer type");
+            return result;
+        }
+        result.value = LLVMConstNull(llvm_type);
+        result.type = expected;
+        return result;
+    }
     switch (expression->__Kind__)
     {
         case __Ast_Expression_Atom__:
             return __LLVM_Emit_Atom__(emitter, &expression->__As__.__Atom__, expected);
 
         case __Ast_Expression_Conversion__:
-            left = __LLVM_Emit_Expression__(
-                emitter, expression->__As__.__Conversion__.__Operand__, NULL);
-            if (left.value == NULL)
+            /* An explicit conversion supplies the type context for an untyped literal.
+             * Do not first lower that literal without context: doing so records a
+             * permanent LLVM failure before the typed retry can succeed. */
             {
-                /* Untyped integer literals are valid when the explicit target supplies context. */
-                if (expression->__As__.__Conversion__.__Operand__->__Kind__ ==
-                    __Ast_Expression_Atom__)
+                int64_t literal_value = 0;
+                unsigned literal_bits;
+                int literal_signed;
+                if (__Semantic_Integer_Literal_Expression_Value__(
+                        expression->__As__.__Conversion__.__Operand__, &literal_value) &&
+                    expression->__As__.__Conversion__.__Operand__->__Kind__ != __Ast_Expression_Atom__)
                 {
-                    left = __LLVM_Emit_Atom__(
-                        emitter,
-                        &expression->__As__.__Conversion__.__Operand__->__As__.__Atom__,
-                        expression->__As__.__Conversion__.__Target_Type__);
+                    /* A negated literal: typed by the cast when it is an
+                     * integer cast, otherwise an عدد. */
+                    __Ast_Type__ *literal_type =
+                        __LLVM_Resolve_Integer__(emitter,
+                                                 expression->__As__.__Conversion__.__Target_Type__,
+                                                 &literal_bits, &literal_signed)
+                            ? expression->__As__.__Conversion__.__Target_Type__
+                            : &__LLVM_Integer_Type__;
+                    left = __LLVM_Emit_Expression__(
+                        emitter, expression->__As__.__Conversion__.__Operand__, literal_type);
+                    if (left.value == NULL)
+                        return result;
+                    return __LLVM_Coerce__(
+                        emitter, left, expression->__As__.__Conversion__.__Target_Type__);
                 }
+            }
+            if (expression->__As__.__Conversion__.__Operand__->__Kind__ ==
+                    __Ast_Expression_Atom__ &&
+                expression->__As__.__Conversion__.__Operand__->__As__.__Atom__.__Kind__ ==
+                    __Ast_Atom_Literal__)
+            {
+                /* An integer literal cast to a float is an عدد first. */
+                __Ast_Atom__ *literal_atom = &expression->__As__.__Conversion__.__Operand__->__As__.__Atom__;
+                unsigned target_bits;
+                int target_signed;
+                left = __LLVM_Emit_Atom__(
+                    emitter,
+                    literal_atom,
+                    (literal_atom->__As__.__Literal__ != NULL &&
+                     literal_atom->__As__.__Literal__->__Kind__ == __Ast_Literal_Integer__ &&
+                     !__LLVM_Resolve_Integer__(emitter, expression->__As__.__Conversion__.__Target_Type__,
+                                               &target_bits, &target_signed))
+                        ? &__LLVM_Integer_Type__
+                        : expression->__As__.__Conversion__.__Target_Type__);
+            }
+            else
+            {
+                left = __LLVM_Emit_Expression__(
+                    emitter, expression->__As__.__Conversion__.__Operand__, NULL);
             }
             if (left.value == NULL)
             {
@@ -481,6 +776,51 @@ __LLVM_Value__ __LLVM_Emit_Expression__(__LLVM_Emitter__ *emitter,
                 return result;
             }
 
+            /* Canonical pointer identity (compiler/msir/lowering/expressions.sn):
+             * raw pointers compare with typed ==/!=, never through an integer
+             * conversion. A contextual null operand takes the other side's
+             * verified pointer type from semantic analysis. */
+            if (operation == __Binary_Equal__ || operation == __Binary_Not_Equal__)
+            {
+                __Ast_Type__ *pointer_type = NULL;
+                if (left_expression_type != NULL &&
+                    __Type_Resolve__(emitter->semantic, left_expression_type, &left_resolved) &&
+                    left_resolved.__Kind__ == __Resolved_Type_Pointer__)
+                {
+                    pointer_type = left_expression_type;
+                }
+                else if (right_expression_type != NULL &&
+                         __Type_Resolve__(emitter->semantic, right_expression_type, &right_resolved) &&
+                         right_resolved.__Kind__ == __Resolved_Type_Pointer__)
+                {
+                    pointer_type = right_expression_type;
+                }
+                if (pointer_type != NULL)
+                {
+                    left = __LLVM_Emit_Expression__(
+                        emitter, expression->__As__.__Binary__.__Left__, pointer_type);
+                    if (left.value == NULL)
+                        return result;
+                    right = __LLVM_Emit_Expression__(
+                        emitter, expression->__As__.__Binary__.__Right__, pointer_type);
+                    if (right.value == NULL)
+                        return result;
+                    if (LLVMGetTypeKind(LLVMTypeOf(left.value)) != LLVMPointerTypeKind ||
+                        LLVMGetTypeKind(LLVMTypeOf(right.value)) != LLVMPointerTypeKind)
+                    {
+                        __LLVM_Fail__("pointer identity requires raw pointer operands");
+                        return result;
+                    }
+                    result.value = LLVMBuildICmp(emitter->builder,
+                                                 operation == __Binary_Equal__ ? LLVMIntEQ : LLVMIntNE,
+                                                 left.value,
+                                                 right.value,
+                                                 "pointer.compare");
+                    result.type = &__LLVM_Boolean_Type__;
+                    return result;
+                }
+            }
+
             if (operation == __Binary_Equal__ || operation == __Binary_Not_Equal__)
             {
                 /* References the left enum. */
@@ -571,12 +911,86 @@ __LLVM_Value__ __LLVM_Emit_Expression__(__LLVM_Emitter__ *emitter,
                 return result.value != NULL ? result : __LLVM_Invalid_Value__();
             }
 
+            {
+                /* Float arithmetic and ordered comparisons (!= is unordered,
+                 * so a NaN differs from everything, as IEEE 754 says). */
+                __Ast_Type__ *float_type =
+                    __LLVM_Float_Operand_Type__(emitter, expression->__As__.__Binary__.__Left__);
+                if (float_type == NULL)
+                    float_type =
+                        __LLVM_Float_Operand_Type__(emitter, expression->__As__.__Binary__.__Right__);
+                if (float_type == NULL &&
+                    __Semantic_Float_Literal_Expression__(expression->__As__.__Binary__.__Left__) &&
+                    __Semantic_Float_Literal_Expression__(expression->__As__.__Binary__.__Right__))
+                {
+                    /* Float literals on both sides: the context's float Type, else f64. */
+                    __Resolved_Type__ expected_resolved;
+                    float_type = expected != NULL &&
+                                         __Type_Resolve__(emitter->semantic, expected, &expected_resolved) &&
+                                         expected_resolved.__Kind__ == __Resolved_Type_Float__
+                                     ? expected
+                                     : &__Body_Builtin_F64_Type__;
+                }
+                if (float_type != NULL)
+                {
+                    left = __LLVM_Emit_Expression__(emitter, expression->__As__.__Binary__.__Left__,
+                                                    float_type);
+                    if (left.value == NULL)
+                        return result;
+                    right = __LLVM_Emit_Expression__(emitter, expression->__As__.__Binary__.__Right__,
+                                                     float_type);
+                    if (right.value == NULL)
+                        return result;
+                    switch (operation)
+                    {
+                        case __Binary_Add__:
+                            result.value = LLVMBuildFAdd(emitter->builder, left.value, right.value, "fadd");
+                            break;
+                        case __Binary_Subtract__:
+                            result.value = LLVMBuildFSub(emitter->builder, left.value, right.value, "fsub");
+                            break;
+                        case __Binary_Multiply__:
+                            result.value = LLVMBuildFMul(emitter->builder, left.value, right.value, "fmul");
+                            break;
+                        case __Binary_Divide__:
+                            result.value = LLVMBuildFDiv(emitter->builder, left.value, right.value, "fdiv");
+                            break;
+                        case __Binary_Modulo__:
+                            result.value = LLVMBuildFRem(emitter->builder, left.value, right.value, "frem");
+                            break;
+                        case __Binary_Equal__:
+                        case __Binary_Not_Equal__:
+                        case __Binary_Less_Than__:
+                        case __Binary_Less_Or_Equal__:
+                        case __Binary_Greater_Than__:
+                        case __Binary_Greater_Or_Equal__:
+                        {
+                            LLVMRealPredicate predicate =
+                                operation == __Binary_Equal__ ? LLVMRealOEQ
+                                : operation == __Binary_Not_Equal__ ? LLVMRealUNE
+                                : operation == __Binary_Less_Than__ ? LLVMRealOLT
+                                : operation == __Binary_Less_Or_Equal__ ? LLVMRealOLE
+                                : operation == __Binary_Greater_Than__ ? LLVMRealOGT
+                                                                       : LLVMRealOGE;
+                            result.value =
+                                LLVMBuildFCmp(emitter->builder, predicate, left.value, right.value, "fcmp");
+                            result.type = &__LLVM_Boolean_Type__;
+                            return result;
+                        }
+                        default:
+                            __LLVM_Fail__("float operation is outside the canonical profile");
+                            return result;
+                    }
+                    result.type = float_type;
+                    return result;
+                }
+            }
             if (operation != __Binary_Add__ && operation != __Binary_Subtract__ &&
                 operation != __Binary_Multiply__ && operation != __Binary_Divide__ &&
                 operation != __Binary_Modulo__ && operation != __Binary_Or__ &&
                 operation != __Binary_Xor__ && operation != __Binary_And__ &&
                 !__LLVM_Is_Comparison__(operation) && operation != __Binary_Shift_Left_Logical__ &&
-                operation != __Binary_Shift_Right_Logical__)
+                operation != __Binary_Shift_Right_Logical__ && operation != __Binary_Shift_Right_Arithmetic__)
             {
                 __LLVM_Fail__("operation is outside the L2 integer proof profile");
                 return result;
@@ -595,6 +1009,12 @@ __LLVM_Value__ __LLVM_Emit_Expression__(__LLVM_Emitter__ *emitter,
             if (operation_type == NULL)
             {
                 operation_type = __LLVM_Concrete_Integer_Type__(emitter, expected);
+            }
+            if (operation_type == NULL && __LLVM_Is_Comparison__(operation))
+            {
+                /* Two untyped integer literals compare as عدد, as the type
+                 * checker inferred them. */
+                operation_type = &__LLVM_Integer_Type__;
             }
             if (operation_type == NULL ||
                 !__LLVM_Resolve_Integer__(emitter, operation_type, &bits, &is_signed))
@@ -679,8 +1099,7 @@ __LLVM_Value__ __LLVM_Emit_Expression__(__LLVM_Emitter__ *emitter,
             /* Stores the builtin. */
             __Name_Builtin_Function__ builtin = __LLVM_Builtin_Call_Identity__(emitter, expression);
             if (builtin != __Name_Builtin_None__)
-                return __LLVM_Emit_Builtin_Call__(
-                    emitter, expression, expected, tagged_target, builtin);
+                return __LLVM_Emit_Builtin_Call__(emitter, expression, expected, builtin);
             /* References the enum type. */
             __Semantic_Type_Entry__ *enum_type = NULL;
             /* References the enum constructor. */
@@ -701,13 +1120,35 @@ __LLVM_Value__ __LLVM_Emit_Expression__(__LLVM_Emitter__ *emitter,
                 if (tagged_target == NULL ||
                     !__Type_Resolve__(emitter->semantic, tagged_target, &target_resolved) ||
                     target_resolved.__Kind__ != __Resolved_Type_Enum__ ||
-                    target_resolved.__Named__ != enum_type || enum_constructor == NULL ||
-                    enum_constructor->__Payload_Count__ !=
-                        expression->__As__.__Call__.__Argument_Count__)
+                    target_resolved.__Named__ == NULL || enum_type == NULL)
                 {
                     __LLVM_Fail__(
                         "L2.5 enum construction disagrees with canonical semantic identity");
                     return result;
+                }
+                {
+                    __Ast_Type_Declaration__ *target_template =
+                        target_resolved.__Named__->__Template_Declaration__ != NULL
+                            ? target_resolved.__Named__->__Template_Declaration__
+                            : target_resolved.__Named__->__Declaration__;
+                    __Ast_Type_Declaration__ *source_template =
+                        enum_type->__Template_Declaration__ != NULL
+                            ? enum_type->__Template_Declaration__
+                            : enum_type->__Declaration__;
+                    if (target_template != source_template ||
+                        !__Name_Find_Enum_Constructor__(
+                            target_resolved.__Named__,
+                            expression->__As__.__Call__.__Function__->__As__.__Field__.__Field__,
+                            &enum_constructor_index, &enum_constructor) ||
+                        enum_constructor == NULL ||
+                        enum_constructor->__Payload_Count__ !=
+                            expression->__As__.__Call__.__Argument_Count__)
+                    {
+                        __LLVM_Fail__(
+                            "L2.5 enum construction disagrees with concrete generic identity");
+                        return result;
+                    }
+                    enum_type = target_resolved.__Named__;
                 }
                 return __LLVM_Emit_Tagged_Construct__(
                     emitter,
@@ -743,19 +1184,135 @@ __LLVM_Value__ __LLVM_Emit_Expression__(__LLVM_Emitter__ *emitter,
             __LLVM_Function__ *llvm_callee;
             /* Stores the call arguments. */
             LLVMValueRef *arguments = NULL;
+            /* The call-result borrows among the arguments (slot and type),
+             * dropped once the call returns. */
+            LLVMValueRef *borrow_slots = NULL;
+            __Ast_Type__ **borrow_types = NULL;
             /* Tracks the index. */
             size_t index;
             if (callee == NULL)
             {
-                __LLVM_Fail__("L2.3 call is not an ordinary canonical SultanC function");
+                __Ast_Type__ *callable_type =
+                    __LLVM_Lvalue_Type__(emitter, expression->__As__.__Call__.__Function__);
+                __Resolved_Type__ callable_resolved;
+                __LLVM_Value__ callable;
+                LLVMTypeRef callable_function_type;
+                LLVMValueRef *indirect_arguments = NULL;
+                /* The call-result borrows among the arguments, dropped once
+                 * the call returns (__LLVM_Emit_Call_Borrow__). */
+                LLVMValueRef *indirect_borrow_slots = NULL;
+                __Ast_Type__ **indirect_borrow_types = NULL;
+                size_t indirect_index;
+                if (callable_type == NULL ||
+                    !__Type_Resolve__(emitter->semantic, callable_type, &callable_resolved) ||
+                    callable_resolved.__Kind__ != __Resolved_Type_Function__ ||
+                    callable_resolved.__Parameter_Count__ !=
+                        expression->__As__.__Call__.__Argument_Count__)
+                {
+                    __LLVM_Fail__("L2.3 call is not a canonical SultanC function value");
+                    return result;
+                }
+                callable = __LLVM_Emit_Lvalue__(emitter, expression->__As__.__Call__.__Function__);
+                callable_function_type =
+                    __LLVM_Function_Type_From_Resolved__(emitter, &callable_resolved);
+                if (callable.value == NULL || callable_function_type == NULL)
+                    return result;
+                if (callable_resolved.__Parameter_Count__ != 0U)
+                {
+                    indirect_arguments = (LLVMValueRef *)calloc(
+                        callable_resolved.__Parameter_Count__, sizeof(*indirect_arguments));
+                    indirect_borrow_slots = (LLVMValueRef *)calloc(
+                        callable_resolved.__Parameter_Count__, sizeof(*indirect_borrow_slots));
+                    indirect_borrow_types = (__Ast_Type__ **)calloc(
+                        callable_resolved.__Parameter_Count__, sizeof(*indirect_borrow_types));
+                    if (indirect_arguments == NULL || indirect_borrow_slots == NULL ||
+                        indirect_borrow_types == NULL)
+                    {
+                        free(indirect_arguments);
+                        free(indirect_borrow_slots);
+                        free(indirect_borrow_types);
+                        __LLVM_Fail__("out of memory while lowering indirect call arguments");
+                        return result;
+                    }
+                }
+                for (indirect_index = 0U;
+                     indirect_index < callable_resolved.__Parameter_Count__; ++indirect_index)
+                {
+                    __Ast_Expression__ *indirect_argument =
+                        expression->__As__.__Call__.__Arguments__[indirect_index];
+                    __LLVM_Value__ argument =
+                        __Body_Is_Call_Borrow__(indirect_argument)
+                            ? __LLVM_Emit_Call_Borrow__(
+                                  emitter, indirect_argument,
+                                  callable_resolved.__Parameters__[indirect_index],
+                                  &indirect_borrow_slots[indirect_index],
+                                  &indirect_borrow_types[indirect_index])
+                            : __LLVM_Emit_Expression__(
+                                  emitter, indirect_argument,
+                                  callable_resolved.__Parameters__[indirect_index]);
+                    if (argument.value == NULL)
+                    {
+                        free(indirect_arguments);
+                        free(indirect_borrow_slots);
+                        free(indirect_borrow_types);
+                        return result;
+                    }
+                    argument = __LLVM_Coerce__(
+                        emitter, argument, callable_resolved.__Parameters__[indirect_index]);
+                    if (argument.value == NULL)
+                    {
+                        free(indirect_arguments);
+                        free(indirect_borrow_slots);
+                        free(indirect_borrow_types);
+                        return result;
+                    }
+                    indirect_arguments[indirect_index] = argument.value;
+                }
+                {
+                    __Resolved_Type__ output_resolved;
+                    const char *call_name = "call.indirect";
+                    if (!__Type_Resolve__(
+                            emitter->semantic, callable_resolved.__Output__, &output_resolved))
+                    {
+                        free(indirect_arguments);
+                        free(indirect_borrow_slots);
+                        free(indirect_borrow_types);
+                        return result;
+                    }
+                    if (output_resolved.__Kind__ == __Resolved_Type_Void__)
+                        call_name = "";
+                    result.value = LLVMBuildCall2(
+                        emitter->builder, callable_function_type, callable.value,
+                        indirect_arguments, (unsigned)callable_resolved.__Parameter_Count__,
+                        call_name);
+                }
+                free(indirect_arguments);
+                /* The call has returned: its call-result borrows end. */
+                if (indirect_borrow_slots != NULL &&
+                    !__LLVM_Drop_Call_Borrows__(emitter, indirect_borrow_slots, indirect_borrow_types,
+                                                callable_resolved.__Parameter_Count__))
+                {
+                    free(indirect_borrow_slots);
+                    free(indirect_borrow_types);
+                    return __LLVM_Invalid_Value__();
+                }
+                free(indirect_borrow_slots);
+                free(indirect_borrow_types);
+                result.type = callable_resolved.__Output__;
+                if (expected != NULL)
+                    return __LLVM_Coerce__(emitter, result, expected);
                 return result;
             }
-            llvm_callee = __LLVM_Find_Function_By_Semantic__(emitter, callee);
+            llvm_callee = __LLVM_Panic_Handler_For__(emitter, callee);
+            if (llvm_callee == NULL)
+                llvm_callee = __LLVM_Find_Function_By_Semantic__(emitter, callee);
             if (llvm_callee == NULL)
             {
                 __LLVM_Fail__("L2.3 ordinary callee has no LLVM declaration");
                 return result;
             }
+            if (!__LLVM_Queue_Function__(emitter, llvm_callee))
+                return result;
             if (expression->__As__.__Call__.__Argument_Count__ !=
                 callee->__Function__->__Parameter_Count__)
             {
@@ -766,22 +1323,40 @@ __LLVM_Value__ __LLVM_Emit_Expression__(__LLVM_Emitter__ *emitter,
             {
                 arguments = (LLVMValueRef *)calloc(callee->__Function__->__Parameter_Count__,
                                                    sizeof(*arguments));
-                if (arguments == NULL)
+                borrow_slots = (LLVMValueRef *)calloc(callee->__Function__->__Parameter_Count__,
+                                                      sizeof(*borrow_slots));
+                borrow_types = (__Ast_Type__ **)calloc(callee->__Function__->__Parameter_Count__,
+                                                       sizeof(*borrow_types));
+                if (arguments == NULL || borrow_slots == NULL || borrow_types == NULL)
                 {
+                    free(arguments);
+                    free(borrow_slots);
+                    free(borrow_types);
                     __LLVM_Fail__("out of memory while lowering L2.3 call arguments");
                     return result;
                 }
             }
             for (index = 0U; index < callee->__Function__->__Parameter_Count__; ++index)
             {
-                /* Stores the argument. */
-                __LLVM_Value__ argument = __LLVM_Emit_Expression__(
-                    emitter,
-                    expression->__As__.__Call__.__Arguments__[index],
-                    callee->__Function__->__Parameters__[index].__Slot__.__Type__);
+                /* Stores the argument: a call-result borrow is materialized
+                 * before the call and dropped after it (below). */
+                __LLVM_Value__ argument =
+                    __Body_Is_Call_Borrow__(expression->__As__.__Call__.__Arguments__[index])
+                        ? __LLVM_Emit_Call_Borrow__(
+                              emitter,
+                              expression->__As__.__Call__.__Arguments__[index],
+                              callee->__Function__->__Parameters__[index].__Slot__.__Type__,
+                              &borrow_slots[index],
+                              &borrow_types[index])
+                        : __LLVM_Emit_Expression__(
+                              emitter,
+                              expression->__As__.__Call__.__Arguments__[index],
+                              callee->__Function__->__Parameters__[index].__Slot__.__Type__);
                 if (argument.value == NULL)
                 {
                     free(arguments);
+                    free(borrow_slots);
+                    free(borrow_types);
                     return result;
                 }
                 {
@@ -793,6 +1368,8 @@ __LLVM_Value__ __LLVM_Emit_Expression__(__LLVM_Emitter__ *emitter,
                             &resolved))
                     {
                         free(arguments);
+                        free(borrow_slots);
+                        free(borrow_types);
                         __LLVM_Fail__("L2.3 could not resolve call parameter Type");
                         return result;
                     }
@@ -807,6 +1384,8 @@ __LLVM_Value__ __LLVM_Emit_Expression__(__LLVM_Emitter__ *emitter,
                 if (argument.value == NULL)
                 {
                     free(arguments);
+                    free(borrow_slots);
+                    free(borrow_types);
                     return result;
                 }
                 arguments[index] = argument.value;
@@ -820,6 +1399,8 @@ __LLVM_Value__ __LLVM_Emit_Expression__(__LLVM_Emitter__ *emitter,
                         emitter->semantic, callee->__Function__->__Output__.__Type__, &call_output))
                 {
                     free(arguments);
+                    free(borrow_slots);
+                    free(borrow_types);
                     __LLVM_Fail__("Direct LLVM could not resolve ordinary call result Type");
                     return result;
                 }
@@ -833,6 +1414,17 @@ __LLVM_Value__ __LLVM_Emit_Expression__(__LLVM_Emitter__ *emitter,
                                               call_name);
             }
             free(arguments);
+            /* The call has returned: its call-result borrows end. */
+            if (borrow_slots != NULL &&
+                !__LLVM_Drop_Call_Borrows__(emitter, borrow_slots, borrow_types,
+                                            callee->__Function__->__Parameter_Count__))
+            {
+                free(borrow_slots);
+                free(borrow_types);
+                return __LLVM_Invalid_Value__();
+            }
+            free(borrow_slots);
+            free(borrow_types);
             result.type = callee->__Function__->__Output__.__Type__;
             if (expected != NULL)
             {
@@ -854,6 +1446,63 @@ __LLVM_Value__ __LLVM_Emit_Expression__(__LLVM_Emitter__ *emitter,
         }
 
         case __Ast_Expression_Unary__:
+            if (expression->__As__.__Unary__.__Operation__ == __Unary_Negate__ &&
+                __Semantic_Float_Literal_Expression__(expression))
+            {
+                /* -1.5: one constant; an even number of signs cancels. */
+                __Ast_Expression__ *operand = expression;
+                int negative = 0;
+                while (operand->__Kind__ == __Ast_Expression_Unary__)
+                {
+                    negative = !negative;
+                    operand = operand->__As__.__Unary__.__Operand__;
+                }
+                return __LLVM_Emit_Float_Literal__(
+                    emitter, operand->__As__.__Atom__.__As__.__Literal__->__As__.__String__, negative,
+                    expected);
+            }
+            if (expression->__As__.__Unary__.__Operation__ == __Unary_Negate__)
+            {
+                __Ast_Type__ *float_type =
+                    __LLVM_Float_Operand_Type__(emitter, expression->__As__.__Unary__.__Operand__);
+                if (float_type != NULL)
+                {
+                    left = __LLVM_Emit_Expression__(emitter, expression->__As__.__Unary__.__Operand__,
+                                                    float_type);
+                    if (left.value == NULL)
+                        return result;
+                    result.value = LLVMBuildFNeg(emitter->builder, left.value, "fneg");
+                    result.type = left.type;
+                    return result;
+                }
+            }
+            if (expression->__As__.__Unary__.__Operation__ == __Unary_Negate__)
+            {
+                /* A negated integer literal is one constant of the context's
+                 * Type (-128 fits ص8 although 128 does not). */
+                int64_t literal_value = 0;
+                unsigned literal_bits;
+                int literal_signed;
+                if (__Semantic_Integer_Literal_Expression_Value__(expression, &literal_value))
+                {
+                    __Ast_Type__ *literal_type =
+                        __LLVM_Resolve_Integer__(emitter, expected, &literal_bits, &literal_signed)
+                            ? expected
+                            : &__LLVM_Integer_Type__;
+                    unsigned long long raw = (unsigned long long)literal_value;
+                    if (!__LLVM_Resolve_Integer__(emitter, literal_type, &literal_bits, &literal_signed))
+                    {
+                        __LLVM_Fail__("negated literal has no integer type");
+                        return result;
+                    }
+                    if (literal_bits < 64U)
+                        raw &= (1ULL << literal_bits) - 1ULL;
+                    result.value =
+                        LLVMConstInt(LLVMIntTypeInContext(emitter->context, literal_bits), raw, 0);
+                    result.type = literal_type;
+                    return result;
+                }
+            }
         {
             /* Stores the operation. */
             __Ast_Unary_Operation__ operation = expression->__As__.__Unary__.__Operation__;
@@ -868,14 +1517,42 @@ __LLVM_Value__ __LLVM_Emit_Expression__(__LLVM_Emitter__ *emitter,
                 __Resolved_Type__ resolved;
                 /* Stores the operand place. */
                 __LLVM_Place__ operand_place;
+                /* A shared borrow of a text literal (body_unary.c): the
+                 * literal's value in a function-entry slot, then its address. */
+                if (operation == __Unary_Address__ && __Body_Is_Text_Literal_Operand__(operand) &&
+                    reference_type != NULL &&
+                    __Type_Resolve__(emitter->semantic, reference_type, &resolved) &&
+                    resolved.__Kind__ == __Resolved_Type_Reference__ && resolved.__Inner__ != NULL)
+                {
+                    /* Stores the literal's value. */
+                    __LLVM_Value__ literal = __LLVM_Emit_Expression__(emitter, operand, resolved.__Inner__);
+                    /* Stores the temporary slot. */
+                    LLVMValueRef slot;
+                    if (literal.value == NULL)
+                    {
+                        return result;
+                    }
+                    slot = __LLVM_Allocate_Stack__(
+                        emitter, __LLVM_Type__(emitter, resolved.__Inner__), "text.literal.borrow");
+                    if (slot == NULL)
+                    {
+                        return result;
+                    }
+                    LLVMBuildStore(emitter->builder, literal.value, slot);
+                    result.value = LLVMBuildPointerCast(
+                        emitter->builder, slot, __LLVM_Type__(emitter, reference_type), "reference");
+                    result.type = reference_type;
+                    return result;
+                }
                 if (operand == NULL || operand->__Kind__ != __Ast_Expression_Atom__ ||
                     operand->__As__.__Atom__.__Kind__ != __Ast_Atom_Lvalue__ ||
                     reference_type == NULL ||
                     !__Type_Resolve__(emitter->semantic, reference_type, &resolved) ||
-                    resolved.__Kind__ != __Resolved_Type_Reference__)
+                    (resolved.__Kind__ != __Resolved_Type_Reference__ &&
+                     resolved.__Kind__ != __Resolved_Type_Pointer__))
                 {
                     __LLVM_Fail__(
-                        "L2.6 address creation requires canonical semantic reference Type");
+                        "L2.6 address creation requires canonical semantic reference/pointer Type");
                     return result;
                 }
                 operand_place =
@@ -907,10 +1584,11 @@ __LLVM_Value__ __LLVM_Emit_Expression__(__LLVM_Emitter__ *emitter,
                 if (left.value == NULL || left.type == NULL ||
                     !__Type_Resolve__(emitter->semantic, left.type, &resolved) ||
                     (resolved.__Kind__ != __Resolved_Type_Reference__ &&
+                     resolved.__Kind__ != __Resolved_Type_Pointer__ &&
                      resolved.__Kind__ != __Resolved_Type_Box__) ||
                     resolved.__Inner__ == NULL)
                 {
-                    __LLVM_Fail__("L2.6 dereference requires canonical reference/box value");
+                    __LLVM_Fail__("L2.6 dereference requires canonical reference/pointer/box value");
                     return result;
                 }
                 inner_type = __LLVM_Type__(emitter, resolved.__Inner__);
@@ -918,7 +1596,53 @@ __LLVM_Value__ __LLVM_Emit_Expression__(__LLVM_Emitter__ *emitter,
                     return result;
                 result.value =
                     LLVMBuildLoad2(emitter->builder, inner_type, left.value, "dereference.load");
-                result.type = resolved.__Inner__;
+                result.type = resolved.__Kind__ == __Resolved_Type_Pointer__
+                                  ? __Type_Unwrap_Mutable__(resolved.__Inner__)
+                                  : resolved.__Inner__;
+                /* Reading through a Reference is a non-owning view. Moving
+                 * an owned payload out of a Box, however, consumes the Box:
+                 * release only the now-empty allocation, and disown the
+                 * operand's live local/match owner. Otherwise its drop glue
+                 * releases the transferred payload a second time. */
+                if (resolved.__Kind__ == __Resolved_Type_Box__ &&
+                    __Memory_Type_Is_Owned__(emitter->semantic, resolved.__Inner__))
+                {
+                    LLVMValueRef borrowed = __LLVM_Expression_Borrowed_Flag__(
+                        emitter, expression->__As__.__Unary__.__Operand__);
+                    LLVMValueRef owning = LLVMBuildNot(
+                        emitter->builder, borrowed, "box.payload.is.owning");
+                    LLVMValueRef owner_flag = __LLVM_Match_Source_Owner_Flag__(
+                        emitter, expression->__As__.__Unary__.__Operand__);
+                    LLVMBasicBlockRef source = LLVMGetInsertBlock(emitter->builder);
+                    LLVMValueRef function = source != NULL ? LLVMGetBasicBlockParent(source) : NULL;
+                    LLVMBasicBlockRef release_block;
+                    LLVMBasicBlockRef continue_block;
+                    if (function == NULL)
+                    {
+                        __LLVM_Fail__("box move lacks an enclosing function");
+                        return __LLVM_Invalid_Value__();
+                    }
+                    release_block = LLVMAppendBasicBlockInContext(
+                        emitter->context, function, "box.move.release");
+                    continue_block = LLVMAppendBasicBlockInContext(
+                        emitter->context, function, "box.move.continue");
+                    if (release_block == NULL || continue_block == NULL)
+                    {
+                        __LLVM_Fail__("box move cannot create release blocks");
+                        return __LLVM_Invalid_Value__();
+                    }
+                    LLVMBuildCondBr(emitter->builder, owning, release_block, continue_block);
+                    LLVMPositionBuilderAtEnd(emitter->builder, release_block);
+                    if (owner_flag != NULL)
+                        LLVMBuildStore(emitter->builder,
+                                       LLVMConstInt(LLVMIntTypeInContext(emitter->context, 1U),
+                                                    0U, 0),
+                                       owner_flag);
+                    if (!__LLVM_Free_Bytes__(emitter, left.value))
+                        return __LLVM_Invalid_Value__();
+                    LLVMBuildBr(emitter->builder, continue_block);
+                    LLVMPositionBuilderAtEnd(emitter->builder, continue_block);
+                }
                 return expected != NULL ? __LLVM_Coerce__(emitter, result, expected) : result;
             }
             if (operation == __Unary_Not__)

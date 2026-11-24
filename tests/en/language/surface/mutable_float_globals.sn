@@ -1,0 +1,23 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/language/surface/mutable_float_globals.sn
+// A mutable global of a float Type keeps its initial value's IEEE-754 bits
+// as its static initial bytes, as an integer global does
+// (compiler/msir/semantic_lowering.sn, هل_ثابت_تهيئة_عام_مدعوم_للخفض); Jisr
+// writes a C file's `static double` this way.
+let ratio: mutable f64 = 1.5;
+let small: mutable f32 = 0.25;
+let zero: mutable f64 = (0.0 as f64);
+
+def scale(by: f64): void { ratio := ratio * by; }
+
+def main(): int {
+    if (zero != 0.0) { return 1; };
+    scale(4.0);
+    small := small * 8.0;
+    if (small != 2.0) { return 2; };
+    zero := ratio;
+    return (zero as int) * 7;
+}

@@ -1,0 +1,14 @@
+// X.509 parsing before any host-name check: a malformed certificate is rejected at parse
+// time and is never trusted.
+import std.io.println;
+import std.text.number;
+import std.text.from_bytes;
+import std.tls.x509;
+
+def main(): int {
+    let malformed: vector u8 = [48 as u8, 1 as u8, 2 as u8];
+    match x509_parse_certificate(&malformed) with
+    | option.none -> { println("untrusted certificate rejected"); }
+    | option.some(_) -> { return 1; };
+    return 0;
+}

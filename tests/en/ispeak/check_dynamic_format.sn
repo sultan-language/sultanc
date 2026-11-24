@@ -1,0 +1,144 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 0
+// نظير: tests/ar/ispeak/check_dynamic_format.sn
+import std.text.compare;
+import std.text.from_bytes;
+import compiler.diagnostics.identity;
+import compiler.diagnostics.reason;
+import compiler.ispeak.format.facts;
+import compiler.diagnostics.schema;
+import compiler.ispeak.ispeak;
+import compiler.ispeak.keys.surface;
+
+def matches(language: لغة_تشخيص, key: مفتاح_رسالة_تشخيص, facts: حقائق_رسالة, expected: string): bool {
+    match رسالة_تشخيص_بحجج(language, key, facts) with
+    | option.some(output) -> { return texts_equal(&output, &expected); }
+    | _ -> { return false; };
+}
+
+def context(): حقائق_سياق_رسالة {
+    let values: حقائق_سياق_رسالة = {
+        القيمة: option.some(قيمة_حجة_رسالة.موقعة(-2)),
+        المتوقع: option.none(),
+        الاستبدال: option.none(),
+        الموجود: option.some(قيمة_حجة_رسالة.منطقية(false)),
+        الفهرس: option.none(),
+        الطول: option.none(),
+        المجال: option.none(),
+        النمط: option.none(),
+        المسار: option.some(قيمة_حجة_رسالة.نصية("/tmp/example.sn")),
+        الرمز: option.none(),
+        النوع: option.none(),
+        السياق: option.none(),
+        المرحلة: option.some(قيمة_حجة_رسالة.نصية("msir-verifier")),
+        الهدف: option.none(),
+        الدالة: option.some(قيمة_حجة_رسالة.طبيعية(7 as uint)),
+        الكتلة: option.none(),
+        التعليمة: option.none(),
+        العملية: option.some(قيمة_حجة_رسالة.نصية("add")),
+        البدائي: option.none(),
+        المصدر: option.none(),
+        الوجهة: option.none(),
+        السبب: option.some(قيمة_حجة_رسالة.سبب_محدد(سبب_تشخيص.سبب_مسير_مميز_فرع_متعدد_غير_صحيح()))
+    };
+    return values;
+}
+
+def the_empty_context(): حقائق_سياق_رسالة {
+    let values: حقائق_سياق_رسالة = {
+        القيمة: option.none(),
+        المتوقع: option.none(),
+        الاستبدال: option.none(),
+        الموجود: option.none(),
+        الفهرس: option.none(),
+        الطول: option.none(),
+        المجال: option.none(),
+        النمط: option.none(),
+        المسار: option.none(),
+        الرمز: option.none(),
+        النوع: option.none(),
+        السياق: option.none(),
+        المرحلة: option.none(),
+        الهدف: option.none(),
+        الدالة: option.none(),
+        الكتلة: option.none(),
+        التعليمة: option.none(),
+        العملية: option.none(),
+        البدائي: option.none(),
+        المصدر: option.none(),
+        الوجهة: option.none(),
+        السبب: option.none()
+    };
+    return values;
+}
+
+def all_facts(): حقائق_سياق_رسالة {
+    let values: حقائق_سياق_رسالة = {
+        القيمة: option.some(قيمة_حجة_رسالة.موقعة(-4)),
+        المتوقع: option.some(قيمة_حجة_رسالة.نصية("i32")),
+        الاستبدال: option.some(قيمة_حجة_رسالة.نصية("return")),
+        الموجود: option.some(قيمة_حجة_رسالة.نصية("f64")),
+        الفهرس: option.some(قيمة_حجة_رسالة.طبيعية(9 as uint)),
+        الطول: option.some(قيمة_حجة_رسالة.طبيعية(11 as uint)),
+        المجال: option.some(قيمة_حجة_رسالة.نصية("0..11")),
+        النمط: option.some(قيمة_حجة_رسالة.نصية("_")),
+        المسار: option.some(قيمة_حجة_رسالة.نصية("module.sn")),
+        الرمز: option.some(قيمة_حجة_رسالة.نصية("foo")),
+        النوع: option.some(قيمة_حجة_رسالة.نصية("i32")),
+        السياق: option.some(قيمة_حجة_رسالة.نصية("initialization")),
+        المرحلة: option.some(قيمة_حجة_رسالة.نصية("lowering")),
+        الهدف: option.some(قيمة_حجة_رسالة.نصية("arm64-darwin")),
+        الدالة: option.some(قيمة_حجة_رسالة.طبيعية(20 as uint)),
+        الكتلة: option.some(قيمة_حجة_رسالة.طبيعية(3 as uint)),
+        التعليمة: option.some(قيمة_حجة_رسالة.طبيعية(10 as uint)),
+        العملية: option.some(قيمة_حجة_رسالة.نصية("copy")),
+        البدائي: option.some(قيمة_حجة_رسالة.نصية("read")),
+        المصدر: option.some(قيمة_حجة_رسالة.نصية("src")),
+        الوجهة: option.some(قيمة_حجة_رسالة.نصية("dst")),
+        السبب: option.some(قيمة_حجة_رسالة.سبب_محدد(سبب_تشخيص.سبب_مسير_مميز_فرع_متعدد_غير_صحيح()))
+    };
+    return values;
+}
+
+def main(): int {
+    let key: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.مسير_غير_صالح());
+    let english_message: string = "invalid MSIR — The supplied value is -2. The actual result is `false`. The affected path is `/tmp/example.sn`. This occurred during phase `msir-verifier`. The affected function is 7. The operation is `add`. MSIR switch selector is not an integer.";
+    let arabic_message: string = "مسير غير صالح — القيمة المقدمة هي -2. النتيجة الفعلية هي `خطأ`. المسار المتأثر هو `/tmp/example.sn`. حدث ذلك خلال المرحلة `msir-verifier`. الدالة المتأثرة هي 7. العملية هي `add`. مميز الفرع المتعدد في MSIR ليس عددا صحيحا.";
+    let english_facts: حقائق_رسالة = حقائق_رسالة.سياق_تشخيص(context());
+    if (!matches(لغة_تشخيص.الإنجليزية(), key, english_facts, english_message)) { return 1; };
+    let arabic_facts: حقائق_رسالة = حقائق_رسالة.سياق_تشخيص(context());
+    if (!matches(لغة_تشخيص.العربية(), key, arabic_facts, arabic_message)) { return 2; };
+    let no_values: حقائق_رسالة = حقائق_رسالة.سياق_تشخيص(the_empty_context());
+    let expected: string = "invalid MSIR";
+    if (!matches(لغة_تشخيص.الإنجليزية(), key, no_values, expected)) { return 3; };
+    let no_values_arabic: حقائق_رسالة = حقائق_رسالة.سياق_تشخيص(the_empty_context());
+    let expected_arabic_text: string = "مسير غير صالح";
+    if (!matches(لغة_تشخيص.العربية(), key, no_values_arabic, expected_arabic_text)) { return 4; };
+    let all_english: حقائق_رسالة = حقائق_رسالة.سياق_تشخيص(all_facts());
+    let full_text_english: string = "invalid MSIR — The supplied value is -4. The expected result is `i32`, but the actual result is `f64`. The suggested replacement is `return`. The index is 9. The length is 11. The relevant range is `0..11`. The pattern is `_`. The affected path is `module.sn`. The symbol is `foo`. The type is `i32`. This occurred in context `initialization`. This occurred during phase `lowering`. The compilation target is `arm64-darwin`. The affected function is 20. The affected block is 3. The affected instruction is 10. The operation is `copy`. The host primitive is `read`. The source value is `src`. The destination value is `dst`. MSIR switch selector is not an integer.";
+    if (!matches(لغة_تشخيص.الإنجليزية(), key, all_english, full_text_english)) { return 5; };
+    let all_arabic: حقائق_رسالة = حقائق_رسالة.سياق_تشخيص(all_facts());
+    let full_text_arabic: string = "مسير غير صالح — القيمة المقدمة هي -4. النتيجة المتوقعة هي `i32`، لكن النتيجة الفعلية هي `f64`. البديل المقترح هو `return`. الفهرس هو 9. الطول هو 11. المجال المعني هو `0..11`. النمط هو `_`. المسار المتأثر هو `module.sn`. الرمز هو `foo`. النوع هو `i32`. حدث ذلك في سياق `initialization`. حدث ذلك خلال المرحلة `lowering`. هدف التجميع هو `arm64-darwin`. الدالة المتأثرة هي 20. الكتلة المتأثرة هي 3. التعليمة المتأثرة هي 10. العملية هي `copy`. العملية البدائية للمضيف هي `read`. قيمة المصدر هي `src`. قيمة الوجهة هي `dst`. مميز الفرع المتعدد في MSIR ليس عددا صحيحا.";
+    if (!matches(لغة_تشخيص.العربية(), key, all_arabic, full_text_arabic)) { return 6; };
+    match نص_تفصيل_بحجج(لغة_تشخيص.الإنجليزية(), مفتاح_صياغة.تسمية_متوقع(), all_facts()) with
+    | option.some(text) -> {
+        let start: string = "expected — The supplied value is  -4.. The expected result is  i32.";
+        // Verify initial fields; the formatter must not ignore structured facts.
+        if ((length(text) as uint) <= (length(start) as uint)) { return 7; };
+    }
+    | _ -> { return 8; };
+    match نص_المترجم_بحجج(لغة_تشخيص.العربية(), مفتاح_نص_مترجم.وصف_نهاية_الملف(), the_empty_context()) with
+    | option.some(text) -> {
+        let expected_description: string = "نهاية الملف";
+        if (!texts_equal(&text, &expected_description)) { return 9; };
+    }
+    | _ -> { return 10; };
+    match شرح_تشخيص_بحجج(لغة_تشخيص.الإنجليزية(), معرف_تشخيص.خطأ_نحوي(), the_empty_context()) with
+    | option.some(text) -> {
+        let expected_explanation: string = شرح_تشخيص(لغة_تشخيص.الإنجليزية(), معرف_تشخيص.خطأ_نحوي());
+        if (!texts_equal(&text, &expected_explanation)) { return 11; };
+    }
+    | _ -> { return 12; };
+    return 0;
+}

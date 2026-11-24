@@ -1,0 +1,10 @@
+// The root file of library/core/text: the Arabic spellings of its modules
+// (docs/en/reference/modules-and-imports.md, "Module spellings"). The
+// standard library is three libraries (docs/en/reference/std-layers.md); this
+// file names only this library's own children.
+
+module compare { ar: مقارنة };
+module number { ar: أعداد };
+module radix { ar: أساس };
+module range { ar: نطاق };
+module search { ar: بحث };

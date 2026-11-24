@@ -1,0 +1,20 @@
+// The root file of std.fs: the Arabic spellings of its modules
+// (docs/en/reference/modules-and-imports.md, "Module spellings"). An import may
+// use either name; both name one module.
+
+module attributes { ar: سمات };
+module canonical { ar: مسار_قانوني };
+module directory { ar: مجلد };
+module error { ar: أخطاء };
+module handle { ar: مقبض };
+module links { ar: وصلات };
+module lock { ar: قفل_ملف };
+module metadata { ar: بيانات_وصفية };
+module mutation { ar: تعديل };
+module path { ar: مسار };
+module permissions { ar: أذونات };
+module read_file { ar: قراءة_ملف };
+module temporary { ar: مؤقت };
+module walk { ar: اجتياز };
+module write_bytes { ar: كتابة_بايتات };
+module write_file { ar: كتابة_ملف };

@@ -1,0 +1,20 @@
+// Fail-fast validation: check the inputs in order and return the first error found.
+import std.io.println;
+import std.text.number;
+
+def validate(a: int, b: int): result int, int {
+    if (a < 0) { return result.err(1); };
+    if (b < 0) { return result.err(2); };
+    if (a + b > 100) { return result.err(3); };
+    return result.ok(a + b);
+}
+
+def main(): int {
+    match validate(12, -4) with
+    | result.err(code) -> {
+        if (code != 2) { return 1; };
+        println(int_to_text(code));
+    }
+    | _ -> { return 1; };
+    return 0;
+}

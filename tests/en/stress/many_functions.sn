@@ -1,0 +1,329 @@
+// اختبار: قبول
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 0
+def function_0(value: int): int { return value + 0; }
+def function_1(value: int): int { return value + 1; }
+def function_2(value: int): int { return value + 2; }
+def function_3(value: int): int { return value + 3; }
+def function_4(value: int): int { return value + 4; }
+def function_5(value: int): int { return value + 5; }
+def function_6(value: int): int { return value + 6; }
+def function_7(value: int): int { return value + 0; }
+def function_8(value: int): int { return value + 1; }
+def function_9(value: int): int { return value + 2; }
+def function_10(value: int): int { return value + 3; }
+def function_11(value: int): int { return value + 4; }
+def function_12(value: int): int { return value + 5; }
+def function_13(value: int): int { return value + 6; }
+def function_14(value: int): int { return value + 0; }
+def function_15(value: int): int { return value + 1; }
+def function_16(value: int): int { return value + 2; }
+def function_17(value: int): int { return value + 3; }
+def function_18(value: int): int { return value + 4; }
+def function_19(value: int): int { return value + 5; }
+def function_20(value: int): int { return value + 6; }
+def function_21(value: int): int { return value + 0; }
+def function_22(value: int): int { return value + 1; }
+def function_23(value: int): int { return value + 2; }
+def function_24(value: int): int { return value + 3; }
+def function_25(value: int): int { return value + 4; }
+def function_26(value: int): int { return value + 5; }
+def function_27(value: int): int { return value + 6; }
+def function_28(value: int): int { return value + 0; }
+def function_29(value: int): int { return value + 1; }
+def function_30(value: int): int { return value + 2; }
+def function_31(value: int): int { return value + 3; }
+def function_32(value: int): int { return value + 4; }
+def function_33(value: int): int { return value + 5; }
+def function_34(value: int): int { return value + 6; }
+def function_35(value: int): int { return value + 0; }
+def function_36(value: int): int { return value + 1; }
+def function_37(value: int): int { return value + 2; }
+def function_38(value: int): int { return value + 3; }
+def function_39(value: int): int { return value + 4; }
+def function_40(value: int): int { return value + 5; }
+def function_41(value: int): int { return value + 6; }
+def function_42(value: int): int { return value + 0; }
+def function_43(value: int): int { return value + 1; }
+def function_44(value: int): int { return value + 2; }
+def function_45(value: int): int { return value + 3; }
+def function_46(value: int): int { return value + 4; }
+def function_47(value: int): int { return value + 5; }
+def function_48(value: int): int { return value + 6; }
+def function_49(value: int): int { return value + 0; }
+def function_50(value: int): int { return value + 1; }
+def function_51(value: int): int { return value + 2; }
+def function_52(value: int): int { return value + 3; }
+def function_53(value: int): int { return value + 4; }
+def function_54(value: int): int { return value + 5; }
+def function_55(value: int): int { return value + 6; }
+def function_56(value: int): int { return value + 0; }
+def function_57(value: int): int { return value + 1; }
+def function_58(value: int): int { return value + 2; }
+def function_59(value: int): int { return value + 3; }
+def function_60(value: int): int { return value + 4; }
+def function_61(value: int): int { return value + 5; }
+def function_62(value: int): int { return value + 6; }
+def function_63(value: int): int { return value + 0; }
+def function_64(value: int): int { return value + 1; }
+def function_65(value: int): int { return value + 2; }
+def function_66(value: int): int { return value + 3; }
+def function_67(value: int): int { return value + 4; }
+def function_68(value: int): int { return value + 5; }
+def function_69(value: int): int { return value + 6; }
+def function_70(value: int): int { return value + 0; }
+def function_71(value: int): int { return value + 1; }
+def function_72(value: int): int { return value + 2; }
+def function_73(value: int): int { return value + 3; }
+def function_74(value: int): int { return value + 4; }
+def function_75(value: int): int { return value + 5; }
+def function_76(value: int): int { return value + 6; }
+def function_77(value: int): int { return value + 0; }
+def function_78(value: int): int { return value + 1; }
+def function_79(value: int): int { return value + 2; }
+def function_80(value: int): int { return value + 3; }
+def function_81(value: int): int { return value + 4; }
+def function_82(value: int): int { return value + 5; }
+def function_83(value: int): int { return value + 6; }
+def function_84(value: int): int { return value + 0; }
+def function_85(value: int): int { return value + 1; }
+def function_86(value: int): int { return value + 2; }
+def function_87(value: int): int { return value + 3; }
+def function_88(value: int): int { return value + 4; }
+def function_89(value: int): int { return value + 5; }
+def function_90(value: int): int { return value + 6; }
+def function_91(value: int): int { return value + 0; }
+def function_92(value: int): int { return value + 1; }
+def function_93(value: int): int { return value + 2; }
+def function_94(value: int): int { return value + 3; }
+def function_95(value: int): int { return value + 4; }
+def function_96(value: int): int { return value + 5; }
+def function_97(value: int): int { return value + 6; }
+def function_98(value: int): int { return value + 0; }
+def function_99(value: int): int { return value + 1; }
+def function_100(value: int): int { return value + 2; }
+def function_101(value: int): int { return value + 3; }
+def function_102(value: int): int { return value + 4; }
+def function_103(value: int): int { return value + 5; }
+def function_104(value: int): int { return value + 6; }
+def function_105(value: int): int { return value + 0; }
+def function_106(value: int): int { return value + 1; }
+def function_107(value: int): int { return value + 2; }
+def function_108(value: int): int { return value + 3; }
+def function_109(value: int): int { return value + 4; }
+def function_110(value: int): int { return value + 5; }
+def function_111(value: int): int { return value + 6; }
+def function_112(value: int): int { return value + 0; }
+def function_113(value: int): int { return value + 1; }
+def function_114(value: int): int { return value + 2; }
+def function_115(value: int): int { return value + 3; }
+def function_116(value: int): int { return value + 4; }
+def function_117(value: int): int { return value + 5; }
+def function_118(value: int): int { return value + 6; }
+def function_119(value: int): int { return value + 0; }
+def function_120(value: int): int { return value + 1; }
+def function_121(value: int): int { return value + 2; }
+def function_122(value: int): int { return value + 3; }
+def function_123(value: int): int { return value + 4; }
+def function_124(value: int): int { return value + 5; }
+def function_125(value: int): int { return value + 6; }
+def function_126(value: int): int { return value + 0; }
+def function_127(value: int): int { return value + 1; }
+def function_128(value: int): int { return value + 2; }
+def function_129(value: int): int { return value + 3; }
+def function_130(value: int): int { return value + 4; }
+def function_131(value: int): int { return value + 5; }
+def function_132(value: int): int { return value + 6; }
+def function_133(value: int): int { return value + 0; }
+def function_134(value: int): int { return value + 1; }
+def function_135(value: int): int { return value + 2; }
+def function_136(value: int): int { return value + 3; }
+def function_137(value: int): int { return value + 4; }
+def function_138(value: int): int { return value + 5; }
+def function_139(value: int): int { return value + 6; }
+def function_140(value: int): int { return value + 0; }
+def function_141(value: int): int { return value + 1; }
+def function_142(value: int): int { return value + 2; }
+def function_143(value: int): int { return value + 3; }
+def function_144(value: int): int { return value + 4; }
+def function_145(value: int): int { return value + 5; }
+def function_146(value: int): int { return value + 6; }
+def function_147(value: int): int { return value + 0; }
+def function_148(value: int): int { return value + 1; }
+def function_149(value: int): int { return value + 2; }
+def function_150(value: int): int { return value + 3; }
+def function_151(value: int): int { return value + 4; }
+def function_152(value: int): int { return value + 5; }
+def function_153(value: int): int { return value + 6; }
+def function_154(value: int): int { return value + 0; }
+def function_155(value: int): int { return value + 1; }
+def function_156(value: int): int { return value + 2; }
+def function_157(value: int): int { return value + 3; }
+def function_158(value: int): int { return value + 4; }
+def function_159(value: int): int { return value + 5; }
+
+def main(): int {
+    let value: mutable int = 0;
+    value := function_0(value);
+    value := function_1(value);
+    value := function_2(value);
+    value := function_3(value);
+    value := function_4(value);
+    value := function_5(value);
+    value := function_6(value);
+    value := function_7(value);
+    value := function_8(value);
+    value := function_9(value);
+    value := function_10(value);
+    value := function_11(value);
+    value := function_12(value);
+    value := function_13(value);
+    value := function_14(value);
+    value := function_15(value);
+    value := function_16(value);
+    value := function_17(value);
+    value := function_18(value);
+    value := function_19(value);
+    value := function_20(value);
+    value := function_21(value);
+    value := function_22(value);
+    value := function_23(value);
+    value := function_24(value);
+    value := function_25(value);
+    value := function_26(value);
+    value := function_27(value);
+    value := function_28(value);
+    value := function_29(value);
+    value := function_30(value);
+    value := function_31(value);
+    value := function_32(value);
+    value := function_33(value);
+    value := function_34(value);
+    value := function_35(value);
+    value := function_36(value);
+    value := function_37(value);
+    value := function_38(value);
+    value := function_39(value);
+    value := function_40(value);
+    value := function_41(value);
+    value := function_42(value);
+    value := function_43(value);
+    value := function_44(value);
+    value := function_45(value);
+    value := function_46(value);
+    value := function_47(value);
+    value := function_48(value);
+    value := function_49(value);
+    value := function_50(value);
+    value := function_51(value);
+    value := function_52(value);
+    value := function_53(value);
+    value := function_54(value);
+    value := function_55(value);
+    value := function_56(value);
+    value := function_57(value);
+    value := function_58(value);
+    value := function_59(value);
+    value := function_60(value);
+    value := function_61(value);
+    value := function_62(value);
+    value := function_63(value);
+    value := function_64(value);
+    value := function_65(value);
+    value := function_66(value);
+    value := function_67(value);
+    value := function_68(value);
+    value := function_69(value);
+    value := function_70(value);
+    value := function_71(value);
+    value := function_72(value);
+    value := function_73(value);
+    value := function_74(value);
+    value := function_75(value);
+    value := function_76(value);
+    value := function_77(value);
+    value := function_78(value);
+    value := function_79(value);
+    value := function_80(value);
+    value := function_81(value);
+    value := function_82(value);
+    value := function_83(value);
+    value := function_84(value);
+    value := function_85(value);
+    value := function_86(value);
+    value := function_87(value);
+    value := function_88(value);
+    value := function_89(value);
+    value := function_90(value);
+    value := function_91(value);
+    value := function_92(value);
+    value := function_93(value);
+    value := function_94(value);
+    value := function_95(value);
+    value := function_96(value);
+    value := function_97(value);
+    value := function_98(value);
+    value := function_99(value);
+    value := function_100(value);
+    value := function_101(value);
+    value := function_102(value);
+    value := function_103(value);
+    value := function_104(value);
+    value := function_105(value);
+    value := function_106(value);
+    value := function_107(value);
+    value := function_108(value);
+    value := function_109(value);
+    value := function_110(value);
+    value := function_111(value);
+    value := function_112(value);
+    value := function_113(value);
+    value := function_114(value);
+    value := function_115(value);
+    value := function_116(value);
+    value := function_117(value);
+    value := function_118(value);
+    value := function_119(value);
+    value := function_120(value);
+    value := function_121(value);
+    value := function_122(value);
+    value := function_123(value);
+    value := function_124(value);
+    value := function_125(value);
+    value := function_126(value);
+    value := function_127(value);
+    value := function_128(value);
+    value := function_129(value);
+    value := function_130(value);
+    value := function_131(value);
+    value := function_132(value);
+    value := function_133(value);
+    value := function_134(value);
+    value := function_135(value);
+    value := function_136(value);
+    value := function_137(value);
+    value := function_138(value);
+    value := function_139(value);
+    value := function_140(value);
+    value := function_141(value);
+    value := function_142(value);
+    value := function_143(value);
+    value := function_144(value);
+    value := function_145(value);
+    value := function_146(value);
+    value := function_147(value);
+    value := function_148(value);
+    value := function_149(value);
+    value := function_150(value);
+    value := function_151(value);
+    value := function_152(value);
+    value := function_153(value);
+    value := function_154(value);
+    value := function_155(value);
+    value := function_156(value);
+    value := function_157(value);
+    value := function_158(value);
+    value := function_159(value);
+    if (value > 0) { return 42; };
+    return 1;
+}

@@ -1,0 +1,8 @@
+// اختبار: رفض
+// خروج: 1
+// مرحلة0: نعم
+import std.definitely_missing;
+
+def main(): int {
+    return 0;
+}

@@ -1,0 +1,23 @@
+// A cache behind a read-write lock: read the value, update it under the write lock, then
+// read it again.
+import std.io.println;
+import std.text.number;
+import std.sync.rwlock;
+
+def read(v: &i64): i64 {
+    return *v;
+}
+
+def add(v: &mutable i64): void {
+    *v := *v + 5;
+}
+
+def main(): int {
+    let lock: rwlock<i64> = rwlock_new(10 as i64);
+    let before: i64 = with_read(&lock, fn(v: &i64): i64 -> read(v));
+    with_write(&lock, fn(v: &mutable i64): void -> add(v));
+    let after: i64 = with_read(&lock, fn(v: &i64): i64 -> read(v));
+    if (before != 10 as i64 || after != 15 as i64) { return 1; };
+    println(int_to_text(after as int));
+    return 0;
+}

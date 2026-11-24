@@ -1,0 +1,9 @@
+// اختبار: رفض
+// تشخيص: SULTANC-TYPE-MISMATCH
+// نظير: tests/ar/diagnostics/e2e/type_mismatch.sn
+// خرج-تشخيص-عربي: type_mismatch.ar.stderr
+// خرج-تشخيص-إنجليزي: type_mismatch.en.stderr
+def main(): i32 {
+    let count: i32 = "text";
+    return count;
+}

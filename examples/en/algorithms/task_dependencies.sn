@@ -1,0 +1,25 @@
+// Ordering tasks by their prerequisites: in repeated passes, mark a task ready once the
+// task it depends on is ready, until all four are.
+import std.io.println;
+import std.text.number;
+
+def main(): int {
+    let prerequisite: vector int = [-1, 0, 1, 2];
+    let ready: mutable vector bool = [false, false, false, false];
+    let count: mutable int = 0;
+    let pass: mutable int = 0;
+    while (pass < 4) {
+        let i: mutable int = 0;
+        while (i < 4) {
+            if (!ready[i] && (prerequisite[i] < 0 || ready[prerequisite[i]])) {
+                ready[i] := true;
+                count := count + 1;
+            };
+            i := i + 1;
+        };
+        pass := pass + 1;
+    };
+    if (count != 4) { return 1; };
+    println(int_to_text(count));
+    return 0;
+}

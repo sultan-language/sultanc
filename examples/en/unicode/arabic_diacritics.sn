@@ -1,0 +1,13 @@
+// Unicode processing: arabic_diacritics.
+import std.io.println;
+import std.text.number;
+import std.unicode.normalization;
+
+
+def main(): int {
+    let text: string = "سَلام";
+    match unicode_normalize(&text, صورة_تطبيع_يونيكود.إن_إف_سي()) with
+    | result.ok(out) -> { println(out); }
+    | result.err(_) -> { return 1; };
+    return 0;
+}

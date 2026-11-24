@@ -1,0 +1,93 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 0
+// نظير: tests/ar/compiler/link/layout_script.sn
+import std.text.compare;
+import std.text.from_bytes;
+import compiler.link.elf.layout_script;
+import compiler.link.elf.script_image;
+
+// The linker-script reader of bare-metal images (compiler/link/elf/
+// layout_script.sn): the subset the Cortex-M scripts use, parsed into
+// regions, the entry and the SECTIONS commands in order.
+
+def bytes_of(text: string): vector u8 {
+    let result: mutable vector u8 = [];
+    let index: mutable uint = 0;
+    while (index < (length(text) as uint)) {
+        append(result, text[index]);
+        index := index + 1;
+    }
+    return result;
+}
+
+def name_is(name: &vector u8, expected: string): bool {
+    let text: string = من_بايتات(name);
+    return texts_equal(&text, &expected);
+}
+
+def main(): int {
+    let board: vector u8 = bytes_of("/* board */\nMEMORY\n{\n  FLASH (rx)  : ORIGIN = 0x00000000, LENGTH = 256K\n  RAM   (rwx) : ORIGIN = 0x20000000, LENGTH = 64K\n}\nENTRY(Reset_Handler)\nSECTIONS\n{\n  .vector_table ORIGIN(FLASH) :\n  {\n    KEEP(*(.vector_table))\n  } > FLASH\n  .text : { *(.text .text.*) } > FLASH\n  .init_array :\n  {\n    __init_array_start = .;\n    KEEP(*(SORT_BY_INIT_PRIORITY(.init_array.*)))\n    __init_array_end = .;\n  } > FLASH\n  .data : ALIGN(4)\n  {\n    __data_start = .;\n    *(.data .data.*)\n    . = ALIGN(4);\n  } > RAM AT > FLASH\n  __data_load = LOADADDR(.data);\n  .bss (NOLOAD) : ALIGN(4) { *(.bss .bss.* COMMON) } > RAM\n  __stack_top = (ORIGIN(RAM) + LENGTH(RAM)) & ~7;\n}\n");
+    let semihosting: vector u8 = bytes_of("/* semihosting */\n__sultanc_exit = __sultanc_semihosting_exit;\nHardFault_Handler = __sultanc_semihosting_fault;\n");
+    let input_script: vector u8 = bytes_of("GROUP ( /lib/libc.so.6 )\n");
+    if (!سكربت_تخطيط_جنو(&board)) { return 1; };
+    if (!سكربت_تخطيط_جنو(&semihosting)) { return 2; };
+    if (سكربت_تخطيط_جنو(&input_script)) { return 3; };
+
+    let script: mutable سكربت_تخطيط = سكربت_تخطيط_فارغ();
+    let path: vector u8 = bytes_of("board.ld");
+    let dirs: vector string = [];
+    match اقرأ_سكربت_تخطيط(&board, &path, &dirs, &mutable script, 0) with
+    | نتيجة_سكربت_تخطيط.خطأ(_, _) -> { return 4; }
+    | نتيجة_سكربت_تخطيط.تم -> { };
+    let second: vector u8 = bytes_of("semihosting.ld");
+    match اقرأ_سكربت_تخطيط(&semihosting, &second, &dirs, &mutable script, 0) with
+    | نتيجة_سكربت_تخطيط.خطأ(_, _) -> { return 5; }
+    | نتيجة_سكربت_تخطيط.تم -> { };
+
+    if ((length(script.المناطق) as uint) != 2) { return 6; };
+    if (!name_is(&script.المناطق[1].الاسم, "RAM")) { return 7; };
+    if (script.المناطق[1].الأصل != 0x20000000 || script.المناطق[1].الطول != 65536) { return 8; };
+    if (script.المناطق[0].الطول != 262144) { return 9; };
+    match script.الدخول with
+    | option.none -> { return 10; }
+    | option.some(entry) -> { if (!name_is(&entry, "Reset_Handler")) { return 10; }; };
+    // .vector_table .text .init_array .data __data_load .bss __stack_top,
+    // then the two assignments of the second script.
+    if ((length(script.الأوامر) as uint) != 9) { return 11; };
+    match script.الأوامر[3] with
+    | أمر_أقسام_تخطيط.قسم(data) -> {
+        if (!name_is(&data.الاسم, ".data")) { return 12; };
+        match data.منطقة_التحميل with
+        | option.some(region) -> { if (!name_is(&region, "FLASH")) { return 13; }; }
+        | option.none -> { return 13; };
+    }
+    | _ -> { return 12; };
+    match script.الأوامر[5] with
+    | أمر_أقسام_تخطيط.قسم(bss) -> { if (!bss.بلا_تحميل) { return 14; }; }
+    | _ -> { return 14; };
+    match script.الأوامر[8] with
+    | أمر_أقسام_تخطيط.تعيين(assignment) -> { if (!name_is(&assignment.الاسم, "HardFault_Handler")) { return 15; }; }
+    | _ -> { return 15; };
+
+    // Numbers, 32-bit address arithmetic and section patterns.
+    let k: vector u8 = bytes_of("4M");
+    match عدد_تخطيط(&k) with
+    | option.some(value) -> { if (value != 4194304) { return 16; }; }
+    | option.none -> { return 16; };
+    if (طبق_ثنائي_تخطيط(14, 0x20010000 + 65536, 0xFFFFFFF8) != 0x20020000) { return 17; };
+    if (طبق_ثنائي_تخطيط(5, 4, 8) != 0xFFFFFFFC) { return 18; };
+    let text_name: vector u8 = bytes_of(".text.unlikely.");
+    let pattern: vector u8 = bytes_of(".text.*");
+    let exidx: vector u8 = bytes_of(".ARM.exidx");
+    if (!يطابق_نمط_تخطيط(&text_name, &pattern)) { return 19; };
+    if (يطابق_نمط_تخطيط(&exidx, &pattern)) { return 20; };
+
+    // An unsupported command is reported by name.
+    let bad: vector u8 = bytes_of("SECTIONS { /DISCARD/ : { *(.comment) } }");
+    let other: mutable سكربت_تخطيط = سكربت_تخطيط_فارغ();
+    match اقرأ_سكربت_تخطيط(&bad, &path, &dirs, &mutable other, 0) with
+    | نتيجة_سكربت_تخطيط.تم -> { return 21; }
+    | نتيجة_سكربت_تخطيط.خطأ(command, _) -> { if (!name_is(&command, "/DISCARD/")) { return 22; }; };
+    return 0;
+}

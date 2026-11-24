@@ -1,0 +1,57 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/language/surface/field_place_reads.sn
+// A field read of storage that has a place (an owner local, a parameter, a
+// global vector, a dereference, a vector element) loads that field alone, through
+// nested projections; the values read are the same as before, after
+// writes, and when a field read moves the owner.
+type Point = { x: int, y: int };
+type Shape = { name: string, corner: Point, points: vector Point, tags: vector string };
+
+let origin: mutable vector int = [3, 4];
+
+def make(n: int): Shape {
+    let points: mutable vector Point = [];
+    let p0: Point = { x: n, y: n + 1 };
+    let p1: Point = { x: n + 2, y: n + 3 };
+    append(points, p0);
+    append(points, p1);
+    let tags: mutable vector string = [];
+    append(tags, "a");
+    append(tags, "bc");
+    let corner: Point = { x: n, y: 2 * n };
+    let s: Shape = { name: "shape", corner: corner, points: points, tags: tags };
+    return s;
+}
+
+def through_ref(s: &Shape): int {
+    return (*s).corner.y + (*s).points[1].x + (length((*s).tags[1]) as int);
+}
+
+def by_value(s: Shape): int {
+    return s.corner.x + s.points[0].y + (length(s.name) as int);
+}
+
+def take_name(s: Shape): string {
+    return s.name;
+}
+
+def main(): int {
+    let s: mutable Shape = make(1);
+    let total: mutable int = s.corner.x + s.corner.y + s.points[1].y;
+    s.corner.y := 10;
+    s.points[0].x := 7;
+    total := total + s.corner.y + s.points[0].x;
+    total := total + through_ref(&s);
+    let i: mutable uint = 0;
+    while (i < (length(s.points) as uint)) { total := total + s.points[i].x; i := i + 1; }
+    unsafe { origin[1] := 5; total := total + origin[0] + origin[1]; }
+    let copy: Shape = make(2);
+    total := total + by_value(copy);
+    let n: string = take_name(make(0));
+    total := total + (length(n) as int);
+    if (total != 72) { return total; };
+    return 42;
+}

@@ -1,0 +1,2 @@
+import "leaf.sn";
+public def middle(): int { return leaf(); }

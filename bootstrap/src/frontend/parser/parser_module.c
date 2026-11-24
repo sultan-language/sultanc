@@ -7,7 +7,9 @@
 #include <string.h>
 
 /* Parses the parser module. */
-int __Parser_Parse_Module__(const __Source_File__ *__Source__, __Parse_Result__ *__Out_Result__)
+int __Parser_Parse_Module__(const __Source_File__ *__Source__,
+                            const __Bootstrap_Target__ *__Target__,
+                            __Parse_Result__ *__Out_Result__)
 {
     /* Stores the parser state. */
     __Parser__ __Parser_State__;
@@ -26,6 +28,7 @@ int __Parser_Parse_Module__(const __Source_File__ *__Source__, __Parse_Result__ 
         __Parser_Destroy__(&__Parser_State__);
         return 0;
     }
+    __Parser_State__.__Target__ = __Target__;
     if (!__Parser_Parse_Module_Items__(&__Parser_State__, &__Out_Result__->__Module__))
     {
         __Out_Result__->__Failed__ = 1;

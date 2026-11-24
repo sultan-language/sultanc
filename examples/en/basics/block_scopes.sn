@@ -1,0 +1,11 @@
+// Basic block scopes example.
+import std.io.println;
+import std.text.number;
+
+
+def main(): int {
+    let x: int = 60;
+    if (x > 0) { let y: int = x + 5; println(int_to_text(y)); };
+    println(int_to_text(x));
+    return 0;
+}

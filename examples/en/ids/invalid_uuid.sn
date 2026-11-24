@@ -1,0 +1,13 @@
+// Worked ids example: invalid_uuid.
+import std.io.println;
+import std.text.number;
+import std.uuid.uuid;
+
+
+def main(): int {
+    let invalid: string = "invalid-uuid";
+    match parse_uuid(&invalid) with
+    | result.ok(_) -> { return 1; }
+    | result.err(_) -> { println("rejected invalid UUID"); };
+    return 0;
+}

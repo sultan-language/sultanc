@@ -1,0 +1,72 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 0
+// تفاضلي: نعم
+// نظير: tests/ar/stdlib/behavior/text_messages.sn
+// Message catalogs (std.text.messages): a message in the reader's language,
+// falling back from ar-SA to ar and then to the default language; named
+// arguments; Arabic's six plural forms and English's two; a Latin argument
+// isolated inside an Arabic sentence.
+import std.text.messages;
+import std.text.language;
+import std.text.compare;
+import std.text.bidi;
+import std.text.from_bytes;
+
+def three(a: string, b: string, c: string): string {
+    let out: mutable vector u8 = bytes_from_text(a);
+    append_text_bytes(&mutable out, b);
+    append_text_bytes(&mutable out, c);
+    return out as string;
+}
+
+def main(): int {
+    let catalog: mutable message_catalog = message_catalog_new(&"en");
+    message_catalog_add(&mutable catalog, &"required", &"en", &"The field {field} is required");
+    message_catalog_add(&mutable catalog, &"required", &"ar", &"الحقل {field} مطلوب");
+    message_catalog_add_form(&mutable catalog, &"items", &"ar", plural_category.zero(), &"لا عناصر");
+    message_catalog_add_form(&mutable catalog, &"items", &"ar", plural_category.one(), &"عنصر واحد");
+    message_catalog_add_form(&mutable catalog, &"items", &"ar", plural_category.two(), &"عنصران");
+    message_catalog_add_form(&mutable catalog, &"items", &"ar", plural_category.few(), &"{count} عناصر");
+    message_catalog_add_form(&mutable catalog, &"items", &"ar", plural_category.many(), &"{count} عنصرًا");
+    message_catalog_add_form(&mutable catalog, &"items", &"ar", plural_category.other(), &"{count} عنصر");
+    message_catalog_add_form(&mutable catalog, &"items", &"en", plural_category.one(), &"{count} item");
+    message_catalog_add_form(&mutable catalog, &"items", &"en", plural_category.other(), &"{count} items");
+
+    let arabic: Locale = locale_from_accept_language(&"ar-SA, en;q=0.5");
+    let french: Locale = locale_from_tag(&"fr");
+    let args: mutable vector message_argument = [];
+    append(args, message_arg("field", "الاسم"));
+    match message(&catalog, &arabic, &"required", &args) with
+    | option.some(t) -> { if (!texts_equal(&t, &"الحقل الاسم مطلوب")) { return 1; }; }
+    | option.none -> { return 2; };
+    let latin: mutable vector message_argument = [];
+    append(latin, message_arg("field", "email"));
+    match message(&catalog, &arabic, &"required", &latin) with
+    | option.some(t) -> {
+        let expected: string = three("الحقل ", bidi_isolate(&"email"), " مطلوب");
+        if (!texts_equal(&t, &expected)) { return 3; };
+    }
+    | option.none -> { return 4; };
+    match message(&catalog, &french, &"required", &latin) with
+    | option.some(t) -> { if (!texts_equal(&t, &"The field email is required")) { return 5; }; }
+    | option.none -> { return 6; };
+
+    let none: vector message_argument = [];
+    let expected: vector string = ["لا عناصر", "عنصر واحد", "عنصران", "5 عناصر", "11 عنصرًا", "100 عنصر"];
+    let counts: vector int = [0, 1, 2, 5, 11, 100];
+    let i: mutable uint = 0;
+    while (i < 6) {
+        match message_count(&catalog, &arabic, &"items", counts[i], &none) with
+        | option.some(t) -> { if (!texts_equal(&t, &expected[i])) { return 10 + (i as int); }; }
+        | option.none -> { return 20; };
+        i := i + 1;
+    }
+    match message_count(&catalog, &french, &"items", 1, &none) with
+    | option.some(t) -> { if (!texts_equal(&t, &"1 item")) { return 21; }; }
+    | option.none -> { return 22; };
+    match message(&catalog, &arabic, &"missing", &none) with
+    | option.some(_) -> { return 23; }
+    | option.none -> { };
+    return 0;
+}

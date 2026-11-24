@@ -1,0 +1,18 @@
+import std.error.failure;
+
+@@test
+def takes(x: int): void { }
+
+@@test
+def returns_text(): string { return "x"; }
+
+@@test
+type point = { x: int };
+
+@@test
+def fine(): void { }
+
+@@test
+def fine_result(): result int, Error { return result.ok(0); }
+
+def main(): int { return 0; }

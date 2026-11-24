@@ -1,0 +1,11 @@
+// اختبار: قبول
+// خروج: 0
+type Payload = | Empty | Text of string;
+
+def main(): int {
+    let text: string = "payload moved exactly once";
+    let payload: Payload = Payload.Text(text);
+    match payload with
+    | Payload.Empty -> { return 1; }
+    | Payload.Text(value) -> { return 42; };
+}

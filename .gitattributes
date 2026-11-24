@@ -1,0 +1,12 @@
+# Every text file keeps LF on every checkout, Windows runners included (their
+# git sets core.autocrlf=true): sources, scripts, expected compiler output
+# (tools/tests/ispeak_test.sh, the runner's خرج-تشخيص headers) and fixtures
+# are read byte for byte, as the compiler writes and reads them on Linux.
+* text=auto eol=lf
+# Windows PowerShell scripts keep CRLF.
+*.ps1 text eol=crlf
+# Binary: never converted, even when the bytes look like text (an archive
+# that is only `!<arch>\n`, a #embed resource, the compressed seed).
+*.a   binary
+*.bin binary
+*.zst binary

@@ -63,6 +63,7 @@ __Ast_Expression__ *__Parser_Call_After_Lvalue__(__Parser__ *__Parser_State__,
     __Call__->__As__.__Call__.__Argument_Count__ = __Arguments__.__Count__;
     __Call__->__As__.__Call__.__Arguments__ = (__Ast_Expression__ **)__Parser_Freeze_Vector__(
         __Parser_State__, &__Arguments__, alignof(__Ast_Expression__ *));
+    __Call__->__As__.__Call__.__Resolved_Generic_Function_Index__ = SIZE_MAX;
     __Vector_Destroy__(&__Arguments__);
     return __Call__;
 }

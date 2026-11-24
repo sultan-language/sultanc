@@ -1,0 +1,12 @@
+// Heap-backed boxed record: boxed_records.
+import std.io.println;
+import std.text.number;
+
+type Cell = { count: int };
+def read_cell(cell: &Cell): int { return (*cell).count; }
+
+def main(): int {
+    let box_value: box Cell = box { count: 3 };
+    println(int_to_text(read_cell(&*box_value)));
+    return 0;
+}

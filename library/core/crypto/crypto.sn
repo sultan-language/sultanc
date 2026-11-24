@@ -1,0 +1,11 @@
+// The root file of library/core/crypto: the Arabic spellings of its modules
+// (docs/en/reference/modules-and-imports.md, "Module spellings"). The
+// standard library is three libraries (docs/en/reference/std-layers.md); this
+// file names only this library's own children.
+
+module digest { ar: ملخص };
+module field25519 { ar: حقل25519 };
+module sha256 { ar: شا256 };
+module words { ar: كلمات };
+module words64 { ar: كلمات64 };
+module x25519 { ar: إكس25519 };

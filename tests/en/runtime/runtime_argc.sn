@@ -1,0 +1,5 @@
+import std.process.argument_count;
+
+def main(): int {
+    return argument_count() as int;
+}

@@ -1,0 +1,12 @@
+// Compile-time type introspection: metadata_iteration.
+import std.io.println;
+import std.text.number;
+import std.meta.reflect;
+
+type Triple = { left: int, mid: int, right: int };
+def main(): int {
+    let sample: Triple = { left: 1, mid: 2, right: 3 };
+    let i: mutable uint = 0;
+    while (i < field_count(&sample) as uint) { println(uint_to_text(i)); i := i + 1; };
+    return 0;
+}

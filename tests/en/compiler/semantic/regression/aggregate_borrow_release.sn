@@ -1,0 +1,8 @@
+type Holder = { item: &u8 };
+def main(): int {
+    let text: string = "hello";
+    let item: &u8 = &text[0];
+    let holder: Holder = { item: item };
+    release(text);
+    return *holder.item;
+}

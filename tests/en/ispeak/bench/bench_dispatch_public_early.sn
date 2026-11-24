@@ -1,0 +1,35 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 0
+// نظير: tests/ar/ispeak/bench/bench_dispatch_public_early.sn
+import compiler.diagnostics.identity;
+import compiler.diagnostics.reason;
+import compiler.diagnostics.schema;
+import compiler.ispeak.ispeak;
+
+// Isolate public early typed lookups; compare equal-workload fixtures.
+// Dynamic vector indexing prevents a single constant identity lookup.
+def main(): int {
+    let keys: vector مفتاح_رسالة_تشخيص = [
+        مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.خطأ_نحوي()),
+        مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.تعبير_نحوي_غير_صالح()),
+        مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.نوع_نحوي_غير_صالح())
+    ];
+    let expected_for_cycle: mutable uint = 0;
+    let j: mutable uint = 0;
+    while (j < 3) {
+        let message: string = رسالة_تشخيص(لغة_تشخيص.الإنجليزية(), keys[j]);
+        expected_for_cycle := expected_for_cycle + (length(message) as uint);
+        j := j + 1;
+    }
+    let total: mutable uint = 0;
+    let i: mutable uint = 0;
+    while (i < 6000000) {
+        let key: مفتاح_رسالة_تشخيص = keys[i % 3];
+        let message: string = رسالة_تشخيص(لغة_تشخيص.الإنجليزية(), key);
+        total := total + (length(message) as uint);
+        i := i + 1;
+    }
+    if (total != (expected_for_cycle * 2000000)) { return 1; };
+    return 0;
+}

@@ -1,0 +1,43 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+import std.encoding.utf8;
+import std.encoding.utf16;
+import std.text.compare;
+
+def main(): int {
+    if (!is_unicode_scalar_value(0)) { return 1; };
+    if (!is_unicode_scalar_value(0x10FFFF)) { return 2; };
+    if (is_unicode_scalar_value(0x110000)) { return 3; };
+    if (is_unicode_scalar_value(0xD800)) { return 4; };
+    if (is_unicode_scalar_value(0xDFFF)) { return 5; };
+
+    let unpaired_high: vector u16 = [0xD800];
+    match utf16_to_text(&unpaired_high) with
+    | result.ok(_) -> { return 6; }
+    | result.err(_) -> { };
+
+    let unpaired_low: vector u16 = [0xDC00];
+    match utf16_to_text(&unpaired_low) with
+    | result.ok(_) -> { return 7; }
+    | result.err(_) -> { };
+
+    let invalid_pair: vector u16 = [0xD800, 0x0041];
+    match utf16_to_text(&invalid_pair) with
+    | result.ok(_) -> { return 8; }
+    | result.err(_) -> { };
+
+    let source: string = "A😀أ";
+    match text_to_utf16(&source) with
+    | result.err(_) -> { return 9; }
+    | result.ok(units) -> {
+        if (length(units) != 4) { return 10; };
+        match utf16_to_text(&units) with
+        | result.err(_) -> { return 11; }
+        | result.ok(restored) -> {
+            if (!texts_equal(&restored, &source)) { return 12; };
+        };
+    };
+    return 42;
+}

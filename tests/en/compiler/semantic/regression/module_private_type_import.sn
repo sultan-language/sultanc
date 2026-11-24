@@ -1,0 +1,7 @@
+// اختبار: رفض
+// خروج: 1
+import "modules/private_type.sn";
+def main(): int {
+    let value: Secret = { value: 42 };
+    return value.value;
+}

@@ -33,6 +33,9 @@ int __Body_Infer_Atom__(__Semantic_Body_Context__ *__Context__,
         case __Ast_Literal_String__:
             *__Out_Type__ = &__Body_Builtin_String_Type__;
             return 1;
+        case __Ast_Literal_Float__:
+            *__Out_Type__ = &__Body_Builtin_F64_Type__;
+            return 1;
         case __Ast_Literal_Undefined__:
             return __Body_Fail__(__Context__,
                                  __E0600_Undefined_Literal_In_Lowering__,

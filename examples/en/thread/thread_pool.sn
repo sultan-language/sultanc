@@ -1,0 +1,26 @@
+// Running work on threads and collecting the results: spawn two computations and add up
+// what they return when joined.
+import std.io.println;
+import std.text.number;
+import std.thread.thread;
+
+def main(): int {
+    let first: mutable value_join_handle<int>;
+    let second: mutable value_join_handle<int>;
+    match spawn_value(fn(): int -> 3 * 7) with
+    | result.ok(h) -> { first := h; }
+    | _ -> { return 1; };
+    match spawn_value(fn(): int -> 4 * 8) with
+    | result.ok(h) -> { second := h; }
+    | _ -> { return 2; };
+    let total: mutable int = 0;
+    match join_value(&mutable first) with
+    | option.some(v) -> { total := total + v; }
+    | _ -> { return 3; };
+    match join_value(&mutable second) with
+    | option.some(v) -> { total := total + v; }
+    | _ -> { return 4; };
+    if (total != 53) { return 5; };
+    println(int_to_text(total));
+    return 0;
+}

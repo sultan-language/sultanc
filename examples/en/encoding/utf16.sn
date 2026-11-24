@@ -1,0 +1,13 @@
+// Encode text as UTF-16 code units.
+import std.io.println;
+import std.text.number;
+import std.encoding.utf16;
+
+
+def main(): int {
+    let text: string = "SultanC";
+    match text_to_utf16(&text) with
+    | result.ok(units) -> { println(uint_to_text(length(units) as uint)); }
+    | result.err(_) -> { return 1; };
+    return 0;
+}

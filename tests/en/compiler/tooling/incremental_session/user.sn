@@ -1,0 +1,3 @@
+// Fixture of tests/en/compiler/tooling/incremental_session.sn (not a test).
+import "lib.sn";
+public def use_scale(): int { return scale(3) + untouched(); }

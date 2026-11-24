@@ -1,0 +1,12 @@
+// Self-checking example: test_failure_handling.
+import std.io.println;
+import std.text.number;
+import std.debug.assert;
+
+def parse_positive(n: int): result int, int { if (n < 0) { return result.err(1); }; return result.ok(n); }
+def main(): int {
+    match parse_positive(-1) with
+    | result.err(code) -> { assert(code == 1); println("error handled"); }
+    | result.ok(_) -> { return 1; };
+    return 0;
+}

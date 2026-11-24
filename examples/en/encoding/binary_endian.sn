@@ -1,0 +1,14 @@
+// Read a little-endian integer.
+import std.io.println;
+import std.text.number;
+import std.bytes.cursor;
+
+
+def main(): int {
+    let bytes: vector u8 = [0x34, 0x12];
+    let cursor: mutable byte_cursor = new_byte_cursor(&bytes);
+    match byte_cursor_read_u16_le(&mutable cursor) with
+    | option.some(n) -> { println(uint_to_text(n as uint)); }
+    | option.none -> { return 1; };
+    return 0;
+}

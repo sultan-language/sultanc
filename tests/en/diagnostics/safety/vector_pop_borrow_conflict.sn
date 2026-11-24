@@ -1,0 +1,12 @@
+// اختبار: رفض
+// تشخيص: SULTANC-BORROW-CONFLICT
+// نظير: tests/ar/diagnostics/safety/vector_pop_borrow_conflict.sn
+// pop writes the vector, as append does: it cannot run while a reference
+// into the vector is alive (the element it points at would move out).
+def main(): int {
+    let values: mutable vector int = [40, 2];
+    let first: &int = &values[0];
+    match pop(values) with
+    | option.some(v) -> { return *first + v; }
+    | option.none -> { return 0; };
+}

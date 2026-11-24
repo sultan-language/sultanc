@@ -1,0 +1,10 @@
+// اختبار: رفض
+// تشخيص: SULTANC-PARSE-EXPRESSION
+// نظير: tests/ar/ispeak/fixtures/invalid_expression.sn
+// خرج-تشخيص-عربي: invalid_expression.ar.stderr
+// خرج-تشخيص-إنجليزي: invalid_expression.en.stderr
+// Intentionally invalid. Used only to compare the compiler's live output.
+def main(): int {
+    let x: int = ;
+    return 0;
+}

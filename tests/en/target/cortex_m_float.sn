@@ -1,0 +1,24 @@
+// اختبار: تفاضلي
+// أهداف: x86_64-linux,thumbv7em-none-eabihf
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/target/cortex_m_float.sn
+// Single-precision arithmetic, comparisons and integer conversions on the
+// Cortex-M4/M7 FPU (thumbv7em-none-eabihf: FPv4-SP-D16, AAPCS-VFP, so f32
+// arguments and results travel in s0-s15). f64 there, and every float
+// operation on the soft-float eabi targets, would need a soft-float routine
+// and is rejected with SULTANC-TARGET-FEATURE-UNSUPPORTED.
+def poly(x: f32, a: f32, b: f32): f32 { return (x * x * a + b * x - a) / b; }
+def less(a: f32, b: f32): bool { return a < b; }
+def to_int(a: f32): i32 { return a as i32; }
+def from_int(n: i32, m: u32): f32 { return (n as f32) + (m as f32); }
+
+def main(): int {
+    let y: f32 = poly(3.0, 2.0, 4.0);
+    if (y != 7.0) { return 1; };
+    if (!less(y, 7.25) || less(y, 6.75)) { return 2; };
+    if (to_int(-7.75) != -7) { return 3; };
+    if (from_int(-3, 10) != 7.0) { return 4; };
+    if (to_int(from_int(100000, 23456)) != 123456) { return 5; };
+    return 42;
+}

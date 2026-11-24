@@ -1,0 +1,20 @@
+// Reading newline-delimited JSON: split the input into lines and parse each line as its own
+// JSON document.
+import std.io.println;
+import std.text.number;
+import std.text.transform;
+import std.json.parse;
+
+def main(): int {
+    let source: string = "{\"id\":1}\n{\"id\":2}\n";
+    let lines: vector string = split(&source, &"\n");
+    let i: mutable int = 0;
+    while (i < 2) {
+        match parse_json(&lines[i]) with
+        | result.ok(_) -> { }
+        | result.err(_) -> { return 1; };
+        i := i + 1;
+    };
+    println(int_to_text(i));
+    return 0;
+}

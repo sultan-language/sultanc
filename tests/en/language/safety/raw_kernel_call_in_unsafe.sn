@@ -1,0 +1,10 @@
+// اختبار: تشغيل
+// أهداف: x86_64-linux
+// خروج: 42
+// Inside an unsafe scope the raw call is accepted: getpid (39 on x86_64) returns a positive id.
+def main(): int {
+    let result: u64;
+    unsafe { result := raw_kernel_call(39 as u64, 0 as u64, 0 as u64, 0 as u64, 0 as u64, 0 as u64, 0 as u64); }
+    if (result == 0 || result > 4194304) { return 1; };
+    return 42;
+}

@@ -1,0 +1,14 @@
+// اختبار: رفض
+// خروج: 1
+// تشخيص: SULTANC-FORMAT-STRING
+// نظير: tests/ar/stdlib/fmt/reject_format_named_argument.sn
+// A named argument; std.fmt refers to arguments by position.
+// Named arguments are not supported.
+import std.fmt.fmt;
+
+def main(): int {
+    let name: string = "Sultan";
+    match format("{name}", [fmt_arg.text(&name)]) with
+    | result.ok(_) -> { return 0; }
+    | result.err(_) -> { return 1; };
+}

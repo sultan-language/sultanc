@@ -1,0 +1,6 @@
+// The current process id, for logs
+// such as "Started server process [pid]". 0 on platforms without one (WASI).
+استورد نظام_التشغيل.معلومات_العملية;
+
+عام عرف معرف_العملية(): ط64 { أرجع معرف_العملية_نظام(); }
+عام مرادف process_id = معرف_العملية;

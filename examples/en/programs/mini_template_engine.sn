@@ -1,0 +1,14 @@
+// Replace a placeholder with template data.
+import std.io.println;
+import std.text.number;
+import std.text.transform;
+
+
+def main(): int {
+    let template_text: string = "Hello, {{name}}!";
+    let token: string = "{{name}}";
+    let replacement: string = "SultanC";
+    let output: string = replace(&template_text, &token, &replacement);
+    println(output);
+    return 0;
+}

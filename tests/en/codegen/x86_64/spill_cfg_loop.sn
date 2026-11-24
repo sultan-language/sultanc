@@ -1,0 +1,45 @@
+// اختبار: تشغيل
+// أهداف: x86_64-linux
+// خروج: 42
+def main(): int {
+    let i: mutable int = 0;
+    let a0: mutable int = 1;
+    let a1: mutable int = 2;
+    let a2: mutable int = 3;
+    let a3: mutable int = 4;
+    let a4: mutable int = 5;
+    let a5: mutable int = 6;
+    let a6: mutable int = 7;
+    let a7: mutable int = 8;
+    let a8: mutable int = 9;
+    let a9: mutable int = 10;
+    let a10: mutable int = 11;
+    let a11: mutable int = 12;
+
+    while (i < 8) {
+        if ((i % 2) == 0) {
+            a0 := a0 + 1;
+            a2 := a2 + 1;
+            a4 := a4 + 1;
+            a6 := a6 + 1;
+            a8 := a8 + 1;
+            a10 := a10 + 1;
+        } else {
+            a1 := a1 + 1;
+            a3 := a3 + 1;
+            a5 := a5 + 1;
+            a7 := a7 + 1;
+            a9 := a9 + 1;
+            a11 := a11 + 1;
+        };
+        i := i + 1;
+    }
+
+    if (a0 != 5) { return 1; };
+    if (a1 != 6) { return 2; };
+    if (a10 != 15) { return 3; };
+    if (a11 != 16) { return 4; };
+    let total: int = a0 + a1 + a2 + a3 + a4 + a5 + a6 + a7 + a8 + a9 + a10 + a11;
+    if (total != 126) { return 5; };
+    return 42;
+}

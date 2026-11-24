@@ -1,0 +1,11 @@
+// Self-checking example: error_stack.
+import std.io.println;
+import std.text.number;
+
+def checked_divide(a: int, b: int): result int, int { if (b == 0) { return result.err(1); }; return result.ok(a / b); }
+def main(): int {
+    match checked_divide(15, 0) with
+    | result.ok(_) -> { return 1; }
+    | result.err(code) -> { println(int_to_text(code)); };
+    return 0;
+}

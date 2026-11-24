@@ -1,0 +1,10 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 1
+// خرج-قياسي: <فارغ>
+import std.debug.assert;
+
+def main(): int {
+    assert(false);
+    return 42;
+}

@@ -1,0 +1,15 @@
+// Money as whole cents: a price times a quantity plus 13% tax, rounded to the nearest cent
+// without floating point.
+import std.io.println;
+import std.text.number;
+
+def main(): int {
+    let price_cents: int = 1299;
+    let quantity: int = 3;
+    let subtotal: int = price_cents * quantity;
+    let tax: int = (subtotal * 13 + 50) / 100;
+    let grand: int = subtotal + tax;
+    if (grand != 4404) { return 1; };
+    println(int_to_text(grand));
+    return 0;
+}

@@ -1,0 +1,13 @@
+// اختبار: رفض
+// تشخيص: SULTANC-TYPE-MISMATCH
+// نظير: tests/en/diagnostics/e2e/initializer_generic_option.sn
+// خرج-تشخيص-عربي: initializer_generic_option.ar.stderr
+// خرج-تشخيص-إنجليزي: initializer_generic_option.en.stderr
+// A generic call whose result is an option, where its value is declared: a mismatch at the initializer.
+استورد المكتبة.مجموعات.متجهات;
+
+عرف الرئيسية(): عدد {
+    ليكن القيم: متغير متجه عدد = [1, 2, 3];
+    ليكن المزال: عدد = أزل_عند(&متغير القيم, 1);
+    أرجع المزال;
+}

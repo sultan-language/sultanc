@@ -1,0 +1,27 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 0
+// نظير: tests/ar/ispeak/check.sn
+import std.text.compare;
+import compiler.diagnostics.schema;
+import compiler.ispeak.ispeak;
+import compiler.diagnostics.identity;
+import compiler.diagnostics.reason;
+
+def main(): int {
+    let key: مفتاح_رسالة_تشخيص = مفتاح_رسالة_تشخيص.تشخيص(معرف_تشخيص.خطأ_نحوي());
+
+    let english_message: string = رسالة_تشخيص(لغة_تشخيص.الإنجليزية(), key);
+    let expected_in_english: string = "Syntax error in source code";
+    if (!texts_equal(&english_message, &expected_in_english)) {
+        return 2;
+    };
+
+    let arabic_message: string = رسالة_تشخيص(لغة_تشخيص.العربية(), key);
+    let expected_in_arabic: string = "خطأ في بناء الجملة المصدرية";
+    if (!texts_equal(&arabic_message, &expected_in_arabic)) {
+        return 3;
+    };
+
+    return 0;
+}

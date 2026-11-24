@@ -1,0 +1,8 @@
+// اختبار: رفض
+// تشخيص: SULTANC-C-INVALID-IDENTIFIER-CHARACTER
+// نظير: tests/ar/compiler/c_import_errors/identifier_character.sn
+// C23 identifiers are XID_Start/XID_Continue characters: U+20AC inside a name
+// is SULTANC-C-INVALID-IDENTIFIER-CHARACTER at its file:line:column.
+import "identifier_character.h";
+
+def main(): int { return 0; }

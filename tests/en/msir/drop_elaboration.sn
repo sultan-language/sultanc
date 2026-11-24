@@ -1,0 +1,159 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// نظير: tests/ar/msir/drop_elaboration.sn
+// Drop elaboration (compiler/msir/drop_elaboration.sn) on initial MSIR made
+// with the builder: two text owners, one given up on one branch only. The
+// initial-MSIR verifier accepts the ownership operations and the canonical
+// verifier rejects them; after elaboration none is left, the canonical
+// verifier accepts the program, the owner held on some paths only has the one
+// flag, the owner held on every path is released unconditionally, and its
+// second obligation, which follows the first, is dead and removed.
+import compiler.msir.msir_model;
+import compiler.msir.identifiers;
+import compiler.msir.msir_builder;
+import compiler.msir.msir_verifier;
+import compiler.msir.drop_elaboration;
+import compiler.runtime.primitive_identity;
+import compiler.frontend.types.type_identity;
+import compiler.frontend.types.type_context;
+import compiler.frontend.types.type_registry;
+import compiler.frontend.types.type_model;
+import compiler.frontend.types.builtins_generated;
+
+def test_block(outcome: نتيجة_بناء_كتلة_مسير): معرف_كتلة_مسير {
+    match outcome with
+    | نتيجة_بناء_كتلة_مسير.مبنية(id) -> { return id; }
+    | نتيجة_بناء_كتلة_مسير.مرفوضة(_) -> {
+        return معرف_كتلة_مسير_من(معرف_دالة_مسير_من(9999), 9999);
+    };
+}
+
+def test_value(outcome: نتيجة_بناء_قيمة_مسير): معرف_قيمة_مسير {
+    match outcome with
+    | نتيجة_بناء_قيمة_مسير.مبنية(id) -> { return id; }
+    | _ -> { return معرف_قيمة_مسير_من(معرف_دالة_مسير_من(9999), 9999); };
+}
+
+def accepted(outcome: نتيجة_تحقق_مسير): bool {
+    match outcome with
+    | نتيجة_تحقق_مسير.صالح -> { return true; }
+    | نتيجة_تحقق_مسير.مرفوض(_) -> { return false; };
+}
+
+def text_bytes(): vector u8 {
+    let bytes: vector u8 = [97, 98, 99];
+    return bytes;
+}
+
+def ownership_operations(program: &برنامج_مسير): uint {
+    let count: mutable uint = 0;
+    let k: mutable uint = 0;
+    while (k < (length((*program).الدوال[0].الكتل) as uint)) {
+        let t: mutable uint = 0;
+        while (t < (length((*program).الدوال[0].الكتل[k].التعليمات) as uint)) {
+            match (*program).الدوال[0].الكتل[k].التعليمات[t].العملية with
+            | عملية_مسير.ملكية_مكان(_) -> { count := count + 1; }
+            | _ -> { };
+            t := t + 1;
+        }
+        k := k + 1;
+    }
+    return count;
+}
+
+def releases(program: &برنامج_مسير): uint {
+    let count: mutable uint = 0;
+    let k: mutable uint = 0;
+    while (k < (length((*program).الدوال[0].الكتل) as uint)) {
+        let t: mutable uint = 0;
+        while (t < (length((*program).الدوال[0].الكتل[k].التعليمات) as uint)) {
+            match (*program).الدوال[0].الكتل[k].التعليمات[t].العملية with
+            | عملية_مسير.نداء(call) -> {
+                match call.الهدف with
+                | هدف_نداء_مسير.بدائي_مترجم(هوية_بدائي_مترجم.تحرير) -> { count := count + 1; }
+                | _ -> { };
+            }
+            | _ -> { };
+            t := t + 1;
+        }
+        k := k + 1;
+    }
+    return count;
+}
+
+def entry_places(program: &برنامج_مسير): uint {
+    let count: mutable uint = 0;
+    let t: mutable uint = 0;
+    while (t < (length((*program).الدوال[0].الكتل[0].التعليمات) as uint)) {
+        match (*program).الدوال[0].الكتل[0].التعليمات[t].العملية with
+        | عملية_مسير.مكان_محلي(_) -> { count := count + 1; }
+        | _ -> { };
+        t := t + 1;
+    }
+    return count;
+}
+
+def main(): int {
+    let types: mutable سجل_أنواع = سجل_أنواع_جديد();
+    let bool_type: معرف_نوع = قنن_نوعا_بدائيا(&mutable types, نوع_بدائي_مقنن.منطقي());
+    let int_type: معرف_نوع = قنن_نوعا_بدائيا(&mutable types, نوع_بدائي_مقنن.ص64());
+    let text_type: معرف_نوع = قنن_نوعا_بدائيا(&mutable types, نوع_بدائي_مقنن.نص());
+    let program: mutable برنامج_مسير = برنامج_مسير_جديد();
+    let build: حالة_بناء_مسير = حالة_بناء_مسير_جديدة();
+    let no_parameters: vector معرف_نوع = [];
+    let function: معرف_دالة_مسير = أضف_دالة_مسير(&mutable program, &no_parameters, option.some(int_type));
+    let entry: معرف_كتلة_مسير = test_block(أضف_كتلة_مسير(&mutable program, function));
+    let moved: معرف_كتلة_مسير = test_block(أضف_كتلة_مسير(&mutable program, function));
+    let kept: معرف_كتلة_مسير = test_block(أضف_كتلة_مسير(&mutable program, function));
+    let join: معرف_كتلة_مسير = test_block(أضف_كتلة_مسير(&mutable program, function));
+    let sometimes: معرف_قيمة_مسير = test_value(
+        أصدر_مكان_محلي_مسير(&mutable program, &build, function, entry, text_type, true)
+    );
+    let always: معرف_قيمة_مسير = test_value(
+        أصدر_مكان_محلي_مسير(&mutable program, &build, function, entry, text_type, true)
+    );
+    let first: معرف_قيمة_مسير = test_value(
+        أصدر_ثابت_نص_مسير(&mutable program, &build, function, entry, text_bytes(), text_type)
+    );
+    أصدر_تخزين_مسير(&mutable program, &build, function, entry, sometimes, first);
+    أصدر_ملكية_مكان_مسير(&mutable program, &build, function, entry, حدث_ملكية_مسير.تهيئة(), sometimes);
+    let second: معرف_قيمة_مسير = test_value(
+        أصدر_ثابت_نص_مسير(&mutable program, &build, function, entry, text_bytes(), text_type)
+    );
+    أصدر_تخزين_مسير(&mutable program, &build, function, entry, always, second);
+    أصدر_ملكية_مكان_مسير(&mutable program, &build, function, entry, حدث_ملكية_مسير.تهيئة(), always);
+    let condition: معرف_قيمة_مسير = test_value(
+        أصدر_ثابتا_مسير(&mutable program, &build, function, entry, ثابت_مسير.منطق(true), bool_type)
+    );
+    let to_moved_arguments: vector معرف_قيمة_مسير = [];
+    let to_kept_arguments: vector معرف_قيمة_مسير = [];
+    let to_moved: حافة_مسير = { الهدف: moved, الحجج: to_moved_arguments };
+    let to_kept: حافة_مسير = { الهدف: kept, الحجج: to_kept_arguments };
+    اختم_بفرع_شرطي_مسير(&mutable program, &build, function, entry, condition, to_moved, to_kept);
+    let no_arguments: vector معرف_قيمة_مسير = [];
+    أصدر_ملكية_مكان_مسير(&mutable program, &build, function, moved, حدث_ملكية_مسير.تسليم(), sometimes);
+    اختم_بفرع_مسير(&mutable program, &build, function, moved, join, &no_arguments);
+    اختم_بفرع_مسير(&mutable program, &build, function, kept, join, &no_arguments);
+    أصدر_ملكية_مكان_مسير(&mutable program, &build, function, join, حدث_ملكية_مسير.إسقاط(), sometimes);
+    أصدر_ملكية_مكان_مسير(&mutable program, &build, function, join, حدث_ملكية_مسير.إسقاط(), always);
+    أصدر_ملكية_مكان_مسير(&mutable program, &build, function, join, حدث_ملكية_مسير.إسقاط(), always);
+    let result_value: معرف_قيمة_مسير = test_value(
+        أصدر_ثابتا_مسير(&mutable program, &build, function, join, ثابت_مسير.صحيح_موقع(42), int_type)
+    );
+    اختم_بإرجاع_مسير(&mutable program, &build, function, join, option.some(result_value));
+    عين_دالة_بدء_برنامج_مسير(&mutable program, function);
+
+    if (!accepted(تحقق_برنامج_مسير_أولي(&program, &types))) { return 1; };
+    if (accepted(تحقق_برنامج_مسير(&program, &types))) { return 2; };
+    if (ownership_operations(&program) != 6) { return 3; };
+    match فصل_إسقاط_برنامج_مسير(&mutable program, &mutable types) with
+    | option.some(_) -> { return 4; }
+    | option.none -> { };
+    if (ownership_operations(&program) != 0) { return 5; };
+    if (!accepted(تحقق_برنامج_مسير(&program, &types))) { return 6; };
+    if (entry_places(&program) != 3) { return 7; };
+    if (releases(&program) != 2) { return 8; };
+    if (length(program.الدوال[0].الكتل) != 6) { return 9; };
+    return 42;
+}

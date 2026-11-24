@@ -1,0 +1,14 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// خرج-قياسي: <فارغ>
+// خطأ-قياسي: <فارغ>
+import std.fs.read_file;
+
+def main(): int {
+    let path: string = "stage0-file-that-does-not-exist.tmp";
+    let loaded: result string, int = read_file(&path);
+    match loaded with
+    | result.err(e) -> { return 42; }
+    | result.ok(text) -> { return 0; }
+}

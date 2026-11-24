@@ -1,0 +1,95 @@
+استورد compiler.msir.msir_model;
+استورد compiler.msir.identifiers;
+
+// Static environments for function values that capture nothing
+// (docs/en/reference/ownership.md, "Closure environments").
+//
+// A closure construction allocates a reference-counted environment whose
+// header holds the code pointer, the count and the destructor. A construction
+// with no captures fills that header with the same three words every time, so
+// each function built that way gets one static environment instead, emitted
+// as writable data (برنامج_مسير.البيئات_الساكنة): its count starts at
+// عداد_بيئة_إغلاق_ساكنة_مسير() (2^62), which no sequence of atomic releases
+// brings to zero, so it is never destroyed. The construction becomes the
+// address of that data: no allocation, and the layout, retain/release, calls
+// through the environment and threads are unchanged.
+//
+// The pipeline (msir_optimization_pipeline.sn) runs this pass last, at every
+// optimization level, on the functions the request keeps. It marks each
+// capture-free construction البيئة_الساكنة and records its function (with
+// the construction's destructor) once. It returns, by position, the functions
+// it changed.
+عام عرف أعط_الإغلاقات_بيئات_ساكنة_مسير(
+    البرنامج: &متغير برنامج_مسير,
+    الدوال: &متجه منطقي
+): متجه منطقي {
+    ليكن المتغيرة: متغير متجه منطقي = [];
+    ليكن د: متغير طبيعي = 0;
+    طالما (د < (الطول((*البرنامج).الدوال) مثل طبيعي)) {
+        ألحق(المتغيرة, خطأ);
+        إذا (د < (الطول(*الدوال) مثل طبيعي) && (*الدوال)[د]) {
+            ليكن ك: متغير طبيعي = 0;
+            طالما (ك < (الطول((*البرنامج).الدوال[د].الكتل) مثل طبيعي)) {
+                ليكن ت: متغير طبيعي = 0;
+                طالما (ت < (الطول((*البرنامج).الدوال[د].الكتل[ك].التعليمات) مثل طبيعي)) {
+                    طابق بيئة_بناء_بلا_التقاطات_مسير(&(*البرنامج).الدوال[د].الكتل[ك].التعليمات[ت].العملية) مع
+                    | اختياري.موجود(البيئة) -> {
+                        إذا (سجل_بيئة_إغلاق_ساكنة_مسير(البرنامج, &البيئة)) {
+                            ليكن العملية: متغير عملية_مسير = عملية_مسير.ثابت(ثابت_مسير.منطق(خطأ));
+                            بدّل(العملية, (*البرنامج).الدوال[د].الكتل[ك].التعليمات[ت].العملية);
+                            طابق العملية مع
+                            | عملية_مسير.بناء_إغلاق(البناء) -> {
+                                ليكن المحدث: متغير بناء_إغلاق_مسير = البناء;
+                                المحدث.البيئة_الساكنة := صواب;
+                                (*البرنامج).الدوال[د].الكتل[ك].التعليمات[ت].العملية :=
+                                    عملية_مسير.بناء_إغلاق(المحدث);
+                            }
+                            | _ -> {
+                                (*البرنامج).الدوال[د].الكتل[ك].التعليمات[ت].العملية := العملية;
+                            };
+                            المتغيرة[د] := صواب;
+                        };
+                    }
+                    | اختياري.لا_شيء -> { };
+                    ت := ت + 1;
+                }
+                ك := ك + 1;
+            }
+        };
+        د := د + 1;
+    }
+    أرجع المتغيرة;
+}
+
+// The static environment a construction that captures nothing (and is not
+// yet static) would use.
+عرف بيئة_بناء_بلا_التقاطات_مسير(العملية: &عملية_مسير): اختياري بيئة_إغلاق_ساكنة_مسير {
+    طابق *العملية مع
+    | عملية_مسير.بناء_إغلاق(البناء) -> {
+        إذا (البناء.البيئة_الساكنة || (الطول(البناء.الالتقاطات) مثل طبيعي) != 0) {
+            أرجع اختياري.لا_شيء();
+        };
+        ليكن البيئة: بيئة_إغلاق_ساكنة_مسير = { الدالة: البناء.الدالة, المدمر: البناء.المدمر };
+        أرجع اختياري.موجود(البيئة);
+    }
+    | _ -> { أرجع اختياري.لا_شيء(); };
+}
+
+// Records البيئة's function once. False (the construction keeps its heap
+// environment) when the function is already recorded with another
+// destructor, which one function's constructions never have.
+عرف سجل_بيئة_إغلاق_ساكنة_مسير(
+    البرنامج: &متغير برنامج_مسير,
+    البيئة: &بيئة_إغلاق_ساكنة_مسير
+): منطقي {
+    طابق فهرس_بيئة_إغلاق_ساكنة_مسير(البرنامج, (*البيئة).الدالة) مع
+    | اختياري.موجود(الفهرس) -> {
+        أرجع مدمرا_بيئة_ساكنة_متساويان(
+            (*البرنامج).البيئات_الساكنة[الفهرس].المدمر, (*البيئة).المدمر
+        );
+    }
+    | اختياري.لا_شيء -> { };
+    ليكن الجديدة: بيئة_إغلاق_ساكنة_مسير = { الدالة: (*البيئة).الدالة, المدمر: (*البيئة).المدمر };
+    ألحق((*البرنامج).البيئات_الساكنة, الجديدة);
+    أرجع صواب;
+}

@@ -1,0 +1,26 @@
+// AES-256-GCM round trip: seal a message with a key, a nonce and associated data, then
+// open it again and print the recovered text.
+import std.io.println;
+import std.text.number;
+import std.text.from_bytes;
+import std.crypto.aes_gcm;
+
+def main(): int {
+    let key: mutable vector u8 = [];
+    let i: mutable uint = 0;
+    while (i < 32) {
+        append(key, (i + 1) as u8);
+        i := i + 1;
+    };
+    let nonce: vector u8 = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+    let aad: vector u8 = bytes_from_text("v1");
+    let plain: vector u8 = bytes_from_text("confidential");
+    match aes_gcm_seal(&key, &nonce, &aad, &plain) with
+    | option.some(cipher) -> {
+        match aes_gcm_open(&key, &nonce, &aad, &cipher) with
+        | option.some(recovered) -> { println(from_bytes(&recovered)); }
+        | option.none -> { return 2; };
+    }
+    | option.none -> { return 1; };
+    return 0;
+}

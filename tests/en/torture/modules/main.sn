@@ -1,0 +1,8 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// فئة: modules
+import "helper.sn";
+
+def main(): int { return module_value(40); }

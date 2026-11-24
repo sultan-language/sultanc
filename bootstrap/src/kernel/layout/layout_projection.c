@@ -102,6 +102,94 @@ static int __Layout_Tagged_Constructor_View__(__Semantic_Context__ *__Context__,
     return 0;
 }
 
+/* Returns tagged storage for a canonical named enum entry. */
+int __Layout_Tagged_Entry_Storage__(__Semantic_Context__ *__Context__,
+                                    __Semantic_Type_Entry__ *__Entry__,
+                                    size_t *__Out_Tag_Size__,
+                                    size_t *__Out_Payload_Offset__,
+                                    size_t *__Out_Payload_Size__,
+                                    size_t *__Out_Alignment__)
+{
+    __Ast_Type_Declaration__ *__Declaration__;
+    size_t __Payload_Max__ = 0U;
+    size_t __Payload_Alignment__ = 1U;
+    size_t __Constructor_Index__;
+    size_t __Canonical_Size__ = 0U;
+    size_t __Canonical_Alignment__ = 1U;
+    size_t __Projected_Size__;
+    size_t __Projected_Alignment__;
+    size_t __Payload_Offset__;
+
+    if (__Context__ == NULL || __Entry__ == NULL ||
+        (__Declaration__ = __Entry__->__Declaration__) == NULL ||
+        __Declaration__->__Kind__ != __Ast_Type_Decl_Enum__)
+    {
+        return 0;
+    }
+
+    for (__Constructor_Index__ = 0U;
+         __Constructor_Index__ < __Declaration__->__As__.__Enum__.__Count__;
+         ++__Constructor_Index__)
+    {
+        __Ast_Enum_Constructor__ *__Constructor__ =
+            &__Declaration__->__As__.__Enum__.__Constructors__[__Constructor_Index__];
+        size_t __Payload_Size__ = 0U;
+        size_t __Constructor_Alignment__ = 1U;
+        size_t __Slot_Index__;
+
+        for (__Slot_Index__ = 0U; __Slot_Index__ < __Constructor__->__Payload_Count__;
+             ++__Slot_Index__)
+        {
+            size_t __Field_Size__ = 0U;
+            size_t __Field_Alignment__ = 1U;
+            if (!__Layout_Type__(__Context__,
+                                 __Constructor__->__Payload_Slots__[__Slot_Index__].__Type__,
+                                 &__Field_Size__,
+                                 &__Field_Alignment__))
+            {
+                return 0;
+            }
+            __Payload_Size__ = __Align_Up__(__Payload_Size__, __Field_Alignment__);
+            __Payload_Size__ += __Field_Size__;
+            if (__Field_Alignment__ > __Constructor_Alignment__)
+            {
+                __Constructor_Alignment__ = __Field_Alignment__;
+            }
+        }
+        __Payload_Size__ = __Align_Up__(__Payload_Size__, __Constructor_Alignment__);
+        if (__Payload_Size__ > __Payload_Max__)
+        {
+            __Payload_Max__ = __Payload_Size__;
+        }
+        if (__Constructor_Alignment__ > __Payload_Alignment__)
+        {
+            __Payload_Alignment__ = __Constructor_Alignment__;
+        }
+    }
+
+    __Payload_Offset__ = __Align_Up__(8U, __Payload_Alignment__);
+    __Projected_Alignment__ = __Payload_Alignment__ > 8U ? __Payload_Alignment__ : 8U;
+    __Projected_Size__ =
+        __Align_Up__(__Payload_Offset__ + __Payload_Max__, __Projected_Alignment__);
+    if (!__Layout_Named_Entry__(
+            __Context__, __Entry__, &__Canonical_Size__, &__Canonical_Alignment__) ||
+        __Canonical_Size__ != __Projected_Size__ ||
+        __Canonical_Alignment__ != __Projected_Alignment__)
+    {
+        return 0;
+    }
+
+    if (__Out_Tag_Size__ != NULL)
+        *__Out_Tag_Size__ = 8U;
+    if (__Out_Payload_Offset__ != NULL)
+        *__Out_Payload_Offset__ = __Payload_Offset__;
+    if (__Out_Payload_Size__ != NULL)
+        *__Out_Payload_Size__ = __Payload_Max__;
+    if (__Out_Alignment__ != NULL)
+        *__Out_Alignment__ = __Projected_Alignment__;
+    return 1;
+}
+
 /* Returns the layout tagged storage. */
 int __Layout_Tagged_Storage__(__Semantic_Context__ *__Context__,
                               __Ast_Type__ *__Type__,
@@ -144,7 +232,12 @@ int __Layout_Tagged_Storage__(__Semantic_Context__ *__Context__,
     else if (__Resolved__.__Kind__ == __Resolved_Type_Enum__ && __Resolved__.__Named__ != NULL &&
              __Resolved__.__Named__->__Declaration__ != NULL)
     {
-        __Constructor_Count__ = __Resolved__.__Named__->__Declaration__->__As__.__Enum__.__Count__;
+        return __Layout_Tagged_Entry_Storage__(__Context__,
+                                               __Resolved__.__Named__,
+                                               __Out_Tag_Size__,
+                                               __Out_Payload_Offset__,
+                                               __Out_Payload_Size__,
+                                               __Out_Alignment__);
     }
     else
     {

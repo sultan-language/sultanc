@@ -1,0 +1,11 @@
+// Compile-time type introspection: reflect_records.
+import std.io.println;
+import std.text.number;
+import std.meta.reflect;
+
+type Measurement = { distance: i64, weight: i64 };
+def main(): int {
+    let sample: Measurement = { distance: 2 as i64, weight: 5 as i64 };
+    println(uint_to_text(field_count(&sample) as uint));
+    return 0;
+}

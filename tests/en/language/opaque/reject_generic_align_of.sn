@@ -1,0 +1,11 @@
+// اختبار: رفض
+// أهداف: arm64-darwin,x86_64-linux
+// تشخيص: SULTANC-TYPE-OPAQUE-TYPE-ARGUMENT
+// نظير: tests/ar/language/opaque/reject_generic_align_of.sn
+// align_of of an opaque type argument inside a generic: it has no alignment.
+import std.meta.reflect;
+type Db = opaque;
+def measure<A>(p: *A): u64 {
+    unsafe { return align_of(p as &A); };
+}
+def main(): int { return measure(0 as *Db) as int; }

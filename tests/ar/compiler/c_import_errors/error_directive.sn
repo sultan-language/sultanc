@@ -1,0 +1,8 @@
+// اختبار: رفض
+// تشخيص: SULTANC-C-ERROR-DIRECTIVE
+// نظير: tests/en/compiler/c_import_errors/error_directive.sn
+// يبلغ جسر عن #error في مجموعة نشطة في ترويسة مستوردة بالرمز SULTANC-C-ERROR-DIRECTIVE مع
+// ملف الترويسة وسطرها وعمودها، ويفشل الاستيراد وقت الترجمة.
+استورد "error_directive.h";
+
+عرف الرئيسية(): عدد { أرجع 0; }

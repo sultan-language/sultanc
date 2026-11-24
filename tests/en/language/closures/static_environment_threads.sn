@@ -1,0 +1,55 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// نظير: tests/ar/language/closures/static_environment_threads.sn
+// Static closure environments are shared across threads
+// (compiler/msir/static_environments.sn): four threads, started from the
+// same capture-free function value, copy, pass, call and drop the same
+// capture-free function values at once, so their retains and releases race
+// on one count. The count stays atomic and never reaches zero, so the values
+// still call their functions after the threads have ended.
+import std.thread.thread;
+
+def triple(x: int): int { return x * 3; }
+
+def apply(f: fn(int): int, v: int): int { return f(v); }
+
+def rounds(n: int): int {
+    let i: mutable int = 0;
+    let total: mutable int = 0;
+    while (i < n) {
+        let f: fn(int): int = triple;
+        let g: fn(int): int = f;
+        let h: fn(int): int = fn(x: int): int -> x + 1;
+        let k: fn(int): int = h;
+        total := total + apply(g, 1) + apply(k, 1) + f(0);
+        i := i + 1;
+    }
+    return total;
+}
+
+def work(): void {
+    let total: int = rounds(100000);
+    // 3 + 2 + 0 per round; a wrong answer stops the program.
+    if (total != 500000) { let z: int = 1 / (total - total); };
+}
+
+def main(): int {
+    let handles: mutable vector join_handle = [];
+    let k: mutable int = 0;
+    while (k < 4) {
+        match spawn(work) with
+        | result.err(_) -> { return 1; }
+        | result.ok(h) -> { append(handles, h); };
+        k := k + 1;
+    }
+    k := 0;
+    while (k < 4) {
+        join(&mutable handles[k as uint]);
+        k := k + 1;
+    }
+    if (rounds(1000) != 5000) { return 2; };
+    let f: fn(int): int = triple;
+    if (f(14) != 42) { return 3; };
+    return 42;
+}

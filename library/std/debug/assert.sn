@@ -1,0 +1,48 @@
+استورد نصوص.من_بايتات;
+استورد دخ.اطبع_سطر;
+استورد عمليات.اخرج;
+استورد عمليات.فشل;
+استورد تصحيح.موقع;
+
+// Assertions remain active in all build modes. The condition is evaluated once.
+// A failed assertion stops the program like إنهيار (std.process.panic): the
+// iSpeak frame "the program stopped" with the reason "an assertion failed",
+// in the program's language, on standard error, then where the assertion is
+// (`  --> file:line:column`: both functions are `@@track_caller`, so the
+// place is the call's, or the place a marked helper was called from), then
+// status 1; owned values are not dropped.
+@@يتتبع_المستدعي
+عام عرف تأكد(الشرط: منطقي, الموقع: موقع_مصدر): فراغ {
+    إذا (!الشرط) {
+        ليكن بلا_رسالة: نص = «»;
+        أبلغ_عن_تأكيد_فاشل(&الموقع, &بلا_رسالة);
+        اخرج(1);
+    };
+}
+
+// An optional message, evaluated by the caller before the call, printed
+// under the frame.
+@@يتتبع_المستدعي
+عام عرف تأكد_برسالة(الشرط: منطقي, الرسالة: &نص, الموقع: موقع_مصدر): فراغ {
+    إذا (!الشرط) {
+        أبلغ_عن_تأكيد_فاشل(&الموقع, الرسالة);
+        اخرج(1);
+    };
+}
+
+// The frame, the place (the line `sultanc test` reads for its `-->`), then
+// the message.
+عرف أبلغ_عن_تأكيد_فاشل(الموقع: &موقع_مصدر, الرسالة: &نص): فراغ {
+    ليكن بلا_حمولة: نص = «»;
+    اطبع_فشل_تشغيل(2, &بلا_حمولة);
+    ليكن السطر: متغير متجه ط8 = بايتات_من_نص(«  --> »);
+    ألحق_بايتات_نص(&متغير السطر, نص_موقع_مصدر(الموقع));
+    ليكن نص_السطر: نص = من_بايتات(&السطر);
+    ليكن تجاهل: نتيجة عدد, عدد = اطبع_سطر_خطأ(&نص_السطر);
+    إذا ((الطول(*الرسالة) مثل طبيعي) > 0) {
+        ليكن تجاهل_الرسالة: نتيجة عدد, عدد = اطبع_سطر_خطأ(الرسالة);
+    };
+}
+
+عام مرادف assert = تأكد;
+عام مرادف assert_with_message = تأكد_برسالة;

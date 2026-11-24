@@ -1,0 +1,13 @@
+// Summarize the number of CSV rows in an offline document.
+import std.io.println;
+import std.text.number;
+import std.csv.csv;
+
+
+def main(): int {
+    let source: string = "name,score\nNoor,8\nAdam,10\n";
+    match parse_csv(&source) with
+    | result.err(_) -> { return 1; }
+    | result.ok(doc) -> { println(uint_to_text(csv_record_count(&doc))); };
+    return 0;
+}

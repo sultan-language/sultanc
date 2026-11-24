@@ -1,0 +1,8 @@
+// The root file of library/core/hash: the Arabic spellings of its modules
+// (docs/en/reference/modules-and-imports.md, "Module spellings"). The
+// standard library is three libraries (docs/en/reference/std-layers.md); this
+// file names only this library's own children.
+
+module combine { ar: دمج };
+module fnv { ar: فنڤ };
+module xxh64 { ar: إكس_إكس_إتش64 };

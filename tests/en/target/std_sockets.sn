@@ -1,0 +1,122 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux,aarch64-linux-gnu,x86_64-darwin,x86_64-windows-msvc,aarch64-windows-msvc,x86_64-android,aarch64-android,armv7-android,x86_64-freebsd,aarch64-freebsd,riscv64-freebsd,i686-linux-gnu,armv7-linux-gnueabihf,riscv64-linux-gnu,loongarch64-linux-gnu,mips64el-linux-gnuabi64,powerpc64le-linux-gnu,s390x-linux-gnu,sparcv9-linux-gnu
+// خروج: 42
+// خرج-قياسي: tcp ping/pong|udp 6
+// تفاضلي: نعم
+// نظير: tests/ar/target/std_sockets.sn
+// Loopback TCP and UDP on every target with sockets (WASI has preopened
+// sockets only). The socket type and option constants, the sockaddr_in
+// layout and its byte order, and the system calls (socketcall is not used on
+// i686) differ per OS and architecture: MIPS numbers SOCK_STREAM 2 and
+// SOL_SOCKET 0xffff, s390x and SPARC are big-endian.
+from std.net import
+    parse_socket_addr,
+    tcp_bind_with_options,
+    tcp_connect,
+    tcp_accept,
+    tcp_read,
+    tcp_write,
+    tcp_stream_set_option,
+    tcp_stream_close,
+    tcp_listener_close,
+    udp_bind,
+    udp_connect,
+    udp_send,
+    udp_recv,
+    udp_set_option,
+    udp_close,
+    socket_option,
+    reuse_address,
+    receive_timeout_ms;
+import std.io.print;
+import std.text.from_bytes;
+import std.text.number;
+import std.text.transform;
+
+def tcp_round_trip(): option string {
+    let text: string = "127.0.0.1:38631";
+    match parse_socket_addr(&text) with
+    | result.err(_) -> { return option.none(); }
+    | result.ok(addr) -> {
+        let options: vector socket_option = [reuse_address(true)];
+        match tcp_bind_with_options(&addr, 4, &options) with
+        | result.err(_) -> { return option.none(); }
+        | result.ok(listener) -> {
+            let line: mutable option string = option.none();
+            match tcp_connect(&addr) with
+            | result.err(_) -> { }
+            | result.ok(client) -> {
+                match tcp_accept(&listener) with
+                | result.err(_) -> { }
+                | result.ok(server) -> {
+                    match tcp_stream_set_option(&server, receive_timeout_ms(5000)) with
+                    | _ -> { };
+                    let ping: vector u8 = [112, 105, 110, 103];
+                    let pong: vector u8 = [112, 111, 110, 103];
+                    let got: mutable vector u8 = [0, 0, 0, 0];
+                    let back: mutable vector u8 = [0, 0, 0, 0];
+                    match tcp_write(&client, &ping, 0, 4) with | _ -> { };
+                    match tcp_read(&server, &mutable got, 0, 4) with | _ -> { };
+                    match tcp_write(&server, &pong, 0, 4) with | _ -> { };
+                    match tcp_read(&client, &mutable back, 0, 4) with | _ -> { };
+                    let parts: vector string = ["tcp ", from_bytes(&got), "/", from_bytes(&back)];
+                    let nothing: string = "";
+                    line := option.some(join(&parts, &nothing));
+                    let closed_server: result int, int = tcp_stream_close(server);
+                };
+                let closed_client: result int, int = tcp_stream_close(client);
+            };
+            let closed: result int, int = tcp_listener_close(listener);
+            return line;
+        };
+    };
+}
+
+def udp_round_trip(): int {
+    let text_a: string = "127.0.0.1:38633";
+    let text_b: string = "127.0.0.1:38634";
+    match parse_socket_addr(&text_a) with
+    | result.err(_) -> { return -1; }
+    | result.ok(addr_a) -> {
+        match parse_socket_addr(&text_b) with
+        | result.err(_) -> { return -2; }
+        | result.ok(addr_b) -> {
+            match udp_bind(&addr_a) with
+            | result.err(_) -> { return -3; }
+            | result.ok(a) -> {
+                let count: mutable int = -4;
+                match udp_bind(&addr_b) with
+                | result.err(_) -> { }
+                | result.ok(b) -> {
+                    match udp_connect(&a, &addr_b) with | _ -> { };
+                    match udp_set_option(&b, receive_timeout_ms(5000)) with | _ -> { };
+                    let message: vector u8 = [83, 117, 108, 116, 97, 110];
+                    match udp_send(&a, &message, 0, 6) with | _ -> { };
+                    let buffer: mutable vector u8 = [0, 0, 0, 0, 0, 0, 0, 0];
+                    match udp_recv(&b, &mutable buffer, 0, 8) with
+                    | result.err(_) -> { count := -5; }
+                    | result.ok(n) -> {
+                        count := n;
+                        if (buffer[0] != 83 || buffer[5] != 110) { count := -6; };
+                    };
+                    let closed_b: result int, int = udp_close(b);
+                };
+                let closed_a: result int, int = udp_close(a);
+                return count;
+            };
+        };
+    };
+}
+
+def main(): int {
+    let tcp: string;
+    match tcp_round_trip() with
+    | option.some(line) -> { tcp := line; }
+    | option.none -> { return 1; };
+    let udp: int = udp_round_trip();
+    if (udp < 0) { return 2; };
+    let line: vector string = [tcp, "|udp ", int_to_text(udp)];
+    let nothing: string = "";
+    print(join(&line, &nothing));
+    return 42;
+}

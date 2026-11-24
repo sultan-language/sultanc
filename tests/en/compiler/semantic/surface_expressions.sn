@@ -1,0 +1,11 @@
+def double(value: int): int {
+    return value * 2;
+}
+
+def main(): int {
+    let value: mutable int = 0;
+    while (value < 20) {
+        value := value + 1;
+    }
+    return value + double(11);
+}

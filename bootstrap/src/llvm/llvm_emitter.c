@@ -1,4 +1,4 @@
-/* Emits Stage0 LLVM IR, runtime bridges, objects, and execution. */
+/* Exposes the Stage0 LLVM object emitter status. */
 
 #include "llvm/llvm_internal.h"
 #include "llvm/llvm_context.h"

@@ -1,0 +1,8 @@
+// اختبار: رفض
+// تشخيص: SULTANC-C-UNSUPPORTED
+// نظير: tests/en/compiler/c_import_errors/bitint_wide.sn
+// يبلغ جسر عن _BitInt أعرض من 128 بتا في شفرة سي مترجمة (يحفظ _BitInt(65..128) في 128 بتا) بالرمز
+// SULTANC-C-UNSUPPORTED مع ملفه وسطره وعموده، ولا يتوقف المترجم عند إزاحته.
+استورد "bitint_wide.c";
+
+عرف الرئيسية(): عدد { أرجع 0; }

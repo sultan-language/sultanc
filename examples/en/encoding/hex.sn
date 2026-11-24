@@ -1,0 +1,11 @@
+// Encode bytes in hexadecimal.
+import std.io.println;
+import std.text.number;
+import std.encoding.hex;
+
+
+def main(): int {
+    let data: vector u8 = [0, 1, 15, 255];
+    println(hex_encode(&data));
+    return 0;
+}

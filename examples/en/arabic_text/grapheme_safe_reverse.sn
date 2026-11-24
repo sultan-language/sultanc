@@ -1,0 +1,39 @@
+// Reversing Arabic text by grapheme cluster, so each letter keeps its diacritics, using the
+// Unicode cluster boundaries.
+import std.io.println;
+import std.text.number;
+import std.unicode.grapheme;
+import std.text.substring;
+import std.text.transform;
+
+def reverse_clusters(text: &string): option string {
+    match حدود_عناقيد_بايتات_يونيكود(text) with
+    | result.err(_) -> { return option.none(); }
+    | result.ok(boundaries) -> {
+        let output: mutable string = "";
+        let i: mutable int = length(boundaries) - 1;
+        while (i > 0) {
+            let start: uint = boundaries[i - 1];
+            let n: uint = boundaries[i] - start;
+            match substring(text, start, n) with
+            | option.some(part) -> {
+                let combined: string = concat(&output, &part);
+                output := combined;
+            }
+            | option.none -> { return option.none(); };
+            i := i - 1;
+        };
+        return option.some(output);
+    };
+}
+
+def main(): int {
+    let input: string = "سَلَام";
+    match reverse_clusters(&input) with
+    | option.some(reversed) -> {
+        if (length(reversed) != length(input)) { return 1; };
+        println(reversed);
+    }
+    | option.none -> { return 2; };
+    return 0;
+}

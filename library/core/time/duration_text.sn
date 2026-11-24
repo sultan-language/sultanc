@@ -1,0 +1,25 @@
+استورد وقت.مدة;
+
+// Duration arithmetic that needs no heap: the absolute value and the quotient.
+// The text forms build text and are alloc's (alloc.time.duration_text), which
+// re-exports these at the same path.
+
+// |المدة|; nothing for -2^63 ns, which has no positive counterpart.
+عام عرف مطلق_المدة(المدة: &مدة): اختياري مدة {
+    ليكن القيمة: عدد = (*المدة).النانوثواني;
+    إذا (القيمة >= 0) { أرجع اختياري.موجود(مدة_من_نانوثواني(القيمة)); };
+    إذا (القيمة == -9223372036854775807 - 1) { أرجع اختياري.لا_شيء(); };
+    أرجع اختياري.موجود(مدة_من_نانوثواني(0 - القيمة));
+}
+
+// المدة / القاسم rounded toward zero; nothing for a zero divisor or an
+// overflowing quotient.
+عام عرف اقسم_المدة(المدة: &مدة, القاسم: عدد): اختياري مدة {
+    إذا (القاسم == 0) { أرجع اختياري.لا_شيء(); };
+    ليكن القيمة: عدد = (*المدة).النانوثواني;
+    إذا (القاسم == -1 && القيمة == -9223372036854775807 - 1) { أرجع اختياري.لا_شيء(); };
+    أرجع اختياري.موجود(مدة_من_نانوثواني(القيمة / القاسم));
+}
+
+عام مرادف duration_abs = مطلق_المدة;
+عام مرادف duration_divide = اقسم_المدة;

@@ -1,0 +1,22 @@
+// A disjoint set (union-find) with parent links: two elements are connected when they
+// share a root.
+import std.io.println;
+import std.text.number;
+
+def find_root(parents: &vector int, x: int): int {
+    let at: mutable int = x;
+    while ((*parents)[at] != at) {
+        at := (*parents)[at];
+    };
+    return at;
+}
+
+def main(): int {
+    let parents: mutable vector int = [0, 1, 2, 3, 4];
+    parents[1] := 0;
+    parents[3] := 2;
+    parents[4] := 3;
+    if (find_root(&parents, 3) != find_root(&parents, 4)) { return 1; };
+    println("connected");
+    return 0;
+}

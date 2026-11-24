@@ -1,0 +1,16 @@
+// An output parameter in C: strtol parses the digits "24" and stops at the "x", taking a
+// pointer to the end pointer it can set.
+import std.io.println;
+import std.text.number;
+
+extern def strtol(text: *u8, endptr: **u8, base: i32): i64 = «strtol»;
+
+def main(): int {
+    let digits: mutable vector u8 = [50 as u8, 52 as u8, 120 as u8, 0 as u8];
+    let end: *u8 = 0 as *u8;
+    let value: mutable i64 = 0 as i64;
+    unsafe { value := strtol(&digits[0], &end, 10 as i32); };
+    if (value != 24 as i64) { return 1; };
+    println(int_to_text(value as int));
+    return 0;
+}

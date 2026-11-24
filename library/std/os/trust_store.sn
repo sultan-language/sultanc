@@ -1,0 +1,93 @@
+// std.os.trust_store (المكتبة.نظام_التشغيل.مخزن_الثقة): where each platform
+// keeps the TLS trust anchors std.tls verifies peers against (std.tls.trust):
+// the usual distribution PEM bundle files and certificate directories, the
+// Windows CryptoAPI ROOT store, and the separator of an SSL_CERT_DIR list.
+// These are platform facts, so they are in std.os; std.tls has
+// no target guard.
+
+إذا (الهدف.المنصة == «linux») {
+    عام عرف مسارات_حزم_جذور_الثقة_نظام(): متجه نص {
+        ليكن المسارات: متجه نص = [
+            «/etc/ssl/certs/ca-certificates.crt»,
+            «/etc/pki/tls/certs/ca-bundle.crt»,
+            «/etc/ssl/ca-bundle.pem»,
+            «/etc/pki/tls/cacert.pem»,
+            «/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem»,
+            «/etc/ssl/cert.pem»
+        ];
+        أرجع المسارات;
+    }
+}
+
+إذا (الهدف.المنصة == «macos») {
+    عام عرف مسارات_حزم_جذور_الثقة_نظام(): متجه نص {
+        ليكن المسارات: متجه نص = [«/etc/ssl/cert.pem»];
+        أرجع المسارات;
+    }
+}
+
+إذا (الهدف.المنصة == «freebsd») {
+    عام عرف مسارات_حزم_جذور_الثقة_نظام(): متجه نص {
+        ليكن المسارات: متجه نص = [
+            «/etc/ssl/cert.pem»,
+            «/usr/local/share/certs/ca-root-nss.crt»
+        ];
+        أرجع المسارات;
+    }
+}
+
+// Directories of one-certificate files (Android: the system and the
+// updatable conscrypt APEX stores).
+إذا (الهدف.المنصة == «linux» || الهدف.المنصة == «freebsd») {
+    عام عرف أدلة_جذور_الثقة_نظام(): متجه نص {
+        ليكن الأدلة: متجه نص = [«/etc/ssl/certs», «/etc/pki/tls/certs»];
+        أرجع الأدلة;
+    }
+}
+إذا (الهدف.المنصة == «android») {
+    عام عرف مسارات_حزم_جذور_الثقة_نظام(): متجه نص {
+        ليكن المسارات: متجه نص = [];
+        أرجع المسارات;
+    }
+    عام عرف أدلة_جذور_الثقة_نظام(): متجه نص {
+        ليكن الأدلة: متجه نص = [«/apex/com.android.conscrypt/cacerts», «/system/etc/security/cacerts»];
+        أرجع الأدلة;
+    }
+}
+إذا (الهدف.المنصة != «linux» && الهدف.المنصة != «freebsd» && الهدف.المنصة != «android») {
+    عام عرف أدلة_جذور_الثقة_نظام(): متجه نص {
+        ليكن الأدلة: متجه نص = [];
+        أرجع الأدلة;
+    }
+}
+
+// No system PEM bundle (Windows keeps roots in its CryptoAPI store, read
+// below; WASI and browsers have none): only an explicitly configured bundle.
+إذا (الهدف.المنصة != «linux» && الهدف.المنصة != «macos» && الهدف.المنصة != «freebsd» && الهدف.المنصة != «android») {
+    عام عرف مسارات_حزم_جذور_الثقة_نظام(): متجه نص {
+        ليكن المسارات: متجه نص = [];
+        أرجع المسارات;
+    }
+}
+
+// Windows: the DER certificates of the CryptoAPI ROOT system store
+// (os/platform/windows/win32/certificates.sn); none elsewhere. They are
+// bytes here: parsing X.509 is std.tls's.
+إذا (الهدف.المنصة == «windows») {
+    استورد نظام_التشغيل.منصات.ويندوز.وين32.شهادات;
+    عام عرف شهادات_جذور_الثقة_نظام(): متجه متجه ط8 { أرجع شهادات_مخزن_الجذور_ويندوز(); }
+}
+إذا (الهدف.المنصة != «windows») {
+    عام عرف شهادات_جذور_الثقة_نظام(): متجه متجه ط8 {
+        ليكن الكتل: متجه متجه ط8 = [];
+        أرجع الكتل;
+    }
+}
+
+// The list separator of SSL_CERT_DIR.
+إذا (الهدف.المنصة == «windows») {
+    عام عرف فاصل_قائمة_أدلة_الثقة_نظام(): ط8 { أرجع 0x3B; }
+}
+إذا (الهدف.المنصة != «windows») {
+    عام عرف فاصل_قائمة_أدلة_الثقة_نظام(): ط8 { أرجع 0x3A; }
+}

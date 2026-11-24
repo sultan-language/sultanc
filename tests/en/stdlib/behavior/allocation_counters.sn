@@ -1,0 +1,31 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 0
+// نظير: tests/ar/stdlib/behavior/allocation_counters.sn
+// The allocator's counters (std.os.allocation): building and dropping
+// owned text allocates, frees and requests bytes, and reading the counters
+// allocates nothing. No pair directive: the interpreter does not use the std
+// allocator whose counters this reads.
+import std.os.allocation;
+import std.text.number;
+
+def work(i: int): uint {
+    let t: string = int_to_text(i * 1000003);
+    return length(t) as uint;
+}
+
+def main(): int {
+    let a0: u64 = allocation_count();
+    let a1: u64 = allocation_count();
+    if (a1 != a0) { return 1; };
+    let f0: u64 = free_count();
+    let b0: u64 = requested_bytes();
+    let i: mutable int = 0;
+    let total: mutable uint = 0;
+    while (i < 100) { total := total + work(i); i := i + 1; }
+    if (allocation_count() < a0 + 100) { return 2; };
+    if (free_count() < f0 + 100) { return 3; };
+    if (requested_bytes() <= b0) { return 4; };
+    if (total == 0) { return 5; };
+    return 0;
+}

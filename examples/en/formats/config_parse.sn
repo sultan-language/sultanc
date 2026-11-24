@@ -1,0 +1,12 @@
+// Validate TOML settings: config_parse.
+import std.io.println;
+import std.toml.parser;
+
+
+def main(): int {
+    let source: string = "title = \"SultanC\"\nnumber = 10\n";
+    match parse_toml(&source) with
+    | result.ok(_) -> { println("valid toml"); }
+    | result.err(_) -> { return 1; };
+    return 0;
+}

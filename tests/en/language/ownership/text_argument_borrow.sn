@@ -1,0 +1,25 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/language/ownership/text_argument_borrow.sn
+// A `string` argument for a `&string` parameter is borrowed for the call, as
+// if written `&t`: println and print
+// take `&string`, so a text printed twice is not moved. `&t`, a literal and a
+// call result work as well. Only text is borrowed implicitly.
+import std.io.print;
+import std.io.println;
+
+def count(t: &string): int { return length(*t) as int; }
+def word(): string { return "word"; }
+
+def main(): int {
+    let t: string = "x";
+    let a: result int, int = println(t);
+    let b: result int, int = println(t);
+    let c: result int, int = println(&t);
+    let d: result int, int = println("literal");
+    let e: result int, int = print(t);
+    let f: result int, int = print("\n");
+    return count(t) + count("abcd") + count(&t) + count(word()) + (length(t) as int) + 31;
+}

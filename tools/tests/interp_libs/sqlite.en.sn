@@ -1,0 +1,9 @@
+// With `-l sqlite3`, when the host has the shared library.
+extern def sqlite3_libversion_number(): i32;
+
+def main(): int {
+    unsafe {
+        if (sqlite3_libversion_number() >= 3000000) { return 42; };
+    }
+    return 1;
+}

@@ -1,0 +1,15 @@
+// اختبار: رفض
+// أهداف: arm64-darwin,x86_64-linux
+// تشخيص: SULTANC-TYPE-OPAQUE-TYPE-ARGUMENT
+// نظير: tests/ar/language/opaque/reject_generic_result.sn
+// An instance whose signature returns its opaque type argument by value:
+// the call would hand the caller a value of it.
+type Db = opaque;
+def read<A>(p: *A): A {
+    unsafe { return *p; };
+}
+def main(): int {
+    let p: *Db = 0 as *Db;
+    read(p);
+    return 0;
+}

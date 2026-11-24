@@ -1,0 +1,20 @@
+// A table entry computed at compile time: the sum of the squares 0² + 1² + ... + 5² (55).
+import std.io.println;
+import std.text.number;
+
+def lookup(n: int): int {
+    let i: mutable int = 0;
+    let total: mutable int = 0;
+    while (i <= n) {
+        total := total + i * i;
+        i := i + 1;
+    };
+    return total;
+}
+
+def main(): int {
+    let answer: int = comptime lookup(5);
+    if (answer != 55) { return 1; };
+    println(int_to_text(answer));
+    return 0;
+}

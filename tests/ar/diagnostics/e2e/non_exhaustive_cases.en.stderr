@@ -1,0 +1,7 @@
+error[SULTANC-PATTERN-NON-EXHAUSTIVE]: non-exhaustive pattern: `ضوء.أخضر`, `ضوء.أزرق(_)`, `ضوء.بنفسجي` and 1 more not covered — Every value of the matched type must match one of the arms.
+  --> tests/ar/diagnostics/e2e/non_exhaustive_cases.sn:12:10..12:15
+    |
+ 12 |     طابق الضوء مع
+    |          ^^^^^
+    |
+  = help: add an arm for each case that is not covered

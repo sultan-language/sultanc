@@ -1,0 +1,8 @@
+// اختبار: رفض
+// أهداف: arm64-darwin,x86_64-linux
+// تشخيص: SULTANC-TYPE-OPAQUE-BY-VALUE
+// نظير: tests/en/language/opaque/reject_field_by_value.sn
+// حقل سجل من نوع معتم.
+نوع قاعدة = معتم;
+نوع حامل = { القاعدة: قاعدة };
+عرف الرئيسية(): عدد { أرجع 0; }

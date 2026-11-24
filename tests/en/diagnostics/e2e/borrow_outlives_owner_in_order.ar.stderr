@@ -1,0 +1,67 @@
+خطأ[SULTANC-BORROW-REFERENCE-ESCAPE]: المرجع يهرب من نطاق صلاحيته — المرجع الخارج عن نطاق صلاحيته هو ⁨`reader`⁩. يبقى مرجع بعد انتهاء القيمة التي يشير إليها.
+  --> tests/en/diagnostics/e2e/borrow_outlives_owner_in_order.sn:20:5..20:6
+    |
+ 20 |     };
+    |     ^
+    |
+  ::: tests/en/diagnostics/e2e/borrow_outlives_owner_in_order.sn:18:9..18:34
+    |
+ 18 |         let text: string = "abc";
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^ المالك الأصلي
+    |
+  ::: tests/en/diagnostics/e2e/borrow_outlives_owner_in_order.sn:21:20..21:26
+    |
+ 21 |     return length(*reader) as int;
+    |                    ^^^^^^ الاستخدام غير الصالح
+    |
+
+خطأ[SULTANC-BORROW-REFERENCE-ESCAPE]: المرجع يهرب من نطاق صلاحيته — المرجع الخارج عن نطاق صلاحيته هو ⁨`reader`⁩. يبقى مرجع بعد انتهاء القيمة التي يشير إليها.
+  --> tests/en/diagnostics/e2e/borrow_outlives_owner_in_order.sn:32:5..32:6
+    |
+ 32 |     }
+    |     ^
+    |
+  ::: tests/en/diagnostics/e2e/borrow_outlives_owner_in_order.sn:29:9..29:34
+    |
+ 29 |         let text: string = "abc";
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^ المالك الأصلي
+    |
+  ::: tests/en/diagnostics/e2e/borrow_outlives_owner_in_order.sn:33:20..33:26
+    |
+ 33 |     return length(*reader) as int;
+    |                    ^^^^^^ الاستخدام غير الصالح
+    |
+
+خطأ[SULTANC-BORROW-REFERENCE-ESCAPE]: المرجع يهرب من نطاق صلاحيته — المرجع الخارج عن نطاق صلاحيته هو ⁨`reader`⁩. يبقى مرجع بعد انتهاء القيمة التي يشير إليها.
+  --> tests/en/diagnostics/e2e/borrow_outlives_owner_in_order.sn:46:5..46:6
+    |
+ 46 |     }
+    |     ^
+    |
+  ::: tests/en/diagnostics/e2e/borrow_outlives_owner_in_order.sn:43:9..43:34
+    |
+ 43 |         let text: string = "abc";
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^ المالك الأصلي
+    |
+  ::: tests/en/diagnostics/e2e/borrow_outlives_owner_in_order.sn:42:35..42:41
+    |
+ 42 |         total := total + (length(*reader) as int);
+    |                                   ^^^^^^ الاستخدام غير الصالح
+    |
+
+خطأ[SULTANC-BORROW-REFERENCE-ESCAPE]: المرجع يهرب من نطاق صلاحيته — المرجع الخارج عن نطاق صلاحيته هو ⁨`kept`⁩. يبقى مرجع بعد انتهاء القيمة التي يشير إليها.
+  --> tests/en/diagnostics/e2e/borrow_outlives_owner_in_order.sn:57:5..57:6
+    |
+ 57 |     };
+    |     ^
+    |
+  ::: tests/en/diagnostics/e2e/borrow_outlives_owner_in_order.sn:54:9..54:34
+    |
+ 54 |         let text: string = "abc";
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^ المالك الأصلي
+    |
+  ::: tests/en/diagnostics/e2e/borrow_outlives_owner_in_order.sn:58:20..58:24
+    |
+ 58 |     return length(*kept) as int;
+    |                    ^^^^ الاستخدام غير الصالح
+    |

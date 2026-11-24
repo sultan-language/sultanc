@@ -1,0 +1,29 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/language/ownership/reference_field_access.sn
+// `r.f` through a reference means `(*r).f`: a plain field
+// is copied out, a field is borrowed through the reference (and the borrow
+// may be returned, it borrows the referent), `&mutable` writes through, and
+// a reference to a reference is dereferenced twice.
+type Point = { x: int, y: int };
+type Person = { name: string, age: int, home: Point };
+
+def sum(p: &Point): int { return p.x + p.y; }
+def name_of(p: &Person): &string { return &p.name; }
+def move_right(p: &mutable Point, by: int): void { p.x := p.x + by; }
+def birthday(p: &mutable Person): void { p.age := p.age + 1; p.home.y := 0; }
+def twice(pp: & &Point): int { return pp.x * 2; }
+
+def main(): int {
+    let point: mutable Point = { x: 3, y: 4 };
+    move_right(&mutable point, 2);
+    let r: &Point = &point;
+    let rr: & &Point = &r;
+    let person: mutable Person = { name: "Sultan", age: 9, home: { x: 1, y: 5 } };
+    birthday(&mutable person);
+    let shared: &Person = &person;
+    let n: &string = name_of(shared);
+    return sum(r) + twice(rr) + shared.age + shared.home.x + shared.home.y + (length(*n) as int) + 6;
+}

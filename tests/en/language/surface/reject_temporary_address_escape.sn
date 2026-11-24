@@ -1,0 +1,12 @@
+// اختبار: رفض
+// خروج: 1
+// تشخيص: SULTANC-TYPE-ADDRESS-OF-NON-LVALUE
+// نظير: tests/ar/language/surface/reject_temporary_address_escape.sn
+// The call's result is a reference that could carry the temporary's borrow
+// out of the block: `&"..."` is rejected.
+def same(t: &string): &string { return t; }
+
+def main(): int {
+    let r: &string = same(&"x");
+    return 0;
+}

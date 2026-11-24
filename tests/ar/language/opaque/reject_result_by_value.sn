@@ -1,0 +1,8 @@
+// اختبار: رفض
+// أهداف: arm64-darwin,x86_64-linux
+// تشخيص: SULTANC-TYPE-OPAQUE-BY-VALUE
+// نظير: tests/en/language/opaque/reject_result_by_value.sn
+// ناتج دالة من نوع معتم.
+نوع قاعدة = معتم;
+عرف اقرأ(م: *قاعدة): قاعدة { غير_آمن { أرجع *م; }; }
+عرف الرئيسية(): عدد { أرجع 0; }

@@ -1,0 +1,8 @@
+// `import ... as` gives a module a short name used as a qualifier.
+import std.text.number as numbers;
+import std.io.println;
+
+def main(): int {
+    println(numbers.int_to_text(42));
+    return 0;
+}

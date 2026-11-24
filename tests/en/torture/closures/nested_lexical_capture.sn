@@ -1,0 +1,10 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// فئة: closures
+def main(): i32 {
+    let make: fn(i32): fn(i32): i32 = fn(a: i32): fn(i32): i32 -> fn(b: i32): i32 -> a + b;
+    let add40: fn(i32): i32 = make(40);
+    return add40(2);
+}

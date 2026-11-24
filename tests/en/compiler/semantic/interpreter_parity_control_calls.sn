@@ -1,0 +1,25 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+def step(value: i32): i32 {
+    return value * 2 + 1;
+}
+
+def nested(value: i32): i32 {
+    return step(value);
+}
+
+def main(): i32 {
+    let total: mutable i32 = 0;
+    let index: mutable i32 = 0;
+    while (index < 4) {
+        total := total + nested(index);
+        index := index + 1;
+    }
+    if (total == 16) {
+        return 42;
+    } else {
+        return 0;
+    };
+}

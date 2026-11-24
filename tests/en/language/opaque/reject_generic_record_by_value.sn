@@ -1,0 +1,12 @@
+// اختبار: رفض
+// أهداف: arm64-darwin,x86_64-linux
+// تشخيص: SULTANC-TYPE-OPAQUE-TYPE-ARGUMENT
+// نظير: tests/ar/language/opaque/reject_generic_record_by_value.sn
+// A generic record instance whose field holds the opaque type argument by
+// value (a pointer field would be fine).
+type Db = opaque;
+type Box2<A> = { value: A };
+def main(): int {
+    let p: *Box2<Db> = 0 as *Box2<Db>;
+    return 0;
+}

@@ -1,0 +1,94 @@
+# beta: the release candidate. It moves only by
+# promotion (promote.yml), which merges in the files of a commit of main that
+# passed the full tier, so a push to beta normally finds its qualification and
+# runs no matrix.
+#
+#   push to beta     Verdict links the qualification of that exact commit;
+#                    without one (beta moved by hand to an unqualified commit)
+#                    the full tier runs on it and qualifies it
+#   manual dispatch  the same check, on the head of beta; `requalify` runs the
+#                    full tier even when the commit is already qualified
+#
+# Never merges, promotes, tags or releases.
+name: SultanC Beta
+
+on:
+  push:
+    branches: [beta]
+  workflow_dispatch:
+    inputs:
+      requalify:
+        description: Run the full tier even if this commit is already qualified
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  pull-requests: read
+  statuses: write
+
+concurrency:
+  group: sultanc-beta-${{ github.sha }}
+  cancel-in-progress: false
+
+jobs:
+  evidence:
+    name: Evidence
+    if: github.ref == 'refs/heads/beta'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      url: ${{ steps.check.outputs.url }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github
+      - name: Qualification of this commit
+        id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+          REQUALIFY: ${{ inputs.requalify }}
+        run: |
+          url=
+          [ "$REQUALIFY" = true ] || url=$(sh .github/ci/evidence.sh "$SHA")
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          if [ -n "$url" ]; then
+            echo "beta \`$SHA\` is qualified by $url" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "beta \`$SHA\` is not qualified: the full tier runs on it" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+  qualify:
+    name: Qualify
+    needs: evidence
+    if: needs.evidence.outputs.url == ''
+    uses: ./.github/workflows/ci.yml
+    with:
+      scope: full
+      extended: true
+      qualify: true
+
+  verdict:
+    name: Verdict
+    needs: [evidence, qualify]
+    if: always() && needs.evidence.result == 'success'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github
+      - name: Qualified
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+        run: |
+          url=$(sh .github/ci/evidence.sh "$SHA")
+          if [ -z "$url" ]; then
+            echo "::error::beta $SHA did not pass the full tier"
+            exit 1
+          fi
+          echo "beta $SHA: qualified by $url"

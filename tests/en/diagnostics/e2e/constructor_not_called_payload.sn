@@ -1,0 +1,15 @@
+// اختبار: رفض
+// تشخيص: SULTANC-NAME-CONSTRUCTOR-NOT-CALLED
+// نظير: tests/ar/diagnostics/e2e/constructor_not_called_payload.sn
+// خرج-تشخيص-عربي: constructor_not_called_payload.ar.stderr
+// خرج-تشخيص-إنجليزي: constructor_not_called_payload.en.stderr
+// A constructor with a payload read as a value: it takes arguments. A help
+// only; no fix, since the arguments are the author's to write.
+type Shape = | Circle of i32 | Square;
+
+def main(): i32 {
+    let s: Shape = Shape.Circle;
+    match s with
+    | Shape.Circle(r) -> { return r; }
+    | Shape.Square -> { return 0; };
+}

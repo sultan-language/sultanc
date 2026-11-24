@@ -1,0 +1,15 @@
+import std.process.argument_count;
+import std.process.argument;
+
+def main(): i32 {
+    if (argument_count() == 1) {
+        match argument(0) with
+        | option.none -> { return 0; }
+        | option.some(arg) -> {
+            if (arg[0] > 0) {
+                return 42;
+            };
+        };
+    };
+    return 0;
+}

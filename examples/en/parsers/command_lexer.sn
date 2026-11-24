@@ -1,0 +1,12 @@
+// Splitting a command line into tokens at the spaces: a command name and its two arguments.
+import std.io.println;
+import std.text.number;
+import std.text.transform;
+
+def main(): int {
+    let source: string = "copy source.txt dest.txt";
+    let parts: vector string = split(&source, &" ");
+    if (length(parts) != 3) { return 1; };
+    println(clone(&parts[0]));
+    return 0;
+}

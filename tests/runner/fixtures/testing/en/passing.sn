@@ -1,0 +1,14 @@
+// `sultanc test` (tests/runner/suites/testing.sn): every test passes, in
+// this file and in helpers.sn; the program has no main. Expected: exit 0.
+import "helpers.sn";
+import std.debug.assert;
+
+@@test
+def adds(): void {
+    assert(double(3) + 1 == 7);
+}
+
+@@اختبار
+def marked_in_arabic(): void {
+    assert(double(0) == 0);
+}

@@ -1,0 +1,25 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/language/numeric/float_cast_constants.sn
+// Float conversions in module constants are evaluated at compile time with
+// the results they give at run time: truncation and saturation, rounding to
+// nearest, an f32 infinity and an f32 subnormal.
+import std.math.float;
+
+let k1: int = 2.5 as int;
+let k2: u8 = (-3.5) as u8;
+let k3: f64 = 9007199254740993 as f64;
+let k4: f32 = 0.1 as f32;
+let k5: f32 = 1.0e300 as f32;
+let k6: f32 = 1.0e-40 as f32;
+let k7: i16 = 1.0e10 as i16;
+
+def main(): int {
+    if (k1 != 2 || k2 != 0 || k7 != 32767) { return 1; };
+    if (f64_to_bits(k3) != 4845873199050653696) { return 2; };
+    if (f32_to_bits(k4) != 1036831949 || f32_to_bits(k5) != 2139095040) { return 3; };
+    if (f32_to_bits(k6) != 71362 || f64_to_bits(k6 as f64) != 4008604028031205376) { return 4; };
+    return 42;
+}

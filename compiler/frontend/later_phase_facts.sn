@@ -1,0 +1,29 @@
+استورد compiler.frontend.types.semantic_pipeline;
+استورد compiler.frontend.types.type_identity;
+استورد compiler.frontend.pattern.semantic_pipeline;
+استورد compiler.frontend.memory.semantic_pipeline;
+استورد compiler.frontend.names.identifiers;
+استورد compiler.diagnostics.record;
+استورد compiler.diagnostics.engine;
+
+// The facts of the phases after Name binding for the modules analysed so far.
+// الأخطاء_السابقة: the errors a compilation's later phases gathered from the
+// declarations they set aside; the program is then lowered only to state the
+// errors of its ownership after them (msir/ssf/ownership_legality.sn).
+عام نوع حقائق_لاحقة_مرحلية = {
+    سياقات_الأنواع: سياقات_أنواع_وحدة,
+    سياق_الأنماط: سياق_أنماط_وحدة,
+    الأخطاء_السابقة: مجموعة_تشخيصات,
+    // The Memory facts of every Type, for the ownership analysis on MSIR.
+    الذاكرة: سياق_ذاكرة_وحدة
+};
+
+عام عرف حقائق_لاحقة_مرحلية_فارغة(): حقائق_لاحقة_مرحلية {
+    ليكن الفارغة: حقائق_لاحقة_مرحلية = {
+        سياقات_الأنواع: سياقات_أنواع_وحدة_فارغة(),
+        سياق_الأنماط: سياق_أنماط_وحدة_فارغ(),
+        الأخطاء_السابقة: مجموعة_تشخيصات_جديدة(),
+        الذاكرة: سياق_ذاكرة_وحدة_فارغ()
+    };
+    أرجع الفارغة;
+}

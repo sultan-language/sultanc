@@ -1,0 +1,136 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// Moving the payload out of a box releases the box's own cell exactly once
+// and leaves the payload to its new owner (drop elaboration,
+// docs/en/internals/ownership-analysis.md, "Moves out of a box"). Each case
+// runs many times on payloads the heap holds, and the allocator's live bytes
+// must return to their starting value after it: a cell or payload never
+// released grows them, one released twice traps in the allocator, and a
+// payload destroyed too early gives a wrong length. The payload moves into
+// a vector and into a call, on some paths only, in a loop, before an early
+// return, and out of a box held in a box. A box whose payload is read but not
+// moved, and a borrowed view initialized from the payload, leave the box to
+// its owner, which frees it with its payload.
+// Counterpart: tests/ar/language/ownership/box_payload_moves.sn; no pair
+// directive: the interpreter does not use the std allocator whose counters
+// this reads.
+import std.os.allocation;
+import std.text.number;
+
+// Seven digits, on the heap.
+def payload(n: uint): string { return int_to_text((n + 1000000) as int); }
+
+def take(t: string): int { return length(t) as int; }
+
+def take_box(b: box string): int { return length(*b) as int; }
+
+def into_vector(n: uint): int {
+    let items: mutable vector string = [];
+    let boxed: box string = box payload(n);
+    append(items, *boxed);
+    let other: box string = box payload(n + 1);
+    append(items, *other);
+    return (length(items[0]) + length(items[1])) as int;
+}
+
+def into_call(n: uint): int {
+    let boxed: box string = box payload(n);
+    return take(*boxed);
+}
+
+def some_paths(n: uint): int {
+    let boxed: box string = box payload(n);
+    let total: mutable int = 1;
+    if ((n % 3) == 0) {
+        total := take(*boxed);
+    };
+    return total;
+}
+
+def in_loop(n: uint): int {
+    let total: mutable int = 0;
+    let i: mutable uint = 0;
+    while (i < 4) {
+        let boxed: box string = box payload(n + i);
+        if ((i % 2) == 0) {
+            total := total + take(*boxed);
+        } else {
+            total := total + (length(*boxed) as int);
+        };
+        i := i + 1;
+    }
+    return total;
+}
+
+def early_return(n: uint): int {
+    let boxed: box string = box payload(n);
+    if ((n % 4) == 1) {
+        return take(*boxed);
+    };
+    return 100;
+}
+
+def nested(n: uint): int {
+    let first: box string = box payload(n);
+    let outer: box (box string) = box first;
+    let second: box string = box payload(n + 1);
+    let outer_too: box (box string) = box second;
+    return take_box(*outer) + take(**outer_too);
+}
+
+def view(n: uint): int {
+    let boxed: box string = box payload(n);
+    let seen: string = *boxed;
+    return (length(seen) + length(*boxed)) as int;
+}
+
+def kept(n: uint): int {
+    let boxed: box string = box payload(n);
+    return length(*boxed) as int;
+}
+
+def check(case: uint, n: uint): int {
+    if (case == 0) { return into_vector(n); };
+    if (case == 1) { return into_call(n); };
+    if (case == 2) { return some_paths(n); };
+    if (case == 3) { return in_loop(n); };
+    if (case == 4) { return early_return(n); };
+    if (case == 5) { return nested(n); };
+    if (case == 6) { return view(n); };
+    return kept(n);
+}
+
+def expected(case: uint, n: uint): int {
+    if (case == 0) { return 14; };
+    if (case == 2) {
+        if ((n % 3) == 0) { return 7; };
+        return 1;
+    };
+    if (case == 3) { return 28; };
+    if (case == 4) {
+        if ((n % 4) == 1) { return 7; };
+        return 100;
+    };
+    if (case == 5) { return 14; };
+    if (case == 6) { return 14; };
+    return 7;
+}
+
+def main(): int {
+    let warm_up: int = check(7, 0) + check(0, 0);
+    let case: mutable uint = 0;
+    while (case < 8) {
+        let before: u64 = بايتات_حية_مخصص_النظام();
+        let n: mutable uint = 0;
+        while (n < 2000) {
+            if (check(case, n) != expected(case, n)) { return 10 + (case as int); };
+            n := n + 1;
+        }
+        let after: u64 = بايتات_حية_مخصص_النظام();
+        if (after != before) { return 20 + (case as int); };
+        case := case + 1;
+    }
+    if (warm_up != 21) { return 1; };
+    return 42;
+}

@@ -1,0 +1,5 @@
+// اختبار: قبول
+// خروج: 0
+استورد "modules/duplicate_helper.sn";
+استورد "modules/duplicate_helper.sn";
+عرف الرئيسية(): عدد { أرجع helper_مكرر(); }

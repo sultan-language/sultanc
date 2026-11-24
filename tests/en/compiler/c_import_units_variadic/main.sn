@@ -1,0 +1,19 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// نظير: tests/ar/compiler/c_import_units_variadic/main.sn
+// Variadic calls between the translation units of one import: calls.c calls
+// vsum, vmix and vlen, which sum.c defines. Each call shape becomes a
+// SultanC function that stores the variadic arguments (promoted: an
+// unsigned char as int, a double, a pointer) in 8-byte slots and calls
+// sum.c's slot entry for the function (compiler/jisr/units.sn), which
+// va_arg reads; no C compiler, no C variadic call.
+import "calls.c+sum.c";
+
+def main(): int {
+    let failure: i32 = run_calls();
+    if (failure != 0) { return failure as int; };
+    // SultanC calls a variadic C function with its fixed arguments only.
+    if (vsum(0) != 0) { return 10; };
+    return 42;
+}

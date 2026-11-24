@@ -1,0 +1,17 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+def add_value(value_1: int, value_2: int): int {
+    let hex_byte: u8 = 0x2A;
+    let truth: bool = true;
+    if (truth && (hex_byte == 42)) {
+        return value_1 + value_2;
+    };
+    return 0;
+}
+
+def main(): int {
+    let unicode_text: string = "سلطان";
+    if (length(unicode_text) == 0) { return 1; };
+    return add_value(40, 2);
+}

@@ -1,0 +1,13 @@
+// اختبار: رفض
+// خروج: 1
+// تشخيص: SULTANC-COMPTIME-FAILED
+import std.meta.reflect;
+
+def checked(comptime n: int): int {
+    if (n > 10) {
+        compile_error("n must be at most 10");
+    };
+    return n;
+}
+
+def main(): int { return checked(42); }

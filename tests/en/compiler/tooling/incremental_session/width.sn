@@ -1,0 +1,7 @@
+// Fixture of tests/en/compiler/tooling/incremental_session.sn (not a test).
+// A declaration that depends on the target.
+if (target.pointer_width == "64") {
+    public def width_value(): int { return 64; }
+} else {
+    public def width_value(): int { return 32; }
+}

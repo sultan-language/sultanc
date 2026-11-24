@@ -1,0 +1,11 @@
+// اختبار: رفض
+// أهداف: arm64-darwin,x86_64-linux
+// تشخيص: SULTANC-TYPE-MISMATCH
+// نظير: tests/ar/language/opaque/reject_pointer_plus.sn
+// `p + 1` on a pointer is not arithmetic for any pointer type.
+type Db = opaque;
+def main(): int {
+    let p: *Db = 0 as *Db;
+    let q: *Db = p + 1;
+    return 0;
+}

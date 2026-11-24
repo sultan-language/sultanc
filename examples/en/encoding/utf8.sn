@@ -1,0 +1,10 @@
+// Encode and decode a UTF-8 string.
+import std.io.println;
+import std.text.from_bytes;
+
+
+def main(): int {
+    let data: vector u8 = bytes_from_text("لغة SultanC");
+    println(from_bytes(&data));
+    return 0;
+}

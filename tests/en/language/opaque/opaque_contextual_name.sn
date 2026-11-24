@@ -1,0 +1,18 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/language/opaque/opaque_contextual_name.sn
+// `opaque` is contextual: only the whole right-hand side of a type
+// declaration declares an opaque type. Elsewhere it is an ordinary name: a
+// local, a parameter and a function.
+type Handle = opaque;
+
+def opaque_value(opaque: int): int { return opaque + 1; }
+
+def main(): int {
+    let opaque: int = 20;
+    let handle: *Handle = 0 as *Handle;
+    if (handle == 0 as *Handle) { return opaque_value(opaque) + 21; };
+    return 1;
+}

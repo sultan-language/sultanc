@@ -1,0 +1,117 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux,aarch64-linux-gnu,x86_64-darwin,x86_64-windows-msvc,aarch64-windows-msvc,x86_64-android,aarch64-android,armv7-android,x86_64-freebsd,aarch64-freebsd,riscv64-freebsd,i686-linux-gnu,armv7-linux-gnueabihf,riscv64-linux-gnu,loongarch64-linux-gnu,mips64el-linux-gnuabi64,powerpc64le-linux-gnu,s390x-linux-gnu,sparcv9-linux-gnu
+// خروج: 42
+// خرج-قياسي: 500500|5050|8
+// Counterpart: tests/ar/target/std_threads.sn
+// (no pair directive: the interpreter runs one OS thread and stops at a spawn).
+// std.thread and std.sync on every target with OS threads (not wasm32-wasi):
+// threads that return values, a channel fed by several producers, and a
+// mutex. Thread creation (clone and its per-architecture argument order,
+// thr_new, the thread pointer), futex waits and atomics are per OS and
+// architecture. `join` names both the thread join and the text join here,
+// so the test calls those by their std names.
+import std.io.print;
+import std.text.number;
+import std.text.transform;
+import std.thread.thread;
+import std.sync.channel;
+import std.sync.mutex;
+import std.sync.arc;
+
+def sum_range(first: u64, last: u64): u64 {
+    let total: mutable u64 = 0;
+    let i: mutable u64 = first;
+    while (i <= last) { total := total + i; i := i + 1; }
+    return total;
+}
+
+def produce(tx: &sender<i64>, first: i64): void {
+    let i: mutable i64 = first;
+    while (i < first + 25) {
+        match send(tx, i) with | result.ok(_) -> { } | result.err(_) -> { };
+        i := i + 1;
+    }
+}
+
+def start_producer(tx: sender<i64>, first: i64): option join_handle {
+    match spawn(fn(): void -> produce(&tx, first)) with
+    | result.ok(h) -> { return option.some(h); }
+    | result.err(_) -> { return option.none(); };
+}
+
+def add_one(value: &mutable u64): u64 { *value := *value + 1; return *value; }
+
+def bump(counter: &arc<mutex<u64>>): void {
+    let m: &mutex<u64> = arc_get(counter);
+    let ignored: u64 = with_lock(m, add_one);
+}
+
+def start_bumper(counter: &arc<mutex<u64>>): option join_handle {
+    let mine: arc<mutex<u64>> = arc_clone(counter);
+    match spawn(fn(): void -> bump(&mine)) with
+    | result.ok(h) -> { return option.some(h); }
+    | result.err(_) -> { return option.none(); };
+}
+
+def main(): i32 {
+    // Four threads each sum a quarter of 1..1000 and return it.
+    let handles: mutable vector value_join_handle<u64> = [];
+    let q: mutable u64 = 0;
+    while (q < 4) {
+        let first: u64 = (q * 250) + 1;
+        match spawn_value(fn(): u64 -> sum_range(first, first + 249)) with
+        | result.ok(h) -> { append(handles, h); }
+        | result.err(_) -> { return 1; };
+        q := q + 1;
+    }
+    let total: mutable u64 = 0;
+    let i: mutable uint = 0;
+    while (i < 4) {
+        match join_value(&mutable handles[i]) with
+        | option.some(part) -> { total := total + part; }
+        | option.none -> { return 2; };
+        i := i + 1;
+    }
+
+    // Four producers send 1..100 over one channel.
+    let rx: receiver<i64> = channel_receiver();
+    let producers: mutable vector join_handle = [];
+    let p: mutable i64 = 0;
+    while (p < 4) {
+        match start_producer(sender_for(&rx), (p * 25) + 1) with
+        | option.some(h) -> { append(producers, h); }
+        | option.none -> { return 3; };
+        p := p + 1;
+    }
+    let received: mutable i64 = 0;
+    let n: mutable i64 = 0;
+    while (n < 100) {
+        match recv(&rx) with
+        | result.ok(v) -> { received := received + v; }
+        | result.err(_) -> { return 4; };
+        n := n + 1;
+    }
+    i := 0;
+    while (i < 4) { انضم(&mutable producers[i]); i := i + 1; }
+
+    // Eight threads increment one mutex-protected counter.
+    let counter: arc<mutex<u64>> = arc_new(mutex_new(0 as u64));
+    let bumpers: mutable vector join_handle = [];
+    i := 0;
+    while (i < 8) {
+        match start_bumper(&counter) with
+        | option.some(h) -> { append(bumpers, h); }
+        | option.none -> { return 5; };
+        i := i + 1;
+    }
+    i := 0;
+    while (i < 8) { انضم(&mutable bumpers[i]); i := i + 1; }
+    let count: u64 = with_lock(arc_get(&counter), add_none);
+
+    let line: vector string = [uint_to_text(total as uint), int_to_text(received as int), uint_to_text(count as uint)];
+    let bar: string = "|";
+    print(صل_النصوص(&line, &bar));
+    return 42;
+}
+
+def add_none(value: &mutable u64): u64 { return *value; }

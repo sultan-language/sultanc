@@ -1,0 +1,14 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/language/surface/embed_file.sn
+// `embed_file("path")` is the file's bytes as a text literal read at compile
+// time; a relative path is resolved from the source file's directory.
+// embed_file_data.txt holds "embedded!" and a newline.
+def main(): int {
+    let content: string = embed_file("embed_file_data.txt");
+    if (length(content) != 10) { return 1; };
+    if (content[0] != (0x65 as u8)) { return 2; };
+    return 42;
+}

@@ -23,6 +23,8 @@ typedef enum
     __Resolved_Type_Character__,
     /* Represents the resolved type string value. */
     __Resolved_Type_String__,
+    /* Represents the resolved type pointer value. */
+    __Resolved_Type_Pointer__,
     /* Represents the resolved type reference value. */
     __Resolved_Type_Reference__,
     /* Represents the resolved type vector value. */
@@ -33,6 +35,8 @@ typedef enum
     __Resolved_Type_Option__,
     /* Represents the resolved type result value. */
     __Resolved_Type_Result__,
+    /* Represents the resolved type function value. */
+    __Resolved_Type_Function__,
     /* Represents the resolved type struct value. */
     __Resolved_Type_Struct__,
     /* Represents the resolved type enum value. */
@@ -56,6 +60,12 @@ typedef struct
     __Semantic_Type_Entry__ *__Named__;
     /* References the inner. */
     __Ast_Type__ *__Inner__;
+    /* References function parameter types. */
+    __Ast_Type__ **__Parameters__;
+    /* Stores function parameter count. */
+    size_t __Parameter_Count__;
+    /* References the function output type. */
+    __Ast_Type__ *__Output__;
     /* Tracks the mutable state. */
     int __Mutable__;
     /* Tracks the reference mutable state. */

@@ -1,0 +1,215 @@
+استورد compiler.backend.codegen.selected_code_core;
+استورد compiler.source.provenance;
+استورد compiler.debuginfo.model;
+استورد compiler.backend.object.dwarf.dwarf_constants;
+استورد compiler.msir.identifiers;
+
+// Target-independent placement facts consumed by DWARF. Object-format writers
+// decide how these section-relative addresses are embedded in Mach-O or ELF.
+عام نوع موضع_دالة_دوارف = {
+    الدالة: معرف_دالة_منتقاة,
+    إزاحة_بايت: طبيعي,
+    حجم_بايت: طبيعي,
+    اسم_الربط: متجه ط8
+};
+
+عام نوع مدى_نص_دوارف = {
+    إزاحة_بايت: طبيعي,
+    حجم_بايت: طبيعي
+};
+
+// Object-format owners compute these offsets while laying out the data section.
+// DWARF consumes the fact but never owns global placement.
+عام نوع موضع_عام_دوارف = {
+    العام: معرف_عام_مسير,
+    إزاحة_بايت: طبيعي,
+    اسم_الربط: متجه ط8
+};
+
+// A source value can live in a register or in a Target-described stack slot.
+// The DWARF writer consumes only this target-independent location fact.
+عام نوع موقع_قيمة_دوارف =
+    | غير_متاح
+    | سجل بنوع طبيعي
+    | مكدس بنوع (طبيعي, طبيعي)
+    // Memory whose address is stored at (register + offset).
+    | مكدس_غير_مباشر بنوع (طبيعي, طبيعي)
+    // Memory at an offset from DW_AT_frame_base (the CFA), and memory whose
+    // address is stored there.
+    | إطار بنوع عدد
+    | إطار_غير_مباشر بنوع عدد
+    // A WebAssembly local (index); true when it holds the value's address.
+    | محلي_ويب_أسمبلي بنوع (طبيعي, منطقي)
+;
+
+عام نوع وصف_معامل_دوارف = {
+    المتغير: معرف_متغير_تصحيح,
+    الاسم: متجه ط8,
+    الأصل: معرف_أصل_مصدر,
+    هوية_النوع: طبيعي,
+    اصطناعي: منطقي
+};
+
+عام نوع وصف_نطاق_دوارف = {
+    المعرف: طبيعي,
+    الأصل: معرف_أصل_مصدر,
+    الأب: اختياري طبيعي,
+    // An inlined call's scope (compiler/debuginfo/inlining.sn): the inlined
+    // function's debug identity and the call's debug location.
+    المضمنة: اختياري طبيعي,
+    موقع_الاستدعاء: اختياري طبيعي
+};
+
+عام نوع وصف_متغير_دوارف = {
+    المتغير: معرف_متغير_تصحيح,
+    // A parameter of an inlined call (the function's own parameters are
+    // وصف_دالة_دوارف.المعاملات).
+    معامل: منطقي,
+    الاسم: متجه ط8,
+    الأصل: معرف_أصل_مصدر,
+    نطاق_الإحاطة: طبيعي,
+    هوية_النوع: طبيعي,
+    اصطناعي: منطقي
+};
+
+عام نوع وصف_عضو_دوارف = {
+    الاسم: متجه ط8,
+    هوية_النوع: طبيعي,
+    إزاحة_بايت: طبيعي
+};
+
+عام نوع وصف_بديل_دوارف = {
+    الاسم: متجه ط8,
+    القيمة: طبيعي,
+    الأعضاء: متجه وصف_عضو_دوارف
+};
+
+عام نوع وصف_مميز_بدائل_دوارف = {
+    الاسم: متجه ط8,
+    هوية_النوع: طبيعي,
+    إزاحة_بايت: طبيعي
+};
+
+// Type classes are deliberately target-independent. Size/member offsets come
+// from canonical Target layout, while DWARF encoding policy remains in the writer.
+عام نوع صنف_نوع_دوارف =
+    | أساسي_موقع
+    | أساسي_طبيعي
+    | أساسي_منطقي
+    | أساسي_عشري
+    | أساسي_محرف
+    | مؤشر بنوع طبيعي
+    | مرجع بنوع طبيعي
+    | صندوق بنوع طبيعي
+    | اسم_مستعار بنوع طبيعي
+    | دالة بنوع (متجه طبيعي, اختياري طبيعي)
+    | مركب بنوع (متجه وصف_عضو_دوارف, اختياري وصف_مميز_بدائل_دوارف, متجه وصف_بديل_دوارف)
+    // A tag's values named by their constructors (underlying integer Type,
+    // constructors with their tag values; their payloads are unused here).
+    | تعداد_وسم بنوع (طبيعي, متجه وصف_بديل_دوارف)
+    | غير_محدد
+;
+
+عام نوع وصف_نوع_دوارف = {
+    الهوية: طبيعي,
+    الاسم: متجه ط8,
+    الحجم: طبيعي,
+    الصنف: صنف_نوع_دوارف,
+    الأصل: اختياري معرف_أصل_مصدر,
+    معاملات_النوع: متجه طبيعي,
+    أسماء_معاملات_النوع: متجه متجه ط8,
+    اصطناعي: منطقي
+};
+
+عام نوع وصف_دالة_دوارف = {
+    الدالة: معرف_دالة_منتقاة,
+    معرف_التصحيح: طبيعي,
+    الاسم: متجه ط8,
+    اسم_الربط: متجه ط8,
+    الأصل: معرف_أصل_مصدر,
+    المعاملات: متجه وصف_معامل_دوارف,
+    نوع_الناتج: اختياري طبيعي,
+    النطاقات: متجه وصف_نطاق_دوارف,
+    المحليات: متجه وصف_متغير_دوارف,
+    علني: منطقي,
+    إعلان_فقط: منطقي,
+    اصطناعي: منطقي
+};
+
+عام نوع قسم_عنوان_دوارف =
+    | معلومات
+    | سطور
+    | مواقع
+    | إطار
+    | نطاقات_عناوين
+    | عناوين
+    | قوائم_مواقع
+    | قوائم_نطاقات
+;
+
+عام نوع قاعدة_عنوان_دوارف =
+    | نص
+    | بيانات
+;
+
+// Internal DWARF section references are distinct from program-address fixups.
+// Relocatable object writers translate these into object-format relocations;
+// final executable writers keep them as section-relative values.
+عام نوع قسم_بيانات_دوارف =
+    | معلومات
+    | اختصارات
+    | سطور
+    | سلاسل_سطور
+    | سلاسل
+    | عناوين
+    | مواقع
+    | قوائم_مواقع
+    | إطار
+    | نطاقات_عناوين
+    | قوائم_نطاقات
+    | أسماء_عامة
+    | فهرس_أسماء
+;
+
+عام نوع رقعة_قسم_دوارف = {
+    القسم: قسم_بيانات_دوارف,
+    الموضع: طبيعي,
+    العرض: طبيعي,
+    الهدف: قسم_بيانات_دوارف,
+    الإزاحة: طبيعي
+};
+
+عام نوع مرجع_عنوان_دوارف = {
+    القاعدة: قاعدة_عنوان_دوارف,
+    إزاحة_بايت: طبيعي
+};
+
+// DWARF owns only the location of an address field plus a symbolic
+// section-relative reference. Mach-O/ELF own relocation and final resolution.
+عام نوع رقعة_عنوان_دوارف = {
+    القسم: قسم_عنوان_دوارف,
+    الموضع: طبيعي,
+    العرض: طبيعي,
+    المرجع: مرجع_عنوان_دوارف
+};
+
+عام نوع حزمة_دوارف = {
+    الإصدار: إصدار_دوارف,
+    صيغة_الإزاحة: صيغة_إزاحة_دوارف,
+    حجم_العنوان: طبيعي,
+    معلومات: متجه ط8,
+    اختصارات: متجه ط8,
+    سطور: متجه ط8,
+    سلاسل_سطور: متجه ط8,
+    سلاسل: متجه ط8,
+    عناوين: متجه ط8,
+    مواقع: متجه ط8,
+    قوائم_مواقع: متجه ط8,
+    إطار: متجه ط8,
+    نطاقات_عناوين: متجه ط8,
+    قوائم_نطاقات: متجه ط8,
+    أسماء_عامة: متجه ط8,
+    فهرس_أسماء: متجه ط8,
+    رقع_العناوين: متجه رقعة_عنوان_دوارف,
+    رقع_الأقسام: متجه رقعة_قسم_دوارف
+};

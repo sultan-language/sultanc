@@ -1,0 +1,7 @@
+خطأ[SULTANC-ENTRYPOINT-INVALID-SIGNATURE]: توقيع نقطة الدخول غير صالح — نوع الخطأ المكتوب هو ⁨`نص`⁩. يجب أن يكون نوع خطأ ⁨`الرئيسية`⁩ هو ⁨`فشل`⁩ (std.error).
+  --> tests/en/diagnostics/e2e/entry_error_type.sn:7:25..7:31
+   |
+ 7 | def main(): result int, string {
+   |                         ^^^^^^
+   |
+  = مساعدة: أرجع ⁨`فشل`⁩ القياسي من ⁨`الرئيسية`⁩ (استورد المكتبة.أخطاء.فشل)

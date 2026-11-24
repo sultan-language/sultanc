@@ -1,0 +1,34 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/language/surface/literal_address_temporaries.sn
+// `&` of a literal (integer, bool, char, text) is a temporary that lives to
+// the end of the enclosing statement, in every expression position: a call
+// argument whatever the call returns, a constructor argument inside a vector
+// literal, a record field. The value holding the borrow is used within the
+// statement.
+type Arg = | Text of &string | Num of &i32 | Flag of &bool;
+type Pair = { left: &int, right: &int };
+
+def weight(args: vector Arg): int {
+    let total: mutable int = 0;
+    let i: mutable uint = 0;
+    while (i < (length(args) as uint)) {
+        match args[i] with
+        | Arg.Text(t) -> { total := total + (length(*t) as int); }
+        | Arg.Num(n) -> { total := total + ((*n) as int); }
+        | Arg.Flag(b) -> { if (*b) { total := total + 1; }; };
+        i := i + 1;
+    }
+    return total;
+}
+def larger(a: &int, b: &int): &int { if (*a > *b) { return a; }; return b; }
+def sum(p: Pair): int { return *(p.left) + *(p.right); }
+def code(c: &char): int { return ((*c) as u32) as int; }
+
+def main(): int {
+    let w: int = weight([Arg.Text(&"total"), Arg.Num(&20), Arg.Flag(&true)]);
+    let m: int = *larger(&15, &20);
+    return w + m + sum({ left: &-3, right: &2 }) - code(&'A') + 62;
+}

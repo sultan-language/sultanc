@@ -1,0 +1,12 @@
+// The root file of std.net: the Arabic spellings of its modules
+// (docs/en/reference/modules-and-imports.md, "Module spellings"). An import may
+// use either name; both name one module.
+
+module dns { ar: أسماء_النطاقات };
+module ip { ar: آيبي };
+module options { ar: خيارات };
+module socket_address { ar: عنوان_مقبس };
+module socket_names { ar: أسماء_المقابس };
+module tcp { ar: تي_سي_بي };
+module udp { ar: يو_دي_بي };
+module unix { ar: يونكس };

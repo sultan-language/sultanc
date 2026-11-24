@@ -1,0 +1,39 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+import std.json.parse;
+import std.json.stringify;
+import std.json.value;
+import std.text.compare;
+
+def main(): int {
+    let source: string = "{\"answer\":42,\"ok\":true}";
+    match parse_json(&source) with
+    | result.err(_) -> { return 1; }
+    | result.ok(document) -> {
+        let root: json_value = json_root(&document);
+        match root with
+        | قيمة_جسون.كائن(index) -> {
+            let key: string = "answer";
+            match json_object_get(&document, index, &key) with
+            | option.none -> { return 2; }
+            | option.some(value) -> {
+                match value with
+                | قيمة_جسون.رقم(number_text) -> {
+                    let expected_number: string = "42";
+                    if (!texts_equal(&number_text, &expected_number)) { return 3; };
+                }
+                | _ -> { return 4; };
+            };
+        }
+        | _ -> { return 5; };
+
+        match stringify_json(&document) with
+        | result.err(_) -> { return 6; }
+        | result.ok(encoded) -> {
+            if (!texts_equal(&encoded, &source)) { return 7; };
+        };
+    };
+    return 42;
+}

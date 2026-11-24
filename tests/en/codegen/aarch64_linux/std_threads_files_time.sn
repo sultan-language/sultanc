@@ -1,0 +1,58 @@
+// اختبار: تشغيل
+// أهداف: x86_64-linux,aarch64-linux-gnu,aarch64-android,x86_64-android,x86_64-freebsd,aarch64-freebsd
+// خروج: 42
+// نظير: tests/ar/codegen/aarch64_linux/std_threads_files_time.sn
+// std on a native Linux target end to end: four threads started by the
+// kernel clone return their squares through join, a file is written and
+// read back, sleeping advances the monotonic clock, and the wall clock is
+// after 2020. On AArch64 every one of these is a raw kernel call.
+import std.thread.thread;
+import std.fs.read_file;
+import std.fs.write_file;
+import std.time.time;
+import std.text.compare;
+
+def square(n: u64): u64 { return n * n; }
+
+def main(): int {
+    let handles: mutable vector value_join_handle<u64> = [];
+    let i: mutable u64 = 0;
+    while (i < 4) {
+        let n: u64 = i + 3;
+        match spawn_value(fn(): u64 -> square(n)) with
+        | result.ok(h) -> { append(handles, h); }
+        | result.err(_) -> { return 1; };
+        i := i + 1;
+    }
+    let total: mutable u64 = 0;
+    let j: mutable uint = 0;
+    while (j < 4) {
+        match join_value(&mutable handles[j]) with
+        | option.some(value) -> { total := total + value; }
+        | option.none -> { return 2; };
+        j := j + 1;
+    }
+    if (total != 9 + 16 + 25 + 36) { return 3; };
+
+    let path: string = "build/native-systems-std.tmp";
+    let content: string = "native";
+    match write_file(&path, &content) with
+    | result.err(_) -> { return 4; }
+    | result.ok(_) -> { };
+    match read_file(&path) with
+    | result.err(_) -> { return 5; }
+    | result.ok(text) -> { if (!texts_equal(&text, &content)) { return 6; }; };
+
+    let before: mutable int = 0;
+    match monotonic_time_ns() with
+    | result.ok(t) -> { before := t; }
+    | result.err(_) -> { return 7; };
+    sleep_ns(2000000);
+    match monotonic_time_ns() with
+    | result.ok(t) -> { if (t - before < 2000000) { return 8; }; }
+    | result.err(_) -> { return 9; };
+    match system_time_ns() with
+    | result.ok(t) -> { if (t < 1577836800000000000) { return 10; }; }
+    | result.err(_) -> { return 11; };
+    return 42;
+}

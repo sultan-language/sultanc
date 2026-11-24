@@ -1,0 +1,130 @@
+استورد compiler.backend.architectures.wasm32.encoder;
+استورد compiler.backend.object.object_reference_model;
+استورد compiler.msir.identifiers;
+استورد compiler.backend.codegen.selected_code_core;
+
+// The encoded form of the native wasm32 path, shared by the selector that
+// produces it and the WebAssembly object writer that consumes it (the role
+// encoded_code plays for x86-64/ARM64). A function body is final WebAssembly
+// code whose relocatable fields are fixed 5-byte LEB128 slots recorded here;
+// the module type table is one registry of distinct signatures.
+
+عام نوع نوع_إزاحة_ويب_أسمبلي =
+    | فهرس_دالة
+    | فهرس_جدول_موقع
+    | عنوان_ذاكرة_موقع
+    | فهرس_نوع
+    | فهرس_عام
+    | رقم_جدول
+    // Position-independent code (a shared module, WebAssembly
+    // DynamicLinking.md) addresses data and functions as
+    // `global.get <base>; i32.const <offset>; i32.add`. The base slot holds
+    // __memory_base for module-local data, __table_base for a function's
+    // table slot, or the symbol's GOT entry (GOT.mem) for data another module
+    // may define; the offset slot holds the address relative to
+    // __memory_base, the table index relative to __table_base, or (after a
+    // GOT load) just the addend. The object writer picks the relocations.
+    | قاعدة_موضعية
+    | عنوان_ذاكرة_نسبي
+    | فهرس_جدول_نسبي
+;
+
+عام نوع هدف_إزاحة_ويب_أسمبلي =
+    | رمز بنوع مرجع_رمز_كائن
+    | مؤشر_المكدس
+    | جدول_الدوال
+    | قاعدة_الكومة
+    | توقيع بنوع طبيعي
+;
+
+عام نوع إزاحة_شفرة_ويب_أسمبلي = {
+    الموضع: طبيعي,
+    النوع: نوع_إزاحة_ويب_أسمبلي,
+    الهدف: هدف_إزاحة_ويب_أسمبلي,
+    الإضافة: عدد
+};
+
+عام نوع توقيع_ويب_أسمبلي = {
+    المعاملات: متجه نوع_قيمة_ويب_أسمبلي,
+    النواتج: متجه نوع_قيمة_ويب_أسمبلي
+};
+
+عام نوع سجل_تواقيع_ويب_أسمبلي = {
+    التواقيع: متجه توقيع_ويب_أسمبلي
+};
+
+عام عرف سجل_تواقيع_ويب_أسمبلي_فارغ(): سجل_تواقيع_ويب_أسمبلي {
+    ليكن التواقيع: متجه توقيع_ويب_أسمبلي = [];
+    ليكن السجل: سجل_تواقيع_ويب_أسمبلي = { التواقيع: التواقيع };
+    أرجع السجل;
+}
+
+عرف قائمتا_أنواع_ويب_أسمبلي_متساويتان(
+    أ: &متجه نوع_قيمة_ويب_أسمبلي, ب: &متجه نوع_قيمة_ويب_أسمبلي
+): منطقي {
+    إذا ((الطول(*أ) مثل طبيعي) != (الطول(*ب) مثل طبيعي)) { أرجع خطأ; };
+    ليكن ف: متغير طبيعي = 0;
+    طالما (ف < (الطول(*أ) مثل طبيعي)) {
+        إذا (!نوعا_قيمة_ويب_أسمبلي_متساويان((*أ)[ف], (*ب)[ف])) { أرجع خطأ; };
+        ف := ف + 1;
+    }
+    أرجع صواب;
+}
+
+// The module type table: each distinct signature once, by first use.
+عام عرف ضمن_توقيع_ويب_أسمبلي(
+    السجل: &متغير سجل_تواقيع_ويب_أسمبلي,
+    التوقيع: &توقيع_ويب_أسمبلي
+): طبيعي {
+    ليكن ف: متغير طبيعي = 0;
+    طالما (ف < (الطول((*السجل).التواقيع) مثل طبيعي)) {
+        إذا (قائمتا_أنواع_ويب_أسمبلي_متساويتان(&(*السجل).التواقيع[ف].المعاملات, &(*التوقيع).المعاملات)
+            && قائمتا_أنواع_ويب_أسمبلي_متساويتان(&(*السجل).التواقيع[ف].النواتج, &(*التوقيع).النواتج)) {
+            أرجع ف;
+        };
+        ف := ف + 1;
+    }
+    ليكن النسخة: توقيع_ويب_أسمبلي = انسخ_مملوكا_توقيع_ويب_أسمبلي(التوقيع);
+    ألحق((*السجل).التواقيع, النسخة);
+    أرجع (الطول((*السجل).التواقيع) مثل طبيعي) - 1;
+}
+
+عام نوع هوية_دالة_ويب_أسمبلي =
+    | مسير بنوع معرف_دالة_مسير
+    | بدء_العملية
+    | منشئ_الوحدة
+;
+
+// Where an MSIR value of the function lives: the wasm local (parameters
+// first) holding it, or holding its storage address when `عنوان` is set.
+// Debug information describes source variables bound to the value with it.
+عام نوع موقع_قيمة_مشفرة_ويب_أسمبلي = {
+    القيمة: طبيعي,
+    المحلي: طبيعي,
+    عنوان: منطقي
+};
+
+عام نوع دالة_ويب_أسمبلي_مشفرة = {
+    الهوية: هوية_دالة_ويب_أسمبلي,
+    التوقيع: طبيعي,
+    المحليات: متجه نوع_قيمة_ويب_أسمبلي,
+    الشفرة: متجه ط8,
+    الإزاحات: متجه إزاحة_شفرة_ويب_أسمبلي,
+    البيانات_الثابتة: متجه بيانات_ثابتة_كائن,
+    // The source origin of each MSIR instruction's code, as byte ranges of
+    // الشفرة (instructions only, before the locals the writer prepends):
+    // the machine ranges DWARF line tables are built from, as the x86-64
+    // and ARM64 encoders record them.
+    الأصول: متجه مدى_شفرة_آلة_بأصل,
+    مواقع_القيم: متجه موقع_قيمة_مشفرة_ويب_أسمبلي
+};
+// Deep copies of owned values (one per Type; read the source through a
+// reference and allocate independent storage).
+
+عام عرف انسخ_مملوكا_توقيع_ويب_أسمبلي(القيمة: &توقيع_ويب_أسمبلي): توقيع_ويب_أسمبلي {
+    ليكن الناتج: توقيع_ويب_أسمبلي = {
+        المعاملات: انسخ_مملوكا_متجه_نوع_قيمة_ويب_أسمبلي(&(*القيمة).المعاملات),
+        النواتج: انسخ_مملوكا_متجه_نوع_قيمة_ويب_أسمبلي(&(*القيمة).النواتج)
+    };
+    أرجع الناتج;
+}

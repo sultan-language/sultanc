@@ -1,0 +1,11 @@
+// Call the actual C library function abs; link with -l c.
+import std.io.println;
+import std.text.number;
+
+extern def abs(value: i32): i32;
+def main(): int {
+    let got: mutable i32 = 0;
+    unsafe { got := abs(-123 as i32); }
+    println(int_to_text(got as int));
+    return 0;
+}

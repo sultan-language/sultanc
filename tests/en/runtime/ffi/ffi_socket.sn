@@ -1,0 +1,12 @@
+extern def socket(domain: i32, kind: i32, protocol: i32): i32;
+extern def close(fd: i32): i32;
+
+def main(): i32 {
+    unsafe {
+        let fd: i32 = socket(2, 1, 0);
+        if (fd < 0) { return 1; };
+        let status: i32 = close(fd);
+        if (status == 0) { return 42; };
+    }
+    return 2;
+}

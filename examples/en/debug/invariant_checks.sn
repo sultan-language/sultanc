@@ -1,0 +1,13 @@
+// Self-checking example: invariant_checks.
+import std.io.println;
+import std.text.number;
+import std.debug.assert;
+
+
+def main(): int {
+    let numbers: vector int = [1, 3, 5, 7];
+    let index: mutable int = 0;
+    while (index < length(numbers)) { assert(numbers[index] > 0); index := index + 1; };
+    println("all positive");
+    return 0;
+}

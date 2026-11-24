@@ -1,0 +1,4 @@
+// Fixture of tests/en/compiler/tooling/isolation.sn (not a test).
+// The same function declared twice: its declarations cannot be collected.
+public def broken_value(): int { return 1; }
+public def broken_value(): int { return 2; }

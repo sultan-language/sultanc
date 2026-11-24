@@ -1,0 +1,14 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// فئة: generics
+type Holder<T> = { value: T };
+
+def identity<T>(value: T): T { return value; }
+def unwrap<T>(holder: Holder<T>): T { return holder.value; }
+
+def main(): int {
+    let holder: Holder<int> = { value: identity(42) };
+    return unwrap(holder);
+}

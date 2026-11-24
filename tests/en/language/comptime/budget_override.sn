@@ -1,0 +1,19 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// نظير: tests/ar/language/comptime/budget_override.sn
+// comptime_budget raises the instruction budget of the evaluation it runs
+// in: this loop needs more than the default ten million instructions.
+from std.meta import comptime_budget;
+def long_sum(): int {
+    comptime_budget(60000000);
+    let total: mutable int = 0;
+    let i: mutable int = 0;
+    while (i < 2500000) { total := total + 1; i := i + 1; }
+    return total;
+}
+def main(): int {
+    let total: int = comptime { long_sum() };
+    if (total != 2500000) { return 1; };
+    return 42;
+}

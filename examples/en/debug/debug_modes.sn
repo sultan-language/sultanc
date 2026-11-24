@@ -1,0 +1,12 @@
+// Self-checking example: debug_modes.
+import std.io.println;
+import std.text.number;
+import std.debug.assert;
+
+
+def main(): int {
+    let verbose: bool = true;
+    let number: int = 42;
+    if (verbose) { assert(number > 0); println("diagnostics enabled"); };
+    return 0;
+}

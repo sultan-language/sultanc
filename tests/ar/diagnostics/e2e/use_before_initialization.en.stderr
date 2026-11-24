@@ -1,0 +1,11 @@
+error[SULTANC-FLOW-USE-BEFORE-INITIALIZATION]: use before initialization — The value used before initialization is `س`. The value is used before it is initialized.
+  --> tests/ar/diagnostics/e2e/use_before_initialization.sn:9:10..9:11
+   |
+ 9 |     أرجع س;
+   |          ^ invalid use
+   |
+  ::: tests/ar/diagnostics/e2e/use_before_initialization.sn:8:5..8:17
+   |
+ 8 |     ليكن س: عدد;
+   |     ^^^^^^^^^^^^ declared here
+   |

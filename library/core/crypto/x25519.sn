@@ -1,0 +1,17 @@
+// The X25519 (RFC 7748) check of a shared secret: no heap, so core. The
+// exchange builds vectors and is alloc's (alloc.crypto.x25519), which
+// re-exports this at the same path.
+
+// True when a shared secret is the all-zero value produced by small-order
+// points (RFC 7748 6.1); checked without a data-dependent branch.
+عام عرف سر_إكس25519_صفري(السر: &متجه ط8): منطقي {
+    ليكن التجميع: متغير طبيعي = 0;
+    ليكن ف: متغير طبيعي = 0;
+    طالما (ف < (الطول(*السر) مثل طبيعي)) {
+        التجميع := التجميع | ((*السر)[ف] مثل طبيعي);
+        ف := ف + 1;
+    }
+    أرجع التجميع == 0;
+}
+
+عام مرادف x25519_shared_secret_is_zero = سر_إكس25519_صفري;

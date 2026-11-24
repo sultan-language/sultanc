@@ -1,0 +1,16 @@
+// GF(2^255 - 19): the conditional swap of two elements in place, with the same
+// operations whatever the bit, so timing does not depend on secret values. No
+// heap, so core. The arithmetic builds elements and is alloc's
+// (alloc.crypto.field25519), which re-exports this at the same path.
+
+// Swaps أ and ب when البت is 1, with the same operations when it is 0.
+عام عرف بدل_شرطيا_حقل25519(أ: &متغير متجه ص64, ب: &متغير متجه ص64, البت: ص64): فراغ {
+    ليكن القناع: ص64 = 0 - البت;
+    ليكن ف: متغير طبيعي = 0;
+    طالما (ف < 16) {
+        ليكن ت: ص64 = القناع & ((*أ)[ف] ^ (*ب)[ف]);
+        (*أ)[ف] := (*أ)[ف] ^ ت;
+        (*ب)[ف] := (*ب)[ف] ^ ت;
+        ف := ف + 1;
+    }
+}

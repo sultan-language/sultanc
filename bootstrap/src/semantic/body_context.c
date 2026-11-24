@@ -10,6 +10,8 @@
 
 /* Stores the body builtin int type. */
 __Ast_Type__ __Body_Builtin_Int_Type__ = {.__Kind__ = __Ast_Type_Integer__};
+/* The canonical طبيعي (uint) Type. */
+__Ast_Type__ __Body_Builtin_Uint_Type__ = {.__Kind__ = __Ast_Type_Unsigned_Integer__};
 /* Stores the body builtin bool type. */
 __Ast_Type__ __Body_Builtin_Bool_Type__ = {.__Kind__ = __Ast_Type_Boolean__};
 /* Stores the body builtin char type. */
@@ -21,6 +23,16 @@ __Ast_Type__ __Body_Builtin_Void_Type__ = {.__Kind__ = __Ast_Type_Void__};
 /* Stores the body builtin u 8 type. */
 __Ast_Type__ __Body_Builtin_U8_Type__ = {.__Kind__ = __Ast_Type_Machine__,
                                          .__As__.__Machine__ = __Machine_U8__};
+
+/* Exact built-in scalar types for float bit reinterpretation. */
+__Ast_Type__ __Body_Builtin_U32_Type__ = {.__Kind__ = __Ast_Type_Machine__,
+                                          .__As__.__Machine__ = __Machine_U32__};
+__Ast_Type__ __Body_Builtin_U64_Type__ = {.__Kind__ = __Ast_Type_Machine__,
+                                          .__As__.__Machine__ = __Machine_U64__};
+__Ast_Type__ __Body_Builtin_F32_Type__ = {.__Kind__ = __Ast_Type_Machine__,
+                                          .__As__.__Machine__ = __Machine_F32__};
+__Ast_Type__ __Body_Builtin_F64_Type__ = {.__Kind__ = __Ast_Type_Machine__,
+                                          .__As__.__Machine__ = __Machine_F64__};
 
 /* Begins the body diagnostic. */
 __Diagnostic__ *__Body_Begin_Diagnostic__(__Semantic_Body_Context__ *__Context__,
@@ -150,6 +162,46 @@ __Ast_Type__ *__Body_Synthetic_Named_Type__(__Semantic_Body_Context__ *__Context
     memset(__Type__, 0, sizeof(*__Type__));
     __Type__->__Kind__ = __Ast_Type_Named__;
     __Type__->__As__.__Named__.__Name__ = __Name__;
+    return __Type__;
+}
+
+/* Returns a body-local function type for a concrete function signature. */
+__Ast_Type__ *__Body_Synthetic_Function_Type__(__Semantic_Body_Context__ *__Context__,
+                                               const __Ast_Function__ *__Function__)
+{
+    __Ast_Type__ *__Type__;
+    __Ast_Type__ **__Parameters__ = NULL;
+    size_t __Index__;
+    if (__Context__ == NULL || __Function__ == NULL)
+    {
+        return NULL;
+    }
+    __Type__ = (__Ast_Type__ *)__Arena_Allocate__(
+        &__Context__->__Synthetic_Types__, sizeof(*__Type__), alignof(__Ast_Type__));
+    if (__Type__ == NULL)
+    {
+        return NULL;
+    }
+    memset(__Type__, 0, sizeof(*__Type__));
+    if (__Function__->__Parameter_Count__ != 0U)
+    {
+        __Parameters__ = (__Ast_Type__ **)__Arena_Allocate__(
+            &__Context__->__Synthetic_Types__,
+            __Function__->__Parameter_Count__ * sizeof(*__Parameters__),
+            alignof(__Ast_Type__ *));
+        if (__Parameters__ == NULL)
+        {
+            return NULL;
+        }
+        for (__Index__ = 0U; __Index__ < __Function__->__Parameter_Count__; ++__Index__)
+        {
+            __Parameters__[__Index__] = __Function__->__Parameters__[__Index__].__Slot__.__Type__;
+        }
+    }
+    __Type__->__Kind__ = __Ast_Type_Function__;
+    __Type__->__As__.__Function__.__Parameters__ = __Parameters__;
+    __Type__->__As__.__Function__.__Parameter_Count__ = __Function__->__Parameter_Count__;
+    __Type__->__As__.__Function__.__Output__ = __Function__->__Output__.__Type__;
     return __Type__;
 }
 
@@ -291,6 +343,23 @@ int __Body_Check_Atom_Compatible__(__Semantic_Body_Context__ *__Context__,
     {
         return 1;
     }
+    if (__Semantic_Integer_Literal_Atom_Is_Unsigned_Wide__(__Atom__))
+    {
+        if (__Type_Unsigned_Wide_Literal_Fits__(__Context__->__Semantic__, __Expected__))
+            return 1;
+        return __Body_Fail__(__Context__, __E0400_Mismatched_Types__, __Span__);
+    }
+    if (__Atom__ != NULL && __Atom__->__Kind__ == __Ast_Atom_Literal__ &&
+        __Atom__->__As__.__Literal__ != NULL &&
+        __Atom__->__As__.__Literal__->__Kind__ == __Ast_Literal_Float__)
+    {
+        /* A float literal takes the expected float Type. */
+        __Resolved_Type__ __Resolved__;
+        if (__Type_Resolve__(__Context__->__Semantic__, __Expected__, &__Resolved__) &&
+            __Resolved__.__Kind__ == __Resolved_Type_Float__)
+            return 1;
+        return __Body_Fail__(__Context__, __E0400_Mismatched_Types__, __Span__);
+    }
     if (!__Body_Infer_Atom__(__Context__, __Atom__, &__Actual__))
     {
         return 0;
@@ -325,6 +394,25 @@ int __Body_Check_Expression_Compatible__(__Semantic_Body_Context__ *__Context__,
     {
         return 1;
     }
+    if (__Semantic_Integer_Literal_Expression_Is_Unsigned_Wide__(__Expression__))
+    {
+        if (__Type_Unsigned_Wide_Literal_Fits__(__Context__->__Semantic__, __Expected__))
+            return 1;
+        return __Body_Fail__(__Context__, __E0400_Mismatched_Types__, __Span__);
+    }
+    if (__Semantic_Float_Literal_Expression__(__Expression__))
+    {
+        /* A float literal takes the expected float Type. */
+        __Resolved_Type__ __Resolved__;
+        if (__Type_Resolve__(__Context__->__Semantic__, __Expected__, &__Resolved__) &&
+            __Resolved__.__Kind__ == __Resolved_Type_Float__)
+        {
+            __Expression__->__Contextual_Type__ = __Expected__;
+            return 1;
+        }
+        return __Body_Fail__(__Context__, __E0400_Mismatched_Types__, __Span__);
+    }
+    __Expression__->__Contextual_Type__ = __Expected__;
     if (!__Body_Infer_Expression__(__Context__, __Expression__, &__Actual__))
     {
         return 0;

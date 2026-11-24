@@ -1,0 +1,7 @@
+// اختبار: رفض
+// أهداف: arm64-darwin,x86_64-linux
+// تشخيص: SULTANC-TYPE-INVALID-DEFINITION
+// نظير: tests/en/language/opaque/reject_generic_opaque.sn
+// النوع المعتم لا يأخذ معاملات نوع.
+نوع مقبض<أ> = معتم;
+عرف الرئيسية(): عدد { أرجع 0; }

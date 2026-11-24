@@ -20,13 +20,41 @@ int __Parser_Push_Module_Item__(__Parser__ *__Parser_State__,
 /* Parses the parser import. */
 int __Parser_Parse_Import__(__Parser__ *__Parser_State__, __Vector__ *__Imports__);
 
+
+/* Parses an optional declaration type-parameter list. */
+int __Parser_Parse_Type_Parameters__(__Parser__ *__Parser_State__,
+                                     __Text_Slice__ **__Out_Parameters__,
+                                     size_t *__Out_Count__);
+
 /* Parses the parser type item. */
 int __Parser_Parse_Type_Item__(__Parser__ *__Parser_State__, __Vector__ *__Items__, int __Public__);
 
 /* Parses the parser function item. */
 int __Parser_Parse_Function_Item__(__Parser__ *__Parser_State__,
                                    __Vector__ *__Items__,
-                                   int __Public__);
+                                   int __Public__,
+                                   int __External__);
+
+/* Parses one external data item (current token "ليكن", "خارجي" already consumed). */
+/* Parses one module constant or module variable: `["عام"] "ليكن" name ":" type
+ * "=" (expression | "[" expressions "]") ";"`. The current token is "ليكن". */
+int __Parser_Parse_Value_Global_Item__(__Parser__ *__Parser_State__,
+                                       __Vector__ *__Items__,
+                                       int __Public__,
+                                       __Source_Position__ __Start__);
+
+int __Parser_Parse_Global_Item__(__Parser__ *__Parser_State__,
+                                 __Vector__ *__Items__,
+                                 int __Public__,
+                                 __Source_Position__ __Start__);
+
+/* Parses a native linker text literal at the current token (an external
+ * symbol name, link name or library): nonempty, no embedded NUL. On success
+ * the parser has advanced past it and *__Out_Text__ is an AST-owned copy. */
+int __Parser_Parse_Native_Link_Text__(__Parser__ *__Parser_State__, __Text_Slice__ *__Out_Text__);
+
+/* Parses one top-level target predicate against the parser's selected target. */
+int __Parser_Parse_Target_Condition__(__Parser__ *__Parser_State__, int *__Out_Value__);
 
 /* Parses the parser alias item. */
 int __Parser_Parse_Alias_Item__(__Parser__ *__Parser_State__,

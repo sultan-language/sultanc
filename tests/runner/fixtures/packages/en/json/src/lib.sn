@@ -1,0 +1,1 @@
+public def json_value(): int { return 40; }

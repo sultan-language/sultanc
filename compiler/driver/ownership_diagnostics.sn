@@ -1,0 +1,44 @@
+استورد compiler.diagnostics.record;
+استورد compiler.diagnostics.engine;
+استورد compiler.frontend.semantic_pipeline;
+استورد compiler.frontend.names.name_context;
+استورد compiler.frontend.types.type_context;
+استورد compiler.source.source_map;
+استورد compiler.msir.ssf.ownership_legality;
+استورد compiler.msir.ssf.template_legality;
+استورد compiler.frontend.ownership_errors;
+استورد compiler.msir.semantic_lowering;
+
+// The diagnostics of a compilation's ownership (msir/ssf/ownership_legality.sn,
+// msir/ssf/template_legality.sn): one error per rejected function, the
+// analysis's or its generic template's, in the order of the modules and their
+// declarations, then the calls that break a plain bound
+// (semantic_lowering.sn, رتب_أخطاء_ملكية_مسير).
+
+// Whether the analysis rejects the program.
+عام عرف ملكية_مرفوضة_مترجم(
+    الأخطاء: &متجه خطأ_ملكية_دالة_مسير,
+    القوالب: &ناتج_شرعية_قوالب_مسير
+): منطقي {
+    أرجع (الطول(*الأخطاء) مثل طبيعي) > 0
+        || (الطول((*القوالب).الأخطاء) مثل طبيعي) > 0 || (الطول((*القوالب).القيود) مثل طبيعي) > 0;
+}
+
+// Every diagnostic of a program the analysis rejects, in their order.
+عام عرف تشخيصات_ملكية_مترجم(
+    الأخطاء: &متجه خطأ_ملكية_دالة_مسير,
+    القوالب: &ناتج_شرعية_قوالب_مسير,
+    رتب_الدوال: &متجه طبيعي,
+    الأسماء: &اختياري سياق_استعلامات_أسماء,
+    المصادر: &خريطة_مصادر,
+    الأنواع: &سجل_أنواع
+): مجموعة_تشخيصات {
+    ليكن المرتبة: متجه خطأ_تدفق_سلامة = رتب_أخطاء_ملكية_مسير(الأخطاء, القوالب, رتب_الدوال);
+    أرجع تشخيصات_أخطاء_ملكية_مسير(&المرتبة, الأسماء, المصادر, الأنواع);
+}
+
+// The ownership diagnostics of a completed Frontend's result (one whose
+// program the analysis-only lowering analyzes, semantic_lowering.sn).
+عام عرف تشخيصات_ملكية_واجهة_مكتملة(الواجهة: &متغير نتيجة_واجهة_وحدة): مجموعة_تشخيصات {
+    أرجع تشخيصات_ملكية_واجهة_مسير(الواجهة);
+}

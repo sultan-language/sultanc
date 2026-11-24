@@ -1,0 +1,128 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux,aarch64-linux-gnu,x86_64-darwin,x86_64-windows-msvc,aarch64-windows-msvc,x86_64-android,aarch64-android,armv7-android,x86_64-freebsd,aarch64-freebsd,riscv64-freebsd,i686-linux-gnu,armv7-linux-gnueabihf,riscv64-linux-gnu,loongarch64-linux-gnu,mips64el-linux-gnuabi64,powerpc64le-linux-gnu,s390x-linux-gnu,sparcv9-linux-gnu,wasm32-wasi
+// خروج: 42
+// خرج-قياسي: b.txt,c.bin|llo|5|7
+// تفاضلي: نعم
+// نظير: tests/ar/target/std_filesystem.sn
+// std.fs on every target with a file system: directories, whole-file and
+// handle I/O, seeking, metadata, renaming, listing and removal. The kernel
+// records involved (stat, dirent, open flags, lseek) differ per OS and
+// architecture. `join` and `write_bytes` each name two std functions here,
+// so the test calls those by their std names.
+import std.io.print;
+import std.text.number;
+import std.text.transform;
+import std.text.from_bytes;
+import std.text.compare;
+import std.fs.write_file;
+import std.fs.write_bytes;
+import std.fs.read_file;
+import std.fs.mutation;
+import std.fs.metadata;
+import std.fs.directory;
+import std.fs.handle;
+import std.fs.path;
+import std.collections.sort;
+
+def remove_quietly(directory: &string, name: string): void {
+    let path: string = صل_المسار(directory, &name);
+    match remove_file(&path) with | _ -> { };
+}
+
+def main(): int {
+    let directory: string = "target-fs-test-en.tmp";
+    remove_quietly(&directory, "a.txt");
+    remove_quietly(&directory, "b.txt");
+    remove_quietly(&directory, "c.bin");
+    match remove_directory(&directory) with | _ -> { };
+
+    match create_directory(&directory) with
+    | result.err(_) -> { return 1; }
+    | result.ok(_) -> { };
+    let a_name: string = "a.txt";
+    let a: string = صل_المسار(&directory, &a_name);
+    let b_name: string = "b.txt";
+    let b: string = صل_المسار(&directory, &b_name);
+    let c_name: string = "c.bin";
+    let c: string = صل_المسار(&directory, &c_name);
+    let content: string = "hello";
+    match write_file(&a, &content) with
+    | result.err(_) -> { return 2; }
+    | result.ok(_) -> { };
+    let bytes: vector u8 = [0, 1, 2, 255, 254, 253, 10];
+    match اكتب_البايتات(&c, &bytes) with
+    | result.err(_) -> { return 3; }
+    | result.ok(_) -> { };
+    match read_file(&a) with
+    | result.err(_) -> { return 4; }
+    | result.ok(text) -> { if (!texts_equal(&text, &content)) { return 5; }; };
+    match read_bytes(&c) with
+    | result.err(_) -> { return 6; }
+    | result.ok(back) -> {
+        if (length(back) != 7 || back[3] != 255 || back[6] != 10) { return 7; };
+    };
+    match try_path_type(&directory) with
+    | result.ok(نوع_مسار.دليل) -> { }
+    | _ -> { return 8; };
+
+    match rename(&a, &b) with
+    | result.err(_) -> { return 9; }
+    | result.ok(_) -> { };
+    match exists(&a) with
+    | result.ok(false) -> { }
+    | _ -> { return 10; };
+
+    let line: mutable vector string = [];
+    match list_directory(&directory) with
+    | result.err(_) -> { return 11; }
+    | result.ok(entries) -> {
+        let names: mutable vector string = [];
+        let i: mutable uint = 0;
+        while (i < (length(entries) as uint)) {
+            append(names, clone(&entries[i].الاسم));
+            i := i + 1;
+        }
+        sort_texts(&mutable names);
+        let comma: string = ",";
+        append(line, صل_النصوص(&names, &comma));
+    };
+
+    match open_file_handle_read(&b) with
+    | result.err(_) -> { return 12; }
+    | result.ok(handle) -> {
+        match file_handle_seek(&handle, 2, أصل_موضع_ملف.البداية()) with
+        | result.ok(2) -> { }
+        | _ -> { return 13; };
+        let buffer: mutable vector u8 = [0, 0, 0, 0, 0, 0, 0, 0];
+        match file_handle_read(&handle, &mutable buffer, 0, 8) with
+        | result.ok(3) -> { }
+        | _ -> { return 14; };
+        let three: vector u8 = [buffer[0], buffer[1], buffer[2]];
+        append(line, from_bytes(&three));
+        match file_handle_close(handle) with
+        | result.err(_) -> { return 15; }
+        | result.ok(_) -> { };
+    };
+    match path_size(&b) with
+    | result.ok(size) -> { append(line, int_to_text(size)); }
+    | result.err(_) -> { return 16; };
+    match path_size(&c) with
+    | result.ok(size) -> { append(line, int_to_text(size)); }
+    | result.err(_) -> { return 17; };
+
+    match remove_file(&b) with
+    | result.err(_) -> { return 18; }
+    | result.ok(_) -> { };
+    match remove_file(&c) with
+    | result.err(_) -> { return 19; }
+    | result.ok(_) -> { };
+    match remove_directory(&directory) with
+    | result.err(_) -> { return 20; }
+    | result.ok(_) -> { };
+    match exists(&directory) with
+    | result.ok(false) -> { }
+    | _ -> { return 21; };
+    let bar: string = "|";
+    print(صل_النصوص(&line, &bar));
+    return 42;
+}

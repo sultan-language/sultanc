@@ -1,0 +1,11 @@
+def pack(a: int, b: int): int {
+    return a * 10 + b;
+}
+
+def swapcall(a: int, b: int): int {
+    return pack(b, a);
+}
+
+def main(): int {
+    return swapcall(2, 4);
+}

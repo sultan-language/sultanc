@@ -1,0 +1,17 @@
+// host_threads.sn for the C Stage0 (bootstrap/), which has neither the
+// thread primitives nor closure literals (cmake/modules/Stage1.cmake binds
+// this file in that module's place). The Stage1 it builds starts no host
+// thread: a program's thread start answers -ENOSYS, as on a kernel
+// without clone, and a C entry is unavailable.
+
+عام عرف خيوط_المضيف_متاحة(): منطقي { أرجع خطأ; }
+
+عام عرف إغلاق_مضيف_بوسيط(الدالة: دالة(ط64): فراغ, الوسيط: ط64): ط64 { أرجع 0; }
+
+عام عرف استنسخ_خيط_مضيف(
+    الرقم: ط64, الأعلام: ط64, المكدس: ط64, الأب: ط64, الابن: ط64, المحلي: ط64, العنوان: ط64
+): ط64 {
+    أرجع ~(37 مثل ط64);
+}
+
+عام عرف مدخل_سي_مضيف(العنوان: ط64): ط64 { أرجع 0; }

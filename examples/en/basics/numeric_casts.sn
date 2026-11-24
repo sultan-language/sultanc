@@ -1,0 +1,10 @@
+// Basic numeric casts example.
+import std.io.println;
+import std.text.number;
+
+
+def main(): int {
+    let x: u8 = 53 as u8;
+    println(int_to_text(x as int));
+    return 0;
+}

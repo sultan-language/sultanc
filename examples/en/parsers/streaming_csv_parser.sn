@@ -1,0 +1,21 @@
+// Reading CSV one line at a time: skip the header and check that each data row has two
+// fields.
+import std.io.println;
+import std.text.number;
+import std.text.transform;
+
+def main(): int {
+    let source: string = "name,score\nAli,8\nLina,9\n";
+    let lines: vector string = split(&source, &"\n");
+    let i: mutable int = 1;
+    let sum: mutable int = 0;
+    while (i < 3) {
+        let fields: vector string = split(&lines[i], &",");
+        if (length(fields) != 2) { return 1; };
+        sum := sum + 1;
+        i := i + 1;
+    };
+    if (sum != 2) { return 1; };
+    println(int_to_text(sum));
+    return 0;
+}

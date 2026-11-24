@@ -1,0 +1,168 @@
+استورد compiler.backend.target.target_model;
+استورد compiler.link.model;
+استورد compiler.link.elf.target_policy;
+استورد compiler.link.coff.target_policy;
+
+// Linker families follow object formats, never code-generation providers.
+// Every supported output is produced by SultanC's own linker for that format,
+// and no C runtime is part of any link. The one exception is
+// يستخدم_رابطا_خارجيا_للربط: static executables of the ELF system targets
+// the target policy still configures for ld.lld. Any other output kind a
+// format's linker does not produce is unsupported here, so the Driver
+// reports it before code generation (link.target-output-unsupported); it is
+// never handed to an external linker instead.
+// Previously ELF targets other than Linux x86_64/AArch64, ELF shared
+// libraries and every WebAssembly and SPIR-V link that needed merging were
+// reported as supported and handed to ld.lld, nld, avr-ld, msp430-ld,
+// wasm-ld or spirv-link.
+عام نوع هوية_مزود_ربط =
+    | إلف
+    | ماتشو
+    | كوف
+    | ويب_أسمبلي
+    | سبير_في
+    | غير_متاح
+;
+
+عام عرف مزود_ربط_للهدف(الهدف: &واصف_هدف): هوية_مزود_ربط {
+    طابق (*الهدف).صيغة_الكائن مع
+    | صيغة_كائن_هدف.إلف -> { أرجع هوية_مزود_ربط.إلف(); }
+    | صيغة_كائن_هدف.ماتشو -> { أرجع هوية_مزود_ربط.ماتشو(); }
+    | صيغة_كائن_هدف.كوف -> { أرجع هوية_مزود_ربط.كوف(); }
+    | صيغة_كائن_هدف.ويب_أسمبلي -> { أرجع هوية_مزود_ربط.ويب_أسمبلي(); }
+    | صيغة_كائن_هدف.سبير_في -> { أرجع هوية_مزود_ربط.سبير_في(); }
+    | صيغة_كائن_هدف.بلا_كائن -> { أرجع هوية_مزود_ربط.غير_متاح(); };
+}
+
+عام عرف يدعم_مزود_الربط_تنفيذيا(الهدف: &واصف_هدف): منطقي {
+    طابق مزود_ربط_للهدف(الهدف) مع
+    | هوية_مزود_ربط.ماتشو -> {
+        طابق (*الهدف).المعمارية.الهوية مع
+        | هوية_معمارية.ذراع_أربعة_وستون -> { }
+        | هوية_معمارية.إكس_ستة_وثمانون_أربعة_وستون -> { }
+        | _ -> { أرجع خطأ; };
+        طابق (*الهدف).المنصة.المنصة مع
+        | هوية_منصة.ماك_أو_إس -> { أرجع صواب; }
+        | _ -> { أرجع خطأ; };
+    }
+    | هوية_مزود_ربط.إلف -> {
+        أرجع يستخدم_رابط_إلف_الداخلي(الهدف) || رابط_إلف_بسكربت_للهدف(الهدف);
+    }
+    | هوية_مزود_ربط.كوف -> {
+        أرجع يدعم_كوف_للهدف(الهدف);
+    }
+    // The SultanC WebAssembly linker (wasm/linker.sn): wasm32 commands and
+    // browser modules.
+    | هوية_مزود_ربط.ويب_أسمبلي -> {
+        أرجع (*الهدف).نموذج_البيانات.عرض_المؤشر == 32;
+    }
+    | _ -> { أرجع خطأ; };
+}
+
+عرف يدعم_إلف_وحدة_هدف(الهدف: &واصف_هدف): منطقي {
+    إذا (!هدف_إلف_ليس_تنفيذيا_نظاميا(الهدف)) { أرجع خطأ; };
+    طابق سياسة_إلف_للهدف(الهدف) مع
+    | اختياري.موجود(_) -> { أرجع صواب; }
+    | اختياري.لا_شيء -> { أرجع خطأ; };
+}
+
+عرف يدعم_كوف_للهدف(الهدف: &واصف_هدف): منطقي {
+    طابق سياسة_كوف_للهدف(الهدف) مع
+    | اختياري.موجود(_) -> { أرجع صواب; }
+    | اختياري.لا_شيء -> { أرجع خطأ; };
+}
+
+// WebAssembly shared modules (`dylink.0`, tool conventions DynamicLinking.md;
+// wasm/linker.sn): position-independent wasm32 code whose memory, table,
+// stack pointer and bases are imported from the dynamic loader. The
+// convention is Emscripten's dynamic-linking ABI, which WASI uses as well:
+// wasi-sdk (21 and later) ships shared libraries in this format, and WASI
+// loaders of it exist (wasm-tools component linking, toywasm libdyld). The
+// browser target has no system interface or loader contract in SultanC
+// (no runtime provider), so shared modules stay unsupported there, as does
+// wasm64 (no 64-bit PIC relocations are linked).
+عرف يدعم_ويب_أسمبلي_مكتبة_مشتركة(الهدف: &واصف_هدف): منطقي {
+    أرجع (*الهدف).نموذج_البيانات.عرض_المؤشر == 32
+        && (*الهدف).مزود_التشغيل == مزود_تشغيل_هدف.واسي();
+}
+
+// Whether this link is delegated to ld.lld (driver/external_linker.sn): an
+// executable that SultanC's ELF linker does not lay out for the target and
+// that the target policy explicitly names for the external linker
+// (elf/target_policy.sn يستخدم_رابط_إلف_خارجي). Never a fallback: a target
+// the internal linker supports is always linked by it, and its link errors
+// (an unsupported relocation, for one) are reported.
+عام عرف يستخدم_رابطا_خارجيا_للربط(
+    الهدف: &واصف_هدف,
+    الخرج: نوع_خرج_ربط
+): منطقي {
+    أرجع الخرج == نوع_خرج_ربط.تنفيذي()
+        && !يدعم_مزود_الربط(الهدف, الخرج)
+        && يستخدم_رابط_إلف_خارجي(الهدف);
+}
+
+// Report only concrete serializers that exist in source. Adding a Target to
+// the registry never advertises a linker output kind by itself.
+عام عرف يدعم_مزود_الربط(
+    الهدف: &واصف_هدف,
+    الخرج: نوع_خرج_ربط
+): منطقي {
+    طابق الخرج مع
+    | نوع_خرج_ربط.تنفيذي -> {
+        أرجع يدعم_مزود_الربط_تنفيذيا(الهدف);
+    }
+    | نوع_خرج_ربط.مكتبة_مشتركة -> {
+        طابق مزود_ربط_للهدف(الهدف) مع
+        | هوية_مزود_ربط.ماتشو -> {
+            طابق (*الهدف).المعمارية.الهوية مع
+            | هوية_معمارية.ذراع_أربعة_وستون -> { }
+            | هوية_معمارية.إكس_ستة_وثمانون_أربعة_وستون -> { }
+            | _ -> { أرجع خطأ; };
+            طابق (*الهدف).المنصة.المنصة مع
+            | هوية_منصة.ماك_أو_إس -> { أرجع صواب; }
+            | _ -> { أرجع خطأ; };
+        }
+        | هوية_مزود_ربط.كوف -> {
+            أرجع يدعم_كوف_للهدف(الهدف);
+        }
+        | هوية_مزود_ربط.ويب_أسمبلي -> {
+            أرجع يدعم_ويب_أسمبلي_مكتبة_مشتركة(الهدف);
+        }
+        | _ -> { أرجع خطأ; };
+    }
+    | نوع_خرج_ربط.كائن_مترابط -> {
+        طابق مزود_ربط_للهدف(الهدف) مع
+        | هوية_مزود_ربط.إلف -> {
+            أرجع يستخدم_رابط_إلف_الداخلي(الهدف);
+        }
+        | هوية_مزود_ربط.ماتشو -> {
+            إذا ((*الهدف).نموذج_البيانات.عرض_المؤشر != 64) { أرجع خطأ; };
+            إذا ((*الهدف).نموذج_البيانات.ترتيب_البايت
+                != ترتيب_بايت.صغير()) {
+                أرجع خطأ;
+            };
+            طابق (*الهدف).المعمارية.الهوية مع
+            | هوية_معمارية.ذراع_أربعة_وستون -> { أرجع صواب; }
+            | هوية_معمارية.إكس_ستة_وثمانون_أربعة_وستون -> {
+                أرجع صواب;
+            }
+            | _ -> { أرجع خطأ; };
+        }
+        | هوية_مزود_ربط.كوف -> {
+            أرجع يدعم_كوف_للهدف(الهدف);
+        }
+        | هوية_مزود_ربط.ويب_أسمبلي -> {
+            أرجع (*الهدف).نموذج_البيانات.عرض_المؤشر == 32;
+        }
+        | _ -> { أرجع خطأ; };
+    }
+    | نوع_خرج_ربط.وحدة_هدف -> {
+        طابق مزود_ربط_للهدف(الهدف) مع
+        | هوية_مزود_ربط.إلف -> {
+            أرجع يدعم_إلف_وحدة_هدف(الهدف);
+        }
+        | هوية_مزود_ربط.ويب_أسمبلي -> { أرجع صواب; }
+        | هوية_مزود_ربط.سبير_في -> { أرجع صواب; }
+        | _ -> { أرجع خطأ; };
+    };
+}

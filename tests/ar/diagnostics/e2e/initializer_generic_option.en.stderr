@@ -1,0 +1,7 @@
+error[SULTANC-TYPE-MISMATCH]: expected `int`, found `option int` — The value does not match the declared type of its destination.
+  --> tests/ar/diagnostics/e2e/initializer_generic_option.sn:11:24..11:48
+    |
+ 11 |     ليكن المزال: عدد = أزل_عند(&متغير القيم, 1);
+    |                        ^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+  = help: the value may be absent: match on it to use the value it holds, or pass the absence on with `?`

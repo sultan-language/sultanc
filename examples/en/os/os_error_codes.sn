@@ -1,0 +1,13 @@
+// OS API example: os_error_codes.
+import std.io.println;
+import std.text.number;
+import std.env.environment;
+
+
+def main(): int {
+    let missing: string = "SULTANC_EXAMPLE_ENV_MISSING_394";
+    match get_environment_variable(&missing) with
+    | result.ok(value) -> { match value with | option.some(_) -> { println("defined"); } | option.none -> { println("undefined"); }; }
+    | result.err(code) -> { println(int_to_text(code)); };
+    return 0;
+}

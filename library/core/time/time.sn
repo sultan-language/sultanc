@@ -1,0 +1,10 @@
+// The root file of library/core/time: the Arabic spellings of its modules
+// (docs/en/reference/modules-and-imports.md, "Module spellings"). The
+// standard library is three libraries (docs/en/reference/std-layers.md); this
+// file names only this library's own children.
+
+module calendar { ar: تقويم };
+module date { ar: تاريخ };
+module duration { ar: مدة };
+module duration_float { ar: مدة_عشرية };
+module duration_text { ar: نص_المدة };

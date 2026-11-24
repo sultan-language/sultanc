@@ -1,0 +1,34 @@
+خطأ[SULTANC-BORROW-CONFLICT]: تعارض استعارة — القيمة ذات الاستعارة المتعارضة هي ⁨`value`⁩. القيمة مستعارة استعارة متغيرة بالفعل، لذا لا يمكن استعارتها مرة أخرى.
+  --> tests/en/diagnostics/e2e/borrow_regions_in_order.sn:16:5..16:32
+    |
+ 16 |     let value: mutable int = 1;
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+خطأ[SULTANC-BORROW-CONFLICT]: تعارض استعارة — القيمة ذات الاستعارة المتعارضة هي ⁨`items`⁩. القيمة مستعارة للقراءة، لذا لا يمكن استعارتها استعارة متغيرة.
+  --> tests/en/diagnostics/e2e/borrow_regions_in_order.sn:29:5..29:44
+    |
+ 29 |     let items: mutable vector int = [1, 2];
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+خطأ[SULTANC-BORROW-CONFLICT]: تعارض استعارة — القيمة ذات الاستعارة المتعارضة هي ⁨`value`⁩. القيمة مستعارة استعارة متغيرة بالفعل، لذا لا يمكن استعارتها مرة أخرى.
+  --> tests/en/diagnostics/e2e/borrow_regions_in_order.sn:37:5..37:32
+    |
+ 37 |     let value: mutable int = 1;
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+خطأ[SULTANC-BORROW-CONFLICT]: تعارض استعارة — القيمة ذات الاستعارة المتعارضة هي ⁨`value`⁩. القيمة مستعارة استعارة متغيرة بالفعل، لذا لا يمكن استعارتها مرة أخرى.
+  --> tests/en/diagnostics/e2e/borrow_regions_in_order.sn:45:5..45:32
+    |
+ 45 |     let value: mutable int = 1;
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+خطأ[SULTANC-BORROW-REFERENCE-ESCAPE]: المرجع يهرب من نطاق صلاحيته — المرجع الخارج عن نطاق صلاحيته هو ⁨`copy`⁩. يبقى مرجع بعد انتهاء القيمة التي يشير إليها.
+  --> tests/en/diagnostics/e2e/borrow_regions_in_order.sn:56:5..56:29
+    |
+ 56 |     let copy: &int = reader;
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^
+    |

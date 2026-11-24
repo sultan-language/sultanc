@@ -1,0 +1,9 @@
+// اختبار: تشغيل
+// خروج: 0
+// نظير: tests/runner/fixtures/pair_targets/all_hosts_ar.sn
+// Runner fixture (tests/runner/execute.sn, اختبر_أهداف_زوج_السطح): a pair
+// with no target restriction. It exits 3 where the header expects 0, so
+// the pair step, which interprets it on every host, reports a mismatch.
+def main(): int {
+    return 3;
+}

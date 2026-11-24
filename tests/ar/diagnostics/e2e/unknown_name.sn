@@ -1,0 +1,8 @@
+// اختبار: رفض
+// تشخيص: SULTANC-NAME-UNKNOWN
+// نظير: tests/en/diagnostics/e2e/unknown_name.sn
+// خرج-تشخيص-عربي: unknown_name.ar.stderr
+// خرج-تشخيص-إنجليزي: unknown_name.en.stderr
+عرف الرئيسية(): ص32 {
+    أرجع مفقود;
+}

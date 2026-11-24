@@ -1,0 +1,11 @@
+// اختبار: رفض
+// أهداف: arm64-darwin,x86_64-linux
+// تشخيص: SULTANC-TYPE-OPAQUE-BY-VALUE
+// نظير: tests/ar/language/opaque/reject_reference.sn
+// A reference to an opaque type: only a raw pointer may point at one.
+type Db = opaque;
+def main(): int {
+    let p: *Db = 0 as *Db;
+    unsafe { let r: &Db = p as &Db; };
+    return 0;
+}

@@ -1,21 +1,35 @@
 استورد compiler.backend.codegen.selected_code_core;
 استورد compiler.backend.target.target_model;
 استورد compiler.backend.object.object_reference_model;
+استورد compiler.backend.object.dwarf.dwarf_model;
 
 // حقائق ELF مستقلة عن Mach-O وعن تمثيل ISA. الكاتب يحول encoded x86 إلى هذه الحقائق ثم يسلسلها.
 عام نوع موضع_رمز_إلف =
-    | معرف_في_النص بنوع (غير_موقع, غير_موقع)
+    | معرف_في_النص بنوع (طبيعي, طبيعي)
+    | معرف_في_البيانات بنوع (طبيعي, طبيعي)
     | غير_معرف
 ;
 
 عام نوع رمز_إلف = {
     المرجع: مرجع_رمز_كائن,
-    الاسم: متجه غ8,
+    الاسم: متجه ط8,
     الموضع: موضع_رمز_إلف
 };
 
+عام نوع نوع_إزاحة_إلف =
+    | نداء_نسبي_اثنان_وثلاثون
+    | عنوان_نسبي_اثنان_وثلاثون
+    | تحميل_جوت_ريكس_نسبي_اثنان_وثلاثون
+    | عنوان_مطلق_أربعة_وستون
+    // AArch64 instruction relocations carry their ELF type (R_AARCH64_*);
+    // the writer checks the instruction word they patch.
+    | تعليمة_ذراع_أربعة_وستون بنوع طبيعي
+;
+
 عام نوع إزاحة_إلف = {
-    إزاحة_بايت: غير_موقع,
+    في_البيانات: منطقي,
+    إزاحة_بايت: طبيعي,
+    النوع: نوع_إزاحة_إلف,
     الرمز: مرجع_رمز_كائن,
     الإضافة: عدد
 };
@@ -23,14 +37,27 @@
 // موضع دخول العملية داخل .text. المعمارية/طبقة النظام تنتج البايتات؛
 // Object يحمل الموضع فقط عبر ET_REL ثم يحوله إلى e_entry عند الإنهاء.
 عام نوع موضع_دخول_عملية_إلف = {
-    إزاحة_بايت: غير_موقع,
-    حجم_بايت: غير_موقع
+    إزاحة_بايت: طبيعي,
+    حجم_بايت: طبيعي
 };
 
 عام نوع كائن_إلف = {
     الهدف: معرف_هدف,
-    النص: متجه غ8,
+    // e_machine: 62 (EM_X86_64) or 183 (EM_AARCH64). It selects the
+    // relocation numbering of the absolute and DWARF records.
+    الآلة: طبيعي,
+    النص: متجه ط8,
+    البيانات: متجه ط8,
+    محاذاة_البيانات: طبيعي,
     الرموز: متجه رمز_إلف,
     الإزاحات: متجه إزاحة_إلف,
-    دخول_العملية: اختيار موضع_دخول_عملية_إلف
+    دخول_العملية: اختياري موضع_دخول_عملية_إلف,
+    منشئ_الوحدة: اختياري معرف_دالة_منتقاة,
+    // Contents of an allocated .note.tag section (the FreeBSD ABI note of
+    // the object holding `_start`); empty when the object has none.
+    ملاحظة_الوسم: متجه ط8,
+    // EI_OSABI: 9 (ELFOSABI_FREEBSD) for FreeBSD, else 0. lld keeps the
+    // value of the input objects (link/elf/target_policy.sn).
+    هوية_النظام: طبيعي,
+    دوارف: حزمة_دوارف
 };

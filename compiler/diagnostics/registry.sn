@@ -1,0 +1,1058 @@
+استورد المكتبة.نصوص.مقارنة;
+استورد compiler.diagnostics.identity;
+استورد compiler.diagnostics.schema;
+
+// Single compiler-owned registry for public code, machine kind, severity and class.
+// Public codes are descriptive and stable; numeric E-codes are intentionally retired.
+عام نوع تعريف_تشخيص = {
+    المعرف: معرف_تشخيص,
+    الكود: نص,
+    النوع_الآلي: نص,
+    الشدة: شدة_تشخيص,
+    الفئة: فئة_تشخيص
+};
+
+عرف أنشئ_تعريف_تشخيص(
+    المعرف: معرف_تشخيص,
+    الكود: نص,
+    النوع_الآلي: نص,
+    الشدة: شدة_تشخيص,
+    الفئة: فئة_تشخيص
+): تعريف_تشخيص {
+    ليكن التعريف: تعريف_تشخيص = {
+        المعرف: المعرف,
+        الكود: الكود,
+        النوع_الآلي: النوع_الآلي,
+        الشدة: الشدة,
+        الفئة: الفئة
+    };
+    أرجع التعريف;
+}
+
+عرف تعريف_خطأ(
+    المعرف: معرف_تشخيص,
+    الكود: نص,
+    النوع_الآلي: نص
+): تعريف_تشخيص {
+    أرجع أنشئ_تعريف_تشخيص(
+        المعرف,
+        الكود,
+        النوع_الآلي,
+        شدة_تشخيص.خطأ(),
+        فئة_تشخيص.مستخدم()
+    );
+}
+
+عرف تعريف_خطأ_بيئي(
+    المعرف: معرف_تشخيص,
+    الكود: نص,
+    النوع_الآلي: نص
+): تعريف_تشخيص {
+    أرجع أنشئ_تعريف_تشخيص(
+        المعرف, الكود, النوع_الآلي, شدة_تشخيص.خطأ(), فئة_تشخيص.بيئة()
+    );
+}
+
+عرف تعريف_خطأ_داخلي(
+    المعرف: معرف_تشخيص,
+    الكود: نص,
+    النوع_الآلي: نص
+): تعريف_تشخيص {
+    أرجع أنشئ_تعريف_تشخيص(
+        المعرف, الكود, النوع_الآلي, شدة_تشخيص.خطأ(), فئة_تشخيص.داخلي()
+    );
+}
+
+عام عرف تعريف_التشخيص(المعرف: معرف_تشخيص): تعريف_تشخيص {
+    طابق المعرف مع
+    | معرف_تشخيص.خطأ_نحوي -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-PARSE-SYNTAX», «syntax-error»);
+    }
+    | معرف_تشخيص.تعبير_نحوي_غير_صالح -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-PARSE-EXPRESSION», «invalid-expression-syntax»);
+    }
+    | معرف_تشخيص.نوع_نحوي_غير_صالح -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-PARSE-TYPE», «invalid-type-syntax»);
+    }
+    | معرف_تشخيص.نمط_نحوي_غير_صالح -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-PARSE-PATTERN», «invalid-pattern-syntax»);
+    }
+    | معرف_تشخيص.عنصر_نحوي_غير_صالح -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-PARSE-ITEM», «invalid-item-syntax»);
+    }
+    | معرف_تشخيص.خلل_محلل_داخلي -> {
+        أرجع تعريف_خطأ_داخلي(المعرف, «SULTANC-ICE-PARSER-FAILURE», «parser-internal-failure»);
+    }
+    | معرف_تشخيص.فاصلة_منقوطة_في_غير_موضعها -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-PARSE-MISPLACED-SEMICOLON», «misplaced-semicolon»);
+    }
+    | معرف_تشخيص.تهجئة_كلمة_محجوزة_غير_معروفة -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-PARSE-KEYWORD-TYPO», «keyword-typo»);
+    }
+    | معرف_تشخيص.تهجئة_مهجورة -> {
+        // An old spelling kept for one release (token_registry.def,
+        // SULTANC__KEYWORD_DEPRECATED__) compiles as the new one, with a warning.
+        أرجع أنشئ_تعريف_تشخيص(
+            المعرف, «SULTANC-SYNTAX-DEPRECATED-SPELLING», «deprecated-spelling»,
+            شدة_تشخيص.تحذير(), فئة_تشخيص.مستخدم()
+        );
+    }
+    | معرف_تشخيص.عبارة_بلا_عملية -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-PARSE-INCOMPLETE-STATEMENT», «statement-without-operation»);
+    }
+    | معرف_تشخيص.نوع_ناتج_دالة_مفقود -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-PARSE-MISSING-RETURN-TYPE», «missing-function-return-type»);
+    }
+    | معرف_تشخيص.خطأ_معجمي -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-LEX-INVALID-TOKEN», «lexical-error»);
+    }
+    | معرف_تشخيص.نص_مصدر_يوتيف8_غير_صالح -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-LEX-INVALID-UTF8», «invalid-source-utf8»);
+    }
+    | معرف_تشخيص.خلل_معجمي_داخلي -> {
+        أرجع تعريف_خطأ_داخلي(المعرف, «SULTANC-ICE-LEXER-FAILURE», «lexer-internal-failure»);
+    }
+    | معرف_تشخيص.لا_ناتج_تحليل -> {
+        أرجع تعريف_خطأ_داخلي(المعرف, «SULTANC-ICE-PARSER-NO-RESULT», «parser-no-result»);
+    }
+    | معرف_تشخيص.استدعاء_مترجم_غير_صالح -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-CLI-INVALID-INVOCATION», «invalid-invocation»);
+    }
+    | معرف_تشخيص.هدف_مترجم_غير_معروف -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-TARGET-UNKNOWN», «unknown-target»);
+    }
+    | معرف_تشخيص.مصدر_مترجم_مفقود -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-CLI-MISSING-SOURCE», «missing-source»);
+    }
+    | معرف_تشخيص.خيار_مترجم_غير_معروف -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-CLI-UNKNOWN-OPTION», «unknown-option»);
+    }
+    | معرف_تشخيص.رمز_تشخيص_مترجم_غير_معروف -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-CLI-UNKNOWN-DIAGNOSTIC-CODE», «unknown-diagnostic-code»);
+    }
+    | معرف_تشخيص.قيمة_خيار_مترجم_مفقودة -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-CLI-MISSING-OPTION-VALUE», «missing-option-value»);
+    }
+    | معرف_تشخيص.لغة_تشخيص_مترجم_غير_صالحة -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-CLI-INVALID-DIAGNOSTIC-LANGUAGE», «invalid-language»);
+    }
+    | معرف_تشخيص.صيغة_تشخيص_مترجم_غير_صالحة -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-CLI-INVALID-DIAGNOSTIC-FORMAT», «invalid-diagnostic-format»);
+    }
+    | معرف_تشخيص.لون_تشخيص_مترجم_غير_صالح -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-CLI-INVALID-DIAGNOSTIC-COLOR», «invalid-diagnostic-color»);
+    }
+    | معرف_تشخيص.مصدر_رئيسي_متعدد -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-CLI-MULTIPLE-PRIMARY-SOURCES», «multiple-primary-sources»);
+    }
+    | معرف_تشخيص.أوضاع_مترجم_متعارضة -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-CLI-CONFLICTING-MODES», «conflicting-modes»);
+    }
+    | معرف_تشخيص.معامل_موضعي_غير_متوقع -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-CLI-UNEXPECTED-ARGUMENT», «unexpected-positional-argument»);
+    }
+    | معرف_تشخيص.هدف_مضيف_مترجم_غير_متاح -> {
+        أرجع تعريف_خطأ_بيئي(المعرف, «SULTANC-TARGET-HOST-UNAVAILABLE», «host-target-unavailable»);
+    }
+    | معرف_تشخيص.مكتبة_إل_إل_في_إم_للهدف_مفقودة -> {
+        أرجع تعريف_خطأ_بيئي(المعرف, «SULTANC-LINK-LLVM-LIBRARY-MISSING», «link-llvm-library-missing»);
+    }
+    | معرف_تشخيص.رمز_إل_إل_في_إم_غير_محلول -> {
+        أرجع تعريف_خطأ_بيئي(المعرف, «SULTANC-LINK-LLVM-SYMBOL-UNRESOLVED», «link-llvm-symbol-unresolved»);
+    }
+    | معرف_تشخيص.خلفية_مترجم_غير_متاحة -> {
+        أرجع تعريف_خطأ_بيئي(المعرف, «SULTANC-BACKEND-UNAVAILABLE», «backend-unavailable»);
+    }
+    | معرف_تشخيص.فشل_كتابة_مخرج_مترجم -> {
+        أرجع تعريف_خطأ_بيئي(المعرف, «SULTANC-IO-OUTPUT-WRITE-FAILED», «output-write-failure»);
+    }
+    | معرف_تشخيص.فشل_مترجم_داخلي -> {
+        أرجع تعريف_خطأ_داخلي(المعرف, «SULTANC-ICE-COMPILER-FAILURE», «internal-compiler-failure»);
+    }
+    | معرف_تشخيص.ملف_إدخال_مفقود -> {
+        أرجع تعريف_خطأ_بيئي(المعرف, «SULTANC-IO-INPUT-NOT-FOUND», «missing-input-file»);
+    }
+    | معرف_تشخيص.بيان_حزمة_غير_صالح -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-PACKAGE-MANIFEST-INVALID», «invalid-package-manifest»);
+    }
+    | معرف_تشخيص.نوع_ملف_إدخال_غير_معروف -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-CLI-UNKNOWN-INPUT-TYPE», «unknown-input-file-type»);
+    }
+    | معرف_تشخيص.وحدة_مصدر_غير_موجودة -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-MODULE-NOT-FOUND», «missing-source-module»);
+    }
+    | معرف_تشخيص.سي_خطأ_نحوي -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-C-SYNTAX», «c-syntax», شدة_تشخيص.خطأ(), فئة_تشخيص.مستخدم());
+    }
+    | معرف_تشخيص.سي_أنواع_متعارضة -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-C-CONFLICTING-TYPES», «c-conflicting-types», شدة_تشخيص.خطأ(), فئة_تشخيص.مستخدم());
+    }
+    | معرف_تشخيص.سي_معامل_ماكرو_مكرر -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-C-DUPLICATE-MACRO-PARAMETER», «c-duplicate-macro-parameter», شدة_تشخيص.خطأ(), فئة_تشخيص.مستخدم());
+    }
+    | معرف_تشخيص.سي_توجيه_خطأ -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-C-ERROR-DIRECTIVE», «c-error-directive», شدة_تشخيص.خطأ(), فئة_تشخيص.مستخدم());
+    }
+    | معرف_تشخيص.سي_عمق_تضمين -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-C-INCLUDE-DEPTH», «c-include-depth», شدة_تشخيص.خطأ(), فئة_تشخيص.مستخدم());
+    }
+    | معرف_تشخيص.سي_تضمين_غير_موجود -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-C-INCLUDE-NOT-FOUND», «c-include-not-found», شدة_تشخيص.خطأ(), فئة_تشخيص.مستخدم());
+    }
+    | معرف_تشخيص.سي_عضو_ناقص -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-C-INCOMPLETE-MEMBER», «c-incomplete-member», شدة_تشخيص.خطأ(), فئة_تشخيص.مستخدم());
+    }
+    | معرف_تشخيص.سي_حقل_بتي_غير_صالح -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-C-INVALID-BIT-FIELD», «c-invalid-bit-field», شدة_تشخيص.خطأ(), فئة_تشخيص.مستخدم());
+    }
+    | معرف_تشخيص.سي_شرط_غير_صالح -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-C-INVALID-CONDITION», «c-invalid-condition», شدة_تشخيص.خطأ(), فئة_تشخيص.مستخدم());
+    }
+    | معرف_تشخيص.سي_توجيه_غير_صالح -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-C-INVALID-DIRECTIVE», «c-invalid-directive», شدة_تشخيص.خطأ(), فئة_تشخيص.مستخدم());
+    }
+    | معرف_تشخيص.سي_مصفوفة_مرنة_غير_صالحة -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-C-INVALID-FLEXIBLE-ARRAY», «c-invalid-flexible-array», شدة_تشخيص.خطأ(), فئة_تشخيص.مستخدم());
+    }
+    | معرف_تشخيص.سي_تضمين_غير_صالح -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-C-INVALID-INCLUDE», «c-invalid-include», شدة_تشخيص.خطأ(), فئة_تشخيص.مستخدم());
+    }
+    | معرف_تشخيص.سي_اسم_ماكرو_غير_صالح -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-C-INVALID-MACRO-NAME», «c-invalid-macro-name», شدة_تشخيص.خطأ(), فئة_تشخيص.مستخدم());
+    }
+    | معرف_تشخيص.سي_معاملات_ماكرو_غير_صالحة -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-C-INVALID-MACRO-PARAMETERS», «c-invalid-macro-parameters», شدة_تشخيص.خطأ(), فئة_تشخيص.مستخدم());
+    }
+    | معرف_تشخيص.سي_عدد_غير_صالح -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-C-INVALID-NUMBER», «c-invalid-number», شدة_تشخيص.خطأ(), فئة_تشخيص.مستخدم());
+    }
+    | معرف_تشخيص.سي_لصق_غير_صالح -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-C-INVALID-PASTE», «c-invalid-paste», شدة_تشخيص.خطأ(), فئة_تشخيص.مستخدم());
+    }
+    | معرف_تشخيص.سي_عامل_براغما_غير_صالح -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-C-INVALID-PRAGMA-OPERATOR», «c-invalid-pragma-operator», شدة_تشخيص.خطأ(), فئة_تشخيص.مستخدم());
+    }
+    | معرف_تشخيص.سي_معالج_غير_صالح -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-C-INVALID-PREPROCESSOR», «c-invalid-preprocessor», شدة_تشخيص.خطأ(), فئة_تشخيص.بيئة());
+    }
+    | معرف_تشخيص.سي_تنصيص_غير_صالح -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-C-INVALID-STRINGIZE», «c-invalid-stringize», شدة_تشخيص.خطأ(), فئة_تشخيص.مستخدم());
+    }
+    | معرف_تشخيص.سي_عدد_حجج_ماكرو -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-C-MACRO-ARGUMENT-COUNT», «c-macro-argument-count», شدة_تشخيص.خطأ(), فئة_تشخيص.مستخدم());
+    }
+    | معرف_تشخيص.سي_نداء_ماكرو_غير_منته -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-C-MACRO-UNTERMINATED-CALL», «c-macro-unterminated-call», شدة_تشخيص.خطأ(), فئة_تشخيص.مستخدم());
+    }
+    | معرف_تشخيص.سي_نوع_مفقود -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-C-MISSING-TYPE», «c-missing-type», شدة_تشخيص.خطأ(), فئة_تشخيص.مستخدم());
+    }
+    | معرف_تشخيص.سي_تعارض_اسم -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-C-NAME-CONFLICT», «c-name-conflict», شدة_تشخيص.خطأ(), فئة_تشخيص.مستخدم());
+    }
+    | معرف_تشخيص.سي_حجم_مصفوفة_سالب -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-C-NEGATIVE-ARRAY-SIZE», «c-negative-array-size», شدة_تشخيص.خطأ(), فئة_تشخيص.مستخدم());
+    }
+    | معرف_تشخيص.سي_عضو_غير_موجود -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-C-NO-MEMBER», «c-no-member», شدة_تشخيص.خطأ(), فئة_تشخيص.مستخدم());
+    }
+    | معرف_تشخيص.سي_ليس_ثابتا -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-C-NOT-CONSTANT», «c-not-constant», شدة_تشخيص.خطأ(), فئة_تشخيص.مستخدم());
+    }
+    | معرف_تشخيص.سي_إعادة_تعريف -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-C-REDEFINITION», «c-redefinition», شدة_تشخيص.خطأ(), فئة_تشخيص.مستخدم());
+    }
+    | معرف_تشخيص.سي_تأكيد_ساكن -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-C-STATIC-ASSERT», «c-static-assert», شدة_تشخيص.خطأ(), فئة_تشخيص.مستخدم());
+    }
+    | معرف_تشخيص.سي_صنف_وسم_مختلف -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-C-TAG-KIND-MISMATCH», «c-tag-kind-mismatch», شدة_تشخيص.خطأ(), فئة_تشخيص.مستخدم());
+    }
+    | معرف_تشخيص.سي_غير_مصرح -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-C-UNDECLARED», «c-undeclared», شدة_تشخيص.خطأ(), فئة_تشخيص.مستخدم());
+    }
+    | معرف_تشخيص.سي_اسم_نوع_مجهول -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-C-UNKNOWN-TYPE-NAME», «c-unknown-type-name», شدة_تشخيص.خطأ(), فئة_تشخيص.مستخدم());
+    }
+    | معرف_تشخيص.سي_شرطي_بلا_مقابل -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-C-UNMATCHED-CONDITIONAL», «c-unmatched-conditional», شدة_تشخيص.خطأ(), فئة_تشخيص.مستخدم());
+    }
+    | معرف_تشخيص.سي_تعليق_غير_منته -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-C-UNTERMINATED-COMMENT», «c-unterminated-comment», شدة_تشخيص.خطأ(), فئة_تشخيص.مستخدم());
+    }
+    | معرف_تشخيص.سي_شرطي_غير_منته -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-C-UNTERMINATED-CONDITIONAL», «c-unterminated-conditional», شدة_تشخيص.خطأ(), فئة_تشخيص.مستخدم());
+    }
+    | معرف_تشخيص.سي_معاملات_عملية_غير_صالحة -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-C-INVALID-OPERANDS», «c-invalid-operands», شدة_تشخيص.خطأ(), فئة_تشخيص.مستخدم());
+    }
+    | معرف_تشخيص.سي_أنواع_غير_متوافقة -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-C-INCOMPATIBLE-TYPES», «c-incompatible-types», شدة_تشخيص.خطأ(), فئة_تشخيص.مستخدم());
+    }
+    | معرف_تشخيص.سي_غير_قابل_للإسناد -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-C-NOT-ASSIGNABLE», «c-not-assignable», شدة_تشخيص.خطأ(), فئة_تشخيص.مستخدم());
+    }
+    | معرف_تشخيص.سي_عدد_حجج_نداء -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-C-ARGUMENT-COUNT», «c-argument-count», شدة_تشخيص.خطأ(), فئة_تشخيص.مستخدم());
+    }
+    | معرف_تشخيص.سي_غير_قابل_للنداء -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-C-NOT-CALLABLE», «c-not-callable», شدة_تشخيص.خطأ(), فئة_تشخيص.مستخدم());
+    }
+    | معرف_تشخيص.سي_لافتة_غير_معرفة -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-C-UNDEFINED-LABEL», «c-undefined-label», شدة_تشخيص.خطأ(), فئة_تشخيص.مستخدم());
+    }
+    | معرف_تشخيص.سي_قفز_غير_صالح -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-C-INVALID-JUMP», «c-invalid-jump», شدة_تشخيص.خطأ(), فئة_تشخيص.مستخدم());
+    }
+    | معرف_تشخيص.سي_حالة_مكررة -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-C-DUPLICATE-CASE», «c-duplicate-case», شدة_تشخيص.خطأ(), فئة_تشخيص.مستخدم());
+    }
+    | معرف_تشخيص.سي_مهيئ_غير_صالح -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-C-INVALID-INITIALIZER», «c-invalid-initializer», شدة_تشخيص.خطأ(), فئة_تشخيص.مستخدم());
+    }
+    | معرف_تشخيص.سي_بناء_غير_مدعوم -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-C-UNSUPPORTED», «c-unsupported», شدة_تشخيص.خطأ(), فئة_تشخيص.غير_منفذ());
+    }
+    | معرف_تشخيص.سي_نوع_غير_مدعوم -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-C-UNSUPPORTED-TYPE», «c-unsupported-type», شدة_تشخيص.تحذير(), فئة_تشخيص.غير_منفذ());
+    }
+    | معرف_تشخيص.سي_متغير_غير_مدعوم -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-C-UNSUPPORTED-VARIABLE», «c-unsupported-variable», شدة_تشخيص.تحذير(), فئة_تشخيص.غير_منفذ());
+    }
+    | معرف_تشخيص.سي_متغيرة_غير_مدعومة -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-C-UNSUPPORTED-VARIADIC», «c-unsupported-variadic», شدة_تشخيص.تحذير(), فئة_تشخيص.غير_منفذ());
+    }
+    | معرف_تشخيص.سي_لافتة_ربط_غير_مدعومة -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-C-UNSUPPORTED-LABEL», «c-unsupported-label», شدة_تشخيص.تحذير(), فئة_تشخيص.غير_منفذ());
+    }
+    | معرف_تشخيص.سي_غير_متاح -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-C-UNAVAILABLE», «c-unavailable», شدة_تشخيص.تحذير(), فئة_تشخيص.مستخدم());
+    }
+    | معرف_تشخيص.سي_بلا_نموذج -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-C-UNPROTOTYPED», «c-unprototyped», شدة_تشخيص.تحذير(), فئة_تشخيص.مستخدم());
+    }
+    | معرف_تشخيص.سي_ماكرو_غير_ثابت -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-C-MACRO-NOT-CONSTANT», «c-macro-not-constant», شدة_تشخيص.تحذير(), فئة_تشخيص.مستخدم());
+    }
+    | معرف_تشخيص.سي_توجيه_تحذير -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-C-WARNING-DIRECTIVE», «c-warning-directive», شدة_تشخيص.تحذير(), فئة_تشخيص.مستخدم());
+    }
+    | معرف_تشخيص.سي_ترويسات_المضيف -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-C-HOST-HEADERS», «c-host-headers», شدة_تشخيص.تحذير(), فئة_تشخيص.بيئة());
+    }
+    | معرف_تشخيص.سي_بلا_ترويسات_نظام -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-C-NO-SYSTEM-HEADERS», «c-no-system-headers», شدة_تشخيص.تحذير(), فئة_تشخيص.بيئة());
+    }
+    | معرف_تشخيص.سي_نداء_متغير_غير_مدعوم -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-C-VARIADIC-CALL», «c-variadic-call», شدة_تشخيص.خطأ(), فئة_تشخيص.غير_منفذ());
+    }
+    | معرف_تشخيص.سي_نص_يوتيف8_غير_صالح -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-C-INVALID-UTF8», «c-invalid-utf8», شدة_تشخيص.خطأ(), فئة_تشخيص.مستخدم());
+    }
+    | معرف_تشخيص.سي_محرف_معرف_غير_صالح -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-C-INVALID-IDENTIFIER-CHARACTER», «c-invalid-identifier-character», شدة_تشخيص.خطأ(), فئة_تشخيص.مستخدم());
+    }
+    | معرف_تشخيص.سي_تعارض_اسم_متخطى -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-C-NAME-CONFLICT-SKIPPED», «c-name-conflict-skipped», شدة_تشخيص.تحذير(), فئة_تشخيص.مستخدم());
+    }
+    | معرف_تشخيص.سي_ترويسة_مقروءة_غير_مترجمة -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-C-READ-HEADER-UNTRANSLATED», «c-read-header-untranslated», شدة_تشخيص.تحذير(), فئة_تشخيص.مستخدم());
+    }
+    | معرف_تشخيص.اشتقاق_جسون_نوع_حقل_غير_مدعوم -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-JSON-DERIVE-UNSUPPORTED-FIELD-TYPE», «json-derive-unsupported-field-type»);
+    }
+    | معرف_تشخيص.مكتبة_تفسير_ساكنة_فقط -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-RUN-LIBRARY-STATIC-ONLY», «run-library-static-only», شدة_تشخيص.خطأ(), فئة_تشخيص.بيئة());
+    }
+    | معرف_تشخيص.مكتبة_تفسير_بلا_اسم_تثبيت -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-RUN-LIBRARY-NO-INSTALL-NAME», «run-library-no-install-name», شدة_تشخيص.خطأ(), فئة_تشخيص.بيئة());
+    }
+    | معرف_تشخيص.اعتمادية_جت_غير_محلولة -> {
+        أرجع تعريف_خطأ_بيئي(المعرف, «SULTANC-PACKAGE-GIT-DEPENDENCY-UNRESOLVED», «unresolved-git-dependency»);
+    }
+    | معرف_تشخيص.خريطة_اعتماديات_غير_صالحة -> {
+        أرجع تعريف_خطأ_بيئي(المعرف, «SULTANC-PACKAGE-DEPENDENCY-MAP-INVALID», «invalid-dependency-map»);
+    }
+    | معرف_تشخيص.رسم_حزم_غير_صالح -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-PACKAGE-GRAPH-INVALID», «invalid-package-graph»);
+    }
+    | معرف_تشخيص.مكتبة_قياسية_غير_موجودة -> {
+        أرجع تعريف_خطأ_بيئي(المعرف, «SULTANC-STD-NOT-FOUND», «standard-library-not-found»);
+    }
+    | معرف_تشخيص.ملف_غير_منسق -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-FMT-UNFORMATTED», «unformatted-source», شدة_تشخيص.خطأ(), فئة_تشخيص.مستخدم());
+    }
+    | معرف_تشخيص.وحدة_معلنة_بلا_ابن -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-MODULE-SPELLING-NO-CHILD», «module-spelling-no-child»);
+    }
+    | معرف_تشخيص.تهجئة_وحدة_مشتركة -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-MODULE-SPELLING-SHARED», «module-spelling-shared»);
+    }
+    | معرف_تشخيص.إعادة_تصدير_تحجب_ابنا -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-MODULE-REEXPORT-SHADOWS», «module-reexport-shadows»);
+    }
+    | معرف_تشخيص.هدف_إعادة_تصدير_غير_متاح -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-MODULE-REEXPORT-UNAVAILABLE», «module-reexport-unavailable»);
+    }
+    | معرف_تشخيص.دورة_إعادة_تصدير -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-MODULE-REEXPORT-CYCLE», «module-reexport-cycle»);
+    }
+    | معرف_تشخيص.تهجئة_وحدة_محجوزة -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-MODULE-SPELLING-RESERVED», «module-spelling-reserved-word»);
+    }
+    | معرف_تشخيص.تصريح_وحدة_خارج_ملف_الجذر -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-MODULE-OUTSIDE-ROOT-FILE», «module-declaration-outside-root-file»);
+    }
+    | معرف_تشخيص.اختبار_بمعاملات -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-TEST-PARAMETERS», «test-has-parameters»);
+    }
+    | معرف_تشخيص.ناتج_اختبار_غير_صالح -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-TEST-RESULT-TYPE», «test-result-type»);
+    }
+    | معرف_تشخيص.اختبار_ليس_دالة_عادية -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-TEST-NOT-A-FUNCTION», «test-not-a-function»);
+    }
+    | معرف_تشخيص.اختبار_غير_موجود -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-TEST-NOT-FOUND», «test-not-found»);
+    }
+    | معرف_تشخيص.ملف_اختبارات_خارج_البرنامج -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-TEST-FILE-NOT-IN-PROGRAM», «test-file-not-in-program»);
+    }
+    | معرف_تشخيص.مكتبة_تفسير_غير_محملة -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-RUN-LIBRARY-LOAD-FAILED», «run-library-load-failed», شدة_تشخيص.خطأ(), فئة_تشخيص.بيئة());
+    }
+    | معرف_تشخيص.تشغيل_يلزمه_عملية -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-RUN-NEEDS-PROCESS», «run-needs-process», شدة_تشخيص.خطأ(), فئة_تشخيص.بيئة());
+    }
+    | معرف_تشخيص.مترجم_سي_لغير_المضيف -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-C-COMPILER-HOST-ONLY», «c-compiler-host-only», شدة_تشخيص.خطأ(), فئة_تشخيص.بيئة());
+    }
+    | معرف_تشخيص.فشل_مترجم_سي -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-C-COMPILER-FAILED», «c-compiler-failed», شدة_تشخيص.خطأ(), فئة_تشخيص.بيئة());
+    }
+    | معرف_تشخيص.مكتبة_سي_غير_موجودة -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-LINK-LIBC-NOT-FOUND», «link-libc-not-found», شدة_تشخيص.تحذير(), فئة_تشخيص.بيئة());
+    }
+    | معرف_تشخيص.قيمة_متغير_بيئة_غير_مقبولة -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-CLI-ENV-VALUE-INVALID», «cli-env-value-invalid», شدة_تشخيص.خطأ(), فئة_تشخيص.مستخدم());
+    }
+    | معرف_تشخيص.نوع_معتم_بالقيمة -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-TYPE-OPAQUE-BY-VALUE», «opaque-type-by-value»);
+    }
+    | معرف_تشخيص.نوع_معتم_حجة_نوع -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-TYPE-OPAQUE-TYPE-ARGUMENT», «opaque-type-argument»);
+    }
+    | معرف_تشخيص.فك_مؤشر_معتم -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-TYPE-OPAQUE-DEREFERENCE», «opaque-pointer-dereference»);
+    }
+    | معرف_تشخيص.حقل_عبر_مؤشر_معتم -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-TYPE-OPAQUE-FIELD-ACCESS», «opaque-field-access»);
+    }
+    | معرف_تشخيص.حساب_مؤشر_معتم -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-TYPE-OPAQUE-POINTER-ARITHMETIC», «opaque-pointer-arithmetic»);
+    }
+    | معرف_تشخيص.وحدة_مصدر_غير_مقروءة -> {
+        أرجع تعريف_خطأ_بيئي(المعرف, «SULTANC-MODULE-SOURCE-UNREADABLE», «unreadable-source-module»);
+    }
+    | معرف_تشخيص.مرجع_استيراد_غير_صالح -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-IMPORT-INVALID-REFERENCE», «invalid-import-reference»);
+    }
+    | معرف_تشخيص.جذر_مكتبة_غير_مسجل -> {
+        أرجع تعريف_خطأ_بيئي(المعرف, «SULTANC-MODULE-LIBRARY-ROOT-UNREGISTERED», «unregistered-library-root»);
+    }
+    | معرف_تشخيص.استيراد_يهرب_من_الجذر -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-IMPORT-ESCAPES-ROOT», «import-escapes-root»);
+    }
+    | معرف_تشخيص.مسار_وحدة_منطقي_غير_صالح -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-MODULE-INVALID-LOGICAL-PATH», «invalid-logical-module-path»);
+    }
+    | معرف_تشخيص.تعارض_مسار_وحدة_عام -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-MODULE-PUBLIC-PATH-CONFLICT», «public-module-path-conflict»);
+    }
+    | معرف_تشخيص.تعارض_مصدر_وحدة -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-MODULE-SOURCE-CONFLICT», «module-source-conflict»);
+    }
+    | معرف_تشخيص.وحدة_مستوردة_غير_محملة -> {
+        أرجع تعريف_خطأ_داخلي(المعرف, «SULTANC-ICE-MODULE-IMPORT-NOT-LOADED», «import-module-not-loaded»);
+    }
+    | معرف_تشخيص.رسم_وحدات_مرفوض -> {
+        أرجع تعريف_خطأ_داخلي(المعرف, «SULTANC-ICE-MODULE-GRAPH-REJECTED», «module-graph-rejected»);
+    }
+    | معرف_تشخيص.تصدير_انتقائي_غير_موجود -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-IMPORT-SELECTIVE-EXPORT-NOT-FOUND», «selective-export-not-found»);
+    }
+    | معرف_تشخيص.نقطة_دخول_مفقودة -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-ENTRYPOINT-NOT-FOUND», «entrypoint-not-found»);
+    }
+    | معرف_تشخيص.نقطة_دخول_بتوقيع_غير_صالح -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-ENTRYPOINT-INVALID-SIGNATURE», «invalid-entrypoint-signature»);
+    }
+    | معرف_تشخيص.تصريح_خاص_غير_متاح -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-NAME-PRIVATE», «private-declaration»);
+    }
+    | معرف_تشخيص.نوع_تكراري_لانهائي -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-TYPE-INFINITE-RECURSION», «infinite-recursive-type»);
+    }
+    | معرف_تشخيص.فك_مرجع_غير_مؤشر -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-TYPE-DEREFERENCE-NON-POINTER», «dereference-non-pointer»);
+    }
+    | معرف_تشخيص.أخذ_عنوان_غير_قيمة_يسرى -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-TYPE-ADDRESS-OF-NON-LVALUE», «address-of-non-lvalue»);
+    }
+    | معرف_تشخيص.حقل_سجل_مفقود -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-TYPE-MISSING-RECORD-FIELD», «missing-record-field»);
+    }
+    | معرف_تشخيص.حقل_سجل_مكرر -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-TYPE-DUPLICATE-RECORD-FIELD», «duplicate-record-field»);
+    }
+    | معرف_تشخيص.كتابة_إلى_غير_متغير -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-MUTABILITY-WRITE-TO-IMMUTABLE», «write-to-immutable»);
+    }
+    | معرف_تشخيص.تصريح_مكرر -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-NAME-DUPLICATE-DECLARATION», «duplicate-declaration»);
+    }
+    | معرف_تشخيص.اسم_غير_معروف -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-NAME-UNKNOWN», «unknown-name»);
+    }
+    | معرف_تشخيص.اسم_غير_محلول -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-NAME-UNRESOLVED», «unresolved-name»);
+    }
+    | معرف_تشخيص.منشئ_غير_مستدعى -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-NAME-CONSTRUCTOR-NOT-CALLED», «constructor-not-called»);
+    }
+    | معرف_تشخيص.استيراد_غامض -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-IMPORT-AMBIGUOUS», «ambiguous-import»);
+    }
+    | معرف_تشخيص.دورة_استيراد -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-IMPORT-CYCLE», «import-cycle»);
+    }
+    | معرف_تشخيص.نوعان_غير_متوافقين -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-TYPE-MISMATCH», «type-mismatch»);
+    }
+    | معرف_تشخيص.نوع_غير_محلول -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-TYPE-UNRESOLVED», «unresolved-type»);
+    }
+    | معرف_تشخيص.تعريف_نوع_غير_صالح -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-TYPE-INVALID-DEFINITION», «invalid-type-definition»);
+    }
+    | معرف_تشخيص.تعبير_نوعي_غير_مدعوم -> {
+        أرجع تعريف_خطأ_داخلي(المعرف, «SULTANC-ICE-TYPE-UNSUPPORTED-EXPRESSION», «unsupported-expression-type-analysis»);
+    }
+    | معرف_تشخيص.تعبير_غير_قابل_للاستدعاء -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-CALL-NOT-CALLABLE», «expression-not-callable»);
+    }
+    | معرف_تشخيص.حقل_سجل_غير_معروف -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-TYPE-UNKNOWN-RECORD-FIELD», «unknown-record-field»);
+    }
+    | معرف_تشخيص.عدد_حمولات_نمط_غير_مطابق -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-PATTERN-PAYLOAD-COUNT-MISMATCH», «pattern-payload-count-mismatch»);
+    }
+    | معرف_تشخيص.نمط_غير_صالح -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-PATTERN-INVALID», «invalid-pattern»);
+    }
+    | معرف_تشخيص.تعبير_وقت_الترجمة_غير_ثابت -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-COMPTIME-NON-CONSTANT», «comptime-non-constant»);
+    }
+    | معرف_تشخيص.فشل_وقت_الترجمة_مطلوب -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-COMPTIME-FAILED», «comptime-failed»);
+    }
+    | معرف_تشخيص.سمة_تصريح_غير_مدعومة -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-ANNOTATION-UNSUPPORTED», «annotation-processing-unavailable»);
+    }
+    | معرف_تشخيص.توقيع_يتتبع_المستدعي_غير_صالح -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-TRACK-CALLER-SIGNATURE», «track-caller-signature»);
+    }
+    | معرف_تشخيص.حجة_موقع_المستدعي_صريحة -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-TRACK-CALLER-EXPLICIT-LOCATION», «track-caller-explicit-location»);
+    }
+    | معرف_تشخيص.استعمال_اتفاقية_سي_غير_صالح -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-C-ABI-MISUSE», «c-abi-misuse»);
+    }
+    | معرف_تشخيص.خفض_تعبير_غير_مدعوم -> {
+        أرجع تعريف_خطأ_داخلي(المعرف, «SULTANC-ICE-LOWERING-UNSUPPORTED-EXPRESSION», «unsupported-expression-lowering»);
+    }
+    | معرف_تشخيص.خفض_عبارة_غير_مدعومة -> {
+        أرجع تعريف_خطأ_داخلي(المعرف, «SULTANC-ICE-LOWERING-UNSUPPORTED-STATEMENT», «unsupported-statement-lowering»);
+    }
+    | معرف_تشخيص.دالة_خفض_مفقودة -> {
+        أرجع تعريف_خطأ_داخلي(المعرف, «SULTANC-ICE-LOWERING-MISSING-FUNCTION-FACT», «missing-function-semantic-fact»);
+    }
+    | معرف_تشخيص.ربط_اسم_خفض_مفقود -> {
+        أرجع تعريف_خطأ_داخلي(المعرف, «SULTANC-ICE-LOWERING-MISSING-NAME-BINDING», «missing-name-binding»);
+    }
+    | معرف_تشخيص.نوع_خفض_مفقود -> {
+        أرجع تعريف_خطأ_داخلي(المعرف, «SULTANC-ICE-LOWERING-MISSING-TYPE-FACT», «missing-type-fact»);
+    }
+    | معرف_تشخيص.هوية_منشئ_خفض_مفقودة -> {
+        أرجع تعريف_خطأ_داخلي(المعرف, «SULTANC-ICE-LOWERING-MISSING-CONSTRUCTOR», «missing-constructor-identity»);
+    }
+    | معرف_تشخيص.عدد_حجج_غير_مطابق -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-CALL-ARGUMENT-COUNT-MISMATCH», «argument-count-mismatch»);
+    }
+    | معرف_تشخيص.نوع_حجة_غير_مطابق -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-CALL-ARGUMENT-TYPE-MISMATCH», «argument-type-mismatch»);
+    }
+    | معرف_تشخيص.نوع_إرجاع_غير_مطابق -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-TYPE-RETURN-MISMATCH», «return-type-mismatch»);
+    }
+    | معرف_تشخيص.استخدام_قبل_التهيئة -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-FLOW-USE-BEFORE-INITIALIZATION», «use-before-initialization»);
+    }
+    | معرف_تشخيص.تعارض_ملكية_عند_الدمج -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-OWNERSHIP-MERGE-CONFLICT», «ownership-merge-conflict»);
+    }
+    | معرف_تشخيص.استخدام_بعد_النقل -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-OWNERSHIP-USE-AFTER-MOVE», «use-after-move»);
+    }
+    | معرف_تشخيص.تعارض_استعارة -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-BORROW-CONFLICT», «borrow-conflict»);
+    }
+    | معرف_تشخيص.هروب_مرجع -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-BORROW-REFERENCE-ESCAPE», «reference-escape»);
+    }
+    | معرف_تشخيص.عملية_غير_آمنة -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-SAFETY-UNSAFE-OPERATION», «unsafe-operation»);
+    }
+    | معرف_تشخيص.التقاط_خيط_مؤشر_خام -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-THREAD-CAPTURE-RAW-POINTER», «thread-capture-raw-pointer»);
+    }
+    | معرف_تشخيص.التقاط_خيط_مرجع -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-THREAD-CAPTURE-REFERENCE», «thread-capture-reference»);
+    }
+    | معرف_تشخيص.التقاط_خيط_مشترك_غير_ذري -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-THREAD-CAPTURE-NON-ATOMIC-SHARED», «thread-capture-non-atomic-shared»);
+    }
+    | معرف_تشخيص.فهرس_خارج_الحدود -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-SAFETY-INDEX-OUT-OF-BOUNDS», «out-of-bounds»);
+    }
+    | معرف_تشخيص.نمط_غير_شامل -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-PATTERN-NON-EXHAUSTIVE», «non-exhaustive-pattern»);
+    }
+    | معرف_تشخيص.نمط_غير_قابل_للوصول -> {
+        // An arm that never runs does not stop the compilation.
+        أرجع أنشئ_تعريف_تشخيص(
+            المعرف, «SULTANC-PATTERN-UNREACHABLE», «unreachable-pattern»,
+            شدة_تشخيص.تحذير(), فئة_تشخيص.مستخدم()
+        );
+    }
+    | معرف_تشخيص.إرجاع_مفقود -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-FLOW-MISSING-RETURN», «missing-return»);
+    }
+    | معرف_تشخيص.انتهى_البرنامج_بخطأ -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-RUNTIME-PROGRAM-ERROR», «program-ended-with-error»);
+    }
+    | معرف_تشخيص.توقف_البرنامج -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-RUNTIME-PROGRAM-STOPPED», «program-stopped»);
+    }
+    | معرف_تشخيص.تحكم_حلقة_خارج_حلقة -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-FLOW-LOOP-CONTROL-OUTSIDE-LOOP», «loop-control-outside-loop»);
+    }
+    | معرف_تشخيص.مورد_محرر -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-OWNERSHIP-RESOURCE-RELEASED», «released-resource»);
+    }
+    | معرف_تشخيص.نقل_جزئي_مملوك -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-OWNERSHIP-PARTIAL-MOVE», «partial-owned-move»);
+    }
+    | معرف_تشخيص.نقل_من_مرجع -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-OWNERSHIP-MOVE-OUT-OF-REFERENCE», «move-out-of-reference»);
+    }
+    | معرف_تشخيص.خطأ_ذاكرة_نوع -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-MEMORY-INVALID-TYPE-CLASSIFICATION», «invalid-type-memory»);
+    }
+    | معرف_تشخيص.مسير_غير_صالح -> {
+        أرجع تعريف_خطأ_داخلي(المعرف, «SULTANC-ICE-MSIR-INVALID», «invalid-msir»);
+    }
+    | معرف_تشخيص.خطأ_سياق_داخلي -> {
+        أرجع تعريف_خطأ_داخلي(المعرف, «SULTANC-ICE-CONTEXT», «internal-context-error»);
+    }
+    | معرف_تشخيص.حقيقة_دلالية_مفقودة -> {
+        أرجع تعريف_خطأ_داخلي(المعرف, «SULTANC-ICE-MISSING-SEMANTIC-FACT», «missing-semantic-fact»);
+    }
+    | معرف_تشخيص.فهرس_تفسير_خارج_الحدود -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-INTERPRETER-INDEX-OUT-OF-BOUNDS», «interpreter-index-out-of-bounds»);
+    }
+    | معرف_تشخيص.حالة_تفسير_غير_صالحة -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-INTERPRETER-INVALID-RUNTIME-STATE», «interpreter-invalid-runtime-state»);
+    }
+    | معرف_تشخيص.ذاكرة_تفسير_تالفة -> {
+        أرجع تعريف_خطأ_داخلي(المعرف, «SULTANC-ICE-INTERPRETER-CORRUPT-MEMORY», «interpreter-corrupt-memory»);
+    }
+    | معرف_تشخيص.نوع_قيمة_تفسير_غير_متوقع -> {
+        أرجع تعريف_خطأ_داخلي(المعرف, «SULTANC-ICE-INTERPRETER-UNEXPECTED-VALUE-KIND», «interpreter-unexpected-value-kind»);
+    }
+    | معرف_تشخيص.نص_تفسير_غير_صالح -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-INTERPRETER-INVALID-UTF8», «interpreter-invalid-utf8»);
+    }
+    | معرف_تشخيص.عدد_حجج_بدائي_تفسير_غير_مطابق -> {
+        أرجع تعريف_خطأ_داخلي(المعرف, «SULTANC-ICE-INTERPRETER-PRIMITIVE-ARGUMENT-COUNT», «interpreter-primitive-argument-count»);
+    }
+    | معرف_تشخيص.حجة_بدائي_تفسير_غير_صالحة -> {
+        أرجع تعريف_خطأ_داخلي(المعرف, «SULTANC-ICE-INTERPRETER-PRIMITIVE-ARGUMENT», «interpreter-invalid-primitive-argument»);
+    }
+    | معرف_تشخيص.فشل_تفسير_وقت_تشغيل -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-INTERPRETER-RUNTIME-FAILURE», «interpreter-runtime-failure»);
+    }
+    | معرف_تشخيص.فخ_تفسير -> {
+        أرجع تعريف_خطأ(المعرف, «SULTANC-INTERPRETER-TRAP», «interpreter-trap»);
+    }
+    | معرف_تشخيص.هدف_لا_يدعم_الميزة -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-TARGET-FEATURE-UNSUPPORTED», «target-feature-unsupported», شدة_تشخيص.خطأ(), فئة_تشخيص.بيئة());
+    }
+    | معرف_تشخيص.بناء_غير_مدعوم_في_الخلفية -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-BACKEND-UNSUPPORTED-CONSTRUCT», «backend-unsupported-construct», شدة_تشخيص.خطأ(), فئة_تشخيص.غير_منفذ());
+    }
+    | معرف_تشخيص.مدى_ترميز_متجاوز -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-BACKEND-RANGE-EXCEEDED», «backend-range-exceeded», شدة_تشخيص.خطأ(), فئة_تشخيص.مستخدم());
+    }
+    | معرف_تشخيص.رمز_ربط_غير_معرف -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-LINK-UNDEFINED-SYMBOL», «link-undefined-symbol», شدة_تشخيص.خطأ(), فئة_تشخيص.مستخدم());
+    }
+    | معرف_تشخيص.رمز_ربط_مكرر -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-LINK-DUPLICATE-SYMBOL», «link-duplicate-symbol», شدة_تشخيص.خطأ(), فئة_تشخيص.مستخدم());
+    }
+    | معرف_تشخيص.رمز_دخول_ربط_مفقود -> {
+        // The target's entry symbol (`_start`, `mainCRTStartup`), not the
+        // program's entry function: a toolchain or runtime fault.
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-LINK-ENTRY-SYMBOL-MISSING», «link-entry-symbol-missing», شدة_تشخيص.خطأ(), فئة_تشخيص.بيئة());
+    }
+    | معرف_تشخيص.موفر_وقت_تشغيل_مفقود -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-TARGET-RUNTIME-PROVIDER-MISSING», «target-runtime-provider-missing», شدة_تشخيص.خطأ(), فئة_تشخيص.بيئة());
+    }
+    | معرف_تشخيص.نفاد_ذاكرة_المترجم -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-HOST-OUT-OF-MEMORY», «host-out-of-memory», شدة_تشخيص.خطأ(), فئة_تشخيص.بيئة());
+    }
+    | معرف_تشخيص.رمز_ربط_بنوع_غير_متطابق -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-LINK-SYMBOL-TYPE-MISMATCH», «link-symbol-type-mismatch», شدة_تشخيص.خطأ(), فئة_تشخيص.مستخدم());
+    }
+    | معرف_تشخيص.رمز_خارجي_بتوقيعين -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-EXTERN-SYMBOL-CONFLICT», «extern-symbol-conflict», شدة_تشخيص.خطأ(), فئة_تشخيص.مستخدم());
+    }
+    | معرف_تشخيص.معالج_انهيار_غير_صالح -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-PANIC-HANDLER-INVALID», «panic-handler-invalid», شدة_تشخيص.خطأ(), فئة_تشخيص.مستخدم());
+    }
+    | معرف_تشخيص.مخصص_عام_غير_صالح -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-GLOBAL-ALLOCATOR-INVALID», «global-allocator-invalid», شدة_تشخيص.خطأ(), فئة_تشخيص.مستخدم());
+    }
+    | معرف_تشخيص.رمز_خارجي_غير_مدعوم -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-LINK-EXTERNAL-SYMBOL-UNSUPPORTED», «link-external-symbol-unsupported», شدة_تشخيص.خطأ(), فئة_تشخيص.غير_منفذ());
+    }
+    | معرف_تشخيص.إعادة_توطين_غير_مدعومة -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-OBJECT-RELOCATION-UNSUPPORTED», «object-relocation-unsupported», شدة_تشخيص.خطأ(), فئة_تشخيص.غير_منفذ());
+    }
+    | معرف_تشخيص.صيغة_كائن_غير_مدعومة_للهدف -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-OBJECT-FORMAT-UNSUPPORTED», «object-format-unsupported», شدة_تشخيص.خطأ(), فئة_تشخيص.بيئة());
+    }
+    | معرف_تشخيص.مخرج_ربط_غير_مدعوم -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-LINK-OUTPUT-UNSUPPORTED», «link-output-unsupported», شدة_تشخيص.خطأ(), فئة_تشخيص.بيئة());
+    }
+    | معرف_تشخيص.مكتبة_ربط_غير_موجودة -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-LINK-LIBRARY-NOT-FOUND», «link-library-not-found», شدة_تشخيص.خطأ(), فئة_تشخيص.بيئة());
+    }
+    | معرف_تشخيص.مدخل_ربط_غير_مدعوم -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-LINK-INPUT-UNSUPPORTED», «link-input-unsupported», شدة_تشخيص.خطأ(), فئة_تشخيص.مستخدم());
+    }
+    | معرف_تشخيص.واجهة_استدعاء_غير_متاحة_للهدف -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-TARGET-ABI-UNAVAILABLE», «target-abi-unavailable», شدة_تشخيص.خطأ(), فئة_تشخيص.بيئة());
+    }
+    | معرف_تشخيص.حد_صيغة_كائن_متجاوز -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-OBJECT-FORMAT-LIMIT-EXCEEDED», «object-format-limit-exceeded», شدة_تشخيص.خطأ(), فئة_تشخيص.مستخدم());
+    }
+    | معرف_تشخيص.حد_وقت_الترجمة_متجاوز -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-COMPTIME-LIMIT-EXCEEDED», «comptime-limit-exceeded», شدة_تشخيص.خطأ(), فئة_تشخيص.مستخدم());
+    }
+    | معرف_تشخيص.سلسلة_تنسيق_غير_صالحة -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-FORMAT-STRING», «format-string-invalid», شدة_تشخيص.خطأ(), فئة_تشخيص.مستخدم());
+    }
+    | معرف_تشخيص.أثر_ممنوع_وقت_الترجمة -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-COMPTIME-PROHIBITED-EFFECT», «comptime-prohibited-effect», شدة_تشخيص.خطأ(), فئة_تشخيص.مستخدم());
+    }
+    | معرف_تشخيص.فشل_تنفيذ_وقت_الترجمة -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-COMPTIME-EVALUATION-FAILED», «comptime-evaluation-failed», شدة_تشخيص.خطأ(), فئة_تشخيص.مستخدم());
+    }
+    | معرف_تشخيص.عملية_غير_مدعومة_وقت_الترجمة -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-COMPTIME-UNSUPPORTED-OPERATION», «comptime-unsupported-operation», شدة_تشخيص.خطأ(), فئة_تشخيص.مستخدم());
+    }
+    | معرف_تشخيص.ناتج_وقت_الترجمة_غير_ثابت -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-COMPTIME-RESULT-NOT-CONSTANT», «comptime-result-not-constant», شدة_تشخيص.خطأ(), فئة_تشخيص.مستخدم());
+    }
+    | معرف_تشخيص.تخطيط_غير_متاح_وقت_الترجمة -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-COMPTIME-LAYOUT-UNAVAILABLE», «comptime-layout-unavailable», شدة_تشخيص.خطأ(), فئة_تشخيص.مستخدم());
+    }
+    | معرف_تشخيص.عدد_حجج_وقت_الترجمة_غير_مطابق -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-COMPTIME-ARGUMENT-COUNT-MISMATCH», «comptime-argument-count-mismatch», شدة_تشخيص.خطأ(), فئة_تشخيص.مستخدم());
+    }
+    | معرف_تشخيص.نداء_خارجي_تفسير_غير_مدعوم -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-INTERPRETER-UNSUPPORTED-EXTERNAL-CALL», «interpreter-unsupported-external-call», شدة_تشخيص.خطأ(), فئة_تشخيص.مستخدم());
+    }
+    | معرف_تشخيص.بدائي_آلة_تفسير_غير_مدعوم -> {
+        أرجع أنشئ_تعريف_تشخيص(المعرف, «SULTANC-INTERPRETER-UNSUPPORTED-MACHINE-PRIMITIVE», «interpreter-unsupported-machine-primitive», شدة_تشخيص.خطأ(), فئة_تشخيص.مستخدم());
+    };
+}
+
+عام عرف كل_معرفات_التشخيص(): متجه معرف_تشخيص {
+    ليكن الناتج: متغير متجه معرف_تشخيص = [];
+    ألحق(الناتج, معرف_تشخيص.خطأ_نحوي());
+    ألحق(الناتج, معرف_تشخيص.تعبير_نحوي_غير_صالح());
+    ألحق(الناتج, معرف_تشخيص.نوع_نحوي_غير_صالح());
+    ألحق(الناتج, معرف_تشخيص.نمط_نحوي_غير_صالح());
+    ألحق(الناتج, معرف_تشخيص.عنصر_نحوي_غير_صالح());
+    ألحق(الناتج, معرف_تشخيص.خلل_محلل_داخلي());
+    ألحق(الناتج, معرف_تشخيص.فاصلة_منقوطة_في_غير_موضعها());
+    ألحق(الناتج, معرف_تشخيص.تهجئة_كلمة_محجوزة_غير_معروفة());
+    ألحق(الناتج, معرف_تشخيص.تهجئة_مهجورة());
+    ألحق(الناتج, معرف_تشخيص.عبارة_بلا_عملية());
+    ألحق(الناتج, معرف_تشخيص.نوع_ناتج_دالة_مفقود());
+    ألحق(الناتج, معرف_تشخيص.خطأ_معجمي());
+    ألحق(الناتج, معرف_تشخيص.نص_مصدر_يوتيف8_غير_صالح());
+    ألحق(الناتج, معرف_تشخيص.خلل_معجمي_داخلي());
+    ألحق(الناتج, معرف_تشخيص.لا_ناتج_تحليل());
+    ألحق(الناتج, معرف_تشخيص.استدعاء_مترجم_غير_صالح());
+    ألحق(الناتج, معرف_تشخيص.هدف_مترجم_غير_معروف());
+    ألحق(الناتج, معرف_تشخيص.مصدر_مترجم_مفقود());
+    ألحق(الناتج, معرف_تشخيص.خيار_مترجم_غير_معروف());
+    ألحق(الناتج, معرف_تشخيص.رمز_تشخيص_مترجم_غير_معروف());
+    ألحق(الناتج, معرف_تشخيص.قيمة_خيار_مترجم_مفقودة());
+    ألحق(الناتج, معرف_تشخيص.لغة_تشخيص_مترجم_غير_صالحة());
+    ألحق(الناتج, معرف_تشخيص.صيغة_تشخيص_مترجم_غير_صالحة());
+    ألحق(الناتج, معرف_تشخيص.لون_تشخيص_مترجم_غير_صالح());
+    ألحق(الناتج, معرف_تشخيص.مصدر_رئيسي_متعدد());
+    ألحق(الناتج, معرف_تشخيص.أوضاع_مترجم_متعارضة());
+    ألحق(الناتج, معرف_تشخيص.معامل_موضعي_غير_متوقع());
+    ألحق(الناتج, معرف_تشخيص.هدف_مضيف_مترجم_غير_متاح());
+    ألحق(الناتج, معرف_تشخيص.مكتبة_إل_إل_في_إم_للهدف_مفقودة());
+    ألحق(الناتج, معرف_تشخيص.رمز_إل_إل_في_إم_غير_محلول());
+    ألحق(الناتج, معرف_تشخيص.خلفية_مترجم_غير_متاحة());
+    ألحق(الناتج, معرف_تشخيص.فشل_كتابة_مخرج_مترجم());
+    ألحق(الناتج, معرف_تشخيص.فشل_مترجم_داخلي());
+    ألحق(الناتج, معرف_تشخيص.ملف_إدخال_مفقود());
+    ألحق(الناتج, معرف_تشخيص.بيان_حزمة_غير_صالح());
+    ألحق(الناتج, معرف_تشخيص.نوع_ملف_إدخال_غير_معروف());
+    ألحق(الناتج, معرف_تشخيص.وحدة_مصدر_غير_موجودة());
+    ألحق(الناتج, معرف_تشخيص.وحدة_مصدر_غير_مقروءة());
+    ألحق(الناتج, معرف_تشخيص.مرجع_استيراد_غير_صالح());
+    ألحق(الناتج, معرف_تشخيص.جذر_مكتبة_غير_مسجل());
+    ألحق(الناتج, معرف_تشخيص.استيراد_يهرب_من_الجذر());
+    ألحق(الناتج, معرف_تشخيص.مسار_وحدة_منطقي_غير_صالح());
+    ألحق(الناتج, معرف_تشخيص.تعارض_مسار_وحدة_عام());
+    ألحق(الناتج, معرف_تشخيص.تعارض_مصدر_وحدة());
+    ألحق(الناتج, معرف_تشخيص.وحدة_مستوردة_غير_محملة());
+    ألحق(الناتج, معرف_تشخيص.رسم_وحدات_مرفوض());
+    ألحق(الناتج, معرف_تشخيص.تصدير_انتقائي_غير_موجود());
+    ألحق(الناتج, معرف_تشخيص.نقطة_دخول_مفقودة());
+    ألحق(الناتج, معرف_تشخيص.نقطة_دخول_بتوقيع_غير_صالح());
+    ألحق(الناتج, معرف_تشخيص.تصريح_خاص_غير_متاح());
+    ألحق(الناتج, معرف_تشخيص.نوع_تكراري_لانهائي());
+    ألحق(الناتج, معرف_تشخيص.فك_مرجع_غير_مؤشر());
+    ألحق(الناتج, معرف_تشخيص.أخذ_عنوان_غير_قيمة_يسرى());
+    ألحق(الناتج, معرف_تشخيص.حقل_سجل_مفقود());
+    ألحق(الناتج, معرف_تشخيص.حقل_سجل_مكرر());
+    ألحق(الناتج, معرف_تشخيص.كتابة_إلى_غير_متغير());
+    ألحق(الناتج, معرف_تشخيص.تصريح_مكرر());
+    ألحق(الناتج, معرف_تشخيص.اسم_غير_معروف());
+    ألحق(الناتج, معرف_تشخيص.اسم_غير_محلول());
+    ألحق(الناتج, معرف_تشخيص.استيراد_غامض());
+    ألحق(الناتج, معرف_تشخيص.دورة_استيراد());
+    ألحق(الناتج, معرف_تشخيص.نوعان_غير_متوافقين());
+    ألحق(الناتج, معرف_تشخيص.نوع_غير_محلول());
+    ألحق(الناتج, معرف_تشخيص.تعريف_نوع_غير_صالح());
+    ألحق(الناتج, معرف_تشخيص.تعبير_نوعي_غير_مدعوم());
+    ألحق(الناتج, معرف_تشخيص.تعبير_غير_قابل_للاستدعاء());
+    ألحق(الناتج, معرف_تشخيص.حقل_سجل_غير_معروف());
+    ألحق(الناتج, معرف_تشخيص.عدد_حمولات_نمط_غير_مطابق());
+    ألحق(الناتج, معرف_تشخيص.نمط_غير_صالح());
+    ألحق(الناتج, معرف_تشخيص.تعبير_وقت_الترجمة_غير_ثابت());
+    ألحق(الناتج, معرف_تشخيص.فشل_وقت_الترجمة_مطلوب());
+    ألحق(الناتج, معرف_تشخيص.سمة_تصريح_غير_مدعومة());
+    ألحق(الناتج, معرف_تشخيص.خفض_تعبير_غير_مدعوم());
+    ألحق(الناتج, معرف_تشخيص.خفض_عبارة_غير_مدعومة());
+    ألحق(الناتج, معرف_تشخيص.دالة_خفض_مفقودة());
+    ألحق(الناتج, معرف_تشخيص.ربط_اسم_خفض_مفقود());
+    ألحق(الناتج, معرف_تشخيص.نوع_خفض_مفقود());
+    ألحق(الناتج, معرف_تشخيص.هوية_منشئ_خفض_مفقودة());
+    ألحق(الناتج, معرف_تشخيص.عدد_حجج_غير_مطابق());
+    ألحق(الناتج, معرف_تشخيص.نوع_حجة_غير_مطابق());
+    ألحق(الناتج, معرف_تشخيص.نوع_إرجاع_غير_مطابق());
+    ألحق(الناتج, معرف_تشخيص.استخدام_قبل_التهيئة());
+    ألحق(الناتج, معرف_تشخيص.استخدام_بعد_النقل());
+    ألحق(الناتج, معرف_تشخيص.مورد_محرر());
+    ألحق(الناتج, معرف_تشخيص.تعارض_استعارة());
+    ألحق(الناتج, معرف_تشخيص.هروب_مرجع());
+    ألحق(الناتج, معرف_تشخيص.عملية_غير_آمنة());
+    ألحق(الناتج, معرف_تشخيص.التقاط_خيط_مؤشر_خام());
+    ألحق(الناتج, معرف_تشخيص.التقاط_خيط_مرجع());
+    ألحق(الناتج, معرف_تشخيص.التقاط_خيط_مشترك_غير_ذري());
+    ألحق(الناتج, معرف_تشخيص.فهرس_خارج_الحدود());
+    ألحق(الناتج, معرف_تشخيص.نمط_غير_شامل());
+    ألحق(الناتج, معرف_تشخيص.نمط_غير_قابل_للوصول());
+    ألحق(الناتج, معرف_تشخيص.إرجاع_مفقود());
+    ألحق(الناتج, معرف_تشخيص.انتهى_البرنامج_بخطأ());
+    ألحق(الناتج, معرف_تشخيص.توقف_البرنامج());
+    ألحق(الناتج, معرف_تشخيص.تحكم_حلقة_خارج_حلقة());
+    ألحق(الناتج, معرف_تشخيص.نقل_جزئي_مملوك());
+    ألحق(الناتج, معرف_تشخيص.نقل_من_مرجع());
+    ألحق(الناتج, معرف_تشخيص.خطأ_ذاكرة_نوع());
+    ألحق(الناتج, معرف_تشخيص.مسير_غير_صالح());
+    ألحق(الناتج, معرف_تشخيص.خطأ_سياق_داخلي());
+    ألحق(الناتج, معرف_تشخيص.حقيقة_دلالية_مفقودة());
+    ألحق(الناتج, معرف_تشخيص.فهرس_تفسير_خارج_الحدود());
+    ألحق(الناتج, معرف_تشخيص.حالة_تفسير_غير_صالحة());
+    ألحق(الناتج, معرف_تشخيص.ذاكرة_تفسير_تالفة());
+    ألحق(الناتج, معرف_تشخيص.نوع_قيمة_تفسير_غير_متوقع());
+    ألحق(الناتج, معرف_تشخيص.نص_تفسير_غير_صالح());
+    ألحق(الناتج, معرف_تشخيص.عدد_حجج_بدائي_تفسير_غير_مطابق());
+    ألحق(الناتج, معرف_تشخيص.حجة_بدائي_تفسير_غير_صالحة());
+    ألحق(الناتج, معرف_تشخيص.فشل_تفسير_وقت_تشغيل());
+    ألحق(الناتج, معرف_تشخيص.فخ_تفسير());
+    ألحق(الناتج, معرف_تشخيص.هدف_لا_يدعم_الميزة());
+    ألحق(الناتج, معرف_تشخيص.بناء_غير_مدعوم_في_الخلفية());
+    ألحق(الناتج, معرف_تشخيص.مدى_ترميز_متجاوز());
+    ألحق(الناتج, معرف_تشخيص.رمز_ربط_غير_معرف());
+    ألحق(الناتج, معرف_تشخيص.رمز_دخول_ربط_مفقود());
+    ألحق(الناتج, معرف_تشخيص.رمز_ربط_مكرر());
+    ألحق(الناتج, معرف_تشخيص.موفر_وقت_تشغيل_مفقود());
+    ألحق(الناتج, معرف_تشخيص.نفاد_ذاكرة_المترجم());
+    ألحق(الناتج, معرف_تشخيص.رمز_ربط_بنوع_غير_متطابق());
+    ألحق(الناتج, معرف_تشخيص.رمز_خارجي_بتوقيعين());
+    ألحق(الناتج, معرف_تشخيص.معالج_انهيار_غير_صالح());
+    ألحق(الناتج, معرف_تشخيص.مخصص_عام_غير_صالح());
+    ألحق(الناتج, معرف_تشخيص.رمز_خارجي_غير_مدعوم());
+    ألحق(الناتج, معرف_تشخيص.إعادة_توطين_غير_مدعومة());
+    ألحق(الناتج, معرف_تشخيص.صيغة_كائن_غير_مدعومة_للهدف());
+    ألحق(الناتج, معرف_تشخيص.مخرج_ربط_غير_مدعوم());
+    ألحق(الناتج, معرف_تشخيص.مكتبة_ربط_غير_موجودة());
+    ألحق(الناتج, معرف_تشخيص.واجهة_استدعاء_غير_متاحة_للهدف());
+    ألحق(الناتج, معرف_تشخيص.حد_صيغة_كائن_متجاوز());
+    ألحق(الناتج, معرف_تشخيص.حد_وقت_الترجمة_متجاوز());
+    ألحق(الناتج, معرف_تشخيص.سلسلة_تنسيق_غير_صالحة());
+    ألحق(الناتج, معرف_تشخيص.أثر_ممنوع_وقت_الترجمة());
+    ألحق(الناتج, معرف_تشخيص.فشل_تنفيذ_وقت_الترجمة());
+    ألحق(الناتج, معرف_تشخيص.عملية_غير_مدعومة_وقت_الترجمة());
+    ألحق(الناتج, معرف_تشخيص.ناتج_وقت_الترجمة_غير_ثابت());
+    ألحق(الناتج, معرف_تشخيص.تخطيط_غير_متاح_وقت_الترجمة());
+    ألحق(الناتج, معرف_تشخيص.عدد_حجج_وقت_الترجمة_غير_مطابق());
+    ألحق(الناتج, معرف_تشخيص.نداء_خارجي_تفسير_غير_مدعوم());
+    ألحق(الناتج, معرف_تشخيص.بدائي_آلة_تفسير_غير_مدعوم());
+    ألحق(الناتج, معرف_تشخيص.سي_خطأ_نحوي());
+    ألحق(الناتج, معرف_تشخيص.سي_أنواع_متعارضة());
+    ألحق(الناتج, معرف_تشخيص.سي_معامل_ماكرو_مكرر());
+    ألحق(الناتج, معرف_تشخيص.سي_توجيه_خطأ());
+    ألحق(الناتج, معرف_تشخيص.سي_عمق_تضمين());
+    ألحق(الناتج, معرف_تشخيص.سي_تضمين_غير_موجود());
+    ألحق(الناتج, معرف_تشخيص.سي_عضو_ناقص());
+    ألحق(الناتج, معرف_تشخيص.سي_حقل_بتي_غير_صالح());
+    ألحق(الناتج, معرف_تشخيص.سي_شرط_غير_صالح());
+    ألحق(الناتج, معرف_تشخيص.سي_توجيه_غير_صالح());
+    ألحق(الناتج, معرف_تشخيص.سي_مصفوفة_مرنة_غير_صالحة());
+    ألحق(الناتج, معرف_تشخيص.سي_تضمين_غير_صالح());
+    ألحق(الناتج, معرف_تشخيص.سي_اسم_ماكرو_غير_صالح());
+    ألحق(الناتج, معرف_تشخيص.سي_معاملات_ماكرو_غير_صالحة());
+    ألحق(الناتج, معرف_تشخيص.سي_عدد_غير_صالح());
+    ألحق(الناتج, معرف_تشخيص.سي_لصق_غير_صالح());
+    ألحق(الناتج, معرف_تشخيص.سي_عامل_براغما_غير_صالح());
+    ألحق(الناتج, معرف_تشخيص.سي_معالج_غير_صالح());
+    ألحق(الناتج, معرف_تشخيص.سي_تنصيص_غير_صالح());
+    ألحق(الناتج, معرف_تشخيص.سي_عدد_حجج_ماكرو());
+    ألحق(الناتج, معرف_تشخيص.سي_نداء_ماكرو_غير_منته());
+    ألحق(الناتج, معرف_تشخيص.سي_نوع_مفقود());
+    ألحق(الناتج, معرف_تشخيص.سي_تعارض_اسم());
+    ألحق(الناتج, معرف_تشخيص.سي_حجم_مصفوفة_سالب());
+    ألحق(الناتج, معرف_تشخيص.سي_عضو_غير_موجود());
+    ألحق(الناتج, معرف_تشخيص.سي_ليس_ثابتا());
+    ألحق(الناتج, معرف_تشخيص.سي_إعادة_تعريف());
+    ألحق(الناتج, معرف_تشخيص.سي_تأكيد_ساكن());
+    ألحق(الناتج, معرف_تشخيص.سي_صنف_وسم_مختلف());
+    ألحق(الناتج, معرف_تشخيص.سي_غير_مصرح());
+    ألحق(الناتج, معرف_تشخيص.سي_اسم_نوع_مجهول());
+    ألحق(الناتج, معرف_تشخيص.سي_شرطي_بلا_مقابل());
+    ألحق(الناتج, معرف_تشخيص.سي_تعليق_غير_منته());
+    ألحق(الناتج, معرف_تشخيص.سي_شرطي_غير_منته());
+    ألحق(الناتج, معرف_تشخيص.سي_معاملات_عملية_غير_صالحة());
+    ألحق(الناتج, معرف_تشخيص.سي_أنواع_غير_متوافقة());
+    ألحق(الناتج, معرف_تشخيص.سي_غير_قابل_للإسناد());
+    ألحق(الناتج, معرف_تشخيص.سي_عدد_حجج_نداء());
+    ألحق(الناتج, معرف_تشخيص.سي_غير_قابل_للنداء());
+    ألحق(الناتج, معرف_تشخيص.سي_لافتة_غير_معرفة());
+    ألحق(الناتج, معرف_تشخيص.سي_قفز_غير_صالح());
+    ألحق(الناتج, معرف_تشخيص.سي_حالة_مكررة());
+    ألحق(الناتج, معرف_تشخيص.سي_مهيئ_غير_صالح());
+    ألحق(الناتج, معرف_تشخيص.سي_بناء_غير_مدعوم());
+    ألحق(الناتج, معرف_تشخيص.سي_نوع_غير_مدعوم());
+    ألحق(الناتج, معرف_تشخيص.سي_متغير_غير_مدعوم());
+    ألحق(الناتج, معرف_تشخيص.سي_متغيرة_غير_مدعومة());
+    ألحق(الناتج, معرف_تشخيص.سي_لافتة_ربط_غير_مدعومة());
+    ألحق(الناتج, معرف_تشخيص.سي_غير_متاح());
+    ألحق(الناتج, معرف_تشخيص.سي_بلا_نموذج());
+    ألحق(الناتج, معرف_تشخيص.سي_ماكرو_غير_ثابت());
+    ألحق(الناتج, معرف_تشخيص.سي_توجيه_تحذير());
+    ألحق(الناتج, معرف_تشخيص.سي_ترويسات_المضيف());
+    ألحق(الناتج, معرف_تشخيص.سي_بلا_ترويسات_نظام());
+    ألحق(الناتج, معرف_تشخيص.سي_نداء_متغير_غير_مدعوم());
+    ألحق(الناتج, معرف_تشخيص.سي_نص_يوتيف8_غير_صالح());
+    ألحق(الناتج, معرف_تشخيص.سي_محرف_معرف_غير_صالح());
+    ألحق(الناتج, معرف_تشخيص.سي_تعارض_اسم_متخطى());
+    ألحق(الناتج, معرف_تشخيص.سي_ترويسة_مقروءة_غير_مترجمة());
+    ألحق(الناتج, معرف_تشخيص.اشتقاق_جسون_نوع_حقل_غير_مدعوم());
+    ألحق(الناتج, معرف_تشخيص.مكتبة_تفسير_ساكنة_فقط());
+    ألحق(الناتج, معرف_تشخيص.مكتبة_تفسير_بلا_اسم_تثبيت());
+    ألحق(الناتج, معرف_تشخيص.مترجم_سي_لغير_المضيف());
+    ألحق(الناتج, معرف_تشخيص.فشل_مترجم_سي());
+    ألحق(الناتج, معرف_تشخيص.مكتبة_سي_غير_موجودة());
+    ألحق(الناتج, معرف_تشخيص.قيمة_متغير_بيئة_غير_مقبولة());
+    ألحق(الناتج, معرف_تشخيص.مدخل_ربط_غير_مدعوم());
+    ألحق(الناتج, معرف_تشخيص.اعتمادية_جت_غير_محلولة());
+    ألحق(الناتج, معرف_تشخيص.خريطة_اعتماديات_غير_صالحة());
+    ألحق(الناتج, معرف_تشخيص.مكتبة_تفسير_غير_محملة());
+    ألحق(الناتج, معرف_تشخيص.نوع_معتم_بالقيمة());
+    ألحق(الناتج, معرف_تشخيص.نوع_معتم_حجة_نوع());
+    ألحق(الناتج, معرف_تشخيص.فك_مؤشر_معتم());
+    ألحق(الناتج, معرف_تشخيص.حقل_عبر_مؤشر_معتم());
+    ألحق(الناتج, معرف_تشخيص.حساب_مؤشر_معتم());
+    ألحق(الناتج, معرف_تشخيص.رسم_حزم_غير_صالح());
+    ألحق(الناتج, معرف_تشخيص.مكتبة_قياسية_غير_موجودة());
+    ألحق(الناتج, معرف_تشخيص.ملف_غير_منسق());
+    ألحق(الناتج, معرف_تشخيص.وحدة_معلنة_بلا_ابن());
+    ألحق(الناتج, معرف_تشخيص.تهجئة_وحدة_مشتركة());
+    ألحق(الناتج, معرف_تشخيص.إعادة_تصدير_تحجب_ابنا());
+    ألحق(الناتج, معرف_تشخيص.هدف_إعادة_تصدير_غير_متاح());
+    ألحق(الناتج, معرف_تشخيص.دورة_إعادة_تصدير());
+    ألحق(الناتج, معرف_تشخيص.تهجئة_وحدة_محجوزة());
+    ألحق(الناتج, معرف_تشخيص.تصريح_وحدة_خارج_ملف_الجذر());
+    ألحق(الناتج, معرف_تشخيص.اختبار_بمعاملات());
+    ألحق(الناتج, معرف_تشخيص.ناتج_اختبار_غير_صالح());
+    ألحق(الناتج, معرف_تشخيص.اختبار_ليس_دالة_عادية());
+    ألحق(الناتج, معرف_تشخيص.اختبار_غير_موجود());
+    ألحق(الناتج, معرف_تشخيص.ملف_اختبارات_خارج_البرنامج());
+    // New public codes go at the end: their order is part of the wire
+    // identity (tests/{en,ar}/ispeak/check_public_codes.sn).
+    ألحق(الناتج, معرف_تشخيص.توقيع_يتتبع_المستدعي_غير_صالح());
+    ألحق(الناتج, معرف_تشخيص.حجة_موقع_المستدعي_صريحة());
+    ألحق(الناتج, معرف_تشخيص.استعمال_اتفاقية_سي_غير_صالح());
+    ألحق(الناتج, معرف_تشخيص.تشغيل_يلزمه_عملية());
+    ألحق(الناتج, معرف_تشخيص.منشئ_غير_مستدعى());
+    ألحق(الناتج, معرف_تشخيص.تعارض_ملكية_عند_الدمج());
+    أرجع الناتج;
+}
+
+عام عرف معرف_تشخيص_من_كود(الكود: &نص): اختياري معرف_تشخيص {
+    ليكن المعرفات: متجه معرف_تشخيص = كل_معرفات_التشخيص();
+    ليكن ف: متغير طبيعي = 0;
+    طالما (ف < (الطول(المعرفات) مثل طبيعي)) {
+        ليكن التعريف: تعريف_تشخيص = تعريف_التشخيص(المعرفات[ف]);
+        إذا (نصان_متساويان(&التعريف.الكود, الكود)) { أرجع اختياري.موجود(المعرفات[ف]); };
+        ف := ف + 1;
+    }
+    أرجع اختياري.لا_شيء();
+}
+
+// Whether المعرف is a C diagnostic of Jisr (SULTANC-C-*).
+عام عرف هو_تشخيص_سي(المعرف: معرف_تشخيص): منطقي {
+    ليكن التعريف: تعريف_تشخيص = تعريف_التشخيص(المعرف);
+    ليكن البادئة: نص = «SULTANC-C-»;
+    إذا ((الطول(التعريف.الكود) مثل طبيعي) < (الطول(البادئة) مثل طبيعي)) { أرجع خطأ; };
+    ليكن ف: متغير طبيعي = 0;
+    طالما (ف < (الطول(البادئة) مثل طبيعي)) {
+        إذا (التعريف.الكود[ف] != البادئة[ف]) { أرجع خطأ; };
+        ف := ف + 1;
+    }
+    أرجع صواب;
+}

@@ -1,0 +1,13 @@
+// اختبار: رفض
+// تشخيص: SULTANC-PARSE-EXPRESSION
+// نظير: tests/ar/diagnostics/semantic/loop_control_in_closure.sn
+// A closure body is an expression: loop control inside it cannot reach the
+// loop around the closure.
+def main(): i32 {
+    let count: mutable i32 = 0;
+    while (count < 3) {
+        let leave: fn(): i32 = fn(): i32 -> break;
+        count := count + 1;
+    }
+    return 0;
+}

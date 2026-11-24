@@ -1,0 +1,9 @@
+type DivResult = { quotient: i32, remainder: i32 };
+extern def div(numerator: i32, denominator: i32): DivResult;
+
+def main(): i32 {
+    unsafe {
+        let division: DivResult = div(85, 2);
+        return division.quotient;
+    }
+}

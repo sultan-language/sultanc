@@ -1,0 +1,27 @@
+// Knuth-Morris-Pratt search: find where a pattern first occurs in a sequence, using the
+// prefix table to fall back after a mismatch instead of starting over.
+import std.io.println;
+import std.text.number;
+
+def main(): int {
+    let haystack: vector int = [1, 2, 1, 2, 1, 2, 3];
+    let needle: vector int = [1, 2, 3];
+    let pi: vector int = [0, 0, 0];
+    let j: mutable int = 0;
+    let match_at: mutable int = -1;
+    let i: mutable int = 0;
+    while (i < length(haystack)) {
+        while (j > 0 && haystack[i] != needle[j]) {
+            j := pi[j - 1];
+        };
+        if (haystack[i] == needle[j]) { j := j + 1; };
+        if (j == length(needle)) {
+            match_at := i + 1 - j;
+            break;
+        };
+        i := i + 1;
+    };
+    if (match_at != 4) { return 1; };
+    println(int_to_text(match_at));
+    return 0;
+}

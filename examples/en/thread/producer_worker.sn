@@ -1,0 +1,13 @@
+// OS thread example: producer_worker.
+import std.io.println;
+import std.text.number;
+import std.thread.thread;
+
+def worker(): void { println("worker running"); }
+def main(): int {
+    match spawn(fn(): void -> worker()) with
+    | result.err(_) -> { return 1; }
+    | result.ok(handle) -> { let h: mutable join_handle = handle; join(&mutable h); };
+    println("workers joined");
+    return 0;
+}

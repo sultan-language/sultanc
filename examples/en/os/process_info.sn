@@ -1,0 +1,11 @@
+// OS API example: process_info.
+import std.io.println;
+import std.text.number;
+import std.thread.thread;
+
+
+def main(): int {
+    let identifier: u64 = current_id();
+    println(uint_to_text(identifier as uint));
+    return 0;
+}

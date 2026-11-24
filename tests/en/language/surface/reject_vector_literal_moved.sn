@@ -1,0 +1,12 @@
+// اختبار: رفض
+// خروج: 1
+// تشخيص: SULTANC-OWNERSHIP-USE-AFTER-MOVE
+// نظير: tests/ar/language/surface/reject_vector_literal_moved.sn
+// A vector literal moves its owned elements in, as `let v: T = [..];` does:
+// the text is gone after the call.
+def count(v: vector string): int { return length(v) as int; }
+def main(): int {
+    let s: string = "a";
+    let n: int = count([s]);
+    return n + (length(s) as int);
+}

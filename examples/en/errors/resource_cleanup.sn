@@ -1,0 +1,18 @@
+// Cleaning up a resource: a temporary file that was written is always removed afterwards.
+import std.io.println;
+import std.text.number;
+import std.fs.read_file;
+import std.fs.write_file;
+import std.fs.mutation;
+
+def main(): int {
+    let path: string = "sultanc-error-cleanup-example.tmp";
+    let text: string = "temporary";
+    match write_file(&path, &text) with
+    | result.err(_) -> { return 1; }
+    | result.ok(_) -> { };
+    match remove_file(&path) with
+    | result.err(_) -> { return 2; }
+    | result.ok(_) -> { println("cleanup complete"); };
+    return 0;
+}

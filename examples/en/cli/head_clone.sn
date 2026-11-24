@@ -1,0 +1,25 @@
+// A small head: print the first line of the input.
+import std.io.println;
+import std.process.argument_count;
+import std.process.argument;
+import std.text.number;
+import std.text.transform;
+
+def read_input(default: string): string {
+    if (argument_count() > 1) {
+        match argument(1) with
+        | option.some(text) -> {
+            if (length(text) > 0) { return text; };
+        }
+        | option.none -> { };
+    };
+    return default;
+}
+
+def main(): int {
+    let text: string = read_input("first\nsecond\nthird");
+    let lines: vector string = split(&text, &"\n");
+    if (length(lines) == 0) { return 1; };
+    println(clone(&lines[0]));
+    return 0;
+}

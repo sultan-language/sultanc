@@ -1,0 +1,20 @@
+// Prime factorization by trial division: 84 = 2 * 2 * 3 * 7 has four prime factors.
+import std.io.println;
+import std.text.number;
+
+def main(): int {
+    let remaining: mutable int = 84;
+    let factor: mutable int = 2;
+    let count: mutable int = 0;
+    while (factor * factor <= remaining) {
+        while (remaining % factor == 0) {
+            count := count + 1;
+            remaining := remaining / factor;
+        };
+        factor := factor + 1;
+    };
+    if (remaining > 1) { count := count + 1; };
+    if (count != 4) { return 1; };
+    println(int_to_text(count));
+    return 0;
+}

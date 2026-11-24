@@ -1,0 +1,20 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 1
+// تفاضلي: نعم
+// بيئة: SULTANC_LANG=ar
+// خرج-قياسي: <فارغ>
+// خطأ-قياسي-ملف: overflow_ar.stderr
+// نظير: tests/en/runtime/failure/overflow_ar.sn
+// An integer operation whose result does not fit its type (docs/en/reference/errors.md,
+// "Runtime checks") stops the program through the panic path: the frame "the
+// program stopped", then the kind and the place of the operation, exit status 1.
+عرف زد(القيمة: ص8): ص8 {
+    أرجع القيمة + 1;
+}
+
+عرف الرئيسية(): عدد {
+    ليكن الأكبر: ص8 = 127;
+    ليكن التالي: ص8 = زد(الأكبر);
+    أرجع التالي مثل عدد;
+}

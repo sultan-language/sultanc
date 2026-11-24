@@ -1,0 +1,24 @@
+// Solving one Sudoku row: mark the digits already present and fill the empty cell with the
+// one that is missing.
+import std.io.println;
+import std.text.number;
+
+def main(): int {
+    let row: mutable vector int = [5, 3, 4, 6, 7, 8, 9, 0, 2];
+    let seen: mutable vector bool = [false, false, false, false, false, false, false, false, false, false];
+    let i: mutable int = 0;
+    while (i < 9) {
+        seen[row[i]] := true;
+        i := i + 1;
+    };
+    let missing: mutable int = 0;
+    i := 1;
+    while (i <= 9) {
+        if (!seen[i]) { missing := i; };
+        i := i + 1;
+    };
+    row[7] := missing;
+    if (missing != 1) { return 1; };
+    println(int_to_text(row[7]));
+    return 0;
+}

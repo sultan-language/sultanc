@@ -1,0 +1,18 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/language/opaque/type_named_opaque.sn
+// A type may be named opaque. It is used and pointed at like any type, and a
+// name alias (`alias`) keeps naming it; `type X = opaque;` would not (see
+// reject_opaque_hides_visible_type.sn).
+type opaque = { x: int };
+type OpaquePointer = *opaque;
+alias Other = opaque;
+
+def main(): int {
+    let record: opaque = { x: 21 };
+    let copy: Other = { x: 21 };
+    let pointer: OpaquePointer = (&record) as OpaquePointer;
+    unsafe { return (*pointer).x + copy.x; };
+}

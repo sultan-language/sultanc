@@ -1,0 +1,3 @@
+// Fixture of tests/en/compiler/tooling/partial_project.sn (not a test).
+import "a.sn";
+def main(): int { return f(); }

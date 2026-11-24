@@ -8,12 +8,17 @@
 /* Parses the parser function item. */
 int __Parser_Parse_Function_Item__(__Parser__ *__Parser_State__,
                                    __Vector__ *__Items__,
-                                   int __Public__)
+                                   int __Public__,
+                                   int __External__)
 {
     /* Stores the start. */
     __Source_Position__ __Start__ = __Parser_State__->__Current__.__Span__.__Start__;
     /* Stores the name. */
     __Text_Slice__ __Name__;
+    /* References generic type parameter names. */
+    __Text_Slice__ *__Type_Parameters__ = NULL;
+    /* Stores generic type parameter count. */
+    size_t __Type_Parameter_Count__ = 0U;
     /* References the function. */
     __Ast_Function__ *__Function__ = NULL;
     /* References the item. */
@@ -27,15 +32,20 @@ int __Parser_Parse_Function_Item__(__Parser__ *__Parser_State__,
         return __Parser_Fail__(__Parser_State__, __Diag_Word_Syntax_Expected_Function_Name__);
     }
     __Name__ = __Parser_State__->__Current__.__Lexeme__;
-    if (!__Parser_Advance__(__Parser_State__))
+    if (!__Parser_Advance__(__Parser_State__) ||
+        !__Parser_Parse_Type_Parameters__(
+            __Parser_State__, &__Type_Parameters__, &__Type_Parameter_Count__))
     {
         return 0;
     }
-    __Function__ = __Parser_Parse_Function__(__Parser_State__, __Name__, __Public__, __Start__);
+    __Function__ = __Parser_Parse_Function__(
+        __Parser_State__, __Name__, __Public__, __External__, __Start__);
     if (__Function__ == NULL)
     {
         return 0;
     }
+    __Function__->__Type_Parameters__ = __Type_Parameters__;
+    __Function__->__Type_Parameter_Count__ = __Type_Parameter_Count__;
     __Item__ = __Parser_New_Module_Item__(__Parser_State__,
                                           __Ast_Module_Item_Function__,
                                           __Name__,

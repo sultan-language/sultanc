@@ -1,0 +1,6 @@
+خطأ[SULTANC-COMPTIME-NON-CONSTANT]: تعبير وقت_الترجمة يجب أن يكون ثابتا نقيا وقت الترجمة
+  --> tests/ar/ispeak/fixtures/comptime_runtime_value.sn:8:10..8:23
+   |
+ 8 |     أرجع وقت_الترجمة س;
+   |          ^^^^^^^^^^^^^
+   |

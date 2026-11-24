@@ -1,10 +1,13 @@
 /* Parses atomic expressions. */
 
+#include "frontend/ast/storage.h"
 #include "frontend/parser/cursor.h"
 #include "frontend/parser/diagnostic.h"
 #include "frontend/parser/expression_internal.h"
 #include "frontend/parser/storage.h"
 #include "frontend/parser/token_payload.h"
+
+#include <stdint.h>
 
 /* Parses the parser atom. */
 __Ast_Atom__ __Parser_Parse_Atom__(__Parser__ *__Parser_State__, int *__Ok__)
@@ -16,6 +19,44 @@ __Ast_Atom__ __Parser_Parse_Atom__(__Parser__ *__Parser_State__, int *__Ok__)
     *__Ok__ = 0;
     __Atom__.__Kind__ = __Ast_Atom_Literal__;
     __Atom__.__As__.__Literal__ = NULL;
+    /* A minus sign directly before an integer literal forms one negative
+     * integer literal, as canonical تعبير_عدد_سالب_من_قيمة_رمز does for the
+     * same token pair (compiler/frontend/parser/expressions.sn). */
+    if (__Parser_State__->__Current__.__Kind__ == __Token_MINUS_OPERATOR__ &&
+        __Parser_State__->__Next__.__Kind__ == __Token_LIT_INT__)
+    {
+        __Integer_Literal__ __Integer__;
+        __Source_Span__ __Span__ = __Parser_State__->__Current__.__Span__;
+        if (!__Parser_Advance__(__Parser_State__) ||
+            !__Parser_Current_Integer__(__Parser_State__, &__Integer__))
+        {
+            return __Atom__;
+        }
+        if (__Integer__.__Unsigned_Wide__ && __Integer__.__Value__ != INT64_MIN)
+        {
+            (void)__Parser_Fail__(__Parser_State__, __Diag_Word_Syntax_Expected_Atom__);
+            return __Atom__;
+        }
+        __Span__.__End__ = __Parser_State__->__Current__.__Span__.__End__;
+        __Literal__ = __Parser_New_Literal__(__Parser_State__, __Ast_Literal_Integer__, __Span__);
+        if (__Literal__ == NULL)
+        {
+            return __Atom__;
+        }
+        /* -(2^63) is INT64_MIN; every other magnitude is signed-representable. */
+        __Literal__->__As__.__Integer__.__Value__ =
+            __Integer__.__Unsigned_Wide__ ? INT64_MIN : -__Integer__.__Value__;
+        __Literal__->__As__.__Integer__.__Spelling__ = __Integer__.__Spelling__;
+        __Literal__->__As__.__Integer__.__Unsigned_Wide__ = 0;
+        __Atom__.__Kind__ = __Ast_Atom_Literal__;
+        __Atom__.__As__.__Literal__ = __Literal__;
+        if (!__Parser_Advance__(__Parser_State__))
+        {
+            return __Atom__;
+        }
+        *__Ok__ = 1;
+        return __Atom__;
+    }
     switch (__Parser_State__->__Current__.__Kind__)
     {
         case __Token_LIT_INT__:
@@ -34,6 +75,7 @@ __Ast_Atom__ __Parser_Parse_Atom__(__Parser__ *__Parser_State__, int *__Ok__)
             }
             __Literal__->__As__.__Integer__.__Value__ = __Integer__.__Value__;
             __Literal__->__As__.__Integer__.__Spelling__ = __Integer__.__Spelling__;
+            __Literal__->__As__.__Integer__.__Unsigned_Wide__ = __Integer__.__Unsigned_Wide__;
             break;
         }
         case __Token_LIT_CHAR__:
@@ -91,6 +133,38 @@ __Ast_Atom__ __Parser_Parse_Atom__(__Parser__ *__Parser_State__, int *__Ok__)
             {
                 return __Atom__;
             }
+            break;
+        }
+        case __Token_LIT_FLO__:
+        {
+            /* Stores the spelling without digit separators. */
+            __Text_Slice__ __Spelling__ = __Parser_State__->__Current__.__Lexeme__;
+            char *__Digits__;
+            size_t __Index__;
+            size_t __Length__ = 0U;
+            __Literal__ = __Parser_New_Literal__(
+                __Parser_State__, __Ast_Literal_Float__, __Parser_State__->__Current__.__Span__);
+            if (__Literal__ == NULL)
+            {
+                return __Atom__;
+            }
+            __Digits__ = (char *)__Ast_Allocate__(__Parser_State__->__Ast__,
+                                                  __Spelling__.__Length__ + 1U, 1U);
+            if (__Digits__ == NULL)
+            {
+                (void)__Parser_Fail_Internal__(__Parser_State__, __Diag_Word_Syntax_Internal_Oom__);
+                return __Atom__;
+            }
+            for (__Index__ = 0U; __Index__ < __Spelling__.__Length__; ++__Index__)
+            {
+                if (__Spelling__.__Data__[__Index__] != '_')
+                {
+                    __Digits__[__Length__++] = __Spelling__.__Data__[__Index__];
+                }
+            }
+            __Digits__[__Length__] = '\0';
+            __Literal__->__As__.__String__.__Data__ = __Digits__;
+            __Literal__->__As__.__String__.__Length__ = __Length__;
             break;
         }
         case __Token_LIT_UNDEF__:

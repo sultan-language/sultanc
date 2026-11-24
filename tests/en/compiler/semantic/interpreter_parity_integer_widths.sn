@@ -1,0 +1,29 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+def main(): i32 {
+    let s8_min: i8 = -128;
+    let s8_max: i8 = 127;
+    let u8_max: u8 = 255;
+    let s16_min: i16 = -32768;
+    let s16_max: i16 = 32767;
+    let u16_max: u16 = 65535;
+    let s32_max: i32 = 2147483647;
+    let u32_max: u32 = 4294967295;
+
+    if ((s8_min as i64) != -128) { return 1; };
+    if ((s8_max as i64) != 127) { return 2; };
+    if ((u8_max as u64) != 255) { return 3; };
+    if ((s16_min as i64) != -32768) { return 4; };
+    if ((s16_max as i64) != 32767) { return 5; };
+    if ((u16_max as u64) != 65535) { return 6; };
+    if ((s32_max as i64) != 2147483647) { return 7; };
+    if ((u32_max as u64) != 4294967295) { return 8; };
+
+    let s8_min_wide: i64 = s8_min;
+    let s8_max_wide: i64 = s8_max;
+    let mixed: i64 = s8_min_wide + s8_max_wide + 1;
+    if (mixed != 0) { return 9; };
+    return 42;
+}

@@ -1,0 +1,29 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/language/numeric/packed_stack_arguments.sn
+// Narrow integers passed on the stack, past the eight integer registers. Apple's AArch64
+// ABI packs them by size (an i8 at offset 0, an i16 at 2, an i32 at 4, the next i8 at 8);
+// the machine interpreter gave every stack argument the word at offset / 8, so on an
+// Apple Silicon host the first three shared one word and their values were lost.
+def tail(
+    a0: i64, a1: i64, a2: i64, a3: i64, a4: i64, a5: i64, a6: i64, a7: i64,
+    s0: i8, s1: i16, s2: i32, s3: i8, s4: u8, s5: u16, s6: i64
+): i64 {
+    if (s0 != -3) { return 1; };
+    if (s1 != -700) { return 2; };
+    if (s2 != -40000) { return 3; };
+    if (s3 != 5) { return 4; };
+    if (s4 != 250) { return 5; };
+    if (s5 != 65000) { return 6; };
+    if (s6 != -9) { return 7; };
+    return a0 + a7 + (s0 as i64) + (s1 as i64) + (s2 as i64) + (s3 as i64) + (s4 as i64) + (s5 as i64) + s6;
+}
+
+def main(): int {
+    let r: i64 = tail(1, 2, 3, 4, 5, 6, 7, 8, -3 as i8, -700 as i16, -40000, 5 as i8, 250 as u8, 65000 as u16, -9);
+    if (r < 10) { return r as int; };
+    if (r != 1 + 8 - 3 - 700 - 40000 + 5 + 250 + 65000 - 9) { return 10; };
+    return 42;
+}

@@ -1,0 +1,27 @@
+// Parsing a JSON document, reading a field, and writing it back out.
+import std.io.println;
+import std.json.parse;
+import std.json.stringify;
+import std.json.value;
+
+def main(): int {
+    let source: string = "{\"name\":\"SultanC\",\"stage\":2}";
+    match parse_json(&source) with
+    | result.err(_) -> { println("invalid json"); return 1; }
+    | result.ok(document) -> {
+        // Patterns use the canonical variant names; English variant aliases are
+        // accepted in expressions but not yet in patterns.
+        match json_root(&document) with
+        | قيمة_جسون.كائن(index) -> {
+            let key: string = "name";
+            match json_object_get(&document, index, &key) with
+            | option.some(قيمة_جسون.سلسلة(name)) -> { println(name); }
+            | _ -> { println("no name"); };
+        }
+        | _ -> { println("not an object"); };
+        match stringify_json(&document) with
+        | result.ok(encoded) -> { println(encoded); }
+        | result.err(_) -> { return 2; };
+    };
+    return 0;
+}

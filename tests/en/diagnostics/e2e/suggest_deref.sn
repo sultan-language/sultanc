@@ -1,0 +1,12 @@
+// اختبار: رفض
+// تشخيص: SULTANC-TYPE-MISMATCH
+// نظير: tests/ar/diagnostics/e2e/suggest_deref.sn
+// خرج-تشخيص-عربي: suggest_deref.ar.stderr
+// خرج-تشخيص-إنجليزي: suggest_deref.en.stderr
+// A reference where its number is expected: a help and a fix with `*`.
+def main(): i32 {
+    let count: i32 = 3;
+    let r: &i32 = &count;
+    let d: i32 = r;
+    return d;
+}

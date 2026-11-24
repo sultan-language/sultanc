@@ -1,0 +1,41 @@
+// An append-only log: write a first line, then read the file and write it back with one
+// more line added at the end.
+import std.io.println;
+import std.text.number;
+import std.fs.write_file;
+import std.fs.read_file;
+import std.fs.mutation;
+import std.fs.metadata;
+import std.fs.walk;
+import std.fs.path;
+import std.text.transform;
+
+def main(): int {
+    let path: string = "sultanc-append-log.tmp";
+    let first: string = "first\n";
+    match write_file(&path, &first) with
+    | result.err(_) -> { return 1; }
+    | _ -> { };
+    let lines: mutable int = 0;
+    match read_file(&path) with
+    | result.ok(previous) -> {
+        let next: string = "second\n";
+        let both: string = concat(&previous, &next);
+        match write_file(&path, &both) with
+        | result.err(_) -> { return 2; }
+        | _ -> { };
+    }
+    | _ -> { return 3; };
+    match read_file(&path) with
+    | result.ok(text) -> {
+        let result: vector string = split(&text, &"\n");
+        lines := length(result) - 1;
+    }
+    | _ -> { return 4; };
+    match remove_file(&path) with
+    | result.err(_) -> { return 5; }
+    | _ -> { };
+    if (lines != 2) { return 6; };
+    println(int_to_text(lines));
+    return 0;
+}

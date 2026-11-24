@@ -1,0 +1,12 @@
+// Validating JSON: a document that parses is reported as valid.
+import std.io.println;
+import std.text.number;
+import std.json.parse;
+
+def main(): int {
+    let input: string = "{\"enabled\":true}";
+    match parse_json(&input) with
+    | result.ok(_) -> { println("valid"); }
+    | result.err(_) -> { return 1; };
+    return 0;
+}

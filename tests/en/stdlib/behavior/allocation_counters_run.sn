@@ -1,0 +1,48 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 0
+// نظير: tests/ar/stdlib/behavior/allocation_counters_run.sn
+// std's allocation counters, process-wide and per thread, give the same
+// answers in an executable and under `run`, where the machine interpreter
+// serves storage itself and answers a call to a counter from its own counts.
+// MSIR's optimization pipeline runs for both, and must leave those calls in
+// place: an inlined counter reads std's counts, which the interpreter's
+// storage never updates, so every counter read 0 under `run`.
+import std.os.allocation;
+import std.os.allocation_cache;
+import std.text.number;
+import std.io.print;
+import std.io.println;
+
+def work(i: int): uint {
+    let t: string = int_to_text(i * 1000003);
+    return length(t) as uint;
+}
+
+def check(label: string, ok: bool): int {
+    print(label);
+    if (ok) { println(": yes"); return 0; };
+    println(": no");
+    return 1;
+}
+
+def main(): int {
+    let a0: u64 = allocation_count();
+    let tf0: u64 = thread_free_count();
+    let tb0: u64 = thread_requested_bytes();
+    let reads: bool = allocation_count() == a0 && thread_free_count() == tf0;
+    let f0: u64 = free_count();
+    let b0: u64 = requested_bytes();
+    let i: mutable int = 0;
+    let total: mutable uint = 0;
+    while (i < 100) { total := total + work(i); i := i + 1; }
+    let failed: mutable int = 0;
+    failed := failed + check("reading the counters allocates nothing", reads);
+    failed := failed + check("allocations counted", allocation_count() >= a0 + 100);
+    failed := failed + check("frees counted", free_count() >= f0 + 100);
+    failed := failed + check("requested bytes counted", requested_bytes() > b0);
+    failed := failed + check("this thread's frees counted", thread_free_count() >= tf0 + 100);
+    failed := failed + check("this thread's requested bytes counted", thread_requested_bytes() > tb0);
+    if (total == 0) { return 100; };
+    return failed;
+}

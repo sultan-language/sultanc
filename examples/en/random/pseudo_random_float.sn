@@ -1,0 +1,13 @@
+// Seeded pseudorandom sample: pseudo_random_float.
+import std.io.println;
+import std.text.number;
+import std.random.prng;
+
+
+def main(): int {
+    let generator: mutable prng = new_prng(2027);
+    match prng_range(&mutable generator, 1, 7) with
+    | option.some(n) -> { println(uint_to_text(n)); }
+    | option.none -> { return 1; };
+    return 0;
+}

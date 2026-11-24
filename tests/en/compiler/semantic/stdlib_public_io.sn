@@ -1,0 +1,10 @@
+import std.io.print;
+import std.io.println;
+
+def main(): int {
+    print("A");
+    print("");
+    println("B");
+    println("سلطان");
+    return 42;
+}

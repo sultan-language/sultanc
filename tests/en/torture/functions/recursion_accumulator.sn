@@ -1,0 +1,15 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// فئة: functions
+def sum_down(value: int, accumulator: int): int {
+    if (value == 0) { return accumulator; };
+    return sum_down(value - 1, accumulator + value);
+}
+
+def main(): int {
+    if (sum_down(9, 0) != 45) { return 1; };
+    if (sum_down(6, 6) != 27) { return 2; };
+    return 42;
+}

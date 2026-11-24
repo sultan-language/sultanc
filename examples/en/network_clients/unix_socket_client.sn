@@ -1,0 +1,42 @@
+// A Unix domain socket client: connect to a listener in the same program, send "hello" and
+// check what the server reads.
+import std.io.println;
+import std.net.unix;
+import std.fs.mutation;
+import std.text.from_bytes;
+
+def main(): int {
+    let path: string = "sultanc_unix_socket_client.sock";
+    let listener: unix_listener;
+    match unix_listener_bind(&path) with
+    | result.ok(s) -> { listener := s; }
+    | result.err(_) -> { return 1; };
+    let client: unix_stream;
+    match unix_connect(&path) with
+    | result.ok(s) -> { client := s; }
+    | result.err(_) -> { return 2; };
+    let server: unix_stream;
+    match unix_accept(&listener) with
+    | result.ok(s) -> { server := s; }
+    | result.err(_) -> { return 3; };
+    let message: vector u8 = bytes_from_text("hello");
+    match unix_write(&client, &message, 0, 5) with
+    | result.ok(n) -> {
+        if (n != 5) { return 4; };
+    }
+    | result.err(_) -> { return 5; };
+    let received: mutable vector u8 = [0 as u8, 0 as u8, 0 as u8, 0 as u8, 0 as u8];
+    match unix_read(&server, &mutable received, 0, 5) with
+    | result.ok(n) -> {
+        if (n != 5 || received[0] != 104 as u8) { return 6; };
+    }
+    | result.err(_) -> { return 7; };
+    let a: result int, int = unix_stream_close(client);
+    let b: result int, int = unix_stream_close(server);
+    let c: result int, int = unix_listener_close(listener);
+    match remove_file(&path) with
+    | result.ok(_) -> { }
+    | result.err(_) -> { return 8; };
+    println("unix socket");
+    return 0;
+}

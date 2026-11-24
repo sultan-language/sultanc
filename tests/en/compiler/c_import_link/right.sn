@@ -1,0 +1,8 @@
+// Part of tests/en/compiler/c_import_link/main.sn: the module that imports
+// right.c (and only right.c).
+import "right.c";
+
+public def from_right(): i32 {
+    let p: pt_t = make_pt(2, 3);
+    return right_total() + sum_pt(p);
+}

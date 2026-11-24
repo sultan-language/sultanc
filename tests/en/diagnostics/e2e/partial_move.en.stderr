@@ -1,0 +1,11 @@
+error[SULTANC-OWNERSHIP-PARTIAL-MOVE]: partial move of an owned aggregate member is not allowed — The value a member is moved out of is `parts`. This value cannot be moved here.
+  --> tests/en/diagnostics/e2e/partial_move.sn:9:17..9:25
+   |
+ 9 |     return take(parts[1]);
+   |                 ^^^^^^^^ invalid use
+   |
+  ::: tests/en/diagnostics/e2e/partial_move.sn:8:5..8:52
+   |
+ 8 |     let parts: vector string = ["first", "second"];
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ declared here
+   |

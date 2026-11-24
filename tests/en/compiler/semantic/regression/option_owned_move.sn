@@ -1,0 +1,8 @@
+def main(): int {
+    let text: string = "hello";
+    let wrapped: option string = option.some(text);
+    let moved: option string = wrapped;
+    match wrapped with
+    | option.some(value) -> { return length(value); }
+    | option.none() -> { return 0; }
+}

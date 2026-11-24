@@ -1,0 +1,1005 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// نظير: tests/ar/language/numeric/division_by_constant_16bit.sn
+// Division and remainder by u16 and i16 constants (small, powers of two and
+// their neighbours, the extremes and random ones) over every dividend,
+// against the same division by a value only known at run time. Generated.
+import std.process.argument_count;
+
+def t_u16_1(one: u16): bool {
+    let d: u16 = 1 * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: u16 = i as u16;
+        if (x / 1 != x / d || x % 1 != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_u16_2(one: u16): bool {
+    let d: u16 = 2 * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: u16 = i as u16;
+        if (x / 2 != x / d || x % 2 != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_u16_3(one: u16): bool {
+    let d: u16 = 3 * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: u16 = i as u16;
+        if (x / 3 != x / d || x % 3 != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_u16_5(one: u16): bool {
+    let d: u16 = 5 * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: u16 = i as u16;
+        if (x / 5 != x / d || x % 5 != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_u16_6(one: u16): bool {
+    let d: u16 = 6 * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: u16 = i as u16;
+        if (x / 6 != x / d || x % 6 != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_u16_7(one: u16): bool {
+    let d: u16 = 7 * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: u16 = i as u16;
+        if (x / 7 != x / d || x % 7 != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_u16_9(one: u16): bool {
+    let d: u16 = 9 * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: u16 = i as u16;
+        if (x / 9 != x / d || x % 9 != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_u16_10(one: u16): bool {
+    let d: u16 = 10 * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: u16 = i as u16;
+        if (x / 10 != x / d || x % 10 != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_u16_11(one: u16): bool {
+    let d: u16 = 11 * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: u16 = i as u16;
+        if (x / 11 != x / d || x % 11 != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_u16_12(one: u16): bool {
+    let d: u16 = 12 * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: u16 = i as u16;
+        if (x / 12 != x / d || x % 12 != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_u16_13(one: u16): bool {
+    let d: u16 = 13 * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: u16 = i as u16;
+        if (x / 13 != x / d || x % 13 != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_u16_25(one: u16): bool {
+    let d: u16 = 25 * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: u16 = i as u16;
+        if (x / 25 != x / d || x % 25 != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_u16_60(one: u16): bool {
+    let d: u16 = 60 * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: u16 = i as u16;
+        if (x / 60 != x / d || x % 60 != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_u16_100(one: u16): bool {
+    let d: u16 = 100 * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: u16 = i as u16;
+        if (x / 100 != x / d || x % 100 != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_u16_127(one: u16): bool {
+    let d: u16 = 127 * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: u16 = i as u16;
+        if (x / 127 != x / d || x % 127 != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_u16_128(one: u16): bool {
+    let d: u16 = 128 * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: u16 = i as u16;
+        if (x / 128 != x / d || x % 128 != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_u16_255(one: u16): bool {
+    let d: u16 = 255 * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: u16 = i as u16;
+        if (x / 255 != x / d || x % 255 != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_u16_256(one: u16): bool {
+    let d: u16 = 256 * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: u16 = i as u16;
+        if (x / 256 != x / d || x % 256 != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_u16_502(one: u16): bool {
+    let d: u16 = 502 * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: u16 = i as u16;
+        if (x / 502 != x / d || x % 502 != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_u16_641(one: u16): bool {
+    let d: u16 = 641 * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: u16 = i as u16;
+        if (x / 641 != x / d || x % 641 != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_u16_762(one: u16): bool {
+    let d: u16 = 762 * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: u16 = i as u16;
+        if (x / 762 != x / d || x % 762 != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_u16_1000(one: u16): bool {
+    let d: u16 = 1000 * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: u16 = i as u16;
+        if (x / 1000 != x / d || x % 1000 != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_u16_1634(one: u16): bool {
+    let d: u16 = 1634 * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: u16 = i as u16;
+        if (x / 1634 != x / d || x % 1634 != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_u16_3169(one: u16): bool {
+    let d: u16 = 3169 * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: u16 = i as u16;
+        if (x / 3169 != x / d || x % 3169 != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_u16_3600(one: u16): bool {
+    let d: u16 = 3600 * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: u16 = i as u16;
+        if (x / 3600 != x / d || x % 3600 != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_u16_4095(one: u16): bool {
+    let d: u16 = 4095 * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: u16 = i as u16;
+        if (x / 4095 != x / d || x % 4095 != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_u16_4096(one: u16): bool {
+    let d: u16 = 4096 * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: u16 = i as u16;
+        if (x / 4096 != x / d || x % 4096 != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_u16_5791(one: u16): bool {
+    let d: u16 = 5791 * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: u16 = i as u16;
+        if (x / 5791 != x / d || x % 5791 != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_u16_7419(one: u16): bool {
+    let d: u16 = 7419 * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: u16 = i as u16;
+        if (x / 7419 != x / d || x % 7419 != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_u16_8756(one: u16): bool {
+    let d: u16 = 8756 * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: u16 = i as u16;
+        if (x / 8756 != x / d || x % 8756 != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_u16_10000(one: u16): bool {
+    let d: u16 = 10000 * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: u16 = i as u16;
+        if (x / 10000 != x / d || x % 10000 != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_u16_14096(one: u16): bool {
+    let d: u16 = 14096 * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: u16 = i as u16;
+        if (x / 14096 != x / d || x % 14096 != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_u16_15408(one: u16): bool {
+    let d: u16 = 15408 * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: u16 = i as u16;
+        if (x / 15408 != x / d || x % 15408 != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_u16_18256(one: u16): bool {
+    let d: u16 = 18256 * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: u16 = i as u16;
+        if (x / 18256 != x / d || x % 18256 != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_u16_21305(one: u16): bool {
+    let d: u16 = 21305 * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: u16 = i as u16;
+        if (x / 21305 != x / d || x % 21305 != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_u16_26599(one: u16): bool {
+    let d: u16 = 26599 * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: u16 = i as u16;
+        if (x / 26599 != x / d || x % 26599 != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_u16_32767(one: u16): bool {
+    let d: u16 = 32767 * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: u16 = i as u16;
+        if (x / 32767 != x / d || x % 32767 != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_u16_32768(one: u16): bool {
+    let d: u16 = 32768 * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: u16 = i as u16;
+        if (x / 32768 != x / d || x % 32768 != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_u16_32769(one: u16): bool {
+    let d: u16 = 32769 * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: u16 = i as u16;
+        if (x / 32769 != x / d || x % 32769 != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_u16_40472(one: u16): bool {
+    let d: u16 = 40472 * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: u16 = i as u16;
+        if (x / 40472 != x / d || x % 40472 != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_u16_42515(one: u16): bool {
+    let d: u16 = 42515 * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: u16 = i as u16;
+        if (x / 42515 != x / d || x % 42515 != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_u16_42529(one: u16): bool {
+    let d: u16 = 42529 * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: u16 = i as u16;
+        if (x / 42529 != x / d || x % 42529 != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_u16_43690(one: u16): bool {
+    let d: u16 = 43690 * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: u16 = i as u16;
+        if (x / 43690 != x / d || x % 43690 != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_u16_43908(one: u16): bool {
+    let d: u16 = 43908 * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: u16 = i as u16;
+        if (x / 43908 != x / d || x % 43908 != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_u16_55687(one: u16): bool {
+    let d: u16 = 55687 * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: u16 = i as u16;
+        if (x / 55687 != x / d || x % 55687 != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_u16_57775(one: u16): bool {
+    let d: u16 = 57775 * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: u16 = i as u16;
+        if (x / 57775 != x / d || x % 57775 != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_u16_59325(one: u16): bool {
+    let d: u16 = 59325 * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: u16 = i as u16;
+        if (x / 59325 != x / d || x % 59325 != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_u16_65411(one: u16): bool {
+    let d: u16 = 65411 * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: u16 = i as u16;
+        if (x / 65411 != x / d || x % 65411 != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_u16_65534(one: u16): bool {
+    let d: u16 = 65534 * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: u16 = i as u16;
+        if (x / 65534 != x / d || x % 65534 != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_u16_65535(one: u16): bool {
+    let d: u16 = 65535 * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: u16 = i as u16;
+        if (x / 65535 != x / d || x % 65535 != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_i16_m32768(one: i16): bool {
+    let d: i16 = (-32767 - 1) * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: i16 = i as i16;
+        if (x / (-32767 - 1) != x / d || x % (-32767 - 1) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_i16_m32767(one: i16): bool {
+    let d: i16 = (-32767) * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: i16 = i as i16;
+        if (x / (-32767) != x / d || x % (-32767) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_i16_m30903(one: i16): bool {
+    let d: i16 = (-30903) * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: i16 = i as i16;
+        if (x / (-30903) != x / d || x % (-30903) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_i16_m28795(one: i16): bool {
+    let d: i16 = (-28795) * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: i16 = i as i16;
+        if (x / (-28795) != x / d || x % (-28795) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_i16_m22712(one: i16): bool {
+    let d: i16 = (-22712) * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: i16 = i as i16;
+        if (x / (-22712) != x / d || x % (-22712) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_i16_m16384(one: i16): bool {
+    let d: i16 = (-16384) * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: i16 = i as i16;
+        if (x / (-16384) != x / d || x % (-16384) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_i16_m11109(one: i16): bool {
+    let d: i16 = (-11109) * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: i16 = i as i16;
+        if (x / (-11109) != x / d || x % (-11109) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_i16_m7937(one: i16): bool {
+    let d: i16 = (-7937) * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: i16 = i as i16;
+        if (x / (-7937) != x / d || x % (-7937) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_i16_m5614(one: i16): bool {
+    let d: i16 = (-5614) * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: i16 = i as i16;
+        if (x / (-5614) != x / d || x % (-5614) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_i16_m5202(one: i16): bool {
+    let d: i16 = (-5202) * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: i16 = i as i16;
+        if (x / (-5202) != x / d || x % (-5202) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_i16_m2544(one: i16): bool {
+    let d: i16 = (-2544) * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: i16 = i as i16;
+        if (x / (-2544) != x / d || x % (-2544) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_i16_m1000(one: i16): bool {
+    let d: i16 = (-1000) * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: i16 = i as i16;
+        if (x / (-1000) != x / d || x % (-1000) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_i16_m255(one: i16): bool {
+    let d: i16 = (-255) * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: i16 = i as i16;
+        if (x / (-255) != x / d || x % (-255) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_i16_m128(one: i16): bool {
+    let d: i16 = (-128) * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: i16 = i as i16;
+        if (x / (-128) != x / d || x % (-128) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_i16_m10(one: i16): bool {
+    let d: i16 = (-10) * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: i16 = i as i16;
+        if (x / (-10) != x / d || x % (-10) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_i16_m7(one: i16): bool {
+    let d: i16 = (-7) * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: i16 = i as i16;
+        if (x / (-7) != x / d || x % (-7) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_i16_m3(one: i16): bool {
+    let d: i16 = (-3) * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: i16 = i as i16;
+        if (x / (-3) != x / d || x % (-3) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_i16_m2(one: i16): bool {
+    let d: i16 = (-2) * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: i16 = i as i16;
+        if (x / (-2) != x / d || x % (-2) != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_i16_2(one: i16): bool {
+    let d: i16 = 2 * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: i16 = i as i16;
+        if (x / 2 != x / d || x % 2 != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_i16_3(one: i16): bool {
+    let d: i16 = 3 * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: i16 = i as i16;
+        if (x / 3 != x / d || x % 3 != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_i16_5(one: i16): bool {
+    let d: i16 = 5 * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: i16 = i as i16;
+        if (x / 5 != x / d || x % 5 != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_i16_7(one: i16): bool {
+    let d: i16 = 7 * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: i16 = i as i16;
+        if (x / 7 != x / d || x % 7 != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_i16_10(one: i16): bool {
+    let d: i16 = 10 * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: i16 = i as i16;
+        if (x / 10 != x / d || x % 10 != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_i16_100(one: i16): bool {
+    let d: i16 = 100 * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: i16 = i as i16;
+        if (x / 100 != x / d || x % 100 != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_i16_127(one: i16): bool {
+    let d: i16 = 127 * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: i16 = i as i16;
+        if (x / 127 != x / d || x % 127 != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_i16_128(one: i16): bool {
+    let d: i16 = 128 * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: i16 = i as i16;
+        if (x / 128 != x / d || x % 128 != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_i16_129(one: i16): bool {
+    let d: i16 = 129 * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: i16 = i as i16;
+        if (x / 129 != x / d || x % 129 != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_i16_255(one: i16): bool {
+    let d: i16 = 255 * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: i16 = i as i16;
+        if (x / 255 != x / d || x % 255 != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_i16_1000(one: i16): bool {
+    let d: i16 = 1000 * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: i16 = i as i16;
+        if (x / 1000 != x / d || x % 1000 != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_i16_2934(one: i16): bool {
+    let d: i16 = 2934 * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: i16 = i as i16;
+        if (x / 2934 != x / d || x % 2934 != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_i16_16383(one: i16): bool {
+    let d: i16 = 16383 * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: i16 = i as i16;
+        if (x / 16383 != x / d || x % 16383 != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_i16_16384(one: i16): bool {
+    let d: i16 = 16384 * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: i16 = i as i16;
+        if (x / 16384 != x / d || x % 16384 != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_i16_17867(one: i16): bool {
+    let d: i16 = 17867 * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: i16 = i as i16;
+        if (x / 17867 != x / d || x % 17867 != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_i16_18961(one: i16): bool {
+    let d: i16 = 18961 * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: i16 = i as i16;
+        if (x / 18961 != x / d || x % 18961 != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_i16_23517(one: i16): bool {
+    let d: i16 = 23517 * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: i16 = i as i16;
+        if (x / 23517 != x / d || x % 23517 != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_i16_23977(one: i16): bool {
+    let d: i16 = 23977 * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: i16 = i as i16;
+        if (x / 23977 != x / d || x % 23977 != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_i16_25010(one: i16): bool {
+    let d: i16 = 25010 * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: i16 = i as i16;
+        if (x / 25010 != x / d || x % 25010 != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_i16_26062(one: i16): bool {
+    let d: i16 = 26062 * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: i16 = i as i16;
+        if (x / 26062 != x / d || x % 26062 != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_i16_31069(one: i16): bool {
+    let d: i16 = 31069 * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: i16 = i as i16;
+        if (x / 31069 != x / d || x % 31069 != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+def t_i16_32767(one: i16): bool {
+    let d: i16 = 32767 * one;
+    let i: mutable uint = 0;
+    while (i < 65536) {
+        let x: i16 = i as i16;
+        if (x / 32767 != x / d || x % 32767 != x % d) { return false; };
+        i := i + 1;
+    }
+    return true;
+}
+
+def main(): int {
+    let one_u16: u16 = argument_count() as u16;
+    let one_i16: i16 = argument_count() as i16;
+    if (!t_u16_1(one_u16)) { return 2; };
+    if (!t_u16_2(one_u16)) { return 3; };
+    if (!t_u16_3(one_u16)) { return 4; };
+    if (!t_u16_5(one_u16)) { return 5; };
+    if (!t_u16_6(one_u16)) { return 6; };
+    if (!t_u16_7(one_u16)) { return 7; };
+    if (!t_u16_9(one_u16)) { return 8; };
+    if (!t_u16_10(one_u16)) { return 9; };
+    if (!t_u16_11(one_u16)) { return 10; };
+    if (!t_u16_12(one_u16)) { return 11; };
+    if (!t_u16_13(one_u16)) { return 12; };
+    if (!t_u16_25(one_u16)) { return 13; };
+    if (!t_u16_60(one_u16)) { return 14; };
+    if (!t_u16_100(one_u16)) { return 15; };
+    if (!t_u16_127(one_u16)) { return 16; };
+    if (!t_u16_128(one_u16)) { return 17; };
+    if (!t_u16_255(one_u16)) { return 18; };
+    if (!t_u16_256(one_u16)) { return 19; };
+    if (!t_u16_502(one_u16)) { return 20; };
+    if (!t_u16_641(one_u16)) { return 21; };
+    if (!t_u16_762(one_u16)) { return 22; };
+    if (!t_u16_1000(one_u16)) { return 23; };
+    if (!t_u16_1634(one_u16)) { return 24; };
+    if (!t_u16_3169(one_u16)) { return 25; };
+    if (!t_u16_3600(one_u16)) { return 26; };
+    if (!t_u16_4095(one_u16)) { return 27; };
+    if (!t_u16_4096(one_u16)) { return 28; };
+    if (!t_u16_5791(one_u16)) { return 29; };
+    if (!t_u16_7419(one_u16)) { return 30; };
+    if (!t_u16_8756(one_u16)) { return 31; };
+    if (!t_u16_10000(one_u16)) { return 32; };
+    if (!t_u16_14096(one_u16)) { return 33; };
+    if (!t_u16_15408(one_u16)) { return 34; };
+    if (!t_u16_18256(one_u16)) { return 35; };
+    if (!t_u16_21305(one_u16)) { return 36; };
+    if (!t_u16_26599(one_u16)) { return 37; };
+    if (!t_u16_32767(one_u16)) { return 38; };
+    if (!t_u16_32768(one_u16)) { return 39; };
+    if (!t_u16_32769(one_u16)) { return 40; };
+    if (!t_u16_40472(one_u16)) { return 41; };
+    if (!t_u16_42515(one_u16)) { return 42; };
+    if (!t_u16_42529(one_u16)) { return 43; };
+    if (!t_u16_43690(one_u16)) { return 44; };
+    if (!t_u16_43908(one_u16)) { return 45; };
+    if (!t_u16_55687(one_u16)) { return 46; };
+    if (!t_u16_57775(one_u16)) { return 47; };
+    if (!t_u16_59325(one_u16)) { return 48; };
+    if (!t_u16_65411(one_u16)) { return 49; };
+    if (!t_u16_65534(one_u16)) { return 50; };
+    if (!t_u16_65535(one_u16)) { return 51; };
+    if (!t_i16_m32768(one_i16)) { return 52; };
+    if (!t_i16_m32767(one_i16)) { return 53; };
+    if (!t_i16_m30903(one_i16)) { return 54; };
+    if (!t_i16_m28795(one_i16)) { return 55; };
+    if (!t_i16_m22712(one_i16)) { return 56; };
+    if (!t_i16_m16384(one_i16)) { return 57; };
+    if (!t_i16_m11109(one_i16)) { return 58; };
+    if (!t_i16_m7937(one_i16)) { return 59; };
+    if (!t_i16_m5614(one_i16)) { return 60; };
+    if (!t_i16_m5202(one_i16)) { return 61; };
+    if (!t_i16_m2544(one_i16)) { return 62; };
+    if (!t_i16_m1000(one_i16)) { return 63; };
+    if (!t_i16_m255(one_i16)) { return 64; };
+    if (!t_i16_m128(one_i16)) { return 65; };
+    if (!t_i16_m10(one_i16)) { return 66; };
+    if (!t_i16_m7(one_i16)) { return 67; };
+    if (!t_i16_m3(one_i16)) { return 68; };
+    if (!t_i16_m2(one_i16)) { return 69; };
+    if (!t_i16_2(one_i16)) { return 70; };
+    if (!t_i16_3(one_i16)) { return 71; };
+    if (!t_i16_5(one_i16)) { return 72; };
+    if (!t_i16_7(one_i16)) { return 73; };
+    if (!t_i16_10(one_i16)) { return 74; };
+    if (!t_i16_100(one_i16)) { return 75; };
+    if (!t_i16_127(one_i16)) { return 76; };
+    if (!t_i16_128(one_i16)) { return 77; };
+    if (!t_i16_129(one_i16)) { return 78; };
+    if (!t_i16_255(one_i16)) { return 79; };
+    if (!t_i16_1000(one_i16)) { return 80; };
+    if (!t_i16_2934(one_i16)) { return 81; };
+    if (!t_i16_16383(one_i16)) { return 82; };
+    if (!t_i16_16384(one_i16)) { return 83; };
+    if (!t_i16_17867(one_i16)) { return 84; };
+    if (!t_i16_18961(one_i16)) { return 85; };
+    if (!t_i16_23517(one_i16)) { return 86; };
+    if (!t_i16_23977(one_i16)) { return 87; };
+    if (!t_i16_25010(one_i16)) { return 88; };
+    if (!t_i16_26062(one_i16)) { return 89; };
+    if (!t_i16_31069(one_i16)) { return 90; };
+    if (!t_i16_32767(one_i16)) { return 91; };
+    return 42;
+}

@@ -1,0 +1,10 @@
+// The root file of library/core/unicode/algorithms: the Arabic spellings of its modules
+// (docs/en/reference/modules-and-imports.md, "Module spellings"). The
+// standard library is three libraries (docs/en/reference/std-layers.md); this
+// file names only this library's own children.
+
+module canonical_order { ar: ترتيب_قانوني };
+module case_context { ar: سياق_الحالة };
+module hangul { ar: هانغول };
+module lookup { ar: بحث };
+module segmentation_engine { ar: محرك_التقطيع };

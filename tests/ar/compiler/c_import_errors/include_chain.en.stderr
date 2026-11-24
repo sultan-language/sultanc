@@ -1,0 +1,11 @@
+error[SULTANC-C-SYNTAX]: C syntax error — The expected result is `)`, but the actual result is `;`. A different token was expected here.
+  --> tests/ar/compiler/c_import_errors/include_chain_inner.h:2:20
+   |
+ 2 | int inner(count_t n;
+   |                    ^
+   |
+  ::: ./tests/ar/compiler/c_import_errors/include_chain.h:2:2
+   |
+ 2 | #include "include_chain_inner.h"
+   |  ^ included from here
+   |

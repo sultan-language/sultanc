@@ -1,0 +1,59 @@
+خطأ[SULTANC-TYPE-MISMATCH]: النوع الموجود ⁨`نص`⁩ لا يطابق النوع المتوقع ⁨`عدد`⁩ — القيمة لا تطابق النوع المصرح به لوجهتها.
+  --> tests/en/diagnostics/e2e/ownership_errors_in_order.sn:39:22..39:28
+    |
+ 39 |     let count: int = "text";
+    |                      ^^^^^^
+    |
+
+خطأ[SULTANC-BORROW-CONFLICT]: تعارض استعارة — القيمة ذات الاستعارة المتعارضة هي ⁨`values`⁩. القيمة مستعارة استعارة متغيرة بالفعل، لذا لا يمكن استعارتها مرة أخرى.
+  --> tests/en/diagnostics/e2e/ownership_errors_in_order.sn:14:5..14:46
+    |
+ 14 |     let values: mutable vector int = [40, 2];
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+خطأ[SULTANC-OWNERSHIP-USE-AFTER-MOVE]: استخدام بعد النقل — القيمة المستخدمة بعد نقل ملكيتها هي ⁨`text`⁩. تُستخدم القيمة بعد نقل ملكيتها.
+  --> tests/en/diagnostics/e2e/ownership_errors_in_order.sn:24:24..24:28
+    |
+ 24 |     return a + consume(text);
+    |                        ^^^^ الاستخدام غير الصالح
+    |
+  ::: tests/en/diagnostics/e2e/ownership_errors_in_order.sn:22:5..22:32
+    |
+ 22 |     let text: string = "twice";
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ المالك الأصلي
+    |
+  ::: tests/en/diagnostics/e2e/ownership_errors_in_order.sn:23:26..23:30
+    |
+ 23 |     let a: int = consume(text);
+    |                          ^^^^ نقلت القيمة هنا
+    |
+
+خطأ[SULTANC-OWNERSHIP-USE-AFTER-MOVE]: استخدام بعد النقل — القيمة المستخدمة بعد نقل ملكيتها هي ⁨`value`⁩. تُستخدم القيمة بعد نقل ملكيتها.
+  --> tests/en/diagnostics/e2e/ownership_errors_in_order.sn:29:25..29:30
+    |
+ 29 |     return first + sink(value);
+    |                         ^^^^^ الاستخدام غير الصالح
+    |
+  ::: tests/en/diagnostics/e2e/ownership_errors_in_order.sn:27:22..27:30
+    |
+ 27 | def generic_twice<T>(value: T, sink: fn(T): int): int {
+    |                      ^^^^^^^^ المالك الأصلي
+    |
+  ::: tests/en/diagnostics/e2e/ownership_errors_in_order.sn:28:27..28:32
+    |
+ 28 |     let first: int = sink(value);
+    |                           ^^^^^ نقلت القيمة هنا
+    |
+
+خطأ[SULTANC-FLOW-USE-BEFORE-INITIALIZATION]: استخدام قبل التهيئة — القيمة المستخدمة قبل التهيئة هي ⁨`text`⁩. تُستخدم القيمة قبل تهيئتها.
+  --> tests/en/diagnostics/e2e/ownership_errors_in_order.sn:35:20..35:24
+    |
+ 35 |     return consume(text);
+    |                    ^^^^ الاستخدام غير الصالح
+    |
+  ::: tests/en/diagnostics/e2e/ownership_errors_in_order.sn:33:5..33:22
+    |
+ 33 |     let text: string;
+    |     ^^^^^^^^^^^^^^^^^ صُرّح به هنا
+    |

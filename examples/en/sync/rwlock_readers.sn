@@ -1,0 +1,15 @@
+// Synchronization primitive: rwlock_readers.
+import std.io.println;
+import std.text.number;
+import std.sync.rwlock;
+
+def read(v: &i64): i64 { return *v; }
+def double(v: &mutable i64): void { *v := *v * 2; }
+def main(): int {
+    let lock: rwlock<i64> = rwlock_new(21 as i64);
+    let first: i64 = with_read(&lock, fn(v: &i64): i64 -> read(v));
+    with_write(&lock, fn(v: &mutable i64): void -> double(v));
+    let second: i64 = with_read(&lock, fn(v: &i64): i64 -> read(v));
+    println(int_to_text((first + second) as int));
+    return 0;
+}

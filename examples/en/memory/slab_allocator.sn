@@ -1,0 +1,15 @@
+// A slab allocator in miniature: take a slot from the free list, mark it in use, then
+// release it.
+import std.io.println;
+import std.text.number;
+
+def main(): int {
+    let free: mutable vector int = [0, 1, 2, 3];
+    let allocated: mutable vector bool = [false, false, false, false];
+    let slot: int = free[3];
+    allocated[slot] := true;
+    if (!allocated[3]) { return 1; };
+    allocated[slot] := false;
+    println(int_to_text(slot));
+    return 0;
+}

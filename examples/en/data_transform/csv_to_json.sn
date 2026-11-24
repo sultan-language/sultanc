@@ -1,0 +1,35 @@
+// CSV to JSON: read the fields of a CSV row, build a JSON object from them and check that
+// it parses.
+import std.io.println;
+import std.text.number;
+import std.csv.csv;
+import std.json.parse;
+import std.text.transform;
+
+def main(): int {
+    let input: string = "name,value\nAli,3\n";
+    let name: mutable string = "";
+    let count: mutable string = "";
+    match parse_csv(&input) with
+    | result.err(_) -> { return 1; }
+    | result.ok(doc) -> {
+        match csv_record_at(&doc, 1 as uint) with
+        | option.none -> { return 2; }
+        | option.some(row) -> {
+            match csv_field_at(&row, 0 as uint) with
+            | option.some(v) -> { name := v; }
+            | option.none -> { return 3; };
+            match csv_field_at(&row, 1 as uint) with
+            | option.some(v) -> { count := v; }
+            | option.none -> { return 4; };
+        };
+    };
+    let parts: vector string = ["{\"name\":\"", name, "\",\"value\":", count, "}"];
+    let empty: string = "";
+    let json: string = join(&parts, &empty);
+    match parse_json(&json) with
+    | result.ok(_) -> { }
+    | result.err(_) -> { return 5; };
+    println(json);
+    return 0;
+}

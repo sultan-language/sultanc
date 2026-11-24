@@ -1,0 +1,14 @@
+// HTTP request-target query: http2_frames.
+import std.io.println;
+import std.text.number;
+import std.http.query;
+
+
+def main(): int {
+    let target: string = "/items?page=4&sort=asc";
+    println(http_target_path(&target));
+    match http_target_query(&target) with
+    | option.some(q) -> { println(q); }
+    | option.none -> { println("no query"); };
+    return 0;
+}

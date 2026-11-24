@@ -1,0 +1,6 @@
+version = 1
+
+[[package]]
+id = "app"
+source_root = "../en/app/src"
+name = "app"

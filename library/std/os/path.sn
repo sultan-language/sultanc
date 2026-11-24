@@ -1,0 +1,79 @@
+استورد ترميز.يوتيف16;
+
+// Native paths are not a single encoding: Unix passes opaque bytes, while
+// Win32's W APIs consume UTF-16 code units. These constructors only prepare
+// values for a future platform binding. They do not invoke an OS service.
+عام نوع خطأ_مسار_نظام =
+    | صفر_مدمج
+    | ترميز_غير_صالح
+;
+
+// A text-based path is a restricted subset of Unix byte paths. It is not a
+// substitute for the byte-based constructor (which can carry non-UTF-8 names).
+عام عرف مسار_نظام_بلا_صفر_مدمج(المسار: &نص): منطقي {
+    ليكن العدد: طبيعي = الطول(*المسار) مثل طبيعي;
+    ليكن الفهرس: متغير طبيعي = 0;
+    طالما (الفهرس < العدد) {
+        إذا ((*المسار)[الفهرس] == 0) { أرجع خطأ; };
+        الفهرس := الفهرس + 1;
+    }
+    أرجع صواب;
+}
+
+// A Unix pathname passed to a NUL-terminated native kernel ABI needs a terminator;
+// an embedded NUL would otherwise silently select a different pathname.
+// The returned vector owns the entire terminated byte sequence.
+عام عرف بايتات_مسار_يونكس_صفرية(
+    البايتات: &متجه ط8
+): نتيجة متجه ط8, خطأ_مسار_نظام {
+    ليكن الناتج: متغير متجه ط8 = [];
+    ليكن الفهرس: متغير طبيعي = 0;
+    ليكن العدد: طبيعي = الطول(*البايتات) مثل طبيعي;
+    طالما (الفهرس < العدد) {
+        ليكن البايت: ط8 = (*البايتات)[الفهرس];
+        إذا (البايت == 0) {
+            أرجع نتيجة.خطأ(خطأ_مسار_نظام.صفر_مدمج());
+        };
+        ألحق(الناتج, البايت);
+        الفهرس := الفهرس + 1;
+    }
+    ألحق(الناتج, 0 مثل ط8);
+    أرجع نتيجة.نجح(الناتج);
+}
+
+// Win32 W-path conversion shares the canonical std.encoding UTF-8/UTF-16
+// converter. Conversion failures are never replaced by lossy code points.
+// A resulting vector includes one UTF-16 NUL terminator for Win32 W APIs.
+عام عرف وحدات_مسار_ويندوز_صفرية(
+    المسار: &نص
+): نتيجة متجه ط16, خطأ_مسار_نظام {
+    إذا (!مسار_نظام_بلا_صفر_مدمج(المسار)) {
+        أرجع نتيجة.خطأ(خطأ_مسار_نظام.صفر_مدمج());
+    };
+    طابق نص_إلى_يوتيف16(المسار) مع
+    | نتيجة.خطأ(_) -> {
+        أرجع نتيجة.خطأ(خطأ_مسار_نظام.ترميز_غير_صالح());
+    }
+    | نتيجة.نجح(الوحدات) -> {
+        ليكن الناتج: متغير متجه ط16 = الوحدات;
+        ألحق(الناتج, 0 مثل ط16);
+        أرجع نتيجة.نجح(الناتج);
+    };
+}
+
+عام مرادف os_path_error = خطأ_مسار_نظام;
+عام مرادف os_path_has_no_embedded_nul = مسار_نظام_بلا_صفر_مدمج;
+عام مرادف unix_path_to_nul_terminated_bytes = بايتات_مسار_يونكس_صفرية;
+عام مرادف windows_path_to_nul_terminated_utf16 = وحدات_مسار_ويندوز_صفرية;
+
+// A text path supplies UTF-8 bytes on Unix; byte-only filesystem names can
+// use the native Linux provider directly without converting through text.
+عام عرف بايتات_مسار_نص_نظام(المسار: &نص): متجه ط8 {
+    ليكن الناتج: متغير متجه ط8 = [];
+    ليكن الموضع: متغير طبيعي = 0;
+    طالما (الموضع < (الطول(*المسار) مثل طبيعي)) {
+        ألحق(الناتج, (*المسار)[الموضع]);
+        الموضع := الموضع + 1;
+    }
+    أرجع الناتج;
+}

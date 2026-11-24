@@ -1,0 +1,48 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// A vector that keeps its buffer still releases it when it is dropped:
+// 10^5 rounds of with_capacity, reserve, reserve_exact, truncate(0) and
+// reuse, pop to empty and shrink_to_fit, on integers and owned text, leave
+// the allocator's live bytes where they were.
+// Counterpart: tests/ar/stdlib/behavior/vector_capacity_rss_flat.sn. It has
+// no pair directive: the interpreter does not use the std allocator whose
+// counters this reads.
+import std.os.allocation;
+import std.collections.vector;
+import std.text.number;
+
+def round(i: int): int {
+    let v: mutable vector int = with_capacity(8);
+    append(v, i);
+    append(v, i + 1);
+    truncate(v, 0);
+    append(v, i + 2);
+    reserve(&mutable v, 30);
+    let words: mutable vector string = [];
+    reserve_exact(words, 4);
+    append(words, int_to_text(i));
+    append(words, int_to_text(i + 5));
+    pop(words);
+    pop(words);
+    append(words, int_to_text(i + 9));
+    shrink_to_fit(&mutable words);
+    let emptied: mutable vector string = [];
+    append(emptied, int_to_text(i));
+    truncate(emptied, 0);
+    return v[0] + (length(words[0]) as int) + capacity(emptied);
+}
+
+def main(): int {
+    let warm_up: int = round(0);
+    if (warm_up < 0) { return 1; };
+    let before: u64 = بايتات_حية_مخصص_النظام();
+    let i: mutable int = 0;
+    while (i < 100000) {
+        if (round(i) < 0) { return 2; };
+        i := i + 1;
+    }
+    let after: u64 = بايتات_حية_مخصص_النظام();
+    if (after != before) { return 3; };
+    return 42;
+}

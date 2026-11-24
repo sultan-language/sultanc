@@ -1,0 +1,47 @@
+from std.net import
+    parse_socket_addr,
+    tcp_connect,
+    tcp_read,
+    tcp_write,
+    tcp_stream_close;
+
+def zero_bytes(count: int): vector u8 {
+    let out: mutable vector u8 = [];
+    let i: mutable int = 0;
+    while (i < count) {
+        append(out, 0);
+        i := i + 1;
+    }
+    return out;
+}
+
+def main(): int {
+    let text: string = "127.0.0.1:38444";
+    match parse_socket_addr(&text) with
+    | result.err(_) -> { return 1; }
+    | result.ok(addr) -> {
+        match tcp_connect(&addr) with
+        | result.err(_) -> { return 2; }
+        | result.ok(stream) -> {
+            let output: vector u8 = [112, 105, 110, 103];
+            match tcp_write(&stream, &output, 0, 4) with
+            | result.err(_) -> { return 3; }
+            | result.ok(wrote) -> {
+                if (wrote != 4) { return 4; };
+            };
+            let input: mutable vector u8 = zero_bytes(4);
+            match tcp_read(&stream, &mutable input, 0, 4) with
+            | result.err(_) -> { return 5; }
+            | result.ok(got) -> {
+                if (got != 4) { return 6; };
+                if ((input[0] != 112) || (input[1] != 111) || (input[2] != 110) || (input[3] != 103)) {
+                    return 7;
+                };
+            };
+            match tcp_stream_close(stream) with
+            | result.err(_) -> { return 8; }
+            | result.ok(_) -> { };
+            return 42;
+        };
+    };
+}

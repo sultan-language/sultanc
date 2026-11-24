@@ -1,0 +1,13 @@
+// Split and join a delimited text line.
+import std.io.println;
+import std.text.transform;
+
+
+def main(): int {
+    let text: string = "red,green,blue";
+    let sep: string = ",";
+    let values: vector string = split(&text, &sep);
+    let delimiter: string = " / ";
+    println(join(&values, &delimiter));
+    return 0;
+}

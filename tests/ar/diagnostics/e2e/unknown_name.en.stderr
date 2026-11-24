@@ -1,0 +1,6 @@
+error[SULTANC-NAME-UNKNOWN]: unknown name: `مفقود` — The required name was not found during resolution.
+  --> tests/ar/diagnostics/e2e/unknown_name.sn:7:10..7:15
+   |
+ 7 |     أرجع مفقود;
+   |          ^^^^^
+   |

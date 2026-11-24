@@ -1,0 +1,19 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 0
+// نظير: tests/ar/stdlib/behavior/process_id_terminal.sn
+// std.process.id and std.os.terminal: the process id is not 0 and stays the
+// same between calls; the terminal checks answer without failing (the
+// runner's streams are not terminals, but this does not depend on it).
+import std.process.id;
+import std.os.terminal;
+
+def main(): int {
+    let first: u64 = process_id();
+    if (first == 0) { return 1; };
+    if (process_id() != first) { return 2; };
+    let a: bool = stdin_is_terminal();
+    let b: bool = stdout_is_terminal();
+    let c: bool = stderr_is_terminal();
+    return 0;
+}

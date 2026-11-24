@@ -1,0 +1,11 @@
+// Encode bytes in Base32.
+import std.io.println;
+import std.text.number;
+import std.encoding.base32;
+
+
+def main(): int {
+    let data: vector u8 = [65, 66, 67];
+    println(base32_encode(&data));
+    return 0;
+}

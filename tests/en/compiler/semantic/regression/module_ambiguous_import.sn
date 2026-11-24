@@ -1,0 +1,6 @@
+// اختبار: رفض
+// خروج: 1
+// مرحلة0: نعم
+import "modules/ambiguous_a.sn";
+import "modules/ambiguous_b.sn";
+def main(): int { return shared(); }

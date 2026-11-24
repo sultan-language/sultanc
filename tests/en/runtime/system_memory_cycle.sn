@@ -1,0 +1,20 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 0
+import std.memory.system;
+def main(): i32 {
+    let page: uint = page_size();
+    match mmap(page, memory_protection_read_write()) with
+    | result.ok(region) -> {
+        match mprotect(&region, memory_protection_read()) with
+        | result.ok(_) -> { }
+        | result.err(_) -> { return 3; };
+        match madvise(&region, memory_advice_normal()) with
+        | result.ok(_) -> { }
+        | result.err(_) -> { return 4; };
+        match munmap(&region) with
+        | result.ok(_) -> { return 0; }
+        | result.err(_) -> { return 5; };
+    }
+    | result.err(_) -> { return 1; };
+}

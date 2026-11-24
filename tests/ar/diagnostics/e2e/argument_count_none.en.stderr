@@ -1,0 +1,6 @@
+error[SULTANC-CALL-ARGUMENT-COUNT-MISMATCH]: call argument count does not match — The function expects no arguments, but the call passes 11 arguments. The call supplies a different number of arguments than the function accepts.
+  --> tests/ar/diagnostics/e2e/argument_count_none.sn:7:28..7:66
+   |
+ 7 | عرف الرئيسية(): ص32 { أرجع صفر(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11); }
+   |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |

@@ -1,0 +1,32 @@
+// اختبار: تفاضلي
+// أهداف: i686-linux-gnu,armv7-linux-gnueabihf,armv7-android
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/target/opaque_pointers_32.sn
+// Pointers to an opaque type on 32-bit targets: a pointer is the target's
+// 32-bit word, `p as u32` and `w as *mutable T` are the address word in both
+// directions, and casts between raw pointers keep the address.
+import std.meta.reflect;
+
+type Db = opaque;
+type Holder = { db: *Db };
+
+def open_at(word: u32): *Db {
+    unsafe { return word as *Db; };
+}
+
+def main(): int {
+    let db: *Db = open_at(4096);
+    let holder: Holder = { db: db };
+    let total: mutable int = 0;
+    if (size_of(&holder) == 4 && align_of(&holder) == 4) { total := total + 10; };
+    unsafe {
+        let word: u32 = holder.db as u32;
+        let writable: *mutable Db = word as *mutable Db;
+        let untyped: *void = writable as *void;
+        let back: *Db = untyped as *Db;
+        if (word == 4096) { total := total + 10; };
+        if (back == db && (writable as u32) == word) { total := total + 22; };
+    };
+    return total;
+}

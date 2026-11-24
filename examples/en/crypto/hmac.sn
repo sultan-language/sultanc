@@ -1,0 +1,14 @@
+// HMAC-SHA256 input authentication: hmac.
+import std.io.println;
+import std.text.from_bytes;
+import std.encoding.hex;
+import std.crypto.digest;
+
+
+def main(): int {
+    let key: vector u8 = bytes_from_text("key");
+    let message: vector u8 = bytes_from_text("data");
+    let digest: vector u8 = hmac_sha256(&key, &message);
+    println(hex_encode(&digest));
+    return 0;
+}

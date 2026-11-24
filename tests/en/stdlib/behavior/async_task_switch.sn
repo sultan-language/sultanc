@@ -1,0 +1,71 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/stdlib/behavior/async_task_switch.sn
+// std.async switches tasks natively and under `sultanc run` (the
+// interpreter switches frame stacks, compiler/interpreter/execution/
+// task_switch.sn): a task that yields lets the others run before it
+// finishes, a task awaiting another suspends only itself, and three
+// sleeping tasks wait in the poller together. The order the tasks finished
+// is recorded through a shared counter.
+import std.async.runtime;
+import std.sync.arc;
+import std.sync.atomic;
+
+type order = { next: atomic_u64, finished: vector atomic_u64 };
+
+def mark(shared: &arc<order>, slot: uint): void {
+    let o: &order = arc_get(shared);
+    let place: u64 = atomic_u64_fetch_add(&(*o).next, 1 as u64, memory_ordering.seq_cst());
+    atomic_u64_store(&(*o).finished[slot], place, memory_ordering.seq_cst());
+}
+
+def yielder(shared: arc<order>): int {
+    yield_task();
+    yield_task();
+    mark(&shared, 0);
+    return 10;
+}
+
+def quick(shared: arc<order>): int {
+    mark(&shared, 1);
+    return 20;
+}
+
+def sleeper(ns: int, value: int): int { sleep_task(ns); return value; }
+
+def awaiter(): int {
+    let inner: mutable task<int> = spawn_task(fn(): int -> sleeper(2000000, 6));
+    match await_task(&mutable inner) with
+    | option.some(v) -> { return v * 2; }
+    | option.none -> { return -1; };
+}
+
+def main(): int {
+    if (!tasks_supported()) { return 1; };
+    let slots: mutable vector atomic_u64 = [];
+    append(slots, atomic_u64_new(0 as u64));
+    append(slots, atomic_u64_new(0 as u64));
+    let shared: arc<order> = arc_new({ next: atomic_u64_new(1 as u64), finished: slots });
+    let a_share: arc<order> = arc_clone(&shared);
+    let b_share: arc<order> = arc_clone(&shared);
+    let a: mutable task<int> = spawn_task(fn(): int -> yielder(a_share));
+    let b: mutable task<int> = spawn_task(fn(): int -> quick(b_share));
+    let c: mutable task<int> = spawn_task(fn(): int -> awaiter());
+    let s1: mutable task<int> = spawn_task(fn(): int -> sleeper(3000000, 1));
+    let s2: mutable task<int> = spawn_task(fn(): int -> sleeper(3000000, 2));
+    let total: mutable int = 0;
+    match await_task(&mutable a) with | option.some(v) -> { total := total + v; } | option.none -> { return 2; };
+    match await_task(&mutable b) with | option.some(v) -> { total := total + v; } | option.none -> { return 3; };
+    match await_task(&mutable c) with | option.some(v) -> { total := total + v; } | option.none -> { return 4; };
+    match await_task(&mutable s1) with | option.some(v) -> { total := total + v; } | option.none -> { return 5; };
+    match await_task(&mutable s2) with | option.some(v) -> { total := total + v; } | option.none -> { return 6; };
+    if (total != 45) { return 7; };
+    // The yielding task finished after the quick one.
+    let o: &order = arc_get(&shared);
+    let yielded: u64 = atomic_u64_load(&(*o).finished[0], memory_ordering.seq_cst());
+    let quick_done: u64 = atomic_u64_load(&(*o).finished[1], memory_ordering.seq_cst());
+    if (quick_done != (1 as u64) || yielded != (2 as u64)) { return 8; };
+    return 42;
+}

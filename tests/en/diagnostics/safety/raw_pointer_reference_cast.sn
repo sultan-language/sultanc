@@ -1,0 +1,10 @@
+// اختبار: رفض
+// تشخيص: SULTANC-SAFETY-UNSAFE-OPERATION
+// نظير: tests/ar/diagnostics/safety/raw_pointer_reference_cast.sn
+// Turning a raw pointer into a reference needs an unsafe scope.
+def main(): i32 {
+    let value: mutable i32 = 42;
+    let pointer: *mutable i32 = & mutable value;
+    let reference: &mutable i32 = pointer as &mutable i32;
+    return *reference;
+}

@@ -1,0 +1,10 @@
+// اختبار: قبول
+// تشخيص: SULTANC-C-WARNING-DIRECTIVE
+// نظير: tests/ar/compiler/c_import_warnings/main.sn
+// A C import that has only warnings succeeds, and its warnings are printed:
+// `#warning` (SULTANC-C-WARNING-DIRECTIVE) and the declaration without a
+// prototype left out of the module (SULTANC-C-UNPROTOTYPED), each at its
+// C location. `check` exits 0.
+import "warnings.h";
+
+def main(): int { return 0; }

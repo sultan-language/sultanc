@@ -1,6 +1,9 @@
 استورد compiler.driver.process_driver;
+// std's panic handler: Stage0 binds it to core's إنهيار by name (the
+// self-hosted compiler loads it itself whenever core's panic is loaded).
+استورد المكتبة.عمليات.معالج_الانهيار;
 
 // نقطة دخول العملية الوحيدة. تنسيق التنفيذ مملوك لوحدات Driver.
-عرف القلعة(): عدد {
+عرف الرئيسية(): عدد {
     أرجع شغل_عملية_المترجم();
 }

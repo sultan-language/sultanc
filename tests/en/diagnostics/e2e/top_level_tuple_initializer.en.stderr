@@ -1,0 +1,7 @@
+error[SULTANC-PARSE-ITEM]: Cannot parse the declaration or item syntax — A top-level value cannot be initialized with a record, tuple or box literal.
+  --> tests/en/diagnostics/e2e/top_level_tuple_initializer.sn:7:27..7:35
+   |
+ 7 | let pair: (int, string) = (1, "x");
+   |                           ^^^^^^^^
+   |
+  = help: declare the value inside the function that uses it

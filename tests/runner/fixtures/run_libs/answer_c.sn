@@ -1,0 +1,7 @@
+// Imported C runs only as an executable, which links answer() from the -l
+// archive libanswer.a (tests/runner/suites/cli.sn).
+import "uses_answer.c";
+
+def main(): int {
+    return answer_from_c() as int;
+}

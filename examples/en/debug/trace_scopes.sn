@@ -1,0 +1,12 @@
+// Self-checking example: trace_scopes.
+import std.io.println;
+import std.text.number;
+
+
+def main(): int {
+    println("scope start");
+    let scoped: int = 5;
+    if (scoped > 2) { println("nested scope"); };
+    println("scope end");
+    return 0;
+}

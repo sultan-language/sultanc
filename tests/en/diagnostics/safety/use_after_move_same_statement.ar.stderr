@@ -1,0 +1,16 @@
+خطأ[SULTANC-OWNERSHIP-USE-AFTER-MOVE]: استخدام بعد النقل — القيمة المستخدمة بعد نقل ملكيتها هي ⁨`text`⁩. تُستخدم القيمة بعد نقل ملكيتها.
+  --> tests/en/diagnostics/safety/use_after_move_same_statement.sn:12:36..12:40
+    |
+ 12 |     return consume(text) + (length(text) as int);
+    |                                    ^^^^ الاستخدام غير الصالح
+    |
+  ::: tests/en/diagnostics/safety/use_after_move_same_statement.sn:11:5..11:31
+    |
+ 11 |     let text: string = "four";
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^ المالك الأصلي
+    |
+  ::: tests/en/diagnostics/safety/use_after_move_same_statement.sn:12:20..12:24
+    |
+ 12 |     return consume(text) + (length(text) as int);
+    |                    ^^^^ نقلت القيمة هنا
+    |

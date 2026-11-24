@@ -1,0 +1,12 @@
+// Compile-time type introspection: type_metadata.
+import std.io.println;
+import std.text.number;
+import std.meta.reflect;
+
+type Packet = { code: u8, size: u64 };
+def main(): int {
+    let sample: Packet = { code: 1 as u8, size: 6 as u64 };
+    println(uint_to_text(size_of(&sample) as uint));
+    println(uint_to_text(align_of(&sample) as uint));
+    return 0;
+}

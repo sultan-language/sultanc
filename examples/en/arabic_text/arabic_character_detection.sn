@@ -1,0 +1,24 @@
+// Detecting Arabic letters in UTF-8 text by their lead bytes 0xD8 and 0xD9.
+import std.io.println;
+import std.text.number;
+
+def has_arabic(text: &string): bool {
+    let i: mutable int = 0;
+    while (i + 1 < length(*text)) {
+        let first: u8 = (*text)[i];
+        let second: u8 = (*text)[i + 1];
+        if ((first == 0xd8 as u8 || first == 0xd9 as u8) && (second >= 0x80 as u8) && (second <= 0xbf as u8)) {
+            return true;
+        };
+        i := i + 1;
+    };
+    return false;
+}
+
+def main(): int {
+    let mixed: string = "Hello مرحبا";
+    let latin: string = "Hello";
+    if (!has_arabic(&mixed) || has_arabic(&latin)) { return 1; };
+    println("Arabic letters detected");
+    return 0;
+}

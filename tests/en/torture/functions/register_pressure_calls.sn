@@ -1,0 +1,20 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// فئة: functions
+def sum10(a: int, b: int, c: int, d: int, e: int, f: int, g: int, h: int, i: int, j: int): int {
+    return a + b + c + d + e + f + g + h + i + j;
+}
+
+def main(): int {
+    let a0: int = 1; let a1: int = 2; let a2: int = 3; let a3: int = 4;
+    let a4: int = 5; let a5: int = 6; let a6: int = 7; let a7: int = 8;
+    let a8: int = 9; let a9: int = 10; let a10: int = 11; let a11: int = 12;
+    let first: int = sum10(a9, a8, a7, a6, a5, a4, a3, a2, a1, a0);
+    let second: int = sum10(a11, a10, a0, a1, a2, a3, a4, a5, a6, a7);
+    if (first != 55) { return 1; };
+    if (second != 59) { return 2; };
+    if ((a8 + a9 + a10 + a11) != 42) { return 3; };
+    return 42;
+}

@@ -1,0 +1,9 @@
+def main(): int {
+    let values: mutable vector int = [];
+    append(values, 40);
+    append(values, 0);
+    append(values, 0);
+    append(values, 0);
+    append(values, 2);
+    return values[0] + values[4];
+}

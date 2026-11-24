@@ -1,0 +1,6 @@
+def pass(values: [] int): [] int { return values; }
+def main(): int {
+    let values: [] int = [40, 2];
+    let returned: [] int = pass(values);
+    return returned[0] + returned[1];
+}

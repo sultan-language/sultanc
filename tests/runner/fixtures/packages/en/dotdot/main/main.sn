@@ -1,0 +1,3 @@
+import util.broken;
+
+def main(): int { return broken_value(); }

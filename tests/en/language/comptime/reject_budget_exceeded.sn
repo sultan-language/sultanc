@@ -1,0 +1,14 @@
+// اختبار: رفض
+// خروج: 1
+// تشخيص: SULTANC-COMPTIME-LIMIT-EXCEEDED
+// The instruction budget: the diagnostic points at the loop, names the
+// function and the limit, and shows the call made by the comptime block.
+def spin(): int {
+    let i: mutable int = 0;
+    while (i >= 0) { i := i + 1; }
+    return i;
+}
+def main(): int {
+    let x: int = comptime { spin() };
+    return x;
+}

@@ -1,0 +1,3 @@
+// اختبار: رفض
+// تشخيص: SULTANC-PARSE-SYNTAX
+def main(): int { let value: int = (40 + 2; return value; }

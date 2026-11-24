@@ -1,0 +1,24 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/language/comptime/decorator.sn
+// Decorators apply from the declaration outwards: triple is bound to
+// add_one applied to (twice applied to the original triple).
+def add_one(comptime f: fn(int): int, x: int): int {
+    return f(x) + 1;
+}
+
+def twice(comptime f: fn(int): int, x: int): int {
+    return f(f(x));
+}
+
+@add_one
+@twice
+def triple(x: int): int { return x * 3; }
+
+def main(): int {
+    let n: mutable int = 1;
+    n := n + 1;
+    return triple(n) + 23;
+}

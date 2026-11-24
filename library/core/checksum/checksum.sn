@@ -1,0 +1,37 @@
+// Data-integrity checksums that need no heap: the CRC-32 update over a
+// caller's table and Adler-32. These are not cryptographic hashes. The rest,
+// which builds the CRC tables, is alloc's (alloc.checksum.checksum), which
+// re-exports these at the same path.
+// Arabic spellings of this folder's modules (docs/en/reference/modules-and-imports.md,
+// "Module spellings").
+module checksum { ar: مجاميع_تحقق };
+
+// As حدث_سي_ار_سي32 with a table from أنشئ_جدول_سي_ار_سي32.
+عام عرف حدث_سي_ار_سي32_بجدول(
+    الجدول: &متجه ط32, السابق: ط32, البايتات: &متجه ط8, البداية: طبيعي, النهاية: طبيعي
+): ط32 {
+    ليكن القيمة: متغير ط32 = السابق ^ 0xFFFFFFFF;
+    ليكن ف: متغير طبيعي = البداية;
+    طالما (ف < النهاية) {
+        ليكن الفهرس: طبيعي = ((القيمة ^ ((*البايتات)[ف] مثل ط32)) & 0xFF) مثل طبيعي;
+        القيمة := (*الجدول)[الفهرس] ^ (القيمة >> 8);
+        ف := ف + 1;
+    }
+    أرجع القيمة ^ 0xFFFFFFFF;
+}
+عام مرادف crc32_update_with_table = حدث_سي_ار_سي32_بجدول;
+
+عام عرف احسب_أدلر32(البايتات: &متجه ط8): ط32 {
+    ليكن المصدر: متجه ط8 = *البايتات;
+    ليكن أ: متغير ط32 = 1;
+    ليكن ب: متغير ط32 = 0;
+    ليكن ف: متغير طبيعي = 0;
+    طالما (ف < (الطول(المصدر) مثل طبيعي)) {
+        أ := (أ + (المصدر[ف] مثل ط32)) % 65521;
+        ب := (ب + أ) % 65521;
+        ف := ف + 1;
+    }
+    أرجع (ب << 16) | أ;
+}
+
+عام مرادف adler32 = احسب_أدلر32;

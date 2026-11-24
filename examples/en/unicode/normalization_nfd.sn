@@ -1,0 +1,13 @@
+// Unicode processing: normalization_nfd.
+import std.io.println;
+import std.text.number;
+import std.unicode.normalization;
+
+
+def main(): int {
+    let input: string = "é";
+    match unicode_normalize(&input, صورة_تطبيع_يونيكود.إن_إف_دي()) with
+    | result.ok(out) -> { println(uint_to_text(length(out) as uint)); }
+    | result.err(_) -> { return 1; };
+    return 0;
+}

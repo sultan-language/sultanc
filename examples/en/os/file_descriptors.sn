@@ -1,0 +1,11 @@
+// OS API example: file_descriptors.
+import std.io.println;
+import std.text.number;
+import std.os.path;
+
+
+def main(): int {
+    let file_name: string = "output.txt";
+    if (os_path_has_no_embedded_nul(&file_name)) { println("path suitable for file descriptor API"); } else { return 1; };
+    return 0;
+}

@@ -1,0 +1,19 @@
+// An AVL tree stored in a vector of nodes: check that the root is balanced, with the heights
+// of its two subtrees differing by at most one.
+import std.io.println;
+import std.text.number;
+
+type Node = { value: int, left: int, right: int, height: int };
+
+def main(): int {
+    let nodes: vector Node = [
+        { value: 20, left: 1, right: 2, height: 2 },
+        { value: 10, left: -1, right: -1, height: 1 },
+        { value: 30, left: -1, right: -1, height: 1 }
+    ];
+    let root: Node = nodes[0];
+    let difference: int = nodes[root.left].height - nodes[root.right].height;
+    if (difference < -1 || difference > 1) { return 1; };
+    println(int_to_text(root.value));
+    return 0;
+}

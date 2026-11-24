@@ -1,7 +1,6 @@
-استورد compiler.frontend.source.source;
+استورد compiler.source.source_file;
 استورد compiler.frontend.lexer.token;
-استورد compiler.frontend.source.position;
-استورد compiler.frontend.source.scope;
+استورد compiler.source.span;
 استورد compiler.frontend.ast.unit;
 استورد compiler.frontend.parser.error;
 

@@ -1,0 +1,11 @@
+// اختبار: رفض
+// تشخيص: SULTANC-OWNERSHIP-USE-AFTER-MOVE
+// نظير: tests/ar/diagnostics/safety/closure_body_use_after_move.sn
+// A closure body is checked like a function body: passing its owned
+// parameter `s` by value moves it, so the second use reads a moved value.
+def size(s: string): int { return length(s) as int; }
+
+def main(): int {
+    let twice: fn(string): int = fn(s: string): int -> size(s) + size(s);
+    return twice("ab");
+}

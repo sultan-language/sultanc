@@ -1,0 +1,19 @@
+// Sorting numbers and text, then binary-searching the sorted vector.
+import std.io.println;
+import std.text.number;
+import std.text.transform;
+import std.collections.sort;
+
+def main(): int {
+    let numbers: mutable vector int = [42, 7, 19, 3, 88, 1];
+    sort_int(&mutable numbers);
+    let names: mutable vector string = ["noor", "adam", "zaid", "huda"];
+    sort_texts(&mutable names);
+    let comma: string = ", ";
+    println(join(&names, &comma));
+    match binary_search_int(&numbers, 19) with
+    | option.some(index) -> { println(uint_to_text(index)); }
+    | option.none -> { println("missing"); };
+    println(int_to_text(numbers[0]));
+    return 0;
+}

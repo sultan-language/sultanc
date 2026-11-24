@@ -1,0 +1,10 @@
+// اختبار: رفض
+// تشخيص: SULTANC-PARSE-ITEM
+// نظير: tests/ar/diagnostics/e2e/top_level_tuple_initializer.sn
+// خرج-تشخيص-عربي: top_level_tuple_initializer.ar.stderr
+// خرج-تشخيص-إنجليزي: top_level_tuple_initializer.en.stderr
+// A top-level value has no tuple literal form either.
+let pair: (int, string) = (1, "x");
+def main(): i32 {
+    return 0;
+}

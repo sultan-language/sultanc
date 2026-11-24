@@ -1,0 +1,23 @@
+// Semantic versions: parsing and precedence (a pre-release sorts first).
+import std.io.println;
+import std.version.semver;
+
+def describe(left: string, right: string): void {
+    match parse_semver(&left) with
+    | result.err(_) -> { println("invalid version"); }
+    | result.ok(a) -> {
+        match parse_semver(&right) with
+        | result.err(_) -> { println("invalid version"); }
+        | result.ok(b) -> {
+            let order: int = compare_semver(&a, &b);
+            if (order < 0) { println("older"); } else { if (order > 0) { println("newer"); } else { println("same"); }; };
+        };
+    };
+}
+
+def main(): int {
+    describe("1.2.3", "1.10.0");
+    describe("2.0.0", "2.0.0-beta.1");
+    describe("1.0.0", "1.0.0");
+    return 0;
+}

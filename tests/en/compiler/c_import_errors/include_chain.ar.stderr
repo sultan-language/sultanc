@@ -1,0 +1,11 @@
+خطأ[SULTANC-C-SYNTAX]: خطأ نحوي في سي — النتيجة المتوقعة هي ⁨`)`⁩، لكن النتيجة الفعلية هي ⁨`;`⁩. كان يتوقع هنا رمز آخر.
+  --> tests/en/compiler/c_import_errors/include_chain_inner.h:2:20
+   |
+ 2 | int inner(count_t n;
+   |                    ^
+   |
+  ::: ./tests/en/compiler/c_import_errors/include_chain.h:2:2
+   |
+ 2 | #include "include_chain_inner.h"
+   |  ^ ضمن من هنا
+   |

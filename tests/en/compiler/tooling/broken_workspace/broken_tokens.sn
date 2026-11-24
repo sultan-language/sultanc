@@ -1,0 +1,3 @@
+// Fixture of tests/en/compiler/tooling/broken_workspace.sn (not a test).
+// An unterminated text literal: the source cannot be read as tokens.
+def broken(): string { return "never closed; }

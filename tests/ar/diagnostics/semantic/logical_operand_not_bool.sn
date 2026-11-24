@@ -1,0 +1,8 @@
+// اختبار: رفض
+// تشخيص: SULTANC-TYPE-MISMATCH
+// نظير: tests/en/diagnostics/semantic/logical_operand_not_bool.sn
+عرف الرئيسية(): ص32 {
+    ليكن العدد: ص32 = 1;
+    إذا (!العدد) { أرجع 1; };
+    أرجع 0;
+}

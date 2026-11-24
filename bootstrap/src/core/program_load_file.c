@@ -109,7 +109,8 @@ int __Program_Load_File__(__Program__ *__Program_State__, const char *__Path__)
         free(__Unit__.__Path__);
         return 0;
     }
-    if (!__Parser_Parse_Module__(__Unit__.__Source__, &__Unit__.__Parse__))
+    if (!__Parser_Parse_Module__(
+            __Unit__.__Source__, __Program_State__->__Target__, &__Unit__.__Parse__))
     {
         __Program_Adopt_Diagnostic__(__Program_State__, &__Unit__.__Parse__.__Diagnostic__);
         __Parse_Result_Destroy__(&__Unit__.__Parse__);
@@ -143,6 +144,8 @@ int __Program_Load_File__(__Program__ *__Program_State__, const char *__Path__)
         char *__Resolved_Canonical__;
         /* Tracks the imported index. */
         size_t __Imported_Index__;
+        /* Tracks whether a relative import escaped its configured root. */
+        int __Escapes_Root__ = 0;
 
         if (__Importer__ == NULL ||
             __Import_Index__ >= __Importer__->__Parse__.__Module__.__Import_Count__)
@@ -154,16 +157,29 @@ int __Program_Load_File__(__Program__ *__Program_State__, const char *__Path__)
             __Importer__->__Path__,
             __Program_State__->__Project_Root__,
             __Import__.__Kind__ == __Ast_Import_Logical__,
-            __Import__.__Path__);
+            __Import__.__Path__,
+            &__Escapes_Root__);
         if (__Resolved__ == NULL)
         {
             /* References the diagnostic state. */
-            __Diagnostic__ *__Diagnostic_State__ =
-                __Program_Begin_Diagnostic__(__Program_State__, __E0201_Source_Module_Not_Found__);
+            __Diagnostic__ *__Diagnostic_State__;
+            if (__Escapes_Root__)
+            {
+                __Diagnostic_State__ =
+                    __Program_Begin_Diagnostic__(__Program_State__, __E0202_Import_Escapes_Root__);
+            }
+            else
+            {
+                __Diagnostic_State__ =
+                    __Program_Begin_Diagnostic__(__Program_State__, __E0201_Source_Module_Not_Found__);
+            }
             if (__Diagnostic_State__ != NULL)
             {
-                __Diagnostic_Set_Message_Key__(__Diagnostic_State__,
-                                               __Diag_Word_Source_Module_Not_Found_Path__);
+                if (!__Escapes_Root__)
+                {
+                    __Diagnostic_Set_Message_Key__(__Diagnostic_State__,
+                                                   __Diag_Word_Source_Module_Not_Found_Path__);
+                }
                 __Diagnostic_Set_Argument_Text__(
                     __Diagnostic_State__, __Diagnostic_Argument_Path__, __Import__.__Path__);
             }

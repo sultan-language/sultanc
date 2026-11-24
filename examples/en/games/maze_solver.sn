@@ -1,0 +1,20 @@
+// Solving a 3x3 maze in one pass: moving only right or down, each open cell takes the
+// shorter distance from its left or upper neighbor.
+import std.io.println;
+import std.text.number;
+
+def main(): int {
+    let maze: vector int = [0, 1, 0, 0, 0, 0, 1, 0, 0];
+    let dist: mutable vector int = [0, 99, 99, 99, 99, 99, 99, 99, 99];
+    let i: mutable int = 0;
+    while (i < 9) {
+        if (maze[i] == 0 && i > 0) {
+            if (i % 3 != 0 && dist[i - 1] + 1 < dist[i]) { dist[i] := dist[i - 1] + 1; };
+            if (i >= 3 && dist[i - 3] + 1 < dist[i]) { dist[i] := dist[i - 3] + 1; };
+        };
+        i := i + 1;
+    };
+    if (dist[8] != 4) { return 1; };
+    println(int_to_text(dist[8]));
+    return 0;
+}

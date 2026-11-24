@@ -3,6 +3,48 @@
 #include "semantic/body_internal.h"
 #include "kernel/name/name.h"
 #include "kernel/type/tagged.h"
+#include "semantic/generic.h"
+#include "semantic/type_named.h"
+#include "frontend/identifier_identity.h"
+
+#include <string.h>
+
+
+/* Invalidates sequence-length facts after a mutable reference escapes into a call. */
+static void __Body_Invalidate_Mutable_Reference_Length__(
+    __Semantic_Body_Context__ *__Context__,
+    __Ast_Type__ *__Parameter__,
+    __Ast_Expression__ *__Argument__)
+{
+    int __Mutable_Reference__ = 0;
+    __Ast_Expression__ *__Operand__;
+    __Ast_Lvalue__ *__Lvalue__;
+    __Semantic_Local__ *__Local__;
+
+    if (!__Safety_Type_Is_Reference__(__Parameter__, &__Mutable_Reference__) ||
+        !__Mutable_Reference__ || __Argument__ == NULL ||
+        __Argument__->__Kind__ != __Ast_Expression_Unary__ ||
+        __Argument__->__As__.__Unary__.__Operation__ != __Unary_Address_Mutable__)
+    {
+        return;
+    }
+    __Operand__ = __Argument__->__As__.__Unary__.__Operand__;
+    if (__Operand__ == NULL || __Operand__->__Kind__ != __Ast_Expression_Atom__ ||
+        __Operand__->__As__.__Atom__.__Kind__ != __Ast_Atom_Lvalue__)
+    {
+        return;
+    }
+    __Lvalue__ = __Operand__->__As__.__Atom__.__As__.__Lvalue__;
+    if (__Lvalue__ == NULL || __Lvalue__->__Kind__ != __Ast_Lvalue_Base__)
+    {
+        return;
+    }
+    __Local__ = __Body_Find_Local__(__Context__, __Lvalue__);
+    if (__Local__ != NULL)
+    {
+        __Local__->__Has_Known_Length__ = 0;
+    }
+}
 
 /* Checks the body call arguments. */
 static int __Body_Check_Call_Arguments__(__Semantic_Body_Context__ *__Context__,
@@ -22,10 +64,17 @@ static int __Body_Check_Call_Arguments__(__Semantic_Body_Context__ *__Context__,
 
     for (__Index__ = 0U; __Index__ < __Argument_Count__; ++__Index__)
     {
-        if (!__Body_Check_Expression_Compatible__(__Context__,
-                                                  __Parameters__[__Index__],
-                                                  __Arguments__[__Index__],
-                                                  __Arguments__[__Index__]->__Header__.__Span__))
+        /* The argument a shared borrow of a call result may be
+         * (body_unary.c); restored for the enclosing call's argument. */
+        __Ast_Expression__ *__Enclosing_Borrow_Argument__ = __Context__->__Call_Borrow_Argument__;
+        int __Compatible__;
+        __Context__->__Call_Borrow_Argument__ = __Arguments__[__Index__];
+        __Compatible__ = __Body_Check_Expression_Compatible__(__Context__,
+                                                              __Parameters__[__Index__],
+                                                              __Arguments__[__Index__],
+                                                              __Arguments__[__Index__]->__Header__.__Span__);
+        __Context__->__Call_Borrow_Argument__ = __Enclosing_Borrow_Argument__;
+        if (!__Compatible__)
         {
             return 0;
         }
@@ -42,9 +91,327 @@ static int __Body_Check_Call_Arguments__(__Semantic_Body_Context__ *__Context__,
             {
                 return 0;
             }
+            __Body_Invalidate_Mutable_Reference_Length__(
+                __Context__, __Parameters__[__Index__], __Arguments__[__Index__]);
         }
     }
     return 1;
+}
+
+static size_t __Body_Generic_Parameter_Index__(const __Ast_Function__ *__Function__,
+                                             __Text_Slice__ __Name__)
+{
+    size_t __Index__;
+    if (__Function__ == NULL)
+        return SIZE_MAX;
+    for (__Index__ = 0U; __Index__ < __Function__->__Type_Parameter_Count__; ++__Index__)
+    {
+        if (__Identifier_Identity_Equals__(__Function__->__Type_Parameters__[__Index__], __Name__))
+            return __Index__;
+    }
+    return SIZE_MAX;
+}
+
+static __Ast_Type__ *__Body_Generic_Expand_Alias__(__Semantic_Body_Context__ *__Context__,
+                                                   __Ast_Type__ *__Type__)
+{
+    __Semantic_Type_Entry__ *__Entry__ = NULL;
+    if (__Type__ == NULL || __Type__->__Kind__ != __Ast_Type_Named__)
+        return __Type__;
+    if (!__Semantic_Resolve_Named_Entry__(__Context__->__Semantic__, __Type__, &__Entry__) ||
+        __Entry__ == NULL || __Entry__->__Declaration__ == NULL)
+        return __Type__;
+    if (__Entry__->__Declaration__->__Kind__ == __Ast_Type_Decl_Alias__)
+        return __Entry__->__Declaration__->__As__.__Alias__;
+    return __Type__;
+}
+
+/* Expands a generic alias written in a template signature, such as
+ * `كاتب<ح>`, into its aliased structure with the template's own type
+ * parameters left as named placeholders.  No concrete instance is created and
+ * no placeholder name is resolved: inference must see the structure before
+ * the template parameters are bound. */
+static __Ast_Type__ *__Body_Generic_Expand_Template_Alias__(__Semantic_Body_Context__ *__Context__,
+                                                            __Ast_Type__ *__Type__)
+{
+    __Semantic_Type_Entry__ *__Entry__ = NULL;
+    const __Program_Unit__ *__Owner_Unit__;
+    __Ast_Type_Declaration__ *__Declaration__;
+    if (__Type__ == NULL || __Type__->__Kind__ != __Ast_Type_Named__ ||
+        __Type__->__As__.__Named__.__Argument_Count__ == 0U)
+        return __Type__;
+    __Owner_Unit__ = __Semantic_Type_Owner_Unit__(__Context__->__Semantic__, __Type__);
+    if (__Owner_Unit__ == NULL)
+        __Owner_Unit__ = __Context__->__Semantic__->__Active_Unit__;
+    if (__Name_Resolve_Type__(__Context__->__Semantic__, __Owner_Unit__,
+                              __Type__->__As__.__Named__.__Name__, &__Entry__) !=
+            __Name_Lookup_Found__ ||
+        __Entry__ == NULL || __Entry__->__Declaration__ == NULL)
+        return __Type__;
+    __Declaration__ = __Entry__->__Declaration__;
+    if (__Declaration__->__Kind__ != __Ast_Type_Decl_Alias__ ||
+        __Declaration__->__Type_Parameter_Count__ != __Type__->__As__.__Named__.__Argument_Count__)
+        return __Type__;
+    {
+        __Ast_Type__ *__Expanded__ = __Semantic_Generic_Substitute_Type__(
+            __Context__->__Semantic__, __Declaration__->__As__.__Alias__,
+            __Declaration__->__Type_Parameters__, __Type__->__As__.__Named__.__Arguments__,
+            __Declaration__->__Type_Parameter_Count__, __Entry__->__Unit__);
+        return __Expanded__ == NULL ? __Type__ : __Expanded__;
+    }
+}
+
+static int __Body_Generic_Type_Contains_Parameter__(
+    const __Ast_Function__ *__Template_Function__,
+    __Ast_Type__ *__Type__)
+{
+    size_t __Index__;
+    if (__Template_Function__ == NULL || __Type__ == NULL)
+        return 0;
+    if (__Type__->__Kind__ == __Ast_Type_Named__ &&
+        __Type__->__As__.__Named__.__Argument_Count__ == 0U &&
+        __Body_Generic_Parameter_Index__(
+            __Template_Function__, __Type__->__As__.__Named__.__Name__) != SIZE_MAX)
+        return 1;
+    switch (__Type__->__Kind__)
+    {
+        case __Ast_Type_Mutable__:
+        case __Ast_Type_Pointer__:
+        case __Ast_Type_Reference__:
+        case __Ast_Type_Vector__:
+        case __Ast_Type_Box__:
+        case __Ast_Type_Option__:
+            return __Body_Generic_Type_Contains_Parameter__(
+                __Template_Function__, __Type__->__As__.__Inner__);
+        case __Ast_Type_Result__:
+            return __Body_Generic_Type_Contains_Parameter__(
+                       __Template_Function__, __Type__->__As__.__Result__.__Ok__) ||
+                   __Body_Generic_Type_Contains_Parameter__(
+                       __Template_Function__, __Type__->__As__.__Result__.__Error__);
+        case __Ast_Type_Function__:
+            for (__Index__ = 0U; __Index__ < __Type__->__As__.__Function__.__Parameter_Count__;
+                 ++__Index__)
+            {
+                if (__Body_Generic_Type_Contains_Parameter__(
+                        __Template_Function__,
+                        __Type__->__As__.__Function__.__Parameters__[__Index__]))
+                    return 1;
+            }
+            return __Body_Generic_Type_Contains_Parameter__(
+                __Template_Function__, __Type__->__As__.__Function__.__Output__);
+        case __Ast_Type_Named__:
+            for (__Index__ = 0U; __Index__ < __Type__->__As__.__Named__.__Argument_Count__; ++__Index__)
+            {
+                if (__Body_Generic_Type_Contains_Parameter__(
+                        __Template_Function__, __Type__->__As__.__Named__.__Arguments__[__Index__]))
+                    return 1;
+            }
+            return 0;
+        default:
+            return 0;
+    }
+}
+
+static int __Body_Generic_Infer_Type__(__Semantic_Body_Context__ *__Context__,
+                                      const __Ast_Function__ *__Template_Function__,
+                                      __Ast_Type__ *__Template_Type__,
+                                      __Ast_Type__ *__Actual_Type__,
+                                      __Ast_Type__ **__Bindings__)
+{
+    size_t __Parameter_Index__;
+    size_t __Index__;
+    if (__Template_Type__ == NULL || __Actual_Type__ == NULL)
+        return 0;
+
+    if (!__Body_Generic_Type_Contains_Parameter__(__Template_Function__, __Template_Type__))
+        return 1;
+
+    if (__Template_Type__->__Kind__ == __Ast_Type_Named__ &&
+        __Template_Type__->__As__.__Named__.__Argument_Count__ == 0U)
+    {
+        __Parameter_Index__ = __Body_Generic_Parameter_Index__(
+            __Template_Function__, __Template_Type__->__As__.__Named__.__Name__);
+        if (__Parameter_Index__ != SIZE_MAX)
+        {
+            if (__Bindings__[__Parameter_Index__] == NULL)
+            {
+                __Bindings__[__Parameter_Index__] = __Actual_Type__;
+            }
+            /* Once a canonical binding exists, concrete argument checking below
+             * owns compatibility. This preserves contextual literal conversion
+             * instead of requiring the literal's provisional default type to
+             * equal the already-inferred generic argument. */
+            return 1;
+        }
+    }
+
+    __Actual_Type__ = __Body_Generic_Expand_Alias__(__Context__, __Actual_Type__);
+    if (__Template_Type__->__Kind__ == __Ast_Type_Named__ &&
+        __Actual_Type__->__Kind__ != __Ast_Type_Named__)
+    {
+        __Ast_Type__ *__Expanded_Template__ =
+            __Body_Generic_Expand_Template_Alias__(__Context__, __Template_Type__);
+        if (__Expanded_Template__ != __Template_Type__)
+            return __Body_Generic_Infer_Type__(__Context__, __Template_Function__,
+                                               __Expanded_Template__, __Actual_Type__, __Bindings__);
+    }
+    if (__Template_Type__->__Kind__ != __Actual_Type__->__Kind__)
+    {
+        return __Type_Compatible__(__Context__->__Semantic__, __Template_Type__, __Actual_Type__);
+    }
+
+    switch (__Template_Type__->__Kind__)
+    {
+        case __Ast_Type_Reference__:
+        {
+            __Ast_Type__ *__Template_Inner__ = __Template_Type__->__As__.__Inner__;
+            __Ast_Type__ *__Actual_Inner__ = __Actual_Type__->__As__.__Inner__;
+
+            /* Generic binding follows the referenced value type, while ordinary
+             * call compatibility remains responsible for reference mutability. */
+            if (__Template_Inner__ != NULL && __Actual_Inner__ != NULL)
+            {
+                if (__Template_Inner__->__Kind__ == __Ast_Type_Mutable__ &&
+                    __Actual_Inner__->__Kind__ != __Ast_Type_Mutable__)
+                {
+                    __Template_Inner__ = __Template_Inner__->__As__.__Inner__;
+                }
+                else if (__Actual_Inner__->__Kind__ == __Ast_Type_Mutable__ &&
+                         __Template_Inner__->__Kind__ != __Ast_Type_Mutable__)
+                {
+                    __Actual_Inner__ = __Actual_Inner__->__As__.__Inner__;
+                }
+            }
+            return __Body_Generic_Infer_Type__(
+                __Context__, __Template_Function__, __Template_Inner__,
+                __Actual_Inner__, __Bindings__);
+        }
+        case __Ast_Type_Pointer__:
+        case __Ast_Type_Mutable__:
+        case __Ast_Type_Vector__:
+        case __Ast_Type_Box__:
+        case __Ast_Type_Option__:
+            return __Body_Generic_Infer_Type__(
+                __Context__, __Template_Function__, __Template_Type__->__As__.__Inner__,
+                __Actual_Type__->__As__.__Inner__, __Bindings__);
+        case __Ast_Type_Result__:
+            return __Body_Generic_Infer_Type__(
+                       __Context__, __Template_Function__,
+                       __Template_Type__->__As__.__Result__.__Ok__,
+                       __Actual_Type__->__As__.__Result__.__Ok__, __Bindings__) &&
+                   __Body_Generic_Infer_Type__(
+                       __Context__, __Template_Function__,
+                       __Template_Type__->__As__.__Result__.__Error__,
+                       __Actual_Type__->__As__.__Result__.__Error__, __Bindings__);
+        case __Ast_Type_Function__:
+            if (__Template_Type__->__As__.__Function__.__Parameter_Count__ !=
+                __Actual_Type__->__As__.__Function__.__Parameter_Count__)
+                return 0;
+            for (__Index__ = 0U;
+                 __Index__ < __Template_Type__->__As__.__Function__.__Parameter_Count__;
+                 ++__Index__)
+            {
+                if (!__Body_Generic_Infer_Type__(
+                        __Context__, __Template_Function__,
+                        __Template_Type__->__As__.__Function__.__Parameters__[__Index__],
+                        __Actual_Type__->__As__.__Function__.__Parameters__[__Index__], __Bindings__))
+                    return 0;
+            }
+            return __Body_Generic_Infer_Type__(
+                __Context__, __Template_Function__, __Template_Type__->__As__.__Function__.__Output__,
+                __Actual_Type__->__As__.__Function__.__Output__, __Bindings__);
+        case __Ast_Type_Named__:
+        {
+            __Ast_Type__ *__Expanded_Actual__ = __Body_Generic_Expand_Alias__(__Context__, __Actual_Type__);
+            if (__Expanded_Actual__ != __Actual_Type__)
+                return __Body_Generic_Infer_Type__(__Context__, __Template_Function__, __Template_Type__,
+                                                   __Expanded_Actual__, __Bindings__);
+            if (!__Identifier_Identity_Equals__(__Template_Type__->__As__.__Named__.__Name__,
+                                                __Actual_Type__->__As__.__Named__.__Name__) ||
+                __Template_Type__->__As__.__Named__.__Argument_Count__ !=
+                    __Actual_Type__->__As__.__Named__.__Argument_Count__)
+                return 0;
+            for (__Index__ = 0U; __Index__ < __Template_Type__->__As__.__Named__.__Argument_Count__;
+                 ++__Index__)
+            {
+                if (!__Body_Generic_Infer_Type__(
+                        __Context__, __Template_Function__,
+                        __Template_Type__->__As__.__Named__.__Arguments__[__Index__],
+                        __Actual_Type__->__As__.__Named__.__Arguments__[__Index__], __Bindings__))
+                    return 0;
+            }
+            return 1;
+        }
+        default:
+            return __Type_Compatible__(__Context__->__Semantic__, __Template_Type__, __Actual_Type__);
+    }
+}
+
+static __Semantic_Function_Entry__ *__Body_Instantiate_Generic_Callee__(
+    __Semantic_Body_Context__ *__Context__,
+    __Semantic_Function_Entry__ *__Template__,
+    __Ast_Expression__ *__Call__)
+{
+    __Ast_Type__ **__Bindings__;
+    size_t __Index__;
+    if (__Template__ == NULL || __Template__->__Function__ == NULL ||
+        !__Template__->__Is_Generic_Template__)
+        return __Template__;
+    __Bindings__ = (__Ast_Type__ **)__Arena_Allocate__(
+        &__Context__->__Synthetic_Types__,
+        __Template__->__Function__->__Type_Parameter_Count__ * sizeof(*__Bindings__),
+        _Alignof(__Ast_Type__ *));
+    if (__Bindings__ == NULL)
+        return NULL;
+    memset(__Bindings__, 0,
+           __Template__->__Function__->__Type_Parameter_Count__ * sizeof(*__Bindings__));
+    if (__Template__->__Function__->__Parameter_Count__ !=
+        __Call__->__As__.__Call__.__Argument_Count__)
+        return NULL;
+
+    /* Contextual output types constrain generic parameters before argument
+     * inference. Integer literals initially infer a provisional default type;
+     * binding from that provisional type first would incorrectly prevent a
+     * surrounding expected type such as u8 from selecting the concrete generic
+     * instance. Ordinary argument compatibility below still decides whether
+     * each actual argument fits the selected instance. */
+    if (__Call__->__Contextual_Type__ != NULL)
+    {
+        __Ast_Type__ *__Expected_Output__ = __Type_Unwrap_Mutable__(__Call__->__Contextual_Type__);
+        if (__Expected_Output__ == NULL ||
+            !__Body_Generic_Infer_Type__(
+                __Context__, __Template__->__Function__,
+                __Template__->__Function__->__Output__.__Type__,
+                __Expected_Output__, __Bindings__))
+        {
+            return NULL;
+        }
+    }
+
+    for (__Index__ = 0U; __Index__ < __Template__->__Function__->__Parameter_Count__; ++__Index__)
+    {
+        __Ast_Type__ *__Actual__ = NULL;
+        __Ast_Expression__ *__Enclosing_Borrow_Argument__ = __Context__->__Call_Borrow_Argument__;
+        int __Inferred__;
+        __Context__->__Call_Borrow_Argument__ = __Call__->__As__.__Call__.__Arguments__[__Index__];
+        __Inferred__ = __Body_Infer_Expression__(
+            __Context__, __Call__->__As__.__Call__.__Arguments__[__Index__], &__Actual__);
+        __Context__->__Call_Borrow_Argument__ = __Enclosing_Borrow_Argument__;
+        if (!__Inferred__ ||
+            !__Body_Generic_Infer_Type__(
+                __Context__, __Template__->__Function__,
+                __Template__->__Function__->__Parameters__[__Index__].__Slot__.__Type__,
+                __Actual__, __Bindings__))
+            return NULL;
+    }
+    for (__Index__ = 0U; __Index__ < __Template__->__Function__->__Type_Parameter_Count__; ++__Index__)
+    {
+        if (__Bindings__[__Index__] == NULL)
+            return NULL;
+    }
+    return __Semantic_Generic_Function_Instance__(
+        __Context__->__Semantic__, __Template__, __Bindings__,
+        __Template__->__Function__->__Type_Parameter_Count__);
 }
 
 /* Infers the body call. */
@@ -71,13 +438,6 @@ int __Body_Infer_Call__(__Semantic_Body_Context__ *__Context__,
         {
             return 1;
         }
-    }
-
-    if (__Expression__->__Contextual_Type__ != NULL &&
-        __Type_Is_Builtin_Tagged__(__Expression__->__Contextual_Type__))
-    {
-        *__Out_Type__ = __Expression__->__Contextual_Type__;
-        return 1;
     }
 
     if (__Function_Lvalue__ == NULL)
@@ -119,6 +479,20 @@ int __Body_Infer_Call__(__Semantic_Body_Context__ *__Context__,
                                      __Expression__->__Header__.__Span__);
             }
         }
+    }
+
+    if (__Callee__ != NULL && __Callee__->__Is_Generic_Template__)
+    {
+        __Semantic_Function_Entry__ *__Instance__ =
+            __Body_Instantiate_Generic_Callee__(__Context__, __Callee__, __Expression__);
+        if (__Instance__ == NULL)
+        {
+            return __Body_Fail__(__Context__, __E0400_Mismatched_Types__,
+                                 __Expression__->__Header__.__Span__);
+        }
+        __Callee__ = __Instance__;
+        __Expression__->__As__.__Call__.__Resolved_Generic_Function_Index__ =
+            __Callee__->__Index__ - __Context__->__Semantic__->__Functions__.__Count__;
     }
 
     if (__Callee__ != NULL)
@@ -165,6 +539,50 @@ int __Body_Infer_Call__(__Semantic_Body_Context__ *__Context__,
         return 1;
     }
 
+    if (__Local__ == NULL && __Callee__ == NULL &&
+        !(__Function_Lvalue__->__Kind__ == __Ast_Lvalue_Base__ &&
+          __Function_Lvalue__->__As__.__Base__.__Kind__ == __Ast_Lvalue_Base_Identifier__))
+    {
+        /* A call through a function value held in a field, an element or a
+         * call result (`h.callback(21)`, `make().callback(3)`, `adder(1)(2)`). */
+        __Ast_Type__ *__Callable_Type__ = NULL;
+        __Resolved_Type__ __Resolved__;
+        if (!__Body_Infer_Lvalue__(__Context__, __Function_Lvalue__, &__Callable_Type__, NULL))
+        {
+            return 0;
+        }
+        if (__Type_Resolve__(__Context__->__Semantic__, __Callable_Type__, &__Resolved__) &&
+            __Resolved__.__Kind__ == __Resolved_Type_Function__)
+        {
+            if (!__Body_Check_Call_Arguments__(
+                    __Context__, __Resolved__.__Parameters__, __Resolved__.__Parameter_Count__,
+                    __Expression__->__As__.__Call__.__Arguments__,
+                    __Expression__->__As__.__Call__.__Argument_Count__,
+                    !__Expression__->__Semantic_Effects_Applied__))
+                return 0;
+            *__Out_Type__ = __Resolved__.__Output__;
+            __Expression__->__Semantic_Effects_Applied__ = 1;
+            return 1;
+        }
+    }
+
+    if (__Local__ != NULL)
+    {
+        __Resolved_Type__ __Resolved__;
+        if (__Type_Resolve__(__Context__->__Semantic__, __Local__->__Type__, &__Resolved__) &&
+            __Resolved__.__Kind__ == __Resolved_Type_Function__)
+        {
+            if (!__Body_Check_Call_Arguments__(
+                    __Context__, __Resolved__.__Parameters__, __Resolved__.__Parameter_Count__,
+                    __Expression__->__As__.__Call__.__Arguments__,
+                    __Expression__->__As__.__Call__.__Argument_Count__,
+                    !__Expression__->__Semantic_Effects_Applied__))
+                return 0;
+            *__Out_Type__ = __Resolved__.__Output__;
+            __Expression__->__Semantic_Effects_Applied__ = 1;
+            return 1;
+        }
+    }
     return __Body_Fail__(
         __Context__, __E0400_Mismatched_Types__, __Expression__->__Header__.__Span__);
 }

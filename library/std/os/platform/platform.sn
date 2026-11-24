@@ -1,0 +1,7 @@
+// The root file of std.os.platform: the Arabic spellings of its modules
+// (docs/en/reference/modules-and-imports.md, "Module spellings"). An import may
+// use either name; both name one module.
+
+module unix { ar: يونكس };
+module wasi { ar: واسي };
+module windows { ar: ويندوز };

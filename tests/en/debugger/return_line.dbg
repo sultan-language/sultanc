@@ -1,0 +1,21 @@
+# Debugger session for return_line.sn, run by tools/tests/debugger_tests.sh.
+
+# Stepping into the call enters twice.
+break @return_call
+run
+expect return_line\.sn
+step
+expect twice
+bt
+expect twice
+expect main
+
+# The return line binds inside twice (not at the next line with code in
+# the caller), and the backtrace shows the caller.
+break @return_twice
+continue
+expect twice
+expect return doubled
+bt
+expect twice
+expect main

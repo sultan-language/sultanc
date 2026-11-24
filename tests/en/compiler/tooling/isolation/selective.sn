@@ -1,0 +1,4 @@
+// Fixture of tests/en/compiler/tooling/isolation.sn (not a test).
+// A selective import of a name std.io does not export.
+from std.io import definitely_missing;
+def selective_value(): int { return 4; }

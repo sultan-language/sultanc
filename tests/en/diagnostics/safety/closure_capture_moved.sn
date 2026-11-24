@@ -1,0 +1,10 @@
+// اختبار: رفض
+// تشخيص: SULTANC-OWNERSHIP-USE-AFTER-MOVE
+// نظير: tests/ar/diagnostics/safety/closure_capture_moved.sn
+// The closure captures the owned text: the environment owns it from the
+// construction on, so the later read through the local is a use after move.
+def main(): int {
+    let text: string = "captured";
+    let f: fn(int): int = fn(x: int): int -> x + (length(text) as int);
+    return f(1) + (length(text) as int);
+}

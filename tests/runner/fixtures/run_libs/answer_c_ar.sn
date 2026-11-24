@@ -1,0 +1,7 @@
+// شيفرة C المستوردة لا تعمل إلا من ملف تنفيذي، وهو يربط answer() من أرشيف
+// -l المسمى libanswer.a (tests/runner/suites/cli.sn).
+استورد "uses_answer.c";
+
+عرف الرئيسية(): عدد {
+    أرجع answer_from_c() مثل عدد;
+}

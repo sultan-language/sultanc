@@ -1,0 +1,11 @@
+// OS API example: signal_handlers.
+import std.io.println;
+import std.text.number;
+import std.os.path;
+
+
+def main(): int {
+    let bad: string = "invalid\u0000path";
+    if (!os_path_has_no_embedded_nul(&bad)) { println("rejected embedded NUL"); } else { return 1; };
+    return 0;
+}

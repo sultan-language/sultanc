@@ -1,0 +1,5 @@
+// Part of tests/en/compiler/c_import_link/main.sn: the module that imports
+// left.c (and only left.c).
+import "left.c";
+
+public def from_left(v: i32): i32 { return use_left(v); }

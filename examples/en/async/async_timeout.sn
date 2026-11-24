@@ -1,0 +1,33 @@
+// A timeout with a watchdog task: the watchdog finishes first while the slow work is still
+// running, and the work is then awaited so nothing is left behind.
+import std.io.println;
+import std.text.number;
+import std.async.runtime;
+
+def slow_work(): int {
+    sleep_task(30000000);
+    return 9;
+}
+
+def watchdog(): int {
+    sleep_task(5000000);
+    return 1;
+}
+
+def main(): int {
+    let work: mutable task<int> = spawn_task(fn(): int -> slow_work());
+    let timer: mutable task<int> = spawn_task(fn(): int -> watchdog());
+    match await_task(&mutable timer) with
+    | option.some(v) -> {
+        if (v != 1) { return 1; };
+    }
+    | option.none -> { return 2; };
+    if (task_finished(&work)) { return 3; };
+    match await_task(&mutable work) with
+    | option.some(v) -> {
+        if (v != 9) { return 4; };
+    }
+    | option.none -> { return 5; };
+    println("deadline exceeded and work cleaned up");
+    return 0;
+}

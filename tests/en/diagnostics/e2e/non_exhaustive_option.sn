@@ -1,0 +1,12 @@
+// اختبار: رفض
+// تشخيص: SULTANC-PATTERN-NON-EXHAUSTIVE
+// نظير: tests/ar/diagnostics/e2e/non_exhaustive_option.sn
+// خرج-تشخيص-عربي: non_exhaustive_option.ar.stderr
+// خرج-تشخيص-إنجليزي: non_exhaustive_option.en.stderr
+// An option without its absent case: the case is named in the output language.
+def main(): int {
+    let found: option int = option.some(3);
+    match found with
+    | option.some(value) -> { return value; };
+    return 0;
+}

@@ -1,0 +1,1 @@
+def main(): int { let value: mutable int = 0; while (value < 1) { value := value + 1; } return 42; }

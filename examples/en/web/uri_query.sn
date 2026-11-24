@@ -1,0 +1,13 @@
+// Worked web example: uri_query.
+import std.io.println;
+import std.text.number;
+import std.uri.uri;
+
+
+def main(): int {
+    let query: string = "q=SultanC&mode=code";
+    match حلل_استعلام_عنوان(&query) with
+    | result.err(_) -> { return 1; }
+    | result.ok(pairs) -> { println(uint_to_text(عدد_أزواج_استعلام_عنوان(&pairs))); };
+    return 0;
+}

@@ -1,0 +1,51 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/stdlib/error/convert_net.sn
+// std.error.from_net: every variant of the IP and socket-address parse
+// errors (std.net names them in Arabic only).
+import std.error.failure;
+import std.error.from_net;
+import std.net.ip;
+import std.net.socket_address;
+import std.text.compare;
+
+def has_identity(failure: &Error, kind: string): bool {
+    let its_domain: string = error_domain(failure);
+    let its_kind: string = error_kind(failure);
+    let domain: string = "std.net";
+    return texts_equal(&its_domain, &domain) && texts_equal(&its_kind, &kind);
+}
+
+def main(): int {
+    let ip_syntax: خطأ_تحليل_آيبي = خطأ_تحليل_آيبي.صيغة_غير_صالحة();
+    let e1: Error = error_from_ip_parse_error(&ip_syntax);
+    if (!has_identity(&e1, "صيغة_غير_صالحة")) { return 1; };
+    let ip_range: خطأ_تحليل_آيبي = خطأ_تحليل_آيبي.جزء_خارج_المدى();
+    let e2: Error = error_from_ip_parse_error(&ip_range);
+    if (!has_identity(&e2, "جزء_خارج_المدى")) { return 2; };
+
+    let socket_syntax: خطأ_تحليل_عنوان_مقبس = خطأ_تحليل_عنوان_مقبس.صيغة_غير_صالحة();
+    let e3: Error = error_from_socket_address_parse_error(&socket_syntax);
+    if (!has_identity(&e3, "صيغة_غير_صالحة")) { return 3; };
+    let socket_address: خطأ_تحليل_عنوان_مقبس = خطأ_تحليل_عنوان_مقبس.عنوان_غير_صالح();
+    let e4: Error = error_from_socket_address_parse_error(&socket_address);
+    if (!has_identity(&e4, "عنوان_غير_صالح")) { return 4; };
+    let socket_port: خطأ_تحليل_عنوان_مقبس = خطأ_تحليل_عنوان_مقبس.منفذ_غير_صالح();
+    let e5: Error = error_from_socket_address_parse_error(&socket_port);
+    if (!has_identity(&e5, "منفذ_غير_صالح")) { return 5; };
+    let message5: string = error_message(&e5);
+    let expected5: string = "منفذ عنوان المقبس غير صالح";
+    if (!texts_equal(&message5, &expected5)) { return 6; };
+
+    // A real parse failure.
+    let text: string = "1.2.3";
+    match parse_ip(&text) with
+    | result.ok(_) -> { return 7; }
+    | result.err(problem) -> {
+        let failure: Error = error_from_ip_parse_error(&problem);
+        if (!has_identity(&failure, "صيغة_غير_صالحة")) { return 8; };
+    };
+    return 42;
+}

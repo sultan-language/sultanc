@@ -1,0 +1,14 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/programs/factorial_recursive.sn
+def factorial(n: int): int {
+    if (n <= 1) { return 1; };
+    return n * factorial(n - 1);
+}
+
+def main(): int {
+    if (factorial(5) == 120) { return 42; };
+    return 1;
+}

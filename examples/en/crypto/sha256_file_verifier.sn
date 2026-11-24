@@ -1,0 +1,36 @@
+// Verifying a file with SHA-256: hash the content before writing it, read the file back
+// and compare the two digests byte by byte.
+import std.io.println;
+import std.text.number;
+import std.text.from_bytes;
+import std.crypto.sha256;
+import std.fs.write_file;
+import std.fs.read_file;
+import std.fs.mutation;
+
+def main(): int {
+    let path: string = "sultanc-file-hash-example.tmp";
+    let content: string = "authentic file";
+    match write_file(&path, &content) with
+    | result.err(_) -> { return 1; }
+    | _ -> { };
+    let expected: vector u8 = sha256(&bytes_from_text(content));
+    let valid: mutable bool = false;
+    match read_file(&path) with
+    | result.ok(text) -> {
+        let actual: vector u8 = sha256(&bytes_from_text(text));
+        let i: mutable int = 0;
+        valid := true;
+        while (i < 32) {
+            if (expected[i] != actual[i]) { valid := false; };
+            i := i + 1;
+        };
+    }
+    | _ -> { };
+    match remove_file(&path) with
+    | result.err(_) -> { return 2; }
+    | _ -> { };
+    if (!valid) { return 3; };
+    println("digest verified");
+    return 0;
+}

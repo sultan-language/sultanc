@@ -1,0 +1,7 @@
+error[SULTANC-OWNERSHIP-MOVE-OUT-OF-REFERENCE]: `btree_map_keys` copies values of `م` out of borrowed storage, so `م` must be a plain type; `string` owns memory — A copy of an owning value would share its memory, so the generic function takes only plain types there.
+  --> tests/en/diagnostics/e2e/plain_bound_owning_keys.sn:12:31..12:54
+    |
+ 12 |     let keys: vector string = btree_map_keys(&counts);
+    |                               ^^^^^^^^^^^^^^^^^^^^^^^
+    |
+  = help: pass a plain type, or use the variant that copies each value (`btree_map_keys_cloned` for `btree_map_keys`)

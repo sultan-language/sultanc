@@ -1,0 +1,29 @@
+// Actual graph toposort implementation over an in-memory graph/vector.
+import std.io.println;
+import std.text.number;
+
+def topological_order(): vector int {
+    let graph: vector vector int = [[1, 2], [3], [3], [4], []];
+    let indegree: mutable vector int = [0, 1, 1, 2, 1];
+    let queue: mutable vector int = [0];
+    let order: mutable vector int = [];
+    let head: mutable int = 0;
+    while (head < length(queue)) {
+        let node: int = queue[head]; head := head + 1;
+        append(order, node);
+        let i: mutable int = 0;
+        while (i < length(graph[node])) {
+            let to: int = graph[node][i];
+            indegree[to] := indegree[to] - 1;
+            if (indegree[to] == 0) { append(queue, to); };
+            i := i + 1;
+        }
+    }
+    return order;
+}
+
+def main(): int {
+    let order: vector int = topological_order();
+    println(int_to_text(length(order)));
+    return 0;
+}

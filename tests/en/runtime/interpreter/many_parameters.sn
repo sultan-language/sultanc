@@ -1,0 +1,29 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// بيئة: SULTANC_INTERPRETER_SELECTOR=aarch64-linux-gnu SULTANC_INTERPRETER_TRACE=1
+// نظير: tests/ar/runtime/interpreter/many_parameters.sn
+// Functions of more than 16 integer and floating parameters run in the
+// machine interpreter with the AArch64 selector: the portable SultanC ABI of
+// the delegated targets (AArch64 Linux) gives each parameter a register of
+// its own, and the machine interpreter has a word for every one
+// (interpreter/machine/machine_program.sn, موضع_واجهة_آلة). Previously the
+// 17th had none and the whole program fell back to the checked interpreter,
+// which SULTANC_INTERPRETER_TRACE=1 reports on standard error (compared
+// with the executable's, which is empty).
+def sum_ints(a0: int, a1: int, a2: int, a3: int, a4: int, a5: int, a6: int, a7: int, a8: int, a9: int, a10: int, a11: int, a12: int, a13: int, a14: int, a15: int, a16: int, a17: int): int {
+    return a0 + a1 + a2 + a3 + a4 + a5 + a6 + a7 + a8 + a9 + a10 + a11 + a12 + a13 + a14 + a15 + a16 + a17;
+}
+
+def sum_floats(f0: f64, f1: f64, f2: f64, f3: f64, f4: f64, f5: f64, f6: f64, f7: f64, f8: f64, f9: f64, f10: f64, f11: f64, f12: f64, f13: f64, f14: f64, f15: f64, f16: f64, f17: f64): f64 {
+    return f0 + f1 + f2 + f3 + f4 + f5 + f6 + f7 + f8 + f9 + f10 + f11 + f12 + f13 + f14 + f15 + f16 + f17;
+}
+
+def main(): int {
+    let i: int = sum_ints(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18);
+    let f: f64 = sum_floats(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0);
+    if (i != 171) { return 1; };
+    if (f != 171.0) { return 2; };
+    return 42;
+}

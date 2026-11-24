@@ -1,0 +1,59 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// std.error ownership: 10^5 errors with causes and notes, built, read
+// through every accessor, copied, rendered and dropped. The allocator's live
+// bytes after the loop equal those before it, so memory stays flat.
+// Counterpart: tests/ar/stdlib/error/rss_flat.sn. It has no pair directive:
+// the pair check interprets both files, the interpreter takes minutes for
+// this loop, and it does not use the std allocator whose counters this reads.
+import std.error.failure;
+import std.error.from_number;
+import std.text.number;
+import std.os.allocation;
+
+def make_chain(i: uint): Error {
+    let root: Error = error_with_kind("std.fs", "غير_موجود", "الملف غير موجود");
+    let middle: mutable Error = error_with_kind_caused_by("config", "غير_محمل", "تعذر تحميل الإعدادات", root);
+    error_add_note(&mutable middle, uint_to_text(i));
+    let top: mutable Error = error_caused_by("أثناء بدء الخادم", middle);
+    error_add_note(&mutable top, "ملاحظة ثابتة");
+    return top;
+}
+
+def use_chain(failure: &Error): bool {
+    let domain: string = "std.fs";
+    let kind: string = "غير_موجود";
+    let found: bool = error_is(failure, &domain, &kind);
+    let message: string = error_message(failure);
+    let its_domain: string = error_domain(failure);
+    let its_kind: string = error_kind(failure);
+    let notes: vector string = error_notes(failure);
+    let cause: option Error = error_cause(failure);
+    let description: string = error_describe(failure);
+    let copy: Error = error_copy(failure);
+    let generated_copy: Error = clone(failure);
+    return found && error_has_cause(&copy) && error_has_cause(&generated_copy);
+}
+
+def main(): int {
+    // Warm up once so lazily created allocator state is not counted.
+    let warm_up: Error = make_chain(0);
+    if (!use_chain(&warm_up)) { return 1; };
+    let warm_up_error: integer_parse_error = integer_parse_error.invalid_digit(0);
+    let warm_up_failure: Error = error_from_integer_parse_error(&warm_up_error);
+
+    let before: u64 = بايتات_حية_مخصص_النظام();
+    let i: mutable uint = 0;
+    while (i < 100000) {
+        let chain: Error = make_chain(i);
+        if (!use_chain(&chain)) { return 2; };
+        let problem: integer_parse_error = integer_parse_error.invalid_digit(i);
+        let converted: Error = error_from_integer_parse_error(&problem);
+        let wrapped: Error = error_caused_by("تعذر قراءة المنفذ", converted);
+        i := i + 1;
+    }
+    let after: u64 = بايتات_حية_مخصص_النظام();
+    if (after != before) { return 3; };
+    return 42;
+}

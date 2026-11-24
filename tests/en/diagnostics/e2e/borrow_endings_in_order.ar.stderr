@@ -1,0 +1,67 @@
+خطأ[SULTANC-OWNERSHIP-USE-AFTER-MOVE]: استخدام بعد النقل — القيمة المستخدمة بعد نقل ملكيتها هي ⁨`text`⁩. تُستخدم القيمة بعد نقل ملكيتها.
+  --> tests/en/diagnostics/e2e/borrow_endings_in_order.sn:20:23..20:27
+    |
+ 20 |         return length(text) as int;
+    |                       ^^^^ الاستخدام غير الصالح
+    |
+  ::: tests/en/diagnostics/e2e/borrow_endings_in_order.sn:18:19..18:23
+    |
+ 18 |     | option.some(text) -> {
+    |                   ^^^^ المالك الأصلي
+    |
+  ::: tests/en/diagnostics/e2e/borrow_endings_in_order.sn:19:9..19:14
+    |
+ 19 |         entry := { value: option.none(), count: 2 };
+    |         ^^^^^ نقلت القيمة هنا
+    |
+
+خطأ[SULTANC-OWNERSHIP-USE-AFTER-MOVE]: استخدام بعد النقل — القيمة المستخدمة بعد نقل ملكيتها هي ⁨`first`⁩. تُستخدم القيمة بعد نقل ملكيتها.
+  --> tests/en/diagnostics/e2e/borrow_endings_in_order.sn:29:13..29:18
+    |
+ 29 |     return *first;
+    |             ^^^^^ الاستخدام غير الصالح
+    |
+  ::: tests/en/diagnostics/e2e/borrow_endings_in_order.sn:26:5..26:43
+    |
+ 26 |     let first: &int = &(*source).items[0];
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ المالك الأصلي
+    |
+  ::: tests/en/diagnostics/e2e/borrow_endings_in_order.sn:27:47..27:62
+    |
+ 27 |     let items: &mutable vector int = &mutable (*source).items;
+    |                                               ^^^^^^^^^^^^^^^ نقلت القيمة هنا
+    |
+
+خطأ[SULTANC-OWNERSHIP-USE-AFTER-MOVE]: استخدام بعد النقل — القيمة المستخدمة بعد نقل ملكيتها هي ⁨`target`⁩. تُستخدم القيمة بعد نقل ملكيتها.
+  --> tests/en/diagnostics/e2e/borrow_endings_in_order.sn:35:13..35:19
+    |
+ 35 |     return *target;
+    |             ^^^^^^ الاستخدام غير الصالح
+    |
+  ::: tests/en/diagnostics/e2e/borrow_endings_in_order.sn:32:21..32:41
+    |
+ 32 | def exclusive_moved(target: &mutable int): int {
+    |                     ^^^^^^^^^^^^^^^^^^^^ المالك الأصلي
+    |
+  ::: tests/en/diagnostics/e2e/borrow_endings_in_order.sn:33:31..33:37
+    |
+ 33 |     let other: &mutable int = target;
+    |                               ^^^^^^ نقلت القيمة هنا
+    |
+
+خطأ[SULTANC-OWNERSHIP-USE-AFTER-MOVE]: استخدام بعد النقل — القيمة المستخدمة بعد نقل ملكيتها هي ⁨`target`⁩. تُستخدم القيمة بعد نقل ملكيتها.
+  --> tests/en/diagnostics/e2e/borrow_endings_in_order.sn:40:31..40:37
+    |
+ 40 |     let again: &mutable int = target;
+    |                               ^^^^^^ الاستخدام غير الصالح
+    |
+  ::: tests/en/diagnostics/e2e/borrow_endings_in_order.sn:38:27..38:47
+    |
+ 38 | def exclusive_moved_twice(target: &mutable int): int {
+    |                           ^^^^^^^^^^^^^^^^^^^^ المالك الأصلي
+    |
+  ::: tests/en/diagnostics/e2e/borrow_endings_in_order.sn:39:31..39:37
+    |
+ 39 |     let other: &mutable int = target;
+    |                               ^^^^^^ نقلت القيمة هنا
+    |

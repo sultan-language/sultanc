@@ -1,0 +1,24 @@
+// ChaCha20-Poly1305: encrypt and authenticate, then decrypt; tampering is detected.
+import std.io.println;
+import std.text.number;
+import std.text.from_bytes;
+import std.crypto.chacha20_poly1305;
+
+def main(): int {
+    let key: mutable vector u8 = [];
+    let i: mutable uint = 0;
+    while (i < 32) { append(key, (i + 1) as u8); i := i + 1; }
+    let nonce: vector u8 = [0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8];
+    let header: vector u8 = bytes_from_text("v1");
+    let secret: vector u8 = bytes_from_text("meet at noon");
+    let sealed: mutable vector u8 = chacha20_poly1305_seal(&key, &nonce, &header, &secret);
+    println(uint_to_text(length(sealed) as uint));
+    match chacha20_poly1305_open(&key, &nonce, &header, &sealed) with
+    | option.some(plain) -> { println(from_bytes(&plain)); }
+    | option.none -> { println("authentication failed"); };
+    sealed[0] := sealed[0] ^ 1;
+    match chacha20_poly1305_open(&key, &nonce, &header, &sealed) with
+    | option.some(_) -> { println("tampering missed"); }
+    | option.none -> { println("tampering detected"); };
+    return 0;
+}

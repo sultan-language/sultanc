@@ -1,0 +1,11 @@
+// Compile-time type introspection: schema_preview.
+import std.io.println;
+import std.text.number;
+import std.meta.reflect;
+
+type Record = { id: u64, title: string, active: bool, tags: vector string };
+def main(): int {
+    let sample: Record = { id: 7 as u64, title: "hello", active: true, tags: [] };
+    println(uint_to_text(field_count(&sample) as uint));
+    return 0;
+}

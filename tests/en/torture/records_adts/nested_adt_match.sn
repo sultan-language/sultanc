@@ -1,0 +1,23 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// فئة: records-adts
+type Inner = | Missing | Number of int;
+type Outer = | Empty | Wrapped of Inner;
+
+def evaluate(value: Outer): int {
+    match value with
+    | Outer.Empty -> { return 0; }
+    | Outer.Wrapped(inner) -> {
+        match inner with
+        | Inner.Missing -> { return 1; }
+        | Inner.Number(number) -> { return number; };
+    };
+}
+
+def main(): int {
+    let inner: Inner = Inner.Number(42);
+    let outer: Outer = Outer.Wrapped(inner);
+    return evaluate(outer);
+}

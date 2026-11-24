@@ -1,0 +1,33 @@
+// Prim's minimum spanning tree: grow the tree from node 0 by always taking the cheapest
+// edge to a node outside it, and add up the edge weights.
+import std.io.println;
+import std.text.number;
+
+type Edge = { a: int, b: int, w: int };
+
+def main(): int {
+    let edges: vector Edge = [{ a: 0, b: 1, w: 1 }, { a: 1, b: 2, w: 2 }, { a: 0, b: 2, w: 5 }];
+    let used: mutable vector bool = [true, false, false];
+    let total: mutable int = 0;
+    let k: mutable int = 0;
+    while (k < 2) {
+        let best: mutable int = 999;
+        let chosen: mutable int = -1;
+        let i: mutable int = 0;
+        while (i < length(edges)) {
+            let e: Edge = edges[i];
+            if (used[e.a] && !used[e.b] && e.w < best) {
+                best := e.w;
+                chosen := e.b;
+            };
+            i := i + 1;
+        };
+        if (chosen < 0) { return 1; };
+        used[chosen] := true;
+        total := total + best;
+        k := k + 1;
+    };
+    if (total != 3) { return 1; };
+    println(int_to_text(total));
+    return 0;
+}

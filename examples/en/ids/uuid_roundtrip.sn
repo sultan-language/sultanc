@@ -1,0 +1,18 @@
+// Worked ids example: uuid_roundtrip.
+import std.io.println;
+import std.text.number;
+import std.uuid.uuid;
+
+
+def main(): int {
+    let original: string = "550e8400-e29b-41d4-a716-446655440000";
+    match parse_uuid(&original) with
+    | result.err(_) -> { return 1; }
+    | result.ok(id) -> {
+        let canonical: string = uuid_to_text(&id);
+        match parse_uuid(&canonical) with
+        | result.ok(second) -> { if (uuid_equal(&id,&second)) { println("round trip"); } else { return 2; }; }
+        | result.err(_) -> { return 3; };
+    };
+    return 0;
+}

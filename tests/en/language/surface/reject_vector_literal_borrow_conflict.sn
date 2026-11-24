@@ -1,0 +1,11 @@
+// اختبار: رفض
+// خروج: 1
+// تشخيص: SULTANC-BORROW-CONFLICT
+// نظير: tests/ar/language/surface/reject_vector_literal_borrow_conflict.sn
+// The borrows a vector literal argument's elements take last for the call:
+// they conflict with a mutable borrow of the same value in another argument.
+def f(a: &mutable int, b: vector &int): int { *a := 2; return length(b) as int; }
+def main(): int {
+    let x: mutable int = 1;
+    return f(&mutable x, [&x]);
+}

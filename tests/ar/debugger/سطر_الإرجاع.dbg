@@ -1,0 +1,20 @@
+# Debugger session for سطر_الإرجاع.sn, run by tools/tests/debugger_tests.sh.
+
+# Stepping into the call enters ضاعف.
+break @نداء_ضاعف
+run
+expect سطر_الإرجاع\.sn
+step
+expect ضاعف
+bt
+expect ضاعف
+expect الرئيسية
+
+# The return line binds inside ضاعف, and the backtrace shows the caller.
+break @إرجاع_ضاعف
+continue
+expect ضاعف
+expect أرجع المضاعف
+bt
+expect ضاعف
+expect الرئيسية

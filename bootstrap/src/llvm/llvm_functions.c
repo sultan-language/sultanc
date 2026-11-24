@@ -5,11 +5,12 @@
 #include "llvm/llvm_statements.h"
 #include "llvm/llvm_types.h"
 #include "llvm/llvm_values.h"
-#include "llvm/runtime/llvm_runtime_process.h"
 #include "kernel/name/name.h"
 #include "kernel/type/type.h"
+#include "semantic/generic.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 /* Finds the LLVM function by semantic. */
 __LLVM_Function__ *__LLVM_Find_Function_By_Semantic__(__LLVM_Emitter__ *emitter,
@@ -42,6 +43,11 @@ __Semantic_Function_Entry__ *__LLVM_Resolve_Ordinary_Callee__(__LLVM_Emitter__ *
     {
         return NULL;
     }
+    if (expression->__As__.__Call__.__Resolved_Generic_Function_Index__ != SIZE_MAX)
+    {
+        return __Semantic_Generic_Function_At__(
+            emitter->semantic, expression->__As__.__Call__.__Resolved_Generic_Function_Index__);
+    }
     function_lvalue = expression->__As__.__Call__.__Function__;
     if (function_lvalue == NULL || function_lvalue->__Kind__ != __Ast_Lvalue_Base__ ||
         function_lvalue->__As__.__Base__.__Kind__ != __Ast_Lvalue_Base_Identifier__)
@@ -63,87 +69,227 @@ __Semantic_Function_Entry__ *__LLVM_Resolve_Ordinary_Callee__(__LLVM_Emitter__ *
     return callee;
 }
 
+/* Returns whether two LLVM function types describe the same external ABI. */
+static int __LLVM_External_Function_Types_Match__(LLVMTypeRef left, LLVMTypeRef right)
+{
+    LLVMTypeRef *parameters = NULL;
+    LLVMTypeRef *left_parameters;
+    LLVMTypeRef *right_parameters;
+    unsigned count;
+    unsigned index;
+    int matches = 1;
+
+    if (left == NULL || right == NULL ||
+        LLVMGetTypeKind(left) != LLVMFunctionTypeKind ||
+        LLVMGetTypeKind(right) != LLVMFunctionTypeKind ||
+        LLVMGetReturnType(left) != LLVMGetReturnType(right) ||
+        LLVMIsFunctionVarArg(left) != LLVMIsFunctionVarArg(right))
+    {
+        return 0;
+    }
+    count = LLVMCountParamTypes(left);
+    if (count != LLVMCountParamTypes(right))
+        return 0;
+    if (count == 0U)
+        return 1;
+
+    parameters = (LLVMTypeRef *)calloc((size_t)count * 2U, sizeof(*parameters));
+    if (parameters == NULL)
+        return -1;
+    left_parameters = parameters;
+    right_parameters = parameters + count;
+    LLVMGetParamTypes(left, left_parameters);
+    LLVMGetParamTypes(right, right_parameters);
+    for (index = 0U; index < count; ++index)
+    {
+        if (left_parameters[index] != right_parameters[index])
+        {
+            matches = 0;
+            break;
+        }
+    }
+    free(parameters);
+    return matches;
+}
+
+/* Declares one external symbol once and reuses matching repeated declarations. */
+static LLVMValueRef __LLVM_Declare_External_Function__(__LLVM_Emitter__ *emitter,
+                                                       const char *symbol,
+                                                       LLVMTypeRef function_type)
+{
+    LLVMValueRef existing = LLVMGetNamedFunction(emitter->module, symbol);
+    int types_match;
+    if (existing == NULL)
+        return LLVMAddFunction(emitter->module, symbol, function_type);
+    types_match = __LLVM_External_Function_Types_Match__(
+        LLVMGlobalGetValueType(existing), function_type);
+    if (types_match < 0)
+    {
+        __LLVM_Fail__("out of memory while validating repeated L2.3 external declaration");
+        return NULL;
+    }
+    if (!types_match)
+    {
+        __LLVM_Fail__("conflicting L2.3 external declarations for one linker symbol");
+        return NULL;
+    }
+    return existing;
+}
+
+static int __LLVM_Declare_One_Function__(__LLVM_Emitter__ *emitter,
+                                       __Semantic_Function_Entry__ *entry,
+                                       size_t output_index)
+{
+    __Ast_Function__ *function;
+    LLVMTypeRef return_type;
+    LLVMTypeRef function_type;
+    LLVMTypeRef *parameter_types = NULL;
+    char symbol[64];
+    size_t parameter_index;
+    if (entry == NULL || (function = entry->__Function__) == NULL)
+        return __LLVM_Fail__("L2.3 semantic function entry is incomplete");
+    emitter->semantic->__Active_Unit__ = entry->__Unit__;
+    return_type = __LLVM_Type__(emitter, function->__Output__.__Type__);
+    if (return_type == NULL)
+        return 0;
+    if (function->__Parameter_Count__ != 0U)
+    {
+        parameter_types = (LLVMTypeRef *)calloc(function->__Parameter_Count__, sizeof(*parameter_types));
+        if (parameter_types == NULL)
+            return __LLVM_Fail__("out of memory while declaring L2.3 parameters");
+    }
+    for (parameter_index = 0U; parameter_index < function->__Parameter_Count__; ++parameter_index)
+    {
+        parameter_types[parameter_index] =
+            __LLVM_Type__(emitter, function->__Parameters__[parameter_index].__Slot__.__Type__);
+        if (parameter_types[parameter_index] == NULL)
+        {
+            free(parameter_types);
+            return 0;
+        }
+    }
+    function_type = LLVMFunctionType(
+        return_type, parameter_types, (unsigned)function->__Parameter_Count__, 0);
+    free(parameter_types);
+    if (function_type == NULL)
+        return __LLVM_Fail__("LLVM function Type creation failed for L2.3");
+    if (function->__External__)
+    {
+        /* The declared link name (`= «stat$INODE64»`), else the source name. */
+        __Text_Slice__ link_name = function->__Link_Name__.__Data__ != NULL
+                                       ? function->__Link_Name__
+                                       : function->__Name__;
+        size_t copy_count = link_name.__Length__ < sizeof(symbol) - 1U
+                                ? link_name.__Length__
+                                : sizeof(symbol) - 1U;
+        memcpy(symbol, link_name.__Data__, copy_count);
+        symbol[copy_count] = '\0';
+    }
+    else
+    {
+        snprintf(symbol, sizeof(symbol), "sultanc.fn.%zu", entry->__Index__);
+    }
+    emitter->functions[output_index].semantic = entry;
+    emitter->functions[output_index].type = function_type;
+    emitter->functions[output_index].value =
+        function->__External__
+            ? __LLVM_Declare_External_Function__(emitter, symbol, function_type)
+            : LLVMAddFunction(emitter->module, symbol, function_type);
+    /* These definitions belong to this executable, not its public ABI. */
+    if (!function->__External__ && emitter->functions[output_index].value != NULL)
+        LLVMSetLinkage(emitter->functions[output_index].value, LLVMInternalLinkage);
+    return emitter->functions[output_index].value != NULL
+               ? 1
+               : __LLVM_Fail__("LLVM function declaration failed for L2.3");
+}
+
 /* Returns the LLVM declare functions. */
 int __LLVM_Declare_Functions__(__LLVM_Emitter__ *emitter)
 {
-    /* Tracks the index. */
     size_t index;
-    emitter->function_count = emitter->semantic->__Functions__.__Count__;
-    if (emitter->function_count == 0U)
+    size_t output_index = 0U;
+    size_t count = 0U;
+    for (index = 0U; index < emitter->semantic->__Functions__.__Count__; ++index)
     {
-        return __LLVM_Fail__("L2.3 semantic context contains no functions");
-    }
-    emitter->functions =
-        (__LLVM_Function__ *)calloc(emitter->function_count, sizeof(*emitter->functions));
-    if (emitter->functions == NULL)
-    {
-        return __LLVM_Fail__("out of memory while declaring L2.3 functions");
-    }
-
-    for (index = 0U; index < emitter->function_count; ++index)
-    {
-        /* References the entry. */
         __Semantic_Function_Entry__ *entry =
             (__Semantic_Function_Entry__ *)__Vector_At__(&emitter->semantic->__Functions__, index);
-        /* References the function. */
-        __Ast_Function__ *function;
-        /* Stores the return type. */
-        LLVMTypeRef return_type;
-        /* Stores the function type. */
-        LLVMTypeRef function_type;
-        /* References the parameter types. */
-        LLVMTypeRef *parameter_types = NULL;
-        /* Stores the symbol. */
-        char symbol[64];
-        /* Tracks the parameter index. */
-        size_t parameter_index;
+        if (entry != NULL && !entry->__Is_Generic_Template__)
+            ++count;
+    }
+    count += emitter->semantic->__Generic_Functions__.__Count__;
+    emitter->function_count = count;
+    if (count == 0U)
+        return __LLVM_Fail__("L2.3 semantic context contains no functions");
+    emitter->functions = (__LLVM_Function__ *)calloc(count, sizeof(*emitter->functions));
+    if (emitter->functions == NULL)
+        return __LLVM_Fail__("out of memory while declaring L2.3 functions");
 
-        if (entry == NULL || (function = entry->__Function__) == NULL)
-        {
-            return __LLVM_Fail__("L2.3 semantic function entry is incomplete");
-        }
-        emitter->semantic->__Active_Unit__ = entry->__Unit__;
-        return_type = __LLVM_Type__(emitter, function->__Output__.__Type__);
-        if (return_type == NULL)
-        {
+    for (index = 0U; index < emitter->semantic->__Functions__.__Count__; ++index)
+    {
+        __Semantic_Function_Entry__ *entry =
+            (__Semantic_Function_Entry__ *)__Vector_At__(&emitter->semantic->__Functions__, index);
+        if (entry == NULL || entry->__Is_Generic_Template__)
+            continue;
+        if (!__LLVM_Declare_One_Function__(emitter, entry, output_index++))
             return 0;
-        }
-        if (function->__Parameter_Count__ != 0U)
-        {
-            parameter_types =
-                (LLVMTypeRef *)calloc(function->__Parameter_Count__, sizeof(*parameter_types));
-            if (parameter_types == NULL)
-            {
-                return __LLVM_Fail__("out of memory while declaring L2.3 parameters");
-            }
-        }
-        for (parameter_index = 0U; parameter_index < function->__Parameter_Count__;
-             ++parameter_index)
-        {
-            parameter_types[parameter_index] =
-                __LLVM_Type__(emitter, function->__Parameters__[parameter_index].__Slot__.__Type__);
-            if (parameter_types[parameter_index] == NULL)
-            {
-                free(parameter_types);
-                return 0;
-            }
-        }
-        function_type = LLVMFunctionType(
-            return_type, parameter_types, (unsigned)function->__Parameter_Count__, 0);
-        free(parameter_types);
-        if (function_type == NULL)
-        {
-            return __LLVM_Fail__("LLVM function Type creation failed for L2.3");
-        }
+    }
+    for (index = 0U; index < emitter->semantic->__Generic_Functions__.__Count__; ++index)
+    {
+        __Semantic_Function_Entry__ **slot = (__Semantic_Function_Entry__ **)__Vector_At__(
+            &emitter->semantic->__Generic_Functions__, index);
+        if (slot == NULL || *slot == NULL ||
+            !__LLVM_Declare_One_Function__(emitter, *slot, output_index++))
+            return 0;
+    }
+    return 1;
+}
 
-        /* Keep SultanC function identity; emit the host C `main` separately. */
-        snprintf(symbol, sizeof(symbol), "sultanc.fn.%zu", entry->__Index__);
-        emitter->functions[index].semantic = entry;
-        emitter->functions[index].type = function_type;
-        emitter->functions[index].value = LLVMAddFunction(emitter->module, symbol, function_type);
-        if (emitter->functions[index].value == NULL)
+/* Queue a referenced declaration exactly once. All entries are predeclared. */
+int __LLVM_Queue_Function__(__LLVM_Emitter__ *emitter,
+                            __LLVM_Function__ *llvm_function)
+{
+    if (llvm_function == NULL || emitter->function_worklist == NULL)
+        return __LLVM_Fail__("Stage0 reachability worklist is not initialized");
+    if (llvm_function->queued)
+        return 1;
+    if (emitter->function_worklist_count >= emitter->function_count)
+        return __LLVM_Fail__("Stage0 reachability worklist exceeds declared functions");
+    llvm_function->queued = 1;
+    emitter->function_worklist[emitter->function_worklist_count++] = llvm_function;
+    return 1;
+}
+
+/* Emit only functions whose code or address is used by the language entry. */
+int __LLVM_Emit_Reachable_Function_Bodies__(
+    __LLVM_Emitter__ *emitter,
+    __Semantic_Function_Entry__ *language_entry)
+{
+    __LLVM_Function__ *entry = __LLVM_Find_Function_By_Semantic__(emitter, language_entry);
+    size_t next_function = 0U;
+    if (entry == NULL || entry->semantic->__Function__->__External__)
+        return __LLVM_Fail__("Stage0 language entry must be a defined function");
+    emitter->function_worklist = (__LLVM_Function__ **)calloc(
+        emitter->function_count, sizeof(*emitter->function_worklist));
+    if (emitter->function_worklist == NULL)
+        return __LLVM_Fail__("out of memory while preparing Stage0 reachability");
+    if (!__LLVM_Queue_Function__(emitter, entry))
+        return 0;
+    while (next_function < emitter->function_worklist_count)
+    {
+        __LLVM_Function__ *current = emitter->function_worklist[next_function++];
+        if (!__LLVM_Emit_Function_Body__(emitter, current))
         {
-            return __LLVM_Fail__("LLVM function declaration failed for L2.3");
+            /* Emission failures carry no source span; name the function so
+             * the failure is actionable. */
+            size_t used = strlen(__LLVM_Error__);
+            if (current->semantic != NULL && used + 16U < sizeof(__LLVM_Error__))
+            {
+                snprintf(__LLVM_Error__ + used, sizeof(__LLVM_Error__) - used,
+                         " (function: %.*s)",
+                         (int)current->semantic->__Name__.__Length__,
+                         current->semantic->__Name__.__Data__);
+            }
+            return 0;
         }
     }
     return 1;
@@ -164,7 +310,15 @@ int __LLVM_Emit_Function_Body__(__LLVM_Emitter__ *emitter, __LLVM_Function__ *ll
     int path_terminated = 0;
 
     if (llvm_function == NULL || (entry = llvm_function->semantic) == NULL ||
-        (function = entry->__Function__) == NULL || function->__Body__ == NULL)
+        (function = entry->__Function__) == NULL)
+    {
+        return __LLVM_Fail__("L2.3 semantic function body entry is incomplete");
+    }
+    if (function->__External__)
+    {
+        return 1;
+    }
+    if (function->__Body__ == NULL)
     {
         return __LLVM_Fail__("L2.3 requires concrete scalar function bodies");
     }
@@ -202,6 +356,14 @@ int __LLVM_Emit_Function_Body__(__LLVM_Emitter__ *emitter, __LLVM_Function__ *ll
             return __LLVM_Fail__("LLVM incoming parameter missing for L2.3 function");
         }
         LLVMBuildStore(emitter->builder, incoming, local->address);
+        /* An owned-type parameter is moved into the callee by value (see
+         * src/semantic/body_call.c's argument-move check), so the callee
+         * owns it from entry and is responsible for releasing it, exactly
+         * like any other local. */
+        if (!__LLVM_Mark_Parameter_Owning__(emitter, local))
+        {
+            return 0;
+        }
     }
 
     if (!__LLVM_Emit_Statement_List__(
@@ -223,6 +385,10 @@ int __LLVM_Emit_Function_Body__(__LLVM_Emitter__ *emitter, __LLVM_Function__ *ll
                     emitter->semantic, function->__Output__.__Type__, &output_resolved) ||
                 output_resolved.__Kind__ != __Resolved_Type_Void__)
                 return __LLVM_Fail__("non-void SultanC function has a reachable unterminated exit");
+            if (!__LLVM_Drop_All_Locals__(emitter))
+            {
+                return 0;
+            }
             LLVMBuildRetVoid(emitter->builder);
         }
     }
@@ -240,90 +406,3 @@ int __LLVM_Emit_Function_Body__(__LLVM_Emitter__ *emitter, __LLVM_Function__ *ll
     return 1;
 }
 
-/* Emits the LLVM process entry. */
-int __LLVM_Emit_Process_Entry__(__LLVM_Emitter__ *emitter)
-{
-    /* References the language entry. */
-    __LLVM_Function__ *language_entry;
-    /* Stores the output resolved. */
-    __Resolved_Type__ output_resolved;
-    /* Stores the LLVM i8 type. */
-    LLVMTypeRef i8 = LLVMIntTypeInContext(emitter->context, 8U);
-    /* Stores the LLVM i32 type. */
-    LLVMTypeRef i32 = LLVMIntTypeInContext(emitter->context, 32U);
-    /* Stores the LLVM i64 type. */
-    LLVMTypeRef i64 = LLVMIntTypeInContext(emitter->context, 64U);
-    /* Stores the LLVM i8 pointer type. */
-    LLVMTypeRef i8_pointer = LLVMPointerType(i8, 0U);
-    /* Stores the argv type. */
-    LLVMTypeRef argv_type = LLVMPointerType(i8_pointer, 0U);
-    /* Stores the parameters. */
-    LLVMTypeRef parameters[2];
-    /* Stores the main type. */
-    LLVMTypeRef main_type;
-    /* Stores the main value. */
-    LLVMValueRef main_value;
-    /* Stores the block. */
-    LLVMBasicBlockRef block;
-    /* Stores the argument count. */
-    LLVMValueRef argc;
-    /* References the argument vector. */
-    LLVMValueRef argv;
-    /* Stores the user argc. */
-    LLVMValueRef user_argc;
-    /* Stores the call. */
-    LLVMValueRef call;
-    /* Stores the status. */
-    LLVMValueRef status;
-
-    language_entry = __LLVM_Find_Function_By_Semantic__(emitter, emitter->semantic->__Main__);
-    if (language_entry == NULL || emitter->semantic->__Main__ == NULL ||
-        emitter->semantic->__Main__->__Function__ == NULL ||
-        !__Type_Resolve__(emitter->semantic,
-                          emitter->semantic->__Main__->__Function__->__Output__.__Type__,
-                          &output_resolved) ||
-        (output_resolved.__Kind__ != __Resolved_Type_Signed_Integer__ &&
-         output_resolved.__Kind__ != __Resolved_Type_Unsigned_Integer__) ||
-        output_resolved.__Bits__ == 0U)
-    {
-        return __LLVM_Fail__("cannot bridge canonical SultanC entry to host process ABI");
-    }
-
-    if (!__LLVM_Ensure_Process_Globals__(emitter))
-        return 0;
-
-    parameters[0] = i32;
-    parameters[1] = argv_type;
-    main_type = LLVMFunctionType(i32, parameters, 2U, 0);
-    main_value = LLVMAddFunction(emitter->module, "main", main_type);
-    if (main_value == NULL)
-        return __LLVM_Fail__("cannot create host process entry wrapper");
-    block = LLVMAppendBasicBlockInContext(emitter->context, main_value, "entry");
-    LLVMPositionBuilderAtEnd(emitter->builder, block);
-    argc = LLVMGetParam(main_value, 0U);
-    argv = LLVMGetParam(main_value, 1U);
-    user_argc = LLVMBuildSub(emitter->builder,
-                             LLVMBuildSExt(emitter->builder, argc, i64, "argc.i64"),
-                             LLVMConstInt(i64, 1U, 0),
-                             "user.argc");
-    LLVMBuildStore(emitter->builder, user_argc, emitter->process_argc_global);
-    LLVMBuildStore(emitter->builder, argv, emitter->process_argv_global);
-    call = LLVMBuildCall2(emitter->builder,
-                          language_entry->type,
-                          language_entry->value,
-                          NULL,
-                          0U,
-                          "language.entry.status");
-    if (call == NULL)
-        return __LLVM_Fail__("cannot call canonical SultanC entry");
-    if (output_resolved.__Bits__ > 32U)
-        status = LLVMBuildTrunc(emitter->builder, call, i32, "process.status");
-    else if (output_resolved.__Bits__ < 32U)
-        status = output_resolved.__Kind__ == __Resolved_Type_Signed_Integer__
-                     ? LLVMBuildSExt(emitter->builder, call, i32, "process.status")
-                     : LLVMBuildZExt(emitter->builder, call, i32, "process.status");
-    else
-        status = call;
-    LLVMBuildRet(emitter->builder, status);
-    return 1;
-}

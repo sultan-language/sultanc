@@ -1,0 +1,57 @@
+// A tiny stack machine: a program is a vector of instructions (an ADT),
+// executed by one `match` per step.
+import std.io.println;
+import std.text.number;
+
+type Instruction =
+    | Push of int
+    | Add
+    | Multiply
+    | Print
+;
+
+def run(program: &vector Instruction): int {
+    let stack: mutable vector int = [];
+    let pc: mutable uint = 0;
+    while (pc < (length(*program) as uint)) {
+        match (*program)[pc] with
+        | Instruction.Push(value) -> { append(stack, value); }
+        | Instruction.Add -> {
+            let top: uint = (length(stack) as uint) - 1;
+            stack[top - 1] := stack[top - 1] + stack[top];
+            pop_last(&mutable stack);
+        }
+        | Instruction.Multiply -> {
+            let top: uint = (length(stack) as uint) - 1;
+            stack[top - 1] := stack[top - 1] * stack[top];
+            pop_last(&mutable stack);
+        }
+        | Instruction.Print -> {
+            println(int_to_text(stack[(length(stack) as uint) - 1]));
+        };
+        pc := pc + 1;
+    }
+    return stack[0];
+}
+
+def pop_last(stack: &mutable vector int): void {
+    let kept: mutable vector int = [];
+    let i: mutable uint = 0;
+    while (i + 1 < (length(*stack) as uint)) {
+        append(kept, (*stack)[i]);
+        i := i + 1;
+    }
+    *stack := kept;
+}
+
+def main(): int {
+    // (2 + 3) * 7 + 7
+    let program: vector Instruction = [
+        Instruction.Push(2), Instruction.Push(3), Instruction.Add(), Instruction.Print(),
+        Instruction.Push(7), Instruction.Multiply(), Instruction.Print(),
+        Instruction.Push(7), Instruction.Add(), Instruction.Print()
+    ];
+    let final_value: int = run(&program);
+    println(int_to_text(final_value));
+    return 0;
+}

@@ -1,0 +1,470 @@
+// اختبار: تشغيل
+// خروج: 42
+// نظير: tests/ar/compiler/tooling/refactoring_queries.sn
+// The read-only refactoring queries of compiler/frontend/tooling_queries.sn on
+// the canonical Frontend result: reference roles (with SSF moves), the same
+// Symbol through an English and an Arabic spelling, exact byte and UTF-16
+// ranges, rename conflicts, top-level symbols, other-target declarations,
+// inline-variable facts, the exact-found_range expression Type and extract function.
+import compiler.driver.source_inputs;
+import compiler.frontend.semantic_pipeline;
+import compiler.frontend.tooling_queries;
+import compiler.frontend.cancellation;
+import compiler.frontend.module_loading.logical_environment;
+import compiler.frontend.names.identifiers;
+import compiler.frontend.names.symbols;
+import compiler.frontend.names.tooling_queries;
+import compiler.frontend.names.reference_queries;
+import compiler.frontend.names.extract_queries;
+import compiler.frontend.names.import_queries;
+import compiler.frontend.types.tooling_queries;
+import compiler.frontend.types.type_identity;
+import compiler.backend.target.target_model;
+import compiler.backend.target.target_registry;
+import compiler.diagnostics.schema;
+import compiler.source.span;
+import compiler.source.source_file;
+import std.text.search;
+import std.text.substring;
+import std.text.compare;
+
+def host(): اختياري واصف_هدف {
+    match حل_هدف_المضيف_المسجل() with
+    | نتيجة_حل_هدف.غير_مسجل -> { return اختياري.لا_شيء(); }
+    | نتيجة_حل_هدف.محلول(target) -> { return اختياري.موجود(target); };
+}
+
+def build(path: string): اختياري نتيجة_واجهة_وحدة {
+    let extras: vector string = [];
+    match ابن_إعداد_تجميع_مباشر(&path, &extras) with
+    | نتيجة_إعداد_تجميع_مباشر.غير_صالح -> { return اختياري.لا_شيء(); }
+    | نتيجة_إعداد_تجميع_مباشر.جاهز({ البيئة: env, المفتاح_الجذري: key, المفاتيح_المباشرة: _ }) -> {
+        let request: طلب_واجهة_وحدة = { البيئة: env, المفتاح_الجذري: key, احتفظ_بحقائق_الأدوات: true };
+        let more: vector مفتاح_وحدة_مقنن = [];
+        let cancel: mutable حالة_إلغاء_واجهة = حالة_إلغاء_واجهة_جديدة();
+        match ابن_واجهة_وحدة_بهدف_قابلة_للإلغاء(request, host(), &more, &mutable cancel) with
+        | نتيجة_بناء_واجهة_قابلة_للإلغاء.مكتملة(frontend) -> { return اختياري.موجود(frontend); }
+        | _ -> { return اختياري.لا_شيء(); };
+    };
+}
+
+def content_of(frontend: &نتيجة_واجهة_وحدة, source: uint): string {
+    match مصدر_واجهة_بمعرف(frontend, source) with
+    | اختياري.موجود(found) -> { return استنسخ(&found.المحتوى); }
+    | اختياري.لا_شيء -> { return ""; };
+}
+
+// Byte offset of the first `needle` at or after `from`; past the end when absent.
+def offset_from(content: &string, needle: string, origin: uint): uint {
+    match ابحث_نصا_من(content, &needle, origin) with
+    | اختياري.موجود(at) -> { return at; }
+    | اختياري.لا_شيء -> { return 1000000; };
+}
+
+def offset_of(content: &string, needle: string): uint {
+    return offset_from(content, needle, 0);
+}
+
+def text_of(content: &string, found_range: نطاق): string {
+    let start: uint = found_range.البداية.البايت as uint;
+    let end: uint = found_range.النهاية.البايت as uint;
+    if (end < start) { return ""; }
+    match مقطع_نص(content, start, end - start) with
+    | اختياري.موجود(part) -> { return part; }
+    | اختياري.لا_شيء -> { return ""; };
+}
+
+def symbol_at(frontend: &نتيجة_واجهة_وحدة, source: uint, at: uint): uint {
+    match رمز_واجهة_عند_بايت(frontend, source, at) with
+    | اختياري.موجود(symbol) -> { return symbol.القيمة as uint; }
+    | اختياري.لا_شيء -> { return 4000000000; };
+}
+
+def role_count(references: &vector مرجع_رمز_دلالي, role: دور_مرجع): uint {
+    let count: mutable uint = 0;
+    let i: mutable uint = 0;
+    while (i < (length(*references) as uint)) {
+        if ((*references)[i].الدور == role) { count := count + 1; }
+        i := i + 1;
+    }
+    return count;
+}
+
+def alternate_count(references: &vector مرجع_رمز_دلالي): uint {
+    let count: mutable uint = 0;
+    let i: mutable uint = 0;
+    while (i < (length(*references) as uint)) {
+        if ((*references)[i].تهجئة_بديلة) { count := count + 1; }
+        i := i + 1;
+    }
+    return count;
+}
+
+// Every reference span spells one of the two names.
+def spans_spell(content: &string, references: &vector مرجع_رمز_دلالي, first: string, second: string): bool {
+    let i: mutable uint = 0;
+    while (i < (length(*references) as uint)) {
+        let spelled: string = text_of(content, (*references)[i].النطاق);
+        if (!نصان_متساويان(&spelled, &first) && !نصان_متساويان(&spelled, &second)) { return false; }
+        i := i + 1;
+    }
+    return true;
+}
+
+def has_conflict(conflicts: &vector تعارض_إعادة_تسمية_دلالي, kind: نوع_تعارض_إعادة_تسمية): bool {
+    let i: mutable uint = 0;
+    while (i < (length(*conflicts) as uint)) {
+        if ((*conflicts)[i].النوع == kind) { return true; }
+        i := i + 1;
+    }
+    return false;
+}
+
+def rename_conflicts(frontend: &نتيجة_واجهة_وحدة, source: uint, at: uint, name: string): vector تعارض_إعادة_تسمية_دلالي {
+    return تعارضات_إعادة_تسمية_واجهة(frontend, source, at, &name);
+}
+
+def plan_rejected(frontend: &نتيجة_واجهة_وحدة, source: uint, at: uint, name: string): bool {
+    match خطط_إعادة_تسمية_واجهة(frontend, source, at, &name) with
+    | نتيجة_خطة_إعادة_تسمية_دلالية.مرفوضة(رفض_إعادة_تسمية_دلالي.تعارض_اسم) -> { return true; }
+    | _ -> { return false; };
+}
+
+def plan_size(frontend: &نتيجة_واجهة_وحدة, source: uint, at: uint, name: string): uint {
+    match خطط_إعادة_تسمية_واجهة(frontend, source, at, &name) with
+    | نتيجة_خطة_إعادة_تسمية_دلالية.جاهزة(plan) -> { return length(plan.النطاقات) as uint; }
+    | _ -> { return 0; };
+}
+
+def find_variable(variables: &vector متغير_استخراج_واجهة, frontend: &نتيجة_واجهة_وحدة, symbol: uint): اختياري uint {
+    let i: mutable uint = 0;
+    while (i < (length(*variables) as uint)) {
+        if (((*variables)[i].الرمز.القيمة as uint) == symbol) { return اختياري.موجود(i); }
+        i := i + 1;
+    }
+    return اختياري.لا_شيء();
+}
+
+// The 0-based line and byte column of an offset, counted directly.
+def line_of(content: &string, at: uint): uint {
+    let line: mutable uint = 0;
+    let i: mutable uint = 0;
+    while (i < at) {
+        if ((*content)[i] == (0x0A as u8)) { line := line + 1; }
+        i := i + 1;
+    }
+    return line;
+}
+
+def column_of(content: &string, at: uint): uint {
+    let i: mutable uint = at;
+    while (i > 0 && (*content)[i - 1] != (0x0A as u8)) { i := i - 1; }
+    return at - i;
+}
+
+def check_references(frontend: &نتيجة_واجهة_وحدة, source: uint, content: &string): int {
+    // One Symbol through both spellings.
+    let scale: uint = symbol_at(frontend, source, offset_of(content, "scale(2"));
+    let alias_use: uint = symbol_at(frontend, source, offset_of(content, "مقياس(total"));
+    let declared: uint = symbol_at(frontend, source, offset_of(content, "scale(value") );
+    if (scale == 4000000000 || scale != alias_use || scale != declared) { return 1; }
+    let scale_id: معرف_رمز = معرف_رمز_من(scale);
+    let scale_refs: vector مرجع_رمز_دلالي = مراجع_رمز_واجهة(frontend, scale_id);
+    if (!spans_spell(content, &scale_refs, "scale", "مقياس")) { return 2; }
+    if (role_count(&scale_refs, دور_مرجع.تصريح()) != 2) { return 3; }
+    if (role_count(&scale_refs, دور_مرجع.استدعاء()) != 3) { return 4; }
+    if (alternate_count(&scale_refs) != 2) { return 5; }
+
+    // A local: declaration, writes, reads, both borrows.
+    let total: uint = symbol_at(frontend, source, offset_of(content, "total: mutable"));
+    let total_refs: vector مرجع_رمز_دلالي = مراجع_رمز_واجهة(frontend, معرف_رمز_من(total));
+    if (!spans_spell(content, &total_refs, "total", "total")) { return 6; }
+    if (role_count(&total_refs, دور_مرجع.تصريح()) != 1) { return 7; }
+    if (role_count(&total_refs, دور_مرجع.كتابة()) != 3) { return 8; }
+    if (role_count(&total_refs, دور_مرجع.استعارة_متغيرة()) != 1) { return 9; }
+    if (role_count(&total_refs, دور_مرجع.استعارة()) != 1) { return 10; }
+    if (role_count(&total_refs, دور_مرجع.قراءة()) != 5) { return 11; }
+
+    // A vector passed by value is moved (SSF).
+    let items: uint = symbol_at(frontend, source, offset_of(content, "items: vector int = "));
+    let items_refs: vector مرجع_رمز_دلالي = مراجع_رمز_واجهة(frontend, معرف_رمز_من(items));
+    if (role_count(&items_refs, دور_مرجع.نقل()) != 1) { return 12; }
+    return 0;
+}
+
+def check_ranges(frontend: &نتيجة_واجهة_وحدة, source: uint, content: &string): int {
+    // `مقياس` after ASCII text: 10 bytes, 5 UTF-16 units.
+    let use_at: uint = offset_of(content, "مقياس(total");
+    let use_range: نطاق = نطاق_بين(موضع_من(source, use_at), موضع_من(source, use_at + 10));
+    match مدى_أداة_واجهة(frontend, use_range) with
+    | اختياري.لا_شيء -> { return 20; }
+    | اختياري.موجود(found_range) -> {
+        let column: uint = column_of(content, use_at);
+        if (found_range.البداية.السطر != line_of(content, use_at)) { return 21; }
+        if (found_range.البداية.العمود_بايت != column || found_range.البداية.العمود_يوتيف16 != column) { return 22; }
+        if (found_range.النهاية.العمود_بايت != column + 10 || found_range.النهاية.العمود_يوتيف16 != column + 5) { return 23; }
+    };
+    // `scale` after `alias مقياس = `: the UTF-16 column is 5 less than the byte column.
+    let after_at: uint = offset_of(content, "scale;");
+    let after_range: نطاق = نطاق_بين(موضع_من(source, after_at), موضع_من(source, after_at + 5));
+    match مدى_أداة_واجهة(frontend, after_range) with
+    | اختياري.لا_شيء -> { return 24; }
+    | اختياري.موجود(found_range) -> {
+        if (found_range.البداية.العمود_بايت != 19 || found_range.البداية.العمود_يوتيف16 != 14) { return 25; }
+        if (found_range.النهاية.العمود_بايت != 24 || found_range.النهاية.العمود_يوتيف16 != 19) { return 26; }
+    };
+    return 0;
+}
+
+def check_rename(frontend: &نتيجة_واجهة_وحدة, source: uint, content: &string): int {
+    let factor_at: uint = offset_of(content, "factor: int = 3");
+    // `factor * step` sits under `step`'s binding: renaming `factor` to `step` captures it.
+    let inner: vector تعارض_إعادة_تسمية_دلالي = rename_conflicts(frontend, source, factor_at, "step");
+    if (!has_conflict(&inner, نوع_تعارض_إعادة_تسمية.التقاط_داخلي())) { return 30; }
+    if (!plan_rejected(frontend, source, factor_at, "step")) { return 31; }
+    // `scale(tmp, 1)` follows `tmp`: a local named `scale` would capture the call.
+    let tmp_at: uint = offset_of(content, "tmp: int");
+    let outer: vector تعارض_إعادة_تسمية_دلالي = rename_conflicts(frontend, source, tmp_at, "scale");
+    if (!has_conflict(&outer, نوع_تعارض_إعادة_تسمية.التقاط_خارجي())) { return 32; }
+    if (!plan_rejected(frontend, source, tmp_at, "scale")) { return 33; }
+    // The same block already binds `total`.
+    let same: vector تعارض_إعادة_تسمية_دلالي = rename_conflicts(frontend, source, factor_at, "total");
+    if (!has_conflict(&same, نوع_تعارض_إعادة_تسمية.نفس_النطاق())) { return 34; }
+    // `step` may take the outer name `doubled`: no use changes resolution.
+    let step_at: uint = offset_of(content, "step: int");
+    let safe: vector تعارض_إعادة_تسمية_دلالي = rename_conflicts(frontend, source, step_at, "doubled");
+    if ((length(safe) as uint) != 0) { return 35; }
+    if (plan_size(frontend, source, step_at, "doubled") != 3) { return 36; }
+    // A rename edits the selected spelling only: `scale` four times, its
+    // Arabic alias `مقياس` twice (its declaration and its call).
+    if (plan_size(frontend, source, offset_of(content, "scale(2"), "multiply") != 4) { return 37; }
+    if (plan_size(frontend, source, offset_of(content, "مقياس(total"), "مضاعف") != 2) { return 38; }
+    return 0;
+}
+
+def check_symbols(frontend: &نتيجة_واجهة_وحدة, source: uint, content: &string): int {
+    let top: vector رمز_أعلى_دلالي = رموز_عليا_واجهة(frontend);
+    let scale: uint = symbol_at(frontend, source, offset_of(content, "scale(2"));
+    let total: uint = symbol_at(frontend, source, offset_of(content, "total: mutable"));
+    let has_scale: mutable bool = false;
+    let i: mutable uint = 0;
+    while (i < (length(top) as uint)) {
+        let id: uint = top[i].الرمز.المعرف.القيمة as uint;
+        if (id == total) { return 40; }
+        if (id == scale) { has_scale := true; }
+        i := i + 1;
+    }
+    if (!has_scale) { return 41; }
+    // The left-out plan9 branch declares `platform_score` too.
+    let score: uint = symbol_at(frontend, source, offset_of(content, "platform_score();"));
+    let others: vector نطاق = تصريحات_لأهداف_أخرى_واجهة(frontend, معرف_رمز_من(score));
+    if ((length(others) as uint) != 1) { return 42; }
+    let spelled: string = text_of(content, others[0]);
+    let expected: string = "platform_score";
+    if (!نصان_متساويان(&spelled, &expected)) { return 43; }
+    if ((others[0].البداية.البايت as uint) != offset_of(content, "platform_score(): int { return 1")) { return 44; }
+    return 0;
+}
+
+def check_inline_and_types(frontend: &نتيجة_واجهة_وحدة, source: uint, content: &string): int {
+    let factor: uint = symbol_at(frontend, source, offset_of(content, "factor: int = 3"));
+    match معلومات_تضمين_محلي_واجهة(frontend, معرف_رمز_من(factor)) with
+    | اختياري.لا_شيء -> { return 50; }
+    | اختياري.موجود(facts) -> {
+        if (facts.قابل_للتغيير || facts.عدد_الكتابات != 0) { return 51; }
+        match facts.نطاق_التهيئة with
+        | اختياري.لا_شيء -> { return 52; }
+        | اختياري.موجود(found_range) -> {
+            let spelled: string = text_of(content, found_range);
+            let expected: string = "3";
+            if (!نصان_متساويان(&spelled, &expected)) { return 53; }
+        };
+    };
+    let total: uint = symbol_at(frontend, source, offset_of(content, "total: mutable"));
+    match معلومات_تضمين_محلي_واجهة(frontend, معرف_رمز_من(total)) with
+    | اختياري.لا_شيء -> { return 54; }
+    | اختياري.موجود(facts) -> { if (!facts.قابل_للتغيير || facts.عدد_الكتابات != 4) { return 55; } };
+    // Extract variable: an exact expression found_range has a Type, a partial one none.
+    let at: uint = offset_of(content, "factor * step");
+    match نوع_تعبير_بمدى_واجهة(frontend, source, at, at + 13) with
+    | اختياري.لا_شيء -> { return 56; }
+    | اختياري.موجود(found_type) -> {
+        match تهجئة_نوع_واجهة(frontend, found_type) with
+        | اختياري.لا_شيء -> { return 57; }
+        | اختياري.موجود(_) -> { };
+    };
+    match نوع_تعبير_بمدى_واجهة(frontend, source, at, at + 8) with
+    | اختياري.موجود(_) -> { return 58; }
+    | اختياري.لا_شيء -> { };
+    return 0;
+}
+
+def check_extract(frontend: &نتيجة_واجهة_وحدة, source: uint, content: &string): int {
+    let total: uint = symbol_at(frontend, source, offset_of(content, "total: mutable"));
+    let factor: uint = symbol_at(frontend, source, offset_of(content, "factor: int = 3"));
+    let start: uint = offset_of(content, "let step");
+    let end: uint = offset_of(content, "total := total + extra;") + 23;
+    match حلل_استخراج_دالة_واجهة(frontend, source, start, end) with
+    | نتيجة_استخراج_دالة_واجهة.مرفوض(_) -> { return 60; }
+    | نتيجة_استخراج_دالة_واجهة.جاهز(found) -> {
+        if ((length(found.المدخلات) as uint) != 2 || (length(found.المخرجات) as uint) != 0) { return 61; }
+        if (found.يحوي_إرجاع || found.يحوي_قفزا_خارجيا) { return 62; }
+        match find_variable(&found.المدخلات, frontend, total) with
+        | اختياري.لا_شيء -> { return 63; }
+        | اختياري.موجود(i) -> {
+            if (!found.المدخلات[i].مكتوب || !found.المدخلات[i].مقروء || !found.المدخلات[i].مستخدم_بعد) { return 64; }
+            if (!found.المدخلات[i].قابل_للتغيير) { return 65; }
+            match found.المدخلات[i].النوع with
+            | اختياري.لا_شيء -> { return 66; }
+            | اختياري.موجود(_) -> { };
+        };
+        match find_variable(&found.المدخلات, frontend, factor) with
+        | اختياري.لا_شيء -> { return 67; }
+        | اختياري.موجود(i) -> {
+            if (found.المدخلات[i].مكتوب || found.المدخلات[i].مستخدم_بعد || found.المدخلات[i].قابل_للتغيير) { return 68; }
+        };
+        match found.الدالة with
+        | اختياري.لا_شيء -> { return 69; }
+        | اختياري.موجود(_) -> { };
+    };
+    // A declared local used after the found_range is a result.
+    let product: uint = symbol_at(frontend, source, offset_of(content, "product: int"));
+    let second_start: uint = offset_of(content, "let tmp");
+    let second_end: uint = offset_of(content, "scale(tmp, 1);") + 14;
+    match حلل_استخراج_دالة_واجهة(frontend, source, second_start, second_end) with
+    | نتيجة_استخراج_دالة_واجهة.مرفوض(_) -> { return 70; }
+    | نتيجة_استخراج_دالة_واجهة.جاهز(found) -> {
+        if ((length(found.المدخلات) as uint) != 0 || (length(found.المخرجات) as uint) != 1) { return 71; }
+        if ((found.المخرجات[0].الرمز.القيمة as uint) != product) { return 72; }
+    };
+    // Part of a statement is not statement-aligned.
+    let part: uint = offset_of(content, "scale(2, factor);");
+    match حلل_استخراج_دالة_واجهة(frontend, source, part, part + 16) with
+    | نتيجة_استخراج_دالة_واجهة.مرفوض(رفض_استخراج_دالة.غير_محاذ_للعبارات) -> { }
+    | _ -> { return 73; };
+    // A return statement is reported.
+    let ret: uint = offset_of(content, "return doubled");
+    let ret_end: uint = offset_of(content, "platform_score();") + 17;
+    match حلل_استخراج_دالة_واجهة(frontend, source, ret, ret_end) with
+    | نتيجة_استخراج_دالة_واجهة.جاهز(found) -> { if (!found.يحوي_إرجاع) { return 74; } }
+    | _ -> { return 75; };
+    // The plan shape: `total` is written inside and used after (by &mutable),
+    // `factor` is only read (by value).
+    match حلل_استخراج_دالة(frontend, source, start, end) with
+    | نتيجة_حلل_استخراج.غير_صالح(_) -> { return 77; }
+    | نتيجة_حلل_استخراج.صالح(plan) -> {
+        if ((length(plan.المدخلات) as uint) != 1 || (plan.المدخلات[0].الرمز.القيمة as uint) != factor) { return 78; }
+        if ((length(plan.المستعارة_متغيرة) as uint) != 1 || (plan.المستعارة_متغيرة[0].الرمز.القيمة as uint) != total) { return 79; }
+        match plan.نوع_القيمة with
+        | اختياري.موجود(_) -> { return 92; }
+        | اختياري.لا_شيء -> { };
+    };
+    // One whole expression has a value Type and reads two locals.
+    let expression: uint = offset_of(content, "factor * step");
+    match حلل_استخراج_دالة(frontend, source, expression, expression + 13) with
+    | نتيجة_حلل_استخراج.غير_صالح(_) -> { return 93; }
+    | نتيجة_حلل_استخراج.صالح(plan) -> {
+        if ((length(plan.المدخلات) as uint) != 2) { return 94; }
+        match plan.نوع_القيمة with
+        | اختياري.لا_شيء -> { return 95; }
+        | اختياري.موجود(_) -> { };
+    };
+    match حلل_استخراج_دالة(frontend, source, ret, ret_end) with
+    | نتيجة_حلل_استخراج.غير_صالح(سبب_رفض_استخراج.قفز_خارج_المدى) -> { }
+    | _ -> { return 96; };
+    match حلل_استخراج_دالة(frontend, source, part, part + 10) with
+    | نتيجة_حلل_استخراج.غير_صالح(سبب_رفض_استخراج.ليس_عبارات_أو_تعبيرا) -> { }
+    | _ -> { return 97; };
+    // Outside every function body.
+    match حلل_استخراج_دالة_واجهة(frontend, source, 0, 5) with
+    | نتيجة_استخراج_دالة_واجهة.مرفوض(رفض_استخراج_دالة.خارج_دالة) -> { }
+    | _ -> { return 76; };
+    return 0;
+}
+
+def check_collision(frontend: &نتيجة_واجهة_وحدة): int {
+    let source: uint = (*frontend).الوحدات[0].معرف_المصدر;
+    let content: string = content_of(frontend, source);
+    // `twice` is public in helper.sn; this module already reaches std's
+    // `نصان_متساويان`, so that new name would collide here.
+    let at: uint = offset_of(&content, "twice(21)");
+    let conflicts: vector تعارض_إعادة_تسمية_دلالي = rename_conflicts(frontend, source, at, "نصان_متساويان");
+    if (!has_conflict(&conflicts, نوع_تعارض_إعادة_تسمية.تعارض_وحدة())) { return 80; }
+    if (!plan_rejected(frontend, source, at, "نصان_متساويان")) { return 81; }
+    // A name nothing declares is free.
+    let free: vector تعارض_إعادة_تسمية_دلالي = rename_conflicts(frontend, source, at, "thrice");
+    if ((length(free) as uint) != 0) { return 82; }
+    return check_imports(frontend, source, &content);
+}
+
+// The direct imports with their statement spans, and the unused ones by
+// resolution: `std.text.search` serves no name here and the second
+// `std.text.compare` repeats the first.
+def check_imports(frontend: &نتيجة_واجهة_وحدة, source: uint, content: &string): int {
+    let relations: vector علاقة_استيراد_وحدة = علاقات_استيراد_واجهة(frontend, source, true);
+    if ((length(relations) as uint) != 4) { return 83; }
+    let i: mutable uint = 0;
+    while (i < (length(relations) as uint)) {
+        match relations[i].نطاق_العبارة with
+        | اختياري.لا_شيء -> { return 84; }
+        | اختياري.موجود(statement) -> {
+            let spelled: string = text_of(content, statement);
+            let prefix: string = "import ";
+            if (!يبدأ_بـ(&spelled, &prefix)) { return 85; }
+        };
+        i := i + 1;
+    }
+    let helper: uint = relations[0].مصدر_المستورد_منه;
+    let importers: vector علاقة_استيراد_وحدة = علاقات_استيراد_واجهة(frontend, helper, false);
+    if ((length(importers) as uint) != 1 || importers[0].مصدر_المستورد != source) { return 86; }
+    let unused: vector استيراد_غير_مستخدم = استيرادات_غير_مستخدمة_واجهة(frontend, source);
+    if ((length(unused) as uint) != 2) { return 87; }
+    let unused_search: mutable bool = false;
+    let duplicate_compare: mutable bool = false;
+    let k: mutable uint = 0;
+    while (k < (length(unused) as uint)) {
+        match unused[k].نطاق_العبارة with
+        | اختياري.لا_شيء -> { return 88; }
+        | اختياري.موجود(statement) -> {
+            let spelled: string = text_of(content, statement);
+            let search: string = "import std.text.search;";
+            let compare: string = "import std.text.compare;";
+            if (نصان_متساويان(&spelled, &search) && unused[k].غير_مستخدم && !unused[k].مكرر) { unused_search := true; }
+            if (نصان_متساويان(&spelled, &compare) && unused[k].مكرر
+                && (statement.البداية.البايت as uint) > offset_of(content, "import std.text.search")) {
+                duplicate_compare := true;
+            }
+        };
+        k := k + 1;
+    }
+    if (!unused_search || !duplicate_compare) { return 89; }
+    return 0;
+}
+
+def main(): int {
+    match build("tests/en/compiler/tooling/refactoring/source.sn") with
+    | اختياري.لا_شيء -> { return 90; }
+    | اختياري.موجود(frontend) -> {
+        let source: uint = frontend.الوحدات[0].معرف_المصدر;
+        let content: string = content_of(&frontend, source);
+        let result: mutable int = check_references(&frontend, source, &content);
+        if (result != 0) { return result; }
+        result := check_ranges(&frontend, source, &content);
+        if (result != 0) { return result; }
+        result := check_rename(&frontend, source, &content);
+        if (result != 0) { return result; }
+        result := check_symbols(&frontend, source, &content);
+        if (result != 0) { return result; }
+        result := check_inline_and_types(&frontend, source, &content);
+        if (result != 0) { return result; }
+        result := check_extract(&frontend, source, &content);
+        if (result != 0) { return result; }
+    };
+    match build("tests/en/compiler/tooling/refactoring/collide.sn") with
+    | اختياري.لا_شيء -> { return 91; }
+    | اختياري.موجود(frontend) -> {
+        let result: int = check_collision(&frontend);
+        if (result != 0) { return result; }
+    };
+    return 42;
+}

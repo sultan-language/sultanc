@@ -1,0 +1,61 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// Twin: tests/ar/compiler/c_import_calls/main.sn (no `نظير` header: the
+// pair step interprets both twins, and the interpreter cannot call the
+// functions of an imported .c file).
+// Calls through Jisr's declarators (compiler/jisr/parser.sn):
+// function pointers (signal()'s shape, through a typedef and spelled out)
+// are address words passed back to C; an array parameter is a pointer; a
+// pointer to an array is a pointer to a tuple; const decides *T or
+// *mutable T at each level; scalars keep their C widths. A variadic
+// function is callable on every target: with its fixed arguments, or with
+// more through a declared call shape whose link name is `SYMBOL...N` (N
+// fixed parameters), so the backends use the C variadic convention (AL on
+// System V x86-64, the stack on Apple arm64). C objects are external data
+// (`extern let`).
+import "calls.c";
+
+// Two call shapes of the C library's `int snprintf(char *, size_t, const
+// char *, ...)`.
+extern def format_int(out: *mutable u8, size: u64, format: *u8, value: i32): i32 = "snprintf...3";
+extern def format_pair(out: *mutable u8, size: u64, format: *u8, a: f64, b: i64): i32 = "snprintf...3";
+
+def variadic_check(): int {
+    if (count_args(42) != 42) { return 11; };
+    let buffer: mutable vector u8 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    let format_d: vector u8 = [37, 100, 0];
+    if (format_int(&mutable buffer[0], 16, &format_d[0], 42) != 2 || buffer[0] != 52 || buffer[1] != 50) { return 14; };
+    let format_g: vector u8 = [37, 103, 47, 37, 108, 100, 0];
+    if (format_pair(&mutable buffer[0], 16, &format_g[0], 2.5, 7) != 5 || buffer[3] != 47 || buffer[4] != 55) { return 15; };
+    // A variadic function compiled from calls.c: its fixed arguments.
+    if (mixed_sum(0) != 0.0) { return 16; };
+    return 0;
+}
+
+def main(): int {
+    if (apply(pick(0), 3, 4) != 7 || apply(pick(1), 3, 4) != 12) { return 1; };
+    let first: handler_t = default_handler();
+    let second: handler_t = install(5, first);
+    if (last_installed() != 5) { return 2; };
+    let third: u64 = install_raw(9, second);
+    if (last_installed() != 9 || third == 0) { return 3; };
+    let values: vector i32 = [1, 2, 3];
+    if (sum_array(&values[0], 3) != 6) { return 4; };
+    if (sum_rows(matrix(), 2) != 21) { return 5; };
+    if (names() == 0 as **u8 || name_slots() == 0 as *mutable *mutable u8) { return 6; };
+    if (long_add(-5, 7) != 2 || wide_mul(4294967296, 3) != 12884901888) { return 7; };
+    if (narrow(300) != 44 || scale(1.5, 2.0) != 3.0 || is_even(4) != 1 || is_even(3) != 0) { return 8; };
+    let bytes: mutable vector u8 = [0, 0, 0, 0];
+    let filled: *mutable u8 = fill_bytes(&mutable bytes[0], 7, 4);
+    if (bytes[0] != 7 || bytes[3] != 7) { return 9; };
+    if (unprototyped() != 7) { return 10; };
+    // C objects are external data, read where they are used.
+    if (counter_variable != 0 || table_size != 3) { return 12; };
+    bump_counter();
+    bump_counter();
+    if (counter_variable != 4) { return 13; };
+    let variadic: int = variadic_check();
+    if (variadic != 0) { return variadic; };
+    return 42;
+}

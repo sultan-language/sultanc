@@ -1,0 +1,4 @@
+// جزء من tests/ar/compiler/c_import_reexport/main.sn: تستورد first.h وحدها.
+استورد "first.h";
+
+عام عرف اصنع(الوزن: ص32): item_t { أرجع first_item(الوزن); }

@@ -1,0 +1,40 @@
+// اختبار: رفض
+// تشخيص: SULTANC-BORROW-REFERENCE-ESCAPE
+// نظير: tests/ar/diagnostics/e2e/borrow_escapes_in_order.sn
+// خرج-تشخيص-عربي: borrow_escapes_in_order.ar.stderr
+// خرج-تشخيص-إنجليزي: borrow_escapes_in_order.en.stderr
+// A reference may not leave the function while it borrows one of its
+// locals: returned directly, through a local holding it, read through a
+// reference to a local, or captured by a closure that leaves. A closure may
+// not capture an exclusive reference either. Each function reports its
+// first error.
+def borrow_of_local(): &int {
+    let value: int = 1;
+    return &value;
+}
+
+def holder_of_local(): &int {
+    let value: int = 2;
+    let reference: &int = &value;
+    return reference;
+}
+
+def through_reference(items: &vector int): &int {
+    let local: vector int = [1, 2];
+    let view: &vector int = &local;
+    return &(*view)[0];
+}
+
+def captured_reference(): fn(int): int {
+    let value: int = 3;
+    let reference: &int = &value;
+    let add: fn(int): int = fn(x: int): int -> x + *reference;
+    return add;
+}
+
+def mutable_capture(target: &mutable int): fn(int): int {
+    let add: fn(int): int = fn(x: int): int -> x + *target;
+    return add;
+}
+
+def main(): int { return 0; }

@@ -1,0 +1,21 @@
+error[SULTANC-NAME-UNKNOWN]: unknown name: `قيمة_مفقودة` — The required name was not found during resolution.
+  --> tests/ar/diagnostics/e2e/every_phase_errors.sn:18:23..18:34
+    |
+ 18 |     ليكن الأول: ص32 = قيمة_مفقودة + 1;
+    |                       ^^^^^^^^^^^
+    |
+
+error[SULTANC-NAME-UNKNOWN]: unknown name: `مساعذ` — The required name was not found during resolution.
+  --> tests/ar/diagnostics/e2e/every_phase_errors.sn:19:24..19:29
+    |
+ 19 |     ليكن الثاني: ص32 = مساعذ(2);
+    |                        ^^^^^
+    |
+  = help: a name with a similar spelling is visible here — The suggested replacement is `مساعد`.
+
+error[SULTANC-TYPE-MISMATCH]: expected `i32`, found `string` — The value does not match the declared type of its destination.
+  --> tests/ar/diagnostics/e2e/every_phase_errors.sn:14:23..14:27
+    |
+ 14 |     ليكن العدد: ص32 = «نص»;
+    |                       ^^^^
+    |

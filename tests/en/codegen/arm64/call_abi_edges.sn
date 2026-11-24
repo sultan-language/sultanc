@@ -1,0 +1,76 @@
+type SmallValue = { first: i64, second: i64 };
+type LargeValue = { first: i64, second: i64, third: i64 };
+
+def mutate_small(value: mutable SmallValue): i64 {
+    value.first := 99;
+    return value.first;
+}
+
+def mutate_value(value: mutable LargeValue): i64 {
+    value.first := 99;
+    return value.first;
+}
+
+def make_small(seed: i64): SmallValue {
+    let value: SmallValue = { first: seed, second: 2 };
+    return value;
+}
+
+def make_large(seed: i64): LargeValue {
+    let value: LargeValue = { first: seed, second: 1, third: 2 };
+    return value;
+}
+
+def narrow_identity(value: i8): i8 {
+    return value;
+}
+
+def packed_stack(
+    a0: i64,
+    a1: i64,
+    a2: i64,
+    a3: i64,
+    a4: i64,
+    a5: i64,
+    a6: i64,
+    a7: i64,
+    ninth: u8,
+    tenth: u8,
+    eleventh: i16
+): i64 {
+    return (ninth as i64) + (tenth as i64) + (eleventh as i64);
+}
+
+def bump(reference: & mutable i64): i64 {
+    *reference := *reference + 2;
+    return *reference;
+}
+
+def main(): i32 {
+    let small_original: mutable SmallValue = { first: 40, second: 2 };
+    let changed_small: i64 = mutate_small(small_original);
+    if (changed_small != 99) { return 1; };
+    if (small_original.first != 40) { return 2; };
+
+    let original: mutable LargeValue = { first: 40, second: 1, third: 1 };
+    let changed_copy: i64 = mutate_value(original);
+    if (changed_copy != 99) { return 3; };
+    if (original.first != 40) { return 4; };
+
+    let direct_return: SmallValue = make_small(40);
+    let returned: LargeValue = make_large(39);
+    let narrow: i8 = narrow_identity(-2);
+    if ((narrow as i64) != -2) { return 5; };
+    if ((direct_return.first + direct_return.second) != 42) { return 6; };
+    if ((returned.first + returned.second + returned.third) != 42) { return 7; };
+
+    let stacked: i64 = packed_stack(10, 11, 12, 13, 14, 15, 16, 17, 40, 1, 1);
+    if (stacked != 42) { return 8; };
+
+    let cell: mutable i64 = 40;
+    let aliased: i64 = bump(& mutable cell);
+    if (aliased != 42) { return 9; };
+    if (cell != 42) { return 10; };
+
+    return 42;
+}

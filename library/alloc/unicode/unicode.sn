@@ -1,0 +1,38 @@
+// The std.unicode package. Each module owns its declarations and their
+// English names: an alias can only name a declaration of its own module, and
+// an import brings in only the imported module's own public names, so this
+// file cannot re-export the others. Import the whole package selectively,
+// `from std.unicode import unicode_category_of, is_unicode_scalar;`, or one
+// module, `import std.unicode.general_category;`. The nested data and
+// algorithms directories are separate packages.
+// Arabic spellings of this folder's modules (docs/en/reference/modules-and-imports.md,
+// "Module spellings"): `استورد المكتبة....` names the same modules as `import std....`.
+module case_folding { ar: طي_الحالة };
+module case_mapping { ar: تحويل_الحالة };
+module code_point_text { ar: نص_نقطة };
+module general_category { ar: الفئة_العامة };
+module grapheme { ar: عناقيد };
+module normalization { ar: تطبيع };
+module properties { ar: خصائص };
+module sentence_boundary { ar: حدود_الجمل };
+module unicode { ar: يونيكود };
+module word_boundary { ar: حدود_الكلمات };
+module algorithms { ar: خوارزميات };
+
+استورد يونيكود.قيم_قياسية;
+استورد يونيكود.الفئة_العامة;
+استورد يونيكود.خصائص;
+استورد يونيكود.تحويل_الحالة;
+استورد يونيكود.طي_الحالة;
+استورد يونيكود.تطبيع;
+استورد يونيكود.عناقيد;
+استورد يونيكود.حدود_الكلمات;
+استورد يونيكود.حدود_الجمل;
+استورد يونيكود.إصدار;
+استورد يونيكود.نص_نقطة;
+
+// Re-exported: these children are modules and folders of core, at the same
+// paths (docs/en/reference/std-layers.md). One file, one module.
+module data = core.unicode.data { ar: بيانات };
+module scalar = core.unicode.scalar { ar: قيم_قياسية };
+module version = core.unicode.version { ar: إصدار };

@@ -1,0 +1,67 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux,aarch64-linux-gnu,x86_64-darwin,x86_64-windows-msvc,aarch64-windows-msvc,x86_64-android,aarch64-android,armv7-android,x86_64-freebsd,aarch64-freebsd,riscv64-freebsd,i686-linux-gnu,armv7-linux-gnueabihf,riscv64-linux-gnu,loongarch64-linux-gnu,mips64el-linux-gnuabi64,powerpc64le-linux-gnu,s390x-linux-gnu,sparcv9-linux-gnu,wasm32-wasi
+// خروج: 42
+// خرج-قياسي: args|env|clocks|sleep|cwd|exit
+// تفاضلي: نعم
+// نظير: tests/ar/target/std_process_time.sn
+// The process start and the process services std reads on every hosted
+// target: the argument vector and environment block the process start
+// passes (_start's stack layout differs per architecture), the process
+// environment table, both clocks (64-bit times on 32-bit targets), sleeping,
+// the working directory and the exit status.
+import std.io.print;
+import std.text.transform;
+import std.text.compare;
+import std.process.arguments;
+import std.process.exit;
+import std.env.environment;
+import std.env.variables;
+import std.time.time;
+
+def main(): int {
+    let line: mutable vector string = [];
+    let args: vector string = arguments();
+    if (length(args) < 1) { return 1; };
+    append(line, "args");
+
+    let name: string = "SULTANC_TARGET_TEST";
+    let value: string = "قيمة";
+    match set_environment_variable(&name, &value) with
+    | result.err(_) -> { return 2; }
+    | result.ok(_) -> { };
+    match get_environment_variable(&name) with
+    | result.ok(option.some(back)) -> { if (!texts_equal(&back, &value)) { return 3; }; }
+    | _ -> { return 4; };
+    append(line, "env");
+
+    let before: int;
+    match monotonic_time_ns() with
+    | result.ok(t) -> { before := t; }
+    | result.err(_) -> { return 5; };
+    match system_time_ns() with
+    | result.ok(t) -> {
+        // After 2020-01-01: the value needs all 64 bits on every target.
+        if (t < 1577836800000000000) { return 6; };
+    }
+    | result.err(_) -> { return 7; };
+    append(line, "clocks");
+
+    match sleep_ns(2000000) with
+    | result.err(_) -> { return 8; }
+    | result.ok(_) -> { };
+    match monotonic_time_ns() with
+    | result.ok(after) -> { if (after - before < 2000000) { return 9; }; }
+    | result.err(_) -> { return 10; };
+    append(line, "sleep");
+
+    match current_directory() with
+    | result.ok(path) -> { if (length(path) == 0) { return 11; }; }
+    | result.err(_) -> { return 12; };
+    append(line, "cwd");
+    append(line, "exit");
+
+    let bar: string = "|";
+    print(join(&line, &bar));
+    exit(42);
+    return 13;
+}

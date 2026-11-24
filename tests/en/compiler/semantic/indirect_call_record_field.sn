@@ -1,0 +1,14 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+type Holder = { callback: fn(i32): i32 };
+
+def twice(x: i32): i32 {
+    return x + x;
+}
+
+def main(): i32 {
+    let h: Holder = { callback: twice };
+    return h.callback(21);
+}

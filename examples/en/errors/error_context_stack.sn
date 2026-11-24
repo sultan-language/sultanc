@@ -1,0 +1,25 @@
+// Adding context to an error on its way up: the wrapper turns error 33 into 133 and passes
+// success values through unchanged.
+import std.io.println;
+import std.text.number;
+
+def failure(kind: int): result int, int {
+    if (kind == 3) { return result.err(33); };
+    return result.ok(kind);
+}
+
+def with_context(kind: int): result int, int {
+    match failure(kind) with
+    | result.err(code) -> { return result.err(code + 100); }
+    | result.ok(value) -> { return result.ok(value); };
+}
+
+def main(): int {
+    match with_context(3) with
+    | result.err(code) -> {
+        if (code != 133) { return 1; };
+        println(int_to_text(code));
+    }
+    | _ -> { return 1; };
+    return 0;
+}

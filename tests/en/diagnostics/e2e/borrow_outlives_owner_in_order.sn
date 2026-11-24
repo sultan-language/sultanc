@@ -1,0 +1,61 @@
+// اختبار: رفض
+// تشخيص: SULTANC-BORROW-REFERENCE-ESCAPE
+// نظير: tests/ar/diagnostics/e2e/borrow_outlives_owner_in_order.sn
+// خرج-تشخيص-عربي: borrow_outlives_owner_in_order.ar.stderr
+// خرج-تشخيص-إنجليزي: borrow_outlives_owner_in_order.en.stderr
+// A borrow may not outlive the owner it borrows (docs/en/reference/
+// ownership.md, "Borrow regions"): an owner is destroyed where its scope
+// ends, and a reference to it that is read afterwards escapes its valid
+// scope. The error is marked where the owner's scope ends, with the
+// owner and the later read as related spans: a reference set in a branch
+// and read after it, one set in a loop body and read after the loop, one
+// read again in the next iteration before it is set, and a copy made in an
+// inner block and read after it. Each function reports its first error.
+def set_in_branch(flag: bool): int {
+    let fallback: string = "x";
+    let reader: mutable &string = &fallback;
+    if (flag) {
+        let text: string = "abc";
+        reader := &text;
+    };
+    return length(*reader) as int;
+}
+
+def set_in_loop(): int {
+    let fallback: string = "x";
+    let reader: mutable &string = &fallback;
+    let i: mutable uint = 0;
+    while (i < 3) {
+        let text: string = "abc";
+        reader := &text;
+        i := i + 1;
+    }
+    return length(*reader) as int;
+}
+
+def read_next_iteration(): int {
+    let fallback: string = "x";
+    let reader: mutable &string = &fallback;
+    let total: mutable int = 0;
+    let i: mutable uint = 0;
+    while (i < 3) {
+        total := total + (length(*reader) as int);
+        let text: string = "abc";
+        reader := &text;
+        i := i + 1;
+    }
+    return total;
+}
+
+def copy_outlives(flag: bool): int {
+    let fallback: string = "x";
+    let kept: mutable &string = &fallback;
+    if (flag) {
+        let text: string = "abc";
+        let inner: &string = &text;
+        kept := inner;
+    };
+    return length(*kept) as int;
+}
+
+def main(): int { return 0; }

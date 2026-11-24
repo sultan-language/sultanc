@@ -1,0 +1,23 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/language/comptime/mixed_parameter.sn
+// A call with compile-time and runtime arguments is specialized for its
+// compile-time arguments (a constant, a function value); the runtime
+// argument stays runtime.
+def scale(comptime factor: int, x: int): int {
+    return x * factor;
+}
+
+def apply(comptime f: fn(int): int, x: int): int {
+    return f(x) + 1;
+}
+
+def double(x: int): int { return x * 2; }
+
+def main(): int {
+    let n: mutable int = 4;
+    n := n + 1;
+    return scale(6, n) + apply(double, n) + 1;
+}

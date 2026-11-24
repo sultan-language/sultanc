@@ -1,0 +1,13 @@
+// اختبار: رفض
+// أهداف: arm64-darwin,x86_64-linux
+// تشخيص: SULTANC-TYPE-OPAQUE-DEREFERENCE
+// نظير: tests/ar/compiler/c_import_opaque/reject_dereference.sn
+// A C struct the program sees only through pointers has no layout in
+// SultanC: dereferencing its pointer is rejected, inside unsafe too.
+import "handles.h";
+
+def main(): int {
+    let d: *mutable db = db_open(1);
+    unsafe { let x: int = *d; };
+    return 0;
+}

@@ -1,0 +1,14 @@
+// Integer widths across the C boundary: abs takes and returns a 32-bit int, here with
+// -2147483647, the most negative value whose absolute value still fits.
+import std.io.println;
+import std.text.number;
+
+extern def abs(value: i32): i32 = «abs»;
+
+def main(): int {
+    let n: mutable i32 = 0 as i32;
+    unsafe { n := abs(-2147483647 as i32); };
+    if (n != 2147483647 as i32) { return 1; };
+    println(int_to_text(n as int));
+    return 0;
+}

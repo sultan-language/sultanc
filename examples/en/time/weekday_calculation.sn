@@ -1,0 +1,11 @@
+// Month lengths and leap years: weekday_calculation.
+import std.io.println;
+import std.text.number;
+import std.time.calendar;
+
+
+def main(): int {
+    println(uint_to_text(days_in_month(2026, 2)));
+    if (is_leap_year(2026)) { println("leap"); };
+    return 0;
+}

@@ -1,0 +1,66 @@
+// اختبار: قبول
+// C functions of the platform's math and C libraries, called with mixed
+// integer and floating-point arguments, an f32 argument and result, an
+// out-pointer and C strings. Natively (Linux: -l c -l m) and interpreted
+// (sultanc interpret, which finds them at run time) the output is the same;
+// tools/tests/interp_ffi_check.sh compares the two on Linux and under wine,
+// and checks the macOS imports.
+import std.io.println;
+import std.text.number;
+
+if (target.platform == "linux") {
+    extern "libm.so.6" def pow(base: f64, exponent: f64): f64;
+    extern "libm.so.6" def ldexp(value: f64, exponent: i32): f64;
+    extern "libm.so.6" def frexp(value: f64, exponent: *mutable i32): f64;
+    extern "libm.so.6" def sqrtf(value: f32): f32;
+    extern "libc.so.6" def strlen(text: *u8): u64;
+    extern "libc.so.6" def snprintf(buffer: *mutable u8, size: u64, format: *u8): i32;
+}
+if (target.platform == "macos") {
+    extern "/usr/lib/libSystem.B.dylib" def pow(base: f64, exponent: f64): f64;
+    extern "/usr/lib/libSystem.B.dylib" def ldexp(value: f64, exponent: i32): f64;
+    extern "/usr/lib/libSystem.B.dylib" def frexp(value: f64, exponent: *mutable i32): f64;
+    extern "/usr/lib/libSystem.B.dylib" def sqrtf(value: f32): f32;
+    extern "/usr/lib/libSystem.B.dylib" def strlen(text: *u8): u64;
+    extern "/usr/lib/libSystem.B.dylib" def snprintf(buffer: *mutable u8, size: u64, format: *u8): i32;
+}
+if (target.platform == "windows") {
+    extern "msvcrt.dll" def pow(base: f64, exponent: f64): f64;
+    extern "msvcrt.dll" def ldexp(value: f64, exponent: i32): f64;
+    extern "msvcrt.dll" def frexp(value: f64, exponent: *mutable i32): f64;
+    extern "msvcrt.dll" def sqrtf(value: f32): f32;
+    extern "msvcrt.dll" def strlen(text: *u8): u64;
+    extern "msvcrt.dll" def snprintf(buffer: *mutable u8, size: u64, format: *u8): i32 = "_snprintf";
+}
+
+def main(): int {
+    let power: mutable f64 = 0.0;
+    let scaled: mutable f64 = 0.0;
+    let fraction: mutable f64 = 0.0;
+    let exponent: mutable i32 = 0;
+    let root: mutable f32 = 0.0;
+    let text: mutable vector u8 = [104, 101, 108, 108, 111, 0];
+    let text_length: mutable u64 = 0;
+    let buffer: mutable vector u8 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    let format: mutable vector u8 = [83, 117, 108, 116, 97, 110, 0];
+    let written: mutable i32 = 0;
+    unsafe {
+        power := pow(2.0, 10.0);
+        scaled := ldexp(0.75, 4);
+        fraction := frexp(48.0, &mutable exponent);
+        root := sqrtf(6.25);
+        text_length := strlen(&mutable text[0]);
+        written := snprintf(&mutable buffer[0], 16, &mutable format[0]);
+    }
+    println(int_to_text(power as int));
+    println(int_to_text(scaled as int));
+    println(int_to_text((fraction * 1000.0) as int));
+    println(int_to_text(exponent as int));
+    println(int_to_text((root * 100.0) as int));
+    println(int_to_text(text_length as int));
+    println(int_to_text(written as int));
+    println(int_to_text(buffer[0] as int));
+    println(int_to_text(buffer[5] as int));
+    println(int_to_text(buffer[6] as int));
+    return 0;
+}

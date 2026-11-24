@@ -1,0 +1,48 @@
+// Merging two JSON objects: join their members into one object, parse it and look up a key
+// from each side.
+import std.io.println;
+import std.text.number;
+import std.text.substring;
+import std.text.transform;
+import std.json.parse;
+import std.json.value;
+
+def main(): int {
+    let first: string = "{\"a\":1}";
+    let second: string = "{\"b\":2}";
+    match parse_json(&first) with
+    | result.ok(_) -> { }
+    | result.err(_) -> { return 1; };
+    match parse_json(&second) with
+    | result.ok(_) -> { }
+    | result.err(_) -> { return 2; };
+    let left: string;
+    let right: string;
+    match substring(&first, 1 as uint, (length(first) - 2) as uint) with
+    | option.some(s) -> { left := s; }
+    | option.none -> { return 3; };
+    match substring(&second, 1 as uint, (length(second) - 2) as uint) with
+    | option.some(s) -> { right := s; }
+    | option.none -> { return 4; };
+    let segments: vector string = ["{", left, ",", right, "}"];
+    let empty: string = "";
+    let merged: string = join(&segments, &empty);
+    match parse_json(&merged) with
+    | result.err(_) -> { return 5; }
+    | result.ok(doc) -> {
+        match json_root(&doc) with
+        | قيمة_جسون.كائن(index) -> {
+            let a: string = "a";
+            let b: string = "b";
+            match json_object_get(&doc, index, &a) with
+            | option.some(_) -> { }
+            | option.none -> { return 6; };
+            match json_object_get(&doc, index, &b) with
+            | option.some(_) -> { }
+            | option.none -> { return 7; };
+        }
+        | _ -> { return 8; };
+    };
+    println(merged);
+    return 0;
+}

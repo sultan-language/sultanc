@@ -1,0 +1,15 @@
+extern def abs(value: i32): i32;
+
+def plus_one(value: i32): i32 {
+    return value + 1;
+}
+
+def main(): i32 {
+    let before: i32 = plus_one(-43);
+    let preserved: i32 = 40;
+    unsafe {
+        let first: i32 = abs(before);
+        let second: i32 = abs(-1);
+        return plus_one(first - second) + preserved - 40;
+    }
+}

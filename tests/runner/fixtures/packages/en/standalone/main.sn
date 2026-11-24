@@ -1,0 +1,4 @@
+import "util.sn";
+import std.entree_sortie.println;
+
+def main(): int { return util_value(); }

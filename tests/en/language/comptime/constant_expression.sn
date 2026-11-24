@@ -1,0 +1,10 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/language/comptime/constant_expression.sn
+def main(): int {
+    let x: int = comptime { 20 + 22; };
+    if (x == 42) { return 42; };
+    return 1;
+}

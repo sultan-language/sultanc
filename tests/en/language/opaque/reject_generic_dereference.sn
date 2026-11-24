@@ -1,0 +1,11 @@
+// اختبار: رفض
+// أهداف: arm64-darwin,x86_64-linux
+// تشخيص: SULTANC-TYPE-OPAQUE-TYPE-ARGUMENT
+// نظير: tests/ar/language/opaque/reject_generic_dereference.sn
+// An instance that dereferences (copies) its opaque type argument.
+type Db = opaque;
+def peek<A>(p: *A): int {
+    unsafe { let copy: A = *p; };
+    return 0;
+}
+def main(): int { return peek(0 as *Db); }

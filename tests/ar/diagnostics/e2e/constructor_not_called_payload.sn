@@ -1,0 +1,15 @@
+// اختبار: رفض
+// تشخيص: SULTANC-NAME-CONSTRUCTOR-NOT-CALLED
+// نظير: tests/en/diagnostics/e2e/constructor_not_called_payload.sn
+// خرج-تشخيص-عربي: constructor_not_called_payload.ar.stderr
+// خرج-تشخيص-إنجليزي: constructor_not_called_payload.en.stderr
+// منشئ بحمولة مستعمل قيمةً: يأخذ حججا. مساعدة فقط بلا إصلاح، فالحجج يكتبها
+// المؤلف.
+نوع شكل = | دائرة بنوع ص32 | مربع;
+
+عرف الرئيسية(): ص32 {
+    ليكن ش: شكل = شكل.دائرة;
+    طابق ش مع
+    | شكل.دائرة(ن) -> { أرجع ن; }
+    | شكل.مربع -> { أرجع 0; };
+}
