@@ -1,0 +1,129 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// Drop elaboration (docs/en/internals/ownership-analysis.md) destroys every
+// owned value exactly once on every path. Each function below makes an owner
+// whose state at a destruction obligation differs by path: moved on some
+// paths only (the owner gets a flag), joined around a loop back edge, left
+// through return, break and continue from nested scopes, consumed in part by
+// a match arm, moved into a closure environment, held by a generic
+// specialization whose two parameters are each returned on one path, and
+// exchanged with another owner. A missed
+// destruction grows the allocator's live bytes, a second one traps in the
+// allocator, and a destroyed value read again gives a wrong length.
+// Counterpart: tests/ar/language/ownership/drop_elaboration_paths.sn; no pair
+// directive: the interpreter does not use the std allocator whose counters
+// this reads.
+import std.os.allocation;
+
+type Two = | both of (string, string) | none_two;
+
+def make(n: uint): string {
+    if ((n % 2) == 0) { return "even"; };
+    return "odd value";
+}
+
+def consume(t: string): int { return length(t) as int; }
+
+def conditional_move(n: uint): int {
+    let text: string = make(n);
+    let total: mutable int = 0;
+    if ((n % 3) == 0) {
+        total := consume(text);
+    };
+    return total + 1;
+}
+
+def loop_reinit(n: uint): int {
+    let text: mutable string = make(n);
+    let i: mutable uint = 0;
+    let total: mutable int = 0;
+    while (i < 4) {
+        if ((i % 2) == 0) {
+            total := total + consume(text);
+            text := make(i);
+        };
+        i := i + 1;
+    }
+    return total;
+}
+
+def early_exits(n: uint): int {
+    let outer: string = make(n);
+    let i: mutable uint = 0;
+    while (i < 5) {
+        let inner: string = make(i);
+        i := i + 1;
+        if (i == 2) { continue; };
+        if (i == 4) { break; };
+        if (n == 7) {
+            let last: string = make(i);
+            return consume(last);
+        };
+    }
+    return length(outer) as int;
+}
+
+def partial(n: uint): int {
+    let pair: Two = Two.both(make(n), make(n + 1));
+    match pair with
+    | Two.both(first, _) -> { return consume(first); }
+    | Two.none_two -> { return 0; };
+}
+
+def captured(n: uint): int {
+    let text: string = make(n);
+    let f: fn(int): int = fn(x: int): int -> x + (length(text) as int);
+    return f(1);
+}
+
+def keep_or<T>(flag: bool, value: T, other: T): T {
+    if (flag) { return value; };
+    return other;
+}
+
+def generic(n: uint): int {
+    let picked: string = keep_or((n % 2) == 0, make(n), make(n + 1));
+    return consume(picked) + keep_or(true, 1, 2);
+}
+
+// An exchange moves nothing: both owners hold a value after it, and each is
+// destroyed once at the end.
+def exchanged(n: uint): int {
+    let first: mutable string = make(n);
+    let second: mutable string = make(n + 1);
+    swap(first, second);
+    return consume(first) + (length(second) as int);
+}
+
+def round(n: uint): int {
+    return conditional_move(n) + loop_reinit(n) + early_exits(n) + partial(n) + captured(n) + generic(n)
+        + exchanged(n);
+}
+
+def expected(n: uint): int {
+    let held: mutable int = 9;
+    if ((n % 2) == 0) { held := 4; };
+    let other: mutable int = 4;
+    if ((n % 2) == 0) { other := 9; };
+    let total: mutable int = 1 + held + 4 + held + held + 1 + held + 5 + other + held;
+    if ((n % 3) == 0) { total := total + held; };
+    if (n == 7) { total := total - held + 9; };
+    return total;
+}
+
+def main(): int {
+    let warm_up: int = round(0) + round(7);
+    let before: u64 = بايتات_حية_مخصص_النظام();
+    let wrong: mutable uint = 0;
+    let n: mutable uint = 0;
+    while (n < 20000) {
+        if (round(n) != expected(n)) { wrong := wrong + 1; };
+        n := n + 1;
+    }
+    let after: u64 = بايتات_حية_مخصص_النظام();
+    if (warm_up != (expected(0) + expected(7))) { return 1; };
+    if (wrong != 0) { return 2; };
+    if (after != before) { return 3; };
+    return 42;
+}

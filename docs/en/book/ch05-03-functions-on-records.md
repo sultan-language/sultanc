@@ -18,36 +18,17 @@ What you choose is how the function takes the record. The rules from chapter 4 d
 ## Reaching fields through a reference
 
 When a function takes `&Rectangle`, its parameter is a reference, not a record. The record is
-`*rectangle`, and its field is `(*rectangle).width`. The parentheses are needed because `.` binds more
-tightly than `*`: `*rectangle.width` would mean "the value that `rectangle.width` points at".
+`*rectangle`, and its field could be written `(*rectangle).width`. The parentheses would be needed
+because `.` binds more tightly than `*`.
 
-Leaving out the `*` is a mistake the compiler catches:
+You do not have to write that. A field reached through a reference follows the reference for you:
+`rectangle.width` means `(*rectangle).width`, however many references lead to the record. The rules are
+the ones from chapter 4, as if the `*` were written:
 
-```sultan fail
-type Rectangle = { width: int, height: int };
-
-def area(rectangle: &Rectangle): int {
-    return rectangle.width * rectangle.height;
-}
-
-def main(): int {
-    let rect: Rectangle = { width: 30, height: 50 };
-    return area(&rect);
-}
-```
-
-```text
-error[SULTANC-TYPE-UNKNOWN-RECORD-FIELD]: unknown record field — The unknown record field is `width`. The referenced field is not declared in the record type.
-  --> main.sn:4:22..4:27
-   |
- 4 |     return rectangle.width * rectangle.height;
-   |                      ^^^^^
-   |
-```
-
-The message says `width` is unknown, although `Rectangle` declares it. That is because a reference has
-no fields of its own: the fields belong to the record it points at. When you see this message for a
-field you know exists, check whether the value is a reference, and write `(*name).field`.
+- reading a plain field, like `rectangle.width`, copies it;
+- an owning field can be read and borrowed, `&account.owner`, but not moved out, because the record is
+  only borrowed;
+- changing a field, `rectangle.width := 0`, needs a `&mutable` reference.
 
 ## A function that changes a record
 
@@ -58,12 +39,12 @@ import std.text.number;
 type Account = { owner: string, balance: int };
 
 def deposit(account: &mutable Account, amount: int): void {
-    (*account).balance := (*account).balance + amount;
+    account.balance := account.balance + amount;
 }
 
 def print_account(account: &Account): void {
-    println(clone(&(*account).owner));
-    println(int_to_text((*account).balance));
+    println(account.owner);
+    println(int_to_text(account.balance));
 }
 
 def main(): int {
@@ -80,7 +61,8 @@ Layla
 ```
 
 `deposit` changes the caller's account, so it takes `&mutable Account`, and the call says
-`&mutable savings`. `print_account` only reads, so it takes `&Account`.
+`&mutable savings`. `print_account` only reads, so it takes `&Account`; `println(account.owner)` borrows
+the owner's name without taking it out of the account.
 
 ## Functions that make records
 
@@ -129,16 +111,16 @@ def square(size: int): Rectangle {
 }
 
 def area(rectangle: &Rectangle): int {
-    return (*rectangle).width * (*rectangle).height;
+    return rectangle.width * rectangle.height;
 }
 
 def can_hold(outer: &Rectangle, inner: &Rectangle): bool {
-    return (*outer).width > (*inner).width && (*outer).height > (*inner).height;
+    return outer.width > inner.width && outer.height > inner.height;
 }
 
 def scale(rectangle: &mutable Rectangle, factor: int): void {
-    (*rectangle).width := (*rectangle).width * factor;
-    (*rectangle).height := (*rectangle).height * factor;
+    rectangle.width := rectangle.width * factor;
+    rectangle.height := rectangle.height * factor;
 }
 
 def main(): int {
@@ -168,7 +150,7 @@ When a program has many functions on one type, put them in a module of their own
 - Records are declared with `type Name = { field: type, … };` and built with `{ field: value, … }`.
 - Every field must be given; a `mutable` record's fields change with `:=`.
 - Functions on a record take `&T` to read, `&mutable T` to change, or `T` to keep it.
-- Through a reference, fields are `(*r).field`.
+- Through a reference, a field is still `r.field`: the reference is followed for you.
 - A function that returns a new record is the place to keep the rules of its fields.
 
 Records group values that are all present at once. The next chapter is about values that are one of

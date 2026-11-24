@@ -5,8 +5,8 @@
 // نظير: tests/ar/stdlib/behavior/float_primitives.sn
 // The float primitives behind std.math (sqrt, floor, ceil, trunc,
 // round_ties_even, abs, copysign, min, max, mul_add, f64 and f32): exact
-// IEEE results as bit patterns, computed with Python's exact rationals and
-// NumPy; sqrt also against std's former Newton iteration on the edge cases
+// IEEE results as bit patterns, computed independently with exact rationals
+// and a reference float library; sqrt also against std's former Newton iteration on the edge cases
 // (zeros, subnormals, infinities, perfect squares). Native, LLVM and the
 // interpreter give the same bits. Generated.
 import std.math.float;

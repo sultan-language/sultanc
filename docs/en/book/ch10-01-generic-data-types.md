@@ -62,11 +62,11 @@ def new_stack<T>(): Stack<T> {
 }
 
 def push<T>(stack: &mutable Stack<T>, item: T): void {
-    append((*stack).items, item);
+    append(stack.items, item);
 }
 
 def size<T>(stack: &Stack<T>): int {
-    return length((*stack).items);
+    return length(stack.items);
 }
 
 def top<T>(stack: &Stack<T>): option T {
@@ -74,7 +74,7 @@ def top<T>(stack: &Stack<T>): option T {
     if (count == 0) {
         return option.none();
     };
-    return option.some(clone(&(*stack).items[count - 1]));
+    return option.some(clone(&stack.items[count - 1]));
 }
 
 def main(): int {

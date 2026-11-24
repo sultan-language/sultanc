@@ -81,7 +81,7 @@ The result:
   takes `&string`.
 - Take `&mutable T` when the function changes the caller's value.
 - Take `T` itself when the function stores the value, or builds something new from it and returns that.
-- To print or pass on a value you still need, `clone` it.
+- To give a value you still need to a function that keeps it, `clone` it. Printing only borrows.
 - When the compiler says *use after move*, look at the place it marks *value moved here*. That is where
   you gave the value away: borrow there, or clone there.
 

@@ -1,17 +1,15 @@
 استورد نظام_التشغيل.أخطاء;
 
-// The path of the running executable at the OS boundary (Rust's
-// std::env::current_exe; Go's os.Executable): /proc/self/exe on Linux and
+// The path of the running executable at the OS boundary: /proc/self/exe on Linux and
 // Android, kern.proc.pathname on FreeBSD, dyld's _NSGetExecutablePath on
 // macOS, GetModuleFileNameW on Windows. An interpreted program runs in the
-// interpreter's process, so this is the interpreter's path there, as
-// sys.executable is Python's.
+// interpreter's process, so this is the interpreter's path there.
 
 إذا ((الهدف.المنصة == «linux» || الهدف.المنصة == «android») && الهدف.المعمارية != «ve») {
     استورد نظام_التشغيل.سمات_الملف;
 
     عام عرف مسار_البرنامج_الحالي_نظام(): نتيجة نص, خطأ_حد_نظام {
-        دع الرابط: نص = «/proc/self/exe»;
+        ليكن الرابط: نص = «/proc/self/exe»;
         أرجع اقرأ_وصلة_رمزية_نظام(&الرابط);
     }
 }

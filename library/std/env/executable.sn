@@ -3,9 +3,8 @@
 استورد نظام_التشغيل.أخطاء;
 استورد نظام_التشغيل.البرنامج;
 
-// The path of the running executable (Rust's std::env::current_exe; Go's
-// os.Executable). On macOS dyld may give the path the process was started
-// with, so it is canonicalized there, as Rust does; elsewhere the system
+// The path of the running executable. On macOS dyld may give the path the
+// process was started with, so it is canonicalized there; elsewhere the system
 // already reports the resolved path. When a program is interpreted
 // (`sultanc run`), the running executable is the interpreter: a program
 // that starts a copy of itself runs this path with `interpret`, its source

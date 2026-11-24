@@ -1,5 +1,5 @@
 // std.fmt: a format string with `{}` placeholders and a vector of
-// arguments, like Rust's format! and Go's fmt.Sprintf. A spec after `:` sets
+// arguments, formatted into new text. A spec after `:` sets
 // fill and alignment, sign, `#`, zero padding, width, precision and type.
 import std.fmt.fmt;
 import std.io.print_formatted;

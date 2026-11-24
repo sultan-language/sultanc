@@ -31,7 +31,7 @@ type pair = { left: i64, right: string };
 
 def main(): i32 {
     // A closure moves an owned capture, so code that needs the mutex inside
-    // its own closure shares it through an Arc, as in Rust.
+    // its own closure shares it through an Arc.
     let m: arc<mutex<i64>> = arc_new(mutex_new(5 as i64));
     if (with_lock(arc_get(&m), fn(v: &mutable i64): i64 -> add_ten(v)) != (15 as i64)) { return 1; };
     if (!with_lock(arc_get(&m), fn(v: &mutable i64): bool -> nested_try(&m, v))) { return 2; };

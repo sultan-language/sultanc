@@ -11,9 +11,9 @@
 
 عرف الرئيسية(): عدد {
     إذا (through_dlsym() != 5) { أرجع 1; };
-    دع العائم: ص32 = through_dlsym_floating();
+    ليكن العائم: ص32 = through_dlsym_floating();
     إذا (العائم != 0) { أرجع 10 + (العائم مثل عدد); };
-    دع السجلات: ص32 = through_dlsym_records();
+    ليكن السجلات: ص32 = through_dlsym_records();
     إذا (السجلات != 0) { أرجع 20 + (السجلات مثل عدد); };
     إذا (through_library_address() != 7) { أرجع 3; };
     إذا (through_marker() != 42) { أرجع 4; };

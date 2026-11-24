@@ -1,0 +1,41 @@
+خطأ[SULTANC-BORROW-CONFLICT]: تعارض استعارة — القيمة ذات الاستعارة المتعارضة هي ⁨`value`⁩. القيمة مستعارة للقراءة، لذا لا يمكن استعارتها استعارة متغيرة.
+  --> tests/en/diagnostics/e2e/borrow_conflicts_in_order.sn:15:5..15:32
+    |
+ 15 |     let value: mutable int = 1;
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+خطأ[SULTANC-BORROW-CONFLICT]: تعارض استعارة — القيمة ذات الاستعارة المتعارضة هي ⁨`value`⁩. القيمة مستعارة استعارة متغيرة بالفعل، لذا لا يمكن استعارتها مرة أخرى.
+  --> tests/en/diagnostics/e2e/borrow_conflicts_in_order.sn:22:5..22:32
+    |
+ 22 |     let value: mutable int = 1;
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+خطأ[SULTANC-BORROW-CONFLICT]: تعارض استعارة — القيمة ذات الاستعارة المتعارضة هي ⁨`value`⁩. القيمة مستعارة استعارة متغيرة بالفعل، لذا لا يمكن استعارتها مرة أخرى.
+  --> tests/en/diagnostics/e2e/borrow_conflicts_in_order.sn:29:5..29:24
+    |
+ 29 |     let value: int = 1;
+    |     ^^^^^^^^^^^^^^^^^^^
+    |
+
+خطأ[SULTANC-BORROW-CONFLICT]: تعارض استعارة — القيمة ذات الاستعارة المتعارضة هي ⁨`value`⁩. القيمة مستعارة للقراءة، لذا لا يمكن استعارتها استعارة متغيرة.
+  --> tests/en/diagnostics/e2e/borrow_conflicts_in_order.sn:36:5..36:32
+    |
+ 36 |     let value: mutable int = 1;
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+خطأ[SULTANC-BORROW-CONFLICT]: تعارض استعارة — القيمة ذات الاستعارة المتعارضة هي ⁨`value`⁩. القيمة مستعارة استعارة متغيرة بالفعل، لذا لا يمكن استعارتها مرة أخرى.
+  --> tests/en/diagnostics/e2e/borrow_conflicts_in_order.sn:41:5..41:32
+    |
+ 41 |     let value: mutable int = 1;
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+خطأ[SULTANC-BORROW-CONFLICT]: تعارض استعارة — القيمة ذات الاستعارة المتعارضة هي ⁨`items`⁩. القيمة مستعارة استعارة متغيرة بالفعل، لذا لا يمكن استعارتها مرة أخرى.
+  --> tests/en/diagnostics/e2e/borrow_conflicts_in_order.sn:48:5..48:41
+    |
+ 48 |     let items: mutable vector int = [1];
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |

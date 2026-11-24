@@ -178,7 +178,7 @@ def main(): int {
     let names: vector string = ["Huda", "Sara"];
     let f: string = first(&names);
     println(f);
-    println(clone(&names[1]));
+    println(names[1]);
     return 0;
 }
 ```
@@ -190,15 +190,18 @@ Sara
 
 ## Printing a value you still need
 
-Now the `println` problem from the last section has a solution. `println` takes its string by value, so
-give it a copy, and keep the original:
+Now the `println` question from the last section has its answer. `println` only reads its text, so it
+takes `&string`, like the text functions. You can lend it a string with `&`, as you would to any of
+them. And because text is passed to be read so often, SultanC lends it for you: a `string` passed where
+a function expects `&string` is borrowed for the call, as if you had written the `&`:
 
 ```sultan
 import std.io.println;
 
 def main(): int {
     let greeting: string = "hello";
-    println(clone(&greeting));
+    println(&greeting);
+    println(greeting);
     println(greeting);
     return 0;
 }
@@ -207,9 +210,14 @@ def main(): int {
 ```text
 hello
 hello
+hello
 ```
 
-The last use can move the value, since nothing needs it afterwards.
+None of the three calls moves `greeting`; `main` still owns it after them. The same is why
+`println(names[1])` above printed the element without taking it out of the vector.
+
+This rule is for text only. A vector, a record or any other value passed to a `&` parameter still needs
+its `&` written out.
 
 ## Summary
 
@@ -217,3 +225,4 @@ The last use can move the value, since nothing needs it afterwards.
 - A mutable reference cannot exist alongside any other reference to the same value.
 - A reference cannot outlive its value.
 - Nothing can be moved out of a borrowed value; return or store a copy.
+- A `string` passed where `&string` is expected is borrowed for the call; other values need `&`.

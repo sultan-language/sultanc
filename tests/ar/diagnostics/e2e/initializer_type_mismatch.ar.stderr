@@ -1,6 +1,6 @@
 خطأ[SULTANC-TYPE-MISMATCH]: النوع الموجود ⁨`نص`⁩ لا يطابق النوع المتوقع ⁨`عدد`⁩ — القيمة لا تطابق النوع المصرح به لوجهتها.
-  --> tests/ar/diagnostics/e2e/initializer_type_mismatch.sn:9:17..9:24
+  --> tests/ar/diagnostics/e2e/initializer_type_mismatch.sn:9:19..9:26
    |
- 9 |     دع س: عدد = «مرحبا»;
-   |                 ^^^^^^^
+ 9 |     ليكن س: عدد = «مرحبا»;
+   |                   ^^^^^^^
    |

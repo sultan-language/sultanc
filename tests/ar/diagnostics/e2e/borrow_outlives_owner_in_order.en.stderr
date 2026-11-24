@@ -1,0 +1,67 @@
+error[SULTANC-BORROW-REFERENCE-ESCAPE]: reference escapes its valid scope — The escaping reference is `القارئ`. A reference outlives the value it points to.
+  --> tests/ar/diagnostics/e2e/borrow_outlives_owner_in_order.sn:18:5..18:6
+    |
+ 18 |     };
+    |     ^
+    |
+  ::: tests/ar/diagnostics/e2e/borrow_outlives_owner_in_order.sn:16:9..16:31
+    |
+ 16 |         ليكن النص: نص = «أبج»;
+    |         ^^^^^^^^^^^^^^^^^^^^^^ original owner
+    |
+  ::: tests/ar/diagnostics/e2e/borrow_outlives_owner_in_order.sn:19:17..19:23
+    |
+ 19 |     أرجع الطول(*القارئ) مثل عدد;
+    |                 ^^^^^^ invalid use
+    |
+
+error[SULTANC-BORROW-REFERENCE-ESCAPE]: reference escapes its valid scope — The escaping reference is `القارئ`. A reference outlives the value it points to.
+  --> tests/ar/diagnostics/e2e/borrow_outlives_owner_in_order.sn:30:5..30:6
+    |
+ 30 |     }
+    |     ^
+    |
+  ::: tests/ar/diagnostics/e2e/borrow_outlives_owner_in_order.sn:27:9..27:31
+    |
+ 27 |         ليكن النص: نص = «أبج»;
+    |         ^^^^^^^^^^^^^^^^^^^^^^ original owner
+    |
+  ::: tests/ar/diagnostics/e2e/borrow_outlives_owner_in_order.sn:31:17..31:23
+    |
+ 31 |     أرجع الطول(*القارئ) مثل عدد;
+    |                 ^^^^^^ invalid use
+    |
+
+error[SULTANC-BORROW-REFERENCE-ESCAPE]: reference escapes its valid scope — The escaping reference is `القارئ`. A reference outlives the value it points to.
+  --> tests/ar/diagnostics/e2e/borrow_outlives_owner_in_order.sn:44:5..44:6
+    |
+ 44 |     }
+    |     ^
+    |
+  ::: tests/ar/diagnostics/e2e/borrow_outlives_owner_in_order.sn:41:9..41:31
+    |
+ 41 |         ليكن النص: نص = «أبج»;
+    |         ^^^^^^^^^^^^^^^^^^^^^^ original owner
+    |
+  ::: tests/ar/diagnostics/e2e/borrow_outlives_owner_in_order.sn:40:38..40:44
+    |
+ 40 |         المجموع := المجموع + (الطول(*القارئ) مثل عدد);
+    |                                      ^^^^^^ invalid use
+    |
+
+error[SULTANC-BORROW-REFERENCE-ESCAPE]: reference escapes its valid scope — The escaping reference is `المحفوظ`. A reference outlives the value it points to.
+  --> tests/ar/diagnostics/e2e/borrow_outlives_owner_in_order.sn:55:5..55:6
+    |
+ 55 |     };
+    |     ^
+    |
+  ::: tests/ar/diagnostics/e2e/borrow_outlives_owner_in_order.sn:52:9..52:31
+    |
+ 52 |         ليكن النص: نص = «أبج»;
+    |         ^^^^^^^^^^^^^^^^^^^^^^ original owner
+    |
+  ::: tests/ar/diagnostics/e2e/borrow_outlives_owner_in_order.sn:56:17..56:24
+    |
+ 56 |     أرجع الطول(*المحفوظ) مثل عدد;
+    |                 ^^^^^^^ invalid use
+    |

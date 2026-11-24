@@ -5,6 +5,6 @@
 // خرج-تشخيص-إنجليزي: use_before_initialization.en.stderr
 // A read before any assignment is marked at the read; the declaration is related.
 عرف الرئيسية(): عدد {
-    دع س: عدد;
+    ليكن س: عدد;
     أرجع س;
 }

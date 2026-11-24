@@ -35,7 +35,46 @@ def read_lines(path):
         return []
 
 
+def visible(line):
+    """A log line with carriage returns and other control bytes made visible."""
+    out = []
+    for ch in line:
+        if ch == "\r":
+            out.append("\\r")
+        elif ch == "\t":
+            out.append("\\t")
+        elif ord(ch) < 0x20:
+            out.append(f"\\x{ord(ch):02x}")
+        else:
+            out.append(ch)
+    return "".join(out)
+
+
+def ispeak_evidence(directory, name):
+    """The start of a failed iSpeak test's diffs (expected < actual) or, with
+    none, of its check log: what the summary row cannot show."""
+    def excerpt(suffixes):
+        lines = []
+        for suffix in suffixes:
+            path = os.path.join(directory, name + suffix)
+            try:
+                with open(path, encoding="utf-8", errors="replace", newline="") as f:
+                    text = f.read()
+            except OSError:
+                continue
+            lines.append(f"  {name}{suffix}:")
+            lines.extend("    | " + visible(l) for l in text.split("\n")[:12] if l != "")
+        return lines
+    lines = excerpt((".ar.diff", ".en.diff")) or excerpt((".log", ".check.log"))
+    return ("\n" + "\n".join(lines)) if lines else ""
+
+
 def main():
+    # Test names and reasons are Arabic. A Windows runner's console encoding
+    # is cp1252, which has no Arabic: printing one (the ::error annotations,
+    # the summary on stdout) raised UnicodeEncodeError and lost the report.
+    for stream in (sys.stdout, sys.stderr):
+        stream.reconfigure(encoding="utf-8", errors="replace")
     root = sys.argv[1] if len(sys.argv) > 1 else "."
     result_path = os.path.join(root, "build", "tests-result.json")
     try:
@@ -77,7 +116,10 @@ def main():
             status = "SKIP"
         else:
             status = "PASS"
-        cases.append(("ispeak", name, status, rest if status != "PASS" else ""))
+        reason = rest if status != "PASS" else ""
+        if status == "FAIL":
+            reason += ispeak_evidence(os.path.join(root, "build", f"ispeak-tests-{target}"), name)
+        cases.append(("ispeak", name, status, reason))
 
     failed = [c for c in cases if c[2] == "FAIL"]
     lines = [

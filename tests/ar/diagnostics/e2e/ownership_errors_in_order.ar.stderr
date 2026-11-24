@@ -1,0 +1,59 @@
+خطأ[SULTANC-TYPE-MISMATCH]: النوع الموجود ⁨`نص`⁩ لا يطابق النوع المتوقع ⁨`عدد`⁩ — القيمة لا تطابق النوع المصرح به لوجهتها.
+  --> tests/ar/diagnostics/e2e/ownership_errors_in_order.sn:38:23..38:29
+    |
+ 38 |     ليكن العدد: عدد = «text»;
+    |                       ^^^^^^
+    |
+
+خطأ[SULTANC-BORROW-CONFLICT]: تعارض استعارة — القيمة ذات الاستعارة المتعارضة هي ⁨`القيم`⁩. القيمة مستعارة استعارة متغيرة بالفعل، لذا لا يمكن استعارتها مرة أخرى.
+  --> tests/ar/diagnostics/e2e/ownership_errors_in_order.sn:13:5..13:42
+    |
+ 13 |     ليكن القيم: متغير متجه عدد = [40, 2];
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+خطأ[SULTANC-OWNERSHIP-USE-AFTER-MOVE]: استخدام بعد النقل — القيمة المستخدمة بعد نقل ملكيتها هي ⁨`النص`⁩. تُستخدم القيمة بعد نقل ملكيتها.
+  --> tests/ar/diagnostics/e2e/ownership_errors_in_order.sn:23:21..23:25
+    |
+ 23 |     أرجع أ + استهلك(النص);
+    |                     ^^^^ الاستخدام غير الصالح
+    |
+  ::: tests/ar/diagnostics/e2e/ownership_errors_in_order.sn:21:5..21:29
+    |
+ 21 |     ليكن النص: نص = «twice»;
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^ المالك الأصلي
+    |
+  ::: tests/ar/diagnostics/e2e/ownership_errors_in_order.sn:22:26..22:30
+    |
+ 22 |     ليكن أ: عدد = استهلك(النص);
+    |                          ^^^^ نقلت القيمة هنا
+    |
+
+خطأ[SULTANC-OWNERSHIP-USE-AFTER-MOVE]: استخدام بعد النقل — القيمة المستخدمة بعد نقل ملكيتها هي ⁨`القيمة`⁩. تُستخدم القيمة بعد نقل ملكيتها.
+  --> tests/ar/diagnostics/e2e/ownership_errors_in_order.sn:28:27..28:33
+    |
+ 28 |     أرجع الأول + المستقبل(القيمة);
+    |                           ^^^^^^ الاستخدام غير الصالح
+    |
+  ::: tests/ar/diagnostics/e2e/ownership_errors_in_order.sn:26:19..26:28
+    |
+ 26 | عرف مرتين_عامة<ن>(القيمة: ن, المستقبل: دالة(ن): عدد): عدد {
+    |                   ^^^^^^^^^ المالك الأصلي
+    |
+  ::: tests/ar/diagnostics/e2e/ownership_errors_in_order.sn:27:32..27:38
+    |
+ 27 |     ليكن الأول: عدد = المستقبل(القيمة);
+    |                                ^^^^^^ نقلت القيمة هنا
+    |
+
+خطأ[SULTANC-FLOW-USE-BEFORE-INITIALIZATION]: استخدام قبل التهيئة — القيمة المستخدمة قبل التهيئة هي ⁨`النص`⁩. تُستخدم القيمة قبل تهيئتها.
+  --> tests/ar/diagnostics/e2e/ownership_errors_in_order.sn:34:17..34:21
+    |
+ 34 |     أرجع استهلك(النص);
+    |                 ^^^^ الاستخدام غير الصالح
+    |
+  ::: tests/ar/diagnostics/e2e/ownership_errors_in_order.sn:32:5..32:19
+    |
+ 32 |     ليكن النص: نص;
+    |     ^^^^^^^^^^^^^^ صُرّح به هنا
+    |

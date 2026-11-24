@@ -9,19 +9,19 @@
 نوع Point = { x: عدد, y: عدد };
 نوع Shape = { name: نص, corner: Point, points: متجه Point, tags: متجه نص };
 
-دع origin: متغير متجه عدد = [3, 4];
+ليكن origin: متغير متجه عدد = [3, 4];
 
 عرف make(n: عدد): Shape {
-    دع points: متغير متجه Point = [];
-    دع p0: Point = { x: n, y: n + 1 };
-    دع p1: Point = { x: n + 2, y: n + 3 };
+    ليكن points: متغير متجه Point = [];
+    ليكن p0: Point = { x: n, y: n + 1 };
+    ليكن p1: Point = { x: n + 2, y: n + 3 };
     ألحق(points, p0);
     ألحق(points, p1);
-    دع tags: متغير متجه نص = [];
+    ليكن tags: متغير متجه نص = [];
     ألحق(tags, "a");
     ألحق(tags, "bc");
-    دع corner: Point = { x: n, y: 2 * n };
-    دع s: Shape = { name: "shape", corner: corner, points: points, tags: tags };
+    ليكن corner: Point = { x: n, y: 2 * n };
+    ليكن s: Shape = { name: "shape", corner: corner, points: points, tags: tags };
     أرجع s;
 }
 
@@ -38,18 +38,18 @@
 }
 
 عرف الرئيسية(): عدد {
-    دع s: متغير Shape = make(1);
-    دع total: متغير عدد = s.corner.x + s.corner.y + s.points[1].y;
+    ليكن s: متغير Shape = make(1);
+    ليكن total: متغير عدد = s.corner.x + s.corner.y + s.points[1].y;
     s.corner.y := 10;
     s.points[0].x := 7;
     total := total + s.corner.y + s.points[0].x;
     total := total + through_ref(&s);
-    دع i: متغير طبيعي = 0;
+    ليكن i: متغير طبيعي = 0;
     طالما (i < (الطول(s.points) مثل طبيعي)) { total := total + s.points[i].x; i := i + 1; }
     غير_آمن { origin[1] := 5; total := total + origin[0] + origin[1]; }
-    دع copy: Shape = make(2);
+    ليكن copy: Shape = make(2);
     total := total + by_value(copy);
-    دع n: نص = take_name(make(0));
+    ليكن n: نص = take_name(make(0));
     total := total + (الطول(n) مثل عدد);
     إذا (total != 72) { أرجع total; };
     أرجع 42;

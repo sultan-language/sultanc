@@ -218,8 +218,8 @@ def main(): int {
 }
 ```
 
-The optional message expression is evaluated by the caller as an ordinary function argument, so unlike Rust's
-`assert!` macro it is not lazy. A failing assertion needs the interpreter's `std.io` and `std.process` effects to
+The optional message expression is evaluated by the caller as an ordinary function argument, so it is
+not lazy. A failing assertion needs the interpreter's `std.io` and `std.process` effects to
 complete, and it is not a compile-time diagnostic.
 
 ## Limitations

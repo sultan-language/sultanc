@@ -91,5 +91,27 @@ error[SULTANC-RUNTIME-PROGRAM-STOPPED]: the program stopped — An assertion fai
 
 You met a third kind in chapter 3: integer overflow, division by zero, and a position past the end of a
 vector stop the program too. These are checks the language makes on every such operation, because
-continuing with a wrong number or with memory that is not yours is never right. They print nothing
-today; the program ends with the `Illegal instruction` signal, and a debugger shows where.
+continuing with a wrong number or with memory that is not yours is never right. They stop the program
+the way `panic` does, with a message that says what went wrong and where:
+
+```sultan exit=1
+import std.io.println;
+import std.text.number;
+
+def average(total: int, count: int): int {
+    return total / count;
+}
+
+def main(): int {
+    println(int_to_text(average(10, 0)));
+    return 0;
+}
+```
+
+```text stderr
+error[SULTANC-RUNTIME-PROGRAM-STOPPED]: the program stopped
+division by zero at main.sn:5:12
+```
+
+`main.sn:5:12` is where `total / count` starts. An overflow reads `integer overflow at …`, and a
+position past the end `index 5 out of range for length 3 at …`.

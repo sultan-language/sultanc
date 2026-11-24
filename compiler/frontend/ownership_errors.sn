@@ -1,0 +1,72 @@
+استورد compiler.frontend.names.identifiers;
+استورد compiler.frontend.types.type_identity;
+استورد compiler.source.span;
+
+// The errors the ownership legality analysis on MSIR states
+// (compiler/msir/ssf/ownership_legality.sn, docs/en/internals/ownership-analysis.md),
+// one per rejected function, and the Frontend turns into diagnostics
+// (semantic_pipeline.sn, تشخيصات_خطأ_تدفق_سلامة_بالرموز): the Frontend owns
+// how they are stated, the analysis what they are.
+
+// The kind of a borrow a conflict is about: the one the rejected use asks for.
+عام نوع نوع_استعارة =
+    | مشتركة
+    | حصرية
+;
+
+// A move whose source is borrowed storage: a dereference, a projection through a
+// reference, or a borrowed-view local. الرمز is the view local when there is one.
+عام نوع سياق_نقل_من_مرجع = {
+    الرمز: اختياري معرف_رمز,
+    الموضع: نطاق
+};
+
+// A generic call that instantiates a type parameter with an inferred plain
+// bound (the template copies its values out of borrowed storage,
+// docs/en/reference/ownership.md "Generic templates") with an owning type:
+// the call, the function, the parameter and the type.
+عام نوع سياق_قيد_عادي_منتهك = {
+    الموضع: نطاق,
+    الدالة: اختياري معرف_رمز,
+    المعامل: معرف_رمز,
+    الحجة: معرف_نوع
+};
+
+// على_عرض: the value is a borrowed view whose borrow ended (a write to the
+// storage it reads), not one moved out.
+عام نوع سياق_استخدام_بعد_النقل = {
+    الرمز: معرف_رمز,
+    أصل_النقل: اختياري نطاق,
+    الاستخدام: اختياري نطاق,
+    على_عرض: منطقي
+};
+
+// A borrow that outlives the owner it borrows: the owner is destroyed where
+// its scope ends (الإتلاف) while الحامل, which holds a borrow of it, is used
+// later (الاستخدام). Stated as a reference escaping its valid scope.
+عام نوع سياق_مرجع_بعد_إتلاف = {
+    الحامل: معرف_رمز,
+    المالك: معرف_رمز,
+    الإتلاف: اختياري نطاق,
+    الاستخدام: اختياري نطاق
+};
+
+عام نوع خطأ_تدفق_سلامة =
+    // The local and, when known, the assignment that writes it.
+    | إسناد_إلى_غير_متغير بنوع (معرف_رمز, اختياري نطاق)
+    // The local and, when known, the use that reads it.
+    | استخدام_قبل_التهيئة بنوع (معرف_رمز, اختياري نطاق)
+    | استخدام_بعد_النقل بنوع سياق_استخدام_بعد_النقل
+    | استخدام_بعد_التحرير بنوع معرف_رمز
+    // The aggregate and, when known, the member that is moved out of it.
+    | نقل_غير_صالح بنوع (معرف_رمز, اختياري نطاق)
+    | نقل_من_مرجع بنوع سياق_نقل_من_مرجع
+    | قيد_عادي_منتهك بنوع سياق_قيد_عادي_منتهك
+    | تحرير_مكرر بنوع معرف_رمز
+    // The value and, when known, the release that names it.
+    | تحرير_غير_مملوك بنوع (معرف_رمز, اختياري نطاق)
+    | تعارض_استعارة بنوع (معرف_رمز, نوع_استعارة)
+    | دمج_غير_صالح بنوع معرف_رمز
+    | هروب_غير_صالح بنوع معرف_رمز
+    | مرجع_بعد_إتلاف بنوع سياق_مرجع_بعد_إتلاف
+;

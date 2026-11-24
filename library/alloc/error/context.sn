@@ -1,8 +1,8 @@
 // std.error.context: helpers for a result in passing (docs/en/reference/errors.md), made
 // to be used with the propagation operator `؟`, which converts no error:
 //
-//   دع البايتات: متجه ط8 = إلى_فشل(اقرأ_الملف(&المسار), فشل_من_خطأ_ملف)؟;
-//   دع الإعداد: إعداد = مع_سياق(حلل_الإعداد(&البايتات), «أثناء قراءة إعداد الخادم»)؟;
+//   ليكن البايتات: متجه ط8 = إلى_فشل(اقرأ_الملف(&المسار), فشل_من_خطأ_ملف)؟;
+//   ليكن الإعداد: إعداد = مع_سياق(حلل_الإعداد(&البايتات), «أثناء قراءة إعداد الخادم»)؟;
 //
 // Each takes the result by value and moves the success value through
 // untouched; nothing is copied out of borrowed storage, so an owning T
@@ -31,7 +31,7 @@
     طابق النتيجة مع
     | نتيجة.نجح(القيمة) -> { أرجع نتيجة.نجح(القيمة); }
     | نتيجة.خطأ(الخطأ) -> {
-        دع الملاحظ: متغير فشل = الخطأ;
+        ليكن الملاحظ: متغير فشل = الخطأ;
         أضف_ملاحظة(&متغير الملاحظ, الملاحظة);
         أرجع نتيجة.خطأ(الملاحظ);
     };

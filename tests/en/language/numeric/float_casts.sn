@@ -5,7 +5,7 @@
 // نظير: tests/ar/language/numeric/float_casts.sn
 // `as` between floats and integers (TYPE_SYSTEM.md, "Numeric casts"): float -> integer
 // truncates toward zero, saturates at the type's bounds and gives 0 for NaN; integer -> float
-// rounds to nearest, ties to even; f32 <-> f64. Expected values from Rust's `as` (since 1.45).
+// rounds to nearest, ties to even; f32 <-> f64. Expected values computed independently.
 import std.math.float;
 
 def main(): int {

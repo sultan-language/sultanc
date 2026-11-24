@@ -4,9 +4,9 @@ error[SULTANC-MUTABILITY-WRITE-TO-IMMUTABLE]: cannot write to an immutable value
  8 |     العدد := 2;
    |     ^^^^^ invalid use
    |
-  ::: tests/ar/diagnostics/e2e/write_to_immutable.sn:7:5..7:23
+  ::: tests/ar/diagnostics/e2e/write_to_immutable.sn:7:5..7:25
    |
- 7 |     دع العدد: ص32 = 1;
-   |     ^^^^^^^^^^^^^^^^^^ declared here without `mutable`
+ 7 |     ليكن العدد: ص32 = 1;
+   |     ^^^^^^^^^^^^^^^^^^^^ declared here without `mutable`
    |
   = help: declare the variable `mutable` to write to it

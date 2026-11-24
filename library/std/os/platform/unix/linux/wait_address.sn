@@ -1,6 +1,5 @@
 // Waiting on an address (std.os.wait_address) on Linux and Android: the
-// private futex, as Rust's std/src/sys/pal/unix/futex.rs and Go's
-// runtime/os_linux.go (futexsleep/futexwakeup) use it. FUTEX_WAIT_PRIVATE
+// private futex. FUTEX_WAIT_PRIVATE
 // sleeps while the 32-bit cell still holds the expected value; the check and
 // the sleep are one atomic step in the kernel, so a wake between the
 // caller's load and the wait is never lost. FUTEX_WAKE_PRIVATE wakes up to N
@@ -33,7 +32,7 @@
 // Each kernel call sits at the top level of its own function: its memory
 // contract (the cell, the timespec) is proven on the function's own values.
 عرف انتظر_بلا_مهلة_لينكس(الخلية: &ط32, المتوقعة: ط32): ط64 {
-    دع الخام: ط64;
+    ليكن الخام: ط64;
     غير_آمن {
         الخام := بدائي_نداء_نواة_خام(
             رقم_نداء_نواة_لينكس(عملية_نداء_نواة_لينكس.مستقبل()),
@@ -44,8 +43,8 @@
 }
 
 عرف انتظر_بمهلة_لينكس(الخلية: &ط32, المتوقعة: ط32, النانو: عدد): ط64 {
-    دع المؤقت: متغير متجه ص64 = [(النانو / 1000000000) مثل ص64, (النانو % 1000000000) مثل ص64];
-    دع الخام: ط64;
+    ليكن المؤقت: متغير متجه ص64 = [(النانو / 1000000000) مثل ص64, (النانو % 1000000000) مثل ص64];
+    ليكن الخام: ط64;
     غير_آمن {
         الخام := بدائي_نداء_نواة_خام(
             رقم_نداء_نواة_لينكس(عملية_نداء_نواة_لينكس.مستقبل_بمهلة()),
@@ -58,14 +57,14 @@
 // The raw result: 0 when woken (or spuriously), -EAGAIN when the cell did
 // not hold the expected value, -EINTR on a signal, -ETIMEDOUT at the
 // deadline. Only the timeout answers خطأ: every other outcome lets the caller
-// re-check its condition, as Rust's futex_wait does.
+// re-check its condition.
 عام عرف انتظر_عند_عنوان_لينكس(الخلية: &ط32, المتوقعة: ط32, المهلة_بالنانو: اختياري عدد): منطقي {
-    دع الخام: متغير ط64 = 0;
+    ليكن الخام: متغير ط64 = 0;
     طابق المهلة_بالنانو مع
     | اختياري.لا_شيء -> { الخام := انتظر_بلا_مهلة_لينكس(الخلية, المتوقعة); }
     | اختياري.موجود(النانو) -> {
         // A negative timeout has already passed: wait for zero.
-        دع الموجبة: متغير عدد = النانو;
+        ليكن الموجبة: متغير عدد = النانو;
         إذا (الموجبة < 0) { الموجبة := 0; };
         الخام := انتظر_بمهلة_لينكس(الخلية, المتوقعة, الموجبة);
     };
@@ -75,7 +74,7 @@
 }
 
 عام عرف أيقظ_عند_عنوان_لينكس(الخلية: &ط32, العدد: ط64): فراغ {
-    دع تجاهل: ط64;
+    ليكن تجاهل: ط64;
     غير_آمن {
         تجاهل := بدائي_نداء_نواة_خام(
             رقم_نداء_نواة_لينكس(عملية_نداء_نواة_لينكس.مستقبل()),

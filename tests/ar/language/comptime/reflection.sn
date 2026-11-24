@@ -9,11 +9,11 @@
 نوع Shape = | Circle | Square | Triangle;
 
 عرف الرئيسية(): عدد {
-    دع p: Pair = { left: 1, right: 2 };
-    دع s: Shape = Shape.Square();
-    دع size: ط64 = حجم_النوع(&p);
-    دع align: ط64 = محاذاة_النوع(&p);
-    دع fields: ط64 = عدد_حقول_النوع(&p);
-    دع ctors: ط64 = عدد_منشئات_النوع(&s);
+    ليكن p: Pair = { left: 1, right: 2 };
+    ليكن s: Shape = Shape.Square();
+    ليكن size: ط64 = حجم_النوع(&p);
+    ليكن align: ط64 = محاذاة_النوع(&p);
+    ليكن fields: ط64 = عدد_حقول_النوع(&p);
+    ليكن ctors: ط64 = عدد_منشئات_النوع(&s);
     أرجع (size + align + fields + ctors + 25) مثل عدد;
 }

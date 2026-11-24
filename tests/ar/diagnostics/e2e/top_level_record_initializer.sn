@@ -6,7 +6,7 @@
 // A top-level value has no record literal form: a diagnostic at the
 // literal with a help (it was an internal parser failure).
 نوع مقاس = { العرض: عدد, الوسم: نص };
-دع الأصل: مقاس = { العرض: 3, الوسم: "x" };
+ليكن الأصل: مقاس = { العرض: 3, الوسم: "x" };
 عرف الرئيسية(): ص32 {
     أرجع 0;
 }

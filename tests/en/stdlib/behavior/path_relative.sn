@@ -2,7 +2,7 @@
 // خروج: 42
 // تفاضلي: نعم
 // std.fs.path relative_path_from: the lexical path from a directory to a
-// target (Python's os.path.relpath, Rust's pathdiff::diff_paths). It is
+// target. It is
 // none across roots or drives, and when a ".." of the origin would remain.
 import std.fs.path;
 import std.text.compare;

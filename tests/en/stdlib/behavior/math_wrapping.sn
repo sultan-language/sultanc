@@ -5,7 +5,7 @@
 // نظير: tests/ar/stdlib/behavior/math_wrapping.sn
 // std.math.wrapping (with std.math.integer's uint and int functions): wrapping,
 // checked and saturating add, sub, mul and shifts for every integer width,
-// against Rust's wrapping_*/checked_*/saturating_* at each type's bounds.
+// against independently computed values at each type's bounds.
 import std.math.wrapping;
 import std.math.integer;
 

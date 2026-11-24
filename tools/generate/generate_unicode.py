@@ -95,7 +95,7 @@ def numeric_vector(name: str, numbers, width=32):
     values = [str(x) for x in numbers]
     for i in range(0, len(values), 16):
         rows.append("    " + ", ".join(values[i:i + 16]) + ("," if i + 16 < len(values) else ""))
-    return (f"عام دع {name}: متجه غ{width} = [\n" + "\n".join(rows) + "\n];\n")
+    return (f"عام ليكن {name}: متجه غ{width} = [\n" + "\n".join(rows) + "\n];\n")
 
 
 def emit(name, *chunks):

@@ -1,0 +1,20 @@
+error[SULTANC-OWNERSHIP-MERGE-CONFLICT]: ownership state of a local differs between paths that join — The symbol is `النص`. Ownership state conflicts prevent a control-flow merge.
+  --> tests/ar/diagnostics/e2e/ownership_merge_rejected.sn:12:5..12:19
+    |
+ 12 |     ليكن النص: نص;
+    |     ^^^^^^^^^^^^^^
+    |
+
+error[SULTANC-OWNERSHIP-MERGE-CONFLICT]: ownership state of a local differs between paths that join — The symbol is `النص`. Ownership state conflicts prevent a control-flow merge.
+  --> tests/ar/diagnostics/e2e/ownership_merge_rejected.sn:21:5..21:25
+    |
+ 21 |     ليكن النص: نص = «ب»;
+    |     ^^^^^^^^^^^^^^^^^^^^
+    |
+
+error[SULTANC-OWNERSHIP-MERGE-CONFLICT]: ownership state of a local differs between paths that join — The symbol is `القيمة`. Ownership state conflicts prevent a control-flow merge.
+  --> tests/ar/diagnostics/e2e/ownership_merge_rejected.sn:31:5..31:32
+    |
+ 31 |     ليكن القيمة: متغير عدد = 1;
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |

@@ -1,6 +1,5 @@
 // The byte transport under an HTTP connection: plain TCP or TLS. HTTP/1 and
-// HTTP/2 run over either one through the std reader and writer shapes, as
-// Go's net/http serves both protocols over a net.Conn or a tls.Conn. An
+// HTTP/2 run over either one through the std reader and writer shapes. An
 // async TCP transport (std.async.net) suspends the task serving the
 // connection instead of the thread whenever the socket is not ready.
 
@@ -16,7 +15,7 @@
     | تي_سي_بي_غير_متزامن بنوع تدفق_تي_سي_بي
 ;
 
-// The client's address of a transport as "ip:port" (Go's RemoteAddr): the
+// The client's address of a transport as "ip:port": the
 // TCP socket's peer, or empty when it cannot be read (a TLS transport keeps
 // its socket inside; its server records the address before the handshake).
 عام عرف عنوان_نظير_ناقل_ويب(الناقل: &ناقل_ويب): نص {

@@ -5,6 +5,6 @@
 // خرج-تشخيص-إنجليزي: invalid_utf8_snippet.en.stderr
 // A byte that is not UTF-8 is rejected at that byte and shown as \xFF.
 عرف الرئيسية(): ص32 {
-    دع القيمة: ص32 = 1 �+ 2;
+    ليكن القيمة: ص32 = 1 �+ 2;
     أرجع القيمة;
 }

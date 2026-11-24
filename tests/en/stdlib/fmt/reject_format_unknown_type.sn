@@ -3,7 +3,7 @@
 // تشخيص: SULTANC-FORMAT-STRING
 // نظير: tests/ar/stdlib/fmt/reject_format_unknown_type.sn
 // The placeholder names an unknown format type.
-// Rust: unknown format trait `q`.
+// Reason: format.unknown-type (`q`).
 import std.fmt.fmt;
 
 def main(): int {

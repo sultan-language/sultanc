@@ -1,12 +1,12 @@
 // Atomic integers (docs/en/reference/concurrency.md). The compiler's atomic intrinsics
-// (بدائي_ذري_*) operate on the integer a reference refers to, like Rust's
-// std::sync::atomic: they read and write through a *shared* reference, which
+// (بدائي_ذري_*) operate on the integer a reference refers to: they read
+// and write through a *shared* reference, which
 // is the one sound point of interior mutability, so N threads sharing an
 // `&ذرة_ط64` (through an Arc) may all fetch-add it. Every backend lowers them
 // to the architecture's atomic instructions at sequentially-consistent
 // strength; the interpreter, which runs one thread, performs them plainly.
 //
-// Memory orderings follow Rust's Ordering (and C/C++11). The backends treat
+// Memory orderings follow the C11 memory model. The backends treat
 // every ordering as SeqCst, which is always sound; the order a caller asks
 // for is recorded and honoured on targets whose weaker forms differ once the
 // backends relax them.
@@ -21,7 +21,7 @@
 مرادف اجلب_أو_حصري_ذري_بدائي = بدائي_ذري_جلب_أو_حصري;
 مرادف سياج_ذري_بدائي = بدائي_سياج_ذاكرة;
 
-// Rust's Ordering. The code is the value the intrinsic takes.
+// The memory ordering. The code is the value the intrinsic takes.
 عام نوع ترتيب_ذاكرة =
     | مسترخ
     | إطلاق
@@ -59,7 +59,7 @@
     عام نوع ذرة_ط64 = { القيمة: ط64 };
     عام مرادف atomic_u64 = ذرة_ط64;
 
-    عام عرف أنشئ_ذرة_ط64(القيمة: ط64): ذرة_ط64 { دع الناتج: ذرة_ط64 = { القيمة: القيمة }; أرجع الناتج; }
+    عام عرف أنشئ_ذرة_ط64(القيمة: ط64): ذرة_ط64 { ليكن الناتج: ذرة_ط64 = { القيمة: القيمة }; أرجع الناتج; }
     عام مرادف atomic_u64_new = أنشئ_ذرة_ط64;
 
     عام عرف احمل_ط64(الذرة: &ذرة_ط64, الترتيب: ترتيب_ذاكرة): ط64 {
@@ -96,7 +96,7 @@
 // ----- 32-bit atomic -----
 عام نوع ذرة_ط32 = { القيمة: ط32 };
 عام مرادف atomic_u32 = ذرة_ط32;
-عام عرف أنشئ_ذرة_ط32(القيمة: ط32): ذرة_ط32 { دع الناتج: ذرة_ط32 = { القيمة: القيمة }; أرجع الناتج; }
+عام عرف أنشئ_ذرة_ط32(القيمة: ط32): ذرة_ط32 { ليكن الناتج: ذرة_ط32 = { القيمة: القيمة }; أرجع الناتج; }
 عام مرادف atomic_u32_new = أنشئ_ذرة_ط32;
 عام عرف احمل_ط32(الذرة: &ذرة_ط32, الترتيب: ترتيب_ذاكرة): ط32 {
     أرجع احمل_ذري_بدائي(&(*الذرة).القيمة, رمز_ترتيب(الترتيب));
@@ -129,12 +129,12 @@
     عام مرادف atomic_u32_compare_exchange = قارن_وبدّل_ط32;
 }
 
-// ----- pointer-width atomic (Rust's AtomicUsize) -----
+// ----- pointer-width atomic -----
 // طبيعي is 64 bits on every target, so these follow the 64-bit atomics.
 إذا (!(الهدف.المعمارية == «arm» && الهدف.المنصة == «freestanding»)) {
     عام نوع ذرة_طبيعي = { القيمة: طبيعي };
     عام مرادف atomic_usize = ذرة_طبيعي;
-    عام عرف أنشئ_ذرة_طبيعي(القيمة: طبيعي): ذرة_طبيعي { دع الناتج: ذرة_طبيعي = { القيمة: القيمة }; أرجع الناتج; }
+    عام عرف أنشئ_ذرة_طبيعي(القيمة: طبيعي): ذرة_طبيعي { ليكن الناتج: ذرة_طبيعي = { القيمة: القيمة }; أرجع الناتج; }
     عام مرادف atomic_usize_new = أنشئ_ذرة_طبيعي;
     عام عرف احمل_طبيعي(الذرة: &ذرة_طبيعي, الترتيب: ترتيب_ذاكرة): طبيعي {
         أرجع احمل_ذري_بدائي(&(*الذرة).القيمة, رمز_ترتيب(الترتيب));
@@ -161,7 +161,7 @@
     // uses on a cell shared through a leaked pointer (std.sync.share). The caller
     // supplies the pointer inside `غير_آمن`.
     عام عرف احمل_مؤشر_ط64(م: *متغير ذرة_ط64, الترتيب: ترتيب_ذاكرة): ط64 {
-        دع الناتج: ط64;
+        ليكن الناتج: ط64;
         غير_آمن { الناتج := احمل_ذري_بدائي(&(*م).القيمة, رمز_ترتيب(الترتيب)); }
         أرجع الناتج;
     }
@@ -169,17 +169,17 @@
         غير_آمن { اخزن_ذري_بدائي(&(*م).القيمة, القيمة, رمز_ترتيب(الترتيب)); }
     }
     عام عرف اجلب_اجمع_مؤشر_ط64(م: *متغير ذرة_ط64, القيمة: ط64, الترتيب: ترتيب_ذاكرة): ط64 {
-        دع الناتج: ط64;
+        ليكن الناتج: ط64;
         غير_آمن { الناتج := اجلب_اجمع_ذري_بدائي(&(*م).القيمة, القيمة, رمز_ترتيب(الترتيب)); }
         أرجع الناتج;
     }
     عام عرف بدّل_مؤشر_ط64(م: *متغير ذرة_ط64, القيمة: ط64, الترتيب: ترتيب_ذاكرة): ط64 {
-        دع الناتج: ط64;
+        ليكن الناتج: ط64;
         غير_آمن { الناتج := بدّل_ذري_بدائي(&(*م).القيمة, القيمة, رمز_ترتيب(الترتيب)); }
         أرجع الناتج;
     }
     عام عرف قارن_وبدّل_مؤشر_ط64(م: *متغير ذرة_ط64, المتوقع: ط64, الجديد: ط64, الترتيب: ترتيب_ذاكرة): ط64 {
-        دع الناتج: ط64;
+        ليكن الناتج: ط64;
         غير_آمن { الناتج := قارن_وبدّل_ذري_بدائي(&(*م).القيمة, المتوقع, الجديد, رمز_ترتيب(الترتيب), 2); }
         أرجع الناتج;
     }

@@ -1,15 +1,14 @@
 استورد نظام_التشغيل.أخطاء;
 
-// Advisory whole-file locks on an open file (Rust 1.89 File::lock,
-// lock_shared, try_lock, try_lock_shared, unlock), one guarded branch per
+// Advisory whole-file locks on an open file (exclusive or shared, waiting
+// or not, and unlock), one guarded branch per
 // OS. The handle is the OS's own: a Unix descriptor or a Windows HANDLE.
 //
-// - Linux, Android, FreeBSD: flock(2), as Rust's std does on these
-//   systems. The lock belongs to the open file description: it is shared by
+// - Linux, Android, FreeBSD: flock(2). The lock belongs to the open file description: it is shared by
 //   duplicated descriptors and released when the last one closes.
 // - macOS: flock from libSystem.
 // - Windows: LockFileEx / UnlockFileEx over the whole range (offset 0,
-//   length 2^64 - 1), as Rust does. A shared and an exclusive lock taken
+//   length 2^64 - 1). A shared and an exclusive lock taken
 //   by the same handle are two locks there; unlock releases one.
 // - WASI preview 1 has no file locks (ENOTSUP 58).
 //
@@ -27,7 +26,7 @@
     // flock, retried on EINTR (a blocking lock is interruptible).
     عرف نفذ_قفل_ملف_لينكس(المقبض: ط64, العملية: ط64): نتيجة عدد, خطأ_نظام_أصلي {
         طالما (صواب) {
-            دع الخام: ط64;
+            ليكن الخام: ط64;
             غير_آمن { الخام := بدائي_نداء_نواة_خام(
                 رقم_نداء_نواة_لينكس(عملية_نداء_نواة_لينكس.قفل_ملف()), المقبض, العملية,
                 0 مثل ط64, 0 مثل ط64, 0 مثل ط64, 0 مثل ط64
@@ -42,7 +41,7 @@
     }
 
     عام عرف اقفل_ملف_نظام(المقبض: ط64, حصري: منطقي, بلا_انتظار: منطقي): نتيجة منطقي, خطأ_حد_نظام {
-        دع العملية: متغير ط64 = قفل_ملف_مشترك_لينكس();
+        ليكن العملية: متغير ط64 = قفل_ملف_مشترك_لينكس();
         إذا (حصري) { العملية := قفل_ملف_حصري_لينكس(); };
         إذا (بلا_انتظار) { العملية := العملية | قفل_ملف_بلا_انتظار_لينكس(); };
         طابق نفذ_قفل_ملف_لينكس(المقبض, العملية) مع
@@ -65,7 +64,7 @@
 
     // EWOULDBLOCK is 35.
     عام عرف اقفل_ملف_نظام(المقبض: ط64, حصري: منطقي, بلا_انتظار: منطقي): نتيجة منطقي, خطأ_حد_نظام {
-        دع العملية: متغير ص32 = 1;
+        ليكن العملية: متغير ص32 = 1;
         إذا (حصري) { العملية := 2; };
         إذا (بلا_انتظار) { العملية := العملية | 4; };
         طابق نفذ_قفل_ملف_داروين(المقبض, العملية) مع
@@ -88,7 +87,7 @@
 
     // A lock held elsewhere makes a LOCKFILE_FAIL_IMMEDIATELY request fail
     // with ERROR_LOCK_VIOLATION (33), or ERROR_IO_PENDING (997) on a handle
-    // opened for overlapped I/O; both are "would block", as in Rust.
+    // opened for overlapped I/O; both are "would block".
     عام عرف اقفل_ملف_نظام(المقبض: ط64, حصري: منطقي, بلا_انتظار: منطقي): نتيجة منطقي, خطأ_حد_نظام {
         طابق اقفل_ملف_ويندوز(المقبض, حصري, بلا_انتظار) مع
         | نتيجة.نجح(_) -> { أرجع نتيجة.نجح(صواب); }

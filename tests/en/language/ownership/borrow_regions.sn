@@ -1,0 +1,43 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/language/ownership/borrow_regions.sn
+// A borrow lasts as long as what holds it is used: a shared borrow passed to
+// a call ends when the call returns, so an exclusive borrow may follow; a
+// reference local holds its borrow until its last use (here the end of its
+// block), is reborrowed for each call and gives a returned reference its own
+// origin; after that use the vector may be borrowed exclusively again.
+def bump(items: &mutable vector int): int {
+    append(*items, 1);
+    return length(*items) as int;
+}
+
+def total(items: &vector int): int {
+    let sum: mutable int = 0;
+    let i: mutable uint = 0;
+    while (i < (length(*items) as uint)) {
+        sum := sum + (*items)[i];
+        i := i + 1;
+    }
+    return sum;
+}
+
+def first(items: &vector int): &int {
+    return &(*items)[0];
+}
+
+def main(): int {
+    let items: mutable vector int = [10, 20];
+    let a: int = total(&items);
+    let b: int = bump(&mutable items);
+    let c: mutable int = 0;
+    let d: mutable int = 0;
+    if (b > 0) {
+        let view: &vector int = &items;
+        c := total(view);
+        d := *first(view);
+    };
+    let e: int = bump(&mutable items);
+    return a + b + c + d + e - 36;
+}

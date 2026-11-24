@@ -7,7 +7,7 @@
 // set-group-ID, sticky, and rwx for owner, group and others). On Windows the
 // only permission is read-only: reading gives 0o444 or 0o666 (plus 0o111 for
 // a directory), and setting a mode without the owner-write bit 0o200 makes
-// the file read-only, as Go and Rust do. WASI has no permission bits: both
+// the file read-only. WASI has no permission bits: both
 // functions report غير_مدعوم there.
 
 // The permission bits of المسار (a final symlink is followed).
@@ -25,7 +25,7 @@
     | نتيجة.نجح(القيمة) -> { أرجع نتيجة.نجح(القيمة); };
 }
 
-// Whether a mode grants nobody write access (Rust Permissions::readonly).
+// Whether a mode grants nobody write access.
 عام عرف هل_للقراءة_فقط(الوضع: طبيعي): منطقي {
     أرجع (الوضع & 0x92) == 0;
 }

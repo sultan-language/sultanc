@@ -2,7 +2,7 @@
 // خروج: 42
 // تفاضلي: نعم
 // نظير: tests/ar/stdlib/behavior/env_executable.sn
-// std.env.executable (Rust env::current_exe): the running executable's
+// std.env.executable: the running executable's
 // path is absolute and names an existing file, and asking twice gives the
 // same path. Interpreted, the running executable is the interpreter.
 import std.env.executable;

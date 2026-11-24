@@ -2,15 +2,15 @@
 استورد نظام_التشغيل.قفل_الملف;
 استورد نظام_التشغيل.أخطاء;
 
-// Advisory whole-file locks through an open handle (Rust 1.89 File::lock,
-// lock_shared, try_lock, try_lock_shared, unlock). Many shared holders or
+// Advisory whole-file locks through an open handle (exclusive or shared,
+// waiting or not, and unlock). Many shared holders or
 // one exclusive holder; another process that asks waits (lock) or is told
 // it would have to wait (try_lock). Advisory: reads and writes are not
 // stopped, only other lock requests. A lock lasts until it is released or
 // the file is closed. Linux, Android and FreeBSD use flock(2), macOS flock
 // from libSystem, Windows LockFileEx; WASI has no locks (غير_مدعوم).
 
-// Why a try_lock did not take the lock (Rust TryLockError): another holder
+// Why a try_lock did not take the lock: another holder
 // would make it wait, or the system reported an error (a negative code).
 عام نوع خطأ_محاولة_قفل =
     | ستحظر

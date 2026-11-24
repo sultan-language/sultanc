@@ -1,0 +1,60 @@
+// اختبار: رفض
+// تشخيص: SULTANC-BORROW-CONFLICT
+// نظير: tests/ar/diagnostics/e2e/borrow_regions_in_order.sn
+// خرج-تشخيص-عربي: borrow_regions_in_order.ar.stderr
+// خرج-تشخيص-إنجليزي: borrow_regions_in_order.en.stderr
+// A borrow lasts until the last use of what holds it on any path that
+// follows (docs/en/reference/ownership.md, "Borrow regions"), so each of
+// these is still rejected: a reference read again in the next iteration of
+// a loop; a reference read through another one, which keeps that one's
+// exclusive borrow; a vector of references, which holds its borrows until
+// it is destroyed at the end of its block; a reference read after the join
+// of a branch that writes the value; a copy of a reference whose own borrow
+// ended, which still names the local it points to when it is returned.
+// Each function reports its first error.
+def loop_carried(): int {
+    let value: mutable int = 1;
+    let reader: &int = &value;
+    let total: mutable int = 0;
+    let i: mutable uint = 0;
+    while (i < 3) {
+        total := total + *reader;
+        value := value + 1;
+        i := i + 1;
+    }
+    return total;
+}
+
+def reborrow_keeps_original(): int {
+    let items: mutable vector int = [1, 2];
+    let writer: &mutable vector int = &mutable items;
+    let first: &int = &(*writer)[0];
+    append(items, 3);
+    return *first;
+}
+
+def owner_holds_until_dropped(): int {
+    let value: mutable int = 1;
+    let held: vector &int = [&value];
+    let count: int = length(held) as int;
+    value := 2;
+    return count;
+}
+
+def live_after_join(flag: bool): int {
+    let value: mutable int = 1;
+    let reader: &int = &value;
+    if (flag) {
+        value := 2;
+    };
+    return *reader;
+}
+
+def escape_through_copy(): &int {
+    let value: int = 1;
+    let reader: &int = &value;
+    let copy: &int = reader;
+    return copy;
+}
+
+def main(): int { return 0; }

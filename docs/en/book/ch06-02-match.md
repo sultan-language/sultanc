@@ -71,16 +71,23 @@ def main(): int {
 ```
 
 ```text
-error[SULTANC-PATTERN-NON-EXHAUSTIVE]: non-exhaustive pattern
-  --> main.sn:4:5..6:36
+error[SULTANC-PATTERN-NON-EXHAUSTIVE]: non-exhaustive pattern: `Light.Amber` not covered — Every value of the matched type must match one of the arms.
+  --> main.sn:4:11..4:16
    |
  4 |     match light with
-   |     ^
+   |           ^^^^^
    |
+  = help: add an arm for each case that is not covered
 ```
 
-`Light.Amber` has no branch. The compiler marks the `match`; look at the enum's cases and add the one
-that is missing.
+`Light.Amber` has no branch, and the message says so.
+
+A `match` whose arms miss a case is `SULTANC-PATTERN-NON-EXHAUSTIVE`, marked at the matched value.
+The headline names the cases no arm covers, up to three, then how many more
+(``non-exhaustive pattern: `Shape.Dot` not covered``); an option's or a result's cases and a boolean's are
+spelled in the language of the output, and `_` stands for a value of a type with no closed set of cases
+(a number, a text). The fix adds an arm `| Shape.Dot -> { }` for each missing case after the last arm,
+in the language of the source.
 
 This check is what makes enums safe to change. When you add a case to an enum, every `match` on it that
 does not handle the new case stops compiling, and each one is a place in your program that needs a

@@ -1,5 +1,5 @@
 // Display and Debug for your own types: a custom fmt_arg holds a closure
-// that writes into the formatter (Rust's impl Display / impl Debug). It can
+// that writes into the formatter (the Display and Debug forms). It can
 // read the placeholder's spec, honour width with pad, and write the
 // pretty Debug form for {:#?}. Closures capture plain values (numbers,
 // booleans, enums and records of them).

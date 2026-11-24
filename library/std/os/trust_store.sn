@@ -1,14 +1,13 @@
 // std.os.trust_store (المكتبة.نظام_التشغيل.مخزن_الثقة): where each platform
 // keeps the TLS trust anchors std.tls verifies peers against (std.tls.trust):
-// the PEM bundle files and certificate directories Go crypto/x509 searches
-// (root_linux.go, root_unix.go), the Windows CryptoAPI ROOT store, and the
-// separator of an SSL_CERT_DIR list. These are platform facts, so they are
-// in std.os (Rust keeps platform code in std::sys and std::os); std.tls has
+// the usual distribution PEM bundle files and certificate directories, the
+// Windows CryptoAPI ROOT store, and the separator of an SSL_CERT_DIR list.
+// These are platform facts, so they are in std.os; std.tls has
 // no target guard.
 
 إذا (الهدف.المنصة == «linux») {
     عام عرف مسارات_حزم_جذور_الثقة_نظام(): متجه نص {
-        دع المسارات: متجه نص = [
+        ليكن المسارات: متجه نص = [
             «/etc/ssl/certs/ca-certificates.crt»,
             «/etc/pki/tls/certs/ca-bundle.crt»,
             «/etc/ssl/ca-bundle.pem»,
@@ -22,14 +21,14 @@
 
 إذا (الهدف.المنصة == «macos») {
     عام عرف مسارات_حزم_جذور_الثقة_نظام(): متجه نص {
-        دع المسارات: متجه نص = [«/etc/ssl/cert.pem»];
+        ليكن المسارات: متجه نص = [«/etc/ssl/cert.pem»];
         أرجع المسارات;
     }
 }
 
 إذا (الهدف.المنصة == «freebsd») {
     عام عرف مسارات_حزم_جذور_الثقة_نظام(): متجه نص {
-        دع المسارات: متجه نص = [
+        ليكن المسارات: متجه نص = [
             «/etc/ssl/cert.pem»,
             «/usr/local/share/certs/ca-root-nss.crt»
         ];
@@ -37,27 +36,27 @@
     }
 }
 
-// Directories of one-certificate files (Go root_linux.go certDirectories;
-// Android: the system and the updatable conscrypt APEX stores).
+// Directories of one-certificate files (Android: the system and the
+// updatable conscrypt APEX stores).
 إذا (الهدف.المنصة == «linux» || الهدف.المنصة == «freebsd») {
     عام عرف أدلة_جذور_الثقة_نظام(): متجه نص {
-        دع الأدلة: متجه نص = [«/etc/ssl/certs», «/etc/pki/tls/certs»];
+        ليكن الأدلة: متجه نص = [«/etc/ssl/certs», «/etc/pki/tls/certs»];
         أرجع الأدلة;
     }
 }
 إذا (الهدف.المنصة == «android») {
     عام عرف مسارات_حزم_جذور_الثقة_نظام(): متجه نص {
-        دع المسارات: متجه نص = [];
+        ليكن المسارات: متجه نص = [];
         أرجع المسارات;
     }
     عام عرف أدلة_جذور_الثقة_نظام(): متجه نص {
-        دع الأدلة: متجه نص = [«/apex/com.android.conscrypt/cacerts», «/system/etc/security/cacerts»];
+        ليكن الأدلة: متجه نص = [«/apex/com.android.conscrypt/cacerts», «/system/etc/security/cacerts»];
         أرجع الأدلة;
     }
 }
 إذا (الهدف.المنصة != «linux» && الهدف.المنصة != «freebsd» && الهدف.المنصة != «android») {
     عام عرف أدلة_جذور_الثقة_نظام(): متجه نص {
-        دع الأدلة: متجه نص = [];
+        ليكن الأدلة: متجه نص = [];
         أرجع الأدلة;
     }
 }
@@ -66,7 +65,7 @@
 // below; WASI and browsers have none): only an explicitly configured bundle.
 إذا (الهدف.المنصة != «linux» && الهدف.المنصة != «macos» && الهدف.المنصة != «freebsd» && الهدف.المنصة != «android») {
     عام عرف مسارات_حزم_جذور_الثقة_نظام(): متجه نص {
-        دع المسارات: متجه نص = [];
+        ليكن المسارات: متجه نص = [];
         أرجع المسارات;
     }
 }
@@ -80,7 +79,7 @@
 }
 إذا (الهدف.المنصة != «windows») {
     عام عرف شهادات_جذور_الثقة_نظام(): متجه متجه ط8 {
-        دع الكتل: متجه متجه ط8 = [];
+        ليكن الكتل: متجه متجه ط8 = [];
         أرجع الكتل;
     }
 }

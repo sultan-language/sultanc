@@ -5,14 +5,13 @@
 استورد نظام_التشغيل.أخطاء;
 
 // A program's environment variables, working directory and temporary
-// directory (Rust std::env::var, current_dir, temp_dir; Go os.Getenv,
-// Getwd, TempDir). Until a variable is set or removed (std.env.variables)
+// directory. Until a variable is set or removed (std.env.variables)
 // they are read from the system (std.env.system); afterwards from the table
 // std keeps (std.env.table), which the change updated.
 
 عام عرف متغير_بيئة(الاسم: &نص): نتيجة اختياري نص, عدد {
     إذا (!هل_جدول_البيئة_مهيأ()) { أرجع متغير_بيئة_النظام(الاسم); };
-    دع البايتات: متجه ط8 = بايتات_من_نص(انسخ_نص(الاسم));
+    ليكن البايتات: متجه ط8 = بايتات_من_نص(انسخ_نص(الاسم));
     طابق ابحث_في_جدول_البيئة(&البايتات) مع
     | اختياري.موجود(القيمة) -> { أرجع نتيجة.نجح(اختياري.موجود(من_بايتات(&القيمة))); }
     | اختياري.لا_شيء -> { أرجع نتيجة.نجح(اختياري.لا_شيء()); };
@@ -28,8 +27,8 @@
     // TMPDIR as the table holds it once the environment was changed.
     عام عرف الدليل_المؤقت(): نتيجة نص, عدد {
         إذا (!هل_جدول_البيئة_مهيأ()) { أرجع الدليل_المؤقت_للنظام(); };
-        دع الاسم: متجه ط8 = بايتات_من_نص(«TMPDIR»);
-        دع القيمة: متغير اختياري نص = اختياري.لا_شيء();
+        ليكن الاسم: متجه ط8 = بايتات_من_نص(«TMPDIR»);
+        ليكن القيمة: متغير اختياري نص = اختياري.لا_شيء();
         طابق ابحث_في_جدول_البيئة(&الاسم) مع
         | اختياري.موجود(البايتات) -> { القيمة := اختياري.موجود(من_بايتات(&البايتات)); }
         | اختياري.لا_شيء -> { };

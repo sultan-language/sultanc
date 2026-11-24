@@ -57,6 +57,6 @@
     // Target assembly text instead of an object (--emit=asm).
     فرض_التجميع: منطقي
 ): نتيجة_مزود_إل_إل_في_إم {
-    دع الرسالة: متجه ط8 = بايتات_من_نص(«the LLVM backend is not included in this compiler»);
+    ليكن الرسالة: متجه ط8 = بايتات_من_نص(«the LLVM backend is not included in this compiler»);
     أرجع نتيجة_مزود_إل_إل_في_إم.خطأ(فشل_مزود_إل_إل_في_إم.خلفية_هدف_غير_متاحة(الرسالة));
 }

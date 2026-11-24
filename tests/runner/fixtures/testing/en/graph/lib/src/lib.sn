@@ -1,5 +1,5 @@
 // The dependency of the graph fixture. Its own test fails on purpose:
-// `sultanc test` runs the root package's tests only (as Cargo does), so the
+// `sultanc test` runs the root package's tests only, so the
 // graph case still exits 0.
 import std.debug.assert;
 

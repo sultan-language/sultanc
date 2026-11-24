@@ -54,6 +54,7 @@
 عام عرف نص_شرح_تصريح_مكرر(): نص { أرجع «The same name is declared twice in one scope. Rename or remove one declaration.»; }
 عام عرف نص_شرح_اسم_غير_معروف(): نص { أرجع «Name is not visible here. Check spelling, scope and imports.»; }
 عام عرف نص_شرح_اسم_غير_محلول(): نص { أرجع «The name could not be bound to a declaration. Check that it is declared and imported.»; }
+عام عرف نص_شرح_منشئ_غير_مستدعى(): نص { أرجع «A constructor is called to make a value: with `()` when it has no payload (`Color.Red()`), with its arguments otherwise.»; }
 عام عرف نص_شرح_استيراد_غامض(): نص { أرجع «Two imports provide the same name. Import only one, or use a qualified name.»; }
 عام عرف نص_شرح_دورة_استيراد(): نص { أرجع «Modules import each other in a cycle. Move shared code to a module both can import.»; }
 عام عرف نص_شرح_نوعان_غير_متوافقين(): نص { أرجع «Types disagree. Compare expected and actual types in the diagnostic.»; }
@@ -68,6 +69,7 @@
 عام عرف نص_شرح_نوع_إرجاع_غير_مطابق(): نص { أرجع «The returned value has a different type than the function declares.»; }
 عام عرف نص_شرح_استخدام_قبل_التهيئة(): نص { أرجع «The variable is read before it has a value. Assign it on every path before use.»; }
 عام عرف نص_شرح_استخدام_بعد_النقل(): نص { أرجع «Value used after move. Find the move in the related spans.»; }
+عام عرف نص_شرح_تعارض_ملكية_عند_الدمج(): نص { أرجع «A local holds a value on one path and none, moved, released or borrowed differently on another, and the paths join. Give it the same state on every path before the join.»; }
 عام عرف نص_شرح_مورد_محرر(): نص { أرجع «The resource is used after it was released. Use it before the release, or do not release it yet.»; }
 عام عرف نص_شرح_تعارض_استعارة(): نص { أرجع «A borrow conflicts with another active borrow of the same value. End one borrow first.»; }
 عام عرف نص_شرح_هروب_مرجع(): نص { أرجع «A reference outlives the value it points to. Return or store the value instead.»; }
@@ -150,7 +152,7 @@
 عام عرف نص_شرح_واجهة_استدعاء_غير_متاحة_للهدف(): نص { أرجع «The target has no calling convention for this code. Pick a target that defines one.»; }
 عام عرف نص_شرح_حد_صيغة_كائن_متجاوز(): نص { أرجع «The output is larger than its file format allows. Reduce code or data size, or split the program.»; }
 عام عرف نص_شرح_حد_وقت_الترجمة_متجاوز(): نص { أرجع «Compile-time code ran too long, recursed too deeply or specialized too often. Simplify it.»; }
-عام عرف نص_شرح_سلسلة_تنسيق_غير_صالحة(): نص { أرجع «A literal format string is checked against its arguments at compile time, as Rust's format! does. Correct the placeholder or the arguments.»; }
+عام عرف نص_شرح_سلسلة_تنسيق_غير_صالحة(): نص { أرجع «A literal format string is checked against its arguments at compile time. Correct the placeholder or the arguments.»; }
 عام عرف نص_شرح_أثر_ممنوع_وقت_الترجمة(): نص { أرجع «Compile-time code may not do I/O or other outside effects. Move that work to runtime.»; }
 عام عرف نص_شرح_فشل_تنفيذ_وقت_الترجمة(): نص { أرجع «Compile-time code failed or trapped while running. Fix the failing operation it reports.»; }
 عام عرف نص_شرح_عملية_غير_مدعومة_وقت_الترجمة(): نص { أرجع «Only SultanC functions and supported operations can run at compile time. Move this to runtime.»; }
@@ -215,6 +217,7 @@
     | مفتاح_شرح.تصريح_مكرر -> { أرجع نص_شرح_تصريح_مكرر(); }
     | مفتاح_شرح.اسم_غير_معروف -> { أرجع نص_شرح_اسم_غير_معروف(); }
     | مفتاح_شرح.اسم_غير_محلول -> { أرجع نص_شرح_اسم_غير_محلول(); }
+    | مفتاح_شرح.منشئ_غير_مستدعى -> { أرجع نص_شرح_منشئ_غير_مستدعى(); }
     | مفتاح_شرح.استيراد_غامض -> { أرجع نص_شرح_استيراد_غامض(); }
     | مفتاح_شرح.دورة_استيراد -> { أرجع نص_شرح_دورة_استيراد(); }
     | مفتاح_شرح.نوعان_غير_متوافقين -> { أرجع نص_شرح_نوعان_غير_متوافقين(); }
@@ -229,6 +232,7 @@
     | مفتاح_شرح.نوع_إرجاع_غير_مطابق -> { أرجع نص_شرح_نوع_إرجاع_غير_مطابق(); }
     | مفتاح_شرح.استخدام_قبل_التهيئة -> { أرجع نص_شرح_استخدام_قبل_التهيئة(); }
     | مفتاح_شرح.استخدام_بعد_النقل -> { أرجع نص_شرح_استخدام_بعد_النقل(); }
+    | مفتاح_شرح.تعارض_ملكية_عند_الدمج -> { أرجع نص_شرح_تعارض_ملكية_عند_الدمج(); }
     | مفتاح_شرح.مورد_محرر -> { أرجع نص_شرح_مورد_محرر(); }
     | مفتاح_شرح.تعارض_استعارة -> { أرجع نص_شرح_تعارض_استعارة(); }
     | مفتاح_شرح.هروب_مرجع -> { أرجع نص_شرح_هروب_مرجع(); }

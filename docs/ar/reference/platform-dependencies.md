@@ -5,11 +5,10 @@
 # اعتماديات المكتبة القياسية على المنصات
 
 تسرد هذه الصفحة كل دالة تستوردها المكتبة القياسية من خارج السلطان: المكتبة التي تأتي منها، وسبب كون تلك المكتبة هي
-الحد المستقر للمنصة، وتصريح C الذي رُوجعت مقابله، وكيف تتعامل سلاسل الأدوات الناضجة مع الحد نفسه. وتسرد
-أيضًا ما تنفّذه المكتبة القياسية بلغة السلطان بدل استدعاء المنصة. وهي موجهة إلى المساهمين الذين يضيفون شيفرة خاصة
+الحد المستقر للمنصة، وتصريح C الذي رُوجعت مقابله. وتسرد أيضًا ما تنفّذه المكتبة القياسية بلغة السلطان بدل استدعاء المنصة. وهي موجهة إلى المساهمين الذين يضيفون شيفرة خاصة
 بالمنصات أو ينقلونها، وإلى كل من يدقق فيما يُربط به الملف التنفيذي المبني بالسلطان.
 
-القاعدة هي نفسها التي تتبعها Rust وGo: لا تعتمد المكتبة القياسية إلا على واجهة النظام المدعومة في المنصة، ولا تستعمل مكتبة
+القاعدة بسيطة: لا تعتمد المكتبة القياسية إلا على واجهة النظام المدعومة في المنصة، ولا تستعمل مكتبة
 تشغيل C لخصائص اللغة مثل نسخ الذاكرة والتنسيق والرياضيات وتخصيص الذاكرة والتشفير وDNS. ويذكر كل استيراد
 مكتبته في التصريح نفسه داخل المكتبة القياسية، ولا يحتفظ المترجم بأي جدول لرموز المكتبة القياسية.
 
@@ -32,8 +31,8 @@
 (`«wasi_snapshot_preview1»`).
 
 يربط `= «اسم_الربط»` التصريح برمز محدد بعينه لدى الرابط (linker) حين يختلف عن الاسم في الشيفرة المصدرية، مثل `= «stat$INODE64»`.
-ويؤدي دور `link_name` في Rust ودور asm label في C. وكلا النصين غير فارغ ولا يحتوي على بايت NUL.
-أما البيانات الخارجية (`خارجي دع س: النوع = «الرمز»;`) فلا تأخذ مكتبة.
+ويؤدي دور asm label في C. وكلا النصين غير فارغ ولا يحتوي على بايت NUL.
+أما البيانات الخارجية (`خارجي ليكن س: النوع = «الرمز»;`) فلا تأخذ مكتبة.
 
 واسم الربط الذي لا يوجد إلا على بعض المعماريات يوضع خلف شرط على الهدف
 (`إذا (الهدف.المعمارية == «x86_64») { … } وإلا { … }`). فأسماء `$INODE64` في Darwin لا توجد إلا على
@@ -44,11 +43,6 @@ x86_64. ويجب أن يحترم جدول الدوال الخارجية في ا�
 في ملف Mach-O تنفيذي مقابل الرموز المصدَّرة في ملفات `.tbd` ضمن SDK لتلك المعمارية. فـ dyld يرفض الملف الثنائي إذا غاب أي
 استيراد، وهذا الفحص يكتشف ذلك دون الحاجة إلى جهاز Mac.
 
-| سلسلة الأدوات | الصيغة | المقابل في السلطان |
-|---|---|---|
-| Rust | `#[link(name = "kernel32")] extern "system" { ... }`؛ وتصريحات Windows في مكتبة Rust القياسية تستعمل `windows_targets::link!("kernel32.dll" "system" fn ...)` (raw-dylib)؛ و`#[link(wasm_import_module = "wasi_snapshot_preview1")]`؛ و`#[cfg_attr(all(target_os = "macos", target_arch = "x86_64"), link_name = "stat$INODE64")]` في libc | نص المكتبة مع `= «اسم_الربط»` |
-| Go | في Windows: `//sys GetLastError() ... = kernel32.GetLastError` (mkwinsyscall) و`//go:cgo_import_dynamic runtime._CloseHandle CloseHandle%1 "kernel32.dll"`؛ وفي darwin: `//go:cgo_import_dynamic libc_read read "/usr/lib/libSystem.B.dylib"` | هوية المكتبة نفسها لكل رمز |
-
 ### كيف تصل المكتبة إلى الملف الثنائي
 
 يخزّن المحلل النحوي المكتبة واسم الربط في التصريح
@@ -57,8 +51,8 @@ x86_64. ويجب أن يحترم جدول الدوال الخارجية في ا�
 
 | صيغة الهدف | السلوك |
 |---|---|
-| WebAssembly | يستورد كلٌّ من كاتب wasm الأصلي ومزوّد LLVM (`wasm-import-module` و`wasm-import-name`) الدالة من الوحدة المصرّح بها، باسم استيراد صريح. والتصريح الذي لا وحدة له يستورد من `env`، وهي القيمة الافتراضية في wasm-ld وclang وrustc. ويستورد رابط wasm الدوال غير المعرّفة من الوحدة التي يذكرها ملف الكائن الذي يحتويها؛ فملفات الكائن في wasm تحمل وحداتها بنفسها. |
-| PE/COFF | يسجّل مشغّل المترجم (driver) كل زوج (رمز، DLL) مصرّح به في خطة الربط (`compiler/link/model.sn`، `استيراد_مكتبة_مصرح_ربط`). ويحوّل رابط COFF كل رمز غير معرّف له DLL مصرّح بها إلى استيراد من تلك المكتبة (`استورد_رموز_مصرحة_كوف_في_السياق`، `compiler/link/coff/directives.sn`). ولا يحتاج ذلك إلى مكتبة استيراد، مثل raw-dylib في rustc. |
+| WebAssembly | يستورد كلٌّ من كاتب wasm الأصلي ومزوّد LLVM (`wasm-import-module` و`wasm-import-name`) الدالة من الوحدة المصرّح بها، باسم استيراد صريح. والتصريح الذي لا وحدة له يستورد من `env`، وهي القيمة الافتراضية في wasm-ld وclang. ويستورد رابط wasm الدوال غير المعرّفة من الوحدة التي يذكرها ملف الكائن الذي يحتويها؛ فملفات الكائن في wasm تحمل وحداتها بنفسها. |
+| PE/COFF | يسجّل مشغّل المترجم (driver) كل زوج (رمز، DLL) مصرّح به في خطة الربط (`compiler/link/model.sn`، `استيراد_مكتبة_مصرح_ربط`). ويحوّل رابط COFF كل رمز غير معرّف له DLL مصرّح بها إلى استيراد من تلك المكتبة (`استورد_رموز_مصرحة_كوف_في_السياق`، `compiler/link/coff/directives.sn`). ولا يحتاج ذلك إلى مكتبة استيراد. |
 | Mach-O | يُربط الرمز غير المعرّف برقم ترتيب مكتبة dylib التي يذكرها تصريحه (`ترتيب_مكتبة_رمز_ماتشو`، `compiler/link/macho/final_image.sn`). ولا تُحمَّل مكتبة dylib المصرّح بها إلا إذا استُوردت إحدى دوالها. وإذا لم تُذكر مكتبة رُبط الرمز بـ libSystem، ورقم ترتيبها دائمًا 1، وهذا سليم لأن libSystem هي واجهة النظام في macOS. |
 | ELF | لا أثر للمكتبة المصرّح بها، وتُحلّ الرموز الخارجية من مدخلات الربط (`-l c` وما شابه). ولا تصرّح المكتبة القياسية بأي دالة خارجية على Linux أو Android أو FreeBSD. |
 
@@ -76,9 +70,8 @@ x86_64. ويجب أن يحترم جدول الدوال الخارجية في ا�
 
 تستدعي المكتبة القياسية النواة مباشرة عبر `بدائي_نداء_نواة_خام`. يستعمل Linux وAndroid
 `library/std/os/platform/unix/linux/**`، مع جداول نداءات نظام مولَّدة من ترويسات UAPI لكل معمارية.
-ويستعمل FreeBSD `platform/unix/freebsd`، الذي يتشارك معه مزوّد النواة المباشر. ولا يستورد أيٌّ منهما شيئًا.
-وهذا نموذج Go: فحزمتا `syscall` و`runtime` في Go تُصدران نداءات نظام خامًا على Linux وFreeBSD ولا
-تربطان أي libc، لأن كلتا النواتين تضمن واجهة ثنائية (ABI) مستقرة لنداءات النظام.
+ويستعمل FreeBSD `platform/unix/freebsd`، الذي يتشارك معه مزوّد النواة المباشر. ولا يستورد أيٌّ منهما شيئًا
+ولا يربط أي libc، لأن كلتا النواتين تضمن واجهة ثنائية (ABI) مستقرة لنداءات النظام.
 
 وعمليات النواة التي تتجاوز النداءات الأساسية للملفات والعمليات موجودة في `syscalls/operations.sn`، مع
 توقيعات للمفسّر. وأرقامها مولَّدة لكل واجهة ثنائية في Linux ولـ FreeBSD.
@@ -120,8 +113,8 @@ x86_64. ويجب أن يحترم جدول الدوال الخارجية في ا�
 
 قد تُطلق الكتابة إلى أنبوب إشارة SIGPIPE، وهي إشارة تنهي العملية إذا كانت العملية الفرعية قد أغلقت دخلها.
 تتجنبها المقابس بـ `MSG_NOSIGNAL` (Linux، FreeBSD) أو `SO_NOSIGPIPE` (macOS)؛ أما الأنابيب فلا تملك أيًّا
-منهما. تتجاهل المكتبة القياسية في Rust إشارة SIGPIPE للعملية كلها وتعيد ضبطها في كل عملية فرعية قبل exec. أما المكتبة القياسية
-هنا فتحجب SIGPIPE في الخيط المستدعي طوال تلك الكتابة الواحدة، وبعد EPIPE تلتقط الإشارة المعلّقة
+منهما. وتجاهل SIGPIPE للعملية كلها يغيّر حالة ترثها العملية الفرعية. أما المكتبة القياسية
+فتحجب SIGPIPE في الخيط المستدعي طوال تلك الكتابة الواحدة، وبعد EPIPE تلتقط الإشارة المعلّقة
 بـ `sigtimedwait` بمهلة صفرية، كما تفعل libpq في PostgreSQL عند الكتابة إلى مقابسها (`pq_block_sigpipe`،
 `pq_reset_sigpipe`). ولا تتغير حالة الإشارات على مستوى العملية، ولا ترث العملية الفرعية شيئًا.
 
@@ -129,8 +122,7 @@ x86_64. ويجب أن يحترم جدول الدوال الخارجية في ا�
 
 لا تدعم Apple نداءات النظام المباشرة: فواجهة نداءات النظام الثنائية خاصة وتتغير بين الإصدارات. والحد
 المستقر هو libSystem (`/usr/lib/libSystem.B.dylib`، التي تعيد تصدير libsystem_kernel وlibsystem_c وlibdyld
-وغيرها). وتمر Go عبر libSystem على darwin منذ Go 1.12، وتربطها المكتبة القياسية في Rust عبر حزمة libc. وتذكرها المكتبة القياسية
-في كل تصريح، كما تفعل Go.
+وغيرها). وتذكرها المكتبة القياسية في كل تصريح.
 
 رُوجعت التوقيعات على ترويسات SDK في macOS. في كلتا واجهتي Darwin الثنائيتين، `mode_t` هو u16، و`off_t`
 و`ssize_t` هما i64، و`size_t` هو u64، و`socklen_t` هو u32. وكل الوحدات أدناه داخل
@@ -150,8 +142,8 @@ x86_64. ويجب أن يحترم جدول الدوال الخارجية في ا�
 | `file_attributes.sn` | `int symlink(const char *, const char *)`؛ `ssize_t readlink(const char *, char *, size_t)`؛ `int link(const char *, const char *)`؛ `int chmod(const char *, mode_t)`؛ `int ftruncate(int, off_t)`؛ `int utimensat(int, const char *, const struct timespec[2], int)` (قيمة `AT_FDCWD` هي -2)؛ `int chdir(const char *)`. يتجنب الإنشاء الحصري وسيط الوضع المتغير في `open`: يُنشأ بـ `creat` ملف مجاور باسم فريد، ثم يُربط بالمسار المطلوب بـ `link` (والفشل بـ EEXIST ذرّي)، ثم يُحذف الملف المجاور بـ `unlink`، ثم يُفتح الملف بـ `open(O_RDWR\|O_CLOEXEC)`. |
 | `child_stdio.sn` | `int pipe(int[2])`؛ `int poll(struct pollfd *, nfds_t, int)` (`nfds_t` هو u32)؛ `int pthread_sigmask(int, const sigset_t *, sigset_t *)`، `int sigpending(sigset_t *)`، `int sigwait(const sigset_t *, int *)` (`sigset_t` هو u32). توفّر هذه الكتابة الآمنة من SIGPIPE إلى دخل عملية فرعية، وهو مسار libpq على Darwin؛ أما `F_SETNOSIGPIPE` فيحتاج إلى الوسيط المتغير في fcntl. |
 | `file_locks.sn` | `int flock(int, int)` (`<sys/file.h>`) |
-| `wait_address.sn` | `int __ulock_wait2(uint32_t op, void *addr, uint64_t value, uint64_t timeout_ns, uint64_t value2)` (macOS 11 فما بعد) و`int __ulock_wake(uint32_t op, void *addr, uint64_t wake_value)`، من libsystem_kernel عبر libSystem. وهما طبقة futex تحت `std.os.wait_address` و`std.sync`، وهذا ما اختارته Rust قبل `os_sync_wait_on_address` (macOS 14.4). |
-| `threads.sn` | `int pthread_create(pthread_t *, const pthread_attr_t *, void *(*)(void *), void *)`؛ `int pthread_join(pthread_t, void **)`؛ `pthread_attr_init`، `pthread_attr_setstacksize(pthread_attr_t *, size_t)`، `pthread_attr_destroy` (`pthread_attr_t` حجمه 64 بايتًا)؛ `int pthread_threadid_np(pthread_t, uint64_t *)`؛ `void pthread_yield_np(void)`؛ `int sysctlbyname(const char *, void *, size_t *, void *, size_t)` (`hw.logicalcpu`). دالة البدء هي مدخل C لدالة مغلقة (closure) (`بدائي_مدخل_سي_لدالة`)، كما تبدأ المكتبة القياسية في Rust و`newosproc` في Go الخيوطَ بـ `pthread_create`. |
+| `wait_address.sn` | `int __ulock_wait2(uint32_t op, void *addr, uint64_t value, uint64_t timeout_ns, uint64_t value2)` (macOS 11 فما بعد) و`int __ulock_wake(uint32_t op, void *addr, uint64_t wake_value)`، من libsystem_kernel عبر libSystem. وهما طبقة futex تحت `std.os.wait_address` و`std.sync`؛ أما الدالة العامة `os_sync_wait_on_address` فتحتاج إلى macOS 14.4. |
+| `threads.sn` | `int pthread_create(pthread_t *, const pthread_attr_t *, void *(*)(void *), void *)`؛ `int pthread_join(pthread_t, void **)`؛ `pthread_attr_init`، `pthread_attr_setstacksize(pthread_attr_t *, size_t)`، `pthread_attr_destroy` (`pthread_attr_t` حجمه 64 بايتًا)؛ `int pthread_threadid_np(pthread_t, uint64_t *)`؛ `void pthread_yield_np(void)`؛ `int sysctlbyname(const char *, void *, size_t *, void *, size_t)` (`hw.logicalcpu`). دالة البدء هي مدخل C لدالة مغلقة (closure) (`بدائي_مدخل_سي_لدالة`). |
 
 ### تفاصيل واجهة Darwin الثنائية
 
@@ -159,7 +151,7 @@ x86_64. ويجب أن يحترم جدول الدوال الخارجية في ا�
   والبنية `struct dirent` (`d_namlen` من نوع u16 عند الإزاحة 18). على x86_64 تكون `stat` و`opendir`
   و`readdir` العادية هي الدوال القديمة الخاصة بأرقام inode ذات 32 بت، التي تحوّلها `<sys/stat.h>` و`<dirent.h>`
   إلى `stat$INODE64` و`opendir$INODE64` و`readdir$INODE64` (`__DARWIN_INODE64`، `__DARWIN_ALIAS_I`).
-  وتُربط التصريحات باسم الربط تحت شرط على المعمارية، كما تفعل libc في Rust. أما arm64 فيستعمل الأسماء
+  وتُربط التصريحات باسم الربط تحت شرط على المعمارية. أما arm64 فيستعمل الأسماء
   العادية.
 - **ترتيب حقول `struct addrinfo`.** تستعمل `<netdb.h>` من Apple ترتيب BSD: يأتي `ai_canonname` قبل
   `ai_addr`، وهو عكس glibc. ويتبع السجل في المكتبة القياسية ترتيب Darwin. ولو قُرئ العنوان من `ai_canonname` لفشل كل
@@ -171,7 +163,7 @@ x86_64. ويجب أن يحترم جدول الدوال الخارجية في ا�
 
 واجهة Win32 في مكتبات DLL النظامية هي الحد المدعوم على Windows، وأرقام نداءات NT خاصة. لا تربط المكتبة القياسية أي
 مكتبة تشغيل C: لا يوجد `mainCRTStartup`، ولا `memcpy` ولا `malloc` ولا `printf`. وتُذكر مكتبة DLL في كل
-تصريح، كما تفعل المكتبة القياسية في Rust عبر `windows_targets::link!`.
+تصريح.
 
 رُوجعت التوقيعات على تصريحات MSDN. `BOOL` و`int` من نوع i32؛ و`DWORD` و`UINT` و`ULONG` (وكذلك
 `u_long`، لأن `long` في Windows بعرض 32 بت) من نوع u32؛ و`HANDLE` و`SOCKET` و`SIZE_T` وأنواع المؤشرات
@@ -182,31 +174,31 @@ x86_64. ويجب أن يحترم جدول الدوال الخارجية في ا�
 
 | المجال (الوحدة داخل `win32/`) | الدوال |
 |---|---|
-| الملفات (`file_handles.sn`، `file_paths.sn`، `directory_streams.sn`) | `GetStdHandle`، `CreateFileW`، `ReadFile`، `WriteFile`، `CloseHandle`، `FlushFileBuffers`، `GetFileTime`، `GetFileSizeEx`، `SetFilePointerEx`، `CreateDirectoryW`، `DeleteFileW`، `GetFileAttributesW`، `GetFileAttributesExW`، `RemoveDirectoryW`، `MoveFileExW`، `FindFirstFileW`، `FindNextFileW`، `FindClose`. تُفتح الملفات بـ `FILE_SHARE_READ \| WRITE \| DELETE`، وهو وضع المشاركة الافتراضي في Rust، حتى تستطيع عملية أخرى فتح ملف مفتوح في هذه العملية (وقفله). |
+| الملفات (`file_handles.sn`، `file_paths.sn`، `directory_streams.sn`) | `GetStdHandle`، `CreateFileW`، `ReadFile`، `WriteFile`، `CloseHandle`، `FlushFileBuffers`، `GetFileTime`، `GetFileSizeEx`، `SetFilePointerEx`، `CreateDirectoryW`، `DeleteFileW`، `GetFileAttributesW`، `GetFileAttributesExW`، `RemoveDirectoryW`، `MoveFileExW`، `FindFirstFileW`، `FindNextFileW`، `FindClose`. تُفتح الملفات بـ `FILE_SHARE_READ \| WRITE \| DELETE` حتى تستطيع عملية أخرى فتح ملف مفتوح في هذه العملية (وقفله). |
 | الوصلات والسمات (`file_attributes.sn`) | `BOOLEAN CreateSymbolicLinkW(LPCWSTR, LPCWSTR, DWORD)`، `CreateHardLinkW`، `SetFileAttributesW`، `DeviceIoControl` (`FSCTL_GET_REPARSE_POINT`)، `SetFileInformationByHandle` (`FileEndOfFileInfo`)، `SetFileTime`، `GetFinalPathNameByHandleW` |
 | أقفال الملفات (`file_locks.sn`) | `LockFileEx`، `UnlockFileEx` على الملف كله |
 | العمليات (`process_control.sn`) | `CreateProcessW`، `WaitForSingleObject`، `GetExitCodeProcess`، `TerminateProcess`، `ExitProcess`، `GetCommandLineW`، `LocalFree`، `GetProcessId` (معرّف العملية الفرعية). try_wait هي `WaitForSingleObject(h, 0)` وkill هي `TerminateProcess(h, 1)`. |
-| الدخل والخرج القياسيان للعملية الفرعية (`child_stdio.sn`) | `CreatePipe`، `PeekNamedPipe`، `DuplicateHandle` (نسخ قابلة للوراثة من أجل `STARTF_USESTDHANDLES`)، و`WriteFile` إلى دخل العملية الفرعية، مع كتلة البيئة في `CreateProcessW` (`CREATE_UNICODE_ENVIRONMENT`) و`lpCurrentDirectory`. لا ترث العملية الفرعية إلا هذه النسخ الثلاث، المذكورة في `PROC_THREAD_ATTRIBUTE_HANDLE_LIST` (`STARTUPINFOEXW`، `EXTENDED_STARTUPINFO_PRESENT`)، كما تفعل `syscall.StartProcess` في Go: `InitializeProcThreadAttributeList`، `UpdateProcThreadAttribute`، `DeleteProcThreadAttributeList`، مع وضع القائمة ومصفوفة المقابض التي تشير إليها في كتلة `HeapAlloc` واحدة (`GetProcessHeap`، `HeapFree`). وتُنسخ المصفوفة إليها بـ `RtlMoveMemory` لأن القائمة تحتفظ بعنوانها حتى تُحذف. |
+| الدخل والخرج القياسيان للعملية الفرعية (`child_stdio.sn`) | `CreatePipe`، `PeekNamedPipe`، `DuplicateHandle` (نسخ قابلة للوراثة من أجل `STARTF_USESTDHANDLES`)، و`WriteFile` إلى دخل العملية الفرعية، مع كتلة البيئة في `CreateProcessW` (`CREATE_UNICODE_ENVIRONMENT`) و`lpCurrentDirectory`. لا ترث العملية الفرعية إلا هذه النسخ الثلاث، المذكورة في `PROC_THREAD_ATTRIBUTE_HANDLE_LIST` (`STARTUPINFOEXW`، `EXTENDED_STARTUPINFO_PRESENT`): `InitializeProcThreadAttributeList`، `UpdateProcThreadAttribute`، `DeleteProcThreadAttributeList`، مع وضع القائمة ومصفوفة المقابض التي تشير إليها في كتلة `HeapAlloc` واحدة (`GetProcessHeap`، `HeapFree`). وتُنسخ المصفوفة إليها بـ `RtlMoveMemory` لأن القائمة تحتفظ بعنوانها حتى تُحذف. |
 | الذاكرة (`virtual_memory.sn`) | `VirtualAlloc`، `VirtualFree`، `VirtualProtect`، `VirtualLock`، `VirtualUnlock`، `GetSystemInfo`، `GetCurrentProcess`، `PrefetchVirtualMemory` (Windows 8 فما بعد) |
 | الوقت (`clocks.sn`) | `GetSystemTimePreciseAsFileTime`، `QueryPerformanceCounter`، `QueryPerformanceFrequency`، `GetTickCount64`، `Sleep`، `CreateWaitableTimerW`، `SetWaitableTimer` |
 | البيئة (`environment.sn`، `environment_block.sn`) | `GetEnvironmentVariableW`، `SetEnvironmentVariableW`، `GetCurrentDirectoryW`، `GetTempPathW`، `SetCurrentDirectoryW`، `GetEnvironmentStringsW`، `FreeEnvironmentStringsW` |
 | الأخطاء (`error.sn`) | `GetLastError`، `SetLastError` |
-| الخيوط (`threads.sn`، كما في المكتبة القياسية في Rust) | `CreateThread` (2 MiB مع `STACK_SIZE_PARAM_IS_A_RESERVATION`؛ ودالة البدء هي مدخل C لدالة مغلقة)، `WaitForSingleObject`، `GetExitCodeThread`، `CloseHandle`، `SwitchToThread`، `GetCurrentThreadId`، `GetSystemInfo` (`dwNumberOfProcessors`) |
+| الخيوط (`threads.sn`) | `CreateThread` (2 MiB مع `STACK_SIZE_PARAM_IS_A_RESERVATION`؛ ودالة البدء هي مدخل C لدالة مغلقة)، `WaitForSingleObject`، `GetExitCodeThread`، `CloseHandle`، `SwitchToThread`، `GetCurrentThreadId`، `GetSystemInfo` (`dwNumberOfProcessors`) |
 
 ### مكتبات DLL أخرى
 
 | DLL | الدوال (الوحدة داخل `win32/` أو `winsock/`) |
 |---|---|
 | `ws2_32.dll` | `winsock/sockets.sn`: `socket` (تعيد `SOCKET` من نوع u64؛ و`AF_UNIX` قيمته 1 من أجل `std.net.unix`، وهي مقابس تدفق على Windows 10 1803 فما بعد)، `closesocket`، `connect`، `bind`، `listen`، `send` و`recv` (بأطوال من نوع `int`)، `accept`، `shutdown`، `ioctlsocket(SOCKET, long, u_long *)`، `setsockopt`، `getsockopt`، `getsockname`، `getpeername`، `sendto`، `recvfrom`، `WSAStartup`، `WSACleanup`، `WSAGetLastError`. و`winsock/name_resolution.sn`: `GetAddrInfoW`، `FreeAddrInfoW`. هذه دوال Winsock أصلية، لا `getaddrinfo` الخاصة بـ CRT. وفي `ADDRINFOW` يأتي `ai_canonname` قبل `ai_addr`. |
-| `api-ms-win-core-synch-l1-2-0.dll` | `wait_address.sn`: `BOOL WaitOnAddress(volatile VOID *, PVOID, SIZE_T, DWORD)`، `VOID WakeByAddressSingle(PVOID)`، `VOID WakeByAddressAll(PVOID)` (Windows 8 فما بعد). هذه مجموعة واجهات التزامن التي تربطها المكتبة القياسية في Rust لطبقة futex لديها، ويستعملها `std.os.wait_address` وكل ما في `std.sync`. |
-| `shell32.dll` | `CommandLineToArgvW(LPCWSTR, int *)` توفّر التقسيم القياسي للوسائط في Windows، وتحرر المكتبة القياسية تخصيصها الوحيد بـ `LocalFree`. أما المكتبة القياسية في Rust وGo فتحلّلان `GetCommandLineW` بشيفرتهما الخاصة، ولذلك يمكن استبدال هذا الاستيراد بشيفرة السلطان. |
-| `bcryptprimitives.dll` | `BOOL ProcessPrng(PBYTE, SIZE_T)`، مولّد الأعداد العشوائية الآمن تشفيريًا (CSPRNG) في النظام، الذي تستعمله المكتبة القياسية في Rust (1.78 فما بعد) ووقت التشغيل في Go |
-| `crypt32.dll` | `certificates.sn`: `CertOpenSystemStoreW(HCRYPTPROV_LEGACY, LPCWSTR)`، و`PCCERT_CONTEXT CertEnumCertificatesInStore(HCERTSTORE, PCCERT_CONTEXT)` و`CertCloseStore(HCERTSTORE, DWORD)`. تقرأ هذه مخزن الثقة ROOT الذي يستعمله التحقق في TLS، كما تفعل crypto/x509 في Go وrustls-native-certs. ويُصرَّح بـ `CERT_CONTEXT` سجلًّا، وتُقرأ بايتات DER الخاصة به عبر مؤشره داخل `غير_آمن`. |
+| `api-ms-win-core-synch-l1-2-0.dll` | `wait_address.sn`: `BOOL WaitOnAddress(volatile VOID *, PVOID, SIZE_T, DWORD)`، `VOID WakeByAddressSingle(PVOID)`، `VOID WakeByAddressAll(PVOID)` (Windows 8 فما بعد). هذه مجموعة واجهات التزامن التي تقوم عليها طبقة futex، ويستعملها `std.os.wait_address` وكل ما في `std.sync`. |
+| `shell32.dll` | `CommandLineToArgvW(LPCWSTR, int *)` توفّر التقسيم القياسي للوسائط في Windows، وتحرر المكتبة القياسية تخصيصها الوحيد بـ `LocalFree`. ويمكن الاستغناء عن هذا الاستيراد بتحليل `GetCommandLineW` بشيفرة السلطان. |
+| `bcryptprimitives.dll` | `BOOL ProcessPrng(PBYTE, SIZE_T)`، مولّد الأعداد العشوائية الآمن تشفيريًا (CSPRNG) في النظام |
+| `crypt32.dll` | `certificates.sn`: `CertOpenSystemStoreW(HCRYPTPROV_LEGACY, LPCWSTR)`، و`PCCERT_CONTEXT CertEnumCertificatesInStore(HCERTSTORE, PCCERT_CONTEXT)` و`CertCloseStore(HCERTSTORE, DWORD)`. تقرأ هذه مخزن الثقة ROOT الذي يستعمله التحقق في TLS. ويُصرَّح بـ `CERT_CONTEXT` سجلًّا، وتُقرأ بايتات DER الخاصة به عبر مؤشره داخل `غير_آمن`. |
 
 ## WASI preview 1
 
-WASI preview 1 هي واجهة النظام لوحدة `wasm32-wasi`. تُستورد كل دالة من الوحدة `wasi_snapshot_preview1`،
-كما تفعل حزمة `wasi` في Rust بـ `#[link(wasm_import_module = "wasi_snapshot_preview1")]`. وتتبع
+WASI preview 1 هي واجهة النظام لوحدة `wasm32-wasi`. تُستورد كل دالة من الوحدة `wasi_snapshot_preview1`.
+وتتبع
 التوقيعات تعريفات witx: المقابض والأحجام والمؤشرات من نوع u32 على wasm32، والرايات من نوع u16 أو u8،
 والإزاحات والصلاحيات من نوع u64، وكل دالة تعيد `errno` من نوع i32. والوحدات داخل
 `library/std/os/platform/wasi/preview1/`.
@@ -227,16 +219,16 @@ WASI preview 1 هي واجهة النظام لوحدة `wasm32-wasi`. تُستو
 
 لا شيء مما يلي يستدعي المنصة.
 
-| القدرة | الموضع | المقابل في Rust أو Go |
-|---|---|---|
-| تخصيص ذاكرة الكومة | `os/allocation.sn`. يحصل المخصِّص على الصفحات من `mmap` أو `VirtualAlloc` أو `memory.grow` في wasm، ولا يستدعي `malloc` أبدًا. | مخصِّص وقت التشغيل في Go. والافتراضي في Rust هو malloc الخاص بالنظام. |
-| نسخ الذاكرة وملؤها | الشيفرة المترجمة. يُصدر مزوّد LLVM الدالة المدمجة `llvm.memcpy.inline` حتى لا يظهر أي استدعاء لـ `memcpy` من libc ([MSIR وتوليد الشيفرة](../internals/msir-and-codegen.md)). | `memmove` في وقت تشغيل Go. وتستعمل Rust وحدة `mem` من compiler-builtins على الأهداف التي لا libc فيها. |
-| تنسيق النصوص وتحليلها (الأعداد، الأساس العددي، UTF-8) | `std/text/**`، `std/unicode` | Go `strconv`، Rust `core::fmt` |
-| رياضيات الأعداد العائمة والصحيحة (`sqrt`، `hypot`، …) | `std/math/**` | حزمة `math` في Go مكتوبة كلها بلغة Go. وRust تستدعي libm. |
-| التشفير وTLS 1.3 | `std/crypto/**`، `std/tls/**` ([TLS](../internals/tls.md)) | Go `crypto/tls` |
-| DNS على Linux | ينفّذ `os/platform/unix/linux/name_resolution.sn` بروتوكول DNS عبر UDP وTCP إلى خادم الأسماء المضبوط. ولا يستعمل محلّل الأسماء في libc. | محلّل الأسماء في Go المكتوب كله بلغة Go |
-| بدء العملية على Unix | تأتي `_start` ومتجها الوسائط والبيئة من الخلفية (رموز البيانات `sultanc.bootstrap.*`)، بلا crt1.o | `rt0` في Go |
-| الضغط، JSON، TOML، CSV، HTTP، URI، UUID | `std/**` | |
+| القدرة | الموضع |
+|---|---|
+| تخصيص ذاكرة الكومة | `os/allocation.sn`. يحصل المخصِّص على الصفحات من `mmap` أو `VirtualAlloc` أو `memory.grow` في wasm، ولا يستدعي `malloc` أبدًا. |
+| نسخ الذاكرة وملؤها | الشيفرة المترجمة. يُصدر مزوّد LLVM الدالة المدمجة `llvm.memcpy.inline` حتى لا يظهر أي استدعاء لـ `memcpy` من libc ([MSIR وتوليد الشيفرة](../internals/msir-and-codegen.md)). |
+| تنسيق النصوص وتحليلها (الأعداد، الأساس العددي، UTF-8) | `std/text/**`، `std/unicode` |
+| رياضيات الأعداد العائمة والصحيحة (`sqrt`، `hypot`، …) | `std/math/**` |
+| التشفير وTLS 1.3 | `std/crypto/**`، `std/tls/**` ([TLS](../internals/tls.md)) |
+| DNS على Linux | ينفّذ `os/platform/unix/linux/name_resolution.sn` بروتوكول DNS عبر UDP وTCP إلى خادم الأسماء المضبوط. ولا يستعمل محلّل الأسماء في libc. |
+| بدء العملية على Unix | تأتي `_start` ومتجها الوسائط والبيئة من الخلفية (رموز البيانات `sultanc.bootstrap.*`)، بلا crt1.o |
+| الضغط، JSON، TOML، CSV، HTTP، URI، UUID | `std/**` |
 
 يؤكد بحث بـ grep أنه لا تُستورد أي دالة من دوال دعم اللغة في libc أو CRT. فمن بين الدوال الخارجية المصرّح بها داخل
 `library/` لا توجد `memcpy` ولا `memmove` ولا `memset` ولا `memcmp` ولا `strlen` ولا `strcmp` ولا `printf`

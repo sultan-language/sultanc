@@ -5,7 +5,13 @@
 // Completion at the cursor (compiler/frontend/tooling_completion.sn) on lines
 // that do not parse yet: members of a record value (English and Arabic
 // sources), an import path through Arabic spellings, the names in scope with
-// their distance, the constructors of an enum, and nothing inside a string.
+// their distance, the constructors of an enum, and nothing inside a string;
+// then (C1 to C9) the members of a call's result, of a dereference and of an
+// element, the builtin option constructors, the Types of a Type position, the
+// fields a record literal has not written, the cases a match has not covered
+// and the call arguments whose Type fits the parameter; then (C10, C11)
+// what a constructor inserts: a call in a value position (`Red()`,
+// `Circle(`), its name in a pattern position, with its payload count.
 // Each source is patched (رقع_مصدر_للإكمال), the patched text is analysed as
 // the file, and the candidates are read from the analysis or the environment.
 import compiler.driver.source_inputs;
@@ -20,6 +26,7 @@ import std.text.compare;
 import std.fs.temporary;
 import std.fs.write_file;
 import std.fs.path;
+import std.text.from_bytes;
 
 def host(): اختياري واصف_هدف {
     match حل_هدف_المضيف_المسجل() with
@@ -94,6 +101,57 @@ def distance_of(found: &نتيجة_إكمال_أدوات, name: string): uint {
     return (*found).المرشحات[at].البعد;
 }
 
+def append_text(bytes: &mutable vector u8, text: &string): void {
+    let i: mutable uint = 0;
+    while (i < (length(*text) as uint)) { append(*bytes, (*text)[i]); i := i + 1; }
+}
+
+// The program of C1 to C9, with `line` as main's unfinished last statement.
+def program(line: string): string {
+    let prelude: string = «type Inner = { depth: int, label: string };
+type Outer = { inner: Inner, count: int };
+type Color = | Red | Green;
+def make(): Outer {
+    let i: Inner = { depth: 1, label: "a" };
+    return { inner: i, count: 2 };
+}
+def area(width: int, height: int): int { return width * height; }
+def main(): int {
+    let outer_value: Outer = make();
+    let r: &Outer = &outer_value;
+    let arr: vector Outer = [make()];
+    let c: Color = Color.Red();
+    let top: int = 2;
+    »;
+    let tail: string = «
+}
+»;
+    let bytes: mutable vector u8 = [];
+    append_text(&mutable bytes, &prelude);
+    append_text(&mutable bytes, &line);
+    append_text(&mutable bytes, &tail);
+    return from_bytes(&bytes);
+}
+
+// The candidate `name` is a constructor with `payloads` payloads that
+// inserts `text`, offered in a pattern position or not.
+def inserts(found: &نتيجة_إكمال_أدوات, name: string, payloads: uint, text: string, pattern: bool): bool {
+    let at: uint = position_of(found, name);
+    if (at >= (length((*found).المرشحات) as uint)) { return false; };
+    match (*found).المرشحات[at].عدد_الحمولات with
+    | اختياري.موجود(count) -> { if (count != payloads) { return false; }; }
+    | اختياري.لا_شيء -> { return false; };
+    if (!نصان_متساويان(&(*found).المرشحات[at].نص_الإدراج, &text)) { return false; };
+    if (pattern) { return (*found).المرشحات[at].في_نمط; };
+    return !(*found).المرشحات[at].في_نمط;
+}
+
+// Exactly two candidates, `first` then `second`.
+def two(found: &نتيجة_إكمال_أدوات, first: string, second: string): bool {
+    return (length((*found).المرشحات) as uint) == 2
+        && position_of(found, first) == 0 && position_of(found, second) == 1;
+}
+
 def main(): int {
     let prefix: string = "completion";
     match create_temp_dir(&prefix) with
@@ -118,7 +176,7 @@ def main(): int {
         // T2: the same in an Arabic source.
         let t2: string = «نوع نقطة = { س: عدد, ص: عدد };
 عرف الرئيسية(): عدد {
-    دع ن: نقطة = { س: 1, ص: 2 };
+    ليكن ن: نقطة = { س: 1, ص: 2 };
     أرجع ن.
 }
 »;
@@ -210,6 +268,198 @@ def main(): int { let c: Color = Color.»;
         let t6: string = "def main(): int { let s: string = \"p.";
         let p6: رقعة_إكمال = رقع_مصدر_للإكمال(&t6, length(t6) as uint);
         if (p6.السياق != سياق_إكمال.لا_شيء()) { return 27; };
+        // C1: the members of a call's result, with their Types.
+        let c1: string = program("return make().");
+        let q1: رقعة_إكمال = رقع_مصدر_للإكمال(&c1, cursor_after(&c1, "return make()."));
+        if (q1.السياق != سياق_إكمال.عضو_قيمة() || !نصان_متساويان(&q1.التعبير, &"make()")) { return 50; };
+        match complete(&dir, "c1.sn", &q1) with
+        | اختياري.لا_شيء -> { return 51; }
+        | اختياري.موجود(found) -> {
+            if (found.السياق != سياق_إكمال.عضو_قيمة()) { return 52; };
+            if (!two(&found, "inner", "count")) { return 53; };
+            match found.المرشحات[0].النوع with
+            | اختياري.لا_شيء -> { return 54; }
+            | اختياري.موجود(_) -> { };
+        };
+        // C2: a field of a call's result.
+        let c2: string = program("return make().inner.");
+        let q2: رقعة_إكمال = رقع_مصدر_للإكمال(&c2, cursor_after(&c2, "return make().inner."));
+        if (!نصان_متساويان(&q2.التعبير, &"make().inner")) { return 55; };
+        match complete(&dir, "c2.sn", &q2) with
+        | اختياري.لا_شيء -> { return 56; }
+        | اختياري.موجود(found) -> {
+            if (!two(&found, "depth", "label")) { return 57; };
+        };
+        // C3: through a dereference in brackets.
+        let c3: string = program("return (*r).");
+        let q3: رقعة_إكمال = رقع_مصدر_للإكمال(&c3, cursor_after(&c3, "return (*r)."));
+        match complete(&dir, "c3.sn", &q3) with
+        | اختياري.لا_شيء -> { return 58; }
+        | اختياري.موجود(found) -> {
+            if (!two(&found, "inner", "count")) { return 59; };
+        };
+        // C4: an element of a vector.
+        let c4: string = program("return arr[0].");
+        let q4: رقعة_إكمال = رقع_مصدر_للإكمال(&c4, cursor_after(&c4, "return arr[0]."));
+        match complete(&dir, "c4.sn", &q4) with
+        | اختياري.لا_شيء -> { return 60; }
+        | اختياري.موجود(found) -> {
+            if (!two(&found, "inner", "count")) { return 61; };
+        };
+        // C5: the builtin option constructors, spelled as the source's
+        // keywords are: English here, Arabic in an Arabic source.
+        let c5: string = program("let o: option int = option.");
+        let q5: رقعة_إكمال = رقع_مصدر_للإكمال(&c5, cursor_after(&c5, "= option."));
+        match complete(&dir, "c5.sn", &q5) with
+        | اختياري.لا_شيء -> { return 62; }
+        | اختياري.موجود(found) -> {
+            if (found.السياق != سياق_إكمال.عضو_نوع()) { return 63; };
+            if (!two(&found, "some", "none")) { return 64; };
+        };
+        let c5_ar: string = «نوع نقطة = { س: عدد, ص: عدد };
+عرف الرئيسية(): عدد {
+    ليكن ق: اختياري عدد = اختياري.
+}
+»;
+        let q5_ar: رقعة_إكمال = رقع_مصدر_للإكمال(&c5_ar, cursor_after(&c5_ar, "= اختياري."));
+        match complete(&dir, "c5_ar.sn", &q5_ar) with
+        | اختياري.لا_شيء -> { return 65; }
+        | اختياري.موجود(found) -> {
+            if (!two(&found, "موجود", "لا_شيء")) { return 66; };
+        };
+        // C6: a Type position offers Types only: those in scope and the
+        // builtin ones.
+        let c6: string = program("let x: ");
+        let q6: رقعة_إكمال = رقع_مصدر_للإكمال(&c6, cursor_after(&c6, "let x: "));
+        if (q6.السياق != سياق_إكمال.موضع_نوع()) { return 67; };
+        match complete(&dir, "c6.sn", &q6) with
+        | اختياري.لا_شيء -> { return 68; }
+        | اختياري.موجود(found) -> {
+            if (found.السياق != سياق_إكمال.موضع_نوع()) { return 69; };
+            if (position_of(&found, "Inner") >= 1000000 || position_of(&found, "Outer") >= 1000000
+                || position_of(&found, "Color") >= 1000000) { return 70; };
+            if (distance_of(&found, "Inner") != 2) { return 71; };
+            if (position_of(&found, "int") >= 1000000 || position_of(&found, "string") >= 1000000
+                || position_of(&found, "bool") >= 1000000 || position_of(&found, "vector") >= 1000000
+                || position_of(&found, "option") >= 1000000) { return 72; };
+            if (position_of(&found, "outer_value") < 1000000 || position_of(&found, "top") < 1000000
+                || position_of(&found, "make") < 1000000 || position_of(&found, "area") < 1000000
+                || position_of(&found, "Red") < 1000000) { return 73; };
+        };
+        // C7: a record literal of a known Type offers the fields it has not
+        // written.
+        let c7: string = program("let o: Inner = {  };");
+        let q7: رقعة_إكمال = رقع_مصدر_للإكمال(&c7, cursor_after(&c7, "let o: Inner = { "));
+        if (q7.السياق != سياق_إكمال.حقل_سجل()) { return 74; };
+        match complete(&dir, "c7.sn", &q7) with
+        | اختياري.لا_شيء -> { return 75; }
+        | اختياري.موجود(found) -> {
+            if (!two(&found, "depth", "label")) { return 76; };
+            match found.النوع_المتوقع with
+            | اختياري.لا_شيء -> { return 77; }
+            | اختياري.موجود(_) -> { };
+        };
+        let c7b: string = program("let o: Inner = { depth: 5,  };");
+        let q7b: رقعة_إكمال = رقع_مصدر_للإكمال(&c7b, cursor_after(&c7b, "depth: 5, "));
+        match complete(&dir, "c7b.sn", &q7b) with
+        | اختياري.لا_شيء -> { return 78; }
+        | اختياري.موجود(found) -> {
+            if ((length(found.المرشحات) as uint) != 1 || position_of(&found, "label") != 0) { return 79; };
+        };
+        // C8: a match on a known Type offers the cases no arm covers.
+        let c8: string = program("match c with\n    | ");
+        let q8: رقعة_إكمال = رقع_مصدر_للإكمال(&c8, cursor_after(&c8, "with\n    | "));
+        if (q8.السياق != سياق_إكمال.حالة_مطابقة() || !نصان_متساويان(&q8.التعبير, &"c")) { return 80; };
+        match complete(&dir, "c8.sn", &q8) with
+        | اختياري.لا_شيء -> { return 81; }
+        | اختياري.موجود(found) -> {
+            if (!two(&found, "Color.Red", "Color.Green")) { return 82; };
+        };
+        let c8b: string = program("match c with\n    | Color.Red -> { }\n    | ");
+        let q8b: رقعة_إكمال = رقع_مصدر_للإكمال(&c8b, cursor_after(&c8b, "{ }\n    | "));
+        match complete(&dir, "c8b.sn", &q8b) with
+        | اختياري.لا_شيء -> { return 83; }
+        | اختياري.موجود(found) -> {
+            if ((length(found.المرشحات) as uint) != 1 || position_of(&found, "Color.Green") != 0) { return 84; };
+        };
+        // C9: a call argument ranks the names whose Type fits the parameter
+        // (int) first.
+        let c9: string = program("return area(");
+        let q9: رقعة_إكمال = رقع_مصدر_للإكمال(&c9, cursor_after(&c9, "return area("));
+        if (q9.السياق != سياق_إكمال.معامل_استدعاء() || q9.ترتيب_المعامل != 0) { return 85; };
+        match complete(&dir, "c9.sn", &q9) with
+        | اختياري.لا_شيء -> { return 86; }
+        | اختياري.موجود(found) -> {
+            if (found.السياق != سياق_إكمال.معامل_استدعاء()) { return 87; };
+            match found.النوع_المتوقع with
+            | اختياري.لا_شيء -> { return 88; }
+            | اختياري.موجود(_) -> { };
+            if (position_of(&found, "top") != 0 || !found.المرشحات[0].يلائم_المتوقع) { return 89; };
+            let at: uint = position_of(&found, "outer_value");
+            if (at >= 1000000 || found.المرشحات[at].يلائم_المتوقع) { return 90; };
+        };
+        let c9b: string = program("return area(top, ");
+        let q9b: رقعة_إكمال = رقع_مصدر_للإكمال(&c9b, cursor_after(&c9b, "area(top, "));
+        if (q9b.ترتيب_المعامل != 1) { return 91; };
+        match complete(&dir, "c9b.sn", &q9b) with
+        | اختياري.لا_شيء -> { return 92; }
+        | اختياري.موجود(found) -> {
+            if (position_of(&found, "top") != 0 || !found.المرشحات[0].يلائم_المتوقع) { return 93; };
+            let after: uint = position_of(&found, "outer_value");
+            if (after >= 1000000 || found.المرشحات[after].يلائم_المتوقع) { return 94; };
+        };
+        // C10: in a value position a constructor is a call. The candidates
+        // keep their names (T5) and carry their payload counts; one without
+        // payloads inserts `Red()`, one with payloads `Circle(`.
+        let c10: string = program("let k: Color = Color.");
+        let q10: رقعة_إكمال = رقع_مصدر_للإكمال(&c10, cursor_after(&c10, "let k: Color = Color."));
+        if (q10.في_نمط) { return 95; };
+        match complete(&dir, "c10.sn", &q10) with
+        | اختياري.لا_شيء -> { return 96; }
+        | اختياري.موجود(found) -> {
+            if (found.السياق != سياق_إكمال.عضو_نوع() || !two(&found, "Red", "Green")) { return 97; };
+            if (!inserts(&found, "Red", 0, "Red()", false) || !inserts(&found, "Green", 0, "Green()", false)) { return 98; };
+        };
+        let c10b: string = «type Shape = | Circle of int | Empty;
+def main(): int { let s: Shape = Shape.»;
+        let q10b: رقعة_إكمال = رقع_مصدر_للإكمال(&c10b, length(c10b) as uint);
+        match complete(&dir, "c10b.sn", &q10b) with
+        | اختياري.لا_شيء -> { return 99; }
+        | اختياري.موجود(found) -> {
+            if (!two(&found, "Circle", "Empty")) { return 100; };
+            if (!inserts(&found, "Circle", 1, "Circle(", false) || !inserts(&found, "Empty", 0, "Empty()", false)) { return 101; };
+        };
+        // The builtin constructors too: `some(` and `none()`.
+        let c10c: string = program("let o: option int = option.");
+        let q10c: رقعة_إكمال = رقع_مصدر_للإكمال(&c10c, cursor_after(&c10c, "= option."));
+        match complete(&dir, "c10c.sn", &q10c) with
+        | اختياري.لا_شيء -> { return 102; }
+        | اختياري.موجود(found) -> {
+            if (!inserts(&found, "some", 1, "some(", false) || !inserts(&found, "none", 0, "none()", false)) { return 103; };
+        };
+        // C11: in a match arm's pattern a constructor is matched: it says so
+        // and inserts its name only.
+        let c11: string = program("match c with\n    | Color.");
+        let q11: رقعة_إكمال = رقع_مصدر_للإكمال(&c11, cursor_after(&c11, "| Color."));
+        if (!q11.في_نمط) { return 104; };
+        match complete(&dir, "c11.sn", &q11) with
+        | اختياري.لا_شيء -> { return 105; }
+        | اختياري.موجود(found) -> {
+            if (!two(&found, "Red", "Green")) { return 106; };
+            if (!inserts(&found, "Red", 0, "Red", true) || !inserts(&found, "Green", 0, "Green", true)) { return 107; };
+        };
+        // Inside an arm's body the position is a value's again.
+        let c11b: string = program("match c with\n    | Color.Red -> { let k: Color = Color.");
+        let q11b: رقعة_إكمال = رقع_مصدر_للإكمال(&c11b, cursor_after(&c11b, "let k: Color = Color."));
+        if (q11b.في_نمط) { return 108; };
+        // A match's cases (C8) are patterns: each inserts itself.
+        let c11c: string = program("match c with\n    | ");
+        let q11c: رقعة_إكمال = رقع_مصدر_للإكمال(&c11c, cursor_after(&c11c, "with\n    | "));
+        match complete(&dir, "c11c.sn", &q11c) with
+        | اختياري.لا_شيء -> { return 109; }
+        | اختياري.موجود(found) -> {
+            if (!inserts(&found, "Color.Red", 0, "Color.Red", true)) { return 110; };
+        };
     };
     return 42;
 }

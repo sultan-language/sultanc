@@ -53,7 +53,6 @@
 عرف نص_سبب_سبب_انتقاء_أصلي_منتقي_قدرة_غير_متاح(): نص { أرجع «The native instruction selector for this target lacks a required capability»; }
 عرف نص_سبب_سبب_انتقاء_نص_ثابت_يحتاج_بيانات_قسم(): نص { أرجع «Instruction selection needs a data section to emit a text constant»; }
 عرف نص_سبب_سبب_انتقاء_واسم32_مفقود_خروج_موفر(): نص { أرجع «The WASM32 instruction selector lacks a process-exit provider»; }
-عرف نص_سبب_سبب_تدفق_سلامة_مكرر_محلي(): نص { أرجع «A local variable was declared more than once during safety checking»; }
 عرف نص_سبب_سبب_نوع_استدعاء_حجة_عدد_عدم_تطابق(): نص { أرجع «The call supplies a different number of arguments than the function accepts»; }
 عرف نص_سبب_سبب_نوع_بدائي_دلالات_غير_متاح(): نص { أرجع «The primitive operation's semantics are unavailable to type checking»; }
 عرف نص_سبب_سبب_نوع_إرجاع_نوع_عدم_تطابق(): نص { أرجع «The returned expression type does not match the function return type»; }
@@ -290,7 +289,6 @@
     | سبب_تشخيص.سبب_مسير_خفض_مفقود_دلالي_دالة -> { أرجع «Lowering to MSIR could not find the analyzed form of a function»; }
     | سبب_تشخيص.سبب_مسير_خفض_مفقود_رمز_نوع -> { أرجع «Lowering to MSIR could not find the type of a symbol»; }
     | سبب_تشخيص.سبب_مسير_خفض_إرجاع_نوع_عدم_تطابق -> { أرجع «The returned value has a different type than the function declares»; }
-    | سبب_تشخيص.سبب_مسير_خفض_غير_مهيأ_محلي -> { أرجع «A local variable is used before it is assigned»; }
     | سبب_تشخيص.سبب_مسير_خفض_غير_محلول_نوع -> { أرجع «Lowering to MSIR reached a type that was not resolved»; }
     | سبب_تشخيص.سبب_مسير_خفض_غير_مدعوم_تعبير -> { أرجع «This expression cannot be lowered to MSIR yet»; }
     | سبب_تشخيص.سبب_مسير_خفض_غير_مدعوم_تعبير_نوع -> { أرجع «This expression's type cannot be lowered to MSIR yet»; }
@@ -364,6 +362,8 @@
     | سبب_تشخيص.سبب_مسير_مرجع_نوع_عدم_تطابق -> { أرجع «An MSIR reference has a different type than the place it refers to»; }
     | سبب_تشخيص.سبب_مسير_إرجاع_بنية_عدم_تطابق -> { أرجع «An MSIR return gives a value where none is expected, or none where one is expected»; }
     | سبب_تشخيص.سبب_مسير_إرجاع_نوع_عدم_تطابق -> { أرجع «An MSIR return value has a different type than the function returns»; }
+    | سبب_تشخيص.سبب_مسير_ملكية_موضع_ليس_محليا -> { أرجع «An MSIR ownership operation names a value that is not a function-local place»; }
+    | سبب_تشخيص.سبب_مسير_ملكية_عملية_بعد_التفصيل -> { أرجع «An MSIR ownership operation remains after drop elaboration»; }
     | سبب_تشخيص.سبب_مسير_وسم_نتيجة_ليس_ط32 -> { أرجع «The MSIR tag extraction result does not have type u32»; }
     | سبب_تشخيص.سبب_مسير_غير_متوقع_استدعاء_تعديل_موضع -> { أرجع «An MSIR call provides an unexpected mutation destination»; }
     | سبب_تشخيص.سبب_مسير_غير_متوقع_تعليمة_نتيجة -> { أرجع «An MSIR instruction produces a result although it must not»; }
@@ -487,17 +487,10 @@
     | سبب_تشخيص.سبب_تدفق_سلامة_استعارة_تعارض_حصري -> { أرجع «The value is already borrowed mutably, so it cannot be borrowed again»; }
     | سبب_تشخيص.سبب_تدفق_سلامة_استعارة_تعارض_مشترك -> { أرجع «The value is borrowed for reading, so it cannot be borrowed mutably»; }
     | سبب_تشخيص.سبب_تدفق_سلامة_مزدوج_تحرير -> { أرجع «The same resource was released twice»; }
-    | سبب_تشخيص.سبب_تدفق_سلامة_مكرر_محلي -> { أرجع نص_سبب_سبب_تدفق_سلامة_مكرر_محلي(); }
-    | سبب_تشخيص.سبب_تدفق_سلامة_غير_صحيح_استعارة_معرف -> { أرجع «Safety checking found a borrow ID that is not valid»; }
     | سبب_تشخيص.سبب_تدفق_سلامة_غير_صحيح_تحكم_تدفق_دمج -> { أرجع «Ownership state conflicts prevent a control-flow merge»; }
-    | سبب_تشخيص.سبب_تدفق_سلامة_غير_صحيح_محلي_نوع -> { أرجع «Safety checking found a local variable with an invalid type»; }
     | سبب_تشخيص.سبب_تدفق_سلامة_غير_صحيح_نقل_ملكية -> { أرجع «This value cannot be moved here»; }
     | سبب_تشخيص.سبب_تدفق_سلامة_غير_صحيح_مرجع_تسرب -> { أرجع «A reference outlives the value it points to»; }
-    | سبب_تشخيص.سبب_تدفق_سلامة_مفقود_محلي -> { أرجع «Safety checking could not find a local variable»; }
-    | سبب_تشخيص.سبب_تدفق_سلامة_نمط_ربط_اسم_مفقود_رمز -> { أرجع «A pattern's name binding is missing from the symbol table»; }
-    | سبب_تشخيص.سبب_تدفق_سلامة_نمط_ربط_اسم_مفقود_نوع -> { أرجع «A pattern's binding type is missing during safety checking»; }
     | سبب_تشخيص.سبب_تدفق_سلامة_تحرير_غير_مملوك -> { أرجع «The code releases a value that it does not own»; }
-    | سبب_تشخيص.سبب_تدفق_سلامة_دلالي_حقيقة_مفقود -> { أرجع «Safety checking is missing information from semantic analysis»; }
     | سبب_تشخيص.سبب_تدفق_سلامة_استخدام_بعد_نقل_ملكية -> { أرجع «The value is used after its ownership was moved»; }
     | سبب_تشخيص.سبب_تدفق_سلامة_استخدام_بعد_تحرير -> { أرجع «The value is used after it was released»; }
     | سبب_تشخيص.سبب_تدفق_سلامة_استخدام_قبل_تهيئة -> { أرجع «The value is used before it is initialized»; }
@@ -551,6 +544,9 @@
     | سبب_تشخيص.سبب_واجهة_أمر_مكرر -> { أرجع «Only one command can be given at a time»; }
     | سبب_تشخيص.سبب_واجهة_خيار_لا_يناسب_الأمر -> { أرجع «The option does not apply to the selected command»; }
     | سبب_تشخيص.سبب_واجهة_نوع_مخرج_متعارض -> { أرجع «The option selects a different output kind than an earlier option»; }
+    | سبب_تشخيص.سبب_واجهة_إخراج_اختبار_يتطلب_منع_التشغيل -> { أرجع «`test` writes its program to -o only with --no-run, which runs nothing»; }
+    | سبب_تشخيص.سبب_واجهة_منع_التشغيل_يتطلب_إخراجا -> { أرجع «--no-run keeps the test program, so it needs -o <path>»; }
+    | سبب_تشخيص.سبب_واجهة_منع_التشغيل_يعارض_التشغيل -> { أرجع «--no-run writes the test program and runs nothing, so it does not go with --list, --interpret or --test-index»; }
     | سبب_تشخيص.سبب_وحدة_مسار_ملف_ليس_اسم_وحدة -> { أرجع «A directory or file name on the source path is not a valid module name»; }
     | سبب_تشخيص.سبب_ربط_واسم_رمز_غير_معرف -> { أرجع «WebAssembly link has an undefined symbol»; }
     | سبب_تشخيص.سبب_ربط_واسم_نوع_رمز_غير_متطابق -> { أرجع «WebAssembly link has a symbol type mismatch»; }
@@ -575,6 +571,7 @@
     | سبب_تشخيص.سبب_وقت_الترجمة_نفاد_عمق_الاستدعاء -> { أرجع «Compile-time evaluation reached the maximum call depth»; }
     | سبب_تشخيص.سبب_وقت_الترجمة_فشل_التنفيذ -> { أرجع «Compile-time evaluation failed while running the code»; }
     | سبب_تشخيص.سبب_وقت_الترجمة_فخ_التنفيذ -> { أرجع «The code trapped during compile-time evaluation»; }
+    | سبب_تشخيص.سبب_وقت_الترجمة_قيمة_عليا_منشئ_غير_ثابتة -> { أرجع «A module-level value built by a constructor is immutable, and its arguments are numbers, booleans, characters, text or such constructors»; }
     | سبب_تشخيص.سبب_وقت_الترجمة_خلل_المفسر -> { أرجع نص_سبب_سبب_وقت_الترجمة_خلل_المفسر(); }
     | سبب_تشخيص.سبب_وقت_الترجمة_مسير_غير_صالح -> { أرجع نص_سبب_سبب_وقت_الترجمة_مسير_غير_صالح(); }
     | سبب_تشخيص.سبب_وقت_الترجمة_تخطيط_غير_مثبت -> { أرجع نص_سبب_سبب_وقت_الترجمة_تخطيط_غير_مثبت(); }

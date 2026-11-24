@@ -19,7 +19,7 @@ alef forms آ, أ and إ to ا and ignores tatweel
 | English | Arabic | Meaning |
 | --- | --- | --- |
 | `def` | `عرف` | Function definition |
-| `let` | `دع` | Value declaration |
+| `let` | `ليكن` | Value declaration |
 | `return` | `أرجع` | Return from a function |
 | `if` | `إذا` | Conditional branch |
 | `else` | `وإلا` | Alternate branch |
@@ -100,8 +100,9 @@ spelling silently). English spellings never change.
 | --- | --- | --- | --- |
 | `while` | `بينما` | `طالما` | `طالما` means "as long as", which is what the loop tests. `بينما` is a time adverb ("during", "whereas"), a calque of English *while*. |
 | entry function `main` | the project nickname "the castle" (removed, no alias) | `الرئيسية` | `الرئيسية` means "the main (function)", the standard term. The old name, "the castle", was a project nickname; it is no longer recognised at all, so a program whose only entry function still has it reports `SULTANC-ENTRYPOINT-NOT-FOUND`. |
+| `let` | `دع` (removed, no alias) | `ليكن` | `ليكن` is how Arabic states "let": «ليكن س عددًا صحيحًا» ("let x be an integer") is the mathematics textbook phrasing, and a binding declares what a name is. `دع` is the imperative of «ودع», "leave, let go" («دعنا نحسب», «دع هذا»), so `دع العدد…` read as "leave the number…". `دع` is no longer a keyword at all: it lexes as an ordinary identifier, so `دع س: عدد = 1;` is a syntax error. |
 | `option` | `اختيار` | `اختياري` | `اختياري` means "optional", the standard word for an optional field or value. `اختيار` is the noun "choice" (and, in the compiler, instruction *selection*). |
-| `some` / `Some` | `بعض` (`اختيار.بعض`) | `موجود` (`اختياري.موجود`) | `موجود` says "a value is present". Arabic `بعض` is partitive ("some of", "part of"), while ML/Rust *Some* means "there is a value x"; Haskell and Elm say `Just` for the same reason. |
+| `some` / `Some` | `بعض` (`اختيار.بعض`) | `موجود` (`اختياري.موجود`) | `موجود` says "a value is present". Arabic `بعض` is partitive ("some of", "part of"), while the constructor means "there is a value x". |
 | `none` / `None` | `لا_شيء` | `لا_شيء` (unchanged) | Only the type prefix changes: `اختياري.لا_شيء`. |
 | `uint` | `غير_موقع` | `طبيعي` | `طبيعي` is a natural number. **It includes 0** («طبيعي: عدد صحيح ≥ 0، يشمل الصفر»), although many Arabic sources start the natural numbers at 1. `غير_موقع` was a calque: `موقَّع` means "signed" as in a signed document. |
 | `u8`, `u16`, `u32`, `u64` | `غ8`, `غ16`, `غ32`, `غ64` | `ط8`, `ط16`, `ط32`, `ط64` | The fixed-width natural types take the initial of `طبيعي`, as `ص8` takes that of `صحيح`. |
@@ -111,6 +112,7 @@ The deprecated keyword spellings are rows of `tools/generate/registry/token_regi
 ```sh
 python3 tools/rename/rename_tokens.py --wave 1 path/to/sources   # بينما -> طالما
 python3 tools/rename/rename_tokens.py --wave 7 path/to/sources   # the entry function -> الرئيسية
+python3 tools/rename/rename_tokens.py --wave 8 path/to/sources   # دع -> ليكن
 python3 tools/rename/rename_tokens.py --wave 2 path/to/sources   # اختيار -> اختياري, اختيار.بعض -> اختياري.موجود
 python3 tools/rename/rename_tokens.py --wave 3 path/to/sources   # غير_موقع -> طبيعي, غN -> طN
 python3 tools/rename/rename_tokens.py --wave 3 --segments path/to/sources   # أصغر_غير_موقع -> أصغر_طبيعي
@@ -153,7 +155,7 @@ distinguish compilation targets, object files, module loading and memory operati
 
 Names follow a verb dictionary: `أنشئ` creates, `اقرأ` reads, `اضبط` sets, `أزل` removes an item
 (a prefix, a variable), `امسح` clears, `احذف` deletes files, `هل_…` asks a question, `حلل` parses,
-`حول_…_إلى_…` converts, `ابدأ` starts, `خذ` takes a value out of its owner (Rust's `Option::take`),
+`حول_…_إلى_…` converts, `ابدأ` starts, `خذ` takes a value out of its owner and leaves the owner empty,
 `تفقد` polls without waiting, `اقفل` and `افتح_قفل` lock and unlock, `حاول_…` is the non-waiting
 attempt, `نفذ` runs something, `انتظر` / `أيقظ` / `نبه` wait, wake and notify, `أرسل` / `استقبل`
 send and receive, `أسقط` drops an end, `استنسخ` clones and `نسق` formats.
@@ -266,10 +268,10 @@ continues the module above it.
 | | `create_temp_file / create_temp_file_in` | `أنشئ_ملفا_مؤقتا / أنشئ_ملفا_مؤقتا_في` | new temporary file |
 | | `close_temp_file` | `أغلق_ملفا_مؤقتا` | close it, keep the path |
 
-| std.fs.lock | `file_lock / file_lock_shared` | `اقفل_الملف / اقفل_الملف_مشتركا` | Rust `File::lock` / `lock_shared` |
+| std.fs.lock | `file_lock / file_lock_shared` | `اقفل_الملف / اقفل_الملف_مشتركا` | lock a whole file, exclusive / shared |
 | | `file_try_lock / file_try_lock_shared` | `حاول_قفل_الملف / حاول_قفل_الملف_مشتركا` | `try_lock` / `try_lock_shared` |
 | | `file_unlock` | `افتح_قفل_الملف` | `unlock` |
-| | `try_lock_error (would_block, os)` | `خطأ_محاولة_قفل (ستحظر، نظام)` | Rust `TryLockError` |
+| | `try_lock_error (would_block, os)` | `خطأ_محاولة_قفل (ستحظر، نظام)` | why a non-waiting lock failed |
 
 ### Environment (std.env)
 
@@ -279,8 +281,8 @@ continues the module above it.
 | | `environment_variables` | `متغيرات_البيئة` | all variables |
 | | `home_directory` | `الدليل_الرئيسي` | the user's home directory |
 | | `set_current_directory` | `غير_دليل_العمل` | change the working directory |
-| std.env.variables | `set_environment_variable` | `اضبط_متغير_بيئة` | Rust `env::set_var`, Go `os.Setenv` |
-| | `remove_environment_variable` | `أزل_متغير_بيئة` | Rust `env::remove_var`, Go `os.Unsetenv` |
+| std.env.variables | `set_environment_variable` | `اضبط_متغير_بيئة` | set a variable of this process |
+| | `remove_environment_variable` | `أزل_متغير_بيئة` | remove a variable of this process |
 | std.env.system | — | `متغير_بيئة_النظام`, `دليل_العمل_للنظام`, `الدليل_المؤقت_للنظام` | the environment as the system holds it (what the compiler reads) |
 | std.env.table | — | `جدول البيئة` | the environment table std owns |
 
@@ -307,17 +309,17 @@ A child's standard error is `أخطاء` ("errors"), so it never reads as the bo
 
 | Module | English | Arabic | Meaning |
 | --- | --- | --- | --- |
-| std.process.command | `command_spawn` | `ابدأ_الأمر` | Rust `Command::spawn` |
-| | `command_child` | `طفل_أمر` | a running child (Rust `Child`) |
+| std.process.command | `command_spawn` | `ابدأ_الأمر` | start the command as a running child |
+| | `command_child` | `طفل_أمر` | a running child |
 | | `child_stdin / child_stdout / child_stderr` | `دخل_طفل / خرج_طفل / خرج_طفل` | a stream taken from the child |
-| | `child_take_stdin / child_take_stdout / child_take_stderr` | `خذ_دخل_الطفل / خذ_خرج_الطفل / خذ_أخطاء_الطفل` | Rust `child.stdin.take()` |
+| | `child_take_stdin / child_take_stdout / child_take_stderr` | `خذ_دخل_الطفل / خذ_خرج_الطفل / خذ_أخطاء_الطفل` | take a stream out of the child |
 | | `child_stdin_write / child_stdout_read` | `اكتب_دخل_طفل / اقرأ_خرج_طفل` | the std.io writer and reader shapes |
 | | `child_stdin_close / child_stdout_close` | `أغلق_دخل_طفل / أغلق_خرج_طفل` | close a taken stream |
 | | `child_write_stdin / child_close_stdin` | `اكتب_إلى_الطفل / أغلق_دخل_الطفل` | write all to, or close, the child's input |
 | | `child_close_streams` | `أغلق_تيارات_الطفل` | close every pipe the child still holds (no destructors) |
 | | `child_read_stdout / child_read_stderr` | `اقرأ_خرج_الطفل / اقرأ_أخطاء_الطفل` | read what the child wrote |
-| | `child_wait / child_try_wait / child_kill` | `انتظر_الطفل / تفقد_الطفل / اقتل_الطفل` | Rust `wait`, `try_wait`, `kill` |
-| | `child_wait_with_output` | `انتظر_خرج_الطفل` | Rust `wait_with_output` |
+| | `child_wait / child_try_wait / child_kill` | `انتظر_الطفل / تفقد_الطفل / اقتل_الطفل` | wait, poll without waiting, kill |
+| | `child_wait_with_output` | `انتظر_خرج_الطفل` | wait and collect the remaining output |
 | | `child_id` | `معرف_عملية_الطفل` | the process ID |
 
 ### Networking (std.net)
@@ -333,7 +335,7 @@ A child's standard error is `أخطاء` ("errors"), so it never reads as the bo
 
 | Module | English | Arabic | Meaning |
 | --- | --- | --- | --- |
-| std.net.unix | `unix_socket_addr (unnamed, pathname, abstract_name)` | `عنوان_يونكس (بلا_اسم، مسار، مجرد)` | Rust `std::os::unix::net::SocketAddr` |
+| std.net.unix | `unix_socket_addr (unnamed, pathname, abstract_name)` | `عنوان_يونكس (بلا_اسم، مسار، مجرد)` | a Unix socket address: unnamed, a path or an abstract name |
 | | `unix_listener / unix_stream / unix_datagram` | `مستمع_يونكس / تدفق_يونكس / مقبس_رسائل_يونكس` | `UnixListener` / `UnixStream` / `UnixDatagram` |
 | | `unix_listener_bind / unix_accept / unix_connect` | `اربط_مستمع_يونكس / اقبل_يونكس / اتصل_يونكس` | (also `…_بعنوان` / `…_addr`) |
 | | `unix_read / unix_write / unix_shutdown` | `اقرأ_يونكس / اكتب_يونكس / أوقف_يونكس` | stream I/O |
@@ -347,7 +349,7 @@ A child's standard error is `أخطاء` ("errors"), so it never reads as the bo
 
 | Module | English | Arabic | Meaning |
 | --- | --- | --- | --- |
-| std.time.duration_text | `format_duration / parse_duration` | `نسق_المدة / حلل_المدة` | Go duration notation |
+| std.time.duration_text | `format_duration / parse_duration` | `نسق_المدة / حلل_المدة` | duration text such as `1h2m3.5s` |
 | | `duration_error (invalid_format, unknown_unit, overflow)` | `خطأ_مدة (صيغة_غير_صالحة، وحدة_مجهولة، تجاوز)` | parse errors |
 | | `duration_abs / duration_divide` | `مطلق_المدة / اقسم_المدة` | checked abs and division |
 | std.time.duration_float | `duration_seconds_f64 / duration_from_seconds_f64` (and f32) | `ثواني_المدة_ع64 / مدة_من_ثواني_ع64` (and ع32) | float seconds |
@@ -378,14 +380,14 @@ A child's standard error is `أخطاء` ("errors"), so it never reads as the bo
 | std.collections.vector | `reverse_vector / rotate_left` | `اعكس_المتجه / دور_المتجه_يسارا` | reorder in place |
 | | `index_of_by / contains_by` | `ابحث_في_المتجه / هل_يحتوي_المتجه` | search with an equality |
 | | `position_min_by / position_max_by` | `موضع_الأصغر_في_المتجه / موضع_الأكبر_في_المتجه` | extremes with an ordering |
-| language | `pop(v)` | `أزل_الأخير(م)` | Rust `Vec::pop`: the last element as `اختياري` (see [Ownership](ownership.md), "Pop and truncate") |
-| | `truncate(v, n)` | `اقتطع(م, ن)` | Rust `Vec::truncate`: drop the elements past `n` (`ن: طبيعي`); the verb of `اقتطع_الملف` |
-| std.collections.vector | `retain / dedup_by` | `احتفظ_في_المتجه / أزل_المتكرر_المتتالي` | Rust `Vec::retain` / `Vec::dedup_by`, Go `slices.DeleteFunc` / `CompactFunc` |
-| | `remove_at / swap_remove / insert_at` | `أزل_عند / أزل_بالتبديل / أدرج_عند` | Rust `Vec::remove` / `swap_remove` / `insert` |
-| | `clear_vector` | `امسح_المتجه` | Rust `Vec::clear` (keeps the buffer) |
-| language | `capacity(v)` | `سعة(م)` | Rust `Vec::capacity`, Go `cap`: elements the buffer holds before an append reallocates |
-| | `reserve_exact(v, n)` | `احجز_سعة(م, ن)` | Rust `Vec::reserve_exact`: room for `ن` more elements, exactly (`ن: طبيعي`) |
-| std.collections.vector | `with_capacity / reserve / shrink_to_fit` | `متجه_بسعة / احجز_في_المتجه / قلص_المتجه` | Rust `Vec::with_capacity` / `reserve` (amortized) / `shrink_to_fit` |
+| language | `pop(v)` | `أزل_الأخير(م)` | remove the last element and return it as `اختياري` (see [Ownership](ownership.md), "Pop and truncate") |
+| | `truncate(v, n)` | `اقتطع(م, ن)` | drop the elements past `n` (`ن: طبيعي`); the verb of `اقتطع_الملف` |
+| std.collections.vector | `retain / dedup_by` | `احتفظ_في_المتجه / أزل_المتكرر_المتتالي` | keep the elements a predicate accepts / drop consecutive duplicates |
+| | `remove_at / swap_remove / insert_at` | `أزل_عند / أزل_بالتبديل / أدرج_عند` | remove at an index (shifting) / remove by swapping in the last / insert at an index |
+| | `clear_vector` | `امسح_المتجه` | remove every element (keeps the buffer) |
+| language | `capacity(v)` | `سعة(م)` | elements the buffer holds before an append reallocates |
+| | `reserve_exact(v, n)` | `احجز_سعة(م, ن)` | room for `ن` more elements, exactly (`ن: طبيعي`) |
+| std.collections.vector | `with_capacity / reserve / shrink_to_fit` | `متجه_بسعة / احجز_في_المتجه / قلص_المتجه` | a new vector with room for n / reserve room (amortized) / release unused room |
 
 ### Text and floats (std.text)
 
@@ -404,12 +406,12 @@ The verb is `نسق` ("arrange, format"): `نسق` formats, `نسق_في` format
 
 | Module | English | Arabic | Meaning |
 | --- | --- | --- | --- |
-| std.fmt.fmt | `format` / `format_into` | `نسق` / `نسق_في` | Rust's `format!` / `write!` to a String or Formatter |
+| std.fmt.fmt | `format` / `format_into` | `نسق` / `نسق_في` | format to new text / into an existing text or formatter |
 | | `write_fmt` / `write_fmt_with` | `اكتب_منسقا` / `اكتب_منسقا_بمنسق` | `write!` to a std.io writer (with a reused formatter) |
 | | `print_fmt` / `println_fmt` / `eprint_fmt` / `eprintln_fmt` | `اطبع_منسقا` / `اطبع_سطرا_منسقا` / `اطبع_خطأ_منسقا` / `اطبع_سطر_خطأ_منسقا` | `print!` / `println!` / `eprint!` / `eprintln!` |
 | | `fmt_arg` (`int`, `uint`, `i8`…`u64`, `f32`, `f64`, `bool`, `char`, `text`, `bytes`, `ints`, `texts`, `list`, `custom`) | `قيمة_تنسيق` (`عدد`، `طبيعي`، `ص8`…`ط64`، `ع32`، `ع64`، `منطقي`، `حرف`، `نص`، `بايتات`، `أعداد`، `نصوص`، `قائمة`، `مخصص`) | one argument; `مخصص` holds a closure (Display/Debug of a user type) |
 | | `fmt_error` (`unclosed_brace`, `unmatched_close_brace`, `invalid_spec`, `unknown_type`, `named_argument`, `missing_argument`, `unused_argument`, `mismatched_type`, `invalid_count`, `write_failed`, `custom_failed`) | `خطأ_تنسيق` (`قوس_غير_مغلق`، `قوس_إغلاق_منفرد`، `مواصفة_غير_صالحة`، `نوع_غير_معروف`، `وسيط_مسمى`، `وسيط_مفقود`، `وسيط_غير_مستخدم`، `نوع_غير_مناسب`، `عدد_غير_صالح`، `فشل_الكتابة`، `فشل_مخصص`) | a format or formatting error |
-| | `formatter` / `fmt_spec` | `منسق` / `مواصفة_تنسيق` | Rust's `Formatter` and its spec |
+| | `formatter` / `fmt_spec` | `منسق` / `مواصفة_تنسيق` | the formatter and its format spec |
 | | `fmt_alignment` (`unknown`, `left`, `center`, `right`) | `محاذاة_تنسيق` (`بلا`، `يسار`، `وسط`، `يمين`) | `fmt::Alignment` |
 | | `fmt_kind` (`display`, `debug`, `lower_hex`, `upper_hex`, `octal`, `binary`, `lower_exp`, `upper_exp`, `debug_lower_hex`, `debug_upper_hex`) | `صيغة_تنسيق` (`عرض`، `تصحيح`، `ست_عشري`، `ست_عشري_كبير`، `ثماني`، `ثنائي`، `أسي`، `أسي_كبير`، `تصحيح_ست_عشري`، `تصحيح_ست_عشري_كبير`) | the placeholder's type: `{}` `{:?}` `{:x}` `{:X}` `{:o}` `{:b}` `{:e}` `{:E}` `{:x?}` `{:X?}` |
 | | `new_formatter` / `formatter_with_capacity` | `أنشئ_منسقا` / `أنشئ_منسقا_بسعة` | a formatter |
@@ -450,24 +452,24 @@ Format names are transliterated as std already writes `جي_زيب` (gzip) and `
 
 ### Threads and synchronization (std.sync, std.os.wait_address)
 
-The type names are nouns: `مشترك` ("shared": Rust's Arc), `قفل` ("lock": Mutex), `قفل_قراءة_كتابة` (RwLock), `شرط_انتظار` ("wait condition": Condvar), `مرة` ("once"), `خلية_مرة` ("once cell": OnceLock), `قناة` ("channel"), `مرسل` / `مستلم` ("sender" / "receiver"; `مستقبل` already names the futex in the system-call tables). The verbs are the dictionary's: `أنشئ`, `استنسخ` (clone), `اقرأ` (read through), `نفذ` (run something), `حاول` (try), `انتظر` / `أيقظ` / `نبه` (wait / wake / notify), `أرسل` / `استقبل`, `أسقط` (drop an end), `اضبط` (set).
+The type names are nouns: `مشترك` ("shared": arc), `قفل` ("lock": mutex), `قفل_قراءة_كتابة` (rwlock), `شرط_انتظار` ("wait condition": condvar), `مرة` ("once"), `خلية_مرة` ("once cell": once_lock), `قناة` ("channel"), `مرسل` / `مستلم` ("sender" / "receiver"; `مستقبل` already names the futex in the system-call tables). The verbs are the dictionary's: `أنشئ`, `استنسخ` (clone), `اقرأ` (read through), `نفذ` (run something), `حاول` (try), `انتظر` / `أيقظ` / `نبه` (wait / wake / notify), `أرسل` / `استقبل`, `أسقط` (drop an end), `اضبط` (set).
 
 | Module | English | Arabic | Meaning |
 | --- | --- | --- | --- |
-| std.sync.arc | `arc`, `arc_new`, `arc_clone`, `arc_get` | `مشترك`, `أنشئ_مشترك`, `استنسخ_مشترك`, `اقرأ_مشترك` | Rust `Arc`, `Arc::new`, `Arc::clone`, `Deref` |
+| std.sync.arc | `arc`, `arc_new`, `arc_clone`, `arc_get` | `مشترك`, `أنشئ_مشترك`, `استنسخ_مشترك`, `اقرأ_مشترك` | the shared handle; create, clone a handle, read the value |
 | | `arc_strong_count`, `arc_ptr_eq`, `arc_as_ptr` | `عدد_مراجع_مشترك`, `هل_المشترك_نفسه`, `مؤشر_مشترك` | `Arc::strong_count`, `Arc::ptr_eq`, `Arc::as_ptr` |
-| std.sync.mutex | `mutex`, `mutex_new`, `with_lock`, `try_lock`, `mutex_is_locked` | `قفل`, `أنشئ_قفل`, `نفذ_مع_القفل`, `حاول_القفل`, `هل_القفل_مأخوذ` | Rust `Mutex`; the lock held for one closure (the guard's scope) |
-| std.sync.rwlock | `rwlock`, `rwlock_new`, `with_read`, `with_write` | `قفل_قراءة_كتابة`, `أنشئ_قفل_قراءة_كتابة`, `نفذ_مع_قراءة`, `نفذ_مع_كتابة` | Rust `RwLock::read` / `write` |
-| std.sync.condvar | `condvar`, `condvar_new`, `condvar_wait`, `condvar_wait_timeout`, `condvar_wait_while` | `شرط_انتظار`, `أنشئ_شرط_انتظار`, `انتظر_الشرط`, `انتظر_الشرط_بمهلة`, `انتظر_طالما` | Rust `Condvar::wait`, `wait_timeout`, `wait_while` |
+| std.sync.mutex | `mutex`, `mutex_new`, `with_lock`, `try_lock`, `mutex_is_locked` | `قفل`, `أنشئ_قفل`, `نفذ_مع_القفل`, `حاول_القفل`, `هل_القفل_مأخوذ` | a mutex; the lock is held for one closure |
+| std.sync.rwlock | `rwlock`, `rwlock_new`, `with_read`, `with_write` | `قفل_قراءة_كتابة`, `أنشئ_قفل_قراءة_كتابة`, `نفذ_مع_قراءة`, `نفذ_مع_كتابة` | a reader-writer lock; run a closure with shared / exclusive access |
+| std.sync.condvar | `condvar`, `condvar_new`, `condvar_wait`, `condvar_wait_timeout`, `condvar_wait_while` | `شرط_انتظار`, `أنشئ_شرط_انتظار`, `انتظر_الشرط`, `انتظر_الشرط_بمهلة`, `انتظر_طالما` | a condition variable; wait, wait with a timeout, wait while a predicate holds |
 | | `condvar_notify_one`, `condvar_notify_all` | `نبه_واحدا`, `نبه_الكل` | `notify_one`, `notify_all` |
-| std.sync.once | `once`, `once_new`, `call_once`, `once_is_completed` | `مرة`, `أنشئ_مرة`, `نفذ_مرة`, `هل_اكتملت_المرة` | Rust `Once` |
-| | `once_lock`, `once_lock_new`, `once_lock_get`, `once_lock_get_or_init`, `once_lock_set` | `خلية_مرة`, `أنشئ_خلية_مرة`, `اقرأ_خلية_مرة`, `اقرأ_أو_هيئ_خلية_مرة`, `اضبط_خلية_مرة` | Rust `OnceLock` |
-| std.sync.channel | `channel`, `sync_channel`, `channel_ends` | `قناة`, `قناة_متزامنة`, `طرفا_قناة` (`المرسل`, `المستلم`) | Rust `mpsc::channel`, `sync_channel` and the pair they return |
+| std.sync.once | `once`, `once_new`, `call_once`, `once_is_completed` | `مرة`, `أنشئ_مرة`, `نفذ_مرة`, `هل_اكتملت_المرة` | run an initializer exactly once |
+| | `once_lock`, `once_lock_new`, `once_lock_get`, `once_lock_get_or_init`, `once_lock_set` | `خلية_مرة`, `أنشئ_خلية_مرة`, `اقرأ_خلية_مرة`, `اقرأ_أو_هيئ_خلية_مرة`, `اضبط_خلية_مرة` | a cell written at most once |
+| std.sync.channel | `channel`, `sync_channel`, `channel_ends` | `قناة`, `قناة_متزامنة`, `طرفا_قناة` (`المرسل`, `المستلم`) | an unbounded and a bounded channel, and the pair of ends they return |
 | | `sender`, `receiver`, `sender_clone`, `sender_for`, `channel_receiver`, `sync_channel_receiver` | `مرسل`, `مستلم`, `استنسخ_مرسل`, `مرسل_لمستلم`, `مستلم_قناة`, `مستلم_قناة_متزامنة` | the ends; a receiver alone and a sender made for it |
-| | `send`, `try_send`, `recv`, `try_recv`, `recv_timeout` | `أرسل`, `حاول_الإرسال`, `استقبل`, `حاول_الاستقبال`, `استقبل_بمهلة` | Rust's methods of the same names |
-| | `drop_sender`, `drop_receiver` | `أسقط_مرسل`, `أسقط_مستلم` | Rust `drop(tx)` / `drop(rx)` |
-| | `try_recv_error (empty, disconnected)`, `recv_timeout_error (timeout, disconnected)`, `recv_error (disconnected)`, `try_send_error (full, disconnected)` | `خطأ_محاولة_استقبال (فارغة، منقطعة)`, `خطأ_استقبال_بمهلة (انتهت_المهلة، منقطعة)`, `خطأ_استقبال (منقطعة)`, `خطأ_محاولة_إرسال (ممتلئة، منقطعة)` | Rust `TryRecvError`, `RecvTimeoutError`, `RecvError`, `TrySendError` |
-| std.sync.atomic | `memory_ordering.relaxed / release / acquire / acq_rel / seq_cst` | `ترتيب_ذاكرة.مسترخ / إطلاق / اكتساب / اكتساب_وإطلاق / تسلسلي` | Rust `Ordering` |
+| | `send`, `try_send`, `recv`, `try_recv`, `recv_timeout` | `أرسل`, `حاول_الإرسال`, `استقبل`, `حاول_الاستقبال`, `استقبل_بمهلة` | send, send without waiting, receive, receive without waiting, receive with a timeout |
+| | `drop_sender`, `drop_receiver` | `أسقط_مرسل`, `أسقط_مستلم` | drop one end, disconnecting the channel from that side |
+| | `try_recv_error (empty, disconnected)`, `recv_timeout_error (timeout, disconnected)`, `recv_error (disconnected)`, `try_send_error (full, disconnected)` | `خطأ_محاولة_استقبال (فارغة، منقطعة)`, `خطأ_استقبال_بمهلة (انتهت_المهلة، منقطعة)`, `خطأ_استقبال (منقطعة)`, `خطأ_محاولة_إرسال (ممتلئة، منقطعة)` | why a receive or send did not deliver a value |
+| std.sync.atomic | `memory_ordering.relaxed / release / acquire / acq_rel / seq_cst` | `ترتيب_ذاكرة.مسترخ / إطلاق / اكتساب / اكتساب_وإطلاق / تسلسلي` | the memory orderings of atomic operations |
 | std.os.wait_address | `wait_on_address`, `wake_by_address_single`, `wake_by_address_all`, `wait_on_address_supported` | `انتظر_عند_العنوان`, `أيقظ_واحدا_عند_العنوان`, `أيقظ_الكل_عند_العنوان`, `هل_الانتظار_عند_العنوان_مدعوم` | futex wait / wake (Windows `WaitOnAddress` names) |
 | | `wait_on_cell`, `wake_one_on_cell` | `انتظر_عند_الخلية`, `أيقظ_واحدا_عند_الخلية` | the same on a bare 32-bit cell |
 | diagnostics | thread capture | `التقاط_خيط_مؤشر_خام`, `التقاط_خيط_مرجع`, `التقاط_خيط_مشترك_غير_ذري` | `SULTANC-THREAD-CAPTURE-RAW-POINTER`, `…-REFERENCE`, `…-NON-ATOMIC-SHARED` |

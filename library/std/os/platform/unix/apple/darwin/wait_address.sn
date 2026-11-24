@@ -1,6 +1,6 @@
 // Waiting on an address (std.os.wait_address) on macOS: the ulock calls of
-// libsystem_kernel (re-exported by libSystem), which Rust's std uses on
-// macOS before 14.4 (sys/pal/unix/futex.rs, `__ulock_wait2`/`__ulock_wake`)
+// libsystem_kernel (re-exported by libSystem), `__ulock_wait2`/`__ulock_wake`
+// (the public os_sync_wait_on_address needs macOS 14.4)
 // and on which libc++'s std::atomic::wait and Apple's own os_unfair_lock are
 // built. os_sync_wait_on_address appeared in macOS 14.4 and is not in the
 // 11.3 SDK std targets; __ulock_wait2 (macOS 11) and __ulock_wake are
@@ -18,19 +18,19 @@
 
 // ETIMEDOUT is 60.
 عام عرف انتظر_عند_عنوان_داروين(الخلية: &ط32, المتوقعة: ط32, المهلة_بالنانو: اختياري عدد): منطقي {
-    دع المهلة: متغير ط64 = 0;
+    ليكن المهلة: متغير ط64 = 0;
     طابق المهلة_بالنانو مع
     | اختياري.لا_شيء -> { }
     | اختياري.موجود(النانو) -> {
         // 0 means "no timeout" to the kernel, so the shortest wait is 1 ns.
         إذا (النانو <= 0) { المهلة := 1; } وإلا { المهلة := النانو مثل ط64; };
     };
-    دع الناتج: ص32 = __ulock_wait2(1 | 16777216, الخلية, المتوقعة مثل ط64, المهلة, 0 مثل ط64);
+    ليكن الناتج: ص32 = __ulock_wait2(1 | 16777216, الخلية, المتوقعة مثل ط64, المهلة, 0 مثل ط64);
     أرجع الناتج != -60;
 }
 
 عام عرف أيقظ_عند_عنوان_داروين(الخلية: &ط32, الكل: منطقي): فراغ {
-    دع العملية: متغير ط32 = 1 | 16777216;
+    ليكن العملية: متغير ط32 = 1 | 16777216;
     إذا (الكل) { العملية := العملية | 256; };
-    دع تجاهل: ص32 = __ulock_wake(العملية, الخلية, 0 مثل ط64);
+    ليكن تجاهل: ص32 = __ulock_wake(العملية, الخلية, 0 مثل ط64);
 }

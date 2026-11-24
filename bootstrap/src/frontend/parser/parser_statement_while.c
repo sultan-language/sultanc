@@ -50,7 +50,7 @@ int __Parser_Parse_While__(__Parser__ *__Parser_State__, __Vector__ *__Statement
     return __Parser_Push_Statement__(__Parser_State__, __Statements__, __Statement__);
 }
 
-/* Parses `لكل (دع name: type = value; condition; place := value) body`
+/* Parses `لكل (ليكن name: type = value; condition; place := value) body`
  * (canonical حلل_لكل): a nested scope holding the initializer and a while
  * loop whose step runs after the body and on continue. */
 int __Parser_Parse_For__(__Parser__ *__Parser_State__, __Vector__ *__Statements__)

@@ -30,6 +30,28 @@ adding_works
 adding_zero_changes_nothing
 ```
 
+## Debugging one test
+
+To step through one test in a debugger, build the test program without running it. `--no-run` with
+`-o PATH` writes the program to `PATH`, runs nothing, and prints one line per test it kept: the test's
+index, a space and its name. `PATH INDEX` then runs that test alone and exits with its status (0 when it
+passes), so the debugger starts the program with the index as its only argument. `--test=NAME` keeps
+exactly one test, and `-O0` builds unoptimized code whose variables the debugger can read, as an
+ordinary `-O0` build does:
+
+```console
+$ sultanc test calc.sn --test=adding_works -O0 -o build/calc-test --no-run
+0 adding_works
+$ build/calc-test 0; echo $?
+0
+```
+
+The lines are the same in every language, for editors and tools to read; the index is the test's
+position in the order `--list` prints the kept tests, counted from 0. `-o` without `--no-run`, and
+`--no-run` without `-o`, are `SULTANC-CLI-CONFLICTING-MODES`, as is `--no-run` with `--list`,
+`--interpret` or `--test-index`. With `--target` for another platform the program is written as well,
+for a debugger on that platform.
+
 ## Tests in a package
 
 In a package, `supax test` runs all the package's tests: those of the library, of every program, and of

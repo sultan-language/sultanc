@@ -82,7 +82,7 @@ import std.text.transform;
 type Rectangle = { width: int, height: int };
 
 def area(rectangle: &Rectangle): int {
-    return (*rectangle).width * (*rectangle).height;
+    return rectangle.width * rectangle.height;
 }
 
 def main(): int {
@@ -101,8 +101,7 @@ computes the area of a `Rectangle`. Nobody can pass the width and height the wro
 nobody passes them separately.
 
 `area` takes `&Rectangle`: it only reads the rectangle, so it borrows it, and `main` keeps it. Inside,
-`(*rectangle).width` reaches the field through the reference; the next section explains why the `*` is
-needed.
+`rectangle.width` reaches the field through the reference; the next section explains how.
 
 `concat3`, from `std.text.transform`, joins three strings, as `concat` joins two.
 
@@ -121,7 +120,7 @@ import std.text.transform;
 type Rectangle = { width: int, height: int };
 
 def describe(rectangle: &Rectangle): string {
-    let text: string = concat3(&int_to_text((*rectangle).width), &" x ", &int_to_text((*rectangle).height));
+    let text: string = concat3(&int_to_text(rectangle.width), &" x ", &int_to_text(rectangle.height));
     return text;
 }
 

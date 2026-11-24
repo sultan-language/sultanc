@@ -18,10 +18,10 @@
     إذا (LATER != 101 || CHOSEN != 1 || HAS_INCLUDE_WORKS != 1 || SHORT_CIRCUIT != 1) { أرجع 4; };
     إذا (C_VERSION != 201710 || CHANGING != 2) { أرجع 5; };
     // نوع كل قيمة في سي يحدد نوعها في سلطان.
-    دع الكبير: ط32 = BIG_UNSIGNED;
-    دع العريض: ص64 = BIG_LONG_LONG;
-    دع الأدنى: ص32 = NEGATIVE_LIMIT;
-    دع المزاح: ط32 = SHIFTED;
+    ليكن الكبير: ط32 = BIG_UNSIGNED;
+    ليكن العريض: ص64 = BIG_LONG_LONG;
+    ليكن الأدنى: ص32 = NEGATIVE_LIMIT;
+    ليكن المزاح: ط32 = SHIFTED;
     إذا (الكبير != 4294967295 || العريض != 4294967296 || الأدنى != -2147483647 - 1 || المزاح != 2147483648) { أرجع 6; };
     إذا (CHAR_VALUE != 65 || ESCAPED_CHAR != 10 || SIZE_OF_INT != 4) { أرجع 7; };
     إذا (HALF != 0.5 || TINY > 0.0011 || TINY < 0.0009) { أرجع 8; };

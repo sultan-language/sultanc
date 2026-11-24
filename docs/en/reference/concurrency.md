@@ -2,27 +2,27 @@
 
 # Concurrency
 
-SultanC follows Rust's model of threads, atomics and shared state (`std::thread`, `std::sync`,
-`std::sync::atomic`, `std::sync::mpsc`) and takes Go's runtime as the reference for the OS layer
-(thread start, futex and semaphore). The design is adapted to SultanC's ownership system, which
-has no traits and runs no user destructors. This page describes each primitive, the OS layer
+SultanC provides OS threads, atomics, shared ownership, locks and channels in `std.thread`,
+`std.sync` and `std.os`, over a thin OS layer (thread start and an address-based wait and wake).
+The design follows SultanC's ownership system, which has no traits and runs no user destructors.
+This page describes each primitive, the OS layer
 underneath, the compile-time check on what a thread may capture, and the current limits. It is
 written for programmers who share data between threads and for those who work on `std.sync`.
 
 ## Modules
 
-| Module | Rust / Go | Contents |
-|---|---|---|
-| `std.sync.atomic` | `std::sync::atomic`; `sync/atomic` | atomic integers and memory orderings |
-| `std.thread.thread` | `std::thread` | `spawn`, `join`, values from threads, sleep, yield |
-| `std.os.wait_address` | `sys::futex`; `runtime.futex`, `sema` | sleep while a 32-bit cell holds a value; wake one or all |
-| `std.sync.arc` | `Arc` | shared ownership with an atomic count |
-| `std.sync.mutex` | `Mutex`; `sync.Mutex` | three-state futex mutex, closure-scoped |
-| `std.sync.rwlock` | `RwLock`; `sync.RWMutex` | readers or one writer |
-| `std.sync.condvar` | `Condvar`; `sync.Cond` | wait and notify on a sequence word |
-| `std.sync.once` | `Once`, `OnceLock`; `sync.Once` | one-time initialization |
-| `std.sync.channel` | `mpsc`; Go channels | unbounded and bounded channels |
-| `std.os.poll` | `mio::Poll`; `runtime.netpoll` | one-shot readiness polling of many non-blocking descriptors |
+| Module | Contents |
+|---|---|
+| `std.sync.atomic` | atomic integers and memory orderings |
+| `std.thread.thread` | `spawn`, `join`, values from threads, sleep, yield |
+| `std.os.wait_address` | sleep while a 32-bit cell holds a value; wake one or all |
+| `std.sync.arc` | shared ownership with an atomic count |
+| `std.sync.mutex` | three-state futex mutex, closure-scoped |
+| `std.sync.rwlock` | readers or one writer |
+| `std.sync.condvar` | wait and notify on a sequence word |
+| `std.sync.once` | one-time initialization |
+| `std.sync.channel` | unbounded and bounded channels |
+| `std.os.poll` | one-shot readiness polling of many non-blocking descriptors |
 
 ## A first program
 
@@ -75,7 +75,7 @@ The program prints the total, 4000.
 `std.sync.atomic` provides atomic integers (`atomic_u64`, `atomic_u32`,
 `atomic_usize`) with load, store, swap, compare-exchange, fetch-add and a memory
 fence. `atomic_u64` also has fetch-and and fetch-or, and has pointer forms that take a `*mutable`
-cell. Orderings follow Rust's `Ordering`:
+cell. The memory orderings are:
 
 | English | Arabic |
 |---|---|
@@ -89,7 +89,7 @@ The operations are compiler intrinsics: `بدائي_ذري_حمل`, `بدائي_
 `بدائي_ذري_قارن_وبدل`, `بدائي_ذري_جلب_جمع`, the bitwise `بدائي_ذري_جلب_و`, `بدائي_ذري_جلب_أو` and
 `بدائي_ذري_جلب_أو_حصري` (fetch-xor), and `بدائي_سياج_ذاكرة` (fence). Unlike every other operation,
 they read and write the integer that a shared reference refers to. This is the one sound point of
-interior mutability, as in Rust, where atomics take `&self`. The frontend accepts a shared `&` to a
+interior mutability. The frontend accepts a shared `&` to a
 32-bit, 64-bit or pointer-sized integer as the first operand.
 
 Every backend lowers the intrinsics to the architecture's atomic instructions at
@@ -108,15 +108,15 @@ every ordering as `seq_cst`, which is always sound.
 
 `std.thread` provides:
 
-| English | Arabic | Rust |
+| English | Arabic | Meaning |
 |---|---|---|
-| `spawn` | `أطلق` | `thread::spawn`: move a closure to a new thread, return a join handle |
-| `join` | `انضم` | `JoinHandle::join` |
+| `spawn` | `أطلق` | move a closure to a new thread, return a join handle |
+| `join` | `انضم` | wait for the thread to finish |
 | `spawn_value`, `join_value` | `أطلق_بقيمة`, `انضم_بقيمة` | a thread whose closure returns a value, which `join_value` answers as an `option` |
-| `sleep` | `نم` | `thread::sleep` (seconds and nanoseconds) |
-| `yield_now` | `تنازل` | `thread::yield_now` |
+| `sleep` | `نم` | sleep the current thread (seconds and nanoseconds) |
+| `yield_now` | `تنازل` | give up the rest of the time slice |
 | `current_id`, `join_handle_id` | `معرف_الخيط_الحالي`, `معرف_المقبض` | the OS thread id |
-| `available_parallelism` | `عدد_المعالجات_المتاحة` | `thread::available_parallelism` |
+| `available_parallelism` | `عدد_المعالجات_المتاحة` | the number of processors the program may use |
 
 `spawn` returns a `result` whose error is the platform's failure to start a thread.
 
@@ -135,8 +135,8 @@ runtime uses.
 
 ### The Linux thread layer
 
-The Linux layer (`library/std/os/platform/unix/linux/threads.sn`) starts a thread the way Go's
-runtime and musl do. A thread gets a 2 MiB `mmap`'d stack with a `PROT_NONE` guard page, and a
+The Linux layer (`library/std/os/platform/unix/linux/threads.sn`) starts a thread the way musl's
+thread start does. A thread gets a 2 MiB `mmap`'d stack with a `PROT_NONE` guard page, and a
 `clone` with `CLONE_VM|FS|FILES|SIGHAND|THREAD|SYSVSEM|PARENT_SETTID|CHILD_CLEARTID`. The clone is
 the compiler intrinsic `بدائي_استنسخ_خيط_نواة`: its child runs the closure on the new stack and
 exits the thread. `join` waits on the tid cell that the kernel clears when the thread exits.
@@ -152,7 +152,7 @@ arguments there, and the flags come from the selected kernel's UAPI.
 
 ### Ownership of the closure
 
-A thread owns its closure, as Rust's `FnOnce` is moved into a thread. The closure goes into a heap
+A thread owns its closure: the closure is moved into the thread and runs once. It goes into a heap
 cell that the thread's entry closure owns. The entry swaps the closure out, runs it and drops it
 when it returns, so whatever the closure captured (an `Arc` clone, a channel's sender) is released
 when the thread finishes, not when or whether it is joined. `join` returns the entry closure's last
@@ -167,8 +167,7 @@ a value back through shared state. A `panic` in any thread ends the whole proces
 
 ## Waiting and waking
 
-`std.os.wait_address` is the one blocking primitive that every `std.sync` type is built on, after
-Rust's `sys/sync/futex` and Go's `runtime/sema`.
+`std.os.wait_address` is the one blocking primitive that every `std.sync` type is built on.
 
 | Call | Meaning |
 |---|---|
@@ -184,8 +183,8 @@ its wait is never lost. A wait may return spuriously, so callers loop on their c
 |---|---|---|---|
 | Linux, Android | `futex(FUTEX_WAIT_PRIVATE)` | `futex(FUTEX_WAKE_PRIVATE)` | timed waits use `futex_time64` on i686 and armv7 (`مستقبل_بمهلة`), so the timespec is 64-bit everywhere; ETIMEDOUT is 110 (mips 145, sparc 60) |
 | FreeBSD | `_umtx_op(UMTX_OP_WAIT_UINT_PRIVATE)` | `_umtx_op(UMTX_OP_WAKE_PRIVATE)` | the timeout is a relative `struct timespec` in `uaddr2` (`مستقبل_بمهلة_بي_إس_دي`) |
-| macOS | `__ulock_wait2(UL_COMPARE_AND_WAIT \| ULF_NO_ERRNO)` | `__ulock_wake` (`ULF_WAKE_ALL`) | what Rust uses before macOS 14.4; `os_sync_wait_on_address` is not in the 11.3 SDK. Imported from libSystem and checked by `tools/audit/macos_imports_audit.py` |
-| Windows | `WaitOnAddress` | `WakeByAddressSingle` / `WakeByAddressAll` | `api-ms-win-core-synch-l1-2-0.dll`, Rust's `synchronization` import; ERROR_TIMEOUT is the timeout |
+| macOS | `__ulock_wait2(UL_COMPARE_AND_WAIT \| ULF_NO_ERRNO)` | `__ulock_wake` (`ULF_WAKE_ALL`) | the private ulock calls, because `os_sync_wait_on_address` (macOS 14.4+) is not in the 11.3 SDK. Imported from libSystem and checked by `tools/audit/macos_imports_audit.py` |
+| Windows | `WaitOnAddress` | `WakeByAddressSingle` / `WakeByAddressAll` | `api-ms-win-core-synch-l1-2-0.dll`, the synchronization API set; ERROR_TIMEOUT is the timeout |
 | WASI, freestanding | returns at once (a timed wait reports the timeout) | nothing | one thread: nobody could change the cell |
 
 The kernel calls carry memory contracts (`توقيع_عملية_نواة_لينكس`: the 4-byte cell, the 16-byte
@@ -193,7 +192,7 @@ timespec), as does every std kernel call that takes a pointer.
 
 ## Shared ownership: Arc
 
-`arc<T>` is Rust's `Arc<T>`: one heap value, any number of handles, an atomic
+`arc<T>` is one heap value, any number of handles, an atomic
 reference count, and the value dropped exactly once with the last handle.
 
 SultanC runs no user destructors, so the count and the drop belong to a closure environment. A
@@ -203,14 +202,14 @@ environment's reference count is the strong count: closures count atomically (`L
 environment's destructor drops the box with the last reference. The closure answers the boxed
 value's address.
 
-| English | Arabic | Rust |
+| English | Arabic | Meaning |
 |---|---|---|
-| `arc_new` | `أنشئ_مشترك` | `Arc::new` |
-| `arc_clone` | `استنسخ_مشترك` | `Arc::clone`; copying a handle is the same clone, as closures are copyable values |
-| `arc_get` | `اقرأ_مشترك` | `Deref`: a shared reference |
-| `arc_strong_count` | `عدد_مراجع_مشترك` | `Arc::strong_count`; reads the environment's count slot |
-| `arc_ptr_eq` | `هل_المشترك_نفسه` | `Arc::ptr_eq` |
-| `arc_as_ptr` | `مؤشر_مشترك` | `Arc::as_ptr` |
+| `arc_new` | `أنشئ_مشترك` | box a value behind a new handle |
+| `arc_clone` | `استنسخ_مشترك` | another handle to the same value; copying a handle is the same clone, as closures are copyable values |
+| `arc_get` | `اقرأ_مشترك` | a shared reference to the value |
+| `arc_strong_count` | `عدد_مراجع_مشترك` | the number of handles; reads the environment's count slot |
+| `arc_ptr_eq` | `هل_المشترك_نفسه` | whether two handles share one value |
+| `arc_as_ptr` | `مؤشر_مشترك` | the value's address |
 
 The value is reached only through a shared reference. Mutation across threads goes through a
 mutex, an rwlock or an atomic inside the `Arc`. The interpreter counts no closure references, so
@@ -219,31 +218,29 @@ intrinsics are refused).
 
 ## Mutex
 
-`mutex<T>` is Rust's futex mutex (`sys/sync/mutex/futex.rs`, after Ulrich Drepper's
-"Futexes Are Tricky"). The state is 0 unlocked, 1 locked, or 2 locked with waiters. An uncontended
+`mutex<T>` is a futex mutex (after Ulrich Drepper's "Futexes Are Tricky"). The state is 0 unlocked, 1 locked, or 2 locked with waiters. An uncontended
 lock is one compare-exchange and an uncontended unlock one swap, with no system call. A contended
 lock spins 100 rounds, marks the state 2 and sleeps; an unlock that finds 2 wakes one sleeper.
 
 The value is reached only inside a closure that runs with the lock held:
 `with_lock(&m, fn(&mutable T): R): R`, or `try_lock`, which answers
-`none` when another thread holds the lock. This is Rust's `MutexGuard` scoped to a call, because
+`none` when another thread holds the lock. The lock is scoped to a call because
 SultanC runs nothing at scope exit: the unlock cannot be forgotten and no reference to the value
 outlives the lock. `mutex_is_locked` reports the state.
 
 There is no poisoning, because a panic ends the process. A mutex moves but is never copied (a
 never-allocated vector marker makes it an owned value), and it is shared through an `Arc`
-(`arc<mutex<T>>`), as in Rust.
+(`arc<mutex<T>>`).
 
 ## RwLock
 
 `rwlock<T>` is one futex word: 0 when free, n for n readers, or `0xFFFFFFFF`
-for a writer. Access is through `with_read` and `with_write`. It
-is simpler than Rust's futex RwLock: there is no writer preference, so a steady stream of readers
-can delay a writer.
+for a writer. Access is through `with_read` and `with_write`. There
+is no writer preference, so a steady stream of readers can delay a writer.
 
 ## Condvar
 
-`condvar` is Rust's futex condvar: a 32-bit sequence number. `condvar_wait(&c, &m)`
+`condvar` is a futex condition variable: a 32-bit sequence number. `condvar_wait(&c, &m)`
 reads the number, releases the mutex, sleeps while the number is unchanged and
 takes the mutex again. A notify increments the number and wakes one sleeper (`condvar_notify_one`) or all
 (`condvar_notify_all`).
@@ -255,7 +252,7 @@ returns. `condvar_wait_timeout` answers whether the wait timed out;
 
 ## Once and OnceLock
 
-`once` is Rust's futex `Once`: 0 incomplete, 1 running, 2 running with sleepers, 3
+`once` is a futex state word: 0 incomplete, 1 running, 2 running with sleepers, 3
 complete. `call_once` runs its closure exactly once however many threads race, and the
 others sleep until it completes. A completed `Once` costs one acquire load.
 
@@ -268,8 +265,10 @@ address stays put. `once_lock_set` refuses a second value.
 
 `channel<T>()` and `sync_channel<T>(bound)` return both ends
 (`channel_ends`), which a pattern takes apart:
-`| { المرسل: tx, المستلم: rx } -> …` (the two fields keep their Arabic names). `channel_receiver` and
-`sender_for` make the ends one at a time. A channel has many senders (`sender_clone`) and one
+`| { المرسل: tx, المستلم: rx } -> …` (the two fields keep their Arabic names). English code borrows them by
+name with `channel_ends_sender(&ends)` and `channel_ends_receiver(&ends)` (`مرسل_الطرفين`, `مستلم_الطرفين`), as
+`send(channel_ends_sender(&ends), x)`: a record field has one name, and these accessors stand for the English one.
+`channel_receiver` and `sender_for` make the ends one at a time, owned. A channel has many senders (`sender_clone`) and one
 receiver, and delivers in FIFO order per sender.
 
 | Operation | English | Arabic |
@@ -284,8 +283,8 @@ receiver, and delivers in FIFO order per sender.
 `send` hands the value back as the error once the receiver is gone. `try_send` reports `full` or
 `disconnected`, with the value. `recv` fails once every sender is gone and nothing
 is queued. `try_recv` and `recv_timeout` report empty, timeout or disconnected, using the error
-types of Rust's `mpsc` (`try_recv_error`, `recv_timeout_error`, `recv_error`,
-`try_send_error`).
+types `try_recv_error`, `recv_timeout_error`, `recv_error` and
+`try_send_error`.
 
 ### Implementation
 
@@ -304,12 +303,12 @@ scope that ends, is noticed by a waiting thread within a few milliseconds, becau
 re-checks the counts between bounded sleeps (1 ms doubling to 32 ms). Ends are not copyable, so a
 spawned closure moves the end it captures.
 
-A bound of 0 holds one value: Rust's rendezvous channel is not implemented.
+A bound of 0 holds one value: a rendezvous channel, where a send waits for a receive, is not implemented.
 
 ## Data-race freedom: the spawn capture check
 
-A closure handed to another thread may capture only what may cross threads, which is Rust's
-`F: Send + 'static`. The compiler rejects a closure that captures:
+A closure handed to another thread may capture only what may cross threads and outlive the
+spawning scope. The compiler rejects a closure that captures:
 
 - a raw pointer, unless the spawn sits inside `unsafe`;
 - a borrowed reference or slice;
@@ -335,25 +334,25 @@ Two process-wide tables are made safe for threads.
   the kernel (`os.platform.*.wait_address`, the untimed calls, which allocate nothing), so a
   waiting thread uses no CPU. Every thread still shares the one lock; per-thread caches would
   remove it from most allocations.
-- The environment table (`std.env.table`; Rust's `ENV_LOCK`, Go's `envLock`) takes one
+- The environment table (`std.env.table`) takes one
   process-wide lock for every read and write once a thread exists, using the three-state protocol
   on a scalar module variable (`wait_on_cell`). Before the first thread, no lock is taken.
 
 ## Readiness polling
 
-`std.os.poll` (after Rust's mio and Go's netpoller) lets one thread serve many non-blocking
+`std.os.poll` lets one thread serve many non-blocking
 sockets: epoll on Linux and Android, kqueue on FreeBSD (system calls) and macOS (libSystem).
 Windows and the other targets report `poll_supported` false; Windows needs IOCP, a completion
 model.
 
-| Call | mio / epoll |
+| Call | Meaning; epoll / kqueue |
 |---|---|
-| `poller_new` | `Poll::new`; `epoll_create1(EPOLL_CLOEXEC)`, `kqueue()` |
-| `poller_register` | `Registry::register`; `EPOLL_CTL_ADD`, `EV_ADD` |
-| `poller_rearm` | `Registry::reregister`; `EPOLL_CTL_MOD`, `EV_ADD` |
-| `poller_deregister` | `Registry::deregister`; `EPOLL_CTL_DEL`, `EV_DELETE` |
-| `poller_wait` | `Poll::poll`; `epoll_pwait`, `kevent` |
-| `poll_event_at` | `Events::iter`: token, readable, writable, hang-up or error |
+| `poller_new` | a new poller; `epoll_create1(EPOLL_CLOEXEC)`, `kqueue()` |
+| `poller_register` | add a descriptor; `EPOLL_CTL_ADD`, `EV_ADD` |
+| `poller_rearm` | re-arm a descriptor; `EPOLL_CTL_MOD`, `EV_ADD` |
+| `poller_deregister` | remove a descriptor; `EPOLL_CTL_DEL`, `EV_DELETE` |
+| `poller_wait` | wait for events; `epoll_pwait`, `kevent` |
+| `poll_event_at` | one event: token, readable, writable, hang-up or error |
 
 Registrations are one-shot (`EPOLLONESHOT`, `EV_ONESHOT`): an event disarms its descriptor until it
 is re-armed, so several threads can wait on one poller and each descriptor reaches one of them at a
@@ -411,10 +410,11 @@ and the accept test is `tests/*/compiler/semantic/thread_capture_allowed.sn`.
 ## Limitations
 
 - The spawn capture check does not see through a closure passed in a variable, a captured
-  closure, or a call that touches a writable module variable. Rust tracks these with auto traits
-  on closure types.
-- Scoped threads (`thread::scope`) need region and lifetime support that the ownership checker
-  does not express cheaply. Thread-locals, barriers and `WaitGroup` do not exist.
+  closure, or a call that touches a writable module variable. Tracking them would need
+  thread-safety facts carried on closure types.
+- Scoped threads (threads that may borrow from the spawning scope) need region and lifetime
+  support that the ownership checker does not express cheaply. Thread-locals, barriers and wait
+  groups do not exist.
 - Atomics ignore weaker orderings and always use `seq_cst`.
 - The rwlock has no writer preference.
 - Channels notice an implicitly dropped end by polling, within 32 ms.
@@ -427,5 +427,5 @@ and the accept test is `tests/*/compiler/semantic/thread_capture_allowed.sn`.
 
 - [Type system](type-system.md#thread-capture-rules): the capture rules.
 - [Ownership](ownership.md): moves, borrows and why closures own what they capture.
-- [Standard library coverage](std-coverage.md): where `std.sync` and `std.thread` sit beside Rust and Go.
+- [Standard library coverage](std-coverage.md): what `std.sync` and `std.thread` cover and what they lack.
 - [Platform dependencies](platform-dependencies.md): the system calls under the wait/wake and thread layers.

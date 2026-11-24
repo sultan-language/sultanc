@@ -3,8 +3,8 @@
 // خروج: 42
 // تفاضلي: نعم
 // نظير: tests/ar/stdlib/fmt/errors.sn
-// std.fmt errors: malformed format strings (Rust rejects each at compile
-// time; std.fmt reports it at run time with the byte offset), arguments
+// std.fmt errors: malformed format strings (a format string built at run
+// time is reported at run time with the byte offset), arguments
 // that are missing, unused or of the wrong type, bad width and precision
 // arguments, a failing custom formatter, and the formatter left unchanged by
 // an error. std.error converts the error to an Error with its identity, an

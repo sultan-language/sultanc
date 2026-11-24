@@ -3,7 +3,7 @@
 // خروج: 42
 // تفاضلي: نعم
 // نظير: tests/ar/language/surface/vector_pop_truncate.sn
-// pop / truncate (Rust's Vec::pop and Vec::truncate): pop moves the last
+// pop / truncate: pop moves the last
 // element out as an option (none when empty), truncate drops the elements
 // past n and does nothing when n is at or past the length. Owned elements
 // (text, nested vectors, closures, records) move or drop exactly once; a

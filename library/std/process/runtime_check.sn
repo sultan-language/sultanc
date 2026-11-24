@@ -1,5 +1,5 @@
-// A failed runtime check (docs/en/reference/errors.md, "Runtime checks"), as
-// Rust's overflow and bounds-check panics: an integer operation whose result
+// A failed runtime check (docs/en/reference/errors.md, "Runtime checks"): an
+// integer operation whose result
 // does not fit its type, an index past the end of a vector or a text, a
 // division or a remainder by zero. The compiler ends each check that fails
 // in one cold call of this function (compiler/msir/runtime_checks.sn), with
@@ -27,13 +27,13 @@
     الأول: عدد,
     الثاني: عدد
 ): فراغ {
-    دع القالب: متجه ط8 = بايتات_من_نص(نص_فحص_تشغيل(النوع, البرنامج_بالإنجليزية()));
-    دع الرسالة: متغير متجه ط8 = [];
-    دع العدد: طبيعي = الطول(القالب) مثل طبيعي;
-    دع ف: متغير طبيعي = 0;
+    ليكن القالب: متجه ط8 = بايتات_من_نص(نص_فحص_تشغيل(النوع, البرنامج_بالإنجليزية()));
+    ليكن الرسالة: متغير متجه ط8 = [];
+    ليكن العدد: طبيعي = الطول(القالب) مثل طبيعي;
+    ليكن ف: متغير طبيعي = 0;
     طالما (ف < العدد) {
         // {0}, {1} and {2}: the index, the length and the place.
-        دع العلامة: متغير طبيعي = 3;
+        ليكن العلامة: متغير طبيعي = 3;
         إذا (القالب[ف] == 0x7B && ف + 2 < العدد) {
             إذا (القالب[ف + 2] == 0x7D) {
                 إذا (القالب[ف + 1] == 0x30) { العلامة := 0; };

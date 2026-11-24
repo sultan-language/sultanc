@@ -6,7 +6,7 @@
 // A write to a `let` without `mutable`: a help, and a machine-applicable
 // fix that inserts `mutable` before the Type (JSON "fixes").
 عرف الرئيسية(): ص32 {
-    دع العدد: ص32 = 3;
+    ليكن العدد: ص32 = 3;
     العدد := 4;
     أرجع العدد;
 }

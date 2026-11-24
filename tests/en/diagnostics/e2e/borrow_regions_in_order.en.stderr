@@ -1,0 +1,34 @@
+error[SULTANC-BORROW-CONFLICT]: borrow conflict — The conflicting borrowed value is `value`. The value is already borrowed mutably, so it cannot be borrowed again.
+  --> tests/en/diagnostics/e2e/borrow_regions_in_order.sn:16:5..16:32
+    |
+ 16 |     let value: mutable int = 1;
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+error[SULTANC-BORROW-CONFLICT]: borrow conflict — The conflicting borrowed value is `items`. The value is borrowed for reading, so it cannot be borrowed mutably.
+  --> tests/en/diagnostics/e2e/borrow_regions_in_order.sn:29:5..29:44
+    |
+ 29 |     let items: mutable vector int = [1, 2];
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+error[SULTANC-BORROW-CONFLICT]: borrow conflict — The conflicting borrowed value is `value`. The value is already borrowed mutably, so it cannot be borrowed again.
+  --> tests/en/diagnostics/e2e/borrow_regions_in_order.sn:37:5..37:32
+    |
+ 37 |     let value: mutable int = 1;
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+error[SULTANC-BORROW-CONFLICT]: borrow conflict — The conflicting borrowed value is `value`. The value is already borrowed mutably, so it cannot be borrowed again.
+  --> tests/en/diagnostics/e2e/borrow_regions_in_order.sn:45:5..45:32
+    |
+ 45 |     let value: mutable int = 1;
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+error[SULTANC-BORROW-REFERENCE-ESCAPE]: reference escapes its valid scope — The escaping reference is `copy`. A reference outlives the value it points to.
+  --> tests/en/diagnostics/e2e/borrow_regions_in_order.sn:56:5..56:29
+    |
+ 56 |     let copy: &int = reader;
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^
+    |

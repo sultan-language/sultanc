@@ -3,7 +3,7 @@
 // خروج: 0
 // نظير: tests/ar/stdlib/behavior/tcp_rebind.sn
 // A server restarted on its port binds again at once (std.net.tcp sets
-// SO_REUSEADDR on Unix listeners, as Rust's std does): the server side closes
+// SO_REUSEADDR on Unix listeners): the server side closes
 // an accepted connection first, which leaves it in TIME_WAIT, then the same
 // address is bound again without any option.
 import std.net.socket_address;

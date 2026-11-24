@@ -3,8 +3,8 @@
 // خروج: 42
 // تفاضلي: نعم
 // نظير: tests/ar/stdlib/behavior/duration_float.sn
-// std.time.duration_float: durations as float seconds (Rust as_secs_f64,
-// try_from_secs_f64; Go Duration.Seconds), rounding to the nearest
+// std.time.duration_float: durations as float seconds, both ways,
+// rounding to the nearest
 // nanosecond and refusing NaN, infinities and out-of-range values.
 import std.time.duration;
 import std.time.duration_float;

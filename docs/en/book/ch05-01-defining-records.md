@@ -34,7 +34,7 @@ def main(): int {
         sign_in_count: 1,
         active: true
     };
-    println(clone(&user.email));
+    println(user.email);
     println(int_to_text(user.sign_in_count));
     return 0;
 }
@@ -81,7 +81,7 @@ def main(): int {
     let visits: mutable Counter = { label: "visits", count: 0 };
     visits.count := visits.count + 1;
     visits.count := visits.count + 1;
-    println(clone(&visits.label));
+    println(visits.label);
     println(int_to_text(visits.count));
     return 0;
 }
@@ -110,7 +110,7 @@ def main(): int {
         labels: ["north", "east"]
     };
     println(int_to_text(line.end.x - line.start.x));
-    println(clone(&line.labels[1]));
+    println(line.labels[1]);
     return 0;
 }
 ```
@@ -128,9 +128,10 @@ A record owns its fields. If all of them are plain, the record is plain and is c
 chapter 4. If any field is owning, like the `string` fields of `User`, the record is owning: assigning
 it moves it, and when its owner goes out of scope, all its fields are freed with it.
 
-That is why the example above printed `clone(&user.email)`: `println` takes its string by value, and
-moving one field out of `user` would leave the record with a hole. Reading a plain field, like
-`user.sign_in_count`, copies it and needs nothing special.
+`println(user.email)` above only borrows the field, because `println` takes `&string`, so `user`
+stays whole. Moving an owning field out, as `let email: string = user.email;` would, is refused: it
+would leave the record with a hole. Copy it with `clone(&user.email)` when you need a string of your
+own. Reading a plain field, like `user.sign_in_count`, copies it and needs nothing special.
 
 ## Another name for a type
 

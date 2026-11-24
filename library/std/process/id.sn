@@ -1,4 +1,4 @@
-// The current process id (Rust std::process::id, Go os.Getpid), for logs
+// The current process id, for logs
 // such as "Started server process [pid]". 0 on platforms without one (WASI).
 استورد نظام_التشغيل.معلومات_العملية;
 

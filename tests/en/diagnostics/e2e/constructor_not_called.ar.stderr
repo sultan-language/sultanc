@@ -1,0 +1,7 @@
+خطأ[SULTANC-NAME-CONSTRUCTOR-NOT-CALLED]: المنشئ ⁨`Color.Red`⁩ يُستدعى بـ⁨`()`⁩: ⁨`Color.Red()`⁩
+  --> tests/en/diagnostics/e2e/constructor_not_called.sn:11:20..11:29
+    |
+ 11 |     let c: Color = Color.Red;
+    |                    ^^^^^^^^^
+    |
+  = مساعدة: استدع المنشئ: أضف ⁨`()`⁩ بعده

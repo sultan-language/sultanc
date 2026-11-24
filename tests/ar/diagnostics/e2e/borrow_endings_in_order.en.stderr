@@ -1,0 +1,67 @@
+error[SULTANC-OWNERSHIP-USE-AFTER-MOVE]: use after move — The value used after being moved is `النص`. The value is used after its ownership was moved.
+  --> tests/ar/diagnostics/e2e/borrow_endings_in_order.sn:18:20..18:24
+    |
+ 18 |         أرجع الطول(النص) مثل عدد;
+    |                    ^^^^ invalid use
+    |
+  ::: tests/ar/diagnostics/e2e/borrow_endings_in_order.sn:16:21..16:25
+    |
+ 16 |     | اختياري.موجود(النص) -> {
+    |                     ^^^^ original owner
+    |
+  ::: tests/ar/diagnostics/e2e/borrow_endings_in_order.sn:17:9..17:15
+    |
+ 17 |         المدخل := { القيمة: اختياري.لا_شيء(), العدد: 2 };
+    |         ^^^^^^ value moved here
+    |
+
+error[SULTANC-OWNERSHIP-USE-AFTER-MOVE]: use after move — The value used after being moved is `الأول`. The value is used after its ownership was moved.
+  --> tests/ar/diagnostics/e2e/borrow_endings_in_order.sn:27:11..27:16
+    |
+ 27 |     أرجع *الأول;
+    |           ^^^^^ invalid use
+    |
+  ::: tests/ar/diagnostics/e2e/borrow_endings_in_order.sn:24:5..24:46
+    |
+ 24 |     ليكن الأول: &عدد = &(*المصدر).العناصر[0];
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ original owner
+    |
+  ::: tests/ar/diagnostics/e2e/borrow_endings_in_order.sn:25:44..25:61
+    |
+ 25 |     ليكن العناصر: &متغير متجه عدد = &متغير (*المصدر).العناصر;
+    |                                            ^^^^^^^^^^^^^^^^^ value moved here
+    |
+
+error[SULTANC-OWNERSHIP-USE-AFTER-MOVE]: use after move — The value used after being moved is `الهدف`. The value is used after its ownership was moved.
+  --> tests/ar/diagnostics/e2e/borrow_endings_in_order.sn:33:11..33:16
+    |
+ 33 |     أرجع *الهدف;
+    |           ^^^^^ invalid use
+    |
+  ::: tests/ar/diagnostics/e2e/borrow_endings_in_order.sn:30:16..30:33
+    |
+ 30 | عرف حصري_منقول(الهدف: &متغير عدد): عدد {
+    |                ^^^^^^^^^^^^^^^^^ original owner
+    |
+  ::: tests/ar/diagnostics/e2e/borrow_endings_in_order.sn:31:30..31:35
+    |
+ 31 |     ليكن الآخر: &متغير عدد = الهدف;
+    |                              ^^^^^ value moved here
+    |
+
+error[SULTANC-OWNERSHIP-USE-AFTER-MOVE]: use after move — The value used after being moved is `الهدف`. The value is used after its ownership was moved.
+  --> tests/ar/diagnostics/e2e/borrow_endings_in_order.sn:38:30..38:35
+    |
+ 38 |     ليكن ثانية: &متغير عدد = الهدف;
+    |                              ^^^^^ invalid use
+    |
+  ::: tests/ar/diagnostics/e2e/borrow_endings_in_order.sn:36:22..36:39
+    |
+ 36 | عرف حصري_منقول_مرتين(الهدف: &متغير عدد): عدد {
+    |                      ^^^^^^^^^^^^^^^^^ original owner
+    |
+  ::: tests/ar/diagnostics/e2e/borrow_endings_in_order.sn:37:30..37:35
+    |
+ 37 |     ليكن الآخر: &متغير عدد = الهدف;
+    |                              ^^^^^ value moved here
+    |

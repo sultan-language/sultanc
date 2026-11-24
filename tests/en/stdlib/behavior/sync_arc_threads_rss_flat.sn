@@ -22,8 +22,8 @@ def add_name(shared: &arc<named>, total: &arc<atomic_u64>): void {
     let old: u64 = atomic_u64_fetch_add(arc_get(total), size, memory_ordering.seq_cst());
 }
 
-// The clones the closure captures live in this frame until it returns, as
-// a Rust `move` closure's would live in the closure alone.
+// The clones the closure captures live in this frame until it returns, not
+// in the closure alone.
 def start_reader(shared: &arc<named>, total: &arc<atomic_u64>): option join_handle {
     let mine: arc<named> = arc_clone(shared);
     let sum: arc<atomic_u64> = arc_clone(total);

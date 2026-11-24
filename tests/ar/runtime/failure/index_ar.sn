@@ -10,7 +10,7 @@
 // stops the program through the panic path: the frame "the program stopped",
 // then the index, the length and the place of the indexing, exit status 1.
 عرف الرئيسية(): عدد {
-    دع القيم: متجه عدد = [10, 20, 30];
-    دع الموضع: عدد = 5;
+    ليكن القيم: متجه عدد = [10, 20, 30];
+    ليكن الموضع: عدد = 5;
     أرجع القيم[الموضع];
 }

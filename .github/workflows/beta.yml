@@ -1,6 +1,7 @@
-# beta: the release candidate, as Rust's beta branch. It moves only by
-# promotion (promote.yml), to a commit of main that passed the full tier, so a
-# push to beta normally finds its qualification and runs no matrix.
+# beta: the release candidate. It moves only by
+# promotion (promote.yml), which merges in the files of a commit of main that
+# passed the full tier, so a push to beta normally finds its qualification and
+# runs no matrix.
 #
 #   push to beta     Verdict links the qualification of that exact commit;
 #                    without one (beta moved by hand to an unqualified commit)

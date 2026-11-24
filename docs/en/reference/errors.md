@@ -110,7 +110,7 @@ The typing rules are:
 - In a function that returns neither, `؟` is a return type mismatch at the `؟` (`SULTANC-TYPE-RETURN-MISMATCH`,
   naming the function's type and the expression's). An option inside a function returning a result is
   `SULTANC-PATTERN-INVALID` at the `؟`.
-- `return EXPR?;` returns `T` itself, so `T` must be the function's result type, as in Rust.
+- `return EXPR?;` returns `T` itself, so `T` must be the function's result type.
 
 The arms follow the return type as written. `option …` gives option arms, and `result …` or a named type (an alias
 of a result) gives result arms. An alias of an option is not recognized, so write `option …` in the signature of a
@@ -178,7 +178,7 @@ A `فشل` (`library/std/error/failure.sn`) holds:
   9457 `type`;
 - a **message** for developers: one sentence in the author's language, without a final period;
 - an optional **cause**, another `فشل`, so errors form a chain;
-- **notes**, in the order they were added (Python's `add_note`);
+- **notes**, in the order they were added;
 - optional **language versions** of the message (see [Language versions](#language-versions)).
 
 The value is opaque. Use the functions below, not its fields, so that fields can be added later. It owns text, a
@@ -191,9 +191,9 @@ and the boxed cause chain, and clone glue copies them.
 | Arabic | English | Signature | Meaning |
 |---|---|---|---|
 | `فشل` | `Error` | type | the error value |
-| `فشل_من` | `error_new` | `(الرسالة: نص): فشل` | ad-hoc error, empty identity (Go `errors.New`) |
+| `فشل_من` | `error_new` | `(الرسالة: نص): فشل` | ad-hoc error, empty identity |
 | `فشل_بهوية` | `error_with_kind` | `(النطاق: نص, النوع: نص, الرسالة: نص): فشل` | error with an identity |
-| `فشل_بسبب` | `error_caused_by` | `(الرسالة: نص, السبب: فشل): فشل` | ad-hoc error wrapping a cause, which is moved in (Go `%w`) |
+| `فشل_بسبب` | `error_caused_by` | `(الرسالة: نص, السبب: فشل): فشل` | ad-hoc error wrapping a cause, which is moved in |
 | `فشل_بهوية_وسبب` | `error_with_kind_caused_by` | `(النطاق: نص, النوع: نص, الرسالة: نص, السبب: فشل): فشل` | error with an identity wrapping a cause |
 | `انسخ_فشل` | `error_copy` | `(&فشل): فشل` | independent deep copy, causes included; the same result as `استنسخ`, in a form Stage0 compiles |
 | `رسالة_فشل` | `error_message` | `(&فشل): نص` | a copy of the message |
@@ -202,7 +202,7 @@ and the boxed cause chain, and clone glue copies them.
 | `له_سبب` | `error_has_cause` | `(&فشل): منطقي` | whether there is a cause |
 | `سبب_فشل` | `error_cause` | `(&فشل): اختياري فشل` | a copy of the direct cause |
 | `ملاحظات_فشل` | `error_notes` | `(&فشل): متجه نص` | a copy of the notes |
-| `هل_من_نوع` | `error_is` | `(&فشل, النطاق: &نص, النوع: &نص): منطقي` | whether this error **or any cause in its chain** has the identity (Go `errors.Is`) |
+| `هل_من_نوع` | `error_is` | `(&فشل, النطاق: &نص, النوع: &نص): منطقي` | whether this error **or any cause in its chain** has the identity |
 | `أضف_ملاحظة` | `error_add_note` | `(&متغير فشل, الملاحظة: نص): فراغ` | appends a note; the identity and message do not change (PEP 678) |
 | `صف_فشل` | `error_describe` | `(&فشل): نص` | developer rendering, below |
 | `اطبع_فشل` | `error_print` | `(&فشل): فراغ` | writes `صف_فشل` and a newline to standard error |
@@ -458,14 +458,55 @@ primitive. `انهيار` without a hamza names the same identifier.
   (`bootstrap/src/semantic/never_return.c`): it identifies `إنهيار` by the canonical path of
   `library/std/process/panic.sn` under the project root, ends the path in its flow check and emits `unreachable`
   after the call.
-- **Abort semantics.** The process ends at once. Owned values that are still alive are not dropped, as with Rust's
-  `panic=abort`, and the operating system reclaims the memory.
+- **Abort semantics.** The process ends at once. Owned values that are still alive are not dropped, and the operating
+  system reclaims the memory.
 
 ### Assertions
 
 `تأكد` / `assert` and `تأكد_برسالة` / `assert_with_message` (`std.debug.assert`) stop the program through the same
 path: the frame "the program stopped" with the reason "an assertion failed", the optional message under it, and
 status 1. [Compile-time evaluation](comptime.md#stddebugassert) specifies them.
+
+### Runtime checks
+
+An integer operation whose result does not fit its type, an index past the end of a vector or a text, and a
+division or remainder by zero stop the program as a panic does: through
+`إنهيار` / `panic`, so the program's panic handler reports them, with the kind and the place in the source. With
+`SULTANC_LANG=en`:
+
+```text
+error[SULTANC-RUNTIME-PROGRAM-STOPPED]: the program stopped
+index 5 out of range for length 3 at src/main.sn:4:12
+```
+
+The other kinds read `integer overflow at …` (`تجاوز العدد الصحيح حدود نوعه عند …`) and `division by zero at …`
+(`قسمة على صفر عند …`). The words are iSpeak's runtime-failure identities (`compiler/runtime/failure_identity.sn`,
+`تجاوز_عدد_صحيح`, `فهرس_خارج_المدى`, `قسمة_على_صفر`), which the compiler writes into `std.process.failure_text`
+(`نص_فحص_تشغيل`) with the frames below; `{0}`, `{1}` and `{2}` in them stand for the index, the length and the
+place.
+
+MSIR's checked integer operations and lowering's bounds checks trap. After compile-time work is discharged and before
+the optimization pipeline, the pass `compiler/msir/runtime_checks.sn` gives each check a branch to one cold block of
+its own, which calls `فشل_فحص_تشغيل` (`std.process.runtime_check`) with the kind, the file (one text global per
+file), the line and the column, and for an index the index and the length; nothing is formatted at the check. That
+function writes the words in the program's language and panics with them. Every consumer of MSIR (x86_64, arm64,
+wasm32, LLVM and both interpreters) therefore reports the same failure. The place is the start of the expression the
+source wrote (`a + b`, `-x`, `v[i]`); an operation the compiler made reports its statement's place.
+
+These checks report:
+
+- add, subtract and multiply of every integer type up to 64 bits, signed and unsigned, including `-x` and a `uint`
+  that would go below zero (add and subtract compute the wrapping result and test it; a multiply of 32 bits or fewer
+  is computed in 64 bits, and one of 64 bits tests whether both operands fit in 32 bits before it divides the product
+  back on the cold path);
+- division and remainder by zero, and the least signed value divided by -1 (an integer overflow);
+- an index past the end of a vector or a text.
+
+These still trap: shifts by the width of the type or more, conversions that do not fit, a check in a function that
+holds compile-time work, in the module initializer, in std's task switch or in the report itself, and every check of
+a program without std (bare metal), which has no report to call. The compiler loads `std.process.runtime_check` for
+every program on a target std serves (`compiler/frontend/semantic_pipeline.sn`); a cold block is not counted in the
+size the inliner limits (`compiler/msir/msir_inlining.sn`).
 
 ## Runtime failures of a program
 
@@ -537,8 +578,16 @@ while starting the server
 returns the value, or calls `أبلغ_عن_خطأ_نقطة_الدخول` and returns 1. The generated text imports
 `std.process.failure`. Every backend's entry adapter (`backend/target/executable_entry_query_context.sn`, the LLVM
 `entry.sn`) and the interpreter thus see an entry with an exit status, and the entry check
-(`SULTANC-ENTRYPOINT-INVALID-SIGNATURE`) applies to `T`: a `T` that is not an exit status, or an `E` that is not
-`فشل`, is reported at the written result type. The error is moved into the report and dropped on the normal return
+(`SULTANC-ENTRYPOINT-INVALID-SIGNATURE`) applies to `T`: a `T` that is not an exit status is reported at the written
+result type. An `E` that is not `فشل` / `Error` is reported at `E` itself, with the reason "the error type of `main`
+must be `Error` (std.error)", the type written, and a fix that writes `Error` (`فشل` in an Arabic source) in its
+place; the call the expansion makes is never named (`frontend/semantic_pipeline.sn`,
+`تشخيصات_خطأ_نقطة_دخول_ليس_فشلا`).
+
+Type names in diagnostics follow the message's language. A std type spelled in Arabic with an English alias
+(`عام مرادف Error = فشل;`) is printed with that alias in English messages, so `--lang=en` shows `Error`, not
+`فشل`, and generic arguments the same way; the first English alias of a declaration is recorded on its symbol
+(`compiler/frontend/names/symbols.sn`, `الاسم_الإنجليزي`). The error is moved into the report and dropped on the normal return
 path, so the program ends cleanly.
 
 ### The interpreter
@@ -550,7 +599,7 @@ assertions end an interpreted program with the native status. WASI's `proc_exit`
 compiler.
 
 `SULTANC-RUN-NEEDS-PROCESS` (environment, kind `run-needs-process`) is reported by `sultanc run` on a host that cannot
-start a process: a wasm32-wasi compiler under Node's WASI or in a browser. A program that only an executable can run
+start a process: a wasm32-wasi compiler under a WASI runtime or in a browser. A program that only an executable can run
 is rejected there instead of being built: one that imports C files, loads `-l` libraries, or calls C functions the
 interpreter cannot call (variadic, `@@c_abi`, at an address, or outside std's WASI imports). The diagnostic names the
 first such part: the external function's link name, the `-l` library, or the C file. Run the program with a native
@@ -579,6 +628,8 @@ The tests come in Arabic and English pairs, and the English one spells `?`.
   `panic` and failed assertions in both program languages, with the exact standard error, exit status, and native
   and interpreter agreement. The runner's `// بيئة:` header sets the program's environment and
   `// خطأ-قياسي-ملف:` names the expected standard error.
+- `tests/{ar,en}/runtime/failure/{overflow,index,division}_{ar,en}.sn` and `unsigned_below_zero_en.sn` cover the
+  runtime checks: the frame, the kind and the exact place, in both program languages, native and interpreted.
 - `tests/{ar,en}/ispeak/check_program_failure_text.sn` checks the words module against the compiler's rendering.
 
 ## Not yet supported

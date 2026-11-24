@@ -32,8 +32,8 @@
 }
 
 عرف الرئيسية(): عدد {
-    دع الناتج: نتيجة exit_status, عدد = نتيجة.نجح(exit_status.exited(3));
-    دع الصنف: json_error_kind = json_error_kind.unexpected_eof();
-    دع القيمة: إشارة_صوت = إشارة_صوت.صاخب(12);
+    ليكن الناتج: نتيجة exit_status, عدد = نتيجة.نجح(exit_status.exited(3));
+    ليكن الصنف: json_error_kind = json_error_kind.unexpected_eof();
+    ليكن القيمة: إشارة_صوت = إشارة_صوت.صاخب(12);
     أرجع درجة_الحالة(الناتج) + درجة_الصنف(الصنف) + درجة_الإشارة(القيمة);
 }

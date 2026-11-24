@@ -1,7 +1,6 @@
 // std.io.print_formatted (المكتبة.دخ.اطبع_منسقا): formatted output to standard
-// output and standard error, after Rust's print!, println!, eprint! and
-// eprintln!, which live in std::io (`std::io::_print`) while the formatting
-// itself is core::fmt.
+// output and standard error. The formatting itself is std.fmt's; the
+// output is std.io's.
 //
 // std.fmt only formats: into a text, a formatter or a std.io writer, with no
 // process stream and no OS. Writing to the process's standard streams is
@@ -14,10 +13,10 @@
 
 // Standard output and error: one write of the whole formatted text.
 عرف اطبع_إلى(القالب: نص, الوسائط: متجه قيمة_تنسيق, سطر: منطقي, الخطأ_القياسي: منطقي): نتيجة طبيعي, خطأ_تنسيق {
-    دع المنسق: متغير منسق = أنشئ_منسقا();
+    ليكن المنسق: متغير منسق = أنشئ_منسقا();
     نسق_في(&متغير المنسق, القالب, الوسائط)؟;
     إذا (سطر) { ألحق(المنسق.الناتج, 0x0A); };
-    دع المكتوب: نتيجة عدد, عدد = اكتب_بايتات_خرج_أو_خطأ(&المنسق.الناتج, الخطأ_القياسي);
+    ليكن المكتوب: نتيجة عدد, عدد = اكتب_بايتات_خرج_أو_خطأ(&المنسق.الناتج, الخطأ_القياسي);
     طابق المكتوب مع
     | نتيجة.خطأ(الرمز) -> { أرجع نتيجة.خطأ(خطأ_تنسيق.فشل_الكتابة(الرمز)); }
     | نتيجة.نجح(العدد) -> { أرجع نتيجة.نجح(العدد مثل طبيعي); };
@@ -28,8 +27,7 @@
     أرجع اكتب_بايتات_خرج(البايتات);
 }
 
-// Rust's print!, println!, eprint!, eprintln! (Go's Printf and Fprintf to
-// os.Stderr); the line forms add "\n".
+// Print to standard output or standard error; the line forms add "\n".
 عام عرف اطبع_منسقا(القالب: نص, الوسائط: متجه قيمة_تنسيق): نتيجة طبيعي, خطأ_تنسيق {
     أرجع اطبع_إلى(القالب, الوسائط, خطأ, خطأ);
 }

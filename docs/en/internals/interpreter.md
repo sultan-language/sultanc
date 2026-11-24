@@ -31,8 +31,8 @@ interpreter bridges it itself, as mature interpreters do. The sources are in
 ### Dispatch
 
 The loop borrows the verified program for the whole run, and each step borrows the current
-instruction in place, with no copy of the instruction or of the block, as wasm3 and Wasmtime's
-Pulley dispatch directly on their code. Frames live in a heap-allocated stack
+instruction in place, with no copy of the instruction or of the block: dispatch runs directly on
+the program's code. Frames live in a heap-allocated stack
 (`حالة_تنفيذ_مفسر.المكدس`), so interpreted recursion never uses the host stack. A popped frame's slot
 table is reused by the next call. Each frame owns one slot per MSIR value ID and a table of local
 storage cells.
@@ -40,8 +40,7 @@ storage cells.
 **Per-function facts.** The first call of a function builds its descriptor (`واصف_دالة_مفسر`,
 `execution/execution_state.sn`): the slot count, the entry block, the parameter value IDs, and a
 numeric descriptor per value ID with the width, signedness and kind (integer, character, float or
-reference) resolved from its type through the registry. CPython keeps the like in a code object and
-Lua in a `Proto`. Handlers read an operand's width and sign from the descriptor table instead of
+reference) resolved from its type through the registry. Handlers read an operand's width and sign from the descriptor table instead of
 walking the type registry on every arithmetic and comparison instruction, which profiles showed to
 be a fifth of the work.
 
@@ -58,8 +57,7 @@ operations (`ضرب_خام_مفسر`, `اقسم_خام_طبيعي`, `ازح_يس
 instead of one shift-and-add or restoring-division step per bit of the width.
 
 **Fast paths.** The dispatch loop runs the instructions that a program executes most through
-specialized handlers (`operations/fast_paths.sn`), after CPython 3.11's adaptive interpreter and
-Lua's integer opcodes. They cover integer constants, arithmetic, comparison and conversion, loads
+specialized handlers (`operations/fast_paths.sn`). They cover integer constants, arithmetic, comparison and conversion, loads
 and stores through the common places, element-place formation, index extraction, the length and
 append primitives, reference and place conversions, and branches. Each runs in one step: operands
 are read in place, width and sign come from the descriptor table, the result is written straight
@@ -72,9 +70,8 @@ executes it and reports any failure. CTFE always takes the checked path, which c
 instruction against its budget.
 
 **Recursion limit.** Unbounded recursion stops at 250 000 live frames with
-`SULTANC-INTERPRETER-RUNTIME-FAILURE` (reason `interpreter.runtime.call-depth-exceeded`), as
-CPython's recursion limit and Lua's `LUAI_MAXCCALLS` stop runaway recursion, instead of growing
-until the host runs out of memory. A native program overflows its 8 MiB stack at a comparable depth.
+`SULTANC-INTERPRETER-RUNTIME-FAILURE` (reason `interpreter.runtime.call-depth-exceeded`), instead
+of growing until the host runs out of memory. A native program overflows its 8 MiB stack at a comparable depth.
 
 ### Memory
 
@@ -98,7 +95,7 @@ storage follows the native model.
   `زيادة_مراجع_إغلاق`, `إنقاص_مراجع_إغلاق` and `مدمر_بيئة_إغلاق` run the same glue, so a captured owner is
   dropped when the last closure goes.
 - Every slot has a generation. A stale handle (use after free, double release) is reported instead of
-  reading reused storage, as Miri's allocation IDs report it.
+  reading reused storage.
 - A place is a root (frame cell, global, box cell or buffer element) and a projection path.
   Projections never cross a handle: an element place is re-rooted at its buffer when it is formed, as
   native code reads the data pointer. Writes mutate in place.
@@ -116,7 +113,7 @@ startup symbols (`sultanc.bootstrap.argc/argv/envp`) that std reads. std's auxv 
 `GetCommandLineW` and `CommandLineToArgvW`, which the foreign-call bridge answers with the program's
 own arguments.
 
-The program's current executable (`std.env.executable`, Rust's `env::current_exe`) is the
+The program's current executable (`std.env.executable`) is the
 interpreter's own path when interpreted. A program that starts a copy of itself
 (`tests/*/stdlib/behavior/fs_lock.sn`) therefore runs that path with `interpret`, its source and `--`
 before its own arguments, on every host.
@@ -131,7 +128,7 @@ buffer is checked against the attested signature, staged, and only the transfer 
 is copied back.
 
 Any other raw call (a user program's own, `clone`, `execve`, `waitid`, `mmap`, socket options, `poll`
-and so on) is marshalled from its runtime values, the way Miri's shims and libffi marshal a foreign
+and so on) is marshalled from its runtime values, the way libffi marshals a foreign
 call. Integers pass as words and a null pointer as 0. A pointer to integer storage (a `u8` or integer
 vector from the referenced element on, or one integer variable) passes as the address of a host copy
 of those bytes, with slack after it. A pointer to a table of string pointers (`execve`'s argv and
@@ -158,11 +155,9 @@ runs the host function through a generated table (`tools/generate/generate_host_
 re-declared with its library and the same C type std gives it. A SultanC executable declares each
 import once, and the LLVM backend rejects a second declaration of a different type, so every pointer
 is spelled `*u8`, which is the same C type. The host loader binds the functions as for any
-executable. This is CPython's and Lua's model of statically registered C functions, and wasm3's
-host-function table.
+executable: the C functions are registered statically, in a host-function table.
 
-The marshalling (`execution/foreign_calls.sn`) follows Miri's foreign-call support and
-libffi/ctypes. Each argument becomes one word.
+The marshalling (`execution/foreign_calls.sn`) follows libffi. Each argument becomes one word.
 
 - An integer passes as is (a boolean as 0 or 1), and a null pointer as 0.
 - A pointer into a host region passes the region's host address.
@@ -178,8 +173,8 @@ Host addresses and pointers are converted with `memmove` and `memcpy` and a zero
 their first argument. Host copies live in host memory (`execution/host_memory.sn`: `HeapAlloc` on
 Windows, `calloc` on macOS).
 
-**Host regions** (`memory.sn`, `منطقة_مضيف_مفسر`) are memory that the host returned to the program, as
-Miri gives every foreign allocation a provenance-tracked place. The bytes are mirrored in one
+**Host regions** (`memory.sn`, `منطقة_مضيف_مفسر`) are memory that the host returned to the program,
+each a provenance-tracked place. The bytes are mirrored in one
 interpreter buffer of fixed length (`u8` elements as bytes, wider integers as values, one record per
 element for a record pointee), so every read and write through a pointer into the region is
 bounds-checked like any buffer access. A read-only region's mirror is static, so a write through it
@@ -192,7 +187,7 @@ is out of bounds.
 
 **errno and the last-error code.** The interpreter keeps errno (macOS) and the Win32 last-error code
 (Windows) in a cell of its own. It hands the cell to the host before every foreign call and takes it
-back afterwards, as Miri keeps its own errno place, so the interpreter's own host work between the
+back afterwards, so the interpreter's own host work between the
 program's call and its errno read cannot change the value.
 
 **Shims** answer the externs whose results point into host memory with an extent that only their
@@ -225,11 +220,11 @@ an extern for macOS, Windows or WASI that the interpreter cannot call:
 
 ### `run` under WASI
 
-A wasm32-wasi compiler (`sultanc` under Node's WASI or a browser shim) runs `sultanc run` in the
+A wasm32-wasi compiler (`sultanc` under a WASI runtime or a browser shim) runs `sultanc run` in the
 checked interpreter. The machine interpreter needs an x86-64 or AArch64 host. On WASI, std's I/O is
 `wasi_snapshot_preview1` imports, and the generated table re-declares each of them with the same
 import module and name. The wasm32-wasi compiler is also the bootstrap seed, so the table imports only
-what the seed's WASI host implements (`bootstrap-wasm/wasm2c.c`, signatures checked). std's other
+what the seed's WASI host implements (`bootstrap-wasm/runtime/wasi.c`, signatures checked in `bootstrap-wasm/wasm2c/module.c`). std's other
 imports (sockets, links, `fd_filestat_set_size`, `path_filestat_set_times`) answer `ENOSYS` until that
 host gains them. The compiler and its host copies share the module's one linear memory, so a
 host address is a linear-memory address and a pointer is its u32 word (`host_memory.sn`). Host copies
@@ -245,10 +240,9 @@ takes the executable route.
 
 A C function that the program declares itself (`extern "libm.so.6" def pow(…)`,
 `extern def labs(…)`) is not in the generated table. The bridge finds it at run time and calls it at
-its address (`execution/host_dynamic.sn`, wired in `foreign_calls.sn`), as Python's ctypes opens a
-library with dlopen and finds a function with dlsym (`Modules/_ctypes/callproc.c`), Miri's native-lib
-mode loads the shared object a user names, and libffi's `ffi_call` loads the argument registers from
-a prepared call interface.
+its address (`execution/host_dynamic.sn`, wired in `foreign_calls.sn`): it opens the library with
+dlopen, finds the function with dlsym and loads the argument registers from a prepared call
+interface, as libffi's `ffi_call` does.
 
 **Lookup.** The declared library is opened once and kept: `dlopen(name, RTLD_NOW)` on Linux and
 macOS, `LoadLibraryW` on Windows. The function is found with `dlsym` or `GetProcAddress` once per
@@ -257,7 +251,7 @@ scope (`dlsym(RTLD_DEFAULT)`), then in the platform C libraries: `libc.so.6` and
 libSystem; `msvcrt.dll`, `ucrtbase.dll` and `kernel32.dll`.
 
 **The call.** `raw_c_call` is the compiler's one primitive for a call at a
-run-time address with the platform C calling convention (Rust's call through an `extern "C" fn`
+run-time address with the platform C calling convention (a call through a C function
 pointer). It takes a fixed register image: a result witness (`u64` for the integer return register,
 `f64` for the floating-point one), the address, eight integer words and eight floating-point words.
 
@@ -290,10 +284,10 @@ fixed arguments only.
 **Linux and the static compiler.** The native Linux compiler is a static executable without the C
 library, and a process that the kernel started without a dynamic loader cannot load glibc soundly:
 `libc.so.6` needs ld.so's own state (its TLS setup, IFUNC resolution from ld.so's CPU features, the
-link map). A small ELF loader in SultanC, as Go's linker reads shared objects for cgo-free dynamic
-imports, would work only for objects with no such dependency, never for libc or libm, and would be a
+link map). A small ELF loader in SultanC, reading shared objects for their dynamic imports, would
+work only for objects with no such dependency, never for libc or libm, and would be a
 second dynamic linker to maintain. The interpreter therefore calls dynamic C functions only where the
-host provides a loader, as a static Go binary cannot dlopen either.
+host provides a loader: a static executable cannot dlopen.
 
 - A compiler that the system's dynamic loader started (an LLVM-enabled build, linked against libLLVM,
   so the C library is in the process) finds `dlopen`, `dlsym`, `dlerror` and `__errno_location` in
@@ -339,6 +333,15 @@ of Eratosthenes over a 3·10^6-element `bool` vector take 0.34 s (native: 0.02 s
 (`machine/raw_memory.sn`) reads and writes 1, 2, 4 and 8 bytes with one host load or store of that width,
 as native code does, instead of a read-modify-write of the enclosing aligned words; that took the same
 program from 0.40 s to 0.34 s.
+
+The machine engine runs a runtime-checked 64-bit add or subtract as one instruction with an
+overflow exit, as LLVM's `sadd.with.overflow` followed by a branch does. The runtime-checks pass
+keeps each checked operation, which traps, and puts before it a wrapping copy of it and a test that
+branches to a cold block calling the overflow report. The word-code optimizer
+(`machine/machine_optimizer.sn`) removes the copy, the test and the branch when nothing else reads
+their registers, and turns the operation into a checked add or subtract that jumps to that block
+on overflow instead of trapping (ops 114 to 121 of `machine/machine_engine.sn`): one dispatch instead
+of six. Multiplication and narrower widths keep the separate test.
 
 A tight loop costs roughly 0.3 to 0.5 microseconds per MSIR instruction. Programs that loop 10^5
 times through the std allocator counters (`tests/*/language/propagation/drops.sn`,

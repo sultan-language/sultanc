@@ -5,8 +5,8 @@
 // نظير: tests/ar/stdlib/fmt/custom.sn
 // std.fmt custom formatters, the Display and Debug of user types: a closure
 // that writes into the formatter with format_into, write_str, write_char and
-// pad, reads the placeholder's spec (Rust's Formatter::width, precision,
-// fill, align, alternate, sign_plus, sign_aware_zero_pad), formats Debug and
+// pad, reads the placeholder's spec (width, precision, fill, align,
+// alternate, sign_plus, sign_aware_zero_pad), formats Debug and
 // pretty Debug ({:#?}, nested inside a list), and leaves the list's spec to
 // the next element. Closures capture plain values only (numbers, booleans,
 // records of them), so a type that owns text is written by its own function
@@ -99,7 +99,7 @@ def main(): int {
     failures := failures + check("p = {}", [pa], "p = (1, -2)");
     failures := failures + check("{:?}", [pa], "Point { x: 1, y: -2 }");
     failures := failures + check("{:#?}", [pa], "Point {\n    x: 1,\n    y: -2,\n}");
-    // Without pad, a custom formatter decides about width, as in Rust.
+    // Without pad, a custom formatter decides about width.
     failures := failures + check("[{:>12}]", [pa], "[(1, -2)]");
 
     let points: vector fmt_arg = [pa, qa];

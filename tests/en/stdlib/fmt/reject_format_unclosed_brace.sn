@@ -3,7 +3,7 @@
 // تشخيص: SULTANC-FORMAT-STRING
 // نظير: tests/ar/stdlib/fmt/reject_format_unclosed_brace.sn
 // A `{` that no `}` closes.
-// Rust: expected `}`.
+// Reason: format.unclosed-brace.
 import std.fmt.fmt;
 
 def main(): int {

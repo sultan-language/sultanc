@@ -1,0 +1,90 @@
+// اختبار: تشغيل
+// خروج: 42
+// نظير: tests/ar/language/ownership/legality_paths.sn
+// The ownership legality analysis (docs/en/internals/ownership-analysis.md,
+// "Legality") accepts every use below: each local holds its value wherever it
+// is read. A match arm that binds the whole scrutinee moves it on that path
+// only, so the arm that falls through still holds it; a match on an owned
+// binding moves only that binding; a returned field moves its whole record;
+// a local declared without a value is given one on every path before it is
+// read, also afresh in each loop iteration; a loop body moves an owner and
+// gives it a new value before the next iteration; a closure owns the text it
+// captures, which is read only through the closure afterwards.
+type Kind = | small of int | named of string;
+type Wrap = | some of Kind | empty;
+type Person = { name: string, age: int };
+
+def consume(text: string): int { return length(text) as int; }
+def keep(kind: Kind): int {
+    match kind with
+    | Kind.small(n) -> { return n; }
+    | Kind.named(text) -> { return consume(text); };
+}
+
+def whole_binding(n: int): int {
+    let kind: Kind = Kind.small(n);
+    match kind with
+    | Kind.named(text) -> { return consume(text); }
+    | rest -> {
+        if (n > 100) { return keep(rest); };
+    };
+    return 1;
+}
+
+def nested(n: int): int {
+    let wrap: Wrap = Wrap.some(Kind.named("abc"));
+    match wrap with
+    | Wrap.some(inner) -> {
+        match inner with
+        | Kind.small(k) -> { return k + n; }
+        | other -> { return keep(other); };
+    }
+    | Wrap.empty -> { return 0; };
+}
+
+def field_return(n: int): string {
+    let person: Person = { name: "ab", age: n };
+    return person.name;
+}
+
+def deferred(flag: bool): int {
+    let text: string;
+    if (flag) { text := "four"; } else { text := "x"; };
+    return consume(text);
+}
+
+def per_iteration(): int {
+    let i: mutable int = 0;
+    let total: mutable int = 0;
+    while (i < 3) {
+        let step: int;
+        if (i == 1) { step := 2; } else { step := 1; };
+        total := total + step;
+        i := i + 1;
+    }
+    return total;
+}
+
+def moved_and_refilled(): int {
+    let text: mutable string = "a";
+    let i: mutable int = 0;
+    let total: mutable int = 0;
+    while (i < 3) {
+        total := total + consume(text);
+        text := "bb";
+        i := i + 1;
+    }
+    return total;
+}
+
+def captured(): int {
+    let text: string = "seven..";
+    let f: fn(int): int = fn(x: int): int -> x + (length(text) as int);
+    return f(0);
+}
+
+def main(): int {
+    // 1 + 3 + 2 + 4 + 4 + 5 + 7 + 16
+    return whole_binding(5) + nested(0) + (length(field_return(1)) as int) + deferred(true)
+        + per_iteration() + moved_and_refilled() + captured() + 16;
+}

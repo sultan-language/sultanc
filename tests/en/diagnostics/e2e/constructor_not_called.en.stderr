@@ -1,0 +1,7 @@
+error[SULTANC-NAME-CONSTRUCTOR-NOT-CALLED]: constructor `Color.Red` is called with `()`: `Color.Red()`
+  --> tests/en/diagnostics/e2e/constructor_not_called.sn:11:20..11:29
+    |
+ 11 |     let c: Color = Color.Red;
+    |                    ^^^^^^^^^
+    |
+  = help: call the constructor: add `()` after it

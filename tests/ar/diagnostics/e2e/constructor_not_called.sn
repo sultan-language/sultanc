@@ -1,0 +1,15 @@
+// اختبار: رفض
+// تشخيص: SULTANC-NAME-CONSTRUCTOR-NOT-CALLED
+// نظير: tests/en/diagnostics/e2e/constructor_not_called.sn
+// خرج-تشخيص-عربي: constructor_not_called.ar.stderr
+// خرج-تشخيص-إنجليزي: constructor_not_called.en.stderr
+// منشئ بلا حمولة مستعمل قيمةً: يُستدعى بـ`()`. مساعدة وإصلاح آلي يضيف `()`
+// (حقل "fixes" في JSON).
+نوع لون = | أحمر | أخضر;
+
+عرف الرئيسية(): ص32 {
+    ليكن ل: لون = لون.أحمر;
+    طابق ل مع
+    | لون.أحمر -> { أرجع 42; }
+    | لون.أخضر -> { أرجع 0; };
+}

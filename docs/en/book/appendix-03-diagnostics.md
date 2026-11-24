@@ -49,6 +49,7 @@ Value used after move. Find the move in the related spans.
 
 | Identity | Explanation |
 | --- | --- |
+| `SULTANC-NAME-CONSTRUCTOR-NOT-CALLED` | A constructor is called to make a value: with `()` when it has no payload (`Color.Red()`), with its arguments otherwise. |
 | `SULTANC-NAME-DUPLICATE-DECLARATION` | The same name is declared twice in one scope. Rename or remove one declaration. |
 | `SULTANC-NAME-PRIVATE` | This declaration is private here. Access it from an allowed scope. |
 | `SULTANC-NAME-UNKNOWN` | Name is not visible here. Check spelling, scope and imports. |
@@ -150,6 +151,7 @@ Value used after move. Find the move in the related spans.
 | `SULTANC-OWNERSHIP-PARTIAL-MOVE` | Moving one owned member out of an aggregate is not allowed. Move or copy the whole value. |
 | `SULTANC-OWNERSHIP-RESOURCE-RELEASED` | The resource is used after it was released. Use it before the release, or do not release it yet. |
 | `SULTANC-OWNERSHIP-USE-AFTER-MOVE` | Value used after move. Find the move in the related spans. |
+| `SULTANC-OWNERSHIP-MERGE-CONFLICT` | A local holds a value on one path and none, moved, released or borrowed differently on another, and the paths join. Give it the same state on every path before the join. |
 
 ## Borrowing
 
@@ -426,6 +428,11 @@ Value used after move. Find the move in the related spans.
 | --- | --- |
 | `SULTANC-RUNTIME-PROGRAM-ERROR` | The program entry returned an error. Its description follows: the message, its notes and its causes. The exit status is 1. |
 | `SULTANC-RUNTIME-PROGRAM-STOPPED` | The program called the stop primitive (panic) or an assertion failed. Owned values are not dropped. The exit status is 1. |
+
+A failed runtime check stops the program through the same path, under `SULTANC-RUNTIME-PROGRAM-STOPPED`.
+The line under the headline names the kind and the place: `integer overflow at main.sn:6:22`,
+`index 10 out of range for length 3 at main.sn:5:12`, `division by zero at main.sn:5:12`
+([chapter 9](ch09-01-unrecoverable-errors.md)).
 
 ## A running program
 

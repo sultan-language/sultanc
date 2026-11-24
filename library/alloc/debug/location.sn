@@ -1,8 +1,7 @@
 استورد نصوص.أعداد;
 استورد نصوص.من_بايتات;
 
-// A place in a source file (docs/en/reference/testing.md), as Rust's
-// `std::panic::Location`. The compiler makes one at each call of a function
+// A place in a source file (docs/en/reference/testing.md). The compiler makes one at each call of a function
 // marked `@@track_caller` (`@@يتتبع_المستدعي`): such a function's last
 // parameter is a موقع_مصدر, which callers do not pass; the call passes its
 // own place (inside another marked function, the location that function
@@ -18,7 +17,7 @@
 
 // `<file>:<line>:<column>`, as a diagnostic's `-->` line shows a place.
 عام عرف نص_موقع_مصدر(الموقع: &موقع_مصدر): نص {
-    دع البايتات: متغير متجه ط8 = بايتات_من_نص(انسخ_نص((*الموقع).الملف));
+    ليكن البايتات: متغير متجه ط8 = بايتات_من_نص(انسخ_نص((*الموقع).الملف));
     ألحق(البايتات, 0x3A);
     ألحق_بايتات_نص(&متغير البايتات, طبيعي_إلى_نص((*الموقع).السطر));
     ألحق(البايتات, 0x3A);

@@ -1,0 +1,29 @@
+استورد compiler.diagnostics.record;
+استورد compiler.frontend.semantic_pipeline;
+استورد compiler.msir.semantic_lowering;
+
+// The ownership legality of a tooling request (docs/en/internals/
+// ownership-analysis.md, "Tooling"): the program the request analyzed is
+// lowered for the analysis only, every function that lowers (one a partial
+// program cannot lower is left out), and analyzed with its generic templates
+// as a compilation's is (semantic_lowering.sn, حلل_ملكية_واجهة_للواجهة_مسير).
+// Its errors join the request's diagnostics, in the order of the modules and
+// their declarations, and the uses of a local's name that move its value out
+// become the result's moved names (tooling_queries.sn). The Frontend runs it
+// for every request of a program that loads this module: it is registered
+// when the program starts (the driver registers it itself, before a
+// compilation).
+@@سجل_محلل_ملكية_أدوات
+عام عرف حلل_ملكية_طلب_أدوات(الواجهة: &متغير نتيجة_واجهة_وحدة): مجموعة_تشخيصات {
+    أرجع حلل_ملكية_واجهة_للواجهة_مسير(الواجهة);
+}
+
+// The same for chosen modules (semantic_pipeline.sn,
+// حلل_ملكية_مرحلية_واجهة): a session's kept state is analysed once.
+@@سجل_محلل_ملكية_أدوات_مختارة
+عام عرف حلل_ملكية_وحدات_مختارة_طلب_أدوات(
+    الواجهة: &متغير نتيجة_واجهة_وحدة,
+    الوحدات_المختارة: &متجه منطقي
+): مجموعة_تشخيصات {
+    أرجع حلل_ملكية_وحدات_مختارة_للواجهة_مسير(الواجهة, الوحدات_المختارة);
+}

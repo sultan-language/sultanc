@@ -9,8 +9,8 @@ and not a word-for-word translation of another language's keywords, but a comple
 build real software with.
 
 SultanC grew out of that wish. Work on it began in 2024, and the road was not easy: the compiler was
-first written in OCaml, the way Rust began, then rewritten entirely in C, and finally written in SultanC itself
-until it could compile itself. The first OCaml versions are still preserved on the
+first written as a prototype, then rewritten entirely in C, and finally written in SultanC itself
+until it could compile itself. The first prototype versions are still preserved on the
 repository's releases page.
 
 The goal is that anyone standing today where I stood back then finds a way into programming in their own

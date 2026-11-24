@@ -1,6 +1,6 @@
 // The process id and terminal checks on Linux, Android and FreeBSD, on raw
 // system calls with no libc (Nahr items 17): getpid, and isatty(3) the way
-// musl and Go's x/term test a descriptor, an ioctl that reads the terminal
+// musl tests a descriptor, an ioctl that reads the terminal
 // attributes (Linux TCGETS, FreeBSD TIOCGETA) and fails with ENOTTY on
 // anything that is not a terminal.
 استورد نظام_التشغيل.منصات.يونكس.لينكس.نداءات_النظام.نتيجة_النواة;
@@ -10,7 +10,7 @@
 
 // getpid() cannot fail.
 عام عرف معرف_العملية_لينكس(): ط64 {
-    دع الخام: ط64;
+    ليكن الخام: ط64;
     غير_آمن {
         الخام := بدائي_نداء_نواة_خام(
             رقم_نداء_نواة_لينكس(عملية_نداء_نواة_لينكس.معرف_العملية()),
@@ -42,8 +42,8 @@
 // Whether the descriptor is a terminal. The 64-byte buffer holds the
 // largest kernel termios (44 bytes on powerpc and FreeBSD).
 عام عرف هل_طرفية_لينكس(الواصف: ط64): منطقي {
-    دع المخزن: متغير متجه ط64 = [0, 0, 0, 0, 0, 0, 0, 0];
-    دع الخام: ط64;
+    ليكن المخزن: متغير متجه ط64 = [0, 0, 0, 0, 0, 0, 0, 0];
+    ليكن الخام: ط64;
     غير_آمن {
         الخام := بدائي_نداء_نواة_خام(
             رقم_نداء_نواة_لينكس(عملية_نداء_نواة_لينكس.تحكم_جهاز()),

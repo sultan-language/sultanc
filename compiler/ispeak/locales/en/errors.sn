@@ -159,6 +159,7 @@
     | معرف_تشخيص.كتابة_إلى_غير_متغير -> { أرجع «cannot write to an immutable value»; }
     | معرف_تشخيص.تصريح_مكرر -> { أرجع «duplicate declaration»; }
     | معرف_تشخيص.اسم_غير_معروف -> { أرجع «unknown name»; }
+    | معرف_تشخيص.منشئ_غير_مستدعى -> { أرجع «constructor used as a value without being called»; }
     | معرف_تشخيص.اسم_غير_محلول -> { أرجع «unresolved name»; }
     | معرف_تشخيص.استيراد_غامض -> { أرجع «ambiguous import»; }
     | معرف_تشخيص.دورة_استيراد -> { أرجع «import cycle»; }
@@ -181,6 +182,7 @@
     | معرف_تشخيص.نوع_إرجاع_غير_مطابق -> { أرجع «return type does not match»; }
     | معرف_تشخيص.استخدام_قبل_التهيئة -> { أرجع «use before initialization»; }
     | معرف_تشخيص.استخدام_بعد_النقل -> { أرجع «use after move»; }
+    | معرف_تشخيص.تعارض_ملكية_عند_الدمج -> { أرجع «ownership state of a local differs between paths that join»; }
     | معرف_تشخيص.مورد_محرر -> { أرجع «resource was already released»; }
     | معرف_تشخيص.تعارض_استعارة -> { أرجع «borrow conflict»; }
     | معرف_تشخيص.هروب_مرجع -> { أرجع «reference escapes its valid scope»; }

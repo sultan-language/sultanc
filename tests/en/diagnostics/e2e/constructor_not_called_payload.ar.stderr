@@ -1,0 +1,7 @@
+خطأ[SULTANC-NAME-CONSTRUCTOR-NOT-CALLED]: المنشئ ⁨`Shape.Circle`⁩ يأخذ حجة واحدة: ⁨`Shape.Circle(...)`⁩
+  --> tests/en/diagnostics/e2e/constructor_not_called_payload.sn:11:20..11:32
+    |
+ 11 |     let s: Shape = Shape.Circle;
+    |                    ^^^^^^^^^^^^
+    |
+  = مساعدة: استدع المنشئ بحججه بين ⁨`(`⁩ و⁨`)`⁩

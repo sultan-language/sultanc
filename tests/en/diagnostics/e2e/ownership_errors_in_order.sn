@@ -1,0 +1,45 @@
+// اختبار: رفض
+// تشخيص: SULTANC-TYPE-MISMATCH
+// نظير: tests/ar/diagnostics/e2e/ownership_errors_in_order.sn
+// خرج-تشخيص-عربي: ownership_errors_in_order.ar.stderr
+// خرج-تشخيص-إنجليزي: ownership_errors_in_order.en.stderr
+// Each function's first ownership error is reported, in the functions' order,
+// after the type error found first: the generic template's use after move
+// from the flow analysis of the source, the borrow conflict, the use after
+// move and the use before initialization from the ownership legality
+// analysis on MSIR (docs/en/internals/ownership-analysis.md, "Legality").
+def consume(text: string): int { return length(text) as int; }
+
+def borrowed_then_moved(): int {
+    let values: mutable vector int = [40, 2];
+    let first: &int = &values[0];
+    match pop(values) with
+    | option.some(v) -> { return *first + v; }
+    | option.none -> { return 0; };
+}
+
+def moved_twice(): int {
+    let text: string = "twice";
+    let a: int = consume(text);
+    return a + consume(text);
+}
+
+def generic_twice<T>(value: T, sink: fn(T): int): int {
+    let first: int = sink(value);
+    return first + sink(value);
+}
+
+def read_unset(flag: bool): int {
+    let text: string;
+    if (flag) { text := "set"; };
+    return consume(text);
+}
+
+def mistyped(): int {
+    let count: int = "text";
+    return count;
+}
+
+def main(): int {
+    return moved_twice() + read_unset(true) + generic_twice("x", consume) + borrowed_then_moved();
+}

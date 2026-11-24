@@ -3,7 +3,7 @@
 // تشخيص: SULTANC-FORMAT-STRING
 // نظير: tests/ar/stdlib/fmt/reject_format_unused_argument.sn
 // The call passes an argument the format string never uses.
-// Rust: argument never used.
+// Reason: format.unused-argument.
 import std.fmt.fmt;
 
 def main(): int {

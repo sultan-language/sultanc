@@ -4,8 +4,8 @@ error[SULTANC-FLOW-USE-BEFORE-INITIALIZATION]: use before initialization — The
  9 |     أرجع س;
    |          ^ invalid use
    |
-  ::: tests/ar/diagnostics/e2e/use_before_initialization.sn:8:5..8:15
+  ::: tests/ar/diagnostics/e2e/use_before_initialization.sn:8:5..8:17
    |
- 8 |     دع س: عدد;
-   |     ^^^^^^^^^^ declared here
+ 8 |     ليكن س: عدد;
+   |     ^^^^^^^^^^^^ declared here
    |

@@ -1,0 +1,54 @@
+// اختبار: رفض
+// تشخيص: SULTANC-BORROW-CONFLICT
+// نظير: tests/ar/diagnostics/e2e/borrow_conflicts_in_order.sn
+// خرج-تشخيص-عربي: borrow_conflicts_in_order.ar.stderr
+// خرج-تشخيص-إنجليزي: borrow_conflicts_in_order.en.stderr
+// A value borrowed exclusively may not be read; a borrowed value may not be
+// assigned, passed on by value, changed in place, or borrowed exclusively by
+// a call, and a call may not borrow one place both exclusively and shared.
+// Each function reports its first error.
+def keep(value: int): int { return value; }
+def bump(target: &mutable int): int { *target := *target + 1; return *target; }
+def pair(first: &mutable int, second: &int): int { return *first + *second; }
+
+def read_while_mutably_borrowed(): int {
+    let value: mutable int = 1;
+    let writer: &mutable int = &mutable value;
+    let copy: int = value;
+    return *writer + copy;
+}
+
+def assign_while_borrowed(): int {
+    let value: mutable int = 1;
+    let reader: &int = &value;
+    value := 2;
+    return *reader;
+}
+
+def pass_while_borrowed(): int {
+    let value: int = 1;
+    let reader: &int = &value;
+    let copy: int = keep(value);
+    return *reader + copy;
+}
+
+def call_borrows_twice(): int {
+    let value: mutable int = 1;
+    return pair(&mutable value, &value);
+}
+
+def call_borrow_while_held(): int {
+    let value: mutable int = 1;
+    let reader: &int = &value;
+    let bumped: int = bump(&mutable value);
+    return *reader + bumped;
+}
+
+def append_while_viewed(): int {
+    let items: mutable vector int = [1];
+    let first: &int = &items[0];
+    append(items, 2);
+    return *first;
+}
+
+def main(): int { return 0; }

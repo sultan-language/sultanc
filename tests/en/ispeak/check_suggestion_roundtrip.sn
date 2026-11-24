@@ -10,6 +10,7 @@ import std.fs.write_file;
 import std.fs.walk;
 import std.encoding.positions;
 import compiler.driver.source_inputs;
+import compiler.driver.ownership_diagnostics;
 import compiler.frontend.semantic_pipeline;
 import compiler.frontend.cancellation;
 import compiler.backend.target.target_model;
@@ -57,7 +58,13 @@ def errors_of(path: &string): option مجموعة_تشخيصات {
             | نتيجة_بناء_واجهة_قابلة_للإلغاء.ملغاة -> { return option.some(مجموعة_تشخيصات_جديدة()); }
             | نتيجة_بناء_واجهة_قابلة_للإلغاء.مرفوضة(found) -> { return option.some(found); }
             | نتيجة_بناء_واجهة_قابلة_للإلغاء.مكتملة(frontend) -> {
-                if (frontend.تشخيصات_الأدوات.عدد_الأخطاء > 0) { return option.some(انسخ_مملوكا_مجموعة_تشخيصات(&frontend.تشخيصات_الأدوات)); };
+                // A compilation states the errors of its ownership on MSIR
+                // (the ownership legality analysis), after those the
+                // Frontend gathered.
+                let completed: mutable نتيجة_واجهة_وحدة = frontend;
+                let found: مجموعة_تشخيصات = تشخيصات_ملكية_واجهة_مكتملة(&mutable completed);
+                if (found.عدد_الأخطاء > 0) { return option.some(found); };
+                if (completed.تشخيصات_الأدوات.عدد_الأخطاء > 0) { return option.some(انسخ_مملوكا_مجموعة_تشخيصات(&completed.تشخيصات_الأدوات)); };
                 return option.none();
             };
         };
@@ -183,6 +190,10 @@ def main(): int {
         "SULTANC-PARSE-SYNTAX", "insert-semicolon", "machine-applicable", 1, 22); };
     if (r == 0) { r := check_case(&dir, "keyword", "def main(): i32 {\n    let a: i32 = 3;\n    retrun a;\n}\n",
         "SULTANC-PARSE-KEYWORD-TYPO", "replace-keyword-spelling", "machine-applicable", 2, 4); };
+    // `()` after a constructor without payloads read as a value; applied,
+    // the constructor is called.
+    if (r == 0) { r := check_case(&dir, "constructor", "type Color = | Red | Green;\ndef main(): i32 {\n    let c: Color = Color.Red;\n    return 0;\n}\n",
+        "SULTANC-NAME-CONSTRUCTOR-NOT-CALLED", "call-constructor", "machine-applicable", 2, 28); };
     let removed: result int, int = احذف_الشجرة(&dir);
     if (r != 0) { return r; };
     // Every help key has a distinct machine kind.
@@ -202,6 +213,6 @@ def main(): int {
         | option.none -> { };
         n := n + 1;
     }
-    if ((length(kinds) as uint) != 24) { return 31; };
+    if ((length(kinds) as uint) != 25) { return 31; };
     return 0;
 }

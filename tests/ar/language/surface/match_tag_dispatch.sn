@@ -40,10 +40,10 @@
 }
 
 عرف الرئيسية(): عدد {
-    دع first: عدد = score(Code.C0()) + score(Code.P6(0)) + score(Code.C1())
+    ليكن first: عدد = score(Code.C0()) + score(Code.P6(0)) + score(Code.C1())
         + score(Code.P6(5)) + score(Code.C2()) + score(Code.P7(3))
         + score(Code.C3()) + score(Code.P10(1)) + score(Code.C9());
-    دع balance: عدد = score(Code.P10(9)) - score(Code.C11()) + 2;
-    دع second: عدد = tail(Wide.W14()) + tail(Wide.W16()) + tail(Wide.W3()) + tail(Wide.W12());
+    ليكن balance: عدد = score(Code.P10(9)) - score(Code.C11()) + 2;
+    ليكن second: عدد = tail(Wide.W14()) + tail(Wide.W16()) + tail(Wide.W3()) + tail(Wide.W12());
     أرجع first + balance + second;
 }

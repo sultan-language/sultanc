@@ -54,8 +54,9 @@ no escapes here: \t "quotes" stay as they are
 ## Text owns its contents
 
 A `string` is an owning value: its characters live on the heap. Everything from chapter 4 applies.
-Passing a string to a function that takes `string` moves it, which is why `println(greeting)` uses
-`greeting` up, and functions that only read text take `&string`.
+Passing a string to a function that takes `string` moves it, so functions that only read text take
+`&string`. `println` is one of them: a `string` passed where `&string` is expected is borrowed for the
+call, so `println(greeting)` leaves `greeting` usable.
 
 ## Joining text
 
@@ -114,9 +115,10 @@ not a number
 
 ## Comparing text
 
-Two strings are compared with `texts_equal`, which returns a `bool`, and
-`compare_texts_lexicographically`, which gives their dictionary order: a negative number if the first
-comes first, zero if they are equal, a positive number otherwise:
+`==` and `!=` compare two strings by their contents: they are equal when they hold the same characters.
+Neither side is moved, so a string stays usable after a comparison. For their dictionary order,
+`compare_texts_lexicographically`, from `std.text.compare`, gives a negative number if the first comes
+first, zero if they are equal, a positive number otherwise. `<` and `>` are not defined for text:
 
 ```sultan
 import std.io.println;
@@ -124,7 +126,7 @@ import std.text.compare;
 
 def main(): int {
     let answer: string = "yes";
-    if (texts_equal(&answer, &"yes")) {
+    if (answer == "yes") {
         println("confirmed");
     };
     if (compare_texts_lexicographically(&"apple", &"banana") < 0) {
@@ -138,6 +140,9 @@ def main(): int {
 confirmed
 apple comes first
 ```
+
+`std.text.compare` also has `texts_equal(&a, &b)`, the same test as `==` written as a function, for
+code that needs the comparison as a function value.
 
 A `match` on a string, as in chapter 3, also compares texts.
 
@@ -241,7 +246,7 @@ def main(): int {
     let clean: string = trim(&line);
     let colors: vector string = split(&clean, &", ");
     println(int_to_text(length(colors)));
-    println(clone(&colors[1]));
+    println(colors[1]);
     println(replace(&clean, &"green", &"gold"));
     match substring(&clean, 5, 5) with
     | option.some(part) -> { println(part); }

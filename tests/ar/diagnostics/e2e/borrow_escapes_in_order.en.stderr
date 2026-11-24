@@ -1,0 +1,34 @@
+error[SULTANC-BORROW-REFERENCE-ESCAPE]: reference escapes its valid scope — The escaping reference is `القيمة`. A reference outlives the value it points to.
+  --> tests/ar/diagnostics/e2e/borrow_escapes_in_order.sn:10:5..10:26
+    |
+ 10 |     ليكن القيمة: عدد = 1;
+    |     ^^^^^^^^^^^^^^^^^^^^^
+    |
+
+error[SULTANC-BORROW-REFERENCE-ESCAPE]: reference escapes its valid scope — The escaping reference is `المرجع`. A reference outlives the value it points to.
+  --> tests/ar/diagnostics/e2e/borrow_escapes_in_order.sn:16:5..16:33
+    |
+ 16 |     ليكن المرجع: &عدد = &القيمة;
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+error[SULTANC-BORROW-REFERENCE-ESCAPE]: reference escapes its valid scope — The escaping reference is `العرض`. A reference outlives the value it points to.
+  --> tests/ar/diagnostics/e2e/borrow_escapes_in_order.sn:22:5..22:37
+    |
+ 22 |     ليكن العرض: &متجه عدد = &المحلي;
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+error[SULTANC-BORROW-REFERENCE-ESCAPE]: reference escapes its valid scope — The escaping reference is `المرجع`. A reference outlives the value it points to.
+  --> tests/ar/diagnostics/e2e/borrow_escapes_in_order.sn:28:5..28:33
+    |
+ 28 |     ليكن المرجع: &عدد = &القيمة;
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+error[SULTANC-BORROW-REFERENCE-ESCAPE]: reference escapes its valid scope — The escaping reference is `الهدف`. A reference outlives the value it points to.
+  --> tests/ar/diagnostics/e2e/borrow_escapes_in_order.sn:33:18..33:35
+    |
+ 33 | عرف التقاط_متغير(الهدف: &متغير عدد): دالة(عدد): عدد {
+    |                  ^^^^^^^^^^^^^^^^^
+    |

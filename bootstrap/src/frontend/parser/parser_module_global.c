@@ -3,7 +3,7 @@
  * Canonical owner: compiler/frontend/parser/declarations.sn
  * (حلل_عنصر_قيمة_عليا with خارجية). The grammar is
  *
- *   ["عام"] "خارجي" "دع" name ":" type "=" text ";"
+ *   ["عام"] "خارجي" "ليكن" name ":" type "=" text ";"
  *
  * External data is an imported linker symbol, never an initialized value. The
  * text literal is the exact native symbol name, so punctuation in linker names
@@ -58,7 +58,7 @@ int __Parser_Parse_Native_Link_Text__(__Parser__ *__Parser_State__, __Text_Slice
     return 1;
 }
 
-/* Parses one external data item. The current token must be "دع"; the caller
+/* Parses one external data item. The current token must be "ليكن"; the caller
  * has already consumed "خارجي" (and "عام" when public). */
 int __Parser_Parse_Global_Item__(__Parser__ *__Parser_State__,
                                  __Vector__ *__Items__,

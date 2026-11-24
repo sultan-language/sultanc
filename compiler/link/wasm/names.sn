@@ -3,6 +3,6 @@
 // entry, which SultanC also uses as the language entry of browser modules
 // (backend/provider/llvm/functions.sn, backend/object/wasm/wasm_object.sn).
 عام عرف اسم_رمز_دخول_ويب_أسمبلي(): متجه ط8 {
-    دع الاسم: متجه ط8 = بايتات_من_نص(«_start»);
+    ليكن الاسم: متجه ط8 = بايتات_من_نص(«_start»);
     أرجع الاسم;
 }

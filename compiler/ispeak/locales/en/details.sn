@@ -91,6 +91,8 @@
     | مفتاح_صياغة.مساعدة_طابق_على_النتيجة -> { أرجع «the value may be an error: match on it to use the value it holds, or pass the error on with `?`»; }
     | مفتاح_صياغة.مساعدة_اختر_اسما_غير_محجوز -> { أرجع «this word is reserved and cannot be a name; choose another name»; }
     | مفتاح_صياغة.مساعدة_صرح_بالقيمة_داخل_دالة -> { أرجع «declare the value inside the function that uses it»; }
+    | مفتاح_صياغة.مساعدة_استدع_المنشئ -> { أرجع «call the constructor: add `()` after it»; }
+    | مفتاح_صياغة.مساعدة_مرر_حجج_المنشئ -> { أرجع «call the constructor with its arguments between `(` and `)`»; }
     | مفتاح_صياغة.مساعدة_اترك_مترجم_سي_الخارجي -> { أرجع «unset `SULTANC_C_COMPILER` so Jisr compiles the C for any target»; }
     | مفتاح_صياغة.مساعدة_أضف_دليل_مكتبة_سي -> { أرجع «add the directory that holds the C library with `-L`»; }
     | مفتاح_صياغة.مساعدة_عدد_موجب_بفواصل -> { أرجع «use a positive decimal number; `_` separators are allowed (`10_000_000`)»; }
@@ -108,13 +110,13 @@
 
 // The cases a match does not cover, each quoted as code, for the headline of
 // SULTANC-PATTERN-NON-EXHAUSTIVE: up to three by name, then how many more
-// (rustc's "`A`, `B`, `C` and 2 more").
+// ("`A`, `B`, `C` and 2 more").
 عام عرف قائمة_حالات_غير_مغطاة_إنجليزية(الحالات: &متجه نص): نص {
-    دع العدد: طبيعي = الطول(*الحالات) مثل طبيعي;
-    دع المسماة: متغير طبيعي = العدد;
+    ليكن العدد: طبيعي = الطول(*الحالات) مثل طبيعي;
+    ليكن المسماة: متغير طبيعي = العدد;
     إذا (المسماة > 3) { المسماة := 3; };
-    دع البايتات: متغير متجه ط8 = [];
-    دع ف: متغير طبيعي = 0;
+    ليكن البايتات: متغير متجه ط8 = [];
+    ليكن ف: متغير طبيعي = 0;
     طالما (ف < المسماة) {
         إذا (ف > 0) {
             إذا (ف + 1 == المسماة && العدد == المسماة) { ألحق_بايتات_نص(&متغير البايتات, « and »); }

@@ -4,9 +4,9 @@
 // A safe reference to a local still cannot escape its function when a raw
 // pointer to the same local exists.
 عرف اهرب(): &عدد {
-    دع المحلي: عدد = 5;
-    دع م: *عدد = &المحلي;
-    دع ر: &عدد = &المحلي;
+    ليكن المحلي: عدد = 5;
+    ليكن م: *عدد = &المحلي;
+    ليكن ر: &عدد = &المحلي;
     أرجع ر;
 }
 

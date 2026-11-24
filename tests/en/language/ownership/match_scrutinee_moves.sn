@@ -1,0 +1,167 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// A match arm that binds the whole owned scrutinee moves it on that arm's
+// path only (drop elaboration, docs/en/internals/ownership-analysis.md, "Moves
+// out of owners"): on every other arm the scrutinee stays with its owner,
+// which destroys it. Each case runs many times on payloads the heap holds,
+// and the allocator's live bytes must return to their starting value after
+// it: a scrutinee never destroyed grows them, one destroyed twice traps in
+// the allocator, and a payload destroyed too early gives a wrong length. The
+// arms that do not bind the scrutinee match a payload with a wildcard, bind
+// part of it, or fall through to the code after the match; the binding arm
+// moves it on some executions only, in a loop, from a parameter and from a
+// match binding.
+// Counterpart: tests/ar/language/ownership/match_scrutinee_moves.sn; no pair
+// directive: the interpreter does not use the std allocator whose counters
+// this reads.
+import std.os.allocation;
+import std.text.number;
+
+type Kind = | small of int | named of string | pair of (string, string);
+type Wrap = | some of Kind | empty;
+
+// Seven digits, on the heap.
+def payload(n: uint): string { return int_to_text((n + 1000000) as int); }
+
+def keep(kind: Kind): int {
+    match kind with
+    | Kind.small(k) -> { return k; }
+    | Kind.named(t) -> { return length(t) as int; }
+    | Kind.pair(a, b) -> { return (length(a) + length(b)) as int; };
+}
+
+def make(n: uint): Kind {
+    if ((n % 3) == 0) { return Kind.small(n as int); };
+    if ((n % 3) == 1) { return Kind.named(payload(n)); };
+    return Kind.pair(payload(n), payload(n + 1));
+}
+
+def wildcard(n: uint): int {
+    let kind: Kind = make(n);
+    match kind with
+    | Kind.named(_) -> { return 8; }
+    | Kind.pair(a, _) -> { return length(a) as int; }
+    | rest -> { return keep(rest); };
+}
+
+def falls_through(n: uint): int {
+    let kind: Kind = make(n);
+    let total: mutable int = 6;
+    match kind with
+    | Kind.named(_) -> { total := 9; }
+    | rest -> { total := keep(rest); };
+    return total;
+}
+
+def some_executions(n: uint): int {
+    let kind: Kind = make(n);
+    match kind with
+    | Kind.small(_) -> { return 4; }
+    | rest -> {
+        if ((n % 2) == 0) { return keep(rest); };
+    };
+    return 5;
+}
+
+def in_loop(n: uint): int {
+    let total: mutable int = 0;
+    let i: mutable uint = 0;
+    while (i < 3) {
+        let kind: Kind = make(n + i);
+        match kind with
+        | Kind.pair(_, b) -> { total := total + (length(b) as int); }
+        | rest -> {
+            if ((i % 2) == 0) { total := total + keep(rest); };
+        };
+        i := i + 1;
+    }
+    return total;
+}
+
+def from_parameter(kind: Kind): int {
+    match kind with
+    | Kind.named(_) -> { return 8; }
+    | rest -> { return keep(rest); };
+}
+
+def from_binding(n: uint): int {
+    let wrap: Wrap = Wrap.some(make(n));
+    match wrap with
+    | Wrap.some(inner) -> {
+        match inner with
+        | Kind.pair(_, _) -> { return 3; }
+        | other -> { return keep(other); };
+    }
+    | Wrap.empty -> { return 0; };
+}
+
+def check(case: uint, n: uint): int {
+    if (case == 0) { return wildcard(n); };
+    if (case == 1) { return falls_through(n); };
+    if (case == 2) { return some_executions(n); };
+    if (case == 3) { return in_loop(n); };
+    if (case == 4) { return from_parameter(make(n)); };
+    return from_binding(n);
+}
+
+// What keep gives for make(n).
+def kept(n: uint): int {
+    if ((n % 3) == 0) { return n as int; };
+    if ((n % 3) == 1) { return 7; };
+    return 14;
+}
+
+def expected(case: uint, n: uint): int {
+    if (case == 0) {
+        if ((n % 3) == 1) { return 8; };
+        if ((n % 3) == 2) { return 7; };
+        return n as int;
+    };
+    if (case == 1) {
+        if ((n % 3) == 1) { return 9; };
+        return kept(n);
+    };
+    if (case == 2) {
+        if ((n % 3) == 0) { return 4; };
+        if ((n % 2) == 0) { return kept(n); };
+        return 5;
+    };
+    if (case == 3) {
+        let total: mutable int = 0;
+        let i: mutable uint = 0;
+        while (i < 3) {
+            if (((n + i) % 3) == 2) {
+                total := total + 7;
+            } else {
+                if ((i % 2) == 0) { total := total + kept(n + i); };
+            };
+            i := i + 1;
+        }
+        return total;
+    };
+    if (case == 4) {
+        if ((n % 3) == 1) { return 8; };
+        return kept(n);
+    };
+    if ((n % 3) == 2) { return 3; };
+    return kept(n);
+}
+
+def main(): int {
+    let warm_up: int = check(0, 1) + check(1, 2);
+    let case: mutable uint = 0;
+    while (case < 6) {
+        let before: u64 = بايتات_حية_مخصص_النظام();
+        let n: mutable uint = 0;
+        while (n < 2000) {
+            if (check(case, n) != expected(case, n)) { return 10 + (case as int); };
+            n := n + 1;
+        }
+        let after: u64 = بايتات_حية_مخصص_النظام();
+        if (after != before) { return 20 + (case as int); };
+        case := case + 1;
+    }
+    if (warm_up != 22) { return 1; };
+    return 42;
+}

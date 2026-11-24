@@ -35,9 +35,9 @@ int __Parser_Parse_Function_Item__(__Parser__ *__Parser_State__,
                                    int __Public__,
                                    int __External__);
 
-/* Parses one external data item (current token "دع", "خارجي" already consumed). */
-/* Parses one module constant or module variable: `["عام"] "دع" name ":" type
- * "=" (expression | "[" expressions "]") ";"`. The current token is "دع". */
+/* Parses one external data item (current token "ليكن", "خارجي" already consumed). */
+/* Parses one module constant or module variable: `["عام"] "ليكن" name ":" type
+ * "=" (expression | "[" expressions "]") ";"`. The current token is "ليكن". */
 int __Parser_Parse_Value_Global_Item__(__Parser__ *__Parser_State__,
                                        __Vector__ *__Items__,
                                        int __Public__,

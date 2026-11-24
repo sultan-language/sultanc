@@ -17,8 +17,7 @@
 
 تستخدم الشجرتان الفئات وأسماء الملفات نفسها، فلكل مثال نظير مباشر. والزوج هو البرنامج نفسه رمزًا برمز. يستخدم
 المثال العربي الكلمات المفتاحية العربية المعتمدة وأسماء المكتبة القياسية والمعرّفات العربية، ويطبع رسائله
-بالعربية. الأمثلة متعددة الملفات (`modules/*`) مجلدات تحوي `main.sn` ووحداته المساعدة. ويشغّل
-`examples/run-wasi.mjs` برنامجًا مبنيًا بصيغة WebAssembly عبر دعم WASI في Node.
+بالعربية. الأمثلة متعددة الملفات (`modules/*`) مجلدات تحوي `main.sn` ووحداته المساعدة.
 
 ## تشغيل مثال
 
@@ -43,13 +42,13 @@
 
 </div>
 
-ابنِه للهدف WebAssembly وشغّله باستخدام Node:
+ابنِه للهدف WebAssembly وشغّله في بيئة تشغيل WASI مثل `wasmtime`:
 
 <div dir="ltr">
 
 ```sh
 ./build/sultanc examples/ar/basics/hello.sn --target=wasm32-wasi -o build/hello.wasm
-node --no-warnings examples/run-wasi.mjs build/hello.wasm
+wasmtime run --dir=. build/hello.wasm
 ```
 
 </div>

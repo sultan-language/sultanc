@@ -7,7 +7,7 @@
 };
 
 عام عرف سياسة_نمو_المتجه(): سياسة_نمو_متجه {
-    دع السياسة: سياسة_نمو_متجه = {
+    ليكن السياسة: سياسة_نمو_متجه = {
         السعة_الدنيا: 1,
         عامل_النمو: 2
     };
@@ -15,23 +15,23 @@
 }
 
 // The policy for elements of حجم_العنصر bytes: the first non-zero capacity is
-// 8 elements of 1 byte (text, byte buffers, as Rust's RawVec), 2 elements of
-// up to 1 KiB, 1 element above that. Rust starts at 4 below 1 KiB; measured on
+// 8 elements of 1 byte (text, byte buffers), 2 elements of
+// up to 1 KiB, 1 element above that. A start of 4 below 1 KiB was measured on
 // 2026-11-19, 2 takes Nahr's GET /plain from 295 to 167 requested bytes per
 // request (the same 10 allocations) and the compiler's self-build peak RSS
 // from 1267 to 1168 MB, for about 2% more build time (1: 119 bytes, 1135 MB,
 // but 6-10% more time). Growth then
 // doubles (append) or takes max(2 x capacity, needed) (extend_from, through
 // سعة_نمو_المتجه below); reserve_exact, a vector literal and a clone stay
-// exact, as Rust's Vec::reserve_exact, vec![...] and clone.
+// exact.
 عام عرف سياسة_نمو_المتجه_لعنصر(حجم_العنصر: طبيعي): سياسة_نمو_متجه {
-    دع الدنيا: متغير طبيعي = 1;
+    ليكن الدنيا: متغير طبيعي = 1;
     إذا (حجم_العنصر == 1) {
         الدنيا := 8;
     } وإلا {
         إذا (حجم_العنصر <= 1024) { الدنيا := 2; };
     };
-    دع السياسة: سياسة_نمو_متجه = {
+    ليكن السياسة: سياسة_نمو_متجه = {
         السعة_الدنيا: الدنيا,
         عامل_النمو: 2
     };
@@ -40,14 +40,14 @@
 
 // The capacity a vector holding السعة elements grows to when it must hold
 // المطلوب (more than السعة): the larger of المطلوب and the policy's next step
-// (السعة × عامل_النمو, at least السعة_الدنيا), as Rust's RawVec::grow_amortized.
+// (السعة × عامل_النمو, at least السعة_الدنيا): amortized growth.
 // Append is the case المطلوب = length + 1; extend_from (إلحاق_نطاق_متجه) grows
 // by it too, so appending ranges in a loop stays amortized O(1) per element.
 // reserve_exact (حجز_سعة_متجه) does not use it: it grows to المطلوب exactly.
 // The backends emit this rule as code from the policy's two numbers; the
 // interpreters call it.
 عام عرف سعة_نمو_المتجه(السياسة: &سياسة_نمو_متجه, السعة: طبيعي, المطلوب: طبيعي): طبيعي {
-    دع الناتج: متغير طبيعي = السعة * (*السياسة).عامل_النمو;
+    ليكن الناتج: متغير طبيعي = السعة * (*السياسة).عامل_النمو;
     إذا (الناتج < (*السياسة).السعة_الدنيا) { الناتج := (*السياسة).السعة_الدنيا; };
     إذا (الناتج < المطلوب) { الناتج := المطلوب; };
     أرجع الناتج;

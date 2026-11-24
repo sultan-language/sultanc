@@ -2,11 +2,10 @@
 
 # Formatting
 
-`std.fmt.fmt` formats a format string and its arguments. It follows Rust's
-`std::fmt` (`format!`, `write!`, `print!`, `Display` and `Debug`, the format-spec mini-language)
-and Go's `fmt` (`Sprintf`, `Fprintf`, `Printf`). Format strings use Rust's syntax and produce
-Rust's output, so a format string written for Rust gives the same text, except for the differences
-listed on this page. The page covers the API, the format-string grammar, custom formatters and the
+`std.fmt.fmt` formats a format string and its arguments: to new text, into a formatter, to any
+std.io writer, to standard output and error, and to a logger. A placeholder in braces selects an
+argument and a format spec (fill, alignment, sign, width, precision and a type such as Display,
+Debug or hexadecimal). The page covers the API, the format-string grammar, custom formatters and the
 compile-time check, and is written for programmers who format text and for those who work on
 `std.fmt`.
 
@@ -49,14 +48,14 @@ the call itself, which also lets the compiler check the format string against it
 
 ## API
 
-| Function | Rust / Go |
+| Function | Writes to |
 |---|---|
-| `format(template, args): result string, fmt_error` | `format!` / `fmt.Sprintf` |
-| `format_into(&mutable f, template, args): result uint, fmt_error` | `write!` to a `String` or, in a custom formatter, to the `Formatter` |
-| `write_fmt(&dest, writer, template, args)` | `write!` on an `io::Write` / `fmt.Fprintf` (any std.io `writer<S>`) |
+| `format(template, args): result string, fmt_error` | new text |
+| `format_into(&mutable f, template, args): result uint, fmt_error` | a formatter, including the one a custom formatter is given |
+| `write_fmt(&dest, writer, template, args)` | any std.io `writer<S>` |
 | `write_fmt_with(&mutable f, &dest, writer, template, args)` | the same, reusing one formatter's buffer |
-| `print_fmt`, `println_fmt`, `eprint_fmt`, `eprintln_fmt` | `print!`, `println!`, `eprint!`, `eprintln!` / `fmt.Printf` |
-| `log_fmt(&logger, level, template, args)` (std.io.log) | `log::info!` / `log.Printf` |
+| `print_fmt`, `println_fmt`, `eprint_fmt`, `eprintln_fmt` | standard output or standard error, with or without a newline |
+| `log_fmt(&logger, level, template, args)` (std.io.log) | a logger, at a level |
 
 The write and print functions return the number of bytes written. The English print names carry
 `_fmt` because `print` and `println` already name std.io's functions, and a program that imports
@@ -83,17 +82,17 @@ type          := '' | '?' | 'x?' | 'X?' | 'x' | 'X' | 'o' | 'b' | 'e' | 'E'
 count         := integer | integer '$'
 ```
 
-This is Rust's grammar without named arguments. `{}` takes the next argument, `{N}` takes argument
-N, and `{{` and `}}` are literal braces. Every argument must be used, as in Rust.
+There are no named arguments. `{}` takes the next argument, `{N}` takes argument
+N, and `{{` and `}}` are literal braces. Every argument must be used.
 
 | Element | Behavior |
 |---|---|
 | Fill and alignment | `{:<8}` `{:^8}` `{:>8}` `{:*^9}`. Text is left-aligned by default and numbers right-aligned. Centering puts the odd fill character after. |
 | Sign | `{:+}` always prints a sign. `-` is accepted and ignored. NaN never has a sign. |
 | `#` | The alternate form: `0x`, `0o` and `0b` prefixes. Pretty Debug (`{:#?}`) puts list entries on their own lines, indented by four spaces. |
-| `0` | Sign-aware zero padding: `{:08}` of -42 is `-0000042` and `{:#010x}` of 255 is `0x000000ff`. Fill and alignment are then ignored. Zero padding applies to NaN and inf too, as in Rust. |
-| Width and precision | Literals or arguments. `{:1$}` takes the width from argument 1, `{:.2$}` the precision from argument 2, and `{:.*}` takes the precision from the next argument before the value. Both are at most 65535 (Rust's `u16`), and an argument must be a non-negative integer. |
-| Precision | Truncates text, rounds floats and is ignored by integers. Rounding uses the exact value, half to even, as Rust does: `{:.1}` of 0.25 is `0.2` and of 0.35 is `0.3`. |
+| `0` | Sign-aware zero padding: `{:08}` of -42 is `-0000042` and `{:#010x}` of 255 is `0x000000ff`. Fill and alignment are then ignored. Zero padding applies to NaN and inf too. |
+| Width and precision | Literals or arguments. `{:1$}` takes the width from argument 1, `{:.2$}` the precision from argument 2, and `{:.*}` takes the precision from the next argument before the value. Both are at most 65535 (16 bits), and an argument must be a non-negative integer. |
+| Precision | Truncates text, rounds floats and is ignored by integers. Rounding uses the exact value, half to even: `{:.1}` of 0.25 is `0.2` and of 0.35 is `0.3`. |
 
 ### Types
 
@@ -101,7 +100,7 @@ N, and `{{` and `}}` are literal braces. Every argument must be used, as in Rust
 |---|---|---|---|---|
 | `{}` | decimal | shortest round trip, positional (`1e21` prints all its digits, `-0.0` is `-0`) | as is | `true`/`false`; a char; bytes as UTF-8 text |
 | `{:?}` | decimal | shortest; exponent form below 1e-4 and from 1e16; `.0` for an integral value (`1.0`, `1e16`) | quoted and escaped | lists as `[a, b]`; a char quoted |
-| `{:x}` `{:X}` | hexadecimal; a negative value's two's complement at its width | | | bytes as hex digits (Go's `%x`) |
+| `{:x}` `{:X}` | hexadecimal; a negative value's two's complement at its width | | | bytes as hex digits |
 | `{:o}` `{:b}` | octal, binary | | | |
 | `{:e}` `{:E}` | exponent form (`1.234e3`) | exponent form, shortest or with a precision (`1.2345e3`, `{:.2e}` is `1.23e3`) | | |
 | `{:x?}` `{:X?}` | Debug in hexadecimal, also inside lists | | | |
@@ -113,15 +112,15 @@ Float digits come from `std.text.float`: the shortest decimal that reads back to
 or, with a precision, the exact value rounded half to even (`f64_fixed_digits`,
 `f64_significant_digits`). Both try Grisu
 (shortest and counted modes) and fall back to the exact big-integer algorithm when Grisu cannot be
-sure, the strategy of Rust's `flt2dec` (Grisu, then Dragon).
+sure (Grisu, then Dragon).
 
 ### Text width and Arabic
 
 Width and precision of text count extended grapheme clusters (UAX #29, `std.unicode.grapheme`).
 A letter with its harakat is one character, so `{:>6}` of «مُحَمَّد» (8 scalar values, 4 clusters)
 adds 2 fill characters, and a precision never separates a letter from its marks. ASCII text
-without CR takes a fast path. Rust counts Unicode scalar values; the two agree for text without
-combining marks. A lam-alef pair is two clusters although fonts draw one glyph.
+without CR takes a fast path. For text without combining marks, clusters and Unicode scalar
+values agree. A lam-alef pair is two clusters although fonts draw one glyph.
 
 `std.fmt` inserts no direction marks. The caller isolates bidirectional text where it needs to,
 with `std.text.bidi`.
@@ -130,15 +129,14 @@ with `std.text.bidi`.
 
 `{:?}` quotes text and escapes `\t \r \n \\ \0` and the quote. It writes control, format
 (including the direction marks U+200E and U+200F, and isolates), separator (other than space),
-private-use and unassigned characters as `\u{…}`, as Rust's `escape_debug` does. A combining mark
-is escaped where it starts the value. Rust also escapes a mark after a letter inside text, while
-`std.fmt` keeps it, so Arabic harakat stay readable. Width does not apply to Debug text or chars,
-as in Rust.
+private-use and unassigned characters as `\u{…}`. A combining mark
+is escaped where it starts the value. A mark after a letter inside text is kept,
+so Arabic harakat stay readable. Width does not apply to Debug text or chars.
 
 ## Custom formatters
 
-A `custom` argument holds a closure that writes into the formatter, like Rust's
-`impl Display` and `impl Debug`.
+A `custom` argument holds a closure that writes into the formatter: the Display and Debug forms of
+a user type.
 
 ```sultan
 import std.fmt.fmt;
@@ -165,8 +163,8 @@ def main(): int {
 The closure can read the placeholder's spec with `formatter_width`, `formatter_precision`,
 `formatter_fill`, `formatter_align`, `formatter_alternate`, `formatter_sign_plus`,
 `formatter_sign_aware_zero_pad`, `formatter_kind` and `formatter_debug`. It writes with
-`format_into`, `write_str` and `write_char`, and honors width, alignment and precision with `pad`
-(Rust's `Formatter::pad`). As in Rust, output written without `pad` ignores the width.
+`format_into`, `write_str` and `write_char`, and honors width, alignment and precision with `pad`.
+Output written without `pad` ignores the width.
 
 The formatter's spec is restored after the closure, so the next element of a list gets the list's
 spec. A custom element of a pretty-printed list is indented line by line.
@@ -182,13 +180,12 @@ Capturing a reference, so that a formatter could borrow `&p` of a value that own
 supported because it cannot be made sound. A closure value is a counted environment whose function
 type `fn(...)` carries no lifetime, and closures flow freely through parameters, fields, vectors
 and returns. The ownership checker would have to treat every closure value as a possible borrow
-carrier and every `fn` type as lifetime-bounded, as Rust does with `impl Fn + 'a`. A capture of
+carrier and every `fn` type as lifetime-bounded. A capture of
 `&p` accepted without that could outlive `p`.
 
 ## Compile-time check
 
-A literal format string is checked at compile time, as Rust's `format_args!` and C++20's
-`std::format` check theirs. The check applies to a call of a std format function (the functions of
+A literal format string is checked at compile time. The check applies to a call of a std format function (the functions of
 `std.fmt.fmt` and `std.io.log` whose last two parameters are `القالب` and `الوسائط`) whose format
 string is a literal.
 
@@ -227,23 +224,23 @@ The tests are `tests/{ar,en}/stdlib/fmt/compile_check.sn` and `reject_format_*.s
 
 ## Errors
 
-A format string that is not a literal is parsed and checked against the arguments at run time, as
-Go's `fmt` checks every format string and C++'s `std::vformat` does. Each error is a
+A format string that is not a literal is parsed and checked against the arguments at run time.
+Each error is a
 `fmt_error` value. On an error the formatter is left as it was and nothing is written or printed.
 
-| Variant | Payload | Rust's compile error |
-|---|---|---|
-| `unclosed_brace` | offset of the `{` | expected `}` |
-| `unmatched_close_brace` | offset | unmatched `}` found |
-| `invalid_spec` | offset | invalid format string |
-| `unknown_type` | offset | unknown format trait |
-| `named_argument` | offset | (named arguments are not supported) |
-| `missing_argument` | argument index | invalid reference to positional argument |
-| `unused_argument` | argument index | argument never used |
-| `mismatched_type` | argument index | the trait is not implemented |
-| `invalid_count` | argument index | expected `usize` |
-| `write_failed` | the writer's status | none |
-| `custom_failed` | none | `fmt::Error` |
+| Variant | Payload |
+|---|---|
+| `unclosed_brace` | offset of the `{` |
+| `unmatched_close_brace` | offset |
+| `invalid_spec` | offset |
+| `unknown_type` | offset |
+| `named_argument` | offset |
+| `missing_argument` | argument index |
+| `unused_argument` | argument index |
+| `mismatched_type` | argument index |
+| `invalid_count` | argument index |
+| `write_failed` | the writer's status |
+| `custom_failed` | none |
 
 At compile time the first nine are the reasons of `SULTANC-FORMAT-STRING`:
 `format.unclosed-brace`, `format.unmatched-close-brace`, `format.invalid-spec`,
@@ -253,24 +250,11 @@ At compile time the first nine are the reasons of `SULTANC-FORMAT-STRING`:
 `std.error` converts the error with `error_from_fmt_error`; see
 [Errors](errors.md).
 
-## Rust and Go
+## Spec tests
 
-| Rust | Go | std.fmt |
-|---|---|---|
-| `format!("{} {}", a, b)` | `fmt.Sprintf("%v %v", a, b)` | `format("{} {}", [fmt_arg.int(a), fmt_arg.int(b)])` |
-| `write!(w, …)` | `fmt.Fprintf(w, …)` | `write_fmt(&dest, writer, …)` / `format_into(&mutable f, …)` |
-| `println!(…)` / `eprintln!(…)` | `fmt.Println`, `fmt.Printf` | `println_fmt(…)` / `eprintln_fmt(…)` |
-| `{:>8}` `{:<8}` `{:^8}` | `%8v` `%-8v` | the same |
-| `{:08.3}` | `%08.3f` | the same |
-| `{:x}` `{:#X}` `{:o}` `{:b}` `{:e}` | `%x` `%#X` `%o` `%b` `%e` | the same |
-| `{:?}` `{:#?}` | `%q`, `%v`, `%+v` | Debug; pretty Debug |
-| `{:.*}` `{:1$}` | `%.*f` `%*d` | the same |
-| `impl Display for T` | `String() string` | a `custom` argument |
-| compile-time check | `go vet` | compile-time check of a literal format string (`SULTANC-FORMAT-STRING`); run-time `fmt_error` for one built at run time |
-| none | `%!d(string=x)` in the output | an error, no output |
-
-The spec tests, `tests/{en,ar}/stdlib/fmt/spec_rust.sn`, are generated from rustc's own output for
-the same format strings and arguments (`tools/generate/generate_fmt_tests.py`).
+The spec tests, `tests/{en,ar}/stdlib/fmt/spec_reference.sn`, check every element of the format-spec
+mini-language against reference text for the same format strings and arguments. They are generated
+by `tools/generate/generate_fmt_tests.py`.
 
 ## Performance
 
@@ -292,5 +276,5 @@ the allocator's live bytes unchanged (`tests/{en,ar}/stdlib/fmt/rss_flat.sn`).
 ## See also
 
 - [Errors](errors.md): converting `fmt_error` to the common error value.
-- [Standard library coverage](std-coverage.md): where `std.fmt` sits beside Rust and Go.
+- [Standard library coverage](std-coverage.md): what `std.fmt` covers and what it lacks.
 - [Arabic terminology](arabic-terminology.md#formatting-stdfmt): the Arabic names in this page.

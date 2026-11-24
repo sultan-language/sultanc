@@ -39,8 +39,8 @@ module timezone { ar: منطقة_زمنية };
 عام مرادف system_time_ns = وقت_نظام_نانو;
 عام مرادف sleep_ns = نم_نانو;
 
-// Sleeps for a std.time.duration مدة. The duration is a pure value (Rust's
-// core::time::Duration); sleeping is the OS's (Rust's std::thread::sleep), so
+// Sleeps for a std.time.duration مدة. The duration is a pure value;
+// sleeping is the OS's, so
 // it is here with the clock, not in duration.sn.
 عام عرف نم_لمدة(المدة: &مدة): نتيجة عدد, عدد {
     أرجع نم_نانو((*المدة).النانوثواني);

@@ -1,0 +1,41 @@
+error[SULTANC-BORROW-CONFLICT]: borrow conflict — The conflicting borrowed value is `القيمة`. The value is borrowed for reading, so it cannot be borrowed mutably.
+  --> tests/ar/diagnostics/e2e/borrow_conflicts_in_order.sn:14:5..14:32
+    |
+ 14 |     ليكن القيمة: متغير عدد = 1;
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+error[SULTANC-BORROW-CONFLICT]: borrow conflict — The conflicting borrowed value is `القيمة`. The value is already borrowed mutably, so it cannot be borrowed again.
+  --> tests/ar/diagnostics/e2e/borrow_conflicts_in_order.sn:21:5..21:32
+    |
+ 21 |     ليكن القيمة: متغير عدد = 1;
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+error[SULTANC-BORROW-CONFLICT]: borrow conflict — The conflicting borrowed value is `القيمة`. The value is already borrowed mutably, so it cannot be borrowed again.
+  --> tests/ar/diagnostics/e2e/borrow_conflicts_in_order.sn:28:5..28:26
+    |
+ 28 |     ليكن القيمة: عدد = 1;
+    |     ^^^^^^^^^^^^^^^^^^^^^
+    |
+
+error[SULTANC-BORROW-CONFLICT]: borrow conflict — The conflicting borrowed value is `القيمة`. The value is borrowed for reading, so it cannot be borrowed mutably.
+  --> tests/ar/diagnostics/e2e/borrow_conflicts_in_order.sn:35:5..35:32
+    |
+ 35 |     ليكن القيمة: متغير عدد = 1;
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+error[SULTANC-BORROW-CONFLICT]: borrow conflict — The conflicting borrowed value is `القيمة`. The value is already borrowed mutably, so it cannot be borrowed again.
+  --> tests/ar/diagnostics/e2e/borrow_conflicts_in_order.sn:40:5..40:32
+    |
+ 40 |     ليكن القيمة: متغير عدد = 1;
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+error[SULTANC-BORROW-CONFLICT]: borrow conflict — The conflicting borrowed value is `العناصر`. The value is already borrowed mutably, so it cannot be borrowed again.
+  --> tests/ar/diagnostics/e2e/borrow_conflicts_in_order.sn:47:5..47:40
+    |
+ 47 |     ليكن العناصر: متغير متجه عدد = [1];
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |

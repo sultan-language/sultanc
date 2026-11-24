@@ -3,7 +3,7 @@
 // خروج: 42
 // تفاضلي: نعم
 // نظير: tests/ar/stdlib/behavior/process_spawn.sn
-// std.process.command streaming (Rust Command::spawn with Stdio::piped):
+// std.process.command streaming:
 // an interactive line-by-line echo through cat, 2 MB of output read while
 // the child writes it, 256 KiB of input, separate stdout and stderr with
 // wait_with_output, exit codes, try_wait/kill, and a write to a child that

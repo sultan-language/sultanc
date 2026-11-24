@@ -1,5 +1,4 @@
-// Whether a standard stream is a terminal (Rust io::IsTerminal, Go
-// x/term.IsTerminal, isatty(3)): colored or interactive output only when a
+// Whether a standard stream is a terminal (isatty(3)): colored or interactive output only when a
 // person is watching. A file, a pipe or a closed stream answers false.
 استورد نظام_التشغيل.معلومات_العملية;
 

@@ -1,0 +1,91 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/language/ownership/borrow_early_end.sn
+// A borrow ends at the last use of what holds it, not where the holder's
+// block ends (docs/en/reference/ownership.md, "Borrow regions"). Once a
+// reference, a mutable reference or a slice view is last used, the value it
+// borrows may be assigned, read, borrowed exclusively by a call, appended to
+// or popped in the same block. A reference used on one branch only leaves
+// the value free on the other branch, and a reference reassigned in a loop
+// leaves the value it borrowed before free.
+def bump(target: &mutable int): int {
+    *target := *target + 1;
+    return *target;
+}
+
+def assign_after_last_read(): int {
+    let value: mutable int = 1;
+    let reader: &int = &value;
+    let seen: int = *reader;
+    value := 2;
+    return seen + value;
+}
+
+def read_after_last_write(): int {
+    let value: mutable int = 1;
+    let writer: &mutable int = &mutable value;
+    *writer := 5;
+    let copy: int = value;
+    return copy;
+}
+
+def exclusive_after_shared(): int {
+    let value: mutable int = 1;
+    let reader: &int = &value;
+    let seen: int = *reader;
+    let bumped: int = bump(&mutable value);
+    return seen + bumped;
+}
+
+def append_after_element(): int {
+    let items: mutable vector int = [4];
+    let first: &int = &items[0];
+    let seen: int = *first;
+    append(items, 2);
+    return seen + (length(items) as int);
+}
+
+def pop_after_view(): int {
+    let values: mutable vector int = [7, 3];
+    let view: [] int = values;
+    let count: int = length(view) as int;
+    match pop(values) with
+    | option.some(last) -> { return count + last; }
+    | option.none -> { return 0; };
+}
+
+def one_branch(flag: bool): int {
+    let value: mutable int = 1;
+    let writer: &mutable int = &mutable value;
+    if (flag) {
+        *writer := 10;
+    } else {
+        value := 20;
+    };
+    return value;
+}
+
+def moved_reference(): int {
+    let a: mutable int = 1;
+    let b: int = 2;
+    let r: mutable &int = &a;
+    let total: mutable int = 0;
+    let i: mutable uint = 0;
+    while (i < 3) {
+        total := total + *r;
+        r := &b;
+        a := a + 10;
+        i := i + 1;
+    }
+    return total + a;
+}
+
+def main(): int {
+    let early: int = assign_after_last_read() + read_after_last_write() + exclusive_after_shared();
+    let containers: int = append_after_element() + pop_after_view();
+    let branches: int = one_branch(true) + one_branch(false);
+    // 11 + 11 + 30 + 36 = 88
+    return early + containers + branches + moved_reference() - 46;
+}

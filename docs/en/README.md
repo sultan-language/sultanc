@@ -48,8 +48,8 @@ def main(): int {
 
 ```
 عرف الرئيسية(): عدد {
-    دع س: عدد = 40;
-    دع ص: عدد = 2;
+    ليكن س: عدد = 40;
+    ليكن ص: عدد = 2;
     أرجع س + ص;
 }
 ```
@@ -112,7 +112,7 @@ The interpreter runs the same MSIR and the same standard library as the compiler
 
 | Area | Highlights |
 |---|---|
-| Text and formatting | UTF-8 text, Unicode segmentation and normalization, `std.fmt` (Rust-style format strings, checked at compile time) |
+| Text and formatting | UTF-8 text, Unicode segmentation and normalization, `std.fmt` (format strings checked at compile time) |
 | Collections | vectors with capacity, maps, sets, sorting |
 | Files and processes | files, directories, links, file locks, streaming child processes, environment |
 | Networking | TCP, UDP, Unix sockets, DNS, TLS 1.3, HTTP/1.1 and HTTP/2 (client and server) |
@@ -121,7 +121,7 @@ The interpreter runs the same MSIR and the same standard library as the compiler
 | Crypto and hashing | SHA-2, X25519, Ed25519, ChaCha20-Poly1305, AES-GCM, XXH64, CRC |
 | Concurrency | `std.thread`, `std.sync` (atomics, Arc, Mutex, RwLock, Condvar, Once, channels) |
 
-See [std coverage](reference/std-coverage.md) for the full list, compared with Rust and Go.
+See [std coverage](reference/std-coverage.md) for the full list.
 
 ## Targets
 
@@ -144,6 +144,7 @@ Native backends for x86_64 and arm64; every other target goes through LLVM. See 
 | [Kernel architecture](internals/compiler-architecture.md) | Compiler internals |
 | [Bootstrap](internals/bootstrap.md) | The C Stage0 and the WebAssembly seed |
 | [Safety flow](internals/safety-flow.md) | Ownership and borrow checking |
+| [Ownership analysis](internals/ownership-analysis.md) | Ownership in initial MSIR and drop elaboration |
 | [Type system](reference/type-system.md) | Types, inference, generics, casts |
 | [Ownership and destruction](reference/ownership.md) | Moves, drops, temporaries, capacity |
 | [Errors](reference/errors.md) | Results, `?`, panics, localized messages |

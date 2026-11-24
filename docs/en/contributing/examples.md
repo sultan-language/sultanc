@@ -17,8 +17,7 @@ The examples are mirrored by source language:
 Both trees use the same categories and file names, so each example has a direct counterpart. A pair is
 the same program token for token. The Arabic one uses the canonical Arabic keywords, standard-library
 names and identifiers, and prints its messages in Arabic. Multi-file examples (`modules/*`) are
-directories holding a `main.sn` and its helper modules. `examples/run-wasi.mjs` runs a WebAssembly
-build under Node's WASI support.
+directories holding a `main.sn` and its helper modules.
 
 ## Running an example
 
@@ -35,11 +34,11 @@ Run it with the interpreter instead of building an executable:
 ./build/sultanc run examples/en/basics/arithmetic.sn
 ```
 
-Build for WebAssembly and run it with Node:
+Build for WebAssembly and run it under a WASI runtime such as `wasmtime`:
 
 ```sh
 ./build/sultanc examples/en/basics/hello.sn --target=wasm32-wasi -o build/hello.wasm
-node --no-warnings examples/run-wasi.mjs build/hello.wasm
+wasmtime run --dir=. build/hello.wasm
 ```
 
 Build for another platform. No toolchain is needed because SultanC links internally:

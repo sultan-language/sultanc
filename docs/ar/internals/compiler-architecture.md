@@ -19,9 +19,9 @@ source
   -> AST                         compiler/frontend/parser, ast, desugar, annotations
   -> modules and names           compiler/frontend/module_loading, names
   -> types and patterns          compiler/frontend/types, pattern
-  -> memory and safety (SSF)     compiler/frontend/memory, ssf
+  -> memory classification       compiler/frontend/memory
   -> semantic lowering           compiler/msir/lowering
-  -> MSIR + verifier             compiler/msir
+  -> MSIR + verifier, ownership   compiler/msir (ssf/, drop_elaboration)
   -> code generation             compiler/backend (Native or LLVM provider), or the interpreter
   -> object files                compiler/backend/object
   -> linker                      compiler/link
@@ -52,7 +52,6 @@ source
 | `compiler/frontend/types` | الهوية الدلالية للأنواع، والتوافق، وتواقيع النداء، وفحوص العمليات غير الآمنة والالتقاط في الخيوط |
 | `compiler/frontend/pattern` | دلالة الأنماط، والشمول، وقابلية الوصول |
 | `compiler/frontend/memory` | تصنيف الذاكرة وخصائص الملكية |
-| `compiler/frontend/ssf` | حالة الأمان المتعلقة بالنقل والاستعارة والعمر وتدفق التحكم |
 | `compiler/frontend/semantic_pipeline.sn` | يشغّل مراحل الواجهة الأمامية بالترتيب ويجمع رسائل التشخيص الصادرة عنها |
 | `compiler/msir` | تمثيل التنفيذ المتحقَّق منه والمحايد تجاه الهدف، وخفضه، ومحسِّنه، والترقية، ومتحقِّقه |
 | `compiler/backend/target` | هوية الهدف، وسجل الأهداف، وتركيب المنصة والخلفية، وسياقات استعلام وقت التشغيل |
@@ -91,8 +90,9 @@ source
 
 ### الذاكرة والأمان
 
-يحدد تصنيف الذاكرة خصائص مثل ما إذا كان النوع يملك موارد. ويستخدم SSF هذه الحقائق لتتبّع حالة
-القيم، وعمليات النقل والاستعارة والإفلات، والتقاء مسارات تدفق التحكم. انظر [تدفق الأمان](safety-flow.md).
+يحدد تصنيف الذاكرة خصائص مثل ما إذا كان النوع يملك موارد. ويستخدم تحليل شرعية الملكية على MSIR هذه الحقائق ليحسم حالة
+القيم، وعمليات النقل والاستعارة والإفلات، والتقاء مسارات تدفق التحكم. انظر [تدفق الأمان](safety-flow.md)
+و[تحليل الملكية](ownership-analysis.md).
 
 ## MSIR
 
@@ -234,12 +234,10 @@ wasmtime run --dir=. build/sultanc.wasm --backend=native compiler/main.sn \
 
 </div>
 
-### مقارنة بمترجمات أخرى
+### تحميل الخلفيات وأهداف LLVM
 
-لا يُدرج rustc خلفية LLVM إلا مع خاصية Cargo المسماة `llvm` (`rustc_interface/Cargo.toml`،
-و`llvm = ['dep:rustc_codegen_llvm']`، و`get_codegen_backend` في `rustc_interface/src/util.rs`)، أما
-`rustc_codegen_cranelift` فخلفية بديلة تُختار بالاسم. ولا يتبنى السلطان التحميل الديناميكي للخلفيات. أما
-نظام CMake الخاص بـ LLVM نفسه (`llvm/docs/CMake.rst`، `LLVM_TARGETS_TO_BUILD`) فيجعل مكونات الأهداف في
+تتحدد مجموعة الخلفيات عند بناء المترجم: فمزود LLVM إما أن يُترجم داخله وإما أن تحل محله نسخته غير المتاحة،
+ولا يحمّل السلطان الخلفيات تحميلًا ديناميكيًا. أما نظام CMake الخاص بـ LLVM نفسه (`llvm/docs/CMake.rst`، `LLVM_TARGETS_TO_BUILD`) فيجعل مكونات الأهداف في
 مكتبة libLLVM خاصيةً من خصائص بناء تلك المكتبة، ولهذا يبقى دعم الأهداف في خلفية LLVM حقيقةً تخص الهدف وlibLLVM،
 لا قدرةً من قدرات بناء المترجم.
 

@@ -3,8 +3,8 @@
 // نظير: tests/ar/diagnostics/safety/thread_capture_reference.sn
 // The spawn capture check (docs/en/reference/type-system.md, "Thread capture rules"): a
 // closure handed to another thread may not capture a borrowed reference,
-// because the thread may outlive the storage it borrows (Rust's 'static
-// bound on spawn). Move an owned value in, or share it through an Arc.
+// because the thread may outlive the storage it borrows (a spawned closure
+// must outlive its scope). Move an owned value in, or share it through an Arc.
 import std.thread.thread;
 
 def first(r: &vector i64): i64 { return (*r)[0]; }
