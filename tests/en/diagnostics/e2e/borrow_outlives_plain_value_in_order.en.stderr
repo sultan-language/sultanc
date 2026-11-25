@@ -1,0 +1,186 @@
+error[SULTANC-BORROW-REFERENCE-ESCAPE]: reference escapes its valid scope — The escaping reference is `r`. A reference outlives the value it points to.
+  --> tests/en/diagnostics/e2e/borrow_outlives_plain_value_in_order.sn:32:5..32:6
+    |
+ 32 |     };
+    |     ^
+    |
+  ::: tests/en/diagnostics/e2e/borrow_outlives_plain_value_in_order.sn:30:9..30:29
+    |
+ 30 |         let inner: int = 42;
+    |         ^^^^^^^^^^^^^^^^^^^^ original owner
+    |
+  ::: tests/en/diagnostics/e2e/borrow_outlives_plain_value_in_order.sn:33:13..33:14
+    |
+ 33 |     return *r;
+    |             ^ invalid use
+    |
+
+error[SULTANC-BORROW-REFERENCE-ESCAPE]: reference escapes its valid scope — The escaping reference is `r`. A reference outlives the value it points to.
+  --> tests/en/diagnostics/e2e/borrow_outlives_plain_value_in_order.sn:42:5..42:6
+    |
+ 42 |     };
+    |     ^
+    |
+  ::: tests/en/diagnostics/e2e/borrow_outlives_plain_value_in_order.sn:40:9..40:42
+    |
+ 40 |         let pair: Pair = { a: 40, b: 2 };
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ original owner
+    |
+  ::: tests/en/diagnostics/e2e/borrow_outlives_plain_value_in_order.sn:43:13..43:14
+    |
+ 43 |     return *r;
+    |             ^ invalid use
+    |
+
+error[SULTANC-BORROW-REFERENCE-ESCAPE]: reference escapes its valid scope — The escaping reference is `r`. A reference outlives the value it points to.
+  --> tests/en/diagnostics/e2e/borrow_outlives_plain_value_in_order.sn:52:5..52:6
+    |
+ 52 |     };
+    |     ^
+    |
+  ::: tests/en/diagnostics/e2e/borrow_outlives_plain_value_in_order.sn:50:9..50:40
+    |
+ 50 |         let both: (int, int) = (40, 2);
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ original owner
+    |
+  ::: tests/en/diagnostics/e2e/borrow_outlives_plain_value_in_order.sn:53:13..53:14
+    |
+ 53 |     return *r;
+    |             ^ invalid use
+    |
+
+error[SULTANC-BORROW-REFERENCE-ESCAPE]: reference escapes its valid scope — The escaping reference is `r`. A reference outlives the value it points to.
+  --> tests/en/diagnostics/e2e/borrow_outlives_plain_value_in_order.sn:64:5..64:6
+    |
+ 64 |     }
+    |     ^
+    |
+  ::: tests/en/diagnostics/e2e/borrow_outlives_plain_value_in_order.sn:61:9..61:28
+    |
+ 61 |         let inner: int = 5;
+    |         ^^^^^^^^^^^^^^^^^^^ original owner
+    |
+  ::: tests/en/diagnostics/e2e/borrow_outlives_plain_value_in_order.sn:65:13..65:14
+    |
+ 65 |     return *r;
+    |             ^ invalid use
+    |
+
+error[SULTANC-BORROW-REFERENCE-ESCAPE]: reference escapes its valid scope — The escaping reference is `r`. A reference outlives the value it points to.
+  --> tests/en/diagnostics/e2e/borrow_outlives_plain_value_in_order.sn:78:5..78:6
+    |
+ 78 |     }
+    |     ^
+    |
+  ::: tests/en/diagnostics/e2e/borrow_outlives_plain_value_in_order.sn:75:9..75:28
+    |
+ 75 |         let inner: int = 5;
+    |         ^^^^^^^^^^^^^^^^^^^ original owner
+    |
+  ::: tests/en/diagnostics/e2e/borrow_outlives_plain_value_in_order.sn:74:27..74:28
+    |
+ 74 |         total := total + *r;
+    |                           ^ invalid use
+    |
+
+error[SULTANC-BORROW-REFERENCE-ESCAPE]: reference escapes its valid scope — The escaping reference is `r`. A reference outlives the value it points to.
+  --> tests/en/diagnostics/e2e/borrow_outlives_plain_value_in_order.sn:88:9..88:15
+    |
+ 88 |         break;
+    |         ^^^^^^
+    |
+  ::: tests/en/diagnostics/e2e/borrow_outlives_plain_value_in_order.sn:86:9..86:28
+    |
+ 86 |         let inner: int = 7;
+    |         ^^^^^^^^^^^^^^^^^^^ original owner
+    |
+  ::: tests/en/diagnostics/e2e/borrow_outlives_plain_value_in_order.sn:90:13..90:14
+    |
+ 90 |     return *r;
+    |             ^ invalid use
+    |
+
+error[SULTANC-BORROW-REFERENCE-ESCAPE]: reference escapes its valid scope — The escaping reference is `r`. A reference outlives the value it points to.
+  --> tests/en/diagnostics/e2e/borrow_outlives_plain_value_in_order.sn:103:9..103:18
+     |
+ 103 |         continue;
+     |         ^^^^^^^^^
+     |
+  ::: tests/en/diagnostics/e2e/borrow_outlives_plain_value_in_order.sn:101:9..101:28
+     |
+ 101 |         let inner: int = 3;
+     |         ^^^^^^^^^^^^^^^^^^^ original owner
+     |
+  ::: tests/en/diagnostics/e2e/borrow_outlives_plain_value_in_order.sn:100:27..100:28
+     |
+ 100 |         total := total + *r;
+     |                           ^ invalid use
+     |
+
+error[SULTANC-BORROW-REFERENCE-ESCAPE]: reference escapes its valid scope — The escaping reference is `r`. A reference outlives the value it points to.
+  --> tests/en/diagnostics/e2e/borrow_outlives_plain_value_in_order.sn:115:5..115:6
+     |
+ 115 |     }
+     |     ^
+     |
+  ::: tests/en/diagnostics/e2e/borrow_outlives_plain_value_in_order.sn:113:9..113:28
+     |
+ 113 |         let inner: int = n;
+     |         ^^^^^^^^^^^^^^^^^^^ original owner
+     |
+  ::: tests/en/diagnostics/e2e/borrow_outlives_plain_value_in_order.sn:117:13..117:14
+     |
+ 117 |     return *r;
+     |             ^ invalid use
+     |
+
+error[SULTANC-BORROW-REFERENCE-ESCAPE]: reference escapes its valid scope — The escaping reference is `holder`. A reference outlives the value it points to.
+  --> tests/en/diagnostics/e2e/borrow_outlives_plain_value_in_order.sn:126:5..126:6
+     |
+ 126 |     };
+     |     ^
+     |
+  ::: tests/en/diagnostics/e2e/borrow_outlives_plain_value_in_order.sn:124:9..124:29
+     |
+ 124 |         let inner: int = 42;
+     |         ^^^^^^^^^^^^^^^^^^^^ original owner
+     |
+  ::: tests/en/diagnostics/e2e/borrow_outlives_plain_value_in_order.sn:127:13..127:19
+     |
+ 127 |     return *holder.item;
+     |             ^^^^^^ invalid use
+     |
+
+error[SULTANC-BORROW-REFERENCE-ESCAPE]: reference escapes its valid scope — The escaping reference is `refs`. A reference outlives the value it points to.
+  --> tests/en/diagnostics/e2e/borrow_outlives_plain_value_in_order.sn:136:5..136:6
+     |
+ 136 |     };
+     |     ^
+     |
+  ::: tests/en/diagnostics/e2e/borrow_outlives_plain_value_in_order.sn:134:9..134:29
+     |
+ 134 |         let inner: int = 42;
+     |         ^^^^^^^^^^^^^^^^^^^^ original owner
+     |
+  ::: tests/en/diagnostics/e2e/borrow_outlives_plain_value_in_order.sn:137:13..137:17
+     |
+ 137 |     return *refs[0];
+     |             ^^^^ invalid use
+     |
+
+error[SULTANC-BORROW-REFERENCE-ESCAPE]: reference escapes its valid scope — The escaping reference is `refs`. A reference outlives the value it points to.
+  --> tests/en/diagnostics/e2e/borrow_outlives_plain_value_in_order.sn:146:5..146:6
+     |
+ 146 |     };
+     |     ^
+     |
+  ::: tests/en/diagnostics/e2e/borrow_outlives_plain_value_in_order.sn:144:9..144:29
+     |
+ 144 |         let inner: int = 42;
+     |         ^^^^^^^^^^^^^^^^^^^^ original owner
+     |
+  ::: tests/en/diagnostics/e2e/borrow_outlives_plain_value_in_order.sn:147:13..147:17
+     |
+ 147 |     return *refs[length(refs) - 1];
+     |             ^^^^ invalid use
+     |

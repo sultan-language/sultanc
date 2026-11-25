@@ -1,0 +1,186 @@
+error[SULTANC-BORROW-REFERENCE-ESCAPE]: reference escapes its valid scope — The escaping reference is `ر`. A reference outlives the value it points to.
+  --> tests/ar/diagnostics/e2e/borrow_outlives_plain_value_in_order.sn:29:5..29:6
+    |
+ 29 |     };
+    |     ^
+    |
+  ::: tests/ar/diagnostics/e2e/borrow_outlives_plain_value_in_order.sn:27:9..27:32
+    |
+ 27 |         ليكن الداخلي: عدد = 42;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^ original owner
+    |
+  ::: tests/ar/diagnostics/e2e/borrow_outlives_plain_value_in_order.sn:30:11..30:12
+    |
+ 30 |     أرجع *ر;
+    |           ^ invalid use
+    |
+
+error[SULTANC-BORROW-REFERENCE-ESCAPE]: reference escapes its valid scope — The escaping reference is `ر`. A reference outlives the value it points to.
+  --> tests/ar/diagnostics/e2e/borrow_outlives_plain_value_in_order.sn:39:5..39:6
+    |
+ 39 |     };
+    |     ^
+    |
+  ::: tests/ar/diagnostics/e2e/borrow_outlives_plain_value_in_order.sn:37:9..37:43
+    |
+ 37 |         ليكن الزوج: زوج = { أ: 40, ب: 2 };
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ original owner
+    |
+  ::: tests/ar/diagnostics/e2e/borrow_outlives_plain_value_in_order.sn:40:11..40:12
+    |
+ 40 |     أرجع *ر;
+    |           ^ invalid use
+    |
+
+error[SULTANC-BORROW-REFERENCE-ESCAPE]: reference escapes its valid scope — The escaping reference is `ر`. A reference outlives the value it points to.
+  --> tests/ar/diagnostics/e2e/borrow_outlives_plain_value_in_order.sn:49:5..49:6
+    |
+ 49 |     };
+    |     ^
+    |
+  ::: tests/ar/diagnostics/e2e/borrow_outlives_plain_value_in_order.sn:47:9..47:44
+    |
+ 47 |         ليكن الاثنان: (عدد, عدد) = (40, 2);
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ original owner
+    |
+  ::: tests/ar/diagnostics/e2e/borrow_outlives_plain_value_in_order.sn:50:11..50:12
+    |
+ 50 |     أرجع *ر;
+    |           ^ invalid use
+    |
+
+error[SULTANC-BORROW-REFERENCE-ESCAPE]: reference escapes its valid scope — The escaping reference is `ر`. A reference outlives the value it points to.
+  --> tests/ar/diagnostics/e2e/borrow_outlives_plain_value_in_order.sn:61:5..61:6
+    |
+ 61 |     }
+    |     ^
+    |
+  ::: tests/ar/diagnostics/e2e/borrow_outlives_plain_value_in_order.sn:58:9..58:31
+    |
+ 58 |         ليكن الداخلي: عدد = 5;
+    |         ^^^^^^^^^^^^^^^^^^^^^^ original owner
+    |
+  ::: tests/ar/diagnostics/e2e/borrow_outlives_plain_value_in_order.sn:62:11..62:12
+    |
+ 62 |     أرجع *ر;
+    |           ^ invalid use
+    |
+
+error[SULTANC-BORROW-REFERENCE-ESCAPE]: reference escapes its valid scope — The escaping reference is `ر`. A reference outlives the value it points to.
+  --> tests/ar/diagnostics/e2e/borrow_outlives_plain_value_in_order.sn:75:5..75:6
+    |
+ 75 |     }
+    |     ^
+    |
+  ::: tests/ar/diagnostics/e2e/borrow_outlives_plain_value_in_order.sn:72:9..72:31
+    |
+ 72 |         ليكن الداخلي: عدد = 5;
+    |         ^^^^^^^^^^^^^^^^^^^^^^ original owner
+    |
+  ::: tests/ar/diagnostics/e2e/borrow_outlives_plain_value_in_order.sn:71:31..71:32
+    |
+ 71 |         المجموع := المجموع + *ر;
+    |                               ^ invalid use
+    |
+
+error[SULTANC-BORROW-REFERENCE-ESCAPE]: reference escapes its valid scope — The escaping reference is `ر`. A reference outlives the value it points to.
+  --> tests/ar/diagnostics/e2e/borrow_outlives_plain_value_in_order.sn:85:9..85:22
+    |
+ 85 |         اخرج_من_حلقة;
+    |         ^^^^^^^^^^^^^
+    |
+  ::: tests/ar/diagnostics/e2e/borrow_outlives_plain_value_in_order.sn:83:9..83:31
+    |
+ 83 |         ليكن الداخلي: عدد = 7;
+    |         ^^^^^^^^^^^^^^^^^^^^^^ original owner
+    |
+  ::: tests/ar/diagnostics/e2e/borrow_outlives_plain_value_in_order.sn:87:11..87:12
+    |
+ 87 |     أرجع *ر;
+    |           ^ invalid use
+    |
+
+error[SULTANC-BORROW-REFERENCE-ESCAPE]: reference escapes its valid scope — The escaping reference is `ر`. A reference outlives the value it points to.
+  --> tests/ar/diagnostics/e2e/borrow_outlives_plain_value_in_order.sn:100:9..100:19
+     |
+ 100 |         تابع_حلقة;
+     |         ^^^^^^^^^^
+     |
+  ::: tests/ar/diagnostics/e2e/borrow_outlives_plain_value_in_order.sn:98:9..98:31
+    |
+ 98 |         ليكن الداخلي: عدد = 3;
+    |         ^^^^^^^^^^^^^^^^^^^^^^ original owner
+    |
+  ::: tests/ar/diagnostics/e2e/borrow_outlives_plain_value_in_order.sn:97:31..97:32
+    |
+ 97 |         المجموع := المجموع + *ر;
+    |                               ^ invalid use
+    |
+
+error[SULTANC-BORROW-REFERENCE-ESCAPE]: reference escapes its valid scope — The escaping reference is `ر`. A reference outlives the value it points to.
+  --> tests/ar/diagnostics/e2e/borrow_outlives_plain_value_in_order.sn:112:5..112:6
+     |
+ 112 |     }
+     |     ^
+     |
+  ::: tests/ar/diagnostics/e2e/borrow_outlives_plain_value_in_order.sn:110:9..110:31
+     |
+ 110 |         ليكن الداخلي: عدد = ن;
+     |         ^^^^^^^^^^^^^^^^^^^^^^ original owner
+     |
+  ::: tests/ar/diagnostics/e2e/borrow_outlives_plain_value_in_order.sn:114:11..114:12
+     |
+ 114 |     أرجع *ر;
+     |           ^ invalid use
+     |
+
+error[SULTANC-BORROW-REFERENCE-ESCAPE]: reference escapes its valid scope — The escaping reference is `الحامل`. A reference outlives the value it points to.
+  --> tests/ar/diagnostics/e2e/borrow_outlives_plain_value_in_order.sn:123:5..123:6
+     |
+ 123 |     };
+     |     ^
+     |
+  ::: tests/ar/diagnostics/e2e/borrow_outlives_plain_value_in_order.sn:121:9..121:32
+     |
+ 121 |         ليكن الداخلي: عدد = 42;
+     |         ^^^^^^^^^^^^^^^^^^^^^^^ original owner
+     |
+  ::: tests/ar/diagnostics/e2e/borrow_outlives_plain_value_in_order.sn:124:11..124:17
+     |
+ 124 |     أرجع *الحامل.العنصر;
+     |           ^^^^^^ invalid use
+     |
+
+error[SULTANC-BORROW-REFERENCE-ESCAPE]: reference escapes its valid scope — The escaping reference is `المراجع`. A reference outlives the value it points to.
+  --> tests/ar/diagnostics/e2e/borrow_outlives_plain_value_in_order.sn:133:5..133:6
+     |
+ 133 |     };
+     |     ^
+     |
+  ::: tests/ar/diagnostics/e2e/borrow_outlives_plain_value_in_order.sn:131:9..131:32
+     |
+ 131 |         ليكن الداخلي: عدد = 42;
+     |         ^^^^^^^^^^^^^^^^^^^^^^^ original owner
+     |
+  ::: tests/ar/diagnostics/e2e/borrow_outlives_plain_value_in_order.sn:134:11..134:18
+     |
+ 134 |     أرجع *المراجع[0];
+     |           ^^^^^^^ invalid use
+     |
+
+error[SULTANC-BORROW-REFERENCE-ESCAPE]: reference escapes its valid scope — The escaping reference is `المراجع`. A reference outlives the value it points to.
+  --> tests/ar/diagnostics/e2e/borrow_outlives_plain_value_in_order.sn:143:5..143:6
+     |
+ 143 |     };
+     |     ^
+     |
+  ::: tests/ar/diagnostics/e2e/borrow_outlives_plain_value_in_order.sn:141:9..141:32
+     |
+ 141 |         ليكن الداخلي: عدد = 42;
+     |         ^^^^^^^^^^^^^^^^^^^^^^^ original owner
+     |
+  ::: tests/ar/diagnostics/e2e/borrow_outlives_plain_value_in_order.sn:144:11..144:18
+     |
+ 144 |     أرجع *المراجع[الطول(المراجع) - 1];
+     |           ^^^^^^^ invalid use
+     |

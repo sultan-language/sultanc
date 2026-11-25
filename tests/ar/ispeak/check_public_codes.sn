@@ -250,6 +250,8 @@
     ألحق(الناتج, «SULTANC-RUN-NEEDS-PROCESS»);
     ألحق(الناتج, «SULTANC-NAME-CONSTRUCTOR-NOT-CALLED»);
     ألحق(الناتج, «SULTANC-OWNERSHIP-MERGE-CONFLICT»);
+    ألحق(الناتج, «SULTANC-ASM-UNSUPPORTED»);
+    ألحق(الناتج, «SULTANC-NAME-BUILTIN-NOT-CALLED»);
     أرجع الناتج;
 }
 
@@ -492,6 +494,8 @@
     ألحق(الناتج, «run-needs-process»);
     ألحق(الناتج, «constructor-not-called»);
     ألحق(الناتج, «ownership-merge-conflict»);
+    ألحق(الناتج, «asm-unsupported»);
+    ألحق(الناتج, «builtin-not-called»);
     أرجع الناتج;
 }
 

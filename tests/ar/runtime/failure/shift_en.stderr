@@ -1,0 +1,2 @@
+error[SULTANC-RUNTIME-PROGRAM-STOPPED]: the program stopped
+shift by 64 out of range for a 64-bit integer at tests/ar/runtime/failure/shift_en.sn:13:10

@@ -572,6 +572,7 @@
     | سبب_تشخيص.سبب_وقت_الترجمة_فشل_التنفيذ -> { أرجع «Compile-time evaluation failed while running the code»; }
     | سبب_تشخيص.سبب_وقت_الترجمة_فخ_التنفيذ -> { أرجع «The code trapped during compile-time evaluation»; }
     | سبب_تشخيص.سبب_وقت_الترجمة_قيمة_عليا_منشئ_غير_ثابتة -> { أرجع «A module-level value built by a constructor is immutable, and its arguments are numbers, booleans, characters, text or such constructors»; }
+    | سبب_تشخيص.سبب_وقت_الترجمة_قيمة_عليا_غير_ثابتة -> { أرجع «A module-level value is computed while compiling, so it is initialized only from literals and other constant values, without a cycle»; }
     | سبب_تشخيص.سبب_وقت_الترجمة_خلل_المفسر -> { أرجع نص_سبب_سبب_وقت_الترجمة_خلل_المفسر(); }
     | سبب_تشخيص.سبب_وقت_الترجمة_مسير_غير_صالح -> { أرجع نص_سبب_سبب_وقت_الترجمة_مسير_غير_صالح(); }
     | سبب_تشخيص.سبب_وقت_الترجمة_تخطيط_غير_مثبت -> { أرجع نص_سبب_سبب_وقت_الترجمة_تخطيط_غير_مثبت(); }

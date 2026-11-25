@@ -49,6 +49,15 @@
     // A module-level value built by an enum constructor that is mutable, or
     // whose arguments are not constants a read can rebuild (the initializer).
     | قيمة_عليا_منشئ_غير_ثابتة بنوع نطاق
+    // A module-level value whose initializer names a module-level value not
+    // lowered yet (declared later, or in another unit lowered later): it is
+    // retried once the others are lowered (semantic_lowering.sn).
+    | قيمة_عليا_مؤجلة بنوع نطاق
+    // A module-level value whose initializer is not a compile-time constant,
+    // or one that still waits for another after every retry (a cycle).
+    | قيمة_عليا_غير_ثابتة بنوع نطاق
+    // `asm` (تجميع), in a function or at module level: not compiled yet.
+    | تجميع_غير_مدعوم بنوع نطاق
     // Constant evaluation of a module value or comptime expression hit an
     // operation that traps at run time (overflow, division by zero).
     | تقييم_ثابت_بفخ بنوع نطاق

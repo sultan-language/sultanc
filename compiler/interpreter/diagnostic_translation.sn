@@ -17,6 +17,11 @@
 استورد المكتبة.نصوص.من_بايتات;
 استورد المكتبة.نصوص.أعداد;
 استورد compiler.interpreter.execution.load_libraries;
+استورد compiler.diagnostics.output.terminal;
+استورد compiler.runtime.failure_identity;
+استورد compiler.ispeak.ispeak;
+استورد المكتبة.بيئة.نظام;
+استورد المكتبة.دخ.اطبع;
 
 عرف أضف_سبب_مفسر(التشخيص: &متغير تشخيص, السبب: سبب_تشخيص): فراغ {
     ليكن أضيف: منطقي = أضف_سبب_تشخيص(التشخيص, السبب
@@ -468,6 +473,72 @@
         الفشل, &(*السياق).المصادر, &(*السياق).الأصول, &(*السياق).التصحيح
     );
     اعرض_مجموعة_تشخيصات_بصيغة(&التشخيصات, (*السياق).اللغة, (*السياق).الصيغة, (*السياق).أنسي);
+}
+
+// ---- A stack overflow -----------------------------------------------------
+//
+// A program that runs out of the interpreters' call depth at run time stops
+// as an executable whose stack overflows does (std/os/stack_overflow.sn):
+// the frame "the program stopped" and the words of a stack overflow, each on
+// its line, on standard error, in the language the program's own failure path
+// would choose (std.text.system_language: the first of SULTANC_LANG, LC_ALL,
+// LC_MESSAGES and LANG that carries a language, else the language it was
+// compiled with), and the run ends with status 1. Compile-time work keeps its
+// diagnostic.
+
+عام عرف فشل_تفسير_فيض_مكدس(الفشل: &فشل_تفسير_مسير): منطقي {
+    طابق *الفشل مع
+    | فشل_تفسير_مسير.وقت_تشغيل(خطأ_وقت_تشغيل_مفسر.تجاوز_عمق_النداء(_)) -> { أرجع صواب; }
+    | _ -> { أرجع خطأ; };
+}
+
+// The language of the interpreted program's runtime failures; المترجمة is
+// the one it was compiled with (--lang).
+عرف لغة_فشل_برنامج_مفسر(المترجمة: لغة_تشخيص): لغة_تشخيص {
+    ليكن الأسماء: متغير متجه نص = [];
+    ألحق(الأسماء, «SULTANC_LANG»);
+    ألحق(الأسماء, «LC_ALL»);
+    ألحق(الأسماء, «LC_MESSAGES»);
+    ألحق(الأسماء, «LANG»);
+    ليكن ف: متغير طبيعي = 0;
+    طالما (ف < (الطول(الأسماء) مثل طبيعي)) {
+        طابق متغير_بيئة_النظام(&الأسماء[ف]) مع
+        | نتيجة.نجح(اختياري.موجود(القيمة)) -> {
+            // The language is the text before «.» or «@»; none in an empty
+            // value, «C» or «POSIX».
+            ليكن الطول_الكلي: طبيعي = الطول(القيمة) مثل طبيعي;
+            ليكن النهاية: متغير طبيعي = 0;
+            طالما (النهاية < الطول_الكلي && القيمة[النهاية] != 0x2E && القيمة[النهاية] != 0x40) {
+                النهاية := النهاية + 1;
+            }
+            ليكن بلا_لغة: منطقي = النهاية == 0
+                || (النهاية == 1 && القيمة[0] == 0x43)
+                || (النهاية == 5 && القيمة[0] == 0x50 && القيمة[1] == 0x4F && القيمة[2] == 0x53
+                    && القيمة[3] == 0x49 && القيمة[4] == 0x58);
+            إذا (!بلا_لغة) {
+                // «ar», «ar-…» or «ar_…»: Arabic; any other language: English.
+                إذا (النهاية >= 2 && القيمة[0] == 0x61 && القيمة[1] == 0x72
+                    && (النهاية == 2 || القيمة[2] == 0x2D || القيمة[2] == 0x5F)) {
+                    أرجع لغة_تشخيص.العربية();
+                };
+                أرجع لغة_تشخيص.الإنجليزية();
+            };
+        }
+        | _ -> { };
+        ف := ف + 1;
+    }
+    أرجع المترجمة;
+}
+
+// Writes the stack overflow's two lines to standard error.
+عام عرف اكتب_فيض_مكدس_مفسر(المترجمة: لغة_تشخيص): فراغ {
+    ليكن اللغة: لغة_تشخيص = لغة_فشل_برنامج_مفسر(المترجمة);
+    ليكن التشخيص: تشخيص = ابدأ_تشخيصا(معرف_تشخيص.توقف_البرنامج(), اختياري.لا_شيء());
+    ليكن السطر: متغير متجه ط8 = بايتات_من_نص(سطر_عنوان_تشخيص_طرفي(&التشخيص, اللغة));
+    ألحق(السطر, 10);
+    ألحق_بايتات_نص(&متغير السطر, نص_فشل_تشغيل(اللغة, هوية_فشل_تشغيل.فيض_المكدس()));
+    ألحق(السطر, 10);
+    ليكن _ن: نتيجة عدد, عدد = اكتب_بايتات_خطأ(&السطر);
 }
 
 // A -l library `run` could not load (load_libraries.sn): its -l spelling,

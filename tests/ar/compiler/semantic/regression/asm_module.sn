@@ -1,0 +1,6 @@
+// اختبار: رفض
+// تشخيص: SULTANC-ASM-UNSUPPORTED
+// نظير: tests/en/compiler/semantic/regression/asm_module.sn
+// `تجميع` على مستوى الوحدة يُبلَّغ عنه غير مدعوم بدل أن يُسقط بصمت.
+تجميع «nop»;
+عرف الرئيسية(): عدد { أرجع 0; }

@@ -1,0 +1,18 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 1
+// تفاضلي: نعم
+// بيئة: SULTANC_LANG=ar
+// خرج-قياسي: <فارغ>
+// خطأ-قياسي-ملف: shift_ar.stderr
+// نظير: tests/ar/runtime/failure/shift_ar.sn
+// A shift by the width of its type or more (docs/en/reference/errors.md, "Runtime
+// checks") stops the program through the panic path: the frame "the program
+// stopped", then the amount, the width and the place of the shift, exit status 1.
+def shift(value: int, amount: int): int {
+    return value << amount;
+}
+
+def main(): int {
+    return shift(1, 64);
+}

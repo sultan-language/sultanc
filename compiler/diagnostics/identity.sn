@@ -101,6 +101,11 @@
     // A local whose ownership state differs between the paths that join
     // (msir/ssf/ownership_legality.sn): a user error, not an ICE.
     | تعارض_ملكية_عند_الدمج
+    // `asm` (تجميع), at module level or in a function: no backend compiles it
+    // yet (msir lowering). Previously dropped silently or an ICE.
+    | تجميع_غير_مدعوم
+    // A built-in function read as a value without a call (types).
+    | بدائي_غير_مستدعى
     | مورد_محرر
     | تعارض_استعارة
     | هروب_مرجع

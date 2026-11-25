@@ -115,5 +115,7 @@
     إذا (!تحقق_سبب(سبب_تشخيص.سبب_تنسيق_عدد_غير_صالح(), «A width or precision taken from an argument needs an integer argument», «العرض أو الدقة المأخوذان من وسيط يتطلبان وسيطا صحيحا»)) { أرجع 48; };
     // comptime.module-constructor-not-constant, compiler/msir/lowering/diagnostics.sn
     إذا (!تحقق_سبب(سبب_تشخيص.سبب_وقت_الترجمة_قيمة_عليا_منشئ_غير_ثابتة(), «A module-level value built by a constructor is immutable, and its arguments are numbers, booleans, characters, text or such constructors», «القيمة على مستوى الوحدة التي يبنيها منشئ غير قابلة للتغيير، وحججها أعداد أو قيم منطقية أو محارف أو نصوص أو منشئات مثلها»)) { أرجع 49; };
+    // comptime.module-value-not-constant, compiler/msir/lowering/diagnostics.sn
+    إذا (!تحقق_سبب(سبب_تشخيص.سبب_وقت_الترجمة_قيمة_عليا_غير_ثابتة(), «A module-level value is computed while compiling, so it is initialized only from literals and other constant values, without a cycle», «تُحسب القيمة على مستوى الوحدة أثناء الترجمة، فلا تُهيَّأ إلا بحرفيات وقيم ثابتة أخرى، دون دوران»)) { أرجع 49; };
     أرجع 0;
 }

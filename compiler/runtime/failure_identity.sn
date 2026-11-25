@@ -6,9 +6,15 @@
     | عملية_غير_صالحة
     | إدخال_إخراج
     // A failed runtime check (std.process.runtime_check): its words are
-    // templates, where {0} and {1} stand for the index and the length and {2}
-    // for the place `file:line:column`.
+    // templates, where {0} and {1} stand for the index and the length (for a
+    // shift, its amount and the width) and {2} for the place
+    // `file:line:column`.
     | تجاوز_عدد_صحيح
     | فهرس_خارج_المدى
     | قسمة_على_صفر
+    | إزاحة_خارج_المدى
+    // A stack overflow: a program's call stack ran past its end
+    // (std/os/stack_overflow.sn; the interpreters' call-depth limit). No
+    // place: the report is written from a signal handler.
+    | فيض_المكدس
 ;

@@ -1,0 +1,21 @@
+// اختبار: تفاضلي
+// أهداف: x86_64-linux,aarch64-linux-gnu
+// خروج: 1
+// تفاضلي: نعم
+// بيئة: SULTANC_LANG=en
+// خرج-قياسي: <فارغ>
+// خطأ-قياسي-ملف: stack_overflow_en.stderr
+// نظير: tests/en/runtime/failure/stack_overflow_en.sn
+// A recursion with no end runs the main thread's call stack past its end
+// (docs/en/reference/errors.md, "Runtime checks"): an executable stops with the
+// frame "the program stopped" and the words of a stack overflow, exit status 1,
+// as the interpreter does at its call-depth limit.
+عرف انزل(العمق: عدد): عدد {
+    إذا (العمق < 0) { أرجع 0; };
+    ليكن التحت: عدد = انزل(العمق + 1);
+    أرجع (التحت % 1000003) * 31 + العمق % 7;
+}
+
+عرف الرئيسية(): عدد {
+    أرجع انزل(0) % 100;
+}

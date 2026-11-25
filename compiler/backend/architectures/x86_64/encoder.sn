@@ -535,6 +535,33 @@
     }
 }
 
+// Stack probe of a frame of at least one page on Linux and macOS, before the
+// prologue moves RSP: RSP itself steps down one page (4096 bytes) at a time
+// and each step reads the new top, so the first access past the stack's end
+// faults in its guard page (where the stack-overflow report finds it,
+// std/os/stack_overflow.sn) and no access lands beyond it; the kernel grows
+// the main thread's stack on the faults at RSP as on any push. RSP is then
+// set back and the prologue allocates the frame as usual. R10 and R11 hold
+// no SultanC argument at entry.
+//   mov r11,rsp; mov r10d,pages; 1: sub rsp,4096; test [rsp],rsp; dec r10; jnz 1b; mov rsp,r11
+عرف ألحق_مسبار_مكدس_سيستم_في_إكس(البايتات: &متغير متجه ط8, الحجم: طبيعي): فراغ {
+    إذا (الحجم < 4096) { أرجع; };
+    ليكن الصفحات: طبيعي = (الحجم + 4095) / 4096;
+    ليكن البداية: متجه طبيعي = [0x49, 0x89, 0xE3, 0x41, 0xBA];
+    ليكن ف: متغير طبيعي = 0;
+    طالما (ف < (الطول(البداية) مثل طبيعي)) { ألحق_بايت_إكس(البايتات, البداية[ف]); ف := ف + 1; }
+    ألحق_ط32_إكس(البايتات, الصفحات);
+    ليكن الحلقة: متجه طبيعي = [
+        0x48, 0x81, 0xEC, 0x00, 0x10, 0x00, 0x00,
+        0x48, 0x85, 0x24, 0x24,
+        0x49, 0xFF, 0xCA,
+        0x75, 0xF0,
+        0x4C, 0x89, 0xDC
+    ];
+    ف := 0;
+    طالما (ف < (الطول(الحلقة) مثل طبيعي)) { ألحق_بايت_إكس(البايتات, الحلقة[ف]); ف := ف + 1; }
+}
+
 عرف ألحق_تعديل_مؤشر_المكدس_إكس_مع_فك(
     البايتات: &متغير متجه ط8,
     الحجم: طبيعي,
@@ -5001,9 +5028,14 @@
 
     ليكن بداية_الدالة: طبيعي = الطول(*البايتات) مثل طبيعي;
     ليكن فك_المكدس: متغير متتبع_فك_المكدس = متتبع_فك_المكدس_جديد(الهدف);
-    // Windows commits the stack page by page: probe a frame of a page or more.
+    // Every target this encoder serves ends its stacks with a guard page:
+    // probe a frame of a page or more. Windows commits the stack page by
+    // page; Linux and macOS stop at the guard, which a frame larger than it
+    // could otherwise step over.
     إذا (تركيب_الهدف_الأصلي(الهدف) == هوية_تركيب_هدف_أصلي.إكس_ستة_وثمانون_أربعة_وستون_ويندوز_كوف()) {
         ألحق_مسبار_مكدس_ويندوز_إكس(البايتات, الدالة.إطار_الانسكاب.الحجم_بايت);
+    } وإلا {
+        ألحق_مسبار_مكدس_سيستم_في_إكس(البايتات, الدالة.إطار_الانسكاب.الحجم_بايت);
     };
     ألحق_تعديل_مؤشر_المكدس_إكس_مع_فك(
         البايتات, الدالة.إطار_الانسكاب.الحجم_بايت, صواب, بداية_الدالة, &متغير فك_المكدس

@@ -999,12 +999,43 @@
     أرجع الناتج;
 }
 
+// Whether a local of this Type holds one scalar its slot holds whole: a
+// promotable scalar (صنف_نوع_قابل_للترقية), a character, a reference or a
+// raw pointer (both laid out as one address).
+عرف محلي_عددي_تصحيح_مسير(الأنواع: &سجل_أنواع, النوع: معرف_نوع): منطقي {
+    طابق صنف_نوع_قابل_للترقية(الأنواع, النوع) مع
+    | اختياري.موجود(_) -> { أرجع صواب; }
+    | اختياري.لا_شيء -> { };
+    طابق أزل_غلاف_متغير(الأنواع, النوع) مع
+    | اختياري.لا_شيء -> { أرجع خطأ; }
+    | اختياري.موجود(المعرف) -> {
+        طابق وصف_شكل_نوع_دلالي_عند(الأنواع, المعرف) مع
+        | اختياري.لا_شيء -> { أرجع خطأ; }
+        | اختياري.موجود(الوصف) -> {
+            طابق الوصف.الصنف مع
+            | صنف_شكل_نوع_دلالي.مرجع -> { أرجع صواب; }
+            | صنف_شكل_نوع_دلالي.مؤشر -> { أرجع صواب; }
+            | صنف_شكل_نوع_دلالي.بدائي(البدائي) -> {
+                أرجع صنف_النوع_البدائي(البدائي) == صنف_نوع_بدائي.حرف();
+            }
+            | _ -> { أرجع خطأ; };
+        };
+    };
+}
+
 // At -O0 (msir_optimization_pipeline.sn) the slot of a scalar local that is
 // not an owner is its variable's only location. Every assignment stores into
 // the slot, so the slot is always current, while a value an assignment also
 // bound to the variable goes stale once the slot is written through a
 // reference. Those variables are therefore taken off every other value of the
 // function. An aggregate local keeps the values bound to it as well.
+// A reference, a raw pointer and a character are such scalars too. While
+// they kept the values they are given, the LLVM backend stored each of those
+// into the variable's slot right after the value's definition: `r := &b`
+// stored the alloca of b's slot at the function's entry, before the slot it
+// wrote was defined (a module LLVM rejects), and a constant (a character, a
+// global's address) was stored at the end of its block, after the
+// assignments that follow it there.
 عام عرف اجعل_الخانات_مواقع_المحليات_تصحيح_مسير(
     البرنامج: &برنامج_مسير,
     الأنواع: &سجل_أنواع,
@@ -1030,9 +1061,7 @@
         ليكن عددي: متغير منطقي = خطأ;
         إذا (فهرس < (الطول((*البرنامج).الدوال) مثل طبيعي)
             && (السجل.المكان.القيمة مثل طبيعي) < (الطول((*البرنامج).الدوال[فهرس].القيم) مثل طبيعي)) {
-            طابق صنف_نوع_قابل_للترقية(الأنواع, (*البرنامج).الدوال[فهرس].القيم[السجل.المكان.القيمة].النوع) مع
-            | اختياري.موجود(_) -> { عددي := صواب; }
-            | اختياري.لا_شيء -> { };
+            عددي := محلي_عددي_تصحيح_مسير(الأنواع, (*البرنامج).الدوال[فهرس].القيم[السجل.المكان.القيمة].النوع);
         };
         إذا (عددي && !السجل.المالك && فهرس < عدد_الدوال
             && فهرس < (الطول((*التصحيح).العقد.متغيرات_بالرمز) مثل طبيعي)) {

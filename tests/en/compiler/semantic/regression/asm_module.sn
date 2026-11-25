@@ -1,0 +1,6 @@
+// اختبار: رفض
+// تشخيص: SULTANC-ASM-UNSUPPORTED
+// نظير: tests/ar/compiler/semantic/regression/asm_module.sn
+// Module-level `asm` is reported as unsupported instead of being dropped silently.
+asm "nop";
+def main(): int { return 0; }

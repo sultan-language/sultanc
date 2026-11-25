@@ -250,6 +250,8 @@ def pinned_codes(): vector string {
     append(result, "SULTANC-RUN-NEEDS-PROCESS");
     append(result, "SULTANC-NAME-CONSTRUCTOR-NOT-CALLED");
     append(result, "SULTANC-OWNERSHIP-MERGE-CONFLICT");
+    append(result, "SULTANC-ASM-UNSUPPORTED");
+    append(result, "SULTANC-NAME-BUILTIN-NOT-CALLED");
     return result;
 }
 
@@ -492,6 +494,8 @@ def pinned_kinds(): vector string {
     append(result, "run-needs-process");
     append(result, "constructor-not-called");
     append(result, "ownership-merge-conflict");
+    append(result, "asm-unsupported");
+    append(result, "builtin-not-called");
     return result;
 }
 

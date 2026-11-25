@@ -183,6 +183,8 @@
     | معرف_تشخيص.استخدام_قبل_التهيئة -> { أرجع «use before initialization»; }
     | معرف_تشخيص.استخدام_بعد_النقل -> { أرجع «use after move»; }
     | معرف_تشخيص.تعارض_ملكية_عند_الدمج -> { أرجع «ownership state of a local differs between paths that join»; }
+    | معرف_تشخيص.تجميع_غير_مدعوم -> { أرجع «assembly (`asm`) is not supported yet»; }
+    | معرف_تشخيص.بدائي_غير_مستدعى -> { أرجع «built-in function used as a value without being called»; }
     | معرف_تشخيص.مورد_محرر -> { أرجع «resource was already released»; }
     | معرف_تشخيص.تعارض_استعارة -> { أرجع «borrow conflict»; }
     | معرف_تشخيص.هروب_مرجع -> { أرجع «reference escapes its valid scope»; }

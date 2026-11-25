@@ -50,6 +50,8 @@
     ألحق(الحقائق, (*البرنامج).دالة_تحقق_التنسيق);
     // The runtime-check report stays one call in each check's cold block.
     ألحق(الحقائق, (*البرنامج).دالة_فشل_فحص_التشغيل);
+    // The stack-overflow report's installer stays one call at the entry.
+    ألحق(الحقائق, (*البرنامج).دالة_تثبيت_تقرير_فيض_المكدس);
     ليكن ف: متغير طبيعي = 0;
     طالما (ف < (الطول(الحقائق) مثل طبيعي)) {
         طابق الحقائق[ف] مع

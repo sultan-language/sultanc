@@ -1293,8 +1293,27 @@
     ليكن الخانة: متغير مرجع_قيمة_إل_إل_في_إم = (*حالة_التصحيح).خانات_المتغيرات[الفهرس].الخانة;
     ليكن جديدة: منطقي = الخانة == الفارغ;
     إذا (جديدة) {
+        // The slot opens the allocation block, ahead of every instruction
+        // already there. A value defined in that block (the alloca of a
+        // local's place, which a reference `&a` to the local is) has its
+        // store right after it, so a slot appended at the block's end came
+        // after that store: the store used the slot before its definition,
+        // and the module failed verification. The variable's own cell, which
+        // takes the slot's place (صرح_بخانات_المتغيرات_تصحيح_إل_إل_في_إم),
+        // then also comes before every store and before every other value
+        // that holds its address.
         ليكن الاسم: متغير متجه ط8 = [0];
-        الخانة := LLVMBuildAlloca((*حالة_المزود).باني_الحجز, LLVMTypeOf(القيمة), مؤشر_اسم_سي_لإل_إل_في_إم(&متغير الاسم));
+        ليكن كتلة_الحجز: مرجع_كتلة_إل_إل_في_إم = LLVMGetInsertBlock((*حالة_المزود).باني_الحجز);
+        ليكن الأولى: مرجع_قيمة_إل_إل_في_إم = LLVMGetFirstInstruction(كتلة_الحجز);
+        إذا (الأولى == الفارغ) {
+            الخانة := LLVMBuildAlloca((*حالة_المزود).باني_الحجز, LLVMTypeOf(القيمة),
+                مؤشر_اسم_سي_لإل_إل_في_إم(&متغير الاسم));
+        } وإلا {
+            ليكن باني_البداية: مرجع_بان_إل_إل_في_إم = LLVMCreateBuilderInContext((*حالة_المزود).السياق);
+            LLVMPositionBuilderBefore(باني_البداية, الأولى);
+            الخانة := LLVMBuildAlloca(باني_البداية, LLVMTypeOf(القيمة), مؤشر_اسم_سي_لإل_إل_في_إم(&متغير الاسم));
+            LLVMDisposeBuilder(باني_البداية);
+        };
         (*حالة_التصحيح).خانات_المتغيرات[الفهرس].الخانة := الخانة;
     };
     // The store goes right after the definition: an argument's in the entry

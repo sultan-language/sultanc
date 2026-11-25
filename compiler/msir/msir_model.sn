@@ -762,6 +762,14 @@
     // bounds check calls it with its kind and source place
     // (runtime_checks.sn). None keeps the trap (bare metal without std).
     دالة_فشل_فحص_التشغيل: اختياري معرف_دالة_مسير,
+    // std's stack-overflow report (std/os/stack_overflow.sn), when it is
+    // loaded and the target has it: the function an executable's entry calls
+    // first, ثبت_تقرير_فيض_المكدس (runtime_checks.sn,
+    // ثبت_تقرير_فيض_المكدس_مسير), and its signal handler, معالج_فيض_المكدس,
+    // a `@@c_abi` function only that call's code takes the address of, which
+    // an interpreted program never runs.
+    دالة_تثبيت_تقرير_فيض_المكدس: اختياري معرف_دالة_مسير,
+    دالة_معالج_فيض_المكدس: اختياري معرف_دالة_مسير,
     // The source places lowering gives the checks (runtime_checks.sn), read
     // once by that pass and then cleared.
     مواقع_فحوص_التشغيل: متجه موقع_فحص_تشغيل_مسير,
@@ -812,7 +820,9 @@
 // The destruction obligation (إسقاط) of an owner where its scope ends: the end
 // of its block, a `break` or `continue` leaving it, the end of a match arm or
 // of a loop's initializer. الاسم and التعبير are that end. The obligation
-// before an assignment (the old value) is no such use.
+// before an assignment (the old value) is no such use. Where a borrowed
+// local is destroyed by no instruction, its scope's end is a borrow event
+// instead (صنف_استعارة_نهاية_نطاق_مسير).
 عام عرف صنف_استخدام_إتلاف_نطاق_مسير(): ط32 { أرجع 5; }
 
 // One borrow event of the source (docs/en/internals/ownership-analysis.md,
@@ -845,7 +855,8 @@
 };
 
 // The kinds of borrow events. Kind 1 is the analysis's own (where a holder's
-// borrows end, ssf/borrow_liveness.sn): lowering records no scope's end.
+// borrows end, ssf/borrow_liveness.sn): the scopes lowering records end
+// no borrow (صنف_استعارة_نهاية_نطاق_مسير).
 // The storage of local الرمز is changed in place: it may not be borrowed.
 عام عرف صنف_استعارة_تغيير_مسير(): ط32 { أرجع 2; }
 // The storage of local الرمز is written: the borrowed views of it end.
@@ -863,7 +874,9 @@
 عام عرف صنف_استعارة_أصول_مسير(): ط32 { أرجع 7; }
 // Local الرمز is given a value with the origins last taken (الأعلام: bit 1
 // a module value, bit 2 its Type carries a borrow, bit 4 a shared and bit 8
-// an exclusive reference).
+// an exclusive reference, bit 16 a raw pointer, bit 32 the origins hold a
+// term, bit 64 only a part of it is given the value: a member or element
+// written, a vector appended to; the origins then keep its own).
 عام عرف صنف_استعارة_إسناد_مسير(): ط32 { أرجع 8; }
 // Local الرمز is declared with the origins of الحدود (a parameter, a
 // pattern binding).
@@ -882,6 +895,12 @@
 // A closure captures local الرمز (الأعلام: bit 1 its Type owns storage,
 // bit 2 it is borrowed, bit 4 it holds an exclusive borrow).
 عام عرف صنف_استعارة_التقاط_مسير(): ط32 { أرجع 14; }
+// The scope of local الرمز ends here (النطاق: that end, as for
+// صنف_استخدام_إتلاف_نطاق_مسير) and it is destroyed by no instruction (it
+// owns no storage, or the code has no drop elaboration): a local an earlier
+// event borrows. It changes no borrow state; the legality analysis rejects
+// it while a holder of a borrow of the local reads it later.
+عام عرف صنف_استعارة_نهاية_نطاق_مسير(): ط32 { أرجع 15; }
 
 // The source function a function of the program was lowered from: the
 // Symbol of a function declared without Type parameters (0xFFFFFFFF for
@@ -1314,6 +1333,8 @@
         أصول_مواقع_التصحيح: انسخ_أصول_مواقع_مسير(&(*القيمة).أصول_مواقع_التصحيح),
         البيئات_الساكنة: انسخ_بيئات_ساكنة_مسير(&(*القيمة).البيئات_الساكنة),
         دالة_فشل_فحص_التشغيل: (*القيمة).دالة_فشل_فحص_التشغيل,
+        دالة_تثبيت_تقرير_فيض_المكدس: (*القيمة).دالة_تثبيت_تقرير_فيض_المكدس,
+        دالة_معالج_فيض_المكدس: (*القيمة).دالة_معالج_فيض_المكدس,
         مواقع_فحوص_التشغيل: انسخ_مواقع_فحوص_مسير(&(*القيمة).مواقع_فحوص_التشغيل),
         // Lowering facts for the legality analysis, which runs before any copy.
         مصادر_الاستخدامات: [],

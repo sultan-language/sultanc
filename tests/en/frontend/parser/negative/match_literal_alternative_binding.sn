@@ -1,0 +1,7 @@
+// اختبار: رفض
+// تشخيص: SULTANC-PARSE-PATTERN
+// نظير: tests/ar/frontend/parser/negative/match_literal_alternative_binding.sn
+// Literal alternatives accept only literals: a binding among them is a pattern
+// error at the binding (found by fuzzing).
+def f(e: int): int { match e with | 1 | x -> { return 0; }; return 1; }
+def main(): int { return f(1); }

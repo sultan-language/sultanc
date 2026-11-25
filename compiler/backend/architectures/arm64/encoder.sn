@@ -1363,8 +1363,8 @@
     }
 }
 
-// The probed form of the prologue's allocation (systems/windows), with the
-// same unwind facts as ألحق_تعديل_مؤشر_المكدس_ذراع.
+// The probed form of the prologue's allocation (systems/windows, used on
+// every target), with the same unwind facts as ألحق_تعديل_مؤشر_المكدس_ذراع.
 عرف ألحق_طرح_مكدس_بمسبار_ذراع(
     الكلمات: &متغير متجه كلمة_ذراع_أربعة_وستون_مشفرة,
     الحجم: طبيعي,
@@ -4129,9 +4129,12 @@
     إذا (إطار_ويندوز_بمؤشر_إطار_ذراع(&د.إطار_الانسكاب, الهدف)) {
         ألحق_مقدمة_إطار_ويندوز_ذراع(&متغير الكلمات, &د.إطار_الانسكاب, الهدف, &متغير فك_المكدس);
     } وإلا {
-        // Windows commits the stack page by page: probe a frame of a page or more.
-        إذا (تركيب_الهدف_الأصلي(الهدف) == هوية_تركيب_هدف_أصلي.ذراع_أربعة_وستون_ويندوز_كوف()
-            && د.إطار_الانسكاب.الحجم_بايت >= 4096) {
+        // Every target this encoder serves ends its stacks with a guard
+        // page: probe a frame of a page or more, one step of at most 4080
+        // bytes at a time. Windows commits the stack page by page; Linux and
+        // macOS stop at the guard, which a frame larger than it could
+        // otherwise step over.
+        إذا (د.إطار_الانسكاب.الحجم_بايت >= 4096) {
             ألحق_طرح_مكدس_بمسبار_ذراع(&متغير الكلمات, د.إطار_الانسكاب.الحجم_بايت, &متغير فك_المكدس);
         } وإلا {
             ألحق_تعديل_مؤشر_المكدس_ذراع(

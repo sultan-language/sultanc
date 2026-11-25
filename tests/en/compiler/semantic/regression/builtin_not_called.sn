@@ -1,0 +1,5 @@
+// اختبار: رفض
+// تشخيص: SULTANC-NAME-BUILTIN-NOT-CALLED
+// نظير: tests/ar/compiler/semantic/regression/builtin_not_called.sn
+// A built-in function used as a value is a user error (found by fuzzing).
+def main(): int { let n: int = length; return n; }

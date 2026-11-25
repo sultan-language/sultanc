@@ -38,11 +38,25 @@ fi
 
 host_target() {
   # Git for Windows' bash is an x64 program; on Windows on ARM it runs
-  # emulated and uname -m says x86_64. Windows itself names the machine.
-  case "${PROCESSOR_ARCHITEW6432:-${PROCESSOR_ARCHITECTURE:-}}" in
-    ARM64) case "$(uname -s 2>/dev/null)" in
-             MINGW*|MSYS*|CYGWIN*) echo aarch64-windows-msvc; return 0 ;;
-           esac ;;
+  # emulated: uname -m says x86_64 and the process sees
+  # PROCESSOR_ARCHITECTURE=AMD64 (PROCESSOR_ARCHITEW6432 is set only for
+  # 32-bit programs on x64 Windows). The system environment in the registry
+  # names the real machine, which is what cmake's host target follows
+  # (CMAKE_HOST_SYSTEM_PROCESSOR). Previously only the two variables were
+  # read, so an ARM64 host tested x86_64 code under emulation.
+  case "$(uname -s 2>/dev/null)" in
+    MINGW*|MSYS*|CYGWIN*)
+      machine=${PROCESSOR_ARCHITEW6432:-}
+      if [ -z "$machine" ]; then
+        machine=$(MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*' reg query \
+          'HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Environment' \
+          /v PROCESSOR_ARCHITECTURE 2>/dev/null | tr -d '\r' |
+          awk '$1 == "PROCESSOR_ARCHITECTURE" { print $3 }')
+      fi
+      case "${machine:-${PROCESSOR_ARCHITECTURE:-}}" in
+        ARM64) echo aarch64-windows-msvc; return 0 ;;
+        AMD64) echo x86_64-windows-msvc; return 0 ;;
+      esac ;;
   esac
   case "$(uname -s 2>/dev/null)-$(uname -m 2>/dev/null)" in
     Linux-x86_64|Linux-amd64) echo x86_64-linux ;;
