@@ -1,5 +1,6 @@
 // اختبار: قبول
 // تشخيص: SULTANC-PATTERN-UNREACHABLE
+// خروج: 2
 // نظير: tests/en/diagnostics/semantic/unreachable_alternative.sn
 // البديل الذي تغطيه الأذرع السابقة لا يطابق أبدا: تحذير عند البديل، ويُبنى
 // البرنامج.

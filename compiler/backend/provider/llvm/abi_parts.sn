@@ -480,7 +480,7 @@
 
 // One enum attribute by name, on a parameter of a function or of a call
 // site; skipped when this LLVM does not know the name.
-عرف أضف_صفة_معامل_باسم_إل_إل_في_إم(
+عام عرف أضف_صفة_معامل_باسم_إل_إل_في_إم(
     الحالة: &حالة_مزود_إل_إل_في_إم,
     القيمة: مرجع_قيمة_إل_إل_في_إم,
     الفهرس: ط32,

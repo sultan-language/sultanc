@@ -12,7 +12,6 @@
 // `&string`; a slice of a slice; std's read-only text functions; owned
 // copies; printing.
 import std.io.print;
-import std.io.println;
 import std.text.search;
 import std.text.from_bytes;
 
@@ -90,6 +89,6 @@ def main(): int {
     print(" ");
     print(greeting);
     print(" ");
-    println(&faces[0..3]);
+    print(&faces[0..3]);
     return 42;
 }

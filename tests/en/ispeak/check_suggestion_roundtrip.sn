@@ -213,6 +213,6 @@ def main(): int {
         | option.none -> { };
         n := n + 1;
     }
-    if ((length(kinds) as uint) != 25) { return 31; };
+    if ((length(kinds) as uint) != 28) { return 31; };
     return 0;
 }

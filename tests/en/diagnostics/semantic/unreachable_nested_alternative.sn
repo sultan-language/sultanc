@@ -1,5 +1,6 @@
 // اختبار: قبول
 // تشخيص: SULTANC-PATTERN-UNREACHABLE
+// خروج: 2
 // نظير: tests/ar/diagnostics/semantic/unreachable_nested_alternative.sn
 // An alternative nested in a pattern that the or-pattern's earlier
 // alternatives already cover never matches: a warning at the alternative, and

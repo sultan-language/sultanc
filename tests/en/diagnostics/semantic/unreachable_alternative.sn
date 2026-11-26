@@ -1,5 +1,6 @@
 // اختبار: قبول
 // تشخيص: SULTANC-PATTERN-UNREACHABLE
+// خروج: 2
 // نظير: tests/ar/diagnostics/semantic/unreachable_alternative.sn
 // An alternative the earlier arms already cover never matches: a warning at
 // the alternative, and the program builds.
