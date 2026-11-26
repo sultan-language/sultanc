@@ -1,0 +1,114 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/language/patterns/rest_patterns.sn
+// `rest` in vector and slice patterns: the last element, the first, both ends,
+// a recursive head/tail sum, a palindrome over `rest middle`, command-line
+// style arguments, a rest nested in a tuple and in an enum payload, `rest`
+// as an ordinary name, and under `match &mutable v` a writable rest that
+// writes into v while the element bindings stay read-only values.
+type Command = | Run of vector string | Help;
+
+def last(v: vector int): int {
+    match v with
+    | [rest _, x] -> { return x; }
+    | [] -> { return -1; };
+}
+
+def first(v: vector int): int {
+    match v with
+    | [x, rest _] -> { return x; }
+    | [] -> { return -1; };
+}
+
+def ends(v: vector int): int {
+    match v with
+    | [a, rest _, b] -> { return a * 10 + b; }
+    | [a] -> { return a; }
+    | [] -> { return 0; };
+}
+
+def sum(s: [] int): int {
+    match s with
+    | [] -> { return 0; }
+    | [head, rest tail] -> { return head + sum(tail); };
+}
+
+def palindrome(s: [] int): bool {
+    match s with
+    | [a, rest middle, b] -> { return a == b && palindrome(middle); }
+    | _ -> { return true; };
+}
+
+// `["run", file, rest extra]`: a command, its file and the other arguments.
+def run_arguments(args: vector string): int {
+    match args with
+    | ["run", file, rest extra] -> { return (length(file) as int) * 10 + (length(extra) as int); }
+    | ["help"] -> { return 1; }
+    | _ -> { return 0; };
+}
+
+def tuple_rest(p: (vector int, int)): int {
+    match p with
+    | ([a, rest tail], k) -> { return a + k + sum(tail); }
+    | ([], k) -> { return k; };
+}
+
+def payload_rest(c: Command): int {
+    match c with
+    | Command.Run([_, rest others]) -> { return length(others) as int; }
+    | Command.Run([]) -> { return 0; }
+    | Command.Help -> { return -1; };
+}
+
+// `rest` alone, or before `,`, is an ordinary name.
+def plain_names(v: vector int): int {
+    let rest: int = 5;
+    match v with
+    | [rest] -> { return rest; }
+    | [rest, x] -> { return rest + x; }
+    | _ -> { return rest; };
+}
+
+// Under `match &mutable v` the named rest is a `mutable [] int`.
+def zero_tail(v: &mutable vector int): int {
+    match &mutable *v with
+    | [first, rest tail] -> {
+        let i: mutable uint = 0;
+        while (i < (length(tail) as uint)) {
+            tail[i] := first;
+            i := i + 1;
+        }
+        return length(tail) as int;
+    }
+    | [] -> { return 0; };
+}
+
+def main(): int {
+    let v: vector int = [1, 2, 3, 4];
+    if (last(clone(&v)) != 4 || first(clone(&v)) != 1 || ends(clone(&v)) != 14) { return 1; };
+    let one: vector int = [7];
+    let none_at_all: vector int = [];
+    if (last(clone(&one)) != 7 || ends(clone(&one)) != 7 || ends(clone(&none_at_all)) != 0) { return 2; };
+    if (sum(v) != 10 || sum(none_at_all) != 0) { return 3; };
+    let p: vector int = [1, 2, 3, 2, 1];
+    if (!palindrome(p) || palindrome(v)) { return 4; };
+    let args: vector string = ["run", "main.sn", "-O2", "--fast"];
+    if (run_arguments(args) != 72) { return 5; };
+    let pair: (vector int, int) = ([1, 2, 3], 10);
+    if (tuple_rest(pair) != 16) { return 6; };
+    let names: vector string = ["a", "b", "c"];
+    if (payload_rest(Command.Run(names)) != 2 || payload_rest(Command.Help()) != -1) { return 7; };
+    let single: vector int = [3];
+    let double: vector int = [3, 4];
+    if (plain_names(single) != 3 || plain_names(double) != 7 || plain_names(clone(&v)) != 5) { return 8; };
+    let w: mutable vector int = [9, 8, 7, 6];
+    if (zero_tail(&mutable w) != 3) { return 9; };
+    if (w[0] != 9 || w[1] != 9 || w[3] != 9) { return 10; };
+    match &mutable w with
+    | [_, rest tail] -> { tail[0] := 1; }
+    | [] -> { };
+    if (w[1] != 1 || w[2] != 9) { return 11; };
+    return 42;
+}

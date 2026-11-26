@@ -612,7 +612,14 @@
 // defined by a move first tries its source's physical register, so the move
 // disappears; an instruction move may share it even when the source's last
 // use is that move itself (a move reads before it writes). Edge moves into
-// block parameters hint too, at no shared position.
+// block parameters hint too, at no shared position, both ways: a parameter
+// tries its argument's register, and an argument defined by no move tries
+// the parameter's (a loop's new value then takes the register of the value
+// it replaces when their lifetimes do not meet, and the back edge's move
+// disappears). A register an instruction would rather read a move's
+// destination from (a call argument's ABI register) is the one the move's
+// source would rather be in too, back along a chain of moves, so a value
+// computed for a call is computed in its argument register.
 نوع تلميحات_نقل_تخصيص = {
     المصدر: متجه طبيعي,
     الموضع: متجه طبيعي,
@@ -652,6 +659,21 @@
         }
         ف := ف + 1;
     }
+    // A move's source would rather be where its destination is read from:
+    // last move first, so a chain of moves carries it back to its start.
+    ف := الطول((*المسألة).التعليمات) مثل طبيعي;
+    طالما (ف > 0) {
+        ف := ف - 1;
+        طابق (*المسألة).التعليمات[ف].نقل_مفضل مع
+        | اختياري.موجود(النقل) -> {
+            ليكن الأول: طبيعي = النقل.الأول.القيمة;
+            ليكن الثاني: طبيعي = النقل.الثاني.القيمة;
+            إذا (الأول < العدد && الثاني < العدد && المفضل[الأول] == 0 && المفضل[الثاني] != 0) {
+                المفضل[الأول] := المفضل[الثاني];
+            };
+        }
+        | اختياري.لا_شيء -> { };
+    }
     ف := 0;
     طالما (ف < (الطول((*المسألة).نقلات_الحواف) مثل طبيعي)) {
         ليكن ن: متغير طبيعي = 0;
@@ -659,6 +681,22 @@
             ليكن الوجهة: طبيعي = (*المسألة).نقلات_الحواف[ف].النقلات[ن].الوجهة.السجل.القيمة;
             إذا (الوجهة < العدد && المصدر[الوجهة] == 0) {
                 المصدر[الوجهة] := (*المسألة).نقلات_الحواف[ف].النقلات[ن].المصدر.السجل.القيمة + 1;
+            };
+            ن := ن + 1;
+        }
+        ف := ف + 1;
+    }
+    // The other way: an edge argument no move defines tries its parameter's
+    // register (after every forward hint is in, so a move-defined value
+    // keeps its source's).
+    ف := 0;
+    طالما (ف < (الطول((*المسألة).نقلات_الحواف) مثل طبيعي)) {
+        ليكن ن: متغير طبيعي = 0;
+        طالما (ن < (الطول((*المسألة).نقلات_الحواف[ف].النقلات) مثل طبيعي)) {
+            ليكن الوجهة: طبيعي = (*المسألة).نقلات_الحواف[ف].النقلات[ن].الوجهة.السجل.القيمة;
+            ليكن الحجة: طبيعي = (*المسألة).نقلات_الحواف[ف].النقلات[ن].المصدر.السجل.القيمة;
+            إذا (الحجة < العدد && الوجهة < العدد && الحجة != الوجهة && المصدر[الحجة] == 0) {
+                المصدر[الحجة] := الوجهة + 1;
             };
             ن := ن + 1;
         }

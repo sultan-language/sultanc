@@ -5,6 +5,8 @@
 استورد compiler.msir.msir_inlining;
 استورد compiler.msir.msir_flow;
 استورد compiler.msir.static_environments;
+استورد compiler.msir.msir_strength;
+استورد compiler.msir.msir_check_ranges;
 استورد compiler.msir.debug_contract;
 استورد compiler.frontend.types.type_context;
 
@@ -22,7 +24,10 @@
 //    branches fold, jumps thread, single-predecessor blocks merge,
 //    unreachable blocks go, trivial and dead block parameters go, repeated
 //    pure expressions are computed once;
-// 4. static environments (static_environments.sn): a closure construction
+// 4. integer strength reduction (msir_strength.sn) and range-based overflow
+//    check removal (msir_check_ranges.sn), then flow simplification again of
+//    the functions they changed;
+// 5. static environments (static_environments.sn): a closure construction
 //    that captures nothing uses its function's one static environment
 //    instead of allocating. This pass runs at every level, بلا included,
 //    since it changes what a construction costs, not what code does.
@@ -65,15 +70,34 @@
     | كل_الدوال
 ;
 
-// How much the pipeline does. بلا (LLVM's and the native backend's -O0) runs
-// no pass: every consumer handles MSIR as lowered (the locals whose address
-// is taken stay places at every level), named locals stay in their frame
-// slots for a debugger, and each call stays a call. افتراضي (every other
-// request) runs the passes above.
+// How much the pipeline does, one level per -O of the command line (the
+// same for the Native backend, LLVM, `run` and `check`; no -O is -O0):
+//   بلا      -O0  no pass: every consumer handles MSIR as lowered (the locals
+//                 whose address is taken stay places at every level), named
+//                 locals stay in their frame slots for a debugger, and each
+//                 call stays a call. Only the static environments of
+//                 capture-free closures (pass 4) are given.
+//   منخفض    -O1  passes 1, 3 and 4 and the second promotion: locals become
+//                 values and control flow is simplified, but no call is
+//                 inlined.
+//   افتراضي  -O2  every pass above: what the compiler builds itself with.
+//   عال      -O3  as -O2, with more inlining rounds (عدد_جولات_تضمين_عال), so
+//                 deeper chains of small calls are inlined.
 عام نوع مستوى_تحسين_مسير =
     | بلا
+    | منخفض
     | افتراضي
+    | عال
 ;
+
+// The inlining rounds of each level (msir_inlining.sn): -O2 keeps the
+// pass's own count, -O3 doubles it, -O1 inlines nothing.
+عرف جولات_تضمين_لمستوى_مسير(المستوى: مستوى_تحسين_مسير): طبيعي {
+    طابق المستوى مع
+    | مستوى_تحسين_مسير.عال -> { أرجع عدد_جولات_تضمين_عال(); }
+    | مستوى_تحسين_مسير.افتراضي -> { أرجع عدد_جولات_تضمين_افتراضي(); }
+    | _ -> { أرجع 0; };
+}
 
 // Which functions (by position) the pipeline optimizes (and the runtime
 // checks, runtime_checks.sn, are added to).
@@ -149,7 +173,7 @@
         ليكن المبقاة: متجه منطقي = دوال_محسنة_مسير(البرنامج, النطاق);
         أرجع أعط_الإغلاقات_بيئات_ساكنة_مسير(البرنامج, &المبقاة);
     }
-    | مستوى_تحسين_مسير.افتراضي -> { };
+    | _ -> { };
     // The same binding before promotion: a slot it turns back into values
     // passes its variables to the values stored in it and to the block
     // parameters it adds (a loop-carried local's value in the loop), and a
@@ -160,16 +184,35 @@
     اربط_أماكن_معاملات_تصحيح_مسير(التصحيح);
     ليكن المحسنة: متجه منطقي = دوال_محسنة_مسير(البرنامج, النطاق);
     ليكن المرقاة: متجه منطقي = رقّ_محليات_برنامج_مسير(البرنامج, الأنواع, التصحيح, &المحسنة);
-    ليكن المضمن_فيها: متجه منطقي = ضمّن_الدوال_الصغيرة_مسير(البرنامج, &المحسنة, التصحيح);
+    ليكن المضمن_فيها: متجه منطقي = ضمّن_الدوال_الصغيرة_مسير_بجولات(
+        البرنامج, &المحسنة, التصحيح, جولات_تضمين_لمستوى_مسير(المستوى)
+    );
     ليكن المبسطة: متجه منطقي = بسط_تدفق_برنامج_مسير(البرنامج, التصحيح, &المحسنة, &المضمن_فيها);
     // Flow simplification can leave a local stored once before its loads
     // (a drop flag's test or a dead path gone): promote those too.
     ليكن المرقاة_ثانية: متجه منطقي = رقّ_محليات_برنامج_مسير(البرنامج, الأنواع, التصحيح, &المبسطة);
+    // ---- Integer strength reduction and range-based check removal ----------------
+    // (msir_strength.sn: x % 2^k as a mask, a remainder after its quotient;
+    // msir_check_ranges.sn: checked add and subtract proven not to overflow
+    // from dominating compares and operand ranges), then flow simplification
+    // of the functions they changed drops the dead tests and report blocks.
+    // One place, so the optimization levels can gate it as a whole.
+    ليكن المخففة: متجه منطقي = خفف_عمليات_برنامج_مسير(البرنامج, &المحسنة);
+    ليكن المثبتة: متجه منطقي = احذف_فحوصا_مثبتة_برنامج_مسير(البرنامج, الأنواع, &المحسنة);
+    ليكن بالحساب: متغير متجه منطقي = [];
+    ليكن ح: متغير طبيعي = 0;
+    طالما (ح < (الطول((*البرنامج).الدوال) مثل طبيعي)) {
+        ألحق(بالحساب, (ح < (الطول(المخففة) مثل طبيعي) && المخففة[ح]) || (ح < (الطول(المثبتة) مثل طبيعي) && المثبتة[ح]));
+        ح := ح + 1;
+    }
+    ليكن المنظفة: متجه منطقي = بسط_تدفق_برنامج_مسير(البرنامج, التصحيح, &بالحساب, &بالحساب);
+    // ---- end of strength reduction and check removal ------------------------------
     ليكن الساكنة: متجه منطقي = أعط_الإغلاقات_بيئات_ساكنة_مسير(البرنامج, &المحسنة);
     ليكن المتغيرة: متغير متجه منطقي = [];
     ليكن د: متغير طبيعي = 0;
     طالما (د < (الطول((*البرنامج).الدوال) مثل طبيعي)) {
-        ألحق(المتغيرة, المرقاة[د] || المضمن_فيها[د] || المبسطة[د] || المرقاة_ثانية[د] || الساكنة[د]);
+        ألحق(المتغيرة, المرقاة[د] || المضمن_فيها[د] || المبسطة[د] || المرقاة_ثانية[د] || الساكنة[د]
+            || بالحساب[د] || المنظفة[د]);
         د := د + 1;
     }
     أرجع المتغيرة;

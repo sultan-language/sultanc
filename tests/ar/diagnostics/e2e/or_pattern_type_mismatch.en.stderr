@@ -1,0 +1,7 @@
+error[SULTANC-PATTERN-ALTERNATIVE-TYPES]: the alternatives of an or-pattern bind a name with different types: `س` has another type in the first alternative
+  --> tests/ar/diagnostics/e2e/or_pattern_type_mismatch.sn:10:31..10:32
+    |
+ 10 |     | قيمة.رقم(س) | قيمة.كلمة(س) -> { أرجع 1; };
+    |                               ^
+    |
+  = help: bind the same names, with the same types, in every alternative

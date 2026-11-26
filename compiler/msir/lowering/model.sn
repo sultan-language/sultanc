@@ -4,6 +4,7 @@
 استورد compiler.frontend.names.identifiers;
 استورد compiler.frontend.types.type_identity;
 استورد compiler.frontend.types.type_model;
+استورد compiler.frontend.pattern.pattern_model;
 استورد compiler.msir.identifiers;
 استورد compiler.msir.msir_model;
 استورد compiler.frontend.semantic_pipeline;
@@ -44,6 +45,11 @@
     | نوع_حجة_غير_مطابق بنوع (نطاق, معرف_نوع, معرف_نوع)
     | نوع_إرجاع_غير_مطابق بنوع (نطاق, معرف_نوع, معرف_نوع)
     | مسار_بلا_إرجاع بنوع نطاق
+    // An arm of a match expression whose body can finish without giving the
+    // match its value (the arm's body).
+    | ذراع_مطابقة_بلا_قيمة بنوع نطاق
+    // The same for a branch of an `if` used as a value.
+    | فرع_إذا_بلا_قيمة بنوع نطاق
     | عبارة_غير_مدعومة بنوع نطاق
     | تعبير_وقت_الترجمة_غير_ثابت بنوع نطاق
     // A module-level value built by an enum constructor that is mutable, or
@@ -133,6 +139,15 @@
 // place of every owner and then enters الخانات, which holds the place of
 // every other local; the body starts in البداية; every return jumps to
 // الخروج, which holds a destruction obligation for every owner.
+// The alternative an or-pattern that binds names matched, as the MSIR value
+// of its position among the alternatives, from where the pattern's
+// alternatives join on (patterns.sn): the arm's entry destroys that
+// alternative's unbound parts (drops.sn, أسقط_أجزاء_غير_مربوطة_خفض).
+عام نوع بديل_مختار_خفض = {
+    النمط: معرف_نمط,
+    القيمة: معرف_قيمة_مسير
+};
+
 عام نوع إطار_إسقاط_خفض = {
     التمهيد: معرف_كتلة_مسير,
     الخانات: معرف_كتلة_مسير,
@@ -424,6 +439,7 @@
 
 عام عرف انسخ_مملوكا_متجه_ربط_محلي_خفض(القيمة: &متجه ربط_محلي_خفض): متجه ربط_محلي_خفض {
     ليكن الناتج: متغير متجه ربط_محلي_خفض = [];
+    احجز_سعة(الناتج, الطول(*القيمة) مثل طبيعي);
     ليكن ف: متغير طبيعي = 0;
     طالما (ف < (الطول(*القيمة) مثل طبيعي)) {
         ألحق(الناتج, (*القيمة)[ف]);
@@ -456,6 +472,7 @@
 عام عرف انسخ_عروض_خفض(العروض: &متجه معرف_رمز): متجه معرف_رمز {
     ليكن الناتج: متغير متجه معرف_رمز = [];
     ليكن ف: متغير طبيعي = 0;
+    احجز_سعة(الناتج, (الطول(*العروض) مثل طبيعي));
     طالما (ف < (الطول(*العروض) مثل طبيعي)) { ألحق(الناتج, (*العروض)[ف]); ف := ف + 1; }
     أرجع الناتج;
 }

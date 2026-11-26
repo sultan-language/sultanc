@@ -1,0 +1,12 @@
+// اختبار: رفض
+// تشخيص: SULTANC-PATTERN-NON-EXHAUSTIVE
+// نظير: tests/en/diagnostics/e2e/or_pattern_non_exhaustive.sn
+// خرج-تشخيص-عربي: or_pattern_non_exhaustive.ar.stderr
+// خرج-تشخيص-إنجليزي: or_pattern_non_exhaustive.en.stderr
+// يغطي البديلان حالتين من الحالات الثلاث.
+نوع يد = | حجر | ورق | مقص;
+عرف لين(ي: يد): عدد {
+    طابق ي مع
+    | يد.حجر | يد.ورق -> { أرجع 1; };
+}
+عرف الرئيسية(): عدد { أرجع لين(يد.حجر()); }

@@ -1,0 +1,40 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/language/surface/arabic_comma.sn
+// The Arabic comma `،` is the comma in every list, in English sources too:
+// parameters and arguments, vectors, tuples, records, generics, constructor
+// payloads, patterns and imports. Both commas mix in one list.
+import std.text.number;
+
+type Point = { x: int، y: int };
+type Shape = | Circle of int | Line of (int، int) | Nothing;
+
+def add(a: int، b: int, c: int): int { return a + b + c; }
+
+def first<T>(a: T، b: T): T { return a; }
+
+def measure(s: Shape): int {
+    match s with
+    | Shape.Circle(n) -> { return n; }
+    | Shape.Line(a، b) -> { return a + b; }
+    | Shape.Nothing -> { return 0; };
+}
+
+def main(): int {
+    let v: vector int = [1، 2, 3، 4];
+    let pair: (int، int) = (5، 6);
+    let p: Point = { x: 7، y: 8 };
+    if (add(1، 2، 3) != 6) { return 1; };
+    if (length(v) != 4 || v[3] != 4) { return 2; };
+    match pair with
+    | (a، b) -> { if (a + b != 11) { return 3; }; };
+    match p with
+    | { x، y: 8 } -> { if (x != 7) { return 4; }; }
+    | _ -> { return 5; };
+    if (first<int>(9، 10) != 9) { return 6; };
+    if (measure(Shape.Line(20، 22)) != 42) { return 7; };
+    if (length(int_to_text(42)) != 2) { return 8; };
+    return add(40، 1, 1);
+}

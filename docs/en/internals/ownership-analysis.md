@@ -328,8 +328,13 @@ swap, an assignment to a member), a value passed on by value, the borrows a call
 runs (with whether two of them conflict), the origins an assignment or a binding gives a local (as
 terms: a local's own origins, a borrow of a local, a read through a reference, a parameter's own),
 a borrowed view, a value that leaves the function (a `return`, a closure's body, a store into a
-module value) and a capture. Lowering records nothing where a scope ends: where a borrow ends is the
-lifetime analysis's ([Borrow regions](#borrow-regions)). Lowering names only what the source says; it reads the Memory facts of a Type and the kind of a Symbol's
+module value) and a capture. A value given to a part of a local (a member or element assigned,
+`append` to a vector) is a partial assignment (`صنف_استعارة_إسناد_مسير` with bit 64): the local, when
+its Type carries a borrow and the place crosses no dereference, keeps its origins and borrows and
+gains the value's. Lowering ends no borrow where a scope ends: where a borrow ends is the lifetime
+analysis's ([Borrow regions](#borrow-regions)); the one scope event it records
+(`صنف_استعارة_نهاية_نطاق_مسير`) changes no state and only marks where a borrowed local that no
+instruction destroys goes out of scope. Lowering names only what the source says; it reads the Memory facts of a Type and the kind of a Symbol's
 declaration for that, and it finds the body's borrowed views itself before lowering it (a local
 declared without `mutable` first given an owning value from borrowed storage, a match binding of an
 owning Type taken from a borrowed scrutinee). The borrow state of the locals
@@ -378,6 +383,19 @@ legality walk, and adds one event where each holder's borrows end.
 
 A store of a whole value into the holder's place and its declaration (`تصريح`) end its liveness.
 
+**Match bindings.** A match's bindings are declared with the origins of the scrutinee, through a
+stand-in (`سجل_مميز_استعارة_خفض`); a binding holds nothing itself. When the scrutinee is a place, the
+local it is read from holds the borrows, and every binding derived from it keeps that local live.
+A temporary scrutinee that carries a borrow and owns no storage (a pair of writable views a call
+returns, a tuple of references, a constructor around a reference) is kept in a place of its own
+under the stand-in, as a `let` keeps its value: the stand-in is assigned the scrutinee's origins and
+holds its borrows (`سجل_حامل_مميز_استعارة_خفض`), and every binding of every arm, however deeply nested
+in a tuple, record or constructor pattern, is derived from that place, so the borrows last while any
+binding lives (`tests/*/diagnostics/e2e/match_bindings_keep_borrow.sn`). A binding such an arm makes a
+borrowed view starts no borrow of its own. Under `match &mutable v` a named rest is assigned its
+origins the same way and holds the exclusive borrow of `v` while it lives (shared when another
+binding of the arm is a borrowed view of `v`).
+
 **Fixed point.** Liveness is a backward fixed point of the shared engine: its core
 (`احسب_حالات_شبكة_على_خلفاء_مسير`) takes the graph as lists of successors and a set of start
 blocks, so the analysis passes the predecessors, starts every block dead, and uses the lattice
@@ -414,6 +432,22 @@ and a plain value copied out through a reference before the owner's scope ends b
 (`tests/*/diagnostics/e2e/borrow_outlives_owner_in_order.sn`,
 `tests/*/language/ownership/borrow_within_owner_scope.sn`). A move or an assignment of a borrowed owner
 is a conflict, as before.
+
+A local that owns no storage (an `int`, a record of numbers, a fixed tuple; or any local in code
+without drop elaboration) has no destruction, but its storage ends with its scope all the same. At
+each of the same scope ends (`أسقط_محليات_من_خفض`), where no instruction destroyed the local, lowering
+records a borrow event of kind `صنف_استعارة_نهاية_نطاق_مسير` with that end as its span
+(`سجل_نهاية_نطاق_استعارة_خفض`): only for a local an earlier event of the function borrows (a borrow
+term names it), and not for a borrowed view or a reference something reads through, since a borrow of
+what those reach is no borrow of their own storage. It adds no instruction and no destruction. The
+walk checks it, where it applies (before the instruction it is recorded at), exactly as a destruction
+(`خطأ_نهاية_مستعار_شرعية`, shared by both): a holder still holding a borrow of the local that reads it
+later rejects the function with the same diagnostic. A reference whose last read is inside the scope, a
+reference to a parameter or to a local of an enclosing block, and a value copied out are accepted as
+before; a reference stored into a member or element of a longer-lived local, or appended to a vector of
+references, is held by that local (a partial assignment) and checked the same way
+(`tests/*/diagnostics/e2e/borrow_outlives_plain_value_in_order.sn`,
+`tests/*/language/ownership/borrow_within_plain_scope.sn`).
 
 **Effect.** Programs where a borrow's last use precedes a conflicting access are accepted
 (`tests/*/language/ownership/borrow_early_end.sn`, `tests/*/language/ownership/borrow_drop_paths.sn`).
@@ -488,7 +522,13 @@ against plain bounds (every template is still analysed, as a covered call may in
 any module). A request that continues a kept state analyses the kept state's modules once per kept
 state (`ملكية_مخبأة_واجهة`, keyed by the state's number and module count: its modules keep their Symbol
 and source IDs in every copy, and none imports a later module) and its own modules every time
-(`حلل_ملكية_مرحلية_واجهة`). The result is that of analysing every module.
+(`حلل_ملكية_مرحلية_واجهة`). A request that keeps its final state for edits of one module's bodies
+(early cutoff, [Compiler Architecture](compiler-architecture.md)) keeps the analysis of every module with
+it; a later edit of one module's bodies alone takes from it every fact of the other modules (a moved
+name, a left-out function and a diagnostic each belong to the module they are in) and analyses that
+module only. Only a generic template's body is read by another module's analysis (its
+plain bounds), so an edit that changes the body of a generic function, or of one with compile-time
+parameters, is analysed in full stages instead. The result is that of analysing every module.
 
 The frontend does not import MSIR. It holds one registered analyzer (`سجل_محلل_ملكية_أدوات`):
 the driver registers it before a compilation, and `compiler/msir/ssf/ownership_tooling.sn` registers
@@ -503,6 +543,13 @@ Glue is unchanged and remains the only provider of type-specific destruction and
 runs on elaborated MSIR: every release primitive on an owning value, whether elaboration emitted
 it or the program called `حرر`, becomes a call of the value type's drop glue, and every explicit
 copy a call of its clone glue. Closure constructions receive their environment destructors there.
+
+The drop glue of a tagged Type whose constructor holds a box of the same Type (an expression's left
+operand, a list's tail) does not call itself for that box. It drops the constructor's other payloads,
+reads the boxed value out, releases the box and runs its dispatch again on that value
+(`compiler/msir/lowering/ownership_glue.sn`, `حمولة_ذاتية_أولى_للغراء`). Destroying a chain of a
+million links therefore needs no stack per link. The first such box is the one looped on; any other
+box of the same Type is still destroyed by a call.
 
 ## Execution consumers
 

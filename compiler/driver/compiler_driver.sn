@@ -56,6 +56,7 @@
 // compiler bound the module to it, unavailable.sn (LLVM excluded). The Driver
 // reaches LLVM code generation and host-libLLVM discovery only through it.
 استورد compiler.backend.provider.llvm.llvm_codegen;
+استورد compiler.driver.compile_cache;
 استورد المكتبة.نصوص.من_بايتات;
 استورد المكتبة.نصوص.بحث;
 استورد المكتبة.نصوص.أعداد;
@@ -919,6 +920,15 @@
     | هوية_مزود_خلفية.إل_إل_في_إم -> { أرجع مزود_إل_إل_في_إم_مضمن(); };
 }
 
+// The libLLVM this compiler runs with, as a path: part of this compiler's
+// identity in the compilation cache (process_driver.sn مفتاح_خزن_طلب);
+// لا_شيء for a compiler without LLVM.
+عام عرف مكتبة_إل_إل_في_إم_المضيف_للخزن(): اختياري نص {
+    طابق موقع_مكتبة_إل_إل_في_إم_المضيف() مع
+    | اختياري.موجود(المسار) -> { أرجع اختياري.موجود(من_بايتات(&المسار)); }
+    | اختياري.لا_شيء -> { أرجع اختياري.لا_شيء(); };
+}
+
 // An unavailable backend names its target as spelled on the command line
 // (`x86_64-linux`), not by the registry's internal number.
 عرف تشخيصات_خلفية_غير_متاحة_لهدف(
@@ -1073,13 +1083,19 @@
     | _ -> { أرجع خطأ; };
 }
 
-// The MSIR optimization level of a request's -O: -O0 runs no pass (no
-// inlining: each call stays a call, for Native and LLVM alike); -O1 to -O3,
-// the default -O2, and `run` run the pipeline.
+// The MSIR optimization level of a request's -O, the same for every
+// consumer (Native, LLVM, `run`, `check`'s compile-time evaluation): -O0 (and
+// no -O at all) runs no pass, so each call stays a call; -O1 promotes locals
+// and simplifies control flow without inlining; -O2 adds the inlining of
+// small functions; -O3 inlines more rounds (msir_optimization_pipeline.sn).
+// LLVM's own pipeline and code generator take the same level
+// (backend/provider/llvm/optimization.sn and target.sn).
 عرف مستوى_تحسين_مسير_من_طلب(المستوى: مستوى_تحسين_مزود_إل_إل_في_إم): مستوى_تحسين_مسير {
     طابق المستوى مع
     | مستوى_تحسين_مزود_إل_إل_في_إم.بلا -> { أرجع مستوى_تحسين_مسير.بلا(); }
-    | _ -> { أرجع مستوى_تحسين_مسير.افتراضي(); };
+    | مستوى_تحسين_مزود_إل_إل_في_إم.منخفض -> { أرجع مستوى_تحسين_مسير.منخفض(); }
+    | مستوى_تحسين_مزود_إل_إل_في_إم.افتراضي -> { أرجع مستوى_تحسين_مسير.افتراضي(); }
+    | مستوى_تحسين_مزود_إل_إل_في_إم.عال -> { أرجع مستوى_تحسين_مسير.عال(); };
 }
 
 // `sultanc run`: the machine interpreter first (interpreter/machine/); the
@@ -1183,7 +1199,7 @@
     وسائط_البرنامج: متجه متجه ط8,
     // Diagnostics that did not stop the compilation (warnings).
     التحذيرات: &متغير مجموعة_تشخيصات,
-    // The LLVM optimization level (-O0 .. -O3).
+    // The optimization level (-O0 .. -O3) of the MSIR pipeline and of LLVM.
     مستوى_التحسين: مستوى_تحسين_مزود_إل_إل_في_إم,
     ميزانية_وقت_الترجمة: طبيعي
 ): نتيجة_تجميع_مترجم {
@@ -1317,6 +1333,9 @@
             );
         }
         | نتيجة_بناء_واجهة_قابلة_للإلغاء.مكتملة(الواجهة) -> {
+            // The sources the compilation read, for the compilation cache
+            // when the process driver may store it (compile_cache.sn).
+            سجل_مصادر_الواجهة_للخزن(&الواجهة.خريطة_المصادر);
             // A completed Frontend reports only non-fatal diagnostics here,
             // unless the analysis on MSIR rejects the program (below).
             تحذيرات_قبل_الواجهة := انسخ_مملوكا_مجموعة_تشخيصات(التحذيرات);
@@ -2171,6 +2190,8 @@
                     );
                 };
                 إذا (ربط_خارجي) {
+                    // The external linker is no input the cache sees.
+                    علّم_تجميعا_لا_يخزن();
                     ليكن الربط_الخارجي: نتيجة_ربط_خارجي = اربط_برابط_خارجي(&بايتات_الكائن, &مدخلات_الربط_الكاملة);
                     أزل_كائنات_سي(&كائنات_سي_المؤقتة);
                     طابق الربط_الخارجي مع
@@ -2278,7 +2299,7 @@
     ليكن السياق: سياق_التجميع = أنشئ_سياق_التجميع(الإعداد);
     ليكن وسائط_فارغة: متجه متجه ط8 = [];
     ليكن التحذيرات: متغير مجموعة_تشخيصات = مجموعة_تشخيصات_جديدة();
-    أرجع نفذ_سياق_تجميع(السياق, الطلب, وسائط_فارغة, &متغير التحذيرات, مستوى_تحسين_مزود_إل_إل_في_إم.افتراضي(), ميزانية_وقت_الترجمة);
+    أرجع نفذ_سياق_تجميع(السياق, الطلب, وسائط_فارغة, &متغير التحذيرات, مستوى_تحسين_مزود_إل_إل_في_إم.بلا(), ميزانية_وقت_الترجمة);
 }
 
 // The words of the program's runtime failures (driver/program_failure_text.sn)
@@ -2468,7 +2489,7 @@
     ليكن التحذيرات: متغير مجموعة_تشخيصات = مجموعة_تشخيصات_جديدة();
     أرجع نفذ_طلب_تجميع_مترجم_بتحذيرات(
         مسار_ملف_الدخول, مسارات_ملفات_المصدر_الإضافية, روابط_المصادر, الطلب,
-        لغة_تشخيص.العربية(), &متغير التحذيرات, مستوى_تحسين_مزود_إل_إل_في_إم.افتراضي(), ميزانية_وقت_الترجمة,
+        لغة_تشخيص.العربية(), &متغير التحذيرات, مستوى_تحسين_مزود_إل_إل_في_إم.بلا(), ميزانية_وقت_الترجمة,
         مسار_رسم_الحزم
     );
 }
@@ -2509,6 +2530,9 @@
     عرض_الفشل: عرض_فشل_تفسير,
     لغة_البرنامج: لغة_تشخيص,
     التحذيرات: &متغير مجموعة_تشخيصات,
+    // The -O level: the interpreters run the program the optimization
+    // pipeline gives them at this level.
+    مستوى_التحسين: مستوى_تحسين_مزود_إل_إل_في_إم,
     ميزانية_وقت_الترجمة: طبيعي,
     مسار_رسم_الحزم: نص,
     وضع_الاختبار: وضع_اختبار_تفسير
@@ -2521,6 +2545,6 @@
         وسائط_البرنامج,
         لغة_البرنامج,
         التحذيرات,
-        مستوى_تحسين_مزود_إل_إل_في_إم.افتراضي(), ميزانية_وقت_الترجمة, مسار_رسم_الحزم
+        مستوى_التحسين, ميزانية_وقت_الترجمة, مسار_رسم_الحزم
     );
 }

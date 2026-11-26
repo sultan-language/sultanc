@@ -1,0 +1,78 @@
+// اختبار: رفض
+// تشخيص: SULTANC-BORROW-CONFLICT
+// نظير: tests/ar/diagnostics/e2e/match_bindings_keep_borrow.sn
+// خرج-تشخيص-عربي: match_bindings_keep_borrow.ar.stderr
+// خرج-تشخيص-إنجليزي: match_bindings_keep_borrow.en.stderr
+// A match binding keeps the borrow its value carries for as long as it is in
+// use, whatever the scrutinee is: a tuple of reference locals, a tuple of
+// fresh borrows, a pair a call returns, a constructor around a borrow, a
+// pair nested in a tuple, and a writable rest under `match &mutable v`. The
+// borrowed value is not read or assigned meanwhile. Each function reports
+// its first error.
+def make_pair(target: &mutable int): (&mutable int, int) { return (target, 1); }
+
+def tuple_of_reference_locals(): int {
+    let value: mutable int = 1;
+    let other: int = 2;
+    let a_ref: &int = &value;
+    let b_ref: &int = &other;
+    match (a_ref, b_ref) with
+    | (x, y) -> {
+        value := 5;
+        return *x + *y;
+    };
+}
+
+def tuple_of_borrows(): int {
+    let first: mutable int = 1;
+    let second: int = 2;
+    match (&mutable first, &second) with
+    | (writer, reader) -> {
+        let copy: int = first;
+        *writer := *reader + copy;
+    };
+    return first;
+}
+
+def pair_from_call(): int {
+    let value: mutable int = 1;
+    match make_pair(&mutable value) with
+    | (writer, step) -> {
+        let copy: int = value;
+        *writer := copy + step;
+    };
+    return value;
+}
+
+def constructor_around_borrow(): int {
+    let value: mutable int = 1;
+    match some(&mutable value) with
+    | some(writer) -> {
+        let copy: int = value;
+        *writer := copy + 1;
+    }
+    | none -> { };
+    return value;
+}
+
+def nested_pair(): int {
+    let values: mutable vector int = [1, 2, 3];
+    match (split_mutable(&mutable values, 1), 10) with
+    | ((left, right), k) -> {
+        let first: int = values[0];
+        return left[0] + right[0] + first + k;
+    };
+}
+
+def writable_rest(): int {
+    let values: mutable vector int = [1, 2, 3];
+    match &mutable values with
+    | [first, rest tail] -> {
+        let copy: int = values[0];
+        tail[0] := copy + first;
+    }
+    | [] -> { };
+    return values[1];
+}
+
+def main(): int { return 0; }

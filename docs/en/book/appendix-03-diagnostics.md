@@ -50,6 +50,7 @@ Value used after move. Find the move in the related spans.
 | Identity | Explanation |
 | --- | --- |
 | `SULTANC-NAME-CONSTRUCTOR-NOT-CALLED` | A constructor is called to make a value: with `()` when it has no payload (`Color.Red()`), with its arguments otherwise. |
+| `SULTANC-NAME-BUILTIN-NOT-CALLED` | A built-in function such as `append` or `length` is only called with its arguments, as in `append(v, x)`: it cannot be stored, returned or assigned. |
 | `SULTANC-NAME-DUPLICATE-DECLARATION` | The same name is declared twice in one scope. Rename or remove one declaration. |
 | `SULTANC-NAME-PRIVATE` | This declaration is private here. Access it from an allowed scope. |
 | `SULTANC-NAME-UNKNOWN` | Name is not visible here. Check spelling, scope and imports. |
@@ -102,6 +103,7 @@ Value used after move. Find the move in the related spans.
 | `SULTANC-TYPE-INFINITE-RECURSION` | Recursive type has no finite layout. Introduce pointer indirection. |
 | `SULTANC-TYPE-INVALID-DEFINITION` | This type definition breaks a rule for type declarations. Check its fields and constructors. |
 | `SULTANC-TYPE-MISMATCH` | Types disagree. Compare expected and actual types in the diagnostic. |
+| `SULTANC-TYPE-MATCH-WITHOUT-VALUE` | A match used as an expression takes its value from the arm that matches, so at least one arm ends with a value: `\| p -> value` or `\| p -> { statements; value }`. |
 | `SULTANC-TYPE-MISSING-RECORD-FIELD` | A record initializer is missing a required field. |
 | `SULTANC-TYPE-OPAQUE-BY-VALUE` | An opaque type has no fields, size or alignment, so no value of it can be stored, passed, returned or held in a container. Only a raw pointer to it holds a value. |
 | `SULTANC-TYPE-OPAQUE-DEREFERENCE` | The memory behind a pointer to an opaque type has no type the program can read or write, even inside unsafe. |
@@ -124,10 +126,17 @@ Value used after move. Find the move in the related spans.
 
 | Identity | Explanation |
 | --- | --- |
+| `SULTANC-PATTERN-ALTERNATIVE-BINDINGS` | Every alternative of an or-pattern must bind the same names. Bind the name in each alternative, or match it with `_`. |
+| `SULTANC-PATTERN-ALTERNATIVE-TYPES` | A name that every alternative of an or-pattern binds must have one type in all of them. |
 | `SULTANC-PATTERN-INVALID` | This pattern cannot match the value's type. Use a pattern of that type. |
 | `SULTANC-PATTERN-NON-EXHAUSTIVE` | Pattern match misses possible values. Cover the missing cases. |
 | `SULTANC-PATTERN-PAYLOAD-COUNT-MISMATCH` | The pattern binds a different number of payloads than the constructor has. |
 | `SULTANC-PATTERN-UNREACHABLE` | An earlier pattern already covers this one, so it never runs. Remove or reorder it. |
+| `SULTANC-PARSE-LET-PATTERN` | `let (a, b): T = e;` gives each name its element for the rest of the block. Its pattern holds only names, `_` and nested tuples, in a block's statements; to test a value against other patterns, use `match`. |
+| `SULTANC-TYPE-LET-TUPLE-SHAPE` | A tuple `let` writes the Type of what it takes apart: a tuple with one element for each name or `_`, and a tuple for each nested pattern: `let (a, (b, _)): (int, (string, bool)) = e;`. |
+| `SULTANC-MUTABILITY-LET-TUPLE-MUTABLE` | In a tuple `let` only a writable view `mutable [] T` is written `mutable`. To change a value taken out, copy it into its own `let name: mutable T = name;`. |
+| `SULTANC-TYPE-PRELUDE-CONSTRUCTOR-UNTYPED` | `none`, `ok(x)` and `err(e)` take their option or result type from where they stand: a declared type, a parameter, a returned value. Here nothing gives one; name the value first: `let found: option int = none;`. |
+| `SULTANC-TYPE-TEXT-SLICE` | A slice of text is a `&string` that views bytes a through b of a text, both included, with no copy: `&s[a..b]`, `&s[a..]`, `&s[..b]` or `&s[..]`. It is read-only: writing into it could cut a character in two, so `&mutable s[a..b]` is not allowed. Without `&`, `s[a..b]` of text is not a value. |
 
 ## Control flow
 
@@ -135,6 +144,11 @@ Value used after move. Find the move in the related spans.
 | --- | --- |
 | `SULTANC-FLOW-LOOP-CONTROL-OUTSIDE-LOOP` | Leaving or continuing a loop is only possible inside a while or for loop of the same function. |
 | `SULTANC-FLOW-MISSING-RETURN` | Some path through the function ends without returning a value. Add the missing return. |
+| `SULTANC-FLOW-MATCH-ARM-WITHOUT-VALUE` | An arm of a match expression without a final value must not finish: on every path its block returns, leaves or continues a loop, or panics. Give the arm a final expression without `;`, or end it so. |
+| `SULTANC-MUTABILITY-VIEW-WITHOUT-MUTABLE` | A `mutable [] T` writes into the vector it views, so only `&mutable` makes one: `&mutable v` or `&mutable v[a..b]`. A vector or slice given without it is a read-only view. |
+| `SULTANC-PARSE-IF-WITHOUT-ELSE` | An `if` that gives a value needs an `else`: without one there is no value when the condition is false. Add `else` with the value for that case, or write the `if` as a statement. |
+| `SULTANC-TYPE-IF-WITHOUT-VALUE` | An `if` used as a value takes its value from the branch that runs, so at least one branch ends with a value: `if (c) a else { statements; b }`. |
+| `SULTANC-FLOW-IF-BRANCH-WITHOUT-VALUE` | A branch of an `if` used as a value without a final value must not finish: on every path it returns, leaves or continues a loop, or panics. Give the branch a final expression without `;`, or end it so. |
 | `SULTANC-FLOW-USE-BEFORE-INITIALIZATION` | The variable is read before it has a value. Assign it on every path before use. |
 
 ## Mutability
@@ -327,6 +341,7 @@ Value used after move. Find the move in the related spans.
 | `SULTANC-BACKEND-RANGE-EXCEEDED` | A jump, offset or constant is too far or too large for the machine instruction. Split large functions. |
 | `SULTANC-BACKEND-UNAVAILABLE` | Selected backend cannot emit this target. Check LLVM target support or use a supported backend. |
 | `SULTANC-BACKEND-UNSUPPORTED-CONSTRUCT` | This backend cannot compile this construct yet. Try the other backend or rewrite the code. |
+| `SULTANC-ASM-UNSUPPORTED` | SultanC does not compile asm yet, at module level or in functions. Write the code in C and import the file, or write it in SultanC. |
 
 ## Object files
 

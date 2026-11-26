@@ -1,0 +1,11 @@
+error[SULTANC-MUTABILITY-WRITE-TO-IMMUTABLE]: cannot write to an immutable value — The immutable value being written to is `الأول`. An assignment targets an immutable variable.
+  --> tests/ar/diagnostics/e2e/rest_element_read_only.sn:10:32..10:37
+    |
+ 10 |     | [الأول، بقية الذيل] -> { الأول := 0; الذيل[0] := 0; }
+    |                                ^^^^^ invalid use
+    |
+  ::: tests/ar/diagnostics/e2e/rest_element_read_only.sn:10:8..10:13
+    |
+ 10 |     | [الأول، بقية الذيل] -> { الأول := 0; الذيل[0] := 0; }
+    |        ^^^^^ declared here without `mutable`
+    |

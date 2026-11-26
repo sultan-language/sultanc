@@ -131,10 +131,9 @@ def main(): int {
     let to_moved: حافة_مسير = { الهدف: moved, الحجج: to_moved_arguments };
     let to_kept: حافة_مسير = { الهدف: kept, الحجج: to_kept_arguments };
     اختم_بفرع_شرطي_مسير(&mutable program, &build, function, entry, condition, to_moved, to_kept);
-    let no_arguments: vector معرف_قيمة_مسير = [];
     أصدر_ملكية_مكان_مسير(&mutable program, &build, function, moved, حدث_ملكية_مسير.تسليم(), sometimes);
-    اختم_بفرع_مسير(&mutable program, &build, function, moved, join, &no_arguments);
-    اختم_بفرع_مسير(&mutable program, &build, function, kept, join, &no_arguments);
+    اختم_بفرع_مسير(&mutable program, &build, function, moved, join, []);
+    اختم_بفرع_مسير(&mutable program, &build, function, kept, join, []);
     أصدر_ملكية_مكان_مسير(&mutable program, &build, function, join, حدث_ملكية_مسير.إسقاط(), sometimes);
     أصدر_ملكية_مكان_مسير(&mutable program, &build, function, join, حدث_ملكية_مسير.إسقاط(), always);
     أصدر_ملكية_مكان_مسير(&mutable program, &build, function, join, حدث_ملكية_مسير.إسقاط(), always);

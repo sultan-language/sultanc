@@ -1,0 +1,102 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/language/patterns/or_patterns.sn
+// Or-patterns of any pattern kinds, at the top of an arm and nested: enum
+// cases, cases with payloads, tuples and records whose alternatives bind the
+// same names, alternatives inside a payload inside a tuple, and owned
+// payloads bound by alternatives (the matched alternative's unbound parts are
+// destroyed; the allocator's counters show nothing is left behind).
+import std.os.allocation;
+import std.text.number;
+
+type Hand = | Rock | Paper | Scissors;
+type Shape = | Circle of int | Square of int | Dot | Line of (int, int);
+type Point = { x: int, y: int };
+type Named = | One of string | Two of (string, string) | Nothing;
+
+def soft(h: Hand): int {
+    match h with
+    | Hand.Rock | Hand.Paper -> { return 1; }
+    | Hand.Scissors -> { return 2; };
+}
+
+def measure(s: Shape): int {
+    match s with
+    | Shape.Circle(0) | Shape.Dot -> { return 1; }
+    | Shape.Circle(r) | Shape.Square(r) | Shape.Line(r, _) -> { return r; };
+}
+
+def axis(p: (int, int)): int {
+    match p with
+    | (0, v) | (v, 0) -> { return v; }
+    | _ -> { return 0; };
+}
+
+def nested(v: (option Shape, int)): int {
+    match v with
+    | (option.some(Shape.Circle(n) | Shape.Square(n)), 1 | 2) -> { return n; }
+    | (option.some(Shape.Dot | Shape.Line(_, _)), _) -> { return 3; }
+    | (option.some(_), _) -> { return 4; }
+    | (option.none, k) -> { return k; };
+}
+
+def on_axis(p: Point): int {
+    match p with
+    | { x: 0, y: v } | { x: v, y: 0 } -> { return v; }
+    | _ -> { return 100; };
+}
+
+def text(i: int): string { return int_to_text(1000000 + i); }
+
+def name_size(n: Named): int {
+    match n with
+    | Named.One(s) | Named.Two(s, _) -> { return length(s) as int; }
+    | Named.Nothing -> { return 0; };
+}
+
+def second_size(n: Named): int {
+    match n with
+    | Named.Two(_, s) | Named.One(s) -> { return length(s) as int; }
+    | Named.Nothing -> { return 0; };
+}
+
+def owned_rounds(): int {
+    let i: mutable int = 0;
+    let total: mutable int = 0;
+    while (i < 100) {
+        total := total + name_size(Named.Two(text(i), text(i + 1)));
+        total := total + name_size(Named.One(text(i)));
+        total := total + second_size(Named.Two(text(i), text(i + 1)));
+        i := i + 1;
+    }
+    return total;
+}
+
+def main(): int {
+    if (soft(Hand.Rock()) + soft(Hand.Paper()) + soft(Hand.Scissors()) != 4) { return 1; };
+    if (measure(Shape.Circle(0)) != 1 || measure(Shape.Dot()) != 1) { return 2; };
+    if (measure(Shape.Circle(5)) != 5 || measure(Shape.Square(6)) != 6 || measure(Shape.Line(7, 9)) != 7) {
+        return 3;
+    };
+    if (axis((0, 8)) != 8 || axis((9, 0)) != 9 || axis((1, 1)) != 0) { return 4; };
+    if (nested((option.some(Shape.Circle(11)), 2)) != 11) { return 5; };
+    if (nested((option.some(Shape.Square(12)), 3)) != 4) { return 6; };
+    if (nested((option.some(Shape.Dot()), 1)) != 3) { return 7; };
+    if (nested((option.none(), 13)) != 13) { return 8; };
+    let p1: Point = { x: 0, y: 14 };
+    let p2: Point = { x: 15, y: 0 };
+    let p3: Point = { x: 1, y: 1 };
+    if (on_axis(p1) != 14 || on_axis(p2) != 15 || on_axis(p3) != 100) { return 9; };
+    if (name_size(Named.Nothing()) != 0) { return 10; };
+    if (owned_rounds() != 2100) { return 11; };
+    let allocations: u64 = allocation_count();
+    let frees: u64 = free_count();
+    if (owned_rounds() != 2100) { return 12; };
+    let allocated: u64 = allocation_count() - allocations;
+    let freed: u64 = free_count() - frees;
+    // Under the std allocator every round allocates, and frees as much.
+    if (allocated != 0 && freed + 8 < allocated) { return 13; };
+    return 42;
+}

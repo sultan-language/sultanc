@@ -1,0 +1,12 @@
+// اختبار: رفض
+// تشخيص: SULTANC-TYPE-ADDRESS-OF-NON-LVALUE
+// نظير: tests/ar/diagnostics/e2e/slice_of_temporary.sn
+// خرج-تشخيص-عربي: slice_of_temporary.ar.stderr
+// خرج-تشخيص-إنجليزي: slice_of_temporary.en.stderr
+// A slice views a place: a call result is gone before the view could be
+// used, so it cannot be sliced.
+def make(): vector int { return [1, 2, 3]; }
+def main(): int {
+    let part: [] int = make()[1..];
+    return length(part) as int;
+}

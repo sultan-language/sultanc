@@ -1,0 +1,6 @@
+خطأ[SULTANC-BORROW-CONFLICT]: تعارض استعارة — القيمة ذات الاستعارة المتعارضة هي ⁨`values`⁩. القيمة مستعارة للقراءة، لذا لا يمكن استعارتها استعارة متغيرة.
+  --> tests/en/diagnostics/e2e/let_tuple_split_use_while_live.sn:9:5..9:48
+   |
+ 9 |     let values: mutable vector int = [1, 2, 3];
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |

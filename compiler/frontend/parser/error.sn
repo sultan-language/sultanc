@@ -19,6 +19,13 @@
     | ملف_مضمن_غير_مقروء
     // A top-level `let` initialized with a record, tuple or box literal.
     | تهيئة_قيمة_عليا_غير_مدعومة
+    // `1..9` in a pattern without the word `range` (`range 1..9`).
+    | مدى_بلا_كلمته
+    // An `if` used as a value without its `else`.
+    | إذا_تعبيرية_بلا_وإلا
+    // A tuple `let` whose pattern is not a tuple of names, `_` and nested
+    // tuples, or one outside a block's statements.
+    | ربط_صف_غير_صالح
     | داخلي
 ;
 
@@ -43,6 +50,7 @@
 
 عام عرف انسخ_مملوكا_متجه_خطأ_نحوي(القيمة: &متجه خطأ_نحوي): متجه خطأ_نحوي {
     ليكن الناتج: متغير متجه خطأ_نحوي = [];
+    احجز_سعة(الناتج, الطول(*القيمة) مثل طبيعي);
     ليكن ف: متغير طبيعي = 0;
     طالما (ف < (الطول(*القيمة) مثل طبيعي)) {
         ألحق(الناتج, (*القيمة)[ف]);

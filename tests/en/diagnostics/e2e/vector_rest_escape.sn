@@ -1,0 +1,21 @@
+// اختبار: رفض
+// تشخيص: SULTANC-BORROW-REFERENCE-ESCAPE
+// نظير: tests/ar/diagnostics/e2e/vector_rest_escape.sn
+// خرج-تشخيص-عربي: vector_rest_escape.ar.stderr
+// خرج-تشخيص-إنجليزي: vector_rest_escape.en.stderr
+// Under `match &mutable v`, `rest tail` is a writable view of the matched
+// vector's own elements: it borrows the vector. A view given `tail`'s value
+// and read after the vector is destroyed escapes the vector's scope.
+def tail_length(flag: bool): int {
+    let kept: mutable [] int = [0];
+    if (flag) {
+        let v: mutable vector int = [1, 2, 3];
+        match &mutable v with
+        | [_, rest tail] -> { kept := tail; }
+        | [] -> { };
+    };
+    return length(kept) as int;
+}
+def main(): int {
+    return tail_length(true);
+}

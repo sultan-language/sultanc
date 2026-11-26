@@ -26,7 +26,7 @@
 
 <br>
 
-SultanC is a native systems language with ownership-aware safety, algebraic data types, pattern matching and threads. Its keywords exist in Arabic and English as equal, interchangeable surfaces of the same syntax. The compiler is written in SultanC and compiles itself: every build passes a byte-for-byte self-host check (Stage3 == Stage4).
+SultanC is a native systems language with ownership-aware safety, algebraic data types, pattern matching and threads. Its keywords exist in Arabic and English as equal, interchangeable surfaces of the same syntax. The compiler is written in SultanC and compiles itself: every commit on main passes a byte-for-byte self-host fixpoint check (S2 == S3).
 
 <br>
 
@@ -64,22 +64,58 @@ Why does SultanC exist? Read [its story](story.md).
 
 ## Install
 
+### Download a release
+
+Each [release](https://github.com/sultan-language/sultanc/releases) has an archive per platform with
+`sultanc`, `supax` (the package manager), `sultanc-analyzer` (the language server) and the standard library:
+`sultanc-VERSION-TARGET.tar.gz` for `x86_64-linux`, `aarch64-linux-gnu`, `arm64-darwin` and `x86_64-darwin`,
+and `sultanc-VERSION-x86_64-windows-msvc.zip`. Check it against the release's `SHA256SUMS.txt`, unpack it
+and add its `bin/` to `PATH`:
+
+```sh
+version=0.1.2 target=x86_64-linux
+base=https://github.com/sultan-language/sultanc/releases/download/v$version
+curl -fL -O "$base/sultanc-$version-$target.tar.gz" -O "$base/SHA256SUMS.txt"
+sha256sum -c SHA256SUMS.txt --ignore-missing    # macOS: shasum -a 256 -c SHA256SUMS.txt --ignore-missing
+tar -xzf "sultanc-$version-$target.tar.gz"
+export PATH="$PWD/sultanc-$version-$target/bin:$PATH"
+sultanc --version
+```
+
+On Windows, compare `Get-FileHash sultanc-VERSION-x86_64-windows-msvc.zip` with its line in `SHA256SUMS.txt`,
+unpack the zip and add its `bin` folder to your user `Path`. Keep `library/` next to `bin/`: the compiler
+reads the standard library from there. `INSTALL.txt` in the archive has the same steps, and
+[Releases](contributing/releases.md) says what a release holds.
+
+### Build from source
+
 ```sh
 git clone https://github.com/sultan-language/sultanc.git && cd sultanc
-./build.sh                          # C Stage0 -> Stage1 -> Stage2 (needs LLVM)
+./build.sh                          # needs only a C compiler; the result is build/sultanc
 sudo cp build/sultanc /usr/local/bin/sultanc
 ```
 
-| Route | Command | Needs |
-|---|---|---|
-| C bootstrap (default) | `./build.sh` | C compiler + LLVM |
-| WebAssembly seed | `./build.sh --bootstrap=wasm` | only a C compiler |
-| Rebuild from an existing compiler | `./build.sh --bootstrap=existing` | a built `build/sultanc` (about a minute) |
-| With the LLVM backend inside | `./build.sh --enable-llvm` | LLVM 19–23 |
-| Self-host check | `./build.sh verify` | Stage3 == Stage4, byte for byte |
+Without a shell, the same build needs only the C compiler:
 
-> The build finds LLVM by itself in its usual locations, Homebrew's on macOS included; `LLVM_CONFIG=/path/to/llvm-config` selects another.
-> Windows: `./build.sh --bootstrap=c --enable-llvm --backend=llvm`.
+```sh
+cc -o build-bootstrap bootstrap-wasm/bootstrap.c && ./build-bootstrap
+```
+
+On Windows: `cl /Fe:build-bootstrap.exe bootstrap-wasm/bootstrap.c` (or `gcc -o build-bootstrap.exe
+bootstrap-wasm/bootstrap.c`), then `build-bootstrap.exe`.
+
+Both end with the compiler at `build/sultanc` (`build\sultanc.exe` on Windows) and print it as their last
+line: `build: compiler: build/sultanc`.
+
+| Step | Command | Needs |
+|---|---|---|
+| Build, or rebuild after a change | `./build.sh` | a C compiler; later builds start from `build/sultanc` and skip the build when `compiler/` did not change |
+| Check | `./build.sh verify` | the compiler rebuilds itself byte for byte (S2 == S3) |
+| With the LLVM backend inside | `./build.sh --enable-llvm` | LLVM 19–23 |
+| Maintainers | `./build.sh seed-update`, `./build.sh seed-check`, `./build.sh chain` | see [Bootstrap](internals/bootstrap.md) |
+
+> `--enable-llvm` finds LLVM through `llvm-config` (Homebrew's on macOS included); `LLVM_CONFIG=/path/to/llvm-config` selects another.
+> Windows, Linux on ARM and macOS on Intel have no Native backend: there `build/sultanc` is the seed compiler, which targets x86_64-linux, arm64-darwin and wasm32-wasi; see [Bootstrap](internals/bootstrap.md) for the compilers built for those hosts.
 
 ```sh
 sultanc main.sn -o app && ./app
@@ -142,7 +178,8 @@ Native backends for x86_64 and arm64; every other target goes through LLVM. See 
 |---|---|
 | [Architecture & MSIR](internals/msir-and-codegen.md) | How source becomes native code |
 | [Kernel architecture](internals/compiler-architecture.md) | Compiler internals |
-| [Bootstrap](internals/bootstrap.md) | The C Stage0 and the WebAssembly seed |
+| [Bootstrap](internals/bootstrap.md) | The WebAssembly seed, the frozen C Stage0 and the build driver |
+| [The compilation cache](internals/compile-cache.md) | What `sultanc` caches and how |
 | [Safety flow](internals/safety-flow.md) | Ownership and borrow checking |
 | [Ownership analysis](internals/ownership-analysis.md) | Ownership in initial MSIR and drop elaboration |
 | [Type system](reference/type-system.md) | Types, inference, generics, casts |
@@ -157,7 +194,7 @@ Native backends for x86_64 and arm64; every other target goes through LLVM. See 
 
 ## Status
 
-Self-hosting on `x86_64-linux` and `arm64-darwin`, verified by byte-identical convergence across compiler generations, from the C Stage0 and from the WebAssembly seed. CI builds every route on Linux, macOS and Windows (x64 and arm64).
+Self-hosting on `x86_64-linux` and `arm64-darwin`, verified by a byte-identical self-host fixpoint from the WebAssembly seed, and by the frozen C Stage0's chain building the same compiler. CI builds on Linux, macOS and Windows (x64 and arm64).
 
 ## License
 

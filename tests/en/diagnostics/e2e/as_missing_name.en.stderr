@@ -1,0 +1,6 @@
+error[SULTANC-PARSE-PATTERN]: Cannot parse the pattern syntax — The expected result is `identifier`, but the actual result is `->`. The parser could not recognize the pattern syntax.
+  --> tests/en/diagnostics/e2e/as_missing_name.sn:10:26..10:28
+    |
+ 10 |     | Shape.Circle(r) as -> { return r; }
+    |                          ^^ parser discovered the problem here
+    |

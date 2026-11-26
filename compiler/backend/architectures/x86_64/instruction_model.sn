@@ -17,6 +17,10 @@
     | أدنى_طبيعي_أو_مساو
     | أعلى_طبيعي
     | أعلى_طبيعي_أو_مساو
+    // OF set: the signed add, subtract or multiply right before the branch
+    // overflowed. Only the native allocation path's simplification makes it
+    // (selected_simplification.sn, a checked operation with an overflow exit).
+    | تجاوز
 ;
 
 عام نوع عنوان_ذاكرة_إكس_ستة_وثمانون_أربعة_وستون = {

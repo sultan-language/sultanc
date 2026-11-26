@@ -1,0 +1,17 @@
+// اختبار: رفض
+// تشخيص: SULTANC-PATTERN-NON-EXHAUSTIVE
+// نظير: tests/en/diagnostics/semantic/match_expression_non_exhaustive.sn
+// خرج-تشخيص-عربي: match_expression_non_exhaustive.ar.stderr
+// خرج-تشخيص-إنجليزي: match_expression_non_exhaustive.en.stderr
+// يغطي تعبير المطابقة كل قيم مميزه كما تفعل العبارة.
+نوع ضوء = | أحمر | أصفر | أخضر;
+
+عرف رمز_الضوء(الضوء: ضوء): عدد {
+    أرجع طابق الضوء مع
+    | ضوء.أحمر -> 1
+    | ضوء.أخضر -> 3;
+}
+
+عرف الرئيسية(): عدد {
+    أرجع رمز_الضوء(ضوء.أصفر());
+}

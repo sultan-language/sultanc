@@ -1,0 +1,19 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 1
+// تفاضلي: نعم
+// بيئة: SULTANC_LANG=ar
+// خرج-قياسي: <فارغ>
+// خطأ-قياسي-ملف: text_slice_inside_letter_ar.stderr
+// نظير: tests/ar/runtime/failure/text_slice_inside_letter_ar.sn
+// A slice of text whose start falls inside an Arabic letter (two bytes: the
+// second one continues the first) (docs/en/reference/errors.md, "Runtime
+// checks") stops the program through the panic path: the frame "the program
+// stopped", then the byte offset inside a character and the place of the
+// slice, exit status 1.
+def main(): int {
+    let text: string = "سلام";
+    let start: int = 1;
+    let part: &string = &text[start..];
+    return length(*part);
+}

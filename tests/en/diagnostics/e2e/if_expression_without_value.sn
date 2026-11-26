@@ -1,0 +1,13 @@
+// اختبار: رفض
+// تشخيص: SULTANC-TYPE-IF-WITHOUT-VALUE
+// نظير: tests/ar/diagnostics/e2e/if_expression_without_value.sn
+// خرج-تشخيص-عربي: if_expression_without_value.ar.stderr
+// خرج-تشخيص-إنجليزي: if_expression_without_value.en.stderr
+// At least one branch of an `if` value gives a value.
+def f(n: int): int {
+    let v: int = if (n > 0) { return 1; } else { return 2; };
+    return v;
+}
+def main(): int {
+    return f(1);
+}

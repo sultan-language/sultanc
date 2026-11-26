@@ -1,0 +1,6 @@
+error[SULTANC-TYPE-LET-TUPLE-SHAPE]: the Type of this tuple `let` is not a tuple with one element for each name
+  --> tests/ar/diagnostics/e2e/let_tuple_arity.sn:8:18..8:33
+   |
+ 8 |     ليكن (أ، ب): (عدد، عدد، عدد) = (1، 2، 3);
+   |                  ^^^^^^^^^^^^^^^
+   |

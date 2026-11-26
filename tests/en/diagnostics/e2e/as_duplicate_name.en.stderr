@@ -1,0 +1,12 @@
+error[SULTANC-NAME-DUPLICATE-DECLARATION]: duplicate declaration — The redeclared name is `x`. The same name is declared more than once in this scope.
+  --> tests/en/diagnostics/e2e/as_duplicate_name.sn:9:12..9:13
+   |
+ 9 |     | x as x -> { return x; };
+   |            ^
+   |
+  ::: tests/en/diagnostics/e2e/as_duplicate_name.sn:9:7..9:8
+   |
+ 9 |     | x as x -> { return x; };
+   |       ^ related context
+   |
+  = note: the previous declaration is shown as related source

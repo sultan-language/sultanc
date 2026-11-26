@@ -1,0 +1,6 @@
+error[SULTANC-BORROW-CONFLICT]: borrow conflict — The conflicting borrowed value is `values`. The value is borrowed for reading, so it cannot be borrowed mutably.
+  --> tests/en/diagnostics/e2e/slice_read_while_writable.sn:9:5..9:48
+   |
+ 9 |     let values: mutable vector int = [1, 2, 3];
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |

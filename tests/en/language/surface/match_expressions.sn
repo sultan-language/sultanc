@@ -1,0 +1,143 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/language/surface/match_expressions.sn
+// `match` as an expression (docs/en/book/ch06-02-match.md, "A match that
+// gives a value"): its value is the value of the arm that matches, in a
+// `let`, an assignment, an argument, a returned value, an operand, a
+// condition and a closure body; nested; values of every kind, typed by their
+// context; braced arms with statements and a final value; arms that return,
+// leave or continue a loop; and the source's evaluation order around it.
+type Shape = | Circle of int | Square of int | Dot;
+type Point = { x: int, y: int };
+
+def area(shape: Shape): int {
+    return match shape with
+    | Shape.Circle(r) -> 3 * r * r
+    | Shape.Square(a) -> a * a
+    | Shape.Dot -> 0;
+}
+
+def twice(x: int): int { return x * 2; }
+
+def name(n: int): string {
+    let text: string = match n with
+    | 1 -> "one"
+    | 2 -> "two"
+    | _ -> "many";
+    return text;
+}
+
+def grid(a: int, b: int): int {
+    return match a with
+    | 0 -> (match b with | 0 -> 1 | _ -> 2)
+    | _ -> match b with
+        | 0 -> 3
+        | _ -> 4;
+}
+
+def first_or(value: option int): int {
+    let found: int = match value with
+    | option.some(n) -> n
+    | option.none -> { return -1; };
+    return found * 2;
+}
+
+def note(acc: &mutable int, k: int): int {
+    *acc := *acc * 10 + k;
+    return k;
+}
+
+def add3(a: int, b: int, c: int): int { return a + b + c; }
+
+def bump(count: &mutable int): int {
+    *count := *count + 1;
+    return 1;
+}
+
+def main(): int {
+    // A value in a `let`, a returned value and an argument.
+    if (area(Shape.Circle(2)) + area(Shape.Square(3)) + area(Shape.Dot()) != 21) { return 1; };
+    let n: int = 2;
+    if (twice(match n with | 1 -> 10 | _ -> 20) != 40) { return 2; };
+    // Operands.
+    let total: int = 1 + match n with | 2 -> 10 | _ -> 20;
+    if (total != 11) { return 3; };
+    let product: int = (match n with | 2 -> 5 | _ -> 6) * 3;
+    if (product != 15) { return 4; };
+    // An assignment.
+    let changed: mutable int = 0;
+    changed := match n with | 0 -> 7 | k -> k * 100;
+    if (changed != 200) { return 5; };
+    // Text.
+    if (name(1) != "one" || name(2) != "two" || name(9) != "many") { return 6; };
+    // Nested matches.
+    if (grid(0, 0) + grid(0, 1) + grid(1, 0) + grid(1, 1) != 10) { return 7; };
+    // An enum, an option, a tuple, a record and a vector, each typed by its context.
+    let shape: Shape = match n with | 0 -> Shape.Dot() | _ -> Shape.Square(n);
+    if (area(shape) != 4) { return 8; };
+    let maybe: option int = match n with | 0 -> option.none() | k -> option.some(k * 3);
+    let got: int = match maybe with | option.some(v) -> v | option.none -> 0;
+    if (got != 6) { return 9; };
+    let pair: (int, string) = match n with | 0 -> (0, "zero") | _ -> (n, "other");
+    let first: int = match pair with | (a, _) -> a;
+    if (first != 2) { return 10; };
+    let point: Point = match n with | 0 -> { x: 1, y: 1 } | _ -> { x: n, y: n + 1 };
+    if (point.x + point.y != 5) { return 11; };
+    let items: vector int = match n with | 0 -> [] | _ -> [n, n, n];
+    if (length(items) != 3) { return 12; };
+    // A braced arm: statements, then the value.
+    let braced: int = match n with
+    | 2 -> {
+        let t: int = 20;
+        let u: int = t + 1;
+        u * 2
+    }
+    | _ -> 0;
+    if (braced != 42) { return 13; };
+    // An arm that returns.
+    if (first_or(option.some(4)) != 8 || first_or(option.none()) != -1) { return 14; };
+    // Arms that leave and continue a loop.
+    let i: mutable int = 0;
+    let sum: mutable int = 0;
+    while (i < 10) {
+        i := i + 1;
+        let step: int = match i % 3 with
+        | 0 -> { continue; }
+        | 1 -> i
+        | _ -> {
+            if (i > 7) { break; };
+            i * 10
+        };
+        sum := sum + step;
+    }
+    if (sum != 82) { return 15; };
+    // A condition, and a loop condition evaluated on every iteration.
+    if (match n with | 2 -> false | _ -> true) { return 16; };
+    let tries: mutable int = 0;
+    while (match tries with | 5 -> false | _ -> true) { tries := tries + 1; }
+    if (tries != 5) { return 17; };
+    // A match nested in a match statement's scrutinee.
+    match (match n with | 2 -> 1 | _ -> 0) with
+    | 1 -> { }
+    | _ -> { return 18; };
+    // In a closure body; a `return` in an arm leaves the closure.
+    let classify: fn(int): int = fn(x: int): int -> match x with | 0 -> 1 | _ -> x * 2;
+    if (classify(0) + classify(5) != 11) { return 19; };
+    let early: fn(int): int = fn(x: int): int -> match x with | 0 -> { return 7; } | _ -> x + 1;
+    if (early(0) + early(4) != 12) { return 20; };
+    // Left to right: what precedes the match runs first, what follows after it.
+    let order: mutable int = 0;
+    let r: int = add3(
+        note(&mutable order, 1),
+        match note(&mutable order, 2) with | 2 -> note(&mutable order, 3) | _ -> 0,
+        note(&mutable order, 4)
+    );
+    if (order != 1234 || r != 8) { return 21; };
+    // A short-circuited operand is not evaluated.
+    let calls: mutable int = 0;
+    if (false && (match bump(&mutable calls) with | _ -> true)) { return 22; };
+    if (calls != 0) { return 23; };
+    return 42;
+}

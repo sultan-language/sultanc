@@ -1,0 +1,6 @@
+خطأ[SULTANC-FLOW-IF-BRANCH-WITHOUT-VALUE]: قد ينتهي هذا الفرع من ⁨`إذا`⁩ دون قيمة
+  --> tests/ar/diagnostics/e2e/if_expression_branch_without_value.sn:8:38..8:67
+   |
+ 8 |     ليكن ق: عدد = إذا (ن > 0) 1 وإلا { إذا (ن < -5) { أرجع 0; }; };
+   |                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |

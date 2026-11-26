@@ -1,6 +1,7 @@
 // اختبار: رفض
 // تشخيص: SULTANC-PARSE-PATTERN
 // نظير: tests/ar/frontend/parser/negative/match_range_missing_upper.sn
-// A range pattern without its upper bound is a pattern error (found by fuzzing).
-def f(e: int): int { match e with | range 1 to -> { return 0; }; return 1; }
+// A range with neither end (`range ..`) is a pattern error (found by fuzzing, as
+// a range without its upper bound, which is now an open end).
+def f(e: int): int { match e with | range .. -> { return 0; }; return 1; }
 def main(): int { return f(1); }

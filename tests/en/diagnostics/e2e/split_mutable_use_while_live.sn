@@ -1,0 +1,17 @@
+// اختبار: رفض
+// تشخيص: SULTANC-BORROW-CONFLICT
+// نظير: tests/ar/diagnostics/e2e/split_mutable_use_while_live.sn
+// خرج-تشخيص-عربي: split_mutable_use_while_live.ar.stderr
+// خرج-تشخيص-إنجليزي: split_mutable_use_while_live.en.stderr
+// The halves of `split_mutable` borrow the vector exclusively: it is not read
+// while either half is in use.
+def main(): int {
+    let values: mutable vector int = [1, 2, 3];
+    match split_mutable(&mutable values, 1) with
+    | (left, right) -> {
+        let first: int = values[0];
+        left[0] := first;
+        right[0] := 0;
+    };
+    return values[0];
+}

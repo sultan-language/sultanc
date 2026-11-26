@@ -1,0 +1,18 @@
+// اختبار: رفض
+// تشخيص: SULTANC-BORROW-REFERENCE-ESCAPE
+// نظير: tests/ar/diagnostics/e2e/slice_view_escape.sn
+// خرج-تشخيص-عربي: slice_view_escape.ar.stderr
+// خرج-تشخيص-إنجليزي: slice_view_escape.en.stderr
+// A view borrows its vector: a view kept in a longer-lived local and read
+// after the vector is destroyed escapes the vector's scope.
+def kept_length(flag: bool): int {
+    let kept: mutable [] int = [0];
+    if (flag) {
+        let values: mutable vector int = [1, 2, 3];
+        kept := &mutable values[1..];
+    };
+    return length(kept) as int;
+}
+def main(): int {
+    return kept_length(true);
+}

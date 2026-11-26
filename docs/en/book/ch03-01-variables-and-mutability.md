@@ -29,7 +29,9 @@ order: the name, a colon, the type, `=`, and the value.
 
 The type is always written. SultanC never works out a variable's type from its value, even when it
 could. A program is read far more often than it is written, and with the type next to every name you
-never have to trace where a value came from to know what it is.
+never have to trace where a value came from to know what it is. One `let` can also name each part of
+a tuple, `let (quotient, remainder): (int, int) = divide(17, 5);`, again with the type written; the
+next section shows it ([Taking a tuple apart](ch03-02-data-types.md#taking-a-tuple-apart)).
 
 `println` prints text, not numbers, so `int_to_text` (from `std.text.number`) turns the number into
 text first.

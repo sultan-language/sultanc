@@ -79,11 +79,11 @@ def from_global(c: bool): int {
 }
 
 def view(c: bool): int {
-    let first: vector int = [1, 2];
-    let second: vector int = [7, 8];
-    let s: mutable [] int = first;
+    let first: mutable vector int = [1, 2];
+    let second: mutable vector int = [7, 8];
+    let s: mutable [] int = &mutable first;
     if (c) {
-        s := second;
+        s := &mutable second;
     };
     return s[0];
 }

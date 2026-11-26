@@ -1,0 +1,6 @@
+خطأ[SULTANC-BORROW-REFERENCE-ESCAPE]: المرجع يهرب من نطاق صلاحيته — المرجع الخارج عن نطاق صلاحيته هو ⁨`greeting`⁩. يبقى مرجع بعد انتهاء القيمة التي يشير إليها.
+  --> tests/en/diagnostics/e2e/text_slice_escape.sn:9:5..9:36
+   |
+ 9 |     let greeting: string = "hello";
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |

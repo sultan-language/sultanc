@@ -1,0 +1,6 @@
+خطأ[SULTANC-TYPE-PRELUDE-CONSTRUCTOR-UNTYPED]: لا يُعرف هنا نوع الاختياري أو النتيجة لـ⁨`لا_شيء`⁩ أو ⁨`نجح`⁩ أو ⁨`خطأ`⁩ هذه
+  --> tests/en/diagnostics/e2e/prelude_ok_untyped.sn:9:11..9:16
+   |
+ 9 |     match ok(5) with
+   |           ^^^^^
+   |

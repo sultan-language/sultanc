@@ -1,0 +1,12 @@
+// اختبار: رفض
+// تشخيص: SULTANC-MUTABILITY-VIEW-WITHOUT-MUTABLE
+// نظير: tests/ar/diagnostics/e2e/split_mutable_without_mutable.sn
+// خرج-تشخيص-عربي: split_mutable_without_mutable.ar.stderr
+// خرج-تشخيص-إنجليزي: split_mutable_without_mutable.en.stderr
+// `split_mutable` makes writable views, so it is given `&mutable v`.
+def main(): int {
+    let values: mutable vector int = [1, 2, 3];
+    match split_mutable(values, 1) with
+    | (left, right) -> { left[0] := 0; right[0] := 0; };
+    return values[0];
+}

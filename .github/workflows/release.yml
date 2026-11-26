@@ -1,0 +1,413 @@
+# Release: CI builds every host's toolchain from the tagged commit, the owner
+# approves, and a DRAFT GitHub Release is created; the owner reviews it and
+# presses Publish. Nothing here publishes a release, pushes or moves a tag.
+# The steps for the owner are in CI.md, "Releases".
+#
+#   push of a tag v*          the release of that tag
+#   manual dispatch           the same, run from the tag ("Use workflow from":
+#                             Tags), with the tag as input; a re-run after a
+#                             failed or deleted draft
+#
+# guard     the tag is vX.Y.Z or vX.Y.Z-rc.N; its commit is on master (an
+#           ancestor of origin/master) and qualified (the check master.yml runs,
+#           ci/evidence.sh); Supax.toml and compiler/Supax.toml say X.Y.Z;
+#           .github/ci/components.toml pins real commits that exist; CHANGELOG.md
+#           has a section for X.Y.Z
+# llvm-sdk  the pinned LLVM SDK of the hosts without a Native backend, unless
+#           cached (as chain.yml)
+# build     per host, from the tagged commit, the compiler with the version the
+#           release reports (ci/linux.sh, macos.sh, windows.ps1 `release`):
+#             linux-x86_64, macos-arm64   Native: from the seed, S2 == S3
+#             linux-arm64, macos-x86_64,  LLVM: the C Stage0 chain (`chain`,
+#             windows-x86_64              as chain.yml), whose LLVM-enabled
+#                                         compiler builds the sources once more
+#           then Supax and sultanc-analyzer at their pinned commits with that
+#           compiler, by their own build commands; the archive
+#           sultanc-VERSION-TARGET.tar.gz (.zip for Windows) and its .sha256,
+#           unpacked again and run (ci/release.py smoke); uploaded as an artifact
+# publish   in the environment `release` (the owner approves the run there):
+#           SHA256SUMS.txt, a build-provenance attestation of every archive, and
+#           a draft release for the tag (a pre-release for -rc. tags) with the
+#           CHANGELOG.md section as its notes. The only job that can write.
+#
+# The version a release compiler reports is VERSION+COMMIT (the tag without
+# its v, then the first 12 hex digits of the commit), with the backends it
+# contains: `sultanc --version`.
+name: SultanC Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: The release tag (vX.Y.Z or vX.Y.Z-rc.N); run the workflow from that tag
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sultanc-release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  guard:
+    name: Guard
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      statuses: read
+    outputs:
+      tag: ${{ steps.ref.outputs.tag }}
+      sha: ${{ steps.commit.outputs.sha }}
+      epoch: ${{ steps.commit.outputs.epoch }}
+      version: ${{ steps.version.outputs.version }}
+      base: ${{ steps.version.outputs.base }}
+      prerelease: ${{ steps.version.outputs.prerelease }}
+      stamp: ${{ steps.commit.outputs.stamp }}
+      supax_repo: ${{ steps.components.outputs.supax_repo }}
+      supax_commit: ${{ steps.components.outputs.supax_commit }}
+      analyzer_repo: ${{ steps.components.outputs.analyzer_repo }}
+      analyzer_commit: ${{ steps.components.outputs.analyzer_commit }}
+    steps:
+      - name: The run is on the tag
+        # The environment `release` admits only v* tags, so a dispatched run
+        # must start from the tag too.
+        id: ref
+        env:
+          EVENT: ${{ github.event_name }}
+          REF: ${{ github.ref }}
+          TAG_INPUT: ${{ inputs.tag }}
+        run: |
+          tag=${REF#refs/tags/}
+          if [ "$tag" = "$REF" ]; then
+            echo "::error::run this workflow from the tag (Use workflow from: Tags: ${TAG_INPUT:-the tag}), not from $REF"
+            exit 1
+          fi
+          if [ "$EVENT" = workflow_dispatch ] && [ "$TAG_INPUT" != "$tag" ]; then
+            echo "::error::the tag input $TAG_INPUT is not the tag this run started from ($tag)"
+            exit 1
+          fi
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          # origin/master for the ancestry check.
+          fetch-depth: 0
+      - name: The tagged commit
+        id: commit
+        env:
+          TAG: ${{ steps.ref.outputs.tag }}
+        run: |
+          sha=$(git rev-parse "refs/tags/$TAG^{commit}")
+          [ "$sha" = "$(git rev-parse HEAD)" ] || { echo "::error::the checkout is not the commit of $TAG ($sha)"; exit 1; }
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+          echo "epoch=$(git log -1 --format=%ct "$sha")" >> "$GITHUB_OUTPUT"
+          version=${TAG#v}
+          echo "stamp=$version+$(printf '%s' "$sha" | cut -c1-12)" >> "$GITHUB_OUTPUT"
+          echo "release $TAG: commit \`$sha\`" >> "$GITHUB_STEP_SUMMARY"
+      - name: On master
+        env:
+          TAG: ${{ steps.ref.outputs.tag }}
+          SHA: ${{ steps.commit.outputs.sha }}
+        run: |
+          if ! git merge-base --is-ancestor "$SHA" origin/master; then
+            echo "::error::$TAG ($SHA) is not on master: release only commits promoted to master (promote.yml)"
+            exit 1
+          fi
+      - name: Qualified
+        # The check of master.yml: the commit status sultanc/qualification.
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          TAG: ${{ steps.ref.outputs.tag }}
+          SHA: ${{ steps.commit.outputs.sha }}
+        run: |
+          url=$(sh .github/ci/evidence.sh "$SHA")
+          if [ -z "$url" ]; then
+            echo "::error::$TAG ($SHA) has no qualification: tag a commit master.yml calls qualified"
+            exit 1
+          fi
+          echo "- qualified by $url" >> "$GITHUB_STEP_SUMMARY"
+      - name: Version
+        id: version
+        env:
+          TAG: ${{ steps.ref.outputs.tag }}
+        run: python3 .github/ci/release.py version "$TAG"
+      - name: Components
+        id: components
+        run: python3 .github/ci/release.py components .github/ci/components.toml
+      - name: The pinned commits exist
+        env:
+          SUPAX_URL: ${{ steps.components.outputs.supax_url }}
+          SUPAX_COMMIT: ${{ steps.components.outputs.supax_commit }}
+          ANALYZER_URL: ${{ steps.components.outputs.analyzer_url }}
+          ANALYZER_COMMIT: ${{ steps.components.outputs.analyzer_commit }}
+        run: |
+          check() { # url commit
+            dir=$(mktemp -d)
+            git -C "$dir" init -q
+            if ! git -C "$dir" fetch -q --depth=1 "$1" "$2"; then
+              echo "::error::.github/ci/components.toml: $1 has no commit $2"
+              exit 1
+            fi
+            echo "- $1 at \`$2\`" >> "$GITHUB_STEP_SUMMARY"
+          }
+          check "$SUPAX_URL" "$SUPAX_COMMIT"
+          check "$ANALYZER_URL" "$ANALYZER_COMMIT"
+      - name: Release notes
+        env:
+          REPO: ${{ github.repository }}
+          TAG: ${{ steps.ref.outputs.tag }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: python3 .github/ci/release.py notes --version "$VERSION" --repo "$REPO" --tag "$TAG" > /dev/null
+      - name: Not released yet
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          TAG: ${{ steps.ref.outputs.tag }}
+        run: |
+          if gh release view "$TAG" --repo "$REPO" > /dev/null 2>&1; then
+            echo "::error::$TAG is already released: a release is never rebuilt; tag a new version"
+            exit 1
+          fi
+
+  llvm-sdk:
+    name: LLVM SDK / ${{ matrix.host }}
+    needs: guard
+    runs-on: ${{ matrix.runner }}
+    # macOS x86_64 and Windows build LLVM from source when the cache is cold.
+    timeout-minutes: 350
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {host: linux-arm64, runner: ubuntu-24.04-arm, script: linux}
+          - {host: macos-x86_64, runner: macos-15-intel, script: macos}
+          - {host: windows-x86_64, runner: windows-2025, script: windows}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: ${{ needs.guard.outputs.sha }}
+      - name: LLVM SDK cache
+        id: cache
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ~/llvm-sdk-22.1.8
+          key: llvm-sdk-${{ matrix.host }}-${{ hashFiles('.github/ci/llvm.lock') }}
+          lookup-only: true
+      - name: Build the LLVM SDK
+        if: steps.cache.outputs.cache-hit != 'true' && matrix.script != 'windows'
+        timeout-minutes: 340
+        run: sh .github/ci/${{ matrix.script }}.sh llvm-sdk
+      - name: Build the LLVM SDK
+        if: steps.cache.outputs.cache-hit != 'true' && matrix.script == 'windows'
+        timeout-minutes: 340
+        shell: pwsh
+        run: ./.github/ci/windows.ps1 llvm-sdk
+
+  build:
+    name: Build / ${{ matrix.host }}
+    needs: [guard, llvm-sdk]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 420
+    strategy:
+      fail-fast: false
+      matrix:
+        # The hosts CI builds the compiler on (plan.py HOSTS), each the way CI
+        # builds it there. windows-arm64 is not released yet.
+        include:
+          - {host: linux-x86_64, runner: ubuntu-24.04, script: linux, target: x86_64-linux, llvm: false, exe: '', archive: tar.gz}
+          - {host: linux-arm64, runner: ubuntu-24.04-arm, script: linux, target: aarch64-linux-gnu, llvm: true, exe: '', archive: tar.gz}
+          - {host: macos-arm64, runner: macos-15, script: macos, target: arm64-darwin, llvm: false, exe: '', archive: tar.gz}
+          - {host: macos-x86_64, runner: macos-15-intel, script: macos, target: x86_64-darwin, llvm: true, exe: '', archive: tar.gz}
+          - {host: windows-x86_64, runner: windows-2025, script: windows, target: x86_64-windows-msvc, llvm: true, exe: .exe, archive: zip}
+    env:
+      SULTANC_RELEASE_VERSION: ${{ needs.guard.outputs.stamp }}
+      # One LLVM compile of the compiler runs longer on the slower hosts than
+      # the 90 minutes CI allows a Native one (linux.sh, macos.sh).
+      SULTANC_CI_COMPILE_TIMEOUT: '10800'
+      SULTANC_CI_COMPILE_TIMEOUT_SECONDS: '10800'
+      # Windows runners name it python.
+      PY: ${{ matrix.script == 'windows' && 'python' || 'python3' }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: ${{ needs.guard.outputs.sha }}
+          # The commits bootstrap/FROZEN pins come from the history (chain).
+          fetch-depth: 0
+      - name: LLVM SDK
+        if: matrix.llvm
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ~/llvm-sdk-22.1.8
+          key: llvm-sdk-${{ matrix.host }}-${{ hashFiles('.github/ci/llvm.lock') }}
+          fail-on-cache-miss: true
+      - name: C Stage0 chain, equal to the seed route
+        if: matrix.llvm && matrix.script != 'windows'
+        timeout-minutes: 240
+        run: sh .github/ci/${{ matrix.script }}.sh chain
+      - name: C Stage0 chain, equal to the seed route
+        if: matrix.llvm && matrix.script == 'windows'
+        timeout-minutes: 240
+        shell: pwsh
+        run: ./.github/ci/windows.ps1 chain
+      - name: Release compiler
+        if: matrix.script != 'windows'
+        timeout-minutes: 180
+        run: sh .github/ci/${{ matrix.script }}.sh release
+      - name: Release compiler
+        if: matrix.script == 'windows'
+        timeout-minutes: 180
+        shell: pwsh
+        run: ./.github/ci/windows.ps1 release
+      - name: Supax source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          repository: ${{ needs.guard.outputs.supax_repo }}
+          ref: ${{ needs.guard.outputs.supax_commit }}
+          path: build/release/src/supax
+          persist-credentials: false
+      - name: sultanc-analyzer source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          repository: ${{ needs.guard.outputs.analyzer_repo }}
+          ref: ${{ needs.guard.outputs.analyzer_commit }}
+          path: build/release/src/sultanc-analyzer
+          persist-credentials: false
+      - name: Supax
+        # Its first build (supax README, tools/install.sh): the checked-in
+        # package graph, with the release compiler.
+        shell: bash
+        timeout-minutes: 60
+        env:
+          EXE: ${{ matrix.exe }}
+        run: |
+          root=$(pwd)
+          cd build/release/src/supax
+          mkdir -p build/bin
+          env -u SULTANC_STD "$root/build/sultanc$EXE" --package-graph=bootstrap/package-graph.toml \
+            src/main.sn -o "build/bin/supax$EXE"
+      - name: sultanc-analyzer
+        # Its build against a local compiler checkout (tools/build.sh): this
+        # one, whose compiler/ it links and whose build/sultanc builds it.
+        shell: bash
+        timeout-minutes: 60
+        env:
+          EXE: ${{ matrix.exe }}
+        run: |
+          root=$(pwd)
+          SULTANC="$root/build/sultanc$EXE" sh build/release/src/sultanc-analyzer/tools/build.sh "$root"
+      - name: patchelf
+        # Sets the run path of the LLVM-enabled compiler to the libLLVM
+        # shipped beside it (release.py package).
+        if: matrix.llvm && runner.os == 'Linux'
+        run: command -v patchelf || { sudo apt-get update -q && sudo apt-get install -y -q patchelf; }
+      - name: Archive
+        shell: bash
+        env:
+          VERSION: ${{ needs.guard.outputs.version }}
+          SHA: ${{ needs.guard.outputs.sha }}
+          SOURCE_DATE_EPOCH: ${{ needs.guard.outputs.epoch }}
+          TARGET: ${{ matrix.target }}
+          EXE: ${{ matrix.exe }}
+          LLVM: ${{ matrix.llvm && '--llvm' || '' }}
+        run: |
+          # shellcheck disable=SC2086 # LLVM is one flag or none
+          "$PY" .github/ci/release.py package --version "$VERSION" --target "$TARGET" --commit "$SHA" \
+            --compiler "build/sultanc$EXE" --supax "build/release/src/supax/build/bin/supax$EXE" \
+            --analyzer build/sultanc-analyzer --out build/release/dist $LLVM
+      - name: The archive runs on its own
+        shell: bash
+        env:
+          VERSION: ${{ needs.guard.outputs.version }}
+          BASE: ${{ needs.guard.outputs.base }}
+          TARGET: ${{ matrix.target }}
+          ARCHIVE: ${{ matrix.archive }}
+          LLVM: ${{ matrix.llvm && '--llvm' || '' }}
+        run: |
+          # shellcheck disable=SC2086 # LLVM is one flag or none
+          "$PY" .github/ci/release.py smoke "build/release/dist/sultanc-$VERSION-$TARGET.$ARCHIVE" \
+            --stamp "$SULTANC_RELEASE_VERSION" --base "$BASE" $LLVM
+      - name: Upload the archive
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: release-${{ matrix.target }}
+          path: |
+            build/release/dist/*.${{ matrix.archive }}
+            build/release/dist/*.sha256
+          retention-days: 14
+          if-no-files-found: error
+
+  publish:
+    name: Draft release
+    needs: [guard, build]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    # The owner makes this environment require their approval (CI.md,
+    # "Releases"); the run waits here until they approve it.
+    environment: release
+    # The only job that can write: the draft release, and the attestation.
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+    env:
+      # The build matrix's targets: every archive must be there.
+      TARGETS: x86_64-linux,aarch64-linux-gnu,arm64-darwin,x86_64-darwin,x86_64-windows-msvc
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: ${{ needs.guard.outputs.sha }}
+          # .github and the files at the root (CHANGELOG.md).
+          sparse-checkout: .github
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          pattern: release-*
+          path: dist
+          merge-multiple: true
+      - name: SHA256SUMS.txt
+        env:
+          VERSION: ${{ needs.guard.outputs.version }}
+        run: python3 .github/ci/release.py sums dist --version "$VERSION" --targets "$TARGETS"
+      - name: Release notes
+        env:
+          REPO: ${{ github.repository }}
+          TAG: ${{ needs.guard.outputs.tag }}
+          VERSION: ${{ needs.guard.outputs.version }}
+        run: python3 .github/ci/release.py notes --version "$VERSION" --repo "$REPO" --tag "$TAG" --out "$RUNNER_TEMP/notes.md"
+      - name: Build provenance
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: |
+            dist/*.tar.gz
+            dist/*.zip
+      - name: No release of the tag yet
+        # Drafts are not found by tag, so the list is read.
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          TAG: ${{ needs.guard.outputs.tag }}
+        run: |
+          found=$(gh release list --repo "$REPO" --limit 200 --json tagName --jq ".[] | select(.tagName == \"$TAG\") | .tagName")
+          if [ -n "$found" ]; then
+            echo "::error::a release of $TAG exists (a draft included): delete the draft to build it again"
+            exit 1
+          fi
+      - name: Draft release
+        # A draft, never published here: the owner checks it and presses Publish.
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          TAG: ${{ needs.guard.outputs.tag }}
+          VERSION: ${{ needs.guard.outputs.version }}
+          PRERELEASE: ${{ needs.guard.outputs.prerelease }}
+        run: |
+          pre=
+          [ "$PRERELEASE" != true ] || pre=--prerelease
+          # shellcheck disable=SC2086 # pre is one flag or none
+          url=$(gh release create "$TAG" --draft --verify-tag $pre --repo "$REPO" --title "SultanC $VERSION" \
+            --notes-file "$RUNNER_TEMP/notes.md" dist/*.tar.gz dist/*.zip dist/*.sha256 dist/SHA256SUMS.txt)
+          echo "Draft release of $TAG: $url (check it, then Publish)" >> "$GITHUB_STEP_SUMMARY"

@@ -1,0 +1,20 @@
+// اختبار: رفض
+// تشخيص: SULTANC-BORROW-CONFLICT
+// نظير: tests/ar/diagnostics/e2e/text_slice_append_while_live.sn
+// خرج-تشخيص-عربي: text_slice_append_while_live.ar.stderr
+// خرج-تشخيص-إنجليزي: text_slice_append_while_live.en.stderr
+// A slice of text borrows its text: the text cannot be appended to while the
+// slice is alive (docs/en/reference/ownership.md, "Slices and writable views").
+import std.text.transform;
+
+def append_bang(text: &mutable string): void {
+    let longer: string = concat(&*text, &"!");
+    *text := longer;
+}
+
+def main(): int {
+    let greeting: mutable string = "hello";
+    let head: &string = &greeting[0..1];
+    append_bang(&mutable greeting);
+    return length(*head);
+}

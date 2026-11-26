@@ -1,0 +1,14 @@
+// اختبار: رفض
+// تشخيص: SULTANC-TYPE-MISMATCH
+// نظير: tests/ar/diagnostics/semantic/match_expression_context_type.sn
+// خرج-تشخيص-عربي: match_expression_context_type.ar.stderr
+// خرج-تشخيص-إنجليزي: match_expression_context_type.en.stderr
+// With a context Type, each arm's value meets it as the context's own value
+// does: here the initialized local's, at the arm.
+def main(): int {
+    let n: int = 1;
+    let s: int = match n with
+    | 1 -> "one"
+    | _ -> 0;
+    return s;
+}

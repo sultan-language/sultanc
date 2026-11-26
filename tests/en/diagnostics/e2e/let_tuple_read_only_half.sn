@@ -1,0 +1,14 @@
+// اختبار: رفض
+// تشخيص: SULTANC-MUTABILITY-WRITE-TO-IMMUTABLE
+// نظير: tests/ar/diagnostics/e2e/let_tuple_read_only_half.sn
+// خرج-تشخيص-عربي: let_tuple_read_only_half.ar.stderr
+// خرج-تشخيص-إنجليزي: let_tuple_read_only_half.en.stderr
+// Each name of a tuple `let` has the Type written for it: a half of
+// `split_mutable` bound as `[] T` is a read-only view.
+def main(): int {
+    let values: mutable vector int = [1, 2, 3];
+    let (left, right): ([] int, mutable [] int) = split_mutable(&mutable values, 1);
+    right[0] := 7;
+    left[0] := 9;
+    return 0;
+}

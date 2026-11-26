@@ -1,0 +1,6 @@
+خطأ[SULTANC-TYPE-TEXT-SLICE]: شريحة النص تُستعار للقراءة فقط: ⁨`&ن[أ..ب]`⁩
+  --> tests/en/diagnostics/e2e/text_slice_mutable.sn:10:32..10:53
+    |
+ 10 |     let all: &mutable string = &mutable greeting[..];
+    |                                ^^^^^^^^^^^^^^^^^^^^^
+    |

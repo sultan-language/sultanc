@@ -1,0 +1,7 @@
+خطأ[SULTANC-PARSE-IF-WITHOUT-ELSE]: ⁨`إذا`⁩ المستعملة قيمةً بلا ⁨`وإلا`⁩
+  --> tests/en/diagnostics/e2e/if_expression_without_else.sn:9:24..9:45
+   |
+ 9 |     let text: string = if (n > 0) "positive";
+   |                        ^^^^^^^^^^^^^^^^^^^^^
+   |
+  = مساعدة: أضف ⁨`وإلا`⁩ بالقيمة التي تكون حين يكون الشرط خاطئا

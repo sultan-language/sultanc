@@ -1,0 +1,7 @@
+error[SULTANC-PARSE-PATTERN]: Cannot parse the pattern syntax — The parser could not recognize the pattern syntax.
+  --> tests/en/diagnostics/e2e/range_without_word.sn:10:7..10:8
+    |
+ 10 |     | 1..9 -> { return 1; }
+    |       ^
+    |
+  = help: a range of values in a pattern starts with the word `range`: `range 1..9`

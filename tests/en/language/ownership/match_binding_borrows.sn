@@ -1,0 +1,44 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/language/ownership/match_binding_borrows.sn
+// Match bindings carry the borrows of their scrutinee: a tuple of fresh
+// borrows, a pair a call returns, a constructor around a borrow and a
+// writable rest under `match &mutable v` are written through in the arm, and
+// the borrowed values are used again once the bindings are no longer in use
+// (docs/en/internals/ownership-analysis.md, "Match bindings"), even inside
+// the arm.
+def make_pair(target: &mutable int): (&mutable int, int) { return (target, 1); }
+
+def main(): int {
+    let a: mutable int = 1;
+    let b: int = 2;
+    match (&mutable a, &b) with
+    | (writer, reader) -> { *writer := *reader + 10; };
+    let c: mutable int = 0;
+    match make_pair(&mutable c) with
+    | (writer, step) -> { *writer := 20 + step; };
+    let d: mutable int = 0;
+    match some(&mutable d) with
+    | some(writer) -> { *writer := 9; }
+    | none -> { };
+    let values: mutable vector int = [1, 2, 3];
+    match &mutable values with
+    | [first, rest tail] -> { tail[0] := first; tail[1] := first + 4; }
+    | [] -> { };
+    if (a != 12 || c != 21 || d != 9) { return 1; };
+    if (values[0] != 1 || values[1] != 1 || values[2] != 5) { return 2; };
+    match split_mutable(&mutable values, 1) with
+    | (left, right) -> {
+        right[1] := left[0];
+        values[0] := 30;
+    };
+    if (values[0] != 30 || values[2] != 1) { return 3; };
+    match (&mutable a, 0) with
+    | (writer, _) -> {
+        *writer := 0;
+        a := a + 42;
+    };
+    return a;
+}

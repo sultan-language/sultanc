@@ -41,7 +41,7 @@ host_target() {
   # emulated: uname -m says x86_64 and the process sees
   # PROCESSOR_ARCHITECTURE=AMD64 (PROCESSOR_ARCHITEW6432 is set only for
   # 32-bit programs on x64 Windows). The system environment in the registry
-  # names the real machine, which is what cmake's host target follows
+  # names the real machine, which is what the compiler's host target follows
   # (CMAKE_HOST_SYSTEM_PROCESSOR). Previously only the two variables were
   # read, so an ARM64 host tested x86_64 code under emulation.
   case "$(uname -s 2>/dev/null)" in
@@ -92,7 +92,9 @@ is_count() { [[ "$1" =~ ^[0-9]+$ ]]; }
 runner_built=0
 runner_rc=-1
 r_total=0; r_pass=0; r_fail=0; r_skip=0; r_compile=0; r_error=0
-if "$SC" tests/runner/main.sn -o "$OUT/runner$exe_suffix" > "$OUT/runner-build.log" 2>&1; then
+# The runner is a tool, not under test: built optimized (without -O the
+# compiler optimizes nothing).
+if "$SC" -O2 tests/runner/main.sn -o "$OUT/runner$exe_suffix" > "$OUT/runner-build.log" 2>&1; then
   runner_built=1
   SULTANC_BIN="$SC" "$OUT/runner$exe_suffix" > "$OUT/runner.log" 2>&1
   runner_rc=$?

@@ -42,7 +42,8 @@ The [README](README.md) gives a short overview of the project and its build rout
 | [Safety flow](internals/safety-flow.md) | How moves, borrows, lifetimes and escapes are checked |
 | [Ownership analysis](internals/ownership-analysis.md) | How initial MSIR states ownership and drop elaboration decides destruction |
 | [Interpreter](internals/interpreter.md) | `sultanc run`: execution model, memory model and host calls |
-| [Bootstrap](internals/bootstrap.md) | The C Stage0, the WebAssembly seed, the build routes and how CI proves each one |
+| [Bootstrap](internals/bootstrap.md) | The roots (the WebAssembly seed, the frozen C Stage0), the N-1 and seed-bump policies, the build driver and the CI tiers |
+| [The compilation cache](internals/compile-cache.md) | What `sultanc` caches, the key, when nothing is stored and the limits |
 | [TLS and cryptography](internals/tls.md) | The TLS 1.3 implementation in std and its cryptographic primitives |
 | [iSpeak](internals/ispeak/README.md) | The message layer behind every diagnostic, in Arabic and English, and its [context contracts](internals/ispeak/context-contracts.md) |
 
@@ -53,6 +54,7 @@ The [README](README.md) gives a short overview of the project and its build rout
 | [Contributor guide](contributing/README.md) | Repository layout, development builds, the rules for compiler sources and documentation style |
 | [Tests](contributing/tests.md) | Running the test suite, test directives and adding tests |
 | [Examples](contributing/examples.md) | The example programs and how they are organized |
+| [Releases](contributing/releases.md) | What a release holds, its version and how it is made |
 
 ## History
 

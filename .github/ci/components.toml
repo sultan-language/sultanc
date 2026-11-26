@@ -1,0 +1,17 @@
+# The tools a SultanC release ships with the compiler, each built by
+# .github/workflows/release.yml from one exact commit of its own repository
+# with the release's own sultanc (.github/CI.md, "Releases").
+#
+# The owner fills in both commits at release time, in the commit that is then
+# promoted and tagged: the full 40-character SHA of the commit of each
+# repository that is that tool's release for this version. The zeros below
+# are a placeholder; the release workflow refuses to build while either is
+# still there.
+
+[supax]
+repo = "https://github.com/sultan-language/supax"
+commit = "0000000000000000000000000000000000000000"
+
+[sultanc-analyzer]
+repo = "https://github.com/sultan-language/sultanc-analyzer"
+commit = "0000000000000000000000000000000000000000"

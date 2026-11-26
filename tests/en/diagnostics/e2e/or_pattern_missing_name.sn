@@ -1,0 +1,13 @@
+// اختبار: رفض
+// تشخيص: SULTANC-PATTERN-ALTERNATIVE-BINDINGS
+// نظير: tests/ar/diagnostics/e2e/or_pattern_missing_name.sn
+// خرج-تشخيص-عربي: or_pattern_missing_name.ar.stderr
+// خرج-تشخيص-إنجليزي: or_pattern_missing_name.en.stderr
+// Every alternative binds the same names: `x` is bound by the first
+// alternative only.
+def axis(p: (int, int)): int {
+    match p with
+    | (0, x) | (y, 0) -> { return 1; }
+    | _ -> { return 0; };
+}
+def main(): int { return axis((0, 1)); }

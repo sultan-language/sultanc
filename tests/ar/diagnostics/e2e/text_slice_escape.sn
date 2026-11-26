@@ -1,0 +1,15 @@
+// اختبار: رفض
+// تشخيص: SULTANC-BORROW-REFERENCE-ESCAPE
+// نظير: tests/en/diagnostics/e2e/text_slice_escape.sn
+// خرج-تشخيص-عربي: text_slice_escape.ar.stderr
+// خرج-تشخيص-إنجليزي: text_slice_escape.en.stderr
+// شريحة نص محلي لا تخرج من الدالة: النص ينتهي بانتهائها. أما شريحة نص
+// أُعطيته الدالة فتخرج (tests/*/language/surface/text_slices.sn).
+عرف أول_حرفين(): &نص {
+    ليكن التحية: نص = «hello»;
+    أرجع &التحية[0..1];
+}
+
+عرف الرئيسية(): عدد {
+    أرجع الطول(*أول_حرفين());
+}

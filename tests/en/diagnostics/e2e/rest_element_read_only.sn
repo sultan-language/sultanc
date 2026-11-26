@@ -1,0 +1,14 @@
+// اختبار: رفض
+// تشخيص: SULTANC-MUTABILITY-WRITE-TO-IMMUTABLE
+// نظير: tests/ar/diagnostics/e2e/rest_element_read_only.sn
+// خرج-تشخيص-عربي: rest_element_read_only.ar.stderr
+// خرج-تشخيص-إنجليزي: rest_element_read_only.en.stderr
+// Under `match &mutable v` only the named rest is writable: an element bound
+// out of v is a read-only value.
+def main(): int {
+    let values: mutable vector int = [1, 2, 3];
+    match &mutable values with
+    | [first, rest tail] -> { first := 0; tail[0] := 0; }
+    | [] -> { };
+    return values[0];
+}

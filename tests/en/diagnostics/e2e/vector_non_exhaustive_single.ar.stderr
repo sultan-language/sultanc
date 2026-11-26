@@ -1,0 +1,7 @@
+خطأ[SULTANC-PATTERN-NON-EXHAUSTIVE]: نمط غير شامل: لا تغطي الأذرع ⁨`[_]`⁩ — يجب أن تطابق كل قيمة من النوع المطابَق إحدى الأذرع.
+  --> tests/en/diagnostics/e2e/vector_non_exhaustive_single.sn:8:11..8:12
+   |
+ 8 |     match v with
+   |           ^
+   |
+  = مساعدة: أضف ذراعًا لكل حالة غير مغطاة

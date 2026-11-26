@@ -1,0 +1,6 @@
+error[SULTANC-BORROW-REFERENCE-ESCAPE]: reference escapes its valid scope — The escaping reference is `التحية`. A reference outlives the value it points to.
+  --> tests/ar/diagnostics/e2e/text_slice_escape.sn:9:5..9:31
+   |
+ 9 |     ليكن التحية: نص = «hello»;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |

@@ -1,0 +1,17 @@
+// اختبار: رفض
+// تشخيص: SULTANC-BORROW-CONFLICT
+// نظير: tests/ar/diagnostics/e2e/vector_rest_keeps_borrow_call.sn
+// خرج-تشخيص-عربي: vector_rest_keeps_borrow_call.ar.stderr
+// خرج-تشخيص-إنجليزي: vector_rest_keeps_borrow_call.en.stderr
+// Passing v as `&mutable` while a named rest of `match v` is still used is the
+// same conflict as appending in the arm: the callee may change or grow v.
+def grow(v: &mutable vector int): void { append(*v, 4); }
+def main(): int {
+    let v: mutable vector int = [1, 2, 3];
+    match v with
+    | [_, rest tail] -> {
+        grow(&mutable v);
+        return tail[0];
+    }
+    | [] -> { return 0; };
+}

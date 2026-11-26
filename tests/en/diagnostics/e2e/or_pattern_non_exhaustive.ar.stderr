@@ -1,0 +1,7 @@
+خطأ[SULTANC-PATTERN-NON-EXHAUSTIVE]: نمط غير شامل: لا تغطي الأذرع ⁨`Hand.Scissors`⁩ — يجب أن تطابق كل قيمة من النوع المطابَق إحدى الأذرع.
+  --> tests/en/diagnostics/e2e/or_pattern_non_exhaustive.sn:9:11..9:12
+   |
+ 9 |     match h with
+   |           ^
+   |
+  = مساعدة: أضف ذراعًا لكل حالة غير مغطاة

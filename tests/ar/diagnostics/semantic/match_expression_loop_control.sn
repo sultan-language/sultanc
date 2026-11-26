@@ -1,0 +1,13 @@
+// اختبار: رفض
+// تشخيص: SULTANC-FLOW-LOOP-CONTROL-OUTSIDE-LOOP
+// نظير: tests/en/diagnostics/semantic/match_expression_loop_control.sn
+// خرج-تشخيص-عربي: match_expression_loop_control.ar.stderr
+// خرج-تشخيص-إنجليزي: match_expression_loop_control.en.stderr
+// `اخرج_من_حلقة` في ذراع تعبير مطابقة يخرج من الحلقة حول المطابقة، ولا حلقة هنا.
+عرف الرئيسية(): عدد {
+    ليكن ن: عدد = 1;
+    ليكن س: عدد = طابق ن مع
+    | 1 -> { اخرج_من_حلقة; }
+    | _ -> 2;
+    أرجع س;
+}

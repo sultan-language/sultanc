@@ -1,0 +1,12 @@
+error[SULTANC-NAME-DUPLICATE-DECLARATION]: duplicate declaration — The redeclared name is `س`. The same name is declared more than once in this scope.
+  --> tests/ar/diagnostics/e2e/as_duplicate_name.sn:9:13..9:14
+   |
+ 9 |     | س مثل س -> { أرجع س; };
+   |             ^
+   |
+  ::: tests/ar/diagnostics/e2e/as_duplicate_name.sn:9:7..9:8
+   |
+ 9 |     | س مثل س -> { أرجع س; };
+   |       ^ related context
+   |
+  = note: the previous declaration is shown as related source

@@ -11,7 +11,10 @@
 // fields a record literal has not written, the cases a match has not covered
 // and the call arguments whose Type fits the parameter; then (C10, C11)
 // what a constructor inserts: a call in a value position (`Red()`,
-// `Circle(`), its name in a pattern position, with its payload count.
+// `Circle(`), its name in a pattern position, with its payload count; then
+// (C12) the fields after `name.` whatever follows the cursor on its line
+// (`;`, ` ;`, `);`, `with`, nothing), the fields whose Type fits what the
+// place expects (a `return`, a `let` with a Type, a call argument) first.
 // Each source is patched (رقع_مصدر_للإكمال), the patched text is analysed as
 // the file, and the candidates are read from the analysis or the environment.
 import compiler.driver.source_inputs;
@@ -152,6 +155,46 @@ def two(found: &نتيجة_إكمال_أدوات, first: string, second: string)
         && position_of(found, first) == 0 && position_of(found, second) == 1;
 }
 
+// The program of C12: a record Name whose two fields have the Type `field`,
+// foo taking a `field`, and get_name returning `returns`, whose body is the
+// unfinished statement `line`.
+def member_program(field: &string, returns: &string, line: &string): string {
+    let bytes: mutable vector u8 = [];
+    append_text(&mutable bytes, &"type Name = { ahmad: ");
+    append_text(&mutable bytes, field);
+    append_text(&mutable bytes, &", Ali: ");
+    append_text(&mutable bytes, field);
+    append_text(&mutable bytes, &" };\ndef foo(s: ");
+    append_text(&mutable bytes, field);
+    append_text(&mutable bytes, &"): int { return 0; }\ndef get_name(name: Name): ");
+    append_text(&mutable bytes, returns);
+    append_text(&mutable bytes, &" {\n    ");
+    append_text(&mutable bytes, line);
+    append_text(&mutable bytes, &"\n}\n");
+    return from_bytes(&bytes);
+}
+
+// C12: completing `line` at the byte after `needle` offers Name's two
+// fields in declaration order, whatever follows the cursor; `expected` says
+// whether the place expects a Type, `fits` whether the fields' Type fits it.
+def member_row(
+    dir: &string, file: string, field: string, returns: string, line: string, needle: string,
+    expected: bool, fits: bool
+): bool {
+    let text: string = member_program(&field, &returns, &line);
+    let patch: رقعة_إكمال = رقع_مصدر_للإكمال(&text, cursor_after(&text, needle));
+    if (patch.السياق != سياق_إكمال.عضو_قيمة()) { return false; };
+    match complete(dir, file, &patch) with
+    | اختياري.لا_شيء -> { return false; }
+    | اختياري.موجود(found) -> {
+        if (found.السياق != سياق_إكمال.عضو_قيمة() || !two(&found, "ahmad", "Ali")) { return false; };
+        match found.النوع_المتوقع with
+        | اختياري.موجود(_) -> { if (!expected) { return false; }; }
+        | اختياري.لا_شيء -> { if (expected) { return false; }; };
+        return (found.المرشحات[0].يلائم_المتوقع == fits) && (found.المرشحات[1].يلائم_المتوقع == fits);
+    };
+}
+
 def main(): int {
     let prefix: string = "completion";
     match create_temp_dir(&prefix) with
@@ -268,7 +311,8 @@ def main(): int { let c: Color = Color.»;
         let t6: string = "def main(): int { let s: string = \"p.";
         let p6: رقعة_إكمال = رقع_مصدر_للإكمال(&t6, length(t6) as uint);
         if (p6.السياق != سياق_إكمال.لا_شيء()) { return 27; };
-        // C1: the members of a call's result, with their Types.
+        // C1: the members of a call's result, with their Types; main returns
+        // int, so count, whose Type fits, comes first (as in C3 and C4).
         let c1: string = program("return make().");
         let q1: رقعة_إكمال = رقع_مصدر_للإكمال(&c1, cursor_after(&c1, "return make()."));
         if (q1.السياق != سياق_إكمال.عضو_قيمة() || !نصان_متساويان(&q1.التعبير, &"make()")) { return 50; };
@@ -276,7 +320,7 @@ def main(): int { let c: Color = Color.»;
         | اختياري.لا_شيء -> { return 51; }
         | اختياري.موجود(found) -> {
             if (found.السياق != سياق_إكمال.عضو_قيمة()) { return 52; };
-            if (!two(&found, "inner", "count")) { return 53; };
+            if (!two(&found, "count", "inner") || !found.المرشحات[0].يلائم_المتوقع) { return 53; };
             match found.المرشحات[0].النوع with
             | اختياري.لا_شيء -> { return 54; }
             | اختياري.موجود(_) -> { };
@@ -296,7 +340,7 @@ def main(): int { let c: Color = Color.»;
         match complete(&dir, "c3.sn", &q3) with
         | اختياري.لا_شيء -> { return 58; }
         | اختياري.موجود(found) -> {
-            if (!two(&found, "inner", "count")) { return 59; };
+            if (!two(&found, "count", "inner")) { return 59; };
         };
         // C4: an element of a vector.
         let c4: string = program("return arr[0].");
@@ -304,7 +348,7 @@ def main(): int { let c: Color = Color.»;
         match complete(&dir, "c4.sn", &q4) with
         | اختياري.لا_شيء -> { return 60; }
         | اختياري.موجود(found) -> {
-            if (!two(&found, "inner", "count")) { return 61; };
+            if (!two(&found, "count", "inner")) { return 61; };
         };
         // C5: the builtin option constructors, spelled as the source's
         // keywords are: English here, Arabic in an Arabic source.
@@ -459,6 +503,35 @@ def main(): int { let s: Shape = Shape.»;
         | اختياري.لا_شيء -> { return 109; }
         | اختياري.موجود(found) -> {
             if (!inserts(&found, "Color.Red", 0, "Color.Red", true)) { return 110; };
+        };
+        // C12: after `name.` the fields are offered whatever follows the
+        // cursor on its line (`with`, nothing, `;`, ` ;`, `);`). get_name
+        // returns int: a `return` expects int, which string fields do not
+        // fit; `let q: string` and foo's parameter expect string.
+        if (!member_row(&dir, "c12a.sn", "string", "int", "match name. with", "match name.", false, false)) { return 111; };
+        if (!member_row(&dir, "c12b.sn", "string", "int", "match name.ahma with", "name.ahma", false, false)) { return 112; };
+        if (!member_row(&dir, "c12c.sn", "string", "int", "return name.ahmad", "name.ahmad", true, false)) { return 113; };
+        if (!member_row(&dir, "c12d.sn", "string", "int", "return name.;", "return name.", true, false)) { return 114; };
+        if (!member_row(&dir, "c12e.sn", "string", "int", "return name.ah;", "name.ah", true, false)) { return 115; };
+        if (!member_row(&dir, "c12f.sn", "string", "int", "return name.ahmad ;", "name.ahmad", true, false)) { return 116; };
+        if (!member_row(&dir, "c12g.sn", "string", "int", "let q: string = name.;", "= name.", true, true)) { return 117; };
+        if (!member_row(&dir, "c12h.sn", "string", "int", "foo(name.);", "foo(name.", true, true)) { return 118; };
+        // int fields, which every place of get_name (int) expects.
+        if (!member_row(&dir, "c12i.sn", "int", "int", "return name.;", "return name.", true, true)) { return 119; };
+        if (!member_row(&dir, "c12j.sn", "int", "int", "return name.ah;", "name.ah", true, true)) { return 120; };
+        if (!member_row(&dir, "c12k.sn", "int", "int", "let q: int = name.;", "= name.", true, true)) { return 121; };
+        if (!member_row(&dir, "c12l.sn", "int", "int", "foo(name.);", "foo(name.", true, true)) { return 122; };
+        // A function returning string: its `return` expects string.
+        if (!member_row(&dir, "c12m.sn", "string", "string", "return name.;", "return name.", true, true)) { return 123; };
+        if (!member_row(&dir, "c12n.sn", "string", "string", "return name.ahmad ;", "name.ahmad", true, true)) { return 124; };
+        // The fields whose Type fits come first.
+        let c12o: string = "type Mixed = { count: int, title: string };\ndef label(m: Mixed): string {\n    return m.;\n}\n";
+        let q12o: رقعة_إكمال = رقع_مصدر_للإكمال(&c12o, cursor_after(&c12o, "return m."));
+        match complete(&dir, "c12o.sn", &q12o) with
+        | اختياري.لا_شيء -> { return 125; }
+        | اختياري.موجود(found) -> {
+            if (!two(&found, "title", "count")) { return 126; };
+            if (!found.المرشحات[0].يلائم_المتوقع || found.المرشحات[1].يلائم_المتوقع) { return 127; };
         };
     };
     return 42;

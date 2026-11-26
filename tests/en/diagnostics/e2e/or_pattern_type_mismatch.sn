@@ -1,0 +1,12 @@
+// اختبار: رفض
+// تشخيص: SULTANC-PATTERN-ALTERNATIVE-TYPES
+// نظير: tests/ar/diagnostics/e2e/or_pattern_type_mismatch.sn
+// خرج-تشخيص-عربي: or_pattern_type_mismatch.ar.stderr
+// خرج-تشخيص-إنجليزي: or_pattern_type_mismatch.en.stderr
+// The alternatives bind `v` with two different types.
+type Value = | Number of int | Word of string;
+def show(v: Value): int {
+    match v with
+    | Value.Number(x) | Value.Word(x) -> { return 1; };
+}
+def main(): int { return show(Value.Number(1)); }

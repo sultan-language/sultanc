@@ -1,0 +1,6 @@
+خطأ[SULTANC-TYPE-MISMATCH]: النوع الموجود ⁨`عدد`⁩ لا يطابق النوع المتوقع ⁨`منطقي`⁩ — يجب أن يكون الشرط قيمة منطقية.
+  --> tests/en/diagnostics/e2e/match_expression_guard_not_bool.sn:9:12..9:13
+   |
+ 9 |     | x if x -> 1
+   |            ^
+   |

@@ -1,0 +1,11 @@
+// اختبار: رفض
+// تشخيص: SULTANC-TYPE-MISMATCH
+// نظير: tests/en/diagnostics/semantic/match_expression_arm_types.sn
+// خرج-تشخيص-عربي: match_expression_arm_types.ar.stderr
+// خرج-تشخيص-إنجليزي: match_expression_arm_types.en.stderr
+// بلا نوع من السياق، يعطي كل ذراع من أذرع تعبير المطابقة قيمة من نوع قيمته الأولى.
+عرف الرئيسية(): عدد {
+    ليكن ن: عدد = 1;
+    طابق (طابق ن مع | 1 -> 2 | _ -> «اثنان») مع
+    | _ -> { أرجع 0; };
+}

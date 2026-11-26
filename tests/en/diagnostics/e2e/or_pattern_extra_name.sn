@@ -1,0 +1,12 @@
+// اختبار: رفض
+// تشخيص: SULTANC-PATTERN-ALTERNATIVE-BINDINGS
+// نظير: tests/ar/diagnostics/e2e/or_pattern_extra_name.sn
+// خرج-تشخيص-عربي: or_pattern_extra_name.ar.stderr
+// خرج-تشخيص-إنجليزي: or_pattern_extra_name.en.stderr
+// A name a later alternative binds and the first one does not.
+type Shape = | Circle of int | Dot;
+def size(s: Shape): int {
+    match s with
+    | Shape.Dot | Shape.Circle(r) -> { return 1; };
+}
+def main(): int { return size(Shape.Dot()); }

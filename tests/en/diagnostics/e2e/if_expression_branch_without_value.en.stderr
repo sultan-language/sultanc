@@ -1,0 +1,6 @@
+error[SULTANC-FLOW-IF-BRANCH-WITHOUT-VALUE]: this branch of the `if` can end without a value
+  --> tests/en/diagnostics/e2e/if_expression_branch_without_value.sn:9:36..9:66
+   |
+ 9 |     let v: int = if (n > 0) 1 else { if (n < -5) { return 0; }; };
+   |                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |

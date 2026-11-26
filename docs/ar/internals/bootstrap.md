@@ -4,228 +4,266 @@
 
 # الإقلاع الذاتي
 
-السلطان مستضاف ذاتيًا: المترجم مكتوب بلغة السلطان، لذا يحتاج بناؤه من المصدر إلى مترجم أول. تصف هذه
-الصفحة المسارات الثلاثة التي توفر ذلك المترجم الأول (Stage0 المكتوب بلغة C، وبذرة WebAssembly
-المحفوظة في المستودع، ومترجم موجود)، وكيف يشغّل `build.sh` و`cmake/` المراحلَ متتابعة، وكيف تُفحص البذرة
-وتُحدَّث، وكيف يثبت التكامل المستمر (CI) صحة كل مسار على كل مضيف. وهي موجهة إلى من يبنون الإقلاع الذاتي
-(bootstrap) أو يتحققون منه أو يغيّرونه.
+السلطان مستضاف ذاتيًا: المترجم مكتوب بلغة السلطان، لذا يحتاج بناؤه من المصدر إلى مترجم سابق. تصف هذه الصفحة
+مصدر ذلك المترجم (الجذور)، والسياسات التي تحفظ الجذور صادقة (N-1، ورفع البذرة، والنقطة الثابتة)، وكيف يبني
+`build.sh` المترجم، وكيف يفحص Stage0 المجمَّد المكتوب بلغة C البذرةَ، وكيف يثبت التكامل المستمر (CI) كل جزء على
+كل مضيف. وهي موجهة إلى من يبنون الإقلاع الذاتي (bootstrap) أو يتحققون منه أو يغيّرونه.
+
+## البناء والفحص والصيانة
+
+**البناء.** ‏`./build.sh`. وبلا shell، بمترجم C وحده:
+`cc -o build-bootstrap bootstrap-wasm/bootstrap.c && ./build-bootstrap`. والناتج في الحالتين `build/sultanc`
+(و`build\sultanc.exe` على Windows)، والسطر الأخير المطبوع `build: compiler: build/sultanc`. والمراحل ملفات وسيطة تحت
+`build/bootstrap/`؛ ويعيد `./build.sh` استعمال Stage1 الذي تركه `./build-bootstrap` هناك. وعلى مضيف لا خلفية أصلية له
+يكون `build/sultanc` هو Stage1، مترجم البذرة، ويقول البناء ذلك في سطر واحد. ويعرض `--verbose` كل أمر؛ ودونه لا يظهر
+خرج الأمر إلا إذا فشل، ومعه الأمر نفسه.
+
+**الفحص.** ‏`./build.sh verify` (و`./build-bootstrap --verify` بلا shell): يبني المترجم نفسه مرة أخرى ويتطابق
+الاثنان ([النقطة الثابتة](#النقطة-الثابتة)).
+
+**للمشرفين.** ‏`./build.sh seed-update` (رفع البذرة)، و`./build.sh seed-check` (البذرة الملتزمة هي ما تبنيه
+المصادر)، و`./build.sh chain` (فحص الإصدار بـ Stage0 المجمَّد المكتوب بلغة C)؛ انظر «فحص البذرة وتحديثها» و«Stage0
+المجمَّد» أدناه.
+
+## الجذور والسياسة
+
+تبني سلاسل الأدوات الناضجة المستضافة ذاتيًا كل مترجم بالمترجم الذي قبله، وتحفظ في الشجرة جذرًا محمولًا واحدًا لا
+يتغير إلا بالتزام صريح، وتفحص النقطة الثابتة للاستضافة الذاتية حين يُرقّى التغيير. ويتبع السلطان القواعد نفسها.
+
+**البذرة الملتزمة هي الجذر الوحيد في الشجرة.** فـ `bootstrap-wasm/seed/sultanc.wasm.zst` هو المترجم مبنيًا لـ
+`wasm32-wasi`. ويترجمه `bootstrap-wasm/` إلى C، فيحوّله أي مترجم C إلى مترجم يعمل (Stage1) على أي مضيف. ولا
+يُنزَّل أي مترجم أبدًا.
+
+**سياسة N-1.** كل بناء للمترجم ترجمةٌ واحدة لـ `compiler/main.sn` بـ`-O2` بمترجم سابق: `build/sultanc`، أو
+المترجم الذي خزّنه التكامل المستمر للالتزام الأساسي، أو Stage1 من البذرة. ويجب أن تُبنى مصادر المترجم دائمًا بـ
+Stage1 البذرة، ويثبت التكامل المستمر ذلك على مشغّل بارد ليس له مترجم سابق غير البذرة.
+
+**رفع البذرة.** تصل ميزة جديدة في اللغة أو بدائية جديدة إلى مصادر المترجم نفسه في ثلاثة التزامات: تدخل الميزة
+دون أن يستعملها `compiler/`؛ ثم يعيد التزام رفع البذرة توليدها (`./build.sh seed-update`) فيحمل Stage1 البذرة
+الميزة؛ ثم يجوز لـ `compiler/` استعمالها. والتغيير الذي يستعمل ميزة تفتقدها البذرة يفشل في بناء N-1.
+
+**البذرة حديثة.** يشترط التكامل المستمر أن تكون البذرة الملتزمة هي ما تبنيه المصادر الحالية تمامًا
+(`./build.sh seed-check`) حين يدخل التزام إلى `main` وفي كل ليلة، فيحمل تغيير مصادر المترجم أو المكتبة القياسية
+الذي يغيّر وحدة البذرة بذرته المولَّدة من جديد. وعندئذ يكون Stage1 البذرة هو المترجم الحالي، وتثبت ترجمتان النقطة
+الثابتة: يبني Stage1 النسخة S2، وتبني S2 النسخة S3، ويجب أن تتطابقا بايتًا ببايت.
+
+**Stage0 المجمَّد المكتوب بلغة C.** يحوي `bootstrap/` مترجمًا للغة السلطان مكتوبًا بـ C11. وهو مجمَّد: لا تتغير
+مصادره. ويترجم مترجمَ التزام واحد مثبَّت (`bootstrap/FROZEN`)، ثم يصعد فحص الإصدار من هناك إلى المصادر الحالية
+ويشترط أن يساوي الناتج ما تبنيه البذرة (انظر «Stage0 المجمَّد» أدناه). وهو ليس على أي مسار بناء يمر به تغيير.
+
+**لا مجموعة جزئية لـ Stage0.** لم يعد Stage0 المكتوب بلغة C يترجم المترجم الحالي، فلم تعد مصادر المترجم والمكتبة
+القياسية محصورة في اللغة التي ينفذها Stage0. والقيود التي تسردها [الملكية والإتلاف](../reference/ownership.md#قيود-شيفرة-المترجم)
+مرفوعة: يجوز لمصدر في المترجم أن يستعمل أي ميزة يحملها Stage1 البذرة (رفع البذرة أعلاه). ولا تُعاد كتابة المصادر
+الموجودة لذلك، وللشيفرة الجديدة أن تستعمل ما تدعمه البذرة.
 
 ## المراحل
 
 <div dir="ltr">
 
 ```text
-Stage0   the C seed compiler (bootstrap/)             needs a C compiler and an LLVM SDK
-Stage1   the first SultanC compiler, built by one of the routes below
-Stage2   Stage1 compiles compiler/main.sn             the compiler that build.sh exports
-Stage3   Stage2 compiles compiler/main.sn
-Stage4   Stage3 compiles compiler/main.sn             Stage3 and Stage4 must be byte-identical
+Stage1   the seed translated to C and compiled: a working compiler on any host (Native-only)
+S2       a previous compiler builds compiler/main.sn          build/sultanc
+S3       S2 builds compiler/main.sn                           S2 == S3: the fixpoint
 ```
 
 </div>
 
-تقع سياسة المراحل كلها في `cmake/`؛ ولا يفعل `build.sh` سوى استدعاء CMake. وStage1 ملف تنفيذي للمضيف
-دائمًا. وStage2 هو مترجم الإنتاج، وهو أصلي فقط ما لم يُعطَ `--enable-llvm`
-([بنية المترجم](compiler-architecture.md)، "قدرات بناء المترجم"). ويبني Stage1 المرحلة Stage2 مباشرةً
-بخلفية السلطان نفسه؛ فلا يوجد بناء وسيط للمترجم بلغة C.
+‏Stage1 ملف تنفيذي للمضيف دائمًا. وS2 هو مترجم الإنتاج، بالخلفية الأصلية وحدها ما لم يُعطَ `--enable-llvm`
+([بنية المترجم](compiler-architecture.md)، «قدرات بناء المترجم»). وكل ترجمة للمترجم تمرر `-O2` صراحة: فدون `-O`
+لا يحسّن المترجم شيئًا ([الأمر `sultanc`](../reference/command-line.md)، «مستويات التحسين»).
 
-## المسارات إلى Stage1
+## build.sh
 
-| | `--bootstrap=c` (الافتراضي) | `--bootstrap=wasm` | `--bootstrap=existing` |
-|---|---|---|---|
-| مصدر Stage1 | Stage0 المكتوب بلغة C في `bootstrap/` | البذرة في `bootstrap-wasm/` | مترجم مبني مسبقًا (`--with=PATH`، والافتراضي `build/sultanc`) |
-| المتطلبات | مترجم C وحزمة LLVM SDK | مترجم C (وحزمة LLVM SDK مع `--enable-llvm` فقط) | المترجم الموجود (وحزمة LLVM SDK مع `--enable-llvm` فقط) |
-| شجرة CMake | `build/bootstrap/cmake` | `build/bootstrap/cmake-wasm` | `build/bootstrap/cmake-existing` |
-| Stage1 | مزوَّد بـ LLVM | أصلي فقط | ما يحتويه المترجم الموجود أيًا كان |
-| `verify` (أصلي فقط) | التقارب الأصلي والتقارب بين الخلفيتين | التقارب الأصلي (ليس في Stage1 خلفية LLVM) | التقارب الأصلي |
-| `stage0` | يبني Stage0 | لا ينطبق (يفشل برسالة) | لا ينطبق (يفشل برسالة) |
-
-مسار C ومسار wasm يبنيان مترجمًا من المصادر وحدها، وهما المساران المرجعيان. استخدمهما على نظام جديد،
-وعندما يكون المترجم الموجود أقدم من أن يناسب المصادر (بنية نحوية أو بدائيات جديدة)، وللتحقق من إصدار.
-أما مسار المترجم الموجود فهو مسار التطوير السريع: يتخطى
-Stage0 وترجمة البذرة، ويخطو خطوة استضافة ذاتية واحدة من المترجم الموجود إلى Stage2 الجديد.
-
-### build.sh
+‏`build.sh` سكربت POSIX رقيق: يحصل على مترجم أول من البذرة إن لم يوجد مترجم (Stage1، يُبنى بـ `bootstrap.c`
+و`$CC` أو `cc`)، ويبني به مشغّل البناء، ويشغّل المشغّل بالوسائط نفسها. والمشغّل، `tools/build/` (`main.sn` و`steps.sn`
+و`chain.sn` و`support.sn`)، مكتوب بالسلطان؛ ولا يُعاد بناؤه إلا إذا تغيرت مصادره أو المترجم الذي يبنيه
+(`build/bootstrap/sultanc-build.stamp`). وعلى مضيف لا خلفية أصلية له يحتاج المشغّل مترجمًا يحوي LLVM (`build/sultanc` أو
+`--with`)؛ ومع Stage1 وحده يشغّل `build.sh` البناءَ (فيكون `build/sultanc` هو Stage1) والأمرين `bootstrap` و`seed-check`
+بنفسه.
 
 <div dir="ltr">
 
 ```sh
-./build.sh                                  # Stage2 -> build/sultanc (مسار C، أصلي فقط)
-./build.sh --enable-llvm                    # Stage2 يحتوي خلفية LLVM أيضًا
-./build.sh verify                           # Stage2، ثم Stage3 == Stage4
-./build.sh verify --enable-llvm             # يضيف تقارب LLVM والتقارب بين الخلفيتين
-./build.sh bootstrap                        # Stage0 + Stage1 فقط
-./build.sh stage0                           # Stage0 فقط
-
-./build.sh --bootstrap=wasm                 # Stage2 من البذرة (لا يحتاج إلا إلى مترجم C)
-./build.sh verify --bootstrap=wasm          # + Stage3 == Stage4
-./build.sh bootstrap --bootstrap=wasm       # Stage1 فقط -> build/bootstrap/sultanc-stage1
-
-./build.sh --bootstrap=existing             # خطوة استضافة ذاتية واحدة من build/sultanc
-./build.sh --bootstrap=existing --with=/path/to/sultanc
+./build.sh                       # one step from build/sultanc (else from the seed) -> build/sultanc
+./build.sh --enable-llvm         # the same, with the LLVM backend inside
+./build.sh verify                # Stage1 -> S2 -> S3, S2 == S3
+./build.sh verify --enable-llvm  # adds the LLVM fixpoint and cross-backend equality
+./build.sh bootstrap             # Stage1 only -> build/bootstrap/sultanc-stage1
+./build.sh seed-check            # the committed seed equals what the sources build
+./build.sh seed-update           # the seed bump: replace the committed seed
+./build.sh --with=/path/sultanc  # one step from another compiler
+./build.sh --target=TRIPLE       # a compiler for another target -> build/cross/TRIPLE/
+./build.sh chain                 # the release check of the frozen C Stage0 (see below)
 ```
 
 </div>
 
-يجوز أن يسمّي الوسيط الأول مرحلةً (`stage0` أو `stage1` أو `stage2` أو `bootstrap` أو `verify`)؛ والافتراضي
-`stage2`. والخيارات الأخرى هي:
-
-| الخيار | المعنى |
+| الخيار | معناه |
 |---|---|
-| `--enable-llvm` | إدراج خلفية LLVM في المترجم المبني (`SULTANC_COMPILER_LLVM`)؛ ومع `--bootstrap=c` يستخدم Stage0 وStage1 دائمًا LLVM |
-| `--backend=native\|llvm` | الخلفية التي يستخدمها Stage1 لتوليد Stage2 (`SULTANC_STAGE2_BACKEND`، والافتراضي `native`) |
-| `--bootstrap=c\|wasm\|existing` | المسار (`SULTANC_BOOTSTRAP`) |
-| `--with=PATH` | المترجم الموجود في `--bootstrap=existing` (`SULTANC_EXISTING_COMPILER`) |
-| `--target=TRIPLE` | هدف Stage2؛ أما Stage1 فيعمل دائمًا على مضيف البناء |
-| `OUTPUT` | مسار لناتج المرحلة المطلوبة |
+| `--enable-llvm` | تضمين خلفية LLVM في المترجم المبني؛ فيرتبط بـ libLLVM، ويجدها عبر `LLVM_CONFIG` (أو أول `llvm-config`، من الإصدار 23 إلى 19، ومنها نسخة Homebrew) أو يسميها `SULTANC_LLVM_LIBRARY` |
+| `--with=PATH` | المترجم السابق لهذه الخطوة |
+| `--bootstrap=wasm` | البدء من البذرة ولو وُجد `build/sultanc`؛ و`--bootstrap=existing` يشترط `build/sultanc` أو `--with` |
+| `--backend=native\|llvm` | الخلفية التي تولّد المترجم (الافتراضية `native`؛ و`llvm` تحتاج مترجمًا سابقًا يحويها) |
+| `--target=TRIPLE` | بناء المترجم للهدف TRIPLE |
+| `--release-version=VERSION` | الإصدار الذي يعلنه المترجم المبني (وحدة `compiler.version` مولَّدة) |
+| `--rebuild` | البناء ولو لم يتغير شيء |
+| `--jobs=N`، `-jN` | ترجمات C المتوازية لـ Stage1 ولـ Stage0 المكتوب بلغة C (الافتراضي: عدد المعالجات) |
+| `--verbose` | عرض كل أمر عند تشغيله |
+| `OUTPUT` | نسخ المترجم المبني إلى هذا المسار أيضًا |
 
-تبقى النواتج في شجرة البناء الخاصة بكل منها (`bin/`)، وتُنسخ المرحلة المطلوبة إلى `build/sultanc`
-(`build/sultanc.exe` على Windows) إن كانت Stage2، أو إلى `build/bootstrap/` إن كانت Stage0 أو Stage1.
-ويختار `LLVM_CONFIG=/path/to/llvm-config`، أو `-DLLVM_DIR` عبر CMake، حزمةَ LLVM SDK. ويمكن تشغيل CMake
-مباشرةً:
+البناء الافتراضي هو حلقة التطوير. فهو يسجل بصمة الملفات في `compiler/` وخيارات البناء في `build/sultanc.stamp`،
+ولا يفعل شيئًا إن لم يتغير أي منهما: فتغيير `library/` أو `tests/` أو `docs/` أو `examples/` لا يكلف بناءً
+للمترجم (يقرأ المترجم المكتبة القياسية من `library/` لكل برنامج، أما نسخته منها فتلحق في بنائه التالي). ويُنسخ
+المترجم السابق قبل الخطوة، فلا يكتب `build/sultanc` الجديد فوق المترجم الذي يبنيه. ولا يُترجم Stage1
+(`build/bootstrap/seed/`) من جديد إلا إذا تغيرت البذرة أو `bootstrap.c`: ففي `build/bootstrap/seed/seed.stamp` بصمة
+SHA-256 للسطرين `<SHA-256>  <path>` للملفين، ويكتبها ويفحصها `build.sh` والمشغّل و`bootstrap.c` جميعًا، فيُعاد استعمال
+Stage1 الذي تركه تشغيل `./build-bootstrap`. وعلى مضيف لا خلفية أصلية له ولا مترجم فيه يحوي LLVM، ينسخ `./build.sh`
+‏Stage1 إلى `build/sultanc` (ويَسِمه في `build/sultanc.stamp`، فيجدده التشغيل التالي من البذرة).
+
+ويحدّ `SULTANC_COMPILE_TIMEOUT` (بالثواني) كل ترجمة، كما يضبطه التكامل المستمر: فالترجمة التي تطول أكثر يُبلَّغ
+عنها أنها معلَّقة. وتستعمل ترجمات حلقة التطوير مخزن الترجمة ([مخزن الترجمة](compile-cache.md))؛ أما `verify`
+و`seed-check` و`seed-update` و`chain` فتطفئه (`SULTANC_CACHE=off`) لكل مترجم تشغّله.
+
+## النقطة الثابتة
+
+يفحص `verify` أن المترجم يعيد إنتاج نفسه. يبني Stage1 البذرة (أو `--with`) النسخة S2، وتبني S2 النسخة S3،
+ويجب أن تتطابقا بايتًا ببايت. ومع بذرة حديثة يكون Stage1 هو المترجم الحالي، فتكون S2 هي النقطة الثابتة أصلًا؛
+والبذرة الأقدم من المصادر تفشل هنا (وفي `seed-check`). ويعمل كل مترجم على مضيف البناء، وتجري الترجمات واحدة بعد
+أخرى لأن كل واحدة تحتاج عدة غيغابايتات من الذاكرة.
+
+ومع `--enable-llvm` على مضيف له خلفية أصلية يتابع `verify`: تبني S3 مترجمًا تولّده LLVM (`llvm-a`)، ويبني هذا
+نفسه من جديد (`llvm-b`، والنقطة الثابتة لـ LLVM هي `llvm-a == llvm-b`)، ويبني `llvm-a` مترجمًا أصليًا يجب أن
+يساوي S3 (التساوي بين الخلفيتين). أما المضيف الذي لا خلفية أصلية له فيتحقق بـ `--backend=llvm --with=PATH`.
+
+## ‏Stage0 المجمَّد
+
+يحلل `bootstrap/` مصادر السلطان معجميًا ونحويًا ودلاليًا، ويصدر ملفات الكائنات عبر واجهة LLVM للغة C
+(`bootstrap/src/llvm`)، فيحتاج بناؤه إلى LLVM SDK. وله إدراج خاص لعمليات الإتلاف، فيحرر المترجم الذي يبنيه
+بياناته العاملة ([مسار الأمان](safety-flow.md)). ويُبنى مع معاملة التحذيرات أخطاءً، ويفحصه CodeQL
+(`.github/workflows/security.yml`). ومصادره مجمَّدة؛ ولا يتغير إلا `bootstrap/FROZEN` وسكربتا السلسلة بجواره.
+
+ويسمي `bootstrap/FROZEN` الالتزامات التي تصعدها السلسلة:
 
 <div dir="ltr">
 
-```sh
-cmake -S cmake -B build/bootstrap/cmake -DSULTANC_REQUESTED_STAGE=stage2
-cmake --build build/bootstrap/cmake --target sultanc-stage2
+```text
+stage0 9d2642f514f2f5c1347afb57222a9e961fd02bd8   the commit whose compiler Stage0 compiles (tagged)
+step   <commit>                                     optional: built by the compiler of the line before
 ```
 
 </div>
 
-يجوز لـ Stage1 أن يستخدم أي خلفية يحتويها لبناء Stage2، لكن الخلفية الأصلية ليس لها هدف Windows. لذا
-يحتاج Stage2 لنظام Windows إلى مسار C مع LLVM:
-`./build.sh --bootstrap=c --enable-llvm --backend=llvm`. ويعمل Stage1 الناتج عن مسار wasm على Windows،
-لكن هذا المسار لا ينتج هناك إلا Stage1. ولا يبني مسار المترجم الموجود Stage2 مزوَّدًا بـ LLVM لنظام Windows.
+ويشغّل فحصَ الإصدار، بالخطوات نفسها في كلٍّ منها، `./build.sh chain` (مشغّل البناء، `tools/build/chain.sn`، على مضيف له
+خلفية أصلية)، و`bootstrap/chain.sh` (أي مضيف POSIX: فقبل السلسلة لا يملك المضيف الذي لا خلفية أصلية له إلا Stage1، ولا
+يقدر Stage1 على بناء المشغّل)، و`bootstrap/chain.ps1` (ويندوز، من بيئة MSVC للمطورين مع `LLVM_SDK`):
 
-ولبناء Stage2 مزوَّد بـ LLVM، يمرر مسار wasm ومسار المترجم الموجود مكتبةَ libLLVM المختارة (بمسار ملفها
-المحلول) إلى Stage1 صراحةً. أما Stage1 في مسار C فيسجل المسار نفسه بنفسه، فتنتج كل المسارات Stage2
-متطابقًا بايتًا ببايت.
+1. يُبنى Stage0 المكتوب بلغة C مع LLVM SDK؛
+2. يترجم Stage0 مترجمَ الالتزام `stage0` (مستخرجًا من تاريخ git)، ويُربط بـ libLLVM؛
+3. يبني المترجمُ الذي في السطر السابق مترجمَ كل التزام `step`؛
+4. يبني آخر مترجم في السلسلة المصادر الحالية (A، بخلفية LLVM)، ويبنيها A من جديد بالخلفية الأصلية وحدها لهدف
+   المقارنة (D)؛
+5. يبني Stage1 البذرة المترجم نفسه (W)، ويجب أن يساوي D النسخة W بايتًا ببايت.
 
-يُنسخ المترجم الموجود إلى شجرة البناء عند تهيئة CMake، فلا يكتب Stage2 الذي يصدّره هذا المسار إلى
-`build/sultanc` أبدًا فوق المترجم الذي يتولى إنتاجه. وفي التهيئة التالية يُعتمد `build/sultanc` الجديد
-مترجمًا موجودًا.
+وهدف المقارنة هو المضيف حيث له خلفية أصلية، و`x86_64-linux` في غير ذلك: فـ Stage1 البذرة بالخلفية الأصلية
+وحدها، ويبني مترجمًا لهدف أصلي على أي مضيف. فيعطي جذران مستقلان، Stage0 المكتوب بلغة C وبذرة WebAssembly،
+مترجمًا واحدًا (ترجمة مزدوجة متنوعة). وعلى مضيف لا خلفية أصلية له يكون A (`build/chain/sultanc-a`) أيضًا المترجم
+ذو خلفية LLVM المبني من المصدر لذلك المضيف، ويستعمله تشغيل الاختبارات في فحص الإصدار.
 
-## التقارب
-
-يفحص `verify` أن المترجم يعيد إنتاج نفسه. يبني Stage2 المرحلة Stage3، ويبني Stage3 المرحلة Stage4، ويجب
-أن تتطابق الاثنتان بايتًا ببايت. وكل مترجم يُنفَّذ يستهدف مضيف البناء، وتجري الخطوات واحدة تلو الأخرى لأن
-كل بناء ذاتي للمترجم يحتاج إلى عدة غيغابايتات من الذاكرة.
-
-- على مضيف له خلفية أصلية، يُفحص التقارب الأصلي دائمًا.
-- مع Stage2 مزوَّد بـ LLVM، يُفحص كذلك تقارب LLVM والتساوي بين الخلفيتين (مترجم مولَّد بـ LLVM يبني
-  مترجمًا أصليًا).
-- مع Stage2 أصلي فقط، يستخدم فحص التساوي بين الخلفيتين Stage3 أصليًا فقط ولّدته خلفية LLVM في Stage1.
-  ويُتخطى هذا الفحص في مسار wasm، لأن Stage1 فيه ليس له خلفية LLVM، وفي مسار المترجم الموجود، الذي لا
-  يفترض أن للمترجم الموجود هذه الخلفية.
-- ليس لنظام Windows خلفية أصلية، لذا يحتاج `verify` على Windows إلى مترجم مزوَّد بـ LLVM.
-
-## Stage0 المكتوب بلغة C
-
-يحتوي `bootstrap/` على مترجم للغة السلطان مكتوب بلغة C11. يحلل مصادر السلطان معجميًا ونحويًا ودلاليًا،
-ويُصدر ملفات الكائنات عبر واجهة C البرمجية لـ LLVM (LLVM C API، `bootstrap/src/llvm`)، لذا يحتاج بناؤه
-إلى حزمة LLVM SDK. ويترجم Stage0 الملفات `compiler/**` ووحدات المكتبة القياسية التي يستوردها المترجم إلى
-ملف الكائن الخاص بـ Stage1، الذي يربطه CMake بمشغّل الربط الخاص بمترجم C على المضيف.
-
-Stage0 هو البذرة، وليس تنفيذًا إنتاجيًا ثانيًا. يُترجم مع معاملة التحذيرات أخطاءً
-(`SULTANC_STAGE0_WARNINGS_AS_ERRORS`)، ويفحصه CodeQL في التكامل المستمر، وله توليده الخاص لعمليات
-الإتلاف (drop elaboration) كي يحرر Stage1 الذي يبنيه بياناتِ عمله ([تدفق الأمان](safety-flow.md)).
-ولأنه يترجم المترجم، تقيّد حدود اللغة في Stage0 مصادر المترجم والمكتبة القياسية؛ انظر
-[المساهمة](../contributing/README.md) و[الملكية والإتلاف](../reference/ownership.md).
+ويُضاف `step` حين تستعمل المصادر الحالية ميزة يفتقدها آخر مترجم في السلسلة: والالتزام الذي رفع البذرة لتلك الميزة
+خطوةٌ مناسبة، إذ يحمل مترجمُه الميزة ولا تستعملها مصادره بعد. ويبني `sh bootstrap/chain.sh --stage0-only` الـ
+Stage0 وحده، كما يفعل CodeQL.
 
 ## بذرة WebAssembly
 
-يحفظ الإقلاع الذاتي بالبذرة في المستودع بناءً للمترجم بصيغة WebAssembly ويترجمه إلى C، فلا يحتاج بناء
-السلطان إلا إلى مترجم C.
+يحفظ إقلاع البذرة في المستودع بناءً للمترجم بصيغة WebAssembly ويترجمه إلى C، فلا يحتاج بناء السلطان إلا مترجم C.
 
 <div dir="ltr">
 
 ```text
 seed/sultanc.wasm.zst --wasm2c/--> C (10 files) --cc + runtime/--> sultanc-stage1
-sultanc-stage1 --compiler/main.sn--> sultanc-stage2 (native) --> Stage3 == Stage4
+sultanc-stage1 --compiler/main.sn--> S2 --compiler/main.sn--> S3 == S2
 ```
 
 </div>
 
-لا يحتوي `bootstrap-wasm/` إلا على البذرة ومصادرها بلغة C؛ أما قواعد CMake ففي `cmake/`.
-
-| الملف | الدور |
+| الملف | دوره |
 |---|---|
-| `bootstrap-wasm/seed/sultanc.wasm.zst` | البذرة: المترجم مبنيًا للهدف `wasm32-wasi`، أصليًا فقط (مزود LLVM مُعيَّن إلى `unavailable.sn`)، ومضغوطًا بـ `zstd -19` |
-| `bootstrap-wasm/wasm2c/` | `sultanc-wasm2c`، أداة ترجمة البذرة إلى C99: `stream.c` (بايتات الوحدة وLEB128 والتحميل، مع فاك ضغط zstd الموجود في المستودع `zstd_decoder.h`، MIT)، و`module.c` (نموذج الوحدة ومحللها وما يُقبل منها)، و`funcgen.c` (ترجمة جسم دالة واحدة إلى C)، و`output.c` (الملفات المولَّدة)، و`main.c` |
-| `bootstrap-wasm/runtime/` | ما تُربط به البذرة المترجَمة: `w2c.h` و`w2c.c` (الذاكرة وعمليات الأعداد الصحيحة المفحوصة والتوقف بخطأ وعمق النداءات) و`wasi.c` (مضيف WASI، على POSIX وWindows) |
-| `bootstrap-wasm/bootstrap.c` | المشغّل المستقل: من البذرة إلى Stage1 إلى Stage2، إضافة إلى `--verify` و`--check-seed` و`--update-seed` |
-| `cmake/modules/WasmSeed.cmake` | أداة الترجمة `sultanc-wasm2c` وStage1 المترجَم |
-| `cmake/modules/Stage1Wasm.cmake` | مسار wasm في البناء الرئيسي والهدف `sultanc-check-seed` |
-| `cmake/scripts/CheckSeed.cmake` | المقارنة التي يقوم عليها `sultanc-check-seed` |
+| `bootstrap-wasm/seed/sultanc.wasm.zst` | البذرة: المترجم مبنيًا لـ `wasm32-wasi` بـ`-O2`، بالخلفية الأصلية وحدها (حد مزود LLVM مربوط بـ `unavailable.sn`)، مضغوطًا بـ `zstd -19` |
+| `bootstrap-wasm/wasm2c/` | ‏`sultanc-wasm2c`، المترجم من البذرة إلى C99: `stream.c` (بايتات الوحدة وLEB128 والتحميل، مع فاك zstd الداخلي `zstd_decoder.h`، برخصة MIT)، و`module.c` (نموذج الوحدة والمحلل وما يُقبل)، و`funcgen.c` (جسم دالة واحدة إلى C)، و`output.c` (الملفات المولَّدة)، و`main.c` |
+| `bootstrap-wasm/runtime/` | ما تُربط به البذرة المترجمة: `w2c.h` و`w2c.c` (الذاكرة والعمليات الصحيحة المفحوصة والتوقفات وعمق النداء) و`wasi.c` (مضيف WASI لـ POSIX وWindows) |
+| `bootstrap-wasm/bootstrap.c` | المشغّل المستقل: من البذرة إلى Stage1 إلى S2، منسوخًا إلى `build/sultanc`، مع `--verify` و`--check-seed` و`--update-seed`؛ ويستعمله `build.sh` لـ Stage1 |
 
-يبلغ حجم البذرة المضغوطة نحو 4.9 MB، وحجم الوحدة نحو 24 MB (منها 12 MB معلومات DWARF تتجاهلها الترجمة). ويوفر البناء الرئيسي مع
-`-DSULTANC_BOOTSTRAP=wasm` الأهداف `sultanc-stage1` و`sultanc-stage2` و`sultanc-verify`
-و`sultanc-check-seed`. ويستخدم فحص البذرة المرحلة Stage2 حين تعمل على المضيف، وإلا فيستخدم Stage1 نفسه
-(Windows، والمضيفات التي ليس لها خلفية أصلية). وللبناء المتقاطع، مرّر
-`-DSULTANC_WASM2C=<sultanc-wasm2c مبنيًا لآلة البناء>`.
+حجم البذرة نحو 4.9 ميغابايت مضغوطة، والوحدة نحو 24 ميغابايت (منها 12 ميغابايت DWARF تتجاهلها الترجمة).
 
 ### المشغّل المستقل
 
-من جذر المستودع، لا يحتاج `bootstrap.c` إلا إلى مترجم C يقبل خيارات على طريقة gcc:
+من جذر المستودع، لا يحتاج `bootstrap.c` إلا مترجم C بخيارات على طريقة gcc أو على طريقة MSVC (`cl` و`clang-cl`،
+يُعرف من اسم المترجم أو بـ `--msvc`):
 
 <div dir="ltr">
 
 ```sh
 cc -o build-bootstrap bootstrap-wasm/bootstrap.c
-./build-bootstrap --verify            # -> build/bootstrap-wasm/sultanc-stage2
+./build-bootstrap                     # -> build/sultanc
+./build-bootstrap --verify            # the same, and S2 == S3
+```
+
+```bat
+cl /Fe:build-bootstrap.exe bootstrap-wasm/bootstrap.c
+build-bootstrap.exe --cc=cl           # -> build\sultanc.exe, the seed compiler (no Native backend)
 ```
 
 </div>
 
-على Windows مع MSVC، استخدم البناء الرئيسي:
+ويطبع التشغيل العادي سطرًا لكل مرحلة ثم الناتج:
 
 <div dir="ltr">
 
-```sh
-cmake -S cmake -B build/bootstrap/cmake-wasm -DSULTANC_BOOTSTRAP=wasm -DSULTANC_REQUESTED_STAGE=stage1
-cmake --build build/bootstrap/cmake-wasm --target sultanc-stage1
-cmake --build build/bootstrap/cmake-wasm --target sultanc-check-seed
+```text
+build: translating the seed to C (bootstrap-wasm/seed/sultanc.wasm.zst)
+build: compiling C (11 files)
+build: building the compiler from compiler/ with the seed compiler
+build: compiler: build/sultanc
 ```
 
 </div>
 
-| الخيار | المعنى |
+وعلى مضيف لا خلفية أصلية له يتوقف التشغيل بعد Stage1 ويقول ذلك قبل الناتج:
+`build: no native backend for this host; build/sultanc is the seed compiler (targets x86_64-linux, arm64-darwin, wasm32-wasi)`.
+
+| الخيار | معناه |
 |---|---|
-| `--cc=CC`, `--cflags=FLAGS` | مترجم C وخياراته (الافتراضي `$CC` أو `cc`، و`$CFLAGS` أو `-std=c99 -O2`) |
-| `--jobs=N` | عدد عمليات ترجمة C المتوازية (الافتراضي 4) |
-| `--out=DIR` | مجلد المخرجات (الافتراضي `build/bootstrap-wasm`) |
+| `--cc=CC`، `--cflags=FLAGS` | مترجم C وخياراته (الافتراضي `$CC` أو `cc`، و`$CFLAGS` أو `-std=c99 -O2`؛ و`/nologo /O2` لمترجم على طريقة MSVC) |
+| `--msvc` | مترجم C يأخذ خيارات على طريقة MSVC |
+| `--jobs=N` | عدد ترجمات C المتوازية (الافتراضي 4) |
+| `--output=PATH` | مكان المترجم (الافتراضي `build/sultanc`؛ و`build/cross/TRIPLE/sultanc` لهدف `--target` آخر) |
+| `--out=DIR` | مجلد الملفات الوسيطة (الافتراضي `build/bootstrap/seed`، وهو الذي يستعمله `build.sh`) |
 | `--target=TRIPLE` | هدف Stage2 (الافتراضي: هذا المضيف) |
-| `--stage1-only` | التوقف بعد Stage1 |
-| `--verify` | بناء Stage3 وStage4 واشتراط Stage3 == Stage4 |
-| `--check-seed` | إعادة بناء البذرة باستخدام Stage2 ومقارنتها بالبذرة المحفوظة |
-| `--update-seed` | إعادة البناء والضغط (`zstd -19`، ويحتاج إلى الأمر `zstd`) واستبدال البذرة المحفوظة |
+| `--verbose` | عرض كل أمر عند تشغيله، وخرجه |
+| `--stage1-only` | التوقف بعد Stage1؛ ولا يُنسخ إلى `--output` إلا إذا أُعطي (فيبقى `build/sultanc` كما هو) |
+| `--verify` | بناء Stage3 بـ Stage2 واشتراط Stage2 == Stage3 |
+| `--check-seed` | إعادة بناء البذرة بـ Stage2 ومقارنتها بالبذرة الملتزمة |
+| `--update-seed` | إعادة البناء والضغط (`zstd -19`، ويحتاج الأمر `zstd`) واستبدال البذرة الملتزمة |
 
-### سياسة فحص البذرة وتحديثها
+### فحص البذرة وتحديثها
 
-تُستخدم البذرة كما حُفظت في المستودع. لا شيء يثبّتها بمجموع اختباري (checksum)، ولا توجد ملفات تجزئة (hash)
-بجانبها. يترجم `wasm2c` أي بذرة صالحة تُعطى له، ويرفض إطار zstd المشوّه أو الوحدة المشوّهة برسالة تشخيص،
-ولا ينهار أبدًا. ويحافظ تاريخ Git والمراجعة على سلامة البذرة، ويبيّن فحص البذرة ما إذا كانت لا تزال
-مطابقةً للمصادر.
+تُستعمل البذرة كما التُزمت. لا يثبّتها مجموع تحقق، ولا ملفات بصمات بجوارها. ويترجم `wasm2c` أي بذرة صالحة
+تُعطى له، ويرفض إطار zstd مشوهًا أو وحدة مشوهة بتشخيص لا بانهيار. ويحفظ تاريخ git والمراجعة البذرة صادقة، ويُظهر
+فحص البذرة مطابقتها للمصادر، وتُظهر سلسلة Stage0 المجمَّد أنها تبني المترجم الذي يبنيه جذر مستقل.
 
-يعيد `--check-seed` (وهدف CMake المسمى `sultanc-check-seed`) بناء الوحدة من المصادر الحالية باستخدام
-Stage2، ويفك ضغط البذرة المحفوظة بفاك الضغط الموجود في المستودع، ويقارن بين الاثنين بايتًا ببايت. ويبلّغ عما
-إذا كانا متساويين. وعند اختلافهما يخرج `bootstrap.c` بحالة الخروج 3 ويفشل هدف CMake.
+يعيد `./build.sh seed-check` بناء الوحدة من المصادر الحالية (بالخلفية الأصلية وحدها، لـ `wasm32-wasi`، بـ`-O2`)
+بـ `build/sultanc` إن كان مبنيًا من هذه المصادر، وإلا بنسخة S2 يبنيها من البذرة (أو بـ Stage1 نفسه على مضيف لا
+خلفية أصلية له)، ويفك ضغط البذرة الملتزمة بالفاك الداخلي ويقارن الاثنتين بايتًا ببايت. ويخرج بالحالة 3 حين تختلفان.
 
-يعيد `--update-seed` بناء الوحدة، ويضغطها بـ `zstd -19`، ثم يفك ضغط النتيجة مرة أخرى بفاك الضغط الموجود
-في المستودع للتأكد من أنها تعيد الوحدة نفسها، وعندئذ فقط يستبدل `seed/sultanc.wasm.zst`. ولا يكتب شيئًا
-غيره.
-
-تنبع هذه السياسة من التكامل المستمر، الذي يشترط أن تكون البذرة المحفوظة هي بالضبط ما تعيد المصادر الحالية
-بناءه. لذا فإن أي تغيير في مصادر المترجم أو المكتبة القياسية يغيّر وحدة البذرة تصحبه بذرة محدَّثة في التغيير
-نفسه الخاضع للمراجعة:
+ويعيد `./build.sh seed-update` (أو `bootstrap.c --update-seed`) بناء الوحدة ويضغطها بـ `zstd -19`، ثم يفك الناتج
+بالفاك الداخلي ليتأكد أنه يعيد الوحدة نفسها، وعندها فقط يستبدل `seed/sultanc.wasm.zst`، ولا يكتب شيئًا غيره.
+ورفع البذرة التزامٌ قائم بذاته:
 
 <div dir="ltr">
 
 ```sh
-cc -o build-bootstrap bootstrap-wasm/bootstrap.c
-./build-bootstrap --update-seed
-./build-bootstrap --out=build/bootstrap-check --verify --check-seed    # يجب أن ينجح دون أخطاء
+./build.sh seed-update
+./build.sh verify && ./build.sh seed-check      # from the new seed: must pass cleanly
 ```
 
 </div>
@@ -294,51 +332,27 @@ Windows خيطًا بحجز مكدس قدره 256 MiB (و64 MiB على 32 بت)�
 
 ## المضيفات
 
-| المضيف | Stage1 (مترجم للسلطان يعمل) | Stage2 والتحقق وفحص البذرة |
+| المضيف | ‏Stage1 (مترجم سلطان يعمل) | مترجم للمضيف |
 |---|---|---|
-| Linux x86_64 | نعم | نعم |
-| macOS arm64 | نعم | نعم |
-| Linux aarch64 وi686 وs390x وriscv64 وغيرها؛ FreeBSD وNetBSD وOpenBSD وillumos | نعم | لا: ليس للسلطان خلفية أصلية لهذه الأنظمة، ويحتاج Stage2 الأصلي لهذا المضيف إلى مترجم مزوَّد بـ LLVM |
-| Windows x64 وarm64 (MinGW وclang وMSVC عبر CMake) | نعم | ليس من البذرة، للسبب نفسه؛ ويتوقف البناء الرئيسي مع ذكر المسار المدعوم. ويأتي Stage2 لنظام Windows من مسار C مع LLVM: `./build.sh --bootstrap=c --enable-llvm --backend=llvm` |
+| لينكس x86_64 | نعم | ‏S2 من البذرة؛ ويجري هنا `verify` وفحص البذرة |
+| ماك arm64 | نعم | ‏S2 من البذرة؛ ويجري هنا `verify` وفحص البذرة |
+| لينكس aarch64، وماك x86_64، وويندوز x64 وarm64 | نعم (ويندوز: MSVC وclang-cl وMinGW) | لا خلفية أصلية: مترجم بالخلفية الأصلية وحدها يبنيه على مضيف أصلي مترجمٌ بخلفية LLVM (`./build.sh --target=TRIPLE --backend=llvm --with=PATH`، ليلًا)، أو المترجم ذو خلفية LLVM من سلسلة Stage0 المجمَّد (فحص الإصدار) |
+| لينكس i686 وs390x وriscv64 وغيرها؛ وFreeBSD وNetBSD وOpenBSD وillumos | نعم | كالصف السابق: مبني على مضيف آخر، أو مترجم بخلفية LLVM مع `--backend=llvm --with=PATH` |
 
-على المضيفات التي ليس لها خلفية أصلية، يعيد فحص البذرة بناء البذرة باستخدام Stage1. ويستطيع Stage1
-على أي مضيف ترجمة برامج السلطان للأهداف x86_64-linux وarm64-darwin وwasm32-wasi، بما في ذلك بناء المترجم
-نفسه لهذه الأهداف.
+وعلى المضيفات التي لا خلفية أصلية لها يعيد Stage1 بناء البذرة في فحصها. ويستطيع Stage1 على أي مضيف ترجمة برامج
+السلطان لـ x86_64-linux وarm64-darwin وwasm32-wasi، ومنها بناء المترجم نفسه لتلك الأهداف. وهناك يترك `./build.sh` (إن لم
+يوجد مترجم يحوي LLVM) و`./build-bootstrap` ‏Stage1 في `build/sultanc`، ويقولان ذلك في سطر واحد.
 
 ## التكامل المستمر
 
-يثبت `.github/workflows/ci.yml` صحة كل مسار على كل مضيف يمكن أن يعمل عليه. ويخدم سكربت واحد كل عائلة من
-المضيفات: `.github/ci/linux.sh` و`.github/ci/macos.sh` (POSIX sh) و`.github/ci/windows.ps1` (PowerShell).
-وهناك ثلاث مهام، تعمل كل منها على المضيفات الستة linux-x86_64 وlinux-arm64 وmacos-arm64 وmacos-x86_64
-وwindows-x86_64 وwindows-arm64، باستثناء `seed-update`.
+يعرض [التكامل المستمر](../../../.github/CI.ar.md) المستويات كاملة. وباختصار:
 
-**`seed`** تبني عبر مسار wasm بمترجم C وحده دون LLVM.
-
-| المضيف | ما يُشغَّل |
-|---|---|
-| linux-x86_64, macos-arm64 (خلفية أصلية) | `./build.sh verify --bootstrap=wasm` (من البذرة إلى Stage1 إلى Stage2، وStage3 == Stage4)، ثم `sultanc-check-seed` (يعيد Stage2 بناء البذرة المحفوظة مطابقةً بايتًا ببايت)، ثم مجموعة الاختبارات |
-| linux-arm64, macos-x86_64 (دون خلفية أصلية) | `./build.sh bootstrap --bootstrap=wasm` و`sultanc-stage1 version`، ثم `sultanc-check-seed` (يعيد Stage1 بناء البذرة) |
-| windows (x64 وarm64) | Stage1 فقط، عبر كل سلسلة أدوات C: MSVC (`cl`) عبر CMake، وclang-cl عبر CMake، وعلى x64 أيضًا MinGW gcc مع `bootstrap.c`. ويعيد Stage1 المبني بـ MSVC بناء البذرة المحفوظة، ويجب أن تطابقها النتيجة بايتًا ببايت |
-
-**`seed-update`** (linux-x86_64) تشغّل `bootstrap.c --update-seed` ثم تشغّل `--verify
---check-seed` تشغيلًا نظيفًا انطلاقًا من البذرة المحدَّثة، فيُعرف مسبقًا أن التحديث التالي للبذرة سينجح.
-
-**`llvm`** تستخدم مسار C مع LLVM 22.1.8، المثبّت بالإصدار واسم الملف والمخزَّن في الذاكرة المؤقتة بواسطة سير
-العمل. تبني Stage2 مزوَّدًا بـ LLVM، وتفحص التقارب، وتشغّل مجموعة الاختبارات.
-
-| المضيف | ما يُشغَّل |
-|---|---|
-| linux-x86_64, macos-arm64 | `./build.sh verify --enable-llvm` (التقارب الأصلي، وتقارب LLVM، وتقارب الأصلية == LLVM)، ثم مجموعة الاختبارات |
-| linux-arm64, macos-x86_64 | Stage2 مولَّد بـ LLVM (`./build.sh --enable-llvm --backend=llvm`)، ثم يجب أن يتطابق بايتًا ببايت Stage3 وStage4 المولَّدان بـ LLVM والمبنيّان مع libLLVM مدخلًا للربط، ثم مجموعة الاختبارات |
-| windows | `sultanc-verify` بمسار C، مع `SULTANC_COMPILER_LLVM=ON` و`SULTANC_STAGE2_BACKEND=llvm` (Stage2 مولَّد بـ LLVM، وStage3 == Stage4 لـ LLVM)، ثم مجموعة الاختبارات تحت bash الخاص بـ Git for Windows |
-
-يوفّر كل سكربت حزمة LLVM SDK بنفسه. فعلى Linux تُربط مكتبة `libLLVM` موحّدة من أرشيفات مكونات الإصدار
-الرسمي. ويفعل macOS arm64 الشيء نفسه، بينما يبني macOS x86_64 المصدر المثبّت، وهو بناء يستغرق ساعات في
-المرة الأولى ثم يُخزَّن في الذاكرة المؤقتة. ويبني Windows المكتبة `LLVM-C.dll` من المصدر المثبّت باستخدام
-clang-cl من الأرشيف المثبّت. ومجموعة الاختبارات هي `tools/tests/ci_run.sh` ([الاختبارات](../contributing/tests.md)).
-
-يشغّل سير عمل منفصل، `.github/workflows/security.yml`، أداة CodeQL على Stage0 المكتوب بلغة C في
-`bootstrap/`. ولا يحلل مصادر `.sn`.
+| المستوى | المشغِّل | عمل الإقلاع |
+|---|---|---|
+| pr | طلب سحب | بناء واحد من المترجم السابق (مترجم الالتزام الأساسي المخزَّن، وإلا Stage1 من البذرة)، ثم الاختبارات |
+| main | دفع إلى `main` | ‏Stage1 ← S2 ← S3، وS2 == S3، وفحص البذرة، والاختبارات؛ وتُخزَّن S2 لطلبات السحب |
+| full | ليلًا، والتأهيل | طريق البذرة على المضيفات الستة، وتحديث البذرة، والنقطة الثابتة لـ LLVM والتساوي بين الخلفيتين، والمترجمات المبنية للمضيفات التي لا خلفية أصلية لها وتشغيلها هناك |
+| release | شهريًا، ووسوم `v*`، ويدويًا (`chain.yml`) | سلسلة Stage0 المجمَّد على المضيفات الستة، مساويةً لمترجم طريق البذرة؛ والاختبارات بمترجم السلسلة حيث لا مترجم من طريق البذرة |
 
 ## تأهيل سلسلة أدوات البذرة
 
@@ -354,22 +368,23 @@ clang-cl من الأرشيف المثبّت. ومجموعة الاختبارات
 - يطابق فاك ضغط zstd الأداة `zstd` عبر تركيبات المستويات والخيارات، والمدخل الممرَّر عبر أنبوب دون حجم
   محتوى، والإطارات المتعددة والقابلة للتخطي، والمدخل الفارغ، ويتحمل المدخلات التالفة دون انهيار.
 - تُترجم المصادر دون تحذيرات مع `-Wall -Wextra -pedantic` على gcc وclang وMinGW، وتحمل الشيفرة المولَّدة
-  بديلًا لـ `inline` لإصدارات MSVC الأقدم، التي يضبط لها CMake الخيارين `/w /bigobj` على المصادر المولَّدة.
+  بديلًا لـ `inline` لإصدارات MSVC الأقدم، التي يترجم لها `bootstrap.c --msvc` المصادر المولَّدة بالخيارين `/w /bigobj`.
 
 ## القيود
 
-- يجب أن تساوي البذرة المحفوظة ما تعيد المصادر الحالية بناءه، لذا فإن تغيير المصدر الذي يبدّل الوحدة
-  يحتاج إلى تحديث البذرة في التغيير نفسه.
-- لا يوجد Stage2 من البذرة إلا على المضيفات التي لها خلفية أصلية (انظر "المضيفات").
-- لا يقبل `wasm2c` إلا المجموعة الجزئية من WebAssembly التي تصدرها خلفية wasm32 الخاصة بالسلطان، ولا
-  يدعم فاك ضغط zstd القواميس.
-- ليس لـ Stage1 الناتج عن مسار wasm خلفية LLVM، لذا تحتاج المراحل المولَّدة بـ LLVM إلى مسار C.
+- يجب أن تساوي البذرة الملتزمة ما تعيد المصادر الحالية بناءه، فيحتاج تغيير المصدر الذي يبدّل الوحدة إلى رفع
+  البذرة في التغيير نفسه (ويفحصه التكامل المستمر حين يدخل التغيير).
+- لا يوجد مترجم للمضيف من البذرة إلا على المضيفات التي لها خلفية أصلية (انظر «المضيفات»).
+- لا يقبل `wasm2c` إلا المجموعة الجزئية من WebAssembly التي تصدرها خلفية wasm32 الخاصة بالسلطان، ولا يدعم فاك
+  ضغط zstd القواميس.
+- لا يترجم Stage0 المجمَّد إلا مترجم الالتزام المثبَّت؛ وتحتاج السلسلة `step` كلما تجاوزت المصادر الحالية آخر
+  مترجم فيها.
 
 ## انظر أيضًا
 
 - [بنية المترجم](compiler-architecture.md)
 - [دليل المساهمين](../contributing/README.md)
 - [الاختبارات](../contributing/tests.md)
-- [الملكية والإتلاف](../reference/ownership.md)
+- [التكامل المستمر](../../../.github/CI.ar.md)
 
 </div>

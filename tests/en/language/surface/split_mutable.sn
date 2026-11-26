@@ -1,0 +1,51 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/language/surface/split_mutable.sn
+// `split_mutable(&mutable v, i)` gives two writable views of v, the elements
+// before i and those from i on; a tuple `let` names them, and writing
+// through either half changes v, which is used again once the halves are no
+// longer in use. Splitting at 0 or at the length leaves one half empty; a
+// vector reached through `&mutable` splits too, and a match takes the pair
+// apart as well.
+def fill(part: mutable [] int, value: int): int {
+    let i: mutable int = 0;
+    while (i < length(part)) { part[i] := value; i := i + 1; }
+    return length(part);
+}
+
+def sum(s: [] int): int {
+    let total: mutable int = 0;
+    let i: mutable int = 0;
+    while (i < length(s)) { total := total + s[i]; i := i + 1; }
+    return total;
+}
+
+def swap_halves_first(v: &mutable vector int, at: int): int {
+    match split_mutable(&mutable *v, at) with
+    | (left, right) -> {
+        let first: int = left[0];
+        left[0] := right[0];
+        right[0] := first;
+        return length(left) * 10 + length(right);
+    };
+}
+
+def main(): int {
+    let v: mutable vector int = [1, 2, 3, 4, 5];
+    let (left, right): (mutable [] int, mutable [] int) = split_mutable(&mutable v, 2);
+    left[0] := 10;
+    right[2] := 50;
+    if (length(left) != 2 || length(right) != 3) { return 1; };
+    if (fill(left, 7) != 2) { return 2; };
+    if (v[0] != 7 || v[1] != 7 || v[2] != 3 || v[4] != 50) { return 3; };
+    let (none_before, all_of_it): (mutable [] int, mutable [] int) = split_mutable(&mutable v, 0);
+    if (length(none_before) != 0 || length(all_of_it) != 5) { return 4; };
+    let n: int = length(v);
+    let (everything, none_after): ([] int, [] int) = split_mutable(&mutable v, n);
+    if (length(everything) != 5 || length(none_after) != 0) { return 5; };
+    if (swap_halves_first(&mutable v, 3) != 32 || v[0] != 4 || v[3] != 7) { return 6; };
+    if (sum(v[..]) != 4 + 7 + 3 + 7 + 50) { return 7; };
+    return 42;
+}

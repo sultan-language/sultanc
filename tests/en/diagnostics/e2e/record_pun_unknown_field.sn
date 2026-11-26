@@ -1,0 +1,15 @@
+// اختبار: رفض
+// تشخيص: SULTANC-PATTERN-INVALID
+// نظير: tests/ar/diagnostics/e2e/record_pun_unknown_field.sn
+// خرج-تشخيص-عربي: record_pun_unknown_field.ar.stderr
+// خرج-تشخيص-إنجليزي: record_pun_unknown_field.en.stderr
+// A punned field is a field of the record: `depth` is not one.
+type Size = { width: int, height: int };
+def f(s: Size): int {
+    match s with
+    | { width, depth } -> { return width; };
+}
+def main(): int {
+    let s: Size = { width: 1, height: 2 };
+    return f(s);
+}

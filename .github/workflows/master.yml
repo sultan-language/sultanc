@@ -7,8 +7,9 @@
 #   push to master   Verdict: the qualification of that exact commit, or fail
 #   manual dispatch  the same check on the head of master
 #
-# Releases are made by hand by the owner from a passing master commit. This
-# workflow never merges, promotes, tags or releases.
+# The owner tags a passing master commit; release.yml then builds its draft
+# release (CI.md, "Releases"). This workflow never merges, promotes, tags or
+# releases.
 name: SultanC Master
 
 on:
@@ -27,7 +28,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           sparse-checkout: .github
       - name: Qualified

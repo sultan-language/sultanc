@@ -2,7 +2,7 @@
 // primitives a program's thread start needs, behind functions of plain
 // signatures. The C Stage0 (bootstrap/) has none of these primitives and no
 // closure literals; it compiles host_threads_unavailable.sn in this
-// module's place (cmake/modules/Stage1.cmake), and the Stage1 it builds
+// module's place (bootstrap/chain.sh), and the Stage1 it builds
 // runs a program's threads as a kernel without clone would.
 
 مرادف عنوان_إغلاق_مضيف_خيوط = بدائي_عنوان_دالة;

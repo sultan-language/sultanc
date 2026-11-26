@@ -116,6 +116,8 @@
     | فهرس_خارج_الحدود
     | نمط_غير_شامل
     | نمط_غير_قابل_للوصول
+    | ربط_بدائل_غير_متسق
+    | نوع_ربط_بدائل_غير_متسق
     | إرجاع_مفقود
     // Runtime failures a compiled or interpreted program prints itself
     // (docs/en/reference/errors.md): `main` returned an error, or the program stopped
@@ -293,6 +295,32 @@
     // (compiler/test_mode/selection.sn).
     | اختبار_غير_موجود
     | ملف_اختبارات_خارج_البرنامج
+    // A match expression none of whose arms gives a value (types), and an
+    // arm of one that can finish without a value (msir lowering).
+    | مطابقة_تعبيرية_بلا_قيمة
+    | ذراع_مطابقة_بلا_قيمة
+    // A vector or slice given to a `mutable [] T` without `&mutable` (types).
+    | عرض_قابل_للكتابة_بلا_علامة
+    // An `if` used as a value without `else` (parser).
+    | إذا_تعبيرية_بلا_وإلا
+    // An `if` used as a value none of whose branches gives a value (types).
+    | إذا_تعبيرية_بلا_قيمة
+    // A branch of an `if` used as a value that can end without a value (msir lowering).
+    | فرع_إذا_بلا_قيمة
+    // A tuple `let` whose pattern is not a tuple of names, `_` and nested
+    // tuples, or one outside a block's statements (parser).
+    | ربط_صف_غير_صالح
+    // A tuple `let` whose written Type is not a tuple of its pattern's shape (types).
+    | ربط_صف_بنوع_غير_مطابق
+    // A tuple `let` whose written Type makes a name `mutable` other than a
+    // writable view `mutable [] T` (types).
+    | ربط_صف_قابل_للتغيير
+    // A bare `none`, `ok(x)` or `err(e)` with no option or result Type to
+    // take (types).
+    | منشئ_تمهيدي_بلا_نوع
+    // A slice of text not written `&s[a..b]`: `&mutable s[a..b]` or a bare
+    // `s[a..b]` (types).
+    | مقطع_نص_غير_صالح
 ;
 
 // Diagnostic classification is stable metadata, independent of presentation.

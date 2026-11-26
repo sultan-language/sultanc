@@ -40,7 +40,10 @@
 //   - a shift by the width or more (as unsigned: a negative amount is past
 //     it), with the amount and the width, and a left shift that shifts out
 //     a significant bit (an overflow);
-//   - an index past the end of a vector or a text (lowering/places.sn).
+//   - an index past the end of a vector or a text, and a slice `v[a..b]`
+//     whose start or end is outside the vector or whose end is before its
+//     start, or a slice of text `&s[a..b]` whose start or end falls inside a
+//     character (lowering/places.sn).
 // What still traps: conversions that do not fit, 128-bit operations, a check whose place is unknown, functions that
 // hold compile-time work, the module initializer, std's task switch, std's
 // allocator and the report itself; and every check of a program without std (bare metal), which
@@ -84,9 +87,11 @@
     التعليمة: طبيعي
 };
 
-// The kinds the report takes (process.failure_text, نص_فحص_تشغيل).
+// The kinds the report takes (process.failure_text, نص_فحص_تشغيل). A
+// bounds check's kind is the one lowering recorded (موقع_فحص_تشغيل_مسير):
+// 1 an index, 5, 6 and 7 a slice's start, end and order, 8 a split index,
+// 9 a byte offset of a slice of text inside a character.
 عرف صنف_تجاوز_فحص(): عدد { أرجع 0; }
-عرف صنف_فهرس_فحص(): عدد { أرجع 1; }
 عرف صنف_قسمة_فحص(): عدد { أرجع 2; }
 عرف صنف_إزاحة_فحص(): عدد { أرجع 3; }
 
@@ -351,7 +356,7 @@
     ), الدالة, أخفق));
     ألحق(الحجج, حجة_فحص(البرنامج, البناء, الدالة, الكتلة, الأنواع, الأول, (*المبلغ).نوع_الأول, أخفق));
     ألحق(الحجج, حجة_فحص(البرنامج, البناء, الدالة, الكتلة, الأنواع, الثاني, (*المبلغ).نوع_الثاني, أخفق));
-    طابق أصدر_نداء_مسير(البرنامج, البناء, الدالة, الكتلة, (*المبلغ).الدالة, &الحجج) مع
+    طابق أصدر_نداء_مسير(البرنامج, البناء, الدالة, الكتلة, (*المبلغ).الدالة, الحجج) مع
     | نتيجة_بناء_قيمة_مسير.مرفوضة(_) -> { *أخفق := صواب; }
     | _ -> { };
     منهي_فحص(اختم_بفخ_مسير(البرنامج, البناء, الدالة, الكتلة), أخفق);
@@ -955,6 +960,7 @@
     إذا ((الطول(الترتيب) مثل طبيعي) != العدد) { أرجع; };
     ليكن المواقع: متغير متجه طبيعي = [];
     ف := 0;
+    احجز_سعة(المواقع, العدد);
     طالما (ف < العدد) { ألحق(المواقع, 0); ف := ف + 1; }
     ف := 0;
     طالما (ف < العدد) { المواقع[الترتيب[ف]] := ف; ف := ف + 1; }
@@ -1043,7 +1049,7 @@
                         );
                         (*البرنامج).الدوال[د].الكتل[ك].المنهي := اختياري.لا_شيء();
                         أصدر_بلاغ_فحص(
-                            البرنامج, &البناء, الدالة, الكتلة, الأنواع, المبلغ, &المكان, صنف_فهرس_فحص(),
+                            البرنامج, &البناء, الدالة, الكتلة, الأنواع, المبلغ, &المكان, الموقع.الصنف,
                             اختياري.موجود(الموقع.القيمة), اختياري.موجود(الموقع.الطول), أخفق
                         );
                         تغيرت := صواب;
@@ -1292,6 +1298,7 @@
     ليكن عدد_الدوال: طبيعي = الطول((*البرنامج).الدوال) مثل طبيعي;
     ليكن المتغيرة: متغير متجه منطقي = [];
     ليكن ف: متغير طبيعي = 0;
+    احجز_سعة(المتغيرة, عدد_الدوال);
     طالما (ف < عدد_الدوال) { ألحق(المتغيرة, خطأ); ف := ف + 1; }
     // The places are read once, here.
     ليكن المواقع: متغير متجه موقع_فحص_تشغيل_مسير = [];

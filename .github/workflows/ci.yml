@@ -2,47 +2,48 @@
 # main, beta and master (promotion carries the qualified files to each
 # branch); each entry workflow filters on its own branch.
 #
+# Each build of the compiler is one compile of compiler/main.sn by the
+# previous compiler (N-1): the cached compiler of the base commit, or Stage1
+# from the committed seed on a cold runner. The self-host fixpoint is checked
+# when a commit lands on main, the wide matrix runs nightly, and the frozen C
+# Stage0 runs only in the release check (chain.yml).
+#
 #   trigger                         tier     runs
-#   push to main                    quick    the smoke set: lint; Seed /
-#                                            linux-x86_64 (Native ELF: seed
-#                                            bootstrap, Stage3 == Stage4, seed
-#                                            reproducible, test suite); LLVM /
-#                                            linux-x86_64 (C Stage0 -> LLVM
-#                                            Stage2, convergence); docs check
-#                                            when docs changed
-#   pull request into main          focused  quick, plus the hosts of the
+#   pull request into main          pr       Build / linux-x86_64: one build
+#                                            from the previous compiler, the
+#                                            test suite; plus the hosts of the
 #                                            components it changes (plan.py,
-#                                            COMPONENTS: macOS, Windows, arm64,
-#                                            LLVM provider)
+#                                            COMPONENTS)
+#   push to main                    main     Seed / linux-x86_64: seed ->
+#                                            Stage1 -> S2 -> S3, S2 == S3, the
+#                                            seed reproduced, the test suite;
+#                                            caches the compiler for pull
+#                                            requests based on the commit
 #   documentation-only change       docs     docs check only (no compiler build)
-#   manual dispatch                 scope    full (default) or quick
+#   manual dispatch                 scope    full (default) or main
 #   workflow_call                   scope    nightly.yml, promote.yml, beta.yml
 #                                            (full, opt-in suites on, qualify)
-#
-# A few Linux jobs run on a change and every host once per commit before it
-# is promoted; as in LLVM's CI, presubmit builds what changed and the wide
-# matrix runs after the commit lands. plan.py has the details.
 #
 # Qualification: a full-tier run called with `qualify: true` that passes its
 # gate sets the commit status `sultanc/qualification` on the commit it tested
 # (`ref`). That status is the only evidence promotion accepts
-# (.github/ci/evidence.sh): a passing quick or focused run qualifies nothing.
+# (.github/ci/evidence.sh): a passing pr or main run qualifies nothing.
 #
-# The full tier is every check CI has:
+# The full tier is every check this workflow has:
 #   lint         workflows (actionlint), CI shell scripts (shellcheck), Python helpers
 #   docs         every relative Markdown link resolves (docs_check.py)
-#   seed         wasm seed through cmake/ with only a C compiler (no LLVM);
-#                native hosts: Stage1 -> Stage2 -> Stage3 == Stage4 and the
-#                test suite; the committed seed must equal what the sources
-#                rebuild (all six hosts)
+#   seed         the seed route with only a C compiler (no LLVM) on all six
+#                hosts; native hosts: S2 == S3 and the test suite; the
+#                committed seed must equal what the sources rebuild
 #   seed-update  bootstrap.c --update-seed into a scratch directory, then a
-#                clean bootstrap from it (the committed seed is never changed);
-#                full tier only
+#                clean bootstrap from it (the committed seed is never changed)
 #   llvm-sdk     the pinned LLVM SDK per host (.github/ci/llvm.lock), cached
-#                on llvm.lock alone; built in its own job, so a multi-hour
-#                source build never shares a time budget with a bootstrap
-#   llvm         C Stage0 -> Stage1 -> LLVM-enabled Stage2, convergence,
-#                test suite
+#                on llvm.lock alone
+#   llvm         native hosts: LLVM-enabled S2 == S3, the LLVM fixpoint,
+#                cross-backend equality, the test suite; linux-x86_64 also
+#                builds the cross-target compilers
+#   cross-run    the cross-built compilers run on the hosts without a Native
+#                backend (version, check, run)
 #   summary      the plan, one table of every host and route, and the gate:
 #                every planned job must succeed and every job left out of the
 #                plan must be skipped, so skipped, failed and passed stay
@@ -52,13 +53,13 @@
 # Superseded push and pull-request runs are cancelled (the newest commit is
 # the one that matters); scheduled, dispatched and qualification runs always
 # finish. Each job step has its own timeout, sized from a normal run, so a
-# hang fails within the step that hangs. Self-builds of the compiler also
-# have a per-command limit inside the scripts (SULTANC_CI_COMPILE_TIMEOUT).
+# hang fails within the step that hangs. Builds of the compiler also have a
+# per-command limit inside build.sh (SULTANC_CI_COMPILE_TIMEOUT).
 # Compilers and test logs are uploaded as artifacts.
 #
 # This workflow never merges, promotes, tags or publishes anything: its token
 # can only read, except the commit status of the qualified job. Promotion is
-# promote.yml; releases are made by hand from master.
+# promote.yml; a release is release.yml (a draft the owner publishes).
 name: SultanC CI
 
 on:
@@ -69,9 +70,9 @@ on:
   workflow_dispatch:
     inputs:
       scope:
-        description: full = every route on every host; quick = the push-to-main tier
+        description: full = every route on every host; main = the push-to-main tier
         type: choice
-        options: [full, quick]
+        options: [full, main]
         default: full
       extended:
         description: Run the opt-in test suites (convergence, RSS, allocations)
@@ -117,15 +118,18 @@ jobs:
     outputs:
       tier: ${{ steps.plan.outputs.tier }}
       docs: ${{ steps.plan.outputs.docs }}
+      build: ${{ steps.plan.outputs.build }}
+      build_matrix: ${{ steps.plan.outputs.build_matrix }}
       seed: ${{ steps.plan.outputs.seed }}
       seed_matrix: ${{ steps.plan.outputs.seed_matrix }}
       seed_update: ${{ steps.plan.outputs.seed_update }}
       llvm: ${{ steps.plan.outputs.llvm }}
-      llvm_sdk_matrix: ${{ steps.plan.outputs.llvm_sdk_matrix }}
       llvm_matrix: ${{ steps.plan.outputs.llvm_matrix }}
+      cross: ${{ steps.plan.outputs.cross }}
+      cross_run_matrix: ${{ steps.plan.outputs.cross_run_matrix }}
       expected: ${{ steps.plan.outputs.expected }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           ref: ${{ inputs.ref }}
           sparse-checkout: .github
@@ -166,7 +170,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           ref: ${{ inputs.ref }}
       - name: actionlint
@@ -183,9 +187,9 @@ jobs:
           tar -xzf "$RUNNER_TEMP/actionlint.tar.gz" -C "$RUNNER_TEMP" actionlint
           "$RUNNER_TEMP/actionlint" -color
       - name: shellcheck
-        run: shellcheck -x .github/ci/linux.sh .github/ci/macos.sh .github/ci/common.sh .github/ci/no_release.sh .github/ci/evidence.sh build.sh
+        run: shellcheck -x .github/ci/linux.sh .github/ci/macos.sh .github/ci/common.sh .github/ci/no_release.sh .github/ci/evidence.sh build.sh bootstrap/chain.sh
       - name: Python helpers
-        run: python3 -m py_compile .github/ci/report.py .github/ci/summary.py .github/ci/plan.py .github/ci/docs_check.py
+        run: python3 -m py_compile .github/ci/report.py .github/ci/summary.py .github/ci/plan.py .github/ci/docs_check.py .github/ci/release.py
       - name: SDK cache path matches llvm.lock
         run: |
           . .github/ci/llvm.lock
@@ -195,8 +199,9 @@ jobs:
             echo "$bad"
             exit 1
           fi
-      - name: No workflow creates a release
-        # CI only verifies: no merge, promotion, tag or release (no_release.sh).
+      - name: No workflow publishes a release
+        # CI only verifies: no merge, promotion, tag or published release; only
+        # release.yml's publish job creates a draft (no_release.sh).
         run: sh .github/ci/no_release.sh
 
   docs:
@@ -206,11 +211,67 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           ref: ${{ inputs.ref }}
       - name: Relative links resolve
         run: python3 .github/ci/docs_check.py .
+
+  build:
+    name: Build / ${{ matrix.host }}
+    needs: [plan, lint]
+    if: needs.plan.outputs.build == 'true'
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.plan.outputs.build_matrix) }}
+    env:
+      # The previous compiler: the one the push of the base commit cached
+      # (seed job); without it build.sh starts from the seed.
+      SULTANC_PREVIOUS: ci-previous/sultanc
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: ${{ inputs.ref }}
+      - name: Compiler of the base commit
+        if: matrix.native
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ci-previous/sultanc
+          key: sultanc-${{ matrix.host }}-${{ github.event.pull_request.base.sha || github.event.before || 'none' }}
+      - name: Compiler from the previous compiler
+        if: matrix.script != 'windows'
+        timeout-minutes: 80
+        run: sh .github/ci/${{ matrix.script }}.sh build
+      - name: Stage1 from the seed (MSVC, clang-cl, MinGW)
+        if: matrix.script == 'windows'
+        timeout-minutes: 100
+        shell: pwsh
+        run: ./.github/ci/windows.ps1 seed
+      - name: Tests
+        if: matrix.native
+        timeout-minutes: 60
+        run: sh .github/ci/${{ matrix.script }}.sh test
+      - name: Upload test results
+        if: always() && matrix.native
+        # Evidence only: a problem uploading it never fails the job.
+        continue-on-error: true
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: tests-build-${{ matrix.host }}
+          path: |
+            build/tests-result.json
+            build/tests-junit.xml
+            build/tests-ci/*.log
+            build/ispeak-tests-*/summary.txt
+            build/ispeak-tests-*/*.log
+            build/ispeak-tests-*/*.diff
+            build/ispeak-tests-*/*.stderr
+            build/tests-sultanc/*.out
+            build/tests-sultanc/*.err
+          retention-days: 14
+          if-no-files-found: ignore
 
   seed:
     name: Seed / ${{ matrix.host }}
@@ -222,10 +283,10 @@ jobs:
       fail-fast: false
       matrix: ${{ fromJSON(needs.plan.outputs.seed_matrix) }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           ref: ${{ inputs.ref }}
-      - name: Bootstrap from the seed
+      - name: Seed bootstrap, S2 == S3
         if: matrix.script != 'windows'
         timeout-minutes: 100
         run: sh .github/ci/${{ matrix.script }}.sh seed-build
@@ -233,7 +294,7 @@ jobs:
         if: matrix.script != 'windows'
         timeout-minutes: 30
         run: sh .github/ci/${{ matrix.script }}.sh seed-check
-      - name: Bootstrap from the seed (MSVC, clang-cl, MinGW)
+      - name: Stage1 from the seed (MSVC, clang-cl, MinGW)
         if: matrix.script == 'windows'
         timeout-minutes: 120
         shell: pwsh
@@ -241,12 +302,24 @@ jobs:
       - name: Tests
         if: matrix.native
         # The opt-in suites (extended: nightly, qualification) rebuild the
-        # compiler twice for self-host convergence and three times for RSS.
+        # compiler for self-host convergence and three times for RSS.
         timeout-minutes: ${{ inputs.extended && 150 || 60 }}
         run: sh .github/ci/${{ matrix.script }}.sh test
+      - name: Keep the compiler for pull requests
+        # The previous compiler of the pull requests based on this commit.
+        if: matrix.native && (github.event_name == 'push' || github.event_name == 'schedule')
+        run: |
+          mkdir -p ci-previous
+          cp build/sultanc ci-previous/sultanc
+      - name: Cache the compiler
+        if: matrix.native && (github.event_name == 'push' || github.event_name == 'schedule')
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ci-previous/sultanc
+          key: sultanc-${{ matrix.host }}-${{ inputs.ref || github.sha }}
       - name: Upload compiler
         if: matrix.native
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: sultanc-seed-${{ matrix.host }}
           path: build/sultanc
@@ -256,7 +329,7 @@ jobs:
         if: always() && matrix.native
         # Evidence only: a problem uploading it never fails the job.
         continue-on-error: true
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: tests-seed-${{ matrix.host }}
           path: |
@@ -279,7 +352,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 90
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           ref: ${{ inputs.ref }}
       - name: Update the seed, then bootstrap from it
@@ -291,31 +364,25 @@ jobs:
     needs: [plan, lint]
     if: needs.plan.outputs.llvm == 'true'
     runs-on: ${{ matrix.runner }}
-    # macOS x86_64 and Windows build LLVM from source when the cache is cold.
-    timeout-minutes: 350
+    timeout-minutes: 120
     strategy:
       fail-fast: false
-      matrix: ${{ fromJSON(needs.plan.outputs.llvm_sdk_matrix) }}
+      matrix: ${{ fromJSON(needs.plan.outputs.llvm_matrix) }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           ref: ${{ inputs.ref }}
       - name: LLVM SDK cache
         id: cache
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: ~/llvm-sdk-22.1.8
           key: llvm-sdk-${{ matrix.host }}-${{ hashFiles('.github/ci/llvm.lock') }}
           lookup-only: true
       - name: Build the LLVM SDK
-        if: steps.cache.outputs.cache-hit != 'true' && matrix.script != 'windows'
-        timeout-minutes: 340
+        if: steps.cache.outputs.cache-hit != 'true'
+        timeout-minutes: 110
         run: sh .github/ci/${{ matrix.script }}.sh llvm-sdk
-      - name: Build the LLVM SDK
-        if: steps.cache.outputs.cache-hit != 'true' && matrix.script == 'windows'
-        timeout-minutes: 340
-        shell: pwsh
-        run: ./.github/ci/windows.ps1 llvm-sdk
 
   llvm:
     name: LLVM / ${{ matrix.host }}
@@ -326,60 +393,60 @@ jobs:
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.plan.outputs.llvm_matrix) }}
+    env:
+      SULTANC_PREVIOUS: ci-previous/sultanc
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           ref: ${{ inputs.ref }}
       - name: LLVM SDK
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: ~/llvm-sdk-22.1.8
           key: llvm-sdk-${{ matrix.host }}-${{ hashFiles('.github/ci/llvm.lock') }}
           fail-on-cache-miss: true
-      - name: Stage0 -> Stage1 -> LLVM-enabled Stage2
-        if: matrix.script != 'windows'
-        timeout-minutes: 120
+      - name: Compiler of the base commit
+        if: matrix.mode == 'build'
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ci-previous/sultanc
+          key: sultanc-${{ matrix.host }}-${{ github.event.pull_request.base.sha || github.event.before || 'none' }}
+      - name: LLVM-enabled compiler from the previous compiler
+        if: matrix.mode == 'build'
+        timeout-minutes: 80
         run: sh .github/ci/${{ matrix.script }}.sh llvm-build
-      - name: Convergence
-        if: matrix.script != 'windows'
-        timeout-minutes: 150
+      - name: LLVM fixpoint and cross-backend
+        if: matrix.mode == 'verify'
+        timeout-minutes: 200
         run: sh .github/ci/${{ matrix.script }}.sh llvm-verify
       - name: Tests
-        # Off only where the plan says so (quick tier: the seed route's test
-        # run is the push-to-main regression run); on in the full tier.
-        if: matrix.script != 'windows' && matrix.tests
         timeout-minutes: ${{ inputs.extended && 150 || 60 }}
         run: sh .github/ci/${{ matrix.script }}.sh test
-      - name: Stage0 -> Stage1 -> LLVM Stage2
-        if: matrix.script == 'windows'
+      - name: Cross-target compilers
+        if: matrix.cross_build
         timeout-minutes: 120
-        shell: pwsh
-        run: ./.github/ci/windows.ps1 llvm-build
-      - name: Convergence
-        if: matrix.script == 'windows'
-        timeout-minutes: 150
-        shell: pwsh
-        run: ./.github/ci/windows.ps1 llvm-verify
-      - name: Tests
-        if: matrix.script == 'windows' && matrix.tests
-        timeout-minutes: ${{ inputs.extended && 150 || 60 }}
-        shell: pwsh
-        run: ./.github/ci/windows.ps1 test
+        run: sh .github/ci/linux.sh cross
+      - name: Upload cross-target compilers
+        if: matrix.cross_build
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: sultanc-cross
+          path: build/cross
+          retention-days: 7
+          if-no-files-found: error
       - name: Upload compiler
         if: success()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: sultanc-llvm-${{ matrix.host }}
-          path: |
-            build/${{ matrix.exe }}
-            build/LLVM-C.dll
+          path: build/sultanc
           retention-days: 7
           if-no-files-found: warn
       - name: Upload test results
-        if: always() && matrix.tests
+        if: always()
         # Evidence only: a problem uploading it never fails the job.
         continue-on-error: true
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: tests-llvm-${{ matrix.host }}
           path: |
@@ -395,18 +462,45 @@ jobs:
           retention-days: 14
           if-no-files-found: ignore
 
+  cross-run:
+    name: Cross run / ${{ matrix.host }}
+    needs: [plan, llvm]
+    if: needs.plan.outputs.cross == 'true'
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.plan.outputs.cross_run_matrix) }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: ${{ inputs.ref }}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: sultanc-cross
+          path: build/cross
+      - name: The compiler built for this host runs
+        if: matrix.script != 'windows'
+        timeout-minutes: 20
+        run: sh .github/ci/${{ matrix.script }}.sh cross-run
+      - name: The compiler built for this host runs
+        if: matrix.script == 'windows'
+        timeout-minutes: 20
+        shell: pwsh
+        run: ./.github/ci/windows.ps1 cross-run
+
   summary:
     name: Summary
     if: always()
-    needs: [plan, lint, docs, seed, seed-update, llvm-sdk, llvm]
+    needs: [plan, lint, docs, build, seed, seed-update, llvm-sdk, llvm, cross-run]
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           ref: ${{ inputs.ref }}
           sparse-checkout: .github
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           pattern: tests-*
           path: results

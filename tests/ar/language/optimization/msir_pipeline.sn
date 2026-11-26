@@ -2,6 +2,7 @@
 // أهداف: arm64-darwin,x86_64-linux
 // خروج: 42
 // تفاضلي: نعم
+// تحسين: -O2
 // نظير: tests/en/language/optimization/msir_pipeline.sn
 // ما يعيد خط تحسين MSIR (compiler/msir/msir_optimization_pipeline.sn) كتابته
 // يحتفظ بمعناه تحت `run` وفي الملفات التنفيذية سواء: دالة صغيرة تُضمَّن مع

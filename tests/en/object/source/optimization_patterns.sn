@@ -1,0 +1,50 @@
+// Functions whose machine code the object checks of
+// tests/runner/suites/objects.sn (تحقق_أنماط_التحسين) look into, one pattern
+// each (docs/en/internals/msir-and-codegen.md). Twin:
+// tests/ar/object/source/optimization_patterns.sn.
+import std.math.wrapping;
+
+// A checked add, subtract and multiply: one operation and a branch on its
+// overflow to the report block.
+def add_checked(a: i64, b: i64): i64 { return a + b; }
+def sub_one(a: i64): i64 { return a - 1; }
+def mul_checked(a: i64, b: i64): i64 { return a * b; }
+def add_unsigned(a: u64, b: u64): u64 { return a + b; }
+
+// Constants: one instruction each on AArch64 (MOVZ, MOVN, ORR of a bitmask)
+// and never a MOVK of a zero halfword.
+def small_constant(): i64 { return 5; }
+def negative_constant(): i64 { return -2; }
+def bitmask_constant(): u64 { return 6148914691236517205; }
+
+// Branches: a compare sets the flags for its branch (CMP #0, B.cond), a
+// test against 0 is CBZ/CBNZ, a test of one bit TBZ/TBNZ or TST #1.
+def count_down(n: i64): i64 {
+    let i: mutable i64 = n;
+    let s: mutable i64 = 0;
+    while (i > 0) {
+        s := s + i;
+        i := i - 1;
+    }
+    return s;
+}
+def zero_branch(x: i64): i64 { if (x == 0) { return 7; }; return 9; }
+def low_bit(x: u64): u64 { if ((x & 1) == 0) { return 1; }; return 2; }
+
+// Strength reduction: a wrapping multiply by 3 is LEA on x86-64, and
+// `x % 2 == 0` a test of bit 0 (AND and JE on x86-64, TBZ or TST on AArch64).
+def triple_wrapping(x: i64): i64 { return wrapping_mul_i64(x, 3); }
+def is_even(x: i64): i64 { if (x % 2 == 0) { return 1; }; return 0; }
+
+def main(): int {
+    let values: vector i64 = [5, 7];
+    let unsigned: vector u64 = [5, 7];
+    let total: i64 = add_checked(values[0], values[1]) + sub_one(values[1]) + mul_checked(values[0], values[1]);
+    let sum: u64 = add_unsigned(unsigned[0], unsigned[1]);
+    if (sum != 12) { return 1; };
+    if (small_constant() + negative_constant() != 3) { return 2; };
+    if (bitmask_constant() != 6148914691236517205) { return 3; };
+    if (triple_wrapping(values[0]) != 15 || is_even(values[1]) != 0) { return 5; };
+    if (count_down(values[0]) != 15 || zero_branch(values[0]) != 9 || low_bit(unsigned[0]) != 2) { return 4; };
+    return (total % 100) as int;
+}

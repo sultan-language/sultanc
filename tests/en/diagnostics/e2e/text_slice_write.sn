@@ -1,0 +1,13 @@
+// اختبار: رفض
+// تشخيص: SULTANC-MUTABILITY-WRITE-TO-IMMUTABLE
+// نظير: tests/ar/diagnostics/e2e/text_slice_write.sn
+// خرج-تشخيص-عربي: text_slice_write.ar.stderr
+// خرج-تشخيص-إنجليزي: text_slice_write.en.stderr
+// A slice of text is a `&string`, a read-only view: writing a byte through
+// it is rejected, even when its text is `mutable`.
+def main(): int {
+    let greeting: mutable string = "hello";
+    let head: &string = &greeting[0..1];
+    (*head)[0] := 72 as u8;
+    return length(*head);
+}

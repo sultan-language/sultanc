@@ -1,0 +1,18 @@
+// اختبار: رفض
+// تشخيص: SULTANC-BORROW-CONFLICT
+// نظير: tests/ar/diagnostics/e2e/vector_rest_keeps_borrow.sn
+// خرج-تشخيص-عربي: vector_rest_keeps_borrow.ar.stderr
+// خرج-تشخيص-إنجليزي: vector_rest_keeps_borrow.en.stderr
+// A named rest of `match v` is a view of v's own elements: it borrows v for as
+// long as it is used. Appending can move v's elements, so it is rejected while
+// the rest is still read afterwards. Previously accepted: the rest then read
+// v's freed storage.
+def main(): int {
+    let v: mutable vector int = [1, 2, 3];
+    match v with
+    | [_, rest tail] -> {
+        append(v, 4);
+        return tail[0];
+    }
+    | [] -> { return 0; };
+}

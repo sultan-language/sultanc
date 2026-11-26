@@ -1,0 +1,12 @@
+// اختبار: رفض
+// تشخيص: SULTANC-PARSE-LET-PATTERN
+// نظير: tests/en/diagnostics/e2e/let_tuple_constructor_pattern.sn
+// خرج-تشخيص-عربي: let_tuple_constructor_pattern.ar.stderr
+// خرج-تشخيص-إنجليزي: let_tuple_constructor_pattern.en.stderr
+// تعطي `ليكن` المفككة العناصر أسماء؛ واختبار عنصر بمُنشئ عمل `طابق`.
+نوع ضوء = | أحمر | أخضر;
+
+عرف الرئيسية(): عدد {
+    ليكن (ضوء.أحمر، العدد): (ضوء، عدد) = (ضوء.أحمر، 3);
+    أرجع العدد;
+}

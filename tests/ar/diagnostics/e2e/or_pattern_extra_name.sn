@@ -1,0 +1,12 @@
+// اختبار: رفض
+// تشخيص: SULTANC-PATTERN-ALTERNATIVE-BINDINGS
+// نظير: tests/en/diagnostics/e2e/or_pattern_extra_name.sn
+// خرج-تشخيص-عربي: or_pattern_extra_name.ar.stderr
+// خرج-تشخيص-إنجليزي: or_pattern_extra_name.en.stderr
+// اسم يربطه بديل لاحق ولا يربطه الأول.
+نوع شكل = | دائرة بنوع عدد | نقطة;
+عرف حجم(ش: شكل): عدد {
+    طابق ش مع
+    | شكل.نقطة | شكل.دائرة(نق) -> { أرجع 1; };
+}
+عرف الرئيسية(): عدد { أرجع حجم(شكل.نقطة()); }

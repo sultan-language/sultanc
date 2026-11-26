@@ -2,6 +2,7 @@
 // أهداف: arm64-darwin,x86_64-linux
 // خروج: 42
 // تفاضلي: نعم
+// تحسين: -O2
 // نظير: tests/ar/language/optimization/msir_pipeline.sn
 // What the MSIR optimization pipeline (compiler/msir/msir_optimization_pipeline.sn)
 // rewrites keeps its meaning under `run` and in executables alike: a small

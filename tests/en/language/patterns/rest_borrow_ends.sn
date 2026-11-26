@@ -1,0 +1,22 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/language/patterns/rest_borrow_ends.sn
+// A named rest of `match v` borrows v only while it is used: v may be read
+// beside it, and changed after the rest's last use, in the arm or after the
+// match.
+def main(): int {
+    let v: mutable vector int = [1, 2, 3];
+    let got: mutable int = 0;
+    match v with
+    | [_, rest tail] -> {
+        let first: int = v[0];
+        got := tail[0] + first;
+        append(v, 4);
+    }
+    | [] -> { };
+    v[0] := 30;
+    if (length(v) != 4 || v[3] != 4) { return 1; };
+    return got + 39;
+}

@@ -1,0 +1,12 @@
+خطأ[SULTANC-PARSE-EXPRESSION]: تعذر تحليل صياغة التعبير — النتيجة المتوقعة هي ⁨`;`⁩، لكن النتيجة الفعلية هي ⁨`؟`⁩. تعذر تحليل تعبير وفق القواعد النحوية.
+  --> tests/ar/diagnostics/semantic/match_expression_propagation.sn:16:29
+    |
+ 16 |         ليكن ح: عدد = نصف(ن)؟;
+    |                             ^ الموضع المتوقع
+    |
+  ::: tests/ar/diagnostics/semantic/match_expression_propagation.sn:16:29..16:30
+    |
+ 16 |         ليكن ح: عدد = نصف(ن)؟;
+    |                             ^ اكتشف المحلل المشكلة هنا
+    |
+  = مساعدة: أضف ⁨`;`⁩ بعد هذا التركيب

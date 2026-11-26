@@ -1,0 +1,18 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 1
+// تفاضلي: نعم
+// بيئة: SULTANC_LANG=ar
+// خرج-قياسي: <فارغ>
+// خطأ-قياسي-ملف: text_slice_start_ar.stderr
+// نظير: tests/ar/runtime/failure/text_slice_start_ar.sn
+// A slice of text whose start is past the text's length (start <= length)
+// (docs/en/reference/errors.md, "Runtime checks") stops the program through
+// the panic path: the frame "the program stopped", then the start, the
+// length and the place of the slice, exit status 1.
+def main(): int {
+    let text: string = "hello world";
+    let start: int = 12;
+    let part: &string = &text[start..];
+    return length(*part);
+}

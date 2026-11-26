@@ -1,0 +1,12 @@
+// Fixture of tests/en/compiler/tooling/let_tuple_queries.sn (not a test).
+def divide(a: int, b: int): (int, int) {
+    return (a / b, a % b);
+}
+
+def main(): int {
+    let values: mutable vector int = [1, 2, 3, 4];
+    let (quotient, remainder): (int, int) = divide(17, 5);
+    let (left, right): (mutable [] int, [] int) = split_mutable(&mutable values, 2);
+    left[0] := right[1] + quotient;
+    return left[1] + remainder;
+}

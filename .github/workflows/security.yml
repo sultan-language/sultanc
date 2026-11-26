@@ -1,13 +1,14 @@
-# CodeQL over the C Stage0 (bootstrap/); it does not analyze .sn sources.
+# CodeQL over the C Stage0 (bootstrap/, frozen; built by bootstrap/chain.sh
+# --stage0-only); it does not analyze .sn sources.
 name: SultanC Security
 
 on:
   push:
     branches: [main]
-    paths: ['bootstrap/**', 'cmake/**', 'build.sh', '.github/workflows/security.yml']
+    paths: ['bootstrap/**', '.github/workflows/security.yml']
   pull_request:
     branches: [main]
-    paths: ['bootstrap/**', 'cmake/**', 'build.sh', '.github/workflows/security.yml']
+    paths: ['bootstrap/**', '.github/workflows/security.yml']
   schedule:
     - cron: '41 4 * * 1'
   workflow_dispatch:
@@ -26,8 +27,8 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v4
-      - uses: github/codeql-action/init@v3
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: github/codeql-action/init@74c1aea9df7c0f02e9b7bfe4a8935abf2e5e3aa6 # v3.39.5
         with:
           languages: c-cpp
       - name: LLVM 22 (apt.llvm.org)
@@ -38,5 +39,5 @@ jobs:
       - name: Build Stage0
         env:
           LLVM_CONFIG: /usr/lib/llvm-22/bin/llvm-config
-        run: ./build.sh stage0
-      - uses: github/codeql-action/analyze@v3
+        run: sh bootstrap/chain.sh --stage0-only
+      - uses: github/codeql-action/analyze@74c1aea9df7c0f02e9b7bfe4a8935abf2e5e3aa6 # v3.39.5

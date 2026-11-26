@@ -5,6 +5,7 @@
 استورد compiler.msir.lowering.model;
 استورد compiler.msir.lowering.msir_context;
 استورد compiler.frontend.ast.expressions;
+استورد compiler.frontend.ast.statements;
 استورد compiler.frontend.ast.declarations;
 استورد compiler.frontend.ast.literals;
 استورد compiler.frontend.ast.operators;

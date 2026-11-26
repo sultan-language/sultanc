@@ -1,0 +1,12 @@
+error[SULTANC-PARSE-EXPRESSION]: Cannot parse the expression syntax — The expected result is `;`, but the actual result is `?`. The parser could not recognize the expression syntax.
+  --> tests/ar/diagnostics/semantic/match_expression_propagation.sn:16:29
+    |
+ 16 |         ليكن ح: عدد = نصف(ن)؟;
+    |                             ^ expected here
+    |
+  ::: tests/ar/diagnostics/semantic/match_expression_propagation.sn:16:29..16:30
+    |
+ 16 |         ليكن ح: عدد = نصف(ن)؟;
+    |                             ^ parser discovered the problem here
+    |
+  = help: insert `;` after this construct

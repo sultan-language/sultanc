@@ -20,6 +20,22 @@ The LLVM backend is available for every target and requires a compiler built wit
 (`./build.sh --enable-llvm`). It produces objects for every target. Targets without an object
 format (NVPTX, XCore) are compiled with `--emit=asm`, which works for every target.
 
+**Stack probes.** Every stack of an operating-system target ends in a guard page, so an access past its end faults
+instead of reaching other memory. A function whose frame is a page or more probes its stack in the prologue, page by
+page, before it allocates the frame: the first access past the stack's end then lands in the guard, whatever the
+frame's size, and never beyond it. Windows needs this to commit its stack one page at a time; Linux, Android, FreeBSD
+and macOS need it so a large frame does not step over the guard (std then reports the fault as a stack overflow, see
+[Runtime checks](errors.md#runtime-checks)). The native x86-64 backend steps RSP down 4096 bytes at a time and reads
+each new top, then sets RSP back before the prologue allocates the frame (`ألحق_مسبار_مكدس_سيستم_في_إكس`; Windows
+keeps its `__chkstk`-style loop, `ألحق_مسبار_مكدس_ويندوز_إكس`). The native AArch64 backend moves SP by at most 4080
+bytes per step and stores to each new top (`ألحق_طرح_مكدس_بمسبار_ذراع`). The LLVM backend marks every function it
+defines for an operating-system target other than Windows, whose code generator already calls `__chkstk`, with
+`"probe-stack"="inline-asm"` and `"stack-probe-size"="4096"` (`compiler/backend/provider/llvm/optimization.sn`); an
+architecture whose LLVM code generator has no inline probe keeps its frames unprobed. WebAssembly and freestanding
+targets have no guard pages and no probes. A frame smaller than a page needs none, as it cannot step over a guard of
+a page or more. The runner checks the probe in the object of `tests/{en,ar}/object/source/large_frame.sn`
+(`tests/runner/suites/objects.sn`).
+
 The `الدعم` (support) column of `sultanc targets` carries one of three values: `مضيف ذاتي`
 (self-hosted, `arm64-darwin` and `x86_64-linux`), `ترجمة متقاطعة` (cross-compilation, every other
 target) and `تجريبي` (experimental, none today).

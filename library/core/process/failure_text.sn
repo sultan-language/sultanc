@@ -25,9 +25,15 @@
 }
 
 // The words of a failed runtime check (std.process.runtime_check), in
-// English or in Arabic: {0} and {1} stand for the index and the length,
-// {2} for the place. The kinds: 0 an integer overflow, 1 an index out of
-// range, 2 a division by zero.
+// English or in Arabic: {0} and {1} stand for the index and the length
+// (for a shift, its amount and the width), {2} for the place. The kinds:
+// 0 an integer overflow, 1 an index out of range, 2 a division by zero,
+// 3 a shift by the width or more, 4 a stack overflow (written by
+// std.os.stack_overflow, without a place), 5 a slice's start out of
+// range, 6 a slice's end out of range, 7 a slice whose end is before
+// its start ({0} the start, {1} the end), 8 a split index out of
+// range (split_mutable), 9 a byte offset of a slice of text inside a
+// character.
 عام عرف نص_فحص_تشغيل(النوع: عدد, الإنجليزية: منطقي): نص {
     إذا (النوع == 1) {
         إذا (الإنجليزية) { أرجع «index {0} out of range for length {1} at {2}»; };
@@ -36,6 +42,34 @@
     إذا (النوع == 2) {
         إذا (الإنجليزية) { أرجع «division by zero at {2}»; };
         أرجع «قسمة على صفر عند {2}»;
+    };
+    إذا (النوع == 3) {
+        إذا (الإنجليزية) { أرجع «shift by {0} out of range for a {1}-bit integer at {2}»; };
+        أرجع «إزاحة بمقدار {0} خارج المدى لعدد صحيح من {1} بت عند {2}»;
+    };
+    إذا (النوع == 5) {
+        إذا (الإنجليزية) { أرجع «slice start {0} out of range for length {1} at {2}»; };
+        أرجع «بداية الشريحة {0} خارج المدى للطول {1} عند {2}»;
+    };
+    إذا (النوع == 6) {
+        إذا (الإنجليزية) { أرجع «slice end {0} out of range for length {1} at {2}»; };
+        أرجع «نهاية الشريحة {0} خارج المدى للطول {1} عند {2}»;
+    };
+    إذا (النوع == 7) {
+        إذا (الإنجليزية) { أرجع «slice from {0} to {1} ends before it starts at {2}»; };
+        أرجع «الشريحة من {0} إلى {1} تنتهي قبل أن تبدأ عند {2}»;
+    };
+    إذا (النوع == 8) {
+        إذا (الإنجليزية) { أرجع «split at {0} out of range for length {1} at {2}»; };
+        أرجع «القسمة عند {0} خارج المدى للطول {1} عند {2}»;
+    };
+    إذا (النوع == 9) {
+        إذا (الإنجليزية) { أرجع «byte offset {0} is inside a character at {2}»; };
+        أرجع «إزاحة البايت {0} داخل حرف عند {2}»;
+    };
+    إذا (النوع == 4) {
+        إذا (الإنجليزية) { أرجع «stack overflow: the call stack ran out of space»; };
+        أرجع «فيض المكدس: نفدت مساحة مكدس الاستدعاءات»;
     };
     إذا (الإنجليزية) { أرجع «integer overflow at {2}»; };
     أرجع «تجاوز العدد الصحيح حدود نوعه عند {2}»;

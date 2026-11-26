@@ -1,0 +1,7 @@
+خطأ[SULTANC-PATTERN-NON-EXHAUSTIVE]: نمط غير شامل: لا تغطي الأذرع ⁨`ضوء.أصفر`⁩ — يجب أن تطابق كل قيمة من النوع المطابَق إحدى الأذرع.
+  --> tests/ar/diagnostics/semantic/match_expression_non_exhaustive.sn:10:15..10:20
+    |
+ 10 |     أرجع طابق الضوء مع
+    |               ^^^^^
+    |
+  = مساعدة: أضف ذراعًا لكل حالة غير مغطاة

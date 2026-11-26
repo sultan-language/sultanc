@@ -1,0 +1,41 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/language/patterns/record_patterns.sn
+// Record patterns: only the fields written are matched, field punning
+// (`{ width }` binds the field to a name spelled as it is), and both mixed,
+// inside payloads, alternatives and guarded arms.
+type Size = { width: int, height: int, depth: int };
+type Box = | Flat of Size | Empty;
+
+def area(s: Size): int {
+    match s with
+    | { width, height } -> { return width * height; };
+}
+
+def wide(s: Size): int {
+    match s with
+    | { width: w } if w > 10 -> { return w; }
+    | { width, height: h, depth } -> { return width + h + depth; };
+}
+
+def flat(b: Box): int {
+    match b with
+    | Box.Flat({ depth: 0, width }) | Box.Flat({ width, depth: 1 }) -> { return width; }
+    | Box.Flat({ depth }) -> { return depth; }
+    | Box.Empty -> { return 0; };
+}
+
+def main(): int {
+    let a: Size = { width: 3, height: 4, depth: 5 };
+    let b: Size = { width: 20, height: 1, depth: 1 };
+    let c: Size = { width: 7, height: 0, depth: 0 };
+    let d: Size = { width: 8, height: 0, depth: 1 };
+    let e: Size = { width: 9, height: 0, depth: 6 };
+    if (area(a) != 12) { return 1; };
+    if (wide(b) != 20 || wide(a) != 12) { return 2; };
+    if (flat(Box.Flat(c)) != 7 || flat(Box.Flat(d)) != 8 || flat(Box.Flat(e)) != 6) { return 3; };
+    if (flat(Box.Empty()) != 0) { return 4; };
+    return 42;
+}

@@ -1,0 +1,6 @@
+خطأ[SULTANC-MUTABILITY-WRITE-TO-IMMUTABLE]: لا يمكن الكتابة إلى قيمة غير متغيرة — القيمة غير مصرح بأنها قابلة للتغيير.
+  --> tests/ar/diagnostics/e2e/text_slice_write.sn:11:5..11:16
+    |
+ 11 |     (*الرأس)[0] := 72 مثل ط8;
+    |     ^^^^^^^^^^^
+    |

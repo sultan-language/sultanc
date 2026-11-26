@@ -1,0 +1,16 @@
+error[SULTANC-BORROW-REFERENCE-ESCAPE]: reference escapes its valid scope — The escaping reference is `المحفوظة`. A reference outlives the value it points to.
+  --> tests/ar/diagnostics/e2e/vector_rest_escape.sn:15:5..15:6
+    |
+ 15 |     };
+    |     ^
+    |
+  ::: tests/ar/diagnostics/e2e/vector_rest_escape.sn:11:9..11:44
+    |
+ 11 |         ليكن م: متغير متجه عدد = [1، 2، 3];
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ original owner
+    |
+  ::: tests/ar/diagnostics/e2e/vector_rest_escape.sn:16:16..16:24
+    |
+ 16 |     أرجع الطول(المحفوظة) مثل عدد;
+    |                ^^^^^^^^ invalid use
+    |

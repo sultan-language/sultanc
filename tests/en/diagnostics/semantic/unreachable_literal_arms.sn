@@ -6,7 +6,7 @@
 type light = | red | green;
 def score(level: u8, word: string, pair: (light, bool)): i32 {
     match level with
-    | range 0 to 100 -> { return 1; }
+    | range 0..100 -> { return 1; }
     | 50 -> { return 2; }
     | _ -> { };
     match word with

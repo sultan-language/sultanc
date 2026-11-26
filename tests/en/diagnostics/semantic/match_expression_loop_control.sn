@@ -1,0 +1,14 @@
+// اختبار: رفض
+// تشخيص: SULTANC-FLOW-LOOP-CONTROL-OUTSIDE-LOOP
+// نظير: tests/ar/diagnostics/semantic/match_expression_loop_control.sn
+// خرج-تشخيص-عربي: match_expression_loop_control.ar.stderr
+// خرج-تشخيص-إنجليزي: match_expression_loop_control.en.stderr
+// `break` in an arm of a match expression leaves the loop around the match;
+// here there is none.
+def main(): int {
+    let n: int = 1;
+    let x: int = match n with
+    | 1 -> { break; }
+    | _ -> 2;
+    return x;
+}

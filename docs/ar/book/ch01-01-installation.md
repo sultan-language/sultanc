@@ -14,9 +14,9 @@
 
 | نظامك | الطريق | ما تحتاجه |
 | --- | --- | --- |
-| لينكس على x86_64 | seed الـ WebAssembly | ‏Git و CMake ومترجم C |
-| ماك على Apple silicon (‏M1 وما بعده) | seed الـ WebAssembly | ‏Git و CMake ومترجم C |
-| ويندوز، ولينكس على ARM، وماك على Intel، و FreeBSD وغيرها | seed الـ C مع LLVM | ‏Git و CMake ومترجم C و LLVM من 19 إلى 23 |
+| لينكس على x86_64 | seed الـ WebAssembly | ‏Git ومترجم C |
+| ماك على Apple silicon (‏M1 وما بعده) | seed الـ WebAssembly | ‏Git ومترجم C |
+| ويندوز، ولينكس على ARM، وماك على Intel، و FreeBSD وغيرها | سلسلة Stage0 المكتوب بلغة C مع LLVM | ‏Git (بالتاريخ الكامل) ومترجم C و LLVM من 19 إلى 23 |
 
 والفرق بينهما هو الـ backend: الجزء من المترجم الذي ينتج شيفرة الآلة. فللسلطان backend خاص به اسمه Native، يعمل على لينكس
 x86_64 وماك Apple silicon. وعلى كل نظام آخر ينتج المترجم الشيفرة عبر LLVM، فيجب تثبيت LLVM قبل البناء.
@@ -26,9 +26,9 @@ x86_64 وماك Apple silicon. وعلى كل نظام آخر ينتج المتر
 ثبّت الأدوات بمدير الحزم في توزيعتك:
 
 ```console
-$ sudo apt install git cmake build-essential     # Debian و Ubuntu
-$ sudo dnf install git cmake gcc make            # Fedora
-$ sudo pacman -S git cmake base-devel            # Arch
+$ sudo apt install git build-essential     # Debian و Ubuntu
+$ sudo dnf install git gcc make            # Fedora
+$ sudo pacman -S git base-devel            # Arch
 ```
 
 ثم ابنِ:
@@ -36,16 +36,34 @@ $ sudo pacman -S git cmake base-devel            # Arch
 ```console
 $ git clone https://github.com/sultan-language/sultanc.git
 $ cd sultanc
-$ ./build.sh --bootstrap=wasm
+$ ./build.sh
+build: translating the seed to C (bootstrap-wasm/seed/sultanc.wasm.zst)
+build: compiling C (11 files)
+build: seed compiler: build/bootstrap/seed/sultanc-stage1
+build: building the build driver (tools/build)
+build: building the compiler from compiler/ with the seed compiler
+build: compiler: build/sultanc
 ```
+
+يسمي السطر الأخير الناتج: المترجم هو `build/sultanc`. يبدأ البناء الأول من الـ seed، ثم يخطو كل `./build.sh` بعده
+خطوة واحدة من المترجم الذي عندك، ولا يفعل شيئًا إن لم تتغير مصادر المترجم. ويعرض `./build.sh --verbose` كذلك كل أمر
+يشغّله.
+
+وبلا shell يبني ملف C واحد البناءَ نفسه، بمترجم C وحده، وينتهي بـ `build/sultanc` نفسه:
+
+```console
+$ cc -o build-bootstrap bootstrap-wasm/bootstrap.c && ./build-bootstrap
+```
+
+ولفحص المترجم، يبنيه `./build.sh verify` ثم يبنيه مرة أخرى بنفسه، ويشترط أن يتطابق الاثنان (و`./build-bootstrap --verify`
+بلا shell). وأوامر المشرفين (`./build.sh seed-update` و`seed-check` و`chain`) في [الإقلاع الذاتي](../internals/bootstrap.md).
 
 ## ماك (Apple silicon)
 
-يأتي مترجم C مع أدوات سطر الأوامر من Apple. و CMake متاح من Homebrew أو من [cmake.org](https://cmake.org/download/):
+يأتي مترجم C مع أدوات سطر الأوامر من Apple:
 
 ```console
 $ xcode-select --install
-$ brew install cmake
 ```
 
 ثم ابنِ بالأوامر نفسها التي في لينكس:
@@ -53,25 +71,35 @@ $ brew install cmake
 ```console
 $ git clone https://github.com/sultan-language/sultanc.git
 $ cd sultanc
-$ ./build.sh --bootstrap=wasm
+$ ./build.sh
 ```
 
 ## ويندوز وكل نظام آخر
 
-ثبّت Git و CMake ومترجم C و LLVM من 19 إلى 23، ثم ابنِ بطريق LLVM:
+لا backend أصليًا لهذه الأنظمة. ويظل `./build.sh` (أو `build-bootstrap`، الذي لا يحتاج إلا مترجم C، وعلى ويندوز أيضًا)
+ينتهي بـ `build/sultanc`، لكنه هناك مترجم الـ seed: يعمل على نظامك ولا يولّد الشيفرة إلا لـ x86_64-linux وarm64-darwin
+وwasm32-wasi، ويقول البناء ذلك في سطر واحد. أما مترجم لهذه الأنظمة نفسها فيولّده LLVM. ويبنيه Stage0 المجمَّد المكتوب بلغة C في المستودع: يترجم مترجم
+التزام مثبَّت، ويبني هذا المترجمَ الحالي. ثبّت Git ومترجم C و LLVM من 19 إلى 23، واستنسخ التاريخ كله، ثم شغّل السلسلة:
 
 ```console
 $ git clone https://github.com/sultan-language/sultanc.git
 $ cd sultanc
-$ ./build.sh --bootstrap=c --enable-llvm --backend=llvm
+$ sh bootstrap/chain.sh
+$ cp build/chain/sultanc-a build/sultanc
 ```
 
-ويجد البناء LLVM في أماكن تثبيته المعتادة. وإن كان في مكان آخر، فسمِّ `llvm-config` الخاص به هكذا:
-`LLVM_CONFIG=/path/to/llvm-config ./build.sh …`.
+وتجد السلسلة LLVM عبر `llvm-config`. وإن كان في مكان آخر، فسمِّه هكذا:
+`LLVM_CONFIG=/path/to/llvm-config sh bootstrap/chain.sh`.
 
-وفي ويندوز، لا يحوي LLVM الذي يثبّته المثبِّت الرسمي كل المعماريات ولا مكتبة LLVM-C التي يرتبط بها السلطان، فيجب بناء LLVM
-من مصدره مرة واحدة. ويفعل ذلك السكربت `.github/ci/windows.ps1` في المستودع: مهمته `llvm-sdk` تبني LLVM، ومهمته
-`llvm-build` تبني السلطان معه.
+وفي ويندوز، شغّل `bootstrap/chain.ps1` من PowerShell المطورين في Visual Studio، مع `LLVM_SDK` يسمي بناءً لـ LLVM فيه
+`include\` و`lib\LLVM-C.lib` و`bin\LLVM-C.dll`. ولا يحوي LLVM الذي يثبّته المثبِّت الرسمي كل المعماريات ولا مكتبة
+LLVM-C، فيجب بناء LLVM من مصدره مرة واحدة: وتفعل ذلك مهمة `llvm-sdk` في `.github/ci/windows.ps1`. والمترجم هو
+`build\chain\sultanc-a.exe`؛ وأبقِ `LLVM-C.dll` بجواره.
+
+وبديلًا عن ذلك، على لينكس x86_64 أو Apple silicon، يبني `./build.sh --enable-llvm` ثم
+`./build.sh --target=x86_64-windows-msvc --backend=llvm --with=build/sultanc` مترجمًا لنظام آخر (هنا ويندوز، في
+`build/cross/`). وهو لا يحوي إلا الـ backend الأصلي، فيفحص البرامج ويشغّلها هناك، لكنه لا يولّد الشيفرة إلا للأهداف
+الأصلية.
 
 ## النتيجة
 

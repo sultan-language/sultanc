@@ -1,0 +1,52 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/language/surface/let_tuple.sn
+// `let (a, b): (A, B) = e;` takes a tuple apart: each name gets its element,
+// with the Type written for it, for the rest of the block. A tuple a call
+// returns, a tuple local and a tuple literal (its literals typed by the
+// written Type) are taken apart; `_` skips an element and nested tuples take
+// nested tuples apart; owned texts move out of the tuple. The halves of
+// `split_mutable` are writable views when the Type says `mutable [] T`:
+// writing through both changes the vector, which is used again once they are
+// no longer in use.
+def divide(a: int, b: int): (int, int) { return (a / b, a % b); }
+
+def fruits(): (string, string, int) { return ("dates", "figs", 3); }
+
+def fill(part: mutable [] int, value: int): int {
+    let i: mutable int = 0;
+    while (i < length(part)) { part[i] := value; i := i + 1; }
+    return length(part);
+}
+
+def first_and_rest(v: &mutable vector int): int {
+    let (head, tail): (mutable [] int, mutable [] int) = split_mutable(&mutable *v, 1);
+    head[0] := 100;
+    return fill(tail, 7);
+}
+
+def main(): int {
+    let (q, r): (int, int) = divide(17, 5);
+    if (q != 3 || r != 2) { return 1; };
+    let pair: (string, int) = ("olive", 5);
+    let (name, _): (string, int) = pair;
+    if ((length(name) as int) != 5) { return 2; };
+    let ((a, b), c): ((int, int), int) = ((1, 2), 3);
+    if (a + b + c != 6) { return 3; };
+    let (first, second, count): (string, string, int) = fruits();
+    if ((length(first) as int) + (length(second) as int) != 9 || count != 3) { return 4; };
+    let (small, wide): (u8, i64) = (7, 8);
+    if ((small as int) + (wide as int) != 15) { return 5; };
+    let v: mutable vector int = [1, 2, 3, 4, 5];
+    let (left, right): (mutable [] int, mutable [] int) = split_mutable(&mutable v, 2);
+    left[0] := 10;
+    right[2] := 50;
+    if (length(left) != 2 || length(right) != 3) { return 6; };
+    if (fill(left, 9) != 2) { return 7; };
+    if (v[0] != 9 || v[1] != 9 || v[2] != 3 || v[4] != 50) { return 8; };
+    v[2] := 30;
+    if (first_and_rest(&mutable v) != 4 || v[0] != 100 || v[4] != 7) { return 9; };
+    return 42;
+}

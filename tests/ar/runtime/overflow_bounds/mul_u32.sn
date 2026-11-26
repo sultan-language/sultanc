@@ -1,0 +1,16 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 1
+// تفاضلي: نعم
+// بيئة: SULTANC_LANG=en
+// خرج-قياسي: <فارغ>
+// خطأ-قياسي-ملف: mul_u32.stderr
+// نظير: tests/en/runtime/overflow_bounds/mul_u32.sn
+// A checked u32 multiply past its bound (2^16 times 2^16) reports the overflow at the
+// operation on every code generator (docs/en/internals/msir-and-codegen.md).
+عرف الرئيسية(): عدد {
+    ليكن القيم: متجه ط32 = [65536, 65536];
+    ليكن الناتج: ط32 = القيم[0] * القيم[1];
+    إذا (الناتج == القيم[0]) { أرجع 3; };
+    أرجع 0;
+}

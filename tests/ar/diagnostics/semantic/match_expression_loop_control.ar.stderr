@@ -1,0 +1,6 @@
+خطأ[SULTANC-FLOW-LOOP-CONTROL-OUTSIDE-LOOP]: عبارة تحكم بالحلقة خارج أي حلقة
+  --> tests/ar/diagnostics/semantic/match_expression_loop_control.sn:10:14..10:27
+    |
+ 10 |     | 1 -> { اخرج_من_حلقة; }
+    |              ^^^^^^^^^^^^^
+    |

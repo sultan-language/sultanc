@@ -2,42 +2,36 @@
 """Plans one CI run: which jobs and hosts run for this trigger.
 
 The tiers (.github/workflows/ci.yml; the policy is written out in CI.md).
-The principles:
-  A change runs a few Linux jobs; the full set (every host) runs once per
-    commit before it is promoted; the small set is a subset of the full set.
-    main -> beta -> master move by promotion of tested commits.
-  LLVM (.github/workflows/premerge.yaml, .ci/compute-projects.sh): presubmit
-    builds only what the change touches; the wide matrix runs after the
-    commit lands, on post-commit builders; release branches run the same
-    workflows.
-  Every presubmit host is also a post-submit host, never the other way round.
-SultanC pushes straight to main, so main gets the small set: a smoke set on
-Linux, widened only where a change touches another host's code. The whole
-matrix runs once per commit: nightly on main, and when a commit is qualified
-for promotion to beta (promote.yml). beta and master hold only commits that
-passed it, so they never run it again.
+The compiler is built the way mature toolchains build theirs: each build is
+one compile of the sources by the previous compiler (N-1), the self-host
+fixpoint is checked when a commit lands, and the wide matrix runs once a day.
 
   docs     only documentation changed: the docs check, no compiler build
-  quick    push to main (the smoke set):
-             Seed / linux-x86_64   Native ELF: seed bootstrap, Stage3 ==
-                                   Stage4, seed reproducible, test suite
-             LLVM / linux-x86_64   C Stage0 -> LLVM-enabled Stage2,
-                                   convergence (no second test run)
-  focused  pull request into main: quick, plus the hosts and routes of the
-           components the pull request changes (COMPONENTS below)
+  pr       pull request into main: one build of the compiler with the
+           previous compiler (the cached compiler of the base commit, else
+           Stage1 from the seed) and the test suite, on linux-x86_64 plus
+           the hosts of the components the pull request changes
+           (COMPONENTS); no second compile, no fixpoint
+  main     push to main (a merge): from the seed, S2 == S3 (two compiles),
+           the seed reproduced by the sources, the test suite; the compiler
+           is cached for the pull requests based on this commit
   full     nightly, qualification (promote.yml, beta.yml), manual dispatch
-           with scope=full: every route on every host, every test step, the
-           seed update
+           with scope=full: the seed route on every host (Stage1 on the
+           hosts without a Native backend), the seed update, the LLVM
+           fixpoint and cross-backend equality, the cross-target compilers
+           and their runs on the hosts without a Native backend
 
-Every host and route is defined once (HOSTS); a tier only selects from them,
-so a tier never changes what a selected job does, and every host of a smaller
-tier is also in the full tier. The jobs themselves are the same
-steps, the same scripts (linux.sh, macos.sh, windows.ps1) and the same
-canonical build and test commands in every tier.
+The frozen C Stage0 runs in none of these: the release check
+(.github/workflows/chain.yml, monthly and before a release) runs it.
+
+Every host is defined once (HOSTS); a tier only selects from them, so a tier
+never changes what a selected job does. The jobs are the same steps, the same
+scripts (linux.sh, macos.sh, windows.ps1) and the same build commands in
+every tier.
 
 Environment:
   EVENT          github.event_name of the run that started CI
-  SCOPE          the scope input: quick | full (empty: from EVENT)
+  SCOPE          the scope input: main | full (empty: from EVENT)
   CHANGED_FILES  a file holding the changed paths, one per line, or empty when
                  they are unknown (the run is then planned as if every
                  component changed, never as documentation-only)
@@ -45,8 +39,12 @@ Environment:
   GITHUB_STEP_SUMMARY  where the plan is described (else stdout)
 
 Outputs (strings; matrices are JSON {"include": [...]}):
-  tier, docs, seed, seed_matrix, seed_update, llvm, llvm_sdk_matrix,
-  llvm_matrix, expected (JSON list of the jobs that must succeed)
+  tier, docs, build, build_matrix, seed, seed_matrix, seed_update, llvm,
+  llvm_matrix, cross, cross_run_matrix, expected (JSON list of the jobs that
+  must succeed)
+
+The cross-target compilers are built by the LLVM job of linux-x86_64
+(matrix field cross_build) and run by cross-run.
 
 Standard library only.
 """
@@ -56,46 +54,46 @@ import os
 import re
 import sys
 
-# Every CI host, once. native: the host has the SultanC Native backend, so
-# the seed route builds Stage2..Stage4 and runs the test suite there.
+# Every CI host, once. native: the host has the SultanC Native backend, so a
+# compiler for it is built there and the test suite runs there. cross: the
+# target of the compiler cross-built for a host without one (linux.sh cross).
 HOSTS = {
     "linux-x86_64": {"runner": "ubuntu-24.04", "script": "linux", "native": True, "exe": "sultanc"},
-    "linux-arm64": {"runner": "ubuntu-24.04-arm", "script": "linux", "native": False, "exe": "sultanc"},
+    "linux-arm64": {"runner": "ubuntu-24.04-arm", "script": "linux", "native": False, "exe": "sultanc",
+                    "cross": "aarch64-linux-gnu"},
     "macos-arm64": {"runner": "macos-15", "script": "macos", "native": True, "exe": "sultanc"},
-    "macos-x86_64": {"runner": "macos-15-intel", "script": "macos", "native": False, "exe": "sultanc"},
-    "windows-x86_64": {"runner": "windows-2025", "script": "windows", "native": False, "exe": "sultanc.exe"},
-    "windows-arm64": {"runner": "windows-11-arm", "script": "windows", "native": False, "exe": "sultanc.exe"},
+    "macos-x86_64": {"runner": "macos-15-intel", "script": "macos", "native": False, "exe": "sultanc",
+                     "cross": "x86_64-darwin"},
+    "windows-x86_64": {"runner": "windows-2025", "script": "windows", "native": False, "exe": "sultanc.exe",
+                       "cross": "x86_64-windows-msvc"},
+    "windows-arm64": {"runner": "windows-11-arm", "script": "windows", "native": False, "exe": "sultanc.exe",
+                      "cross": "aarch64-windows-msvc"},
 }
 
-# Paths that are documentation only (as the former paths-ignore).
+# Paths that are documentation only.
 DOCS = re.compile(r"^(docs/|LICENSE$)|\.md$")
 
-# Components a pull request can touch, and what each adds to the quick tier.
-#   seed: seed-route hosts      llvm: LLVM-route hosts (tests on)
-#   llvm_tests: run the test step on these LLVM-route hosts
-# The seed update (regenerate the seed in a scratch directory, bootstrap from
-# it; never written back) runs only in the full tier.
+# Components a pull request can touch, and the hosts each adds to its build
+# job (build) or the LLVM-enabled build it adds (llvm).
 COMPONENTS = [
     ("macOS / Darwin / Mach-O",
      re.compile(r"(^|/)(macos|darwin|macho|mach_o|apple)([/_.]|$)|^\.github/ci/macos\.sh$"),
-     {"seed": ["macos-arm64"], "llvm": ["macos-x86_64"]}),
+     {"build": ["macos-arm64", "macos-x86_64"]}),
     ("Windows / COFF / PE",
      re.compile(r"(^|/)(windows|win32|coff|pe|msvc)([/_.]|$)|^\.github/ci/windows\.ps1$"),
-     {"llvm": ["windows-x86_64"]}),
+     {"build": ["windows-x86_64"]}),
     ("arm64 Linux / Windows",
      re.compile(r"(^|/)(aarch64|arm64)([/_.]|$)"),
-     {"llvm": ["linux-arm64", "windows-arm64"]}),
-    ("LLVM provider / C Stage0 / build",
-     re.compile(r"^compiler/backend/provider/llvm/|^bootstrap/|^cmake/|^build\.sh$|^\.github/ci/llvm\.lock$"
-                r"|^\.github/ci/linux\.sh$"),
-     {"llvm_tests": ["linux-x86_64"]}),
+     {"build": ["linux-arm64", "windows-arm64"]}),
+    ("LLVM provider / build",
+     re.compile(r"^compiler/backend/provider/llvm/|^build\.sh$|^tools/build/|^bootstrap-wasm/"
+                r"|^\.github/ci/llvm\.lock$|^\.github/ci/linux\.sh$"),
+     {"llvm": ["linux-x86_64"]}),
 ]
 
-# The smoke set (push to main): Linux x86_64 only. The
-# seed route runs the test suite; the LLVM route builds and converges.
-QUICK_SEED = ["linux-x86_64"]
-QUICK_LLVM = ["linux-x86_64"]
-QUICK_LLVM_TESTS = []
+PR_BUILD = ["linux-x86_64"]
+MAIN_SEED = ["linux-x86_64"]
+FULL_LLVM = ["linux-x86_64", "macos-arm64"]
 
 
 def write(path_variable, text):
@@ -112,6 +110,7 @@ def matrix(names, **extra):
     for name in HOSTS:  # host order is the table's
         if name in names:
             entry = {"host": name, **HOSTS[name]}
+            entry.setdefault("cross", "")
             for key, value in extra.items():
                 entry[key] = value(name) if callable(value) else value
             include.append(entry)
@@ -135,12 +134,12 @@ def main():
 
     if scope == "full" or event == "schedule":
         tier = "full"
-    elif scope == "quick":
-        tier = "quick"
+    elif scope in ("main", "quick"):
+        tier = "main"
     elif event == "pull_request":
-        tier = "focused"
+        tier = "pr"
     else:
-        tier = "quick"
+        tier = "main"
 
     docs_changed = True
     code_changed = True
@@ -153,66 +152,69 @@ def main():
             if not code_changed:
                 tier = "docs"
 
-    seed_hosts, llvm_hosts, llvm_test_hosts = set(), set(), set()
+    build_hosts, seed_hosts, llvm_hosts = set(), set(), set()
+    llvm_mode = "build"
     seed_update = False
+    cross = False
     touched = []
     if tier == "full":
         seed_hosts = set(HOSTS)
-        llvm_hosts = set(HOSTS)
-        llvm_test_hosts = set(HOSTS)
+        llvm_hosts = set(FULL_LLVM)
+        llvm_mode = "verify"
         seed_update = True
-    elif tier in ("quick", "focused"):
-        seed_hosts = set(QUICK_SEED)
-        llvm_hosts = set(QUICK_LLVM)
-        llvm_test_hosts = set(QUICK_LLVM_TESTS)
-        if tier == "focused":
-            for label, pattern, adds in COMPONENTS:
-                if changed is None or any(pattern.search(f) for f in changed):
-                    touched.append(label)
-                    seed_hosts.update(adds.get("seed", []))
-                    llvm_hosts.update(adds.get("llvm", []))
-                    llvm_test_hosts.update(adds.get("llvm", []))
-                    llvm_hosts.update(adds.get("llvm_tests", []))
-                    llvm_test_hosts.update(adds.get("llvm_tests", []))
+        cross = True
+    elif tier == "main":
+        seed_hosts = set(MAIN_SEED)
+    elif tier == "pr":
+        build_hosts = set(PR_BUILD)
+        for label, pattern, adds in COMPONENTS:
+            if changed is None or any(pattern.search(f) for f in changed):
+                touched.append(label)
+                build_hosts.update(adds.get("build", []))
+                llvm_hosts.update(adds.get("llvm", []))
 
     run_docs = tier in ("docs", "full") or docs_changed
+    build = matrix(build_hosts)
     seed = matrix(seed_hosts)
-    llvm_sdk = matrix(llvm_hosts)
-    llvm = matrix(llvm_hosts, tests=lambda h: h in llvm_test_hosts)
+    # The LLVM-enabled compiler of linux-x86_64 also builds the cross-target
+    # compilers (linux.sh cross), which cross-run runs on their hosts.
+    llvm = matrix(llvm_hosts, mode=llvm_mode, cross_build=lambda h: cross and h == "linux-x86_64")
+    cross_run = matrix([h for h in HOSTS if HOSTS[h].get("cross")] if cross else [])
 
     expected = ["plan", "lint"]
     if run_docs:
         expected.append("docs")
+    if build["include"]:
+        expected.append("build")
     if seed["include"]:
         expected.append("seed")
     if seed_update:
         expected.append("seed-update")
     if llvm["include"]:
         expected += ["llvm-sdk", "llvm"]
+    if cross:
+        expected.append("cross-run")
 
     outputs = {
         "tier": tier,
         "docs": json.dumps(run_docs),
+        "build": json.dumps(bool(build["include"])),
+        "build_matrix": json.dumps(build),
         "seed": json.dumps(bool(seed["include"])),
         "seed_matrix": json.dumps(seed),
         "seed_update": json.dumps(seed_update),
         "llvm": json.dumps(bool(llvm["include"])),
-        "llvm_sdk_matrix": json.dumps(llvm_sdk),
         "llvm_matrix": json.dumps(llvm),
+        "cross": json.dumps(cross),
+        "cross_run_matrix": json.dumps(cross_run),
         "expected": json.dumps(expected),
     }
     write("GITHUB_OUTPUT", "".join(f"{k}={v}\n" for k, v in outputs.items()))
 
-    def hosts(m, test_key=None):
+    def hosts(m, native_note):
         if not m["include"]:
             return "not run"
-        parts = []
-        for e in m["include"]:
-            if test_key is None:
-                parts.append(e["host"] + ("" if e["native"] else " (bootstrap only)"))
-            else:
-                parts.append(e["host"] + ("" if e[test_key] else " (build + convergence, no tests)"))
-        return ", ".join(parts)
+        return ", ".join(e["host"] + ("" if e["native"] else f" ({native_note})") for e in m["include"])
 
     lines = [
         f"## CI plan: {tier}",
@@ -220,9 +222,11 @@ def main():
         f"- trigger: `{event or 'local'}`" + (f", scope `{scope}`" if scope else ""),
         f"- changed files: {'unknown' if changed is None else len(changed)}",
         f"- docs check: {'run' if run_docs else 'not run'}",
-        f"- seed route: {hosts(seed)}",
+        f"- build from the previous compiler: {hosts(build, 'Stage1 only')}",
+        f"- seed route, S2 == S3, seed check: {hosts(seed, 'Stage1 only')}",
         f"- seed update: {'run' if seed_update else 'not run'}",
-        f"- LLVM route: {hosts(llvm, 'tests')}",
+        f"- LLVM ({llvm_mode}): {hosts(llvm, '')}",
+        f"- cross-target compilers: {hosts(cross_run, 'runs there')}",
     ]
     if touched:
         lines.append(f"- components changed: {', '.join(touched)}")
@@ -230,8 +234,8 @@ def main():
         lines.append(f"- note: {note}")
     if tier != "full":
         lines.append("- the full matrix runs nightly, on manual dispatch with scope `full`, "
-                     "and when a commit is qualified for beta (promote.yml); a passing quick "
-                     "or focused run qualifies nothing")
+                     "and when a commit is qualified for beta (promote.yml); the C Stage0 chain "
+                     "runs monthly and before a release (chain.yml)")
     write("GITHUB_STEP_SUMMARY", "\n".join(lines) + "\n")
     return 0
 

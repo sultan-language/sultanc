@@ -1,0 +1,41 @@
+error[SULTANC-BORROW-CONFLICT]: borrow conflict — The conflicting borrowed value is `القيمة`. The value is already borrowed mutably, so it cannot be borrowed again.
+  --> tests/ar/diagnostics/e2e/match_bindings_keep_borrow.sn:13:5..13:32
+    |
+ 13 |     ليكن القيمة: متغير عدد = 1;
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+error[SULTANC-BORROW-CONFLICT]: borrow conflict — The conflicting borrowed value is `الأول`. The value is borrowed for reading, so it cannot be borrowed mutably.
+  --> tests/ar/diagnostics/e2e/match_bindings_keep_borrow.sn:25:5..25:31
+    |
+ 25 |     ليكن الأول: متغير عدد = 1;
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+error[SULTANC-BORROW-CONFLICT]: borrow conflict — The conflicting borrowed value is `القيمة`. The value is borrowed for reading, so it cannot be borrowed mutably.
+  --> tests/ar/diagnostics/e2e/match_bindings_keep_borrow.sn:36:5..36:32
+    |
+ 36 |     ليكن القيمة: متغير عدد = 1;
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+error[SULTANC-BORROW-CONFLICT]: borrow conflict — The conflicting borrowed value is `القيمة`. The value is borrowed for reading, so it cannot be borrowed mutably.
+  --> tests/ar/diagnostics/e2e/match_bindings_keep_borrow.sn:46:5..46:32
+    |
+ 46 |     ليكن القيمة: متغير عدد = 1;
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+error[SULTANC-BORROW-CONFLICT]: borrow conflict — The conflicting borrowed value is `القيم`. The value is borrowed for reading, so it cannot be borrowed mutably.
+  --> tests/ar/diagnostics/e2e/match_bindings_keep_borrow.sn:57:5..57:44
+    |
+ 57 |     ليكن القيم: متغير متجه عدد = [1، 2، 3];
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+error[SULTANC-BORROW-CONFLICT]: borrow conflict — The conflicting borrowed value is `القيم`. The value is borrowed for reading, so it cannot be borrowed mutably.
+  --> tests/ar/diagnostics/e2e/match_bindings_keep_borrow.sn:66:5..66:44
+    |
+ 66 |     ليكن القيم: متغير متجه عدد = [1، 2، 3];
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |

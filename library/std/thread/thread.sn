@@ -29,6 +29,7 @@ module thread { ar: خيط };
 استورد نظام_التشغيل.أخطاء;
 استورد نظام_التشغيل.خيوط;
 استورد نظام_التشغيل.ساعة;
+استورد نظام_التشغيل.مكدس_الإشارات;
 استورد المكتبة.تزامن.مشترك;
 استورد المكتبة.تزامن.قفل;
 
@@ -49,12 +50,16 @@ module thread { ar: خيط };
 عام مرادف join_handle = مقبض_خيط;
 
 // The entry of a spawned thread: take the closure out of its cell (a no-op
-// closure stays behind), run it, and drop it on return.
+// closure stays behind), run it, and drop it on return. Around the work the
+// thread has its own alternate signal stack, on which std's stack-overflow
+// report runs (os.signal_stack: once the report is installed).
 عرف لا_عمل_خيط(): فراغ { }
 عرف شغل_عمل_الخيط(الخلية: &صندوق متغير دالة(): فراغ, المؤشر: *متغير دالة(): فراغ): فراغ {
+    ليكن مكدس_الإشارات: ط64 = ابدأ_مكدس_إشارات_الخيط();
     ليكن العمل: متغير دالة(): فراغ = لا_عمل_خيط;
     غير_آمن { بدّل((*المؤشر), العمل); }
     العمل();
+    أنه_مكدس_إشارات_الخيط(مكدس_الإشارات);
 }
 
 // The thread owns its closure: it goes in a heap cell the entry closure owns;

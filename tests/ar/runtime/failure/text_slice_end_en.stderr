@@ -1,0 +1,2 @@
+error[SULTANC-RUNTIME-PROGRAM-STOPPED]: the program stopped
+slice end 11 out of range for length 11 at tests/ar/runtime/failure/text_slice_end_en.sn:15:24

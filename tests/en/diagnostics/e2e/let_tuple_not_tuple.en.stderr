@@ -1,0 +1,6 @@
+error[SULTANC-TYPE-LET-TUPLE-SHAPE]: the Type of this tuple `let` is not a tuple with one element for each name
+  --> tests/en/diagnostics/e2e/let_tuple_not_tuple.sn:8:17..8:20
+   |
+ 8 |     let (a, b): int = 5;
+   |                 ^^^
+   |

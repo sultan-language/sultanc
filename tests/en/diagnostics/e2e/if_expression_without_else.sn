@@ -1,0 +1,14 @@
+// اختبار: رفض
+// تشخيص: SULTANC-PARSE-IF-WITHOUT-ELSE
+// نظير: tests/ar/diagnostics/e2e/if_expression_without_else.sn
+// خرج-تشخيص-عربي: if_expression_without_else.ar.stderr
+// خرج-تشخيص-إنجليزي: if_expression_without_else.en.stderr
+// An `if` used as a value needs an `else`: there is no value when the
+// condition is false.
+def label(n: int): string {
+    let text: string = if (n > 0) "positive";
+    return text;
+}
+def main(): int {
+    return length(label(1)) as int;
+}

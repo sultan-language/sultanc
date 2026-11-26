@@ -349,6 +349,48 @@ dates
 returning two values from a function, as the next section shows. When the parts have meanings worth
 naming, a record, from [chapter 5](ch05-00-records.md), is clearer.
 
+### Taking a tuple apart
+
+`let` takes a tuple apart too. The names go in parentheses where one name would go, and, as in every
+`let`, the type is written: a tuple with one element for each name. Each name gets its element, with the
+type written for it, for the rest of the block:
+
+```sultan
+import std.io.println;
+import std.text.number;
+
+def divide(a: int, b: int): (int, int) {
+    return (a / b, a % b);
+}
+
+def main(): int {
+    let (quotient, remainder): (int, int) = divide(17, 5);
+    let entry: (string, int) = ("dates", 45);
+    let (name, _): (string, int) = entry;
+    let ((x, y), z): ((int, int), int) = ((1, 2), 3);
+    println(int_to_text(quotient * 10 + remainder));
+    println(name);
+    println(int_to_text(x + y + z));
+    return 0;
+}
+```
+
+```text
+32
+dates
+6
+```
+
+`_` skips an element, and a nested tuple of names takes a nested tuple apart. A `string` taken out of
+the tuple moves out of it, as in a `match`: after `let (name, _): (string, int) = entry;` the whole of
+`entry` has been used up. A tuple literal takes the types of its elements from the written type, so
+`let (small, wide): (u8, i64) = (7, 8);` makes `7` a `u8`. The pattern is only names, `_` and nested
+tuples: a literal, a constructor or a range would test the value, and testing belongs to `match`, which
+also says what to do when the test fails (`SULTANC-PARSE-LET-PATTERN`). A type of another shape is
+rejected (`SULTANC-TYPE-LET-TUPLE-SHAPE`), and a name cannot be made `mutable` by its element type,
+except a writable view `mutable [] T` from [chapter 8](ch08-01-vectors.md)
+(`SULTANC-MUTABILITY-LET-TUPLE-MUTABLE`): to change a value taken out, copy it into a `let` of its own.
+
 ## Vectors
 
 A *vector* holds any number of values of one type, one after another. Its type is `vector` followed by

@@ -1,0 +1,15 @@
+// اختبار: رفض
+// تشخيص: SULTANC-OWNERSHIP-MOVE-OUT-OF-REFERENCE
+// نظير: tests/ar/diagnostics/e2e/as_borrowed_move.sn
+// خرج-تشخيص-عربي: as_borrowed_move.ar.stderr
+// خرج-تشخيص-إنجليزي: as_borrowed_move.en.stderr
+// `all` and `a` would own the same storage: the arm borrows its scrutinee, so
+// `all` is a view and cannot move.
+type Named = | One of string | Two of (string, string);
+def take(n: Named): int { return 1; }
+def f(n: Named): int {
+    match n with
+    | Named.Two(a, _) as all -> { return take(all); }
+    | Named.One(_) -> { return 0; };
+}
+def main(): int { return f(Named.One("x")); }

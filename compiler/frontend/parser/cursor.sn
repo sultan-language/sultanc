@@ -1,4 +1,5 @@
 استورد compiler.source.span;
+استورد compiler.source.source_file;
 استورد compiler.frontend.lexer.token;
 استورد compiler.frontend.lexer.values;
 استورد compiler.frontend.parser.error;
@@ -309,5 +310,27 @@
     إذا (التالي >= العدد) { أرجع خطأ; };
     الحالة.الموضع := التالي;
     *المؤشر := الحالة;
+    أرجع صواب;
+}
+
+// Whether the source text under the span is exactly المطلوب: how the parser
+// recognizes a contextual word, which stays an ordinary name elsewhere.
+عام عرف هل_نطاق_يساوي_نصا(
+    المصدر: &مصدر,
+    النطاق: نطاق,
+    المطلوب: نص
+): منطقي {
+    ليكن النص: نص = المطلوب;
+    ليكن طول_النطاق: طبيعي = النطاق.النهاية.البايت - النطاق.البداية.البايت;
+    إذا (طول_النطاق != (الطول(النص) مثل طبيعي)) {
+        أرجع خطأ;
+    };
+    ليكن ف: متغير طبيعي = 0;
+    طالما (ف < طول_النطاق) {
+        إذا (بايت_المصدر(المصدر, (النطاق.البداية.البايت مثل طبيعي) + ف) != النص[ف]) {
+            أرجع خطأ;
+        };
+        ف := ف + 1;
+    }
     أرجع صواب;
 }

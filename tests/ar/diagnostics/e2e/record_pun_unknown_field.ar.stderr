@@ -1,0 +1,6 @@
+خطأ[SULTANC-PATTERN-INVALID]: نمط غير صالح — لا يناسب النمط نوع القيمة الجاري مطابقتها.
+  --> tests/ar/diagnostics/e2e/record_pun_unknown_field.sn:10:7..10:23
+    |
+ 10 |     | { العرض, العمق } -> { أرجع العرض; };
+    |       ^^^^^^^^^^^^^^^^
+    |

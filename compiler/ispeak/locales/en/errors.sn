@@ -185,6 +185,17 @@
     | معرف_تشخيص.تعارض_ملكية_عند_الدمج -> { أرجع «ownership state of a local differs between paths that join»; }
     | معرف_تشخيص.تجميع_غير_مدعوم -> { أرجع «assembly (`asm`) is not supported yet»; }
     | معرف_تشخيص.بدائي_غير_مستدعى -> { أرجع «built-in function used as a value without being called»; }
+    | معرف_تشخيص.مطابقة_تعبيرية_بلا_قيمة -> { أرجع «no arm of this match expression gives a value»; }
+    | معرف_تشخيص.ذراع_مطابقة_بلا_قيمة -> { أرجع «this arm of a match expression can end without a value»; }
+    | معرف_تشخيص.عرض_قابل_للكتابة_بلا_علامة -> { أرجع «a writable view `mutable [] T` is made with `&mutable`»; }
+    | معرف_تشخيص.إذا_تعبيرية_بلا_وإلا -> { أرجع «an `if` used as a value has no `else`»; }
+    | معرف_تشخيص.إذا_تعبيرية_بلا_قيمة -> { أرجع «no branch of this `if` gives a value»; }
+    | معرف_تشخيص.فرع_إذا_بلا_قيمة -> { أرجع «this branch of the `if` can end without a value»; }
+    | معرف_تشخيص.ربط_صف_غير_صالح -> { أرجع «a tuple `let` takes a tuple apart only into names, `_` and nested tuples»; }
+    | معرف_تشخيص.ربط_صف_بنوع_غير_مطابق -> { أرجع «the Type of this tuple `let` is not a tuple with one element for each name»; }
+    | معرف_تشخيص.منشئ_تمهيدي_بلا_نوع -> { أرجع «the option or result type of this `none`, `ok` or `err` cannot be known here»; }
+    | معرف_تشخيص.مقطع_نص_غير_صالح -> { أرجع «a slice of text is borrowed read-only: `&s[a..b]`»; }
+    | معرف_تشخيص.ربط_صف_قابل_للتغيير -> { أرجع «a name taken out of a tuple cannot be `mutable`»; }
     | معرف_تشخيص.مورد_محرر -> { أرجع «resource was already released»; }
     | معرف_تشخيص.تعارض_استعارة -> { أرجع «borrow conflict»; }
     | معرف_تشخيص.هروب_مرجع -> { أرجع «reference escapes its valid scope»; }
@@ -195,6 +206,8 @@
     | معرف_تشخيص.فهرس_خارج_الحدود -> { أرجع «index is outside the valid bounds»; }
     | معرف_تشخيص.نمط_غير_شامل -> { أرجع «non-exhaustive pattern»; }
     | معرف_تشخيص.نمط_غير_قابل_للوصول -> { أرجع «unreachable pattern»; }
+    | معرف_تشخيص.ربط_بدائل_غير_متسق -> { أرجع «the alternatives of an or-pattern bind different names»; }
+    | معرف_تشخيص.نوع_ربط_بدائل_غير_متسق -> { أرجع «the alternatives of an or-pattern bind a name with different types»; }
     | معرف_تشخيص.تحكم_حلقة_خارج_حلقة -> { أرجع «loop control statement is outside of any loop»; }
     | معرف_تشخيص.انتهى_البرنامج_بخطأ -> { أرجع «the program ended with an error»; }
     | معرف_تشخيص.توقف_البرنامج -> { أرجع «the program stopped»; }

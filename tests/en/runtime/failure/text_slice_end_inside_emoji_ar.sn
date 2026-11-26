@@ -1,0 +1,19 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 1
+// تفاضلي: نعم
+// بيئة: SULTANC_LANG=ar
+// خرج-قياسي: <فارغ>
+// خطأ-قياسي-ملف: text_slice_end_inside_emoji_ar.stderr
+// نظير: tests/ar/runtime/failure/text_slice_end_inside_emoji_ar.sn
+// A slice of text whose end cuts a four-byte character: the byte after the
+// end (b + 1) continues it (docs/en/reference/errors.md, "Runtime checks").
+// The program stops through the panic path: the frame "the program
+// stopped", then the byte offset inside a character and the place of the
+// slice, exit status 1.
+def main(): int {
+    let text: string = "😀x";
+    let last: int = 1;
+    let part: &string = &text[0..last];
+    return length(*part);
+}

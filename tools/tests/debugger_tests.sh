@@ -11,7 +11,8 @@
 #   aarch64-linux  under lldb attached to qemu-aarch64's gdbstub (gdb on this
 #                  host cannot debug AArch64), with AARCH64=1.
 # Backends: native, and llvm when the compiler includes LLVM (BACKENDS=...).
-# Optimization levels: -O0 and the default (OPTS="-O0 default").
+# Optimization levels: -O0 and -O2 (OPTS="-O0 -O2"; `default` builds with no -O,
+# which is -O0).
 #
 #   SC=./build/sultanc bash tools/tests/debugger_tests.sh [program-name...]
 #
@@ -22,7 +23,7 @@ set -u
 SC=${SC:-./build/sultanc}
 OUT=${OUT:-build/debugger-tests}
 BACKENDS=${BACKENDS:-native llvm}
-OPTS=${OPTS:-"-O0 default"}
+OPTS=${OPTS:-"-O0 -O2"}
 AARCH64=${AARCH64:-0}
 mkdir -p "$OUT"
 HERE=$(cd "$(dirname "$0")" && pwd)

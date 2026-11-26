@@ -1,0 +1,2 @@
+خطأ[SULTANC-RUNTIME-PROGRAM-STOPPED]: توقف البرنامج
+الشريحة من 2 إلى 0 تنتهي قبل أن تبدأ عند tests/en/runtime/failure/slice_order_ar.sn:16:24

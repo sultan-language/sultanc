@@ -1,0 +1,6 @@
+error[SULTANC-BORROW-REFERENCE-ESCAPE]: reference escapes its valid scope — The escaping reference is `greeting`. A reference outlives the value it points to.
+  --> tests/en/diagnostics/e2e/text_slice_escape.sn:9:5..9:36
+   |
+ 9 |     let greeting: string = "hello";
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |

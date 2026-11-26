@@ -1,0 +1,17 @@
+// اختبار: رفض
+// تشخيص: SULTANC-PATTERN-NON-EXHAUSTIVE
+// نظير: tests/ar/diagnostics/semantic/match_expression_non_exhaustive.sn
+// خرج-تشخيص-عربي: match_expression_non_exhaustive.ar.stderr
+// خرج-تشخيص-إنجليزي: match_expression_non_exhaustive.en.stderr
+// A match expression covers every value of its scrutinee, as the statement does.
+type Light = | Red | Amber | Green;
+
+def code(light: Light): int {
+    return match light with
+    | Light.Red -> 1
+    | Light.Green -> 3;
+}
+
+def main(): int {
+    return code(Light.Amber());
+}
