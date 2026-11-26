@@ -8,7 +8,7 @@
 #   manual dispatch  the same check on the head of master
 #
 # The owner tags a passing master commit; release.yml then builds its draft
-# release (CI.md, "Releases"). This workflow never merges, promotes, tags or
+# release (docs/en/contributing/releases.md). This workflow never merges, promotes, tags or
 # releases.
 name: SultanC Master
 

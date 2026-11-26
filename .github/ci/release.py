@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""The steps of a release (.github/workflows/release.yml; CI.md, "Releases").
+"""The steps of a release (.github/workflows/release.yml; docs/en/contributing/releases.md).
 
   release.py version TAG
       The tag is vX.Y.Z or vX.Y.Z-rc.N, and X.Y.Z is the version of both
@@ -11,8 +11,9 @@
       full commit SHA each, never the placeholder. Outputs: supax_repo,
       supax_commit, analyzer_repo, analyzer_commit (repo as owner/name).
   release.py notes --version V --repo OWNER/NAME --tag TAG [--out FILE]
-      The release notes: the section of CHANGELOG.md for the base version of
-      V, which must exist and say something.
+      The top of the release notes: how to install and check the archives.
+      GitHub appends the notes it generates from the changes since the last
+      release (release.yml asks for them); the owner edits the draft.
   release.py package --version V --target T --commit SHA --compiler PATH
                      --supax PATH --analyzer PATH --out DIR [--llvm]
       Lays out sultanc-V-T/ (bin/, library/, LICENSE, README.md,
@@ -138,7 +139,7 @@ def cmd_components(args):
             raise Failure(f"{args.file}: {name}.repo must be https://github.com/OWNER/NAME, not {repo!r}")
         if commit == PLACEHOLDER:
             raise Failure(f"{args.file}: {name}.commit is still the placeholder: fill in the full SHA of the "
-                          f"{name} commit this release ships (CI.md, \"Releases\")")
+                          f"{name} commit this release ships (docs/en/contributing/releases.md)")
         if not isinstance(commit, str) or not SHA.match(commit):
             raise Failure(f"{args.file}: {name}.commit must be a full 40-character lowercase SHA, not {commit!r}")
         values[f"{key}_repo"] = f"{match.group(1)}/{match.group(2)}"
@@ -150,30 +151,11 @@ def cmd_components(args):
 # --- notes --------------------------------------------------------------------------
 
 
-def changelog_section(path, base):
-    with open(path, encoding="utf-8") as f:
-        lines = f.read().splitlines()
-    heading = re.compile(r"^## \[?" + re.escape(base) + r"\]?(\s|$)")
-    start = next((i for i, line in enumerate(lines) if heading.match(line)), None)
-    if start is None:
-        raise Failure(f"{path} has no section \"## {base}\": move the Unreleased entries into it")
-    end = next((i for i in range(start + 1, len(lines)) if lines[i].startswith("## ")), len(lines))
-    body = "\n".join(lines[start + 1:end]).strip()
-    if not re.search(r"^\s*[-*] ", body, re.M):
-        raise Failure(f"{path}: the section \"## {base}\" lists no change")
-    return body
-
-
 def cmd_notes(args):
     match = TAG.match("v" + args.version)
     if not match:
         raise Failure(f"{args.version!r} is not a release version")
-    base = match.group(1)
-    body = changelog_section("CHANGELOG.md", base)
-    blob = f"https://github.com/{args.repo}/blob/{args.tag}"
     text = (
-        f"{body}\n\n"
-        f"العربية: [CHANGELOG.ar.md]({blob}/CHANGELOG.ar.md)\n\n"
         "### Install\n\n"
         "Download the archive for your platform, check it against `SHA256SUMS.txt` "
         "(`sha256sum -c SHA256SUMS.txt --ignore-missing`), unpack it and add its `bin/` to `PATH`. "

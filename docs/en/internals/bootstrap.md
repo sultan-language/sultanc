@@ -345,7 +345,7 @@ Stage1 at `build/sultanc` and say so in one line.
 
 ## CI
 
-[CI](../../../.github/CI.md) has the tiers in full. In short:
+The CI tiers, in short:
 
 | Tier | Trigger | Bootstrap work |
 |---|---|---|
@@ -386,4 +386,3 @@ against reference implementations.
 - [Compiler Architecture](compiler-architecture.md)
 - [Contributor guide](../contributing/README.md)
 - [Tests](../contributing/tests.md)
-- [CI](../../../.github/CI.md)

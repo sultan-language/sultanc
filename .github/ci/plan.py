@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Plans one CI run: which jobs and hosts run for this trigger.
 
-The tiers (.github/workflows/ci.yml; the policy is written out in CI.md).
+The tiers (.github/workflows/ci.yml).
 The compiler is built the way mature toolchains build theirs: each build is
 one compile of the sources by the previous compiler (N-1), the self-host
 fixpoint is checked when a commit lands, and the wide matrix runs once a day.

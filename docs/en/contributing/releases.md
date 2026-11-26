@@ -3,8 +3,7 @@
 # Releases
 
 A SultanC release is a set of prebuilt archives, one per host, built by CI from one tagged commit of
-`master`. This page says what a release holds, how its version is set and how it is made. The owner's
-steps and the repository settings are in [CI](../../../.github/CI.md#releases).
+`master`. This page says what a release holds, how its version is set and how it is made.
 
 ## What a release holds
 
@@ -52,23 +51,20 @@ backends: native
 ```
 
 A development build says `development` instead of a number. Supax and sultanc-analyzer are built from
-the commits that `release/components.toml` pins, one per repository, which the owner fills in for each
+the commits that `.github/ci/components.toml` pins, one per repository, which the owner fills in for each
 release.
 
 ## How a release is made
 
-1. The changes of a release are listed under **Unreleased** in [CHANGELOG.md](../../../CHANGELOG.md)
-   (and [CHANGELOG.ar.md](../../../CHANGELOG.ar.md)) as they land; a release moves them under its
-   version, in the sections Breaking, Added, Changed, Fixed and Performance.
-2. The release commit sets the version, the changelog section and the pinned components, and is promoted
-   to `master` like every commit, so it is qualified.
-3. The owner tags it `vX.Y.Z-rc.N`, then `vX.Y.Z`. The tag starts `.github/workflows/release.yml`: it checks
+1. The release commit sets the version and the pinned components, and is promoted to `master` like
+   every commit, so it is qualified.
+2. The owner tags it `vX.Y.Z-rc.N`, then `vX.Y.Z`. The tag starts `.github/workflows/release.yml`: it checks
    the tag, builds every archive from the tagged commit, waits for the owner's approval, and creates a
-   **draft** release with the changelog section as its notes (a draft pre-release for `-rc.` tags).
-4. The owner checks the draft and publishes it. CI never publishes a release, pushes or moves a tag.
+   **draft** release (a draft pre-release for `-rc.` tags). Its notes are the install steps followed by the
+   notes GitHub generates from the changes since the last release; the owner edits them in the draft.
+3. The owner checks the draft and publishes it. CI never publishes a release, pushes or moves a tag.
 
 ## See also
 
-- [CI](../../../.github/CI.md#releases): the workflow, the owner's steps and the settings
 - [Bootstrap](../internals/bootstrap.md): how each host's compiler is built
 - [Contributor guide](README.md)

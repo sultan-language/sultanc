@@ -25,7 +25,7 @@
 # Releases are not made here: the owner tags master, and release.yml builds a
 # draft release that the owner publishes.
 #
-# Setup (CI.md, "Repository settings"): the secret PROMOTE_TOKEN in the
+# Setup: the secret PROMOTE_TOKEN in the
 # environment `promotion` (a fine-grained token of the owner: this repository,
 # Contents read and write), and a ruleset on beta and master that allows
 # updates only by the owner (bypass: repository admin), with no force push.
@@ -168,7 +168,7 @@ jobs:
           fail() { echo "::error::$1"; echo "Not promoted: $1" >> "$GITHUB_STEP_SUMMARY"; exit 1; }
           evidence=$(sh .github/ci/evidence.sh "$SHA")
           [ -n "$evidence" ] || fail "$SHA has no qualification"
-          [ -n "$PROMOTE_TOKEN" ] || fail "the secret PROMOTE_TOKEN is not set in the environment promotion (CI.md)"
+          [ -n "$PROMOTE_TOKEN" ] || fail "the secret PROMOTE_TOKEN is not set in the environment promotion"
           head=$SHA
           case "$MODE" in
             create)

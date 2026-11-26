@@ -1,7 +1,7 @@
 # Release: CI builds every host's toolchain from the tagged commit, the owner
 # approves, and a DRAFT GitHub Release is created; the owner reviews it and
 # presses Publish. Nothing here publishes a release, pushes or moves a tag.
-# The steps for the owner are in CI.md, "Releases".
+# The steps for the owner are in docs/en/contributing/releases.md.
 #
 #   push of a tag v*          the release of that tag
 #   manual dispatch           the same, run from the tag ("Use workflow from":
@@ -11,8 +11,7 @@
 # guard     the tag is vX.Y.Z or vX.Y.Z-rc.N; its commit is on master (an
 #           ancestor of origin/master) and qualified (the check master.yml runs,
 #           ci/evidence.sh); Supax.toml and compiler/Supax.toml say X.Y.Z;
-#           .github/ci/components.toml pins real commits that exist; CHANGELOG.md
-#           has a section for X.Y.Z
+#           .github/ci/components.toml pins real commits that exist
 # llvm-sdk  the pinned LLVM SDK of the hosts without a Native backend, unless
 #           cached (as chain.yml)
 # build     per host, from the tagged commit, the compiler with the version the
@@ -27,8 +26,9 @@
 #           unpacked again and run (ci/release.py smoke); uploaded as an artifact
 # publish   in the environment `release` (the owner approves the run there):
 #           SHA256SUMS.txt, a build-provenance attestation of every archive, and
-#           a draft release for the tag (a pre-release for -rc. tags) with the
-#           CHANGELOG.md section as its notes. The only job that can write.
+#           a draft release for the tag (a pre-release for -rc. tags) whose notes
+#           are the install steps and the notes GitHub generates from the changes
+#           since the last release; the owner edits them. The only job that can write.
 #
 # The version a release compiler reports is VERSION+COMMIT (the tag without
 # its v, then the first 12 hex digits of the commit), with the backends it
@@ -346,8 +346,8 @@ jobs:
     needs: [guard, build]
     runs-on: ubuntu-24.04
     timeout-minutes: 20
-    # The owner makes this environment require their approval (CI.md,
-    # "Releases"); the run waits here until they approve it.
+    # The owner makes this environment require their approval (docs/en/contributing/releases.md);
+    # the run waits here until they approve it.
     environment: release
     # The only job that can write: the draft release, and the attestation.
     permissions:
@@ -361,7 +361,6 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           ref: ${{ needs.guard.outputs.sha }}
-          # .github and the files at the root (CHANGELOG.md).
           sparse-checkout: .github
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
@@ -409,5 +408,5 @@ jobs:
           [ "$PRERELEASE" != true ] || pre=--prerelease
           # shellcheck disable=SC2086 # pre is one flag or none
           url=$(gh release create "$TAG" --draft --verify-tag $pre --repo "$REPO" --title "SultanC $VERSION" \
-            --notes-file "$RUNNER_TEMP/notes.md" dist/*.tar.gz dist/*.zip dist/*.sha256 dist/SHA256SUMS.txt)
+            --notes-file "$RUNNER_TEMP/notes.md" --generate-notes dist/*.tar.gz dist/*.zip dist/*.sha256 dist/SHA256SUMS.txt)
           echo "Draft release of $TAG: $url (check it, then Publish)" >> "$GITHUB_STEP_SUMMARY"

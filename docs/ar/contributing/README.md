@@ -22,7 +22,7 @@
 | `tools/` | `build/` (مشغّل البناء)، و`tests/` (نقطة دخول التكامل المستمر (CI) والفحوص)، و`generate/` (السجلات والمولّدات)، و`audit/` |
 | `examples/` | برامج بالإنجليزية (`en/`) وبالعربية (`ar/`) |
 | `docs/` | التوثيق: `book/` و`reference/` و`internals/` و`contributing/` و`history/` |
-| `.github/` | التكامل المستمر: الملف `workflows/ci.yml` (كل المهام على مستويات)، و`promote.yml` (الترقية main ← beta ← master)، وسكربت واحد لكل عائلة من المضيفات في المجلد `ci/`؛ السياسة في `.github/CI.md` |
+| `.github/` | التكامل المستمر: الملف `workflows/ci.yml` (كل المهام على مستويات)، و`promote.yml` (الترقية main ← beta ← master)، وسكربت واحد لكل عائلة من المضيفات في المجلد `ci/` |
 
 داخل `compiler/`:
 

@@ -1,6 +1,6 @@
 # The tools a SultanC release ships with the compiler, each built by
 # .github/workflows/release.yml from one exact commit of its own repository
-# with the release's own sultanc (.github/CI.md, "Releases").
+# with the release's own sultanc (docs/en/contributing/releases.md).
 #
 # The owner fills in both commits at release time, in the commit that is then
 # promoted and tagged: the full 40-character SHA of the commit of each
