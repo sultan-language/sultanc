@@ -30,9 +30,11 @@ def main(): int {
     release_free_memory();
     if (بايتات_حية_مخصص_النظام() != live) { return 4; };
     if (بايتات_مستردة_مخصص_النظام() < released + 1048576) { return 5; };
-    // The merged run holds a request of nearly its whole size.
+    // The merged run holds a request of nearly its whole size. Free space
+    // just below the run (left by the program's start) merges with it, so the
+    // block may begin before first; it ends before the guard.
     let big: u64 = خصص_ذاكرة_التشغيل(2000000);
-    if (big != first) { return 6; };
+    if (big == 0 || big > first || big + 2000000 > guard) { return 6; };
     // A second pass finds nothing new to merge and changes nothing live.
     let live_big: u64 = بايتات_حية_مخصص_النظام();
     release_free_memory();

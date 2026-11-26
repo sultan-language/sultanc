@@ -1,6 +1,5 @@
 // اختبار: قبول
 // تشخيص: SULTANC-PATTERN-UNREACHABLE
-// خروج: 2
 // نظير: tests/ar/diagnostics/semantic/unreachable_alternative.sn
 // An alternative the earlier arms already cover never matches: a warning at
 // the alternative, and the program builds.
@@ -9,6 +8,6 @@ def main(): int {
     let h: Hand = Hand.Paper();
     match h with
     | Hand.Rock -> { return 1; }
-    | Hand.Paper | Hand.Rock -> { return 2; }
+    | Hand.Paper | Hand.Rock -> { return 0; }
     | Hand.Scissors -> { return 3; };
 }

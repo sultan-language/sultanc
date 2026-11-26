@@ -1,13 +1,12 @@
 // اختبار: قبول
 // تشخيص: SULTANC-PATTERN-UNREACHABLE
-// خروج: 1
 // نظير: tests/ar/diagnostics/semantic/unreachable_vector_arm.sn
 // `[_, rest _]` covers every vector of one element or more: the arm after it never
 // runs, a warning, and the program builds.
 def main(): int {
     let v: vector int = [1];
     match v with
-    | [_, rest _] -> { return 1; }
+    | [_, rest _] -> { return 0; }
     | [a] -> { return a; }
-    | [] -> { return 0; };
+    | [] -> { return 2; };
 }

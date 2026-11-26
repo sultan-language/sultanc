@@ -83,12 +83,14 @@
 }
 
 // Whether the source's keywords are English: its first code line starts
-// with an ASCII letter (a keyword: `import`, `def`, `type`, ...), not an
-// Arabic one (`استورد`, `عرف`, `نوع`, ...).
+// with an ASCII letter after any `@@` (a keyword: `import`, `def`, `type`,
+// an annotation name, ...), not an Arabic one (`استورد`, `عرف`, `نوع`, ...).
 عام عرف شفرة_بسطح_إنجليزي(النص: &نص): منطقي {
     ليكن ف: متغير طبيعي = بداية_أول_سطر_شفرة(النص);
     ليكن ن: طبيعي = الطول(*النص) مثل طبيعي;
     طالما (ف < ن && بايت_فراغ_سطر((*النص)[ف])) { ف := ف + 1; }
+    // An annotation's `@@` is no letter: its name says the surface.
+    طالما (ف < ن && (*النص)[ف] == 0x40) { ف := ف + 1; }
     إذا (ف >= ن) { أرجع صواب; };
     ليكن ب: ط8 = (*النص)[ف];
     أرجع (ب >= 0x41 && ب <= 0x5A) || (ب >= 0x61 && ب <= 0x7A);

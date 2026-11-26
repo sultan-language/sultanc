@@ -1,6 +1,5 @@
 // اختبار: قبول
 // تشخيص: SULTANC-PATTERN-UNREACHABLE
-// خروج: 2
 // نظير: tests/ar/diagnostics/semantic/unreachable_nested_alternative.sn
 // An alternative nested in a pattern that the or-pattern's earlier
 // alternatives already cover never matches: a warning at the alternative, and
@@ -8,6 +7,6 @@
 def main(): int {
     let p: (int, int) = (1, 2);
     match p with
-    | (1 | 2 | 1, y) -> { return y; }
-    | _ -> { return 0; };
+    | (1 | 2 | 1, y) -> { return y - 2; }
+    | _ -> { return 1; };
 }
