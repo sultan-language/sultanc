@@ -542,7 +542,11 @@ jobs:
     name: Qualified
     needs: [plan, summary]
     # Only a full-tier run whose gate passed, and only when the caller asks.
-    if: inputs.qualify && needs.plan.outputs.tier == 'full' && needs.summary.result == 'success'
+    # `!cancelled()` replaces the implicit success(), which also requires
+    # every earlier job in the chain to have succeeded: a job the plan leaves
+    # out (build in a full run) is skipped, and would skip this one with it.
+    # The gate (summary) already decides what had to pass.
+    if: ${{ !cancelled() && inputs.qualify && needs.plan.outputs.tier == 'full' && needs.summary.result == 'success' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     permissions:
