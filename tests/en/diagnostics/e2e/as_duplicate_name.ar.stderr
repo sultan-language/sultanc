@@ -1,0 +1,12 @@
+خطأ[SULTANC-NAME-DUPLICATE-DECLARATION]: تصريح مكرر — الاسم المعرف أكثر من مرة هو ⁨`x`⁩. صُرح بالاسم نفسه أكثر من مرة في هذا النطاق.
+  --> tests/en/diagnostics/e2e/as_duplicate_name.sn:9:12..9:13
+   |
+ 9 |     | x as x -> { return x; };
+   |            ^
+   |
+  ::: tests/en/diagnostics/e2e/as_duplicate_name.sn:9:7..9:8
+   |
+ 9 |     | x as x -> { return x; };
+   |       ^ سياق مرتبط
+   |
+  = ملاحظة: يظهر التصريح السابق كمصدر مرتبط

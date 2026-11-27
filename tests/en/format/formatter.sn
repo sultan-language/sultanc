@@ -125,6 +125,31 @@ def g(a: int,
         a,
         b); }
 ») != 0) { return 11; };
+    // A match expression: its arms at the statement's level, a braced arm's
+    // statements and value one level in.
+    if (check_case(«def f(n: int): int {
+let s: int = match n with
+| 1 -> 10
+    | _ -> {
+let t: int = n*2;
+t+1
+};
+return match s with
+  | 10 -> 1
+| _ -> s;
+}
+», «def f(n: int): int {
+    let s: int = match n with
+    | 1 -> 10
+    | _ -> {
+        let t: int = n * 2;
+        t + 1
+    };
+    return match s with
+    | 10 -> 1
+    | _ -> s;
+}
+») != 0) { return 36; };
     // Comments in every position: file head, own line, trailing (aligned),
     // before a closing brace, inside a parameter list, between continuation
     // lines, in match arms, in a record literal, at the end of the file.
@@ -314,6 +339,66 @@ def b(): int { return 2; }
     2)
 def b(): int { return 2; }
 ») != 0) { return 35; };
+    // Patterns: alternatives, guards, `as`, records with some fields and
+    // field names, vector patterns with `rest`, and an Arabic comma, which an
+    // English source writes `,`.
+    if (check_case(«def f(v: vector int, s: Size): int {
+match s with
+|{width} if width>5->{ return width; }
+| {width ، height: h} -> { return h; };
+match v with
+|[first,rest tail] if first>5->{ return first; }
+|[rest  _,last]|[last]  as  all -> { return last; }
+| [ ] -> { return 0; };
+}
+», «def f(v: vector int, s: Size): int {
+    match s with
+    | { width } if width > 5 -> { return width; }
+    | { width, height: h } -> { return h; };
+    match v with
+    | [first, rest tail] if first > 5 -> { return first; }
+    | [rest _, last] | [last] as all -> { return last; }
+    | [] -> { return 0; };
+}
+») != 0) { return 37; };
+    // Slices and ranges of values: `..` with no spaces, one after the word
+    // `range` and one before what follows an open end.
+    if (check_case(«def f(v: vector int, n: int): int {
+let a: [] int = v[ 1 .. 3 ];
+let b: [] int = v[2 ..];
+let c: [] int = v[.. 1];
+let d: [] int = v[ .. ];
+match n with
+| range  1 .. 9 -> { return 1; }
+| range ..0 -> { return 0; }
+| range 100..->{ return 2; }
+| _ -> { return length(a) as int; };
+}
+», «def f(v: vector int, n: int): int {
+    let a: [] int = v[1..3];
+    let b: [] int = v[2..];
+    let c: [] int = v[..1];
+    let d: [] int = v[..];
+    match n with
+    | range 1..9 -> { return 1; }
+    | range ..0 -> { return 0; }
+    | range 100.. -> { return 2; }
+    | _ -> { return length(a) as int; };
+}
+») != 0) { return 38; };
+    // A tuple `let`: one space after `let`, none inside the parentheses, one
+    // after each comma and colon, nested tuples alike.
+    if (check_case(«def f(v: mutable vector int): int {
+let ( a ,(b,_) ):( int,( int ,int) )= g();
+let (left,right):(mutable [] int,mutable [] int)=split_mutable(&mutable v,1);
+return a+b;
+}
+», «def f(v: mutable vector int): int {
+    let (a, (b, _)): (int, (int, int)) = g();
+    let (left, right): (mutable [] int, mutable [] int) = split_mutable(&mutable v, 1);
+    return a + b;
+}
+») != 0) { return 39; };
     // Sources that do not lex or parse are rejected, with diagnostics and
     // no output: a syntax error, an unterminated literal, and a raw
     // isolate control (U+2067) in a comment.

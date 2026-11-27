@@ -1,0 +1,7 @@
+error[SULTANC-PATTERN-NON-EXHAUSTIVE]: non-exhaustive pattern: `Light.Amber` not covered — Every value of the matched type must match one of the arms.
+  --> tests/en/diagnostics/semantic/match_expression_non_exhaustive.sn:10:18..10:23
+    |
+ 10 |     return match light with
+    |                  ^^^^^
+    |
+  = help: add an arm for each case that is not covered

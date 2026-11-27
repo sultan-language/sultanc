@@ -1,0 +1,5 @@
+// اختبار: رفض
+// تشخيص: SULTANC-NAME-BUILTIN-NOT-CALLED
+// نظير: tests/en/compiler/semantic/regression/builtin_not_called.sn
+// دالة مدمجة استُعملت قيمةً خطأ مستخدم (وُجد بالتشويش).
+عرف الرئيسية(): عدد { ليكن ن: عدد = الطول; أرجع ن; }

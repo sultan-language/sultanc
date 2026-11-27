@@ -1,0 +1,12 @@
+// اختبار: رفض
+// تشخيص: SULTANC-PATTERN-ALTERNATIVE-TYPES
+// نظير: tests/en/diagnostics/e2e/or_pattern_type_mismatch.sn
+// خرج-تشخيص-عربي: or_pattern_type_mismatch.ar.stderr
+// خرج-تشخيص-إنجليزي: or_pattern_type_mismatch.en.stderr
+// يربط البديلان `س` بنوعين مختلفين.
+نوع قيمة = | رقم بنوع عدد | كلمة بنوع نص;
+عرف اعرض(ق: قيمة): عدد {
+    طابق ق مع
+    | قيمة.رقم(س) | قيمة.كلمة(س) -> { أرجع 1; };
+}
+عرف الرئيسية(): عدد { أرجع اعرض(قيمة.رقم(1)); }

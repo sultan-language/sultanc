@@ -6,9 +6,27 @@
     | عملية_غير_صالحة
     | إدخال_إخراج
     // A failed runtime check (std.process.runtime_check): its words are
-    // templates, where {0} and {1} stand for the index and the length and {2}
-    // for the place `file:line:column`.
+    // templates, where {0} and {1} stand for the index and the length (for a
+    // shift, its amount and the width) and {2} for the place
+    // `file:line:column`.
     | تجاوز_عدد_صحيح
     | فهرس_خارج_المدى
     | قسمة_على_صفر
+    | إزاحة_خارج_المدى
+    // A slice `v[a..b]` outside its vector: {0} the start, {1} the length; {0}
+    // the end, {1} the length; {0} the start, {1} the end before it.
+    | بداية_شريحة_خارج_المدى
+    | نهاية_شريحة_خارج_المدى
+    | شريحة_معكوسة
+    // `split_mutable(&mutable v, i)` with i outside 0..length: {0} the split
+    // index, {1} the length.
+    | قسمة_خارج_المدى
+    // A slice of text `&s[a..b]` that would cut a character in two: {0} the
+    // byte offset inside a character (the start a, or the end b + 1), {1}
+    // the text's length.
+    | إزاحة_داخل_حرف
+    // A stack overflow: a program's call stack ran past its end
+    // (std/os/stack_overflow.sn; the interpreters' call-depth limit). No
+    // place: the report is written from a signal handler.
+    | فيض_المكدس
 ;

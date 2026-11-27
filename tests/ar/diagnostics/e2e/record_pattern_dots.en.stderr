@@ -1,0 +1,6 @@
+error[SULTANC-PARSE-PATTERN]: Cannot parse the pattern syntax — The expected result is `identifier`, but the actual result is `.`. The parser could not recognize the pattern syntax.
+  --> tests/ar/diagnostics/e2e/record_pattern_dots.sn:10:16..10:17
+    |
+ 10 |     | { العرض، .. } -> { أرجع العرض; };
+    |                ^ parser discovered the problem here
+    |

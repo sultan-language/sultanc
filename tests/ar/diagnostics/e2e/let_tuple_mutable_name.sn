@@ -1,0 +1,11 @@
+// اختبار: رفض
+// تشخيص: SULTANC-MUTABILITY-LET-TUPLE-MUTABLE
+// نظير: tests/en/diagnostics/e2e/let_tuple_mutable_name.sn
+// خرج-تشخيص-عربي: let_tuple_mutable_name.ar.stderr
+// خرج-تشخيص-إنجليزي: let_tuple_mutable_name.en.stderr
+// لا يكون `متغير` في `ليكن` المفككة إلا العرض القابل للكتابة `متغير [] T`.
+عرف الرئيسية(): عدد {
+    ليكن (أ، ب): (متغير عدد، عدد) = (1، 2);
+    أ := أ + ب;
+    أرجع أ;
+}

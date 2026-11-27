@@ -1,0 +1,7 @@
+خطأ[SULTANC-MUTABILITY-VIEW-WITHOUT-MUTABLE]: العرض القابل للكتابة ⁨`متغير [] T`⁩ يُصنع بـ⁨`&متغير`⁩
+  --> tests/en/diagnostics/e2e/slice_view_without_mutable.sn:14:10..14:16
+    |
+ 14 |     fill(values, 0);
+    |          ^^^^^^
+    |
+  = مساعدة: اكتب ⁨`&متغير`⁩ قبله ليعطي عرضا قابلا للكتابة

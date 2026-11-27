@@ -1,0 +1,29 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/compiler/semantic/regression/drop_deep_box_chain.sn
+// Destroying a long chain of boxes of the same Type loops in the drop glue instead
+// of recursing once per link, so it does not overflow the stack.
+type List =
+    | empty
+    | node of (int, string, box List);
+
+def build(count: int): List {
+    let list: mutable List = List.empty();
+    let i: mutable int = 0;
+    while (i < count) {
+        let tail: box List = box list;
+        list := List.node(i, "n", tail);
+        i := i + 1;
+    }
+    return list;
+}
+
+def main(): int {
+    let list: List = build(200000);
+    match list with
+    | List.node(value, _, _) -> { if (value != 199999) { return 1; }; }
+    | List.empty -> { return 2; };
+    return 42;
+}

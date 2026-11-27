@@ -1,0 +1,6 @@
+خطأ[SULTANC-PARSE-LET-PATTERN]: تفكك ⁨`ليكن`⁩ الصف إلى أسماء و⁨`_`⁩ وصفوف متداخلة فقط
+  --> tests/en/diagnostics/e2e/let_tuple_literal_pattern.sn:8:10..8:11
+   |
+ 8 |     let (0, count): (int, int) = (0, 3);
+   |          ^
+   |

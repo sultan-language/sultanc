@@ -334,6 +334,15 @@
     أرجع الناتج;
 }
 
+// The socket under the stream (-1 once it failed for good), for socket
+// options such as the receive and send timeouts a server puts on it.
+عام عرف واصف_تدفق_تي_إل_إس(التدفق: &تدفق_تي_إل_إس): عدد {
+    ليكن الحالة: حالة_تدفق_تي_إل_إس = حالة_تي_إل_إس(التدفق);
+    ليكن الواصف: عدد = الحالة.الاتصال.المقبس;
+    احفظ_حالة_تي_إل_إس(التدفق, الحالة);
+    أرجع الواصف;
+}
+
 عام نوع tls_stream = تدفق_تي_إل_إس;
 عام مرادف tls_wrap_client = غلف_عميل_تي_إل_إس;
 عام مرادف tls_wrap_server = غلف_خادم_تي_إل_إس;
@@ -344,3 +353,4 @@
 عام مرادف tls_negotiated_protocol = بروتوكول_تدفق_تي_إل_إس;
 عام مرادف tls_client_connect = اتصل_عميل_تي_إل_إس;
 عام مرادف tls_server_accept = اقبل_خادم_تي_إل_إس;
+عام مرادف tls_stream_raw_descriptor = واصف_تدفق_تي_إل_إس;

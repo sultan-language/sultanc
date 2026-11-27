@@ -1,0 +1,6 @@
+error[SULTANC-PATTERN-INVALID]: invalid pattern — The pattern does not fit the type of the value being matched.
+  --> tests/en/diagnostics/e2e/vector_pattern_not_sequence.sn:9:7..9:10
+   |
+ 9 |     | [a] -> { return a; }
+   |       ^^^
+   |

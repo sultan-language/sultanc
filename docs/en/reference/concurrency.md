@@ -365,8 +365,57 @@ threads (default: the available parallelism) share one poller, an event hands a 
 worker, which reads until the socket would block, runs the handler for each complete HTTP/1
 request, writes without blocking (unsent output waits for writability), and re-arms the
 connection. Idle connections hold no thread. The state is shared as `arc<S>`. An h2c connection
-leaves the poller for the blocking HTTP/2 server on its worker; HTTPS still uses the sequential
-`run_https_server`. Without a poller the function runs `run_http_server`.
+leaves the poller for the blocking HTTP/2 server on its worker; HTTPS uses `run_https_server`.
+Without a poller the function runs `run_http_server`.
+
+## Slow clients and the HTTP servers
+
+Every std HTTP server bounds how long a client may make it wait, and how many connections it holds
+open. The limits are fields of `http_server_config` (`إعداد_خادم_ويب`), set by
+`default_http_server_config` and changed with the setters below; all are on by default, and 0 turns
+one off.
+
+| Setter (English / Arabic) | Field | Default | Bounds |
+|---|---|---|---|
+| `http_server_config_set_header_timeout_ms` / `اضبط_مهلة_رأس_خادم_ويب` | `مهلة_الرأس_بالمللي` | 10 000 ms | from accepting a connection (on a keep-alive connection, from the first byte of the next request) to the end of the request head; also each read of a TLS handshake |
+| `http_server_config_set_body_timeout_ms` / `اضبط_مهلة_جسم_خادم_ويب` | `مهلة_الجسم_بالمللي` | 30 000 ms | each pause while a request body arrives, and while the client takes the response; every read and write of an HTTP/2 connection |
+| `http_server_config_set_keep_alive_timeout_ms` / `اضبط_مهلة_خمول_خادم_ويب` | `مهلة_الخمول_بالمللي` | 5 000 ms | how long a keep-alive connection may wait for its next request |
+| `http_server_config_set_max_connections` / `اضبط_أقصى_اتصالات_خادم_ويب` | `أقصى_الاتصالات` | 1 024 | open connections at once |
+
+A connection past a deadline is closed: with `408 Request Timeout` when part of a request was read,
+silently when it was idle. A connection over the limit is accepted, answered `503` without waiting,
+and closed, so the server never runs out of descriptors. Where each server enforces them:
+
+- `run_http_server` never lets one client hold up the others. Where tasks switch (x86_64 and
+  arm64, with a poller) it is `http_serve_async`: one task per connection on the calling thread, each
+  read waiting in the task poller with the connection's deadline. Elsewhere (Windows, the other
+  architectures) every connection gets a thread whose socket waits through `SO_RCVTIMEO` and
+  `SO_SNDTIMEO`; the handlers still run one at a time (one lock), because the state is borrowed. Where
+  no thread can start (the interpreter) a connection is served in place, its waits bounded by the same
+  deadlines.
+- `run_https_server` serves every connection on a thread of its own the same way.
+- `run_http_server_evented` keeps each connection's deadline in its worker's table; every worker
+  sweeps its table every 100 ms and closes the connections past their deadline, freeing their
+  descriptors. Each worker holds at most its share of the connection limit.
+- An HTTP/2 connection (h2c or ALPN `h2`) reads its preface under the header timeout, then every read
+  and write waits at most the body timeout.
+- An idle connection also ends soon after a shutdown request (`std.http.shutdown`), and every
+  connection once the shutdown grace period is over. A connection task waits for its deadline with a
+  single timer (it costs nothing until then); the async server wakes its waiting tasks
+  (`wake_task`) when a shutdown starts and when the grace period ends. A connection thread waits in
+  slices of at most 200 ms.
+- `default_http_server_config` asks for a listen backlog of 1 024 (the kernel caps it at its own
+  limit), so a burst of connections waits in the kernel rather than losing its SYNs.
+
+`serve_http_connection` and `serve_https_connection`, which serve one connection without a
+configuration, use the default deadlines.
+
+The task scheduler (`std.async.runtime`) keeps its timers in a binary heap and the descriptors it
+watches in a table indexed by descriptor, so setting a timer, waiting on a socket and forgetting one
+cost the same with thousands of connections; a timer wakes a task only during the wait it was set
+for. After every 64 tasks it runs, it also checks the poller and the timers without sleeping, so a
+long run of ready tasks (many connections timing out at once) does not hold back the listener or
+other sockets.
 
 ## The interpreter
 
@@ -418,9 +467,13 @@ and the accept test is `tests/*/compiler/semantic/thread_capture_allowed.sn`.
 - Atomics ignore weaker orderings and always use `seq_cst`.
 - The rwlock has no writer preference.
 - Channels notice an implicitly dropped end by polling, within 32 ms.
-- `run_http_server` and `run_https_server` serve one connection at a time; the event-driven
-  `run_http_server_evented` serves HTTP/1 concurrently, but an h2c connection holds its worker, TLS is
-  not event-driven yet, and Windows has no poller (IOCP).
+- The sequential servers run one handler at a time: `run_http_server` serves its connections as
+  tasks (or threads) and `run_https_server` as threads, but a slow handler still delays the others.
+  The event-driven `run_http_server_evented` serves HTTP/1 concurrently, but an h2c connection holds
+  its worker (each of its waits bounded by the body timeout), TLS is not event-driven yet, and Windows
+  has no poller (IOCP).
+- The body timeout bounds each pause of a request body, not its whole length: a client that keeps
+  sending a byte at a time is bounded by the body size limit and the connection limit.
 - Threads are not available on WASI, on freestanding targets or in the interpreter.
 
 ## See also

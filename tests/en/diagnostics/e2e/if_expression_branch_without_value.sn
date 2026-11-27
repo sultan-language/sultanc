@@ -1,0 +1,14 @@
+// اختبار: رفض
+// تشخيص: SULTANC-FLOW-IF-BRANCH-WITHOUT-VALUE
+// نظير: tests/ar/diagnostics/e2e/if_expression_branch_without_value.sn
+// خرج-تشخيص-عربي: if_expression_branch_without_value.ar.stderr
+// خرج-تشخيص-إنجليزي: if_expression_branch_without_value.en.stderr
+// A branch of an `if` value that can end without a value is rejected: this
+// else branch gives nothing when its own condition is false.
+def f(n: int): int {
+    let v: int = if (n > 0) 1 else { if (n < -5) { return 0; }; };
+    return v;
+}
+def main(): int {
+    return f(1);
+}

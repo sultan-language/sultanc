@@ -1,0 +1,56 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/language/surface/prelude_constructors.sn
+// The prelude constructors written bare: `some(x)`, `none` (also `none()`),
+// `ok(x)` and `err(e)`, in expressions (arguments, returns, locals, record
+// fields, vector elements) and in patterns, where they are constructors, not
+// names. The qualified forms keep working beside them.
+type Reading = { value: option int, count: int };
+
+def half(n: int): option int {
+    if (n % 2 != 0) { return none; };
+    return some(n / 2);
+}
+
+def parse_digit(c: char): result int, string {
+    match c with
+    | range '0'..'9' -> { return ok(((c as u32) - ('0' as u32)) as int); }
+    | _ -> { return err("not a digit"); };
+}
+
+def or_zero(o: option int): int {
+    match o with
+    | some(n) -> { return n; }
+    | none -> { return 0; };
+}
+
+def code(r: result int, string): int {
+    match r with
+    | ok(n) -> { return n; }
+    | err(message) -> { return -(length(message) as int); };
+}
+
+def nested(v: vector option int): int {
+    match v with
+    | [some(a), none, rest _] -> { return a; }
+    | [none, rest _] -> { return 1; }
+    | _ -> { return 0; };
+}
+
+def main(): int {
+    if (or_zero(half(8)) != 4 || or_zero(half(7)) != 0) { return 1; };
+    if (code(parse_digit('7')) != 7 || code(parse_digit('x')) != -11) { return 2; };
+    let nothing: option int = none;
+    let also_nothing: option int = none();
+    let qualified: option int = option.some(3);
+    if (or_zero(nothing) != 0 || or_zero(also_nothing) != 0 || or_zero(qualified) != 3) { return 3; };
+    let r: Reading = { value: some(5), count: 6 };
+    if (or_zero(r.value) + r.count != 11) { return 4; };
+    let items: vector option int = [some(9), none, some(2)];
+    if (nested(items) != 9) { return 5; };
+    let failed: result int, string = err("bad");
+    if (code(failed) != -3) { return 6; };
+    return 42;
+}

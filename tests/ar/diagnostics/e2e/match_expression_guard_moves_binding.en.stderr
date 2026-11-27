@@ -1,0 +1,6 @@
+error[SULTANC-OWNERSHIP-MOVE-OUT-OF-REFERENCE]: cannot move an owned value out of borrowed storage — The value moved out of borrowed storage is `ق`. An owned value is moved out of borrowed storage.
+  --> tests/ar/diagnostics/e2e/match_expression_guard_moves_binding.sn:12:27..12:28
+    |
+ 12 |     | مسمى.واحد(ق) إذا خذ(ق) > 3 -> 1
+    |                           ^
+    |

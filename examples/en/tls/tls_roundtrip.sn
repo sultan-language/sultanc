@@ -6,9 +6,13 @@ import std.tls.config;
 
 def main(): int {
     let domain: string = "example.test";
-    let cfg: mutable tls_client_config = tls_client_config_default(&domain);
-    tls_client_config_set_verify(&mutable cfg, false);
-    tls_client_config_set_verify(&mutable cfg, true);
-    if (tls_client_config_verifies_peer(&cfg)) { println("peer verification enabled"); } else { return 1; };
+    let cfg: tls_client_config = tls_client_config_default(&domain);
+    if (!tls_client_config_verifies_peer(&cfg)) { return 1; };
+    // Dangerous, and only for a local test server whose certificate cannot
+    // be verified: this configuration accepts any server.
+    let insecure: mutable tls_client_config = tls_client_config_default(&domain);
+    tls_client_config_disable_verification_insecure(&mutable insecure);
+    if (tls_client_config_verifies_peer(&insecure)) { return 1; };
+    println("peer verification enabled");
     return 0;
 }

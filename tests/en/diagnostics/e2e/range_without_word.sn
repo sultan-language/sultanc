@@ -1,0 +1,15 @@
+// اختبار: رفض
+// تشخيص: SULTANC-PARSE-PATTERN
+// نظير: tests/ar/diagnostics/e2e/range_without_word.sn
+// خرج-تشخيص-عربي: range_without_word.ar.stderr
+// خرج-تشخيص-إنجليزي: range_without_word.en.stderr
+// A range of values in a pattern starts with `range`: `1..9` alone is not a
+// pattern, and the help shows `range 1..9`.
+def digits(n: int): int {
+    match n with
+    | 1..9 -> { return 1; }
+    | _ -> { return 0; };
+}
+def main(): int {
+    return digits(5);
+}

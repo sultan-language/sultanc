@@ -1,0 +1,6 @@
+error[SULTANC-FLOW-MATCH-ARM-WITHOUT-VALUE]: this arm of a match expression can end without a value
+  --> tests/ar/diagnostics/semantic/match_expression_arm_without_value.sn:11:12..11:32
+    |
+ 11 |     | _ -> { ليكن ص: عدد = 2; };
+    |            ^^^^^^^^^^^^^^^^^^^^
+    |

@@ -1,0 +1,12 @@
+// اختبار: رفض
+// تشخيص: SULTANC-MUTABILITY-WRITE-TO-IMMUTABLE
+// نظير: tests/en/diagnostics/e2e/slice_write_read_only.sn
+// خرج-تشخيص-عربي: slice_write_read_only.ar.stderr
+// خرج-تشخيص-إنجليزي: slice_write_read_only.en.stderr
+// الشريحة بلا `&متغير` عرض للقراءة فقط: الكتابة عبرها مرفوضة، ولو كان متجهها `متغير`.
+عرف الرئيسية(): عدد {
+    ليكن القيم: متغير متجه عدد = [1، 2، 3];
+    ليكن الجزء: [] عدد = القيم[1..];
+    الجزء[0] := 9;
+    أرجع 0;
+}

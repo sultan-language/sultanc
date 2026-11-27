@@ -1,0 +1,112 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/language/patterns/as_patterns.sn
+// `pattern as name` names the whole value the pattern matches: around a case
+// with a payload, around an or-pattern (`as` binds weakest, and parentheses
+// group), inside a tuple, and on owned values. An owning name around a
+// pattern that binds no owning part takes the whole value; an arm that would
+// hold one owned storage twice (an owning name around an owning part)
+// borrows its scrutinee instead, so both names are views and the scrutinee
+// keeps its value (the allocator's counters show nothing is left behind).
+import std.os.allocation;
+import std.text.number;
+
+type Hand = | Rock | Paper | Scissors;
+type Shape = | Circle of int | Square of int;
+type Named = | One of string | Two of (string, string);
+type Item = { name: string, id: int };
+
+def code(h: Hand): int {
+    match h with
+    | Hand.Rock -> { return 1; }
+    | Hand.Paper -> { return 2; }
+    | Hand.Scissors -> { return 3; };
+}
+
+def side(s: Shape): int {
+    match s with
+    | Shape.Circle(r) as c -> { return r + area(c); }
+    | Shape.Square(n) as q -> { return n + area(q); };
+}
+
+def area(s: Shape): int {
+    match s with
+    | Shape.Circle(r) -> { return 3 * r * r; }
+    | Shape.Square(n) -> { return n * n; };
+}
+
+def soft(h: Hand): int {
+    match h with
+    | Hand.Rock | Hand.Paper as x -> { return 10 + code(x); }
+    | (Hand.Scissors) as y -> { return 20 + code(y); };
+}
+
+def first(p: (Shape, int)): int {
+    match p with
+    | (Shape.Circle(_) as c, n) -> { return area(c) + n; }
+    | (q, _) -> { return area(q); };
+}
+
+def text(i: int): string { return int_to_text(1000000 + i); }
+def take_named(n: Named): int {
+    match n with
+    | Named.One(s) -> { return length(s) as int; }
+    | Named.Two(a, b) -> { return (length(a) as int) + (length(b) as int); };
+}
+
+// The name owns the whole value: it moves on.
+def whole(n: Named): int {
+    match n with
+    | Named.One(_) as all -> { return take_named(all); }
+    | Named.Two(_, _) as all -> { return take_named(all); };
+}
+
+// The name and a part would own one storage: the arm borrows.
+def both(n: Named): int {
+    match n with
+    | Named.Two(a, _) as all -> { return (length(a) as int) + take_view(&all); }
+    | Named.One(s as t) -> { return (length(s) as int) + (length(t) as int); };
+}
+
+def take_view(n: &Named): int {
+    match *n with
+    | Named.One(_) -> { return 1; }
+    | Named.Two(_, _) -> { return 2; };
+}
+
+def record(i: int): int {
+    let it: Item = { name: text(i), id: 3 };
+    match it with
+    | { name: n, id: 3 } as r -> { return (length(n) as int) + r.id; }
+    | _ -> { return 0; };
+}
+
+def rounds(): int {
+    let i: mutable int = 0;
+    let total: mutable int = 0;
+    while (i < 100) {
+        total := total + whole(Named.Two(text(i), text(i)));
+        total := total + both(Named.Two(text(i), text(i)));
+        total := total + both(Named.One(text(i)));
+        total := total + record(i);
+        i := i + 1;
+    }
+    return total;
+}
+
+def main(): int {
+    if (side(Shape.Circle(2)) != 14 || side(Shape.Square(3)) != 12) { return 1; };
+    if (soft(Hand.Rock()) != 11 || soft(Hand.Paper()) != 12 || soft(Hand.Scissors()) != 23) { return 2; };
+    if (first((Shape.Circle(1), 4)) != 7 || first((Shape.Square(2), 4)) != 4) { return 3; };
+    if (whole(Named.One(text(1))) != 7) { return 4; };
+    if (rounds() != 4700) { return 5; };
+    let allocations: u64 = allocation_count();
+    let frees: u64 = free_count();
+    if (rounds() != 4700) { return 6; };
+    let allocated: u64 = allocation_count() - allocations;
+    let freed: u64 = free_count() - frees;
+    if (allocated != 0 && freed + 8 < allocated) { return 7; };
+    return 42;
+}

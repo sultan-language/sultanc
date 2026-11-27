@@ -1,0 +1,6 @@
+خطأ[SULTANC-PATTERN-INVALID]: نمط غير صالح — لا يناسب النمط نوع القيمة الجاري مطابقتها.
+  --> tests/ar/diagnostics/e2e/vector_pattern_not_sequence.sn:9:7..9:10
+   |
+ 9 |     | [أ] -> { أرجع أ; }
+   |       ^^^
+   |

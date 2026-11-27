@@ -1,0 +1,17 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 1
+// تفاضلي: نعم
+// بيئة: SULTANC_LANG=ar
+// خرج-قياسي: <فارغ>
+// خطأ-قياسي-ملف: slice_start_ar.stderr
+// نظير: tests/en/runtime/failure/slice_start_ar.sn
+// A slice whose start is past the end of the vector (0 <= start <= length) (docs/en/reference/errors.md, "Runtime checks")
+// stops the program through the panic path: the frame "the program stopped",
+// then the start, and the place of the slice, exit status 1.
+عرف الرئيسية(): عدد {
+    ليكن القيم: متجه عدد = [10, 20, 30];
+    ليكن البداية: عدد = 4;
+    ليكن الجزء: [] عدد = القيم[البداية..];
+    أرجع الطول(الجزء) مثل عدد;
+}

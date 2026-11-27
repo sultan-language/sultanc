@@ -582,6 +582,16 @@
             && القاعدة < نهاية_خانات_مكادس_الخيوط;
     }
 
+    // Whether العنوان lies in the guard at the low end of a slot: a fault
+    // there is that slot's thread running past its stack (the stack-overflow
+    // report, os/stack_overflow.sn, asks from its signal handler). It only
+    // reads the range's bounds.
+    عام عرف في_حارس_خانة_مكدس_مخصص(العنوان: ط64): منطقي {
+        إذا (!هل_خانة_مكدس_خيط_مخصص(العنوان)) { أرجع خطأ; };
+        ليكن الإزاحة: ط64 = (العنوان - بداية_خانات_مكادس_الخيوط) & (حجم_خانة_مكدس_الخيط() - 1);
+        أرجع الإزاحة < حجم_حارس_خانة_مكدس();
+    }
+
     // After join: the slot's pages go back to the system and the slot is free.
     عام عرف أعد_خانة_مكدس_خيط_مخصص(القاعدة: ط64): فراغ {
         إذا (!هل_خانة_مكدس_خيط_مخصص(القاعدة)) { أرجع; };

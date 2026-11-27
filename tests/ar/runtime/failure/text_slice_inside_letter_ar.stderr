@@ -1,0 +1,2 @@
+خطأ[SULTANC-RUNTIME-PROGRAM-STOPPED]: توقف البرنامج
+إزاحة البايت 1 داخل حرف عند tests/ar/runtime/failure/text_slice_inside_letter_ar.sn:16:24

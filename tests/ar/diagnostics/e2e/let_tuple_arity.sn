@@ -1,0 +1,10 @@
+// اختبار: رفض
+// تشخيص: SULTANC-TYPE-LET-TUPLE-SHAPE
+// نظير: tests/en/diagnostics/e2e/let_tuple_arity.sn
+// خرج-تشخيص-عربي: let_tuple_arity.ar.stderr
+// خرج-تشخيص-إنجليزي: let_tuple_arity.en.stderr
+// النوع الذي تكتبه `ليكن` المفككة فيه عنصر لكل اسم.
+عرف الرئيسية(): عدد {
+    ليكن (أ، ب): (عدد، عدد، عدد) = (1، 2، 3);
+    أرجع أ + ب;
+}

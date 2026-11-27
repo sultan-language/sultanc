@@ -1,0 +1,4 @@
+// Fixture of tests/en/compiler/tooling/incremental_session_cutoff.sn (not a test).
+public def scale(x: int): int { return x * 2; }
+public def helper(): int { return 3; }
+public def pick<T>(a: T, b: T): T { return a; }

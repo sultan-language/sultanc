@@ -1,0 +1,11 @@
+// اختبار: رفض
+// تشخيص: SULTANC-NAME-DUPLICATE-DECLARATION
+// نظير: tests/ar/diagnostics/e2e/as_duplicate_name.sn
+// خرج-تشخيص-عربي: as_duplicate_name.ar.stderr
+// خرج-تشخيص-إنجليزي: as_duplicate_name.en.stderr
+// The name an `as` binds is declared like any pattern binding: once.
+def f(value: int): int {
+    match value with
+    | x as x -> { return x; };
+}
+def main(): int { return f(1); }

@@ -1,0 +1,6 @@
+خطأ[SULTANC-OWNERSHIP-MOVE-OUT-OF-REFERENCE]: لا يجوز نقل قيمة مملوكة من تخزين مستعار — القيمة المنقولة من تخزين مستعار هي ⁨`ق`⁩. جرت محاولة نقل قيمة مملوكة من تخزين مستعار.
+  --> tests/ar/diagnostics/e2e/match_expression_guard_moves_binding.sn:12:27..12:28
+    |
+ 12 |     | مسمى.واحد(ق) إذا خذ(ق) > 3 -> 1
+    |                           ^
+    |

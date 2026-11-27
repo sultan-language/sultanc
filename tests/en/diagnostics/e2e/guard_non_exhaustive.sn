@@ -1,0 +1,12 @@
+// اختبار: رفض
+// تشخيص: SULTANC-PATTERN-NON-EXHAUSTIVE
+// نظير: tests/ar/diagnostics/e2e/guard_non_exhaustive.sn
+// خرج-تشخيص-عربي: guard_non_exhaustive.ar.stderr
+// خرج-تشخيص-إنجليزي: guard_non_exhaustive.en.stderr
+// A guarded arm covers nothing: `true` is matched only when the guard holds.
+def f(value: bool, flag: bool): int {
+    match value with
+    | true if flag -> { return 1; }
+    | false -> { return 0; };
+}
+def main(): int { return f(true, true); }

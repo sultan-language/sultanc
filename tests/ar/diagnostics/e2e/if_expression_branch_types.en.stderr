@@ -1,0 +1,6 @@
+error[SULTANC-TYPE-MISMATCH]: expected `int`, found `string` — The value does not match the declared type of its destination.
+  --> tests/ar/diagnostics/e2e/if_expression_branch_types.sn:9:38..9:44
+   |
+ 9 |     ليكن ق: عدد = إذا (ن > 0) 1 وإلا "واحد";
+   |                                      ^^^^^^
+   |

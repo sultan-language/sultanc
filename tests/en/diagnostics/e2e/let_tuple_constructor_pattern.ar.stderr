@@ -1,0 +1,6 @@
+خطأ[SULTANC-PARSE-LET-PATTERN]: تفكك ⁨`ليكن`⁩ الصف إلى أسماء و⁨`_`⁩ وصفوف متداخلة فقط
+  --> tests/en/diagnostics/e2e/let_tuple_constructor_pattern.sn:11:10..11:19
+    |
+ 11 |     let (Light.Red, count): (Light, int) = (Light.Red, 3);
+    |          ^^^^^^^^^
+    |

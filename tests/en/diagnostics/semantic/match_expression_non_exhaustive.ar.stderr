@@ -1,0 +1,7 @@
+خطأ[SULTANC-PATTERN-NON-EXHAUSTIVE]: نمط غير شامل: لا تغطي الأذرع ⁨`Light.Amber`⁩ — يجب أن تطابق كل قيمة من النوع المطابَق إحدى الأذرع.
+  --> tests/en/diagnostics/semantic/match_expression_non_exhaustive.sn:10:18..10:23
+    |
+ 10 |     return match light with
+    |                  ^^^^^
+    |
+  = مساعدة: أضف ذراعًا لكل حالة غير مغطاة

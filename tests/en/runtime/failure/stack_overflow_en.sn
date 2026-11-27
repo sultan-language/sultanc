@@ -1,0 +1,21 @@
+// اختبار: تفاضلي
+// أهداف: x86_64-linux,aarch64-linux-gnu
+// خروج: 1
+// تفاضلي: نعم
+// بيئة: SULTANC_LANG=en
+// خرج-قياسي: <فارغ>
+// خطأ-قياسي-ملف: stack_overflow_en.stderr
+// نظير: tests/ar/runtime/failure/stack_overflow_en.sn
+// A recursion with no end runs the main thread's call stack past its end
+// (docs/en/reference/errors.md, "Runtime checks"): an executable stops with the
+// frame "the program stopped" and the words of a stack overflow, exit status 1,
+// as the interpreter does at its call-depth limit.
+def descend(depth: int): int {
+    if (depth < 0) { return 0; };
+    let below: int = descend(depth + 1);
+    return (below % 1000003) * 31 + depth % 7;
+}
+
+def main(): int {
+    return descend(0) % 100;
+}

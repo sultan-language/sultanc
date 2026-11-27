@@ -1,0 +1,10 @@
+// اختبار: رفض
+// تشخيص: SULTANC-TYPE-LET-TUPLE-SHAPE
+// نظير: tests/ar/diagnostics/e2e/let_tuple_arity.sn
+// خرج-تشخيص-عربي: let_tuple_arity.ar.stderr
+// خرج-تشخيص-إنجليزي: let_tuple_arity.en.stderr
+// The Type a tuple `let` writes has one element for each name.
+def main(): int {
+    let (a, b): (int, int, int) = (1, 2, 3);
+    return a + b;
+}

@@ -1,0 +1,6 @@
+error[SULTANC-MUTABILITY-WRITE-TO-IMMUTABLE]: cannot write to an immutable value — The value is not declared mutable.
+  --> tests/ar/diagnostics/e2e/slice_mutable_of_immutable.sn:11:27..11:32
+    |
+ 11 |     أرجع صفر_الأول(&متغير القيم[0..1]);
+    |                           ^^^^^
+    |

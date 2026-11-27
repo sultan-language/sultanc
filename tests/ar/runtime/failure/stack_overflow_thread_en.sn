@@ -1,0 +1,30 @@
+// اختبار: تشغيل
+// أهداف: x86_64-linux,aarch64-linux-gnu
+// خروج: 1
+// بيئة: SULTANC_LANG=en
+// خرج-قياسي: <فارغ>
+// خطأ-قياسي-ملف: stack_overflow_thread_en.stderr
+// نظير: tests/en/runtime/failure/stack_overflow_thread_en.sn
+// A recursion with no end on a spawned thread runs into the guard of the
+// thread's stack (docs/en/reference/errors.md, "Runtime checks"): the thread's
+// own alternate signal stack runs the report, which writes the frame "the
+// program stopped" and the words of a stack overflow, exit status 1. Not run
+// by the interpreter, whose call-depth limit the differential tests cover.
+استورد المكتبة.خيوط.خيط;
+
+عرف انزل(العمق: ط64): ط64 {
+    إذا (العمق == 0) { أرجع 0; };
+    ليكن التحت: ط64 = انزل(العمق + 1);
+    أرجع (التحت % 1000003) * 31 + العمق % 7;
+}
+
+عرف الرئيسية(): عدد {
+    طابق أطلق_بقيمة(دالة(): ط64 -> انزل(1)) مع
+    | نتيجة.نجح(م) -> {
+        ليكن المقبض: متغير مقبض_خيط_بقيمة<ط64> = م;
+        طابق انضم_بقيمة(&متغير المقبض) مع
+        | اختياري.موجود(القيمة) -> { أرجع (القيمة % 100) مثل عدد; }
+        | اختياري.لا_شيء -> { أرجع 3; };
+    }
+    | نتيجة.خطأ(_) -> { أرجع 2; };
+}

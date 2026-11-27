@@ -1,0 +1,6 @@
+// اختبار: رفض
+// تشخيص: SULTANC-TYPE-MISMATCH
+// نظير: tests/ar/compiler/semantic/regression/assign_to_function.sn
+// Assigning to a function name is a type error, not a missing semantic fact (found by fuzzing).
+def f(): int { return 0; }
+def main(): int { f := 3; return 0; }

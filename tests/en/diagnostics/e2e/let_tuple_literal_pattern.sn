@@ -1,0 +1,10 @@
+// اختبار: رفض
+// تشخيص: SULTANC-PARSE-LET-PATTERN
+// نظير: tests/ar/diagnostics/e2e/let_tuple_literal_pattern.sn
+// خرج-تشخيص-عربي: let_tuple_literal_pattern.ar.stderr
+// خرج-تشخيص-إنجليزي: let_tuple_literal_pattern.en.stderr
+// A literal in a tuple `let` would test the value: that is a `match`.
+def main(): int {
+    let (0, count): (int, int) = (0, 3);
+    return count;
+}

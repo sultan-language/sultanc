@@ -1,0 +1,6 @@
+خطأ[SULTANC-TYPE-MATCH-WITHOUT-VALUE]: لا يعطي أي ذراع من أذرع تعبير المطابقة هذا قيمة
+  --> tests/en/diagnostics/semantic/match_expression_without_value.sn:9:18..11:25
+   |
+ 9 |     let x: int = match n with
+   |                  ^
+   |

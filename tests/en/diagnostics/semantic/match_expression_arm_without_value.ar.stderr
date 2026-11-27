@@ -1,0 +1,6 @@
+خطأ[SULTANC-FLOW-MATCH-ARM-WITHOUT-VALUE]: قد ينتهي هذا الذراع من تعبير المطابقة دون قيمة
+  --> tests/en/diagnostics/semantic/match_expression_arm_without_value.sn:11:12..11:31
+    |
+ 11 |     | _ -> { let y: int = 2; };
+    |            ^^^^^^^^^^^^^^^^^^^
+    |

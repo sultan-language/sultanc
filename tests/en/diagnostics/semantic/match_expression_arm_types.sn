@@ -1,0 +1,12 @@
+// اختبار: رفض
+// تشخيص: SULTANC-TYPE-MISMATCH
+// نظير: tests/ar/diagnostics/semantic/match_expression_arm_types.sn
+// خرج-تشخيص-عربي: match_expression_arm_types.ar.stderr
+// خرج-تشخيص-إنجليزي: match_expression_arm_types.en.stderr
+// Without a context Type, every arm of a match expression gives a value of
+// the Type of its first value (reason type.match-arm-types-differ).
+def main(): int {
+    let n: int = 1;
+    match (match n with | 1 -> 2 | _ -> "two") with
+    | _ -> { return 0; };
+}

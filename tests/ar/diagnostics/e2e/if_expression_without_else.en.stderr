@@ -1,0 +1,7 @@
+error[SULTANC-PARSE-IF-WITHOUT-ELSE]: an `if` used as a value has no `else`
+  --> tests/ar/diagnostics/e2e/if_expression_without_else.sn:8:24..8:42
+   |
+ 8 |     ليكن الكتابة: نص = إذا (ن > 0) "موجب";
+   |                        ^^^^^^^^^^^^^^^^^^
+   |
+  = help: add `else` with the value for when the condition is false

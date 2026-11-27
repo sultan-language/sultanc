@@ -1,0 +1,6 @@
+error[SULTANC-SAFETY-INDEX-OUT-OF-BOUNDS]: index is outside the valid bounds — The out-of-bounds index is 3. The length is 3.
+  --> tests/ar/diagnostics/e2e/slice_constant_end.sn:10:35..10:36
+    |
+ 10 |     ليكن الجزء: [] عدد = القيم[1..3];
+    |                                   ^
+    |

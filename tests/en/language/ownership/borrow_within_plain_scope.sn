@@ -1,0 +1,136 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/language/ownership/borrow_within_plain_scope.sn
+// A borrow of a plain value is valid while its last use comes before the
+// value's scope ends (docs/en/reference/ownership.md, "Borrow regions"): a
+// reference read inside the branch that declares the value, a value copied
+// out through a reference in each iteration, a reference given a new value in
+// each iteration before it is read and an outer value again before it is read
+// after the loop, a reference last read before `break`, a member of a record
+// of numbers read in its block, a reference to a parameter and one to a
+// local of the enclosing block read after an inner block, references to
+// outer locals stored into a record member and appended to a vector in an
+// inner block, and a closure that copies a block's value.
+type Pair = { a: int, b: int };
+type Holder = { item: &int };
+
+def read_in_branch(flag: bool): int {
+    let outer: int = 0;
+    let r: mutable &int = &outer;
+    let seen: mutable int = 0;
+    if (flag) {
+        let inner: int = 4;
+        r := &inner;
+        seen := *r;
+    };
+    return seen;
+}
+
+def copied_out(): int {
+    let total: mutable int = 0;
+    let i: mutable uint = 0;
+    while (i < 3) {
+        let value: int = i as int;
+        let p: &int = &value;
+        total := total + *p;
+        i := i + 1;
+    }
+    return total;
+}
+
+def set_before_read(): int {
+    let outer: int = 2;
+    let r: mutable &int = &outer;
+    let total: mutable int = 0;
+    let i: mutable uint = 0;
+    while (i < 3) {
+        let inner: int = 5;
+        r := &inner;
+        total := total + *r;
+        i := i + 1;
+    }
+    r := &outer;
+    return total + *r;
+}
+
+def read_before_break(): int {
+    let outer: int = 1;
+    let r: mutable &int = &outer;
+    let seen: mutable int = 0;
+    while (true) {
+        let inner: int = 6;
+        r := &inner;
+        seen := *r;
+        break;
+    }
+    r := &outer;
+    return seen + *r;
+}
+
+def member_in_block(): int {
+    let seen: mutable int = 0;
+    if (true) {
+        let pair: Pair = { a: 1, b: 2 };
+        let r: &int = &pair.b;
+        seen := *r;
+    };
+    return seen;
+}
+
+def parameter_ref(p: int, flag: bool): int {
+    let r: &int = &p;
+    let seen: mutable int = 0;
+    if (flag) {
+        let inner: int = 1;
+        seen := *r + inner;
+    };
+    return seen + *r;
+}
+
+def enclosing_ref(flag: bool): int {
+    let first: int = 7;
+    let second: int = 3;
+    let r: mutable &int = &first;
+    let seen: mutable int = 0;
+    if (flag) {
+        let inner: int = 1;
+        r := &second;
+        seen := inner;
+    };
+    return *r + seen;
+}
+
+def stored_outer(flag: bool): int {
+    let first: int = 1;
+    let second: int = 2;
+    let holder: mutable Holder = { item: &first };
+    let refs: mutable vector &int = [];
+    if (flag) {
+        let count: int = 2;
+        holder.item := &second;
+        append(refs, &first);
+        append(refs, &second);
+        refs[0] := &second;
+        if (count != 2) { return 0; };
+    };
+    return *holder.item + *refs[0] + *refs[1] + (length(refs) as int);
+}
+
+def closure_copy(flag: bool): int {
+    let seen: mutable int = 0;
+    if (flag) {
+        let inner: int = 3;
+        let add: fn(int): int = fn(x: int): int -> x + inner;
+        seen := add(1);
+    };
+    return seen;
+}
+
+def main(): int {
+    // 4 + 0 + 3 + 17 + 7 + 2 + 11 + 4 + 8 + 4 = 60
+    return read_in_branch(true) + read_in_branch(false) + copied_out() + set_before_read()
+        + read_before_break() + member_in_block() + parameter_ref(5, true) + enclosing_ref(true)
+        + stored_outer(true) + closure_copy(true) - 18;
+}

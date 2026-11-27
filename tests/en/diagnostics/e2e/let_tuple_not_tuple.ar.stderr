@@ -1,0 +1,6 @@
+خطأ[SULTANC-TYPE-LET-TUPLE-SHAPE]: نوع ⁨`ليكن`⁩ هذه ليس صفا فيه عنصر لكل اسم
+  --> tests/en/diagnostics/e2e/let_tuple_not_tuple.sn:8:17..8:20
+   |
+ 8 |     let (a, b): int = 5;
+   |                 ^^^
+   |

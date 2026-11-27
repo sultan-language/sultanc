@@ -1,0 +1,86 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/language/patterns/guards.sn
+// Guards: `| pattern if condition ->`. The condition sees the pattern's
+// bindings; when it is false, matching goes on with the next arm. A guard
+// applies to a whole or-pattern. Bindings are borrowed while the guard runs:
+// an owned payload the guard read moves into the chosen arm afterwards, even
+// after an earlier arm's guard failed on it. A guarded arm does not count
+// toward exhaustiveness, so the arms after it still cover its values.
+import std.os.allocation;
+import std.text.number;
+
+type Shape = | Circle of int | Square of int | Dot;
+type Named = | One of string | Two of (string, string) | Nothing;
+
+def classify(value: int): int {
+    match value with
+    | x if x > 100 -> { return 3; }
+    | x if x > 5 -> { return 2; }
+    | 0 -> { return 0; }
+    | _ -> { return 1; };
+}
+
+def big(s: Shape): int {
+    match s with
+    | Shape.Circle(n) | Shape.Square(n) if n > 3 -> { return n; }
+    | Shape.Circle(_) | Shape.Square(_) -> { return 1; }
+    | Shape.Dot -> { return 0; };
+}
+
+def take(s: string): int { return length(s) as int; }
+
+def text(i: int): string { return int_to_text(1000000 + i); }
+
+// The first arm's guard reads the payload and fails; the second arm moves it.
+def moved_after_failed_guard(n: Named): int {
+    match n with
+    | Named.One(s) if length(s) > 100 -> { return 0; }
+    | Named.One(s) | Named.Two(s, _) -> { return take(s); }
+    | Named.Nothing -> { return 1; };
+}
+
+// A guard that owns a temporary (the text it compares).
+def guarded_text(value: int): int {
+    match value with
+    | v if int_to_text(v) == "7" -> { return 7; }
+    | _ -> { return 2; };
+}
+
+// A guard over a borrowed scrutinee.
+def through_reference(n: &Named): int {
+    match *n with
+    | Named.Two(a, b) if length(a) == length(b) -> { return 5; }
+    | _ -> { return 6; };
+}
+
+def rounds(): int {
+    let i: mutable int = 0;
+    let total: mutable int = 0;
+    while (i < 100) {
+        total := total + moved_after_failed_guard(Named.One(text(i)));
+        total := total + moved_after_failed_guard(Named.Two(text(i), text(i)));
+        total := total + guarded_text(i % 9);
+        let two: Named = Named.Two(text(i), text(i + 1));
+        total := total + through_reference(&two);
+        i := i + 1;
+    }
+    return total;
+}
+
+def main(): int {
+    if (classify(500) != 3 || classify(50) != 2 || classify(0) != 0 || classify(3) != 1) { return 1; };
+    if (big(Shape.Circle(9)) != 9 || big(Shape.Square(8)) != 8) { return 2; };
+    if (big(Shape.Circle(2)) != 1 || big(Shape.Square(1)) != 1 || big(Shape.Dot()) != 0) { return 3; };
+    if (moved_after_failed_guard(Named.Nothing()) != 1) { return 4; };
+    let r: int = rounds();
+    let allocations: u64 = allocation_count();
+    let frees: u64 = free_count();
+    if (rounds() != r) { return 5; };
+    let allocated: u64 = allocation_count() - allocations;
+    let freed: u64 = free_count() - frees;
+    if (allocated != 0 && freed + 8 < allocated) { return 6; };
+    return 42;
+}

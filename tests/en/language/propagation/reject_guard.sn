@@ -1,0 +1,17 @@
+// اختبار: رفض
+// تشخيص: SULTANC-PARSE-SYNTAX
+// نظير: tests/ar/language/propagation/reject_guard.sn
+// `?` is accepted only as the last postfix of a statement's whole right-hand
+// side (docs/en/reference/errors.md); in a match arm's guard it is an
+// unexpected token, so a guard never returns early.
+def positive(x: int): result bool, string {
+    return result.ok(x > 0);
+}
+
+def classify(x: int): result int, string {
+    match x with
+    | v if positive(v)? -> { return result.ok(1); }
+    | _ -> { return result.ok(0); };
+}
+
+def main(): int { return 0; }

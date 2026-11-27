@@ -59,6 +59,27 @@ The verifier is the boundary between semantic lowering and execution or code gen
 optimization that changes MSIR must produce a program that verifies again before it reaches a
 consumer.
 
+### Optimization levels
+
+One MSIR optimization pipeline (`compiler/msir/msir_optimization_pipeline.sn`) runs on lowered MSIR
+before the canonical verification, for every request: `check` (for compile-time evaluation), `run`,
+and Native and LLVM code generation. Its level is the command's `-O` (`مستوى_تحسين_مسير_من_طلب`,
+`compiler/driver/compiler_driver.sn`); a command without `-O` is `-O0`, so nothing is optimized by
+default:
+
+| `-O` | `مستوى_تحسين_مسير` | Passes |
+|---|---|---|
+| `-O0`, none | `بلا` | none; capture-free closures still get their static environment, named locals stay in their frame slots, every call stays a call |
+| `-O1` | `منخفض` | scalar promotion, control-flow simplification, a second promotion, static environments; no inlining |
+| `-O2` | `افتراضي` | `-O1` plus the inlining of small functions (3 rounds) |
+| `-O3` | `عال` | `-O2` with 6 inlining rounds, so deeper chains of small calls are inlined |
+
+LLVM takes the same level for its own `default<On>` pass pipeline and its code generator
+(`compiler/backend/provider/llvm/optimization.sn`, `target.sn`); at `-O0` it runs no pass. The
+Native backend keeps every source variable readable at `-O0` (`متغيرات_كاملة_لمستوى`). The
+compiler builds itself at an explicit `-O2`, so its bytes, the seed and the self-host fixpoint do
+not depend on the default.
+
 ## Verification boundary
 
 The driver applies the boundary once (`compiler/driver/compiler_driver.sn`, `تحقق_برنامج_مسير`
@@ -133,7 +154,28 @@ patterns and optionally ending in one irrefutable arm, lowers to one multiway br
 constructor tag (`compiler/msir/lowering/statements.sn`), before any sub-pattern is
 tested. The branch enters the first arm of each tag. A failing payload test
 continues with the next arm of the same tag and then with the final irrefutable arm or a trap.
-Other matches keep ordered tests.
+Other matches keep ordered tests, and so does any match with a guarded arm (a guard can fail
+after its pattern matched).
+
+An or-pattern whose alternatives bind names lowers each alternative's test in turn; the matched
+alternative branches to one join block with the values it bound, its position, and the positions
+of the or-patterns inside it, as block arguments (`compiler/msir/lowering/patterns.sn`,
+`اخفض_بدائل_رابطة_إلى_مسير`). The arm's drops branch on a position to destroy the unbound parts of
+the alternative that matched. A vector or slice pattern is one length test, then one indexed read
+per element, with no bounds check (the length test proves it). Its `rest name` is one subslice
+operation (as is a slice expression `v[a..b]`, after its bounds checks), `مقطع_تسلسل(source, start, length)` (`compiler/msir/msir_model.sn`): a slice of the
+source's elements from `start` on, with the slice representation and no copy. The native selectors
+and the LLVM and wasm32 providers build a new header in a frame slot of the result (data = the
+address of element `start`, length = capacity = `length`); the verifier requires a vector or slice
+source, integer operands and a slice result of the source's element type, or a text source and a `&string`
+result: a slice of text `&s[a..b]` is the same operation on the text's header, and a `&string` is a text
+header value with the sequence layout, held by the address of its storage like every aggregate, so `&s`
+(`مكان_إلى_مرجع`) and `*w` (`مرجع_إلى_مكان`) stay register moves on the native backends and address
+passes in LLVM and wasm32 ([Type system](../reference/type-system.md#text-slices)). The checked interpreter
+holds the view as a view of the source's buffer (`مقطع_مخزن_تشغيل`: the buffer, the start and the
+length), so reads and writes through it reach the source's own elements as on the other consumers;
+the borrow rules keep the source unchanged while a read-only view lives. A subslice owns nothing, so drop elaboration never destroys one. A guard is lowered in
+its own block, with the bindings placed as views; its false edge goes to the next arm's test.
 
 Each consumer handles the multiway branch its own way.
 
@@ -236,12 +278,148 @@ LLVM receives the constant and does the same itself at O2. The tests are
 `tests/*/language/numeric/division_by_constant_*.sn`: every u8 and i8 divisor over every dividend,
 u16 and i16 divisors over every dividend, and 32- and 64-bit edges plus pseudo-random dividends.
 
+### Checked arithmetic with an overflow exit
+
+`runtime_checks.sn` makes a checked add, subtract or multiply report its overflow: it splits the
+block before the operation, ends the first half (K) in a test of the operands and a branch to a
+cold block that calls std's report and traps, and leaves the checked operation itself at the head
+of the continuation (C). The test is exact, so it is the same fact the machine computes with the
+operation itself: `compiler/msir/checked_arithmetic.sn` (`حسابات_بمخرج_تجاوز_مسير_في`) recognizes
+it, once for every consumer, and names K, C, the report block, the blocks only the test runs (a
+multiply's slow path) and the values only it reads.
+
+- add and subtract are matched by the test's exact form (`T = a +% b; (a ^ T) & (b ^ T) <s 0`,
+  `(a ^ b) & (a ^ T) <s 0`, `T <u a`, `a <u b`), which also gives their signedness;
+- a multiply is matched by its shape: K computes the operands' wrapping product (or that of their
+  widenings), and K's branch reaches, through blocks only K enters that compute pure values,
+  exactly one report block and C. Only `runtime_checks.sn` makes a block that calls the report and
+  then traps, and the passes after it keep what such a test computes.
+
+Each consumer then lowers the operation once, with its overflow branching to the report block:
+
+| Consumer | Fused form |
+| --- | --- |
+| x86-64 (`selected_simplification.sn`) | the wrapping ADD, SUB or IMUL at the operation's width, then `jo` (signed) or `jb` (unsigned carry or borrow) to the report block; a later step gives it an immediate (`sub rax, 1; jo`) |
+| ARM64 (`selected_simplification.sn`, `حساب_صحيح_بمخرج_ذراع`) | the checked operation's own code with each `b.cond +8; brk` guard replaced by one `b.!cond` to the report block: `adds; b.vs`, `adds; b.cs`, `subs; b.cc`, a narrow result's extension compare and `b.ne`, `smulh`/`umulh` compare and `b.ne` |
+| LLVM (`lowering.sn`) | `llvm.{s,u}{add,sub,mul}.with.overflow` and a conditional branch on its overflow bit |
+
+The test's instructions and blocks are not emitted, and C's checked operation is not emitted again:
+the fused operation defines its value. The report block is unchanged, so the message, the place and
+the exit status are the same. On x86-64 a multiply IMUL's flags do not decide (unsigned, or narrower
+than 64 bits) keeps its test; LLVM targets that spell overflow arithmetic out by hand keep theirs.
+The machine interpreter translates the selectors' own code, before these native simplifications,
+and fuses 64-bit add and subtract itself (`machine_optimizer.sn`). Fusing is a lowering of one
+operation, so it is done at every optimization level. The tests are
+`tests/*/runtime/overflow_bounds/` (every width and signedness at its bounds, trapping and not) and
+the object checks in `tests/runner/suites/objects.sn` (`تحقق_أنماط_التحسين`).
+
+### Integer strength reduction
+
+`compiler/msir/msir_strength.sn` runs in the optimization pipeline (every level but -O0), so the
+native backends, LLVM and both interpreters receive its forms:
+
+- `x %u 2^k` is `x & (2^k - 1)`;
+- `x %s 2^k` whose every use compares it with 0 for equality is `x & (2^k - 1)` (a remainder is 0
+  exactly when the low k bits are, at either sign): `n % 2 == 0` is a bit test, TBZ/TBNZ or TST on
+  AArch64 and AND then JE on x86-64 (`selected_simplification.sn` drops the compare of an AND, OR or
+  XOR result with 0 before JE or JNE, since the operation set ZF);
+- a remainder `x % c` after the quotient `x / c` of the same operands in the same block, `c` a
+  constant other than 0 and -1, is `x -% (x / c) *% c`: one division by `c` instead of two.
+
+On x86-64 a 64-bit wrapping multiply by a constant takes it as an immediate (`imul r, r/m, imm`),
+which keeps OF for a fused checked multiply (`imul rax, rax, 3; jo`); above -O0 a wrapping multiply
+by 2, 3, 5 or 9 that no branch reads the flags of is `lea r, [r + r*k]`. Division and remainder by
+other constants use `codegen/division_by_constant.sn` (above). The tests are
+`tests/*/language/optimization/strength_reduction.sn` and the object checks (LEA, AND then JE, the
+AArch64 bit test).
+
+### Range-based check removal
+
+`compiler/msir/msir_check_ranges.sn` runs right after strength reduction (every level but -O0). It
+proves, from the ranges of its operands, that a checked add or subtract with an overflow exit
+(above) cannot overflow, and then makes K branch to C and C's operation the wrapping one; flow
+simplification then drops the test and the report block. An operand's range is its Type's,
+narrowed by its definition (a constant; `x & m` for a non-negative constant `m`: `[0, m]`;
+`x %u c`: `[0, c - 1]`; `x >>u c`; a zero extension) and by every compare that holds where the
+check runs: the condition of a block D that dominates K along an edge into a block entered only
+from D (the true edge: the compare; the false edge: its negation). So `while (i < n) { i + 1 }`
+(`i <= MAX - 1`), `if (n < 2) { ... } else { n - 1 }` (`n >= 2`) and `if (d > 0) { d - 1 }` lose
+their checks. The sum or difference of the two ranges must fit the Type; anything else keeps the
+check, and so do multiplies and an operation whose value a call or a multiply reads (a memory
+range's length the verifier proves from the checked operation). It benefits every consumer,
+the interpreters included. The tests are `tests/*/object/source/proven_checks.sn` (read through
+`--emit=msir` by `تحقق_الفحوص_المثبتة`), `tests/*/language/optimization/strength_reduction.sn` and
+`tests/*/runtime/overflow_bounds/loop_le_bound.sn` (`i <= n` proves nothing: the check stays and
+reports).
+
+### AArch64 selected-code simplification and branch layout
+
+Before register allocation (native objects only; the machine interpreter translates the selector's
+own code), `arm64/selected_simplification.sn` rewrites a selected function, as the x86-64
+`selected_simplification.sn` does:
+
+- the checked operations with an overflow exit (above);
+- a compare against a constant 0..4095 takes it as an immediate (`cmp x0, #1`), swapping the
+  operands and the condition when the constant is on the left;
+- a compare whose truth value only feeds the block's two-way branch sets the flags for it: the
+  selector's `cmp; cset c; cmp c, #0; b.ne` becomes `cmp; b.cond` (the compare moves down over the
+  constant materializations between, which leave the flags);
+- a branch on a value against 0 is CBZ or CBNZ, and on `a & 2^k` against 0 (read only there) a bit
+  test of `a`;
+- a wrapping add or subtract of a constant 0..4095 or its negation takes it as an immediate, and so
+  do AND, ORR and EOR of a logical immediate, and a checked add or subtract with an overflow exit
+  (`adds x0, x0, #1; b.vs`; a negative signed constant is the other operation's immediate);
+- constant materializations nothing reads any more are dropped.
+
+The encoder then lays branches out (`شفّر_فرع_مخطط_ذراع`): a jump to the block laid out next is left
+out, a conditional branch whose true edge is the next block branches on the inverse condition to
+the false edge, every branch goes straight to the final target of a chain of blocks that only jump,
+and a move of a register onto itself encodes nothing. A bit test is one TBZ or TBNZ to a block
+already laid out within its 32 KiB reach, else TST and B.EQ or B.NE (B.cond reaches 1 MiB, like
+every other branch the encoder makes). The object check `تحقق_أنماط_التحسين` looks for `cmp #0` then
+B.cond, CBZ/CBNZ and the bit test.
+
+### AArch64 constants
+
+The ARM64 encoder materializes a 64-bit constant in the fewest instructions
+(`ألحق_مادي_فوري_ذراع`, `arm64/encoder.sn`): MOVZ of its first non-zero halfword and a MOVK for
+each other non-zero one, or MOVN and a MOVK for each halfword that is not 0xFFFF, whichever is
+shorter; when that still takes two or more, `ORR Xd, XZR, #bitmask` when the value is a logical
+immediate (`فوري_منطقي_ذراع`: a 2- to 64-bit element, one rotated run of ones, repeated across the
+register). So 0, every 16-bit value, -1, -2 and `0x5555555555555555` are one instruction, and no
+MOVK writes a zero halfword. Every sequence that branches over a materialization measures it
+instead of assuming four words. The object check `تحقق_أنماط_التحسين` looks for the single
+MOVZ, MOVN and ORR and for the absence of a MOVK of 0.
+
 ### Register allocation and vector length reads
 
 When no register is free, the linear-scan allocator (`compiler/backend/codegen/register_allocator.sn`,
 `خصص_السجلات_مع_انسكاب`) spills whichever of the new interval and the active, unfixed, unbound
 intervals it could take over ends last (Poletto and Sarkar, TOPLAS 1999). A short-lived value
 therefore does not go to the stack while a long-lived one holds the register.
+
+Both native targets allocate with lifetime holes (`بالمقاطع`): two values whose live positions only
+interleave may share a register, so a value read at the top of a loop and again in one arm leaves
+its register free elsewhere. Copies are coalesced by hints (`ابن_تلميحات_نقل_تخصيص`), never by
+merging values, so every value keeps one location for its whole life (debug information at -O0
+still names one place per value):
+
+- a value defined by a move, or by an operation that reads its left operand only in its first
+  instruction (x86-64 two-address forms; AArch64 add, subtract, wrapping multiply and the bitwise
+  operations, register or immediate, `يقرأ_أولا_ذراع`), first tries its source's register, which
+  that source may hold up to this very instruction;
+- a block parameter tries its edge argument's register, and an edge argument that no move defines
+  tries its parameter's register. A loop's next value (`i + 1`) then lands in the register of the
+  value it replaces whenever their lives do not meet, and the back edge's move becomes a self-move,
+  which emits nothing;
+- a register a call would rather read an argument from is carried back along the moves that build
+  that argument, so the value is computed in the argument register instead of being copied there.
+
+A checked multiply, a division, a remainder and a shift read their operands again after writing
+the destination on AArch64, so they take no hint. Block layout (fall-through, inverted conditional
+branches and jump threading) belongs to each encoder: `شفّر_فرع_مخطط_ذراع` on AArch64 and
+`شفّر_فرع_مخطط_إكس` on x86-64, so a conditional branch whose edges carry no moves is never
+followed by a jump to the block laid out next. Coalesced edge moves make more edges move-free.
 
 A bounds check loads the whole vector to take its length. When that load has no other use and the
 length call follows it, the native selectors read the length through the place
@@ -361,8 +539,9 @@ link no C library.
 `compiler/backend/provider/llvm` lowers verified MSIR to LLVM IR through the LLVM C API and runs
 LLVM's optimization and code-generation pipelines.
 
-The driver passes an optimization level, so the provider runs both the `default<O2>` pipeline and
-the O2 code generator. At O2 LLVM promotes the allocas, hoists the vector data pointers and lengths
+The driver passes the `-O` level, so the provider runs the `default<On>` pipeline and the On code
+generator of that level, and at `-O0` (the level of a command without `-O`) no pipeline and the
+level-0 code generator. At O2 LLVM promotes the allocas, hoists the vector data pointers and lengths
 out of loops, removes the bounds checks it can prove, and turns divisions by constants into
 multiplies. `--emit=llvm-ir` prints the optimized module before code generation.
 

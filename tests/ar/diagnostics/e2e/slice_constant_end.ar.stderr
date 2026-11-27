@@ -1,0 +1,6 @@
+خطأ[SULTANC-SAFETY-INDEX-OUT-OF-BOUNDS]: الفهرس خارج الحدود الصالحة — الفهرس الواقع خارج الحدود هو 3. الطول هو 3.
+  --> tests/ar/diagnostics/e2e/slice_constant_end.sn:10:35..10:36
+    |
+ 10 |     ليكن الجزء: [] عدد = القيم[1..3];
+    |                                   ^
+    |

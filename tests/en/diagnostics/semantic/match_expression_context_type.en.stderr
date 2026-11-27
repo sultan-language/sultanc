@@ -1,0 +1,6 @@
+error[SULTANC-TYPE-MISMATCH]: expected `int`, found `string` — The value does not match the declared type of its destination.
+  --> tests/en/diagnostics/semantic/match_expression_context_type.sn:11:12..11:17
+    |
+ 11 |     | 1 -> "one"
+    |            ^^^^^
+    |

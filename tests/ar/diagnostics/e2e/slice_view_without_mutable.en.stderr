@@ -1,0 +1,7 @@
+error[SULTANC-MUTABILITY-VIEW-WITHOUT-MUTABLE]: a writable view `mutable [] T` is made with `&mutable`
+  --> tests/ar/diagnostics/e2e/slice_view_without_mutable.sn:14:10..14:15
+    |
+ 14 |     املأ(القيم، 0);
+    |          ^^^^^
+    |
+  = help: write `&mutable` before it to give a writable view

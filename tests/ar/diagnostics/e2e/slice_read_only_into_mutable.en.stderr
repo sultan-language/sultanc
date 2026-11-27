@@ -1,0 +1,7 @@
+error[SULTANC-MUTABILITY-VIEW-WITHOUT-MUTABLE]: a writable view `mutable [] T` is made with `&mutable`
+  --> tests/ar/diagnostics/e2e/slice_read_only_into_mutable.sn:10:32..10:42
+    |
+ 10 |     ليكن الجزء: متغير [] عدد = القيم[1..];
+    |                                ^^^^^^^^^^
+    |
+  = help: write `&mutable` before it to give a writable view

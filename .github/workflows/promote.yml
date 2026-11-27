@@ -22,9 +22,10 @@
 # files, keeps its history, and the merge carries the commit's qualification
 # (same tree). A target whose tree already equals the commit's is left alone.
 #
-# Releases are not made here: the owner tags and releases master by hand.
+# Releases are not made here: the owner tags master, and release.yml builds a
+# draft release that the owner publishes.
 #
-# Setup (CI.md, "Repository settings"): the secret PROMOTE_TOKEN in the
+# Setup: the secret PROMOTE_TOKEN in the
 # environment `promotion` (a fine-grained token of the owner: this repository,
 # Contents read and write), and a ruleset on beta and master that allows
 # updates only by the owner (bypass: repository admin), with no force push.
@@ -62,7 +63,7 @@ jobs:
       evidence: ${{ steps.resolve.outputs.evidence }}
       qualify: ${{ steps.resolve.outputs.qualify }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           sparse-checkout: .github
       - name: Resolve the commit
@@ -151,7 +152,7 @@ jobs:
       contents: read
       statuses: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           sparse-checkout: .github
       - name: Qualified, then move
@@ -167,7 +168,7 @@ jobs:
           fail() { echo "::error::$1"; echo "Not promoted: $1" >> "$GITHUB_STEP_SUMMARY"; exit 1; }
           evidence=$(sh .github/ci/evidence.sh "$SHA")
           [ -n "$evidence" ] || fail "$SHA has no qualification"
-          [ -n "$PROMOTE_TOKEN" ] || fail "the secret PROMOTE_TOKEN is not set in the environment promotion (CI.md)"
+          [ -n "$PROMOTE_TOKEN" ] || fail "the secret PROMOTE_TOKEN is not set in the environment promotion"
           head=$SHA
           case "$MODE" in
             create)

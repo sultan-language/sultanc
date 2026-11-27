@@ -1,0 +1,15 @@
+// اختبار: رفض
+// تشخيص: SULTANC-PATTERN-NON-EXHAUSTIVE
+// نظير: tests/en/diagnostics/e2e/vector_non_exhaustive.sn
+// خرج-تشخيص-عربي: vector_non_exhaustive.ar.stderr
+// خرج-تشخيص-إنجليزي: vector_non_exhaustive.en.stderr
+// المتجهات ذات العنصرين فأكثر لا تطابق أي ذراع.
+عرف د(م: متجه عدد): عدد {
+    طابق م مع
+    | [] -> { أرجع 0; }
+    | [أ] -> { أرجع أ; };
+}
+عرف الرئيسية(): عدد {
+    ليكن م: متجه عدد = [1];
+    أرجع د(م);
+}

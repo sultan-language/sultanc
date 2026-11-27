@@ -1,0 +1,13 @@
+// اختبار: رفض
+// تشخيص: SULTANC-PARSE-PATTERN
+// نظير: tests/ar/diagnostics/e2e/as_missing_name.sn
+// خرج-تشخيص-عربي: as_missing_name.ar.stderr
+// خرج-تشخيص-إنجليزي: as_missing_name.en.stderr
+// `as` names the matched value: a name must follow it.
+type Shape = | Circle of int | Dot;
+def f(s: Shape): int {
+    match s with
+    | Shape.Circle(r) as -> { return r; }
+    | Shape.Dot -> { return 0; };
+}
+def main(): int { return f(Shape.Dot()); }

@@ -1,0 +1,12 @@
+// اختبار: رفض
+// تشخيص: SULTANC-SAFETY-INDEX-OUT-OF-BOUNDS
+// نظير: tests/ar/diagnostics/e2e/slice_constant_end.sn
+// خرج-تشخيص-عربي: slice_constant_end.ar.stderr
+// خرج-تشخيص-إنجليزي: slice_constant_end.en.stderr
+// A constant end past a vector of known length is reported when the
+// program is compiled, as the same index would be.
+def main(): int {
+    let values: vector int = [1, 2, 3];
+    let part: [] int = values[1..3];
+    return length(part) as int;
+}

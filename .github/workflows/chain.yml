@@ -1,0 +1,135 @@
+# The release check: the frozen C Stage0 chain (docs/en/internals/bootstrap.md,
+# "The frozen C Stage0"). Monthly, on a release tag, and by hand before a
+# release; never on a pull request or a push to a branch.
+#
+# On every host, bootstrap/chain.sh (chain.ps1 on Windows) builds the C Stage0,
+# lets it compile the compiler of the commit bootstrap/FROZEN pins, climbs the
+# FROZEN steps to the current sources, and requires the compiler that chain
+# builds to equal byte for byte the one Stage1 from the committed seed builds:
+# two independent roots give one compiler (a diverse double-compile). On the
+# hosts without a Native backend (linux-arm64, macos-x86_64, Windows) the
+# chain's LLVM-enabled compiler then runs the test suite: there it is the only
+# from-source LLVM-enabled compiler for the host.
+#
+# Like ci.yml, this workflow only verifies: its token can only read.
+name: SultanC Chain
+
+on:
+  schedule:
+    - cron: '17 3 1 * *'
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sultanc-chain-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  llvm-sdk:
+    name: LLVM SDK / ${{ matrix.host }}
+    runs-on: ${{ matrix.runner }}
+    # macOS x86_64 and Windows build LLVM from source when the cache is cold.
+    timeout-minutes: 350
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {host: linux-x86_64, runner: ubuntu-24.04, script: linux}
+          - {host: linux-arm64, runner: ubuntu-24.04-arm, script: linux}
+          - {host: macos-arm64, runner: macos-15, script: macos}
+          - {host: macos-x86_64, runner: macos-15-intel, script: macos}
+          - {host: windows-x86_64, runner: windows-2025, script: windows}
+          - {host: windows-arm64, runner: windows-11-arm, script: windows}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - name: LLVM SDK cache
+        id: cache
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ~/llvm-sdk-22.1.8
+          key: llvm-sdk-${{ matrix.host }}-${{ hashFiles('.github/ci/llvm.lock') }}
+          lookup-only: true
+      - name: Build the LLVM SDK
+        if: steps.cache.outputs.cache-hit != 'true' && matrix.script != 'windows'
+        timeout-minutes: 340
+        run: sh .github/ci/${{ matrix.script }}.sh llvm-sdk
+      - name: Build the LLVM SDK
+        if: steps.cache.outputs.cache-hit != 'true' && matrix.script == 'windows'
+        timeout-minutes: 340
+        shell: pwsh
+        run: ./.github/ci/windows.ps1 llvm-sdk
+
+  chain:
+    name: Chain / ${{ matrix.host }}
+    needs: llvm-sdk
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 360
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {host: linux-x86_64, runner: ubuntu-24.04, script: linux, tests: false}
+          - {host: linux-arm64, runner: ubuntu-24.04-arm, script: linux, tests: true}
+          - {host: macos-arm64, runner: macos-15, script: macos, tests: false}
+          - {host: macos-x86_64, runner: macos-15-intel, script: macos, tests: true}
+          - {host: windows-x86_64, runner: windows-2025, script: windows, tests: true}
+          - {host: windows-arm64, runner: windows-11-arm, script: windows, tests: true}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          # The commits bootstrap/FROZEN pins come from the history.
+          fetch-depth: 0
+      - name: LLVM SDK
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ~/llvm-sdk-22.1.8
+          key: llvm-sdk-${{ matrix.host }}-${{ hashFiles('.github/ci/llvm.lock') }}
+          fail-on-cache-miss: true
+      - name: C Stage0 chain, equal to the seed route
+        if: matrix.script != 'windows'
+        timeout-minutes: 240
+        run: sh .github/ci/${{ matrix.script }}.sh chain
+      - name: C Stage0 chain, equal to the seed route
+        if: matrix.script == 'windows'
+        timeout-minutes: 240
+        shell: pwsh
+        run: ./.github/ci/windows.ps1 chain
+      - name: Tests
+        if: matrix.tests && matrix.script != 'windows'
+        timeout-minutes: 90
+        run: sh .github/ci/${{ matrix.script }}.sh test
+      - name: Tests
+        if: matrix.tests && matrix.script == 'windows'
+        timeout-minutes: 90
+        shell: pwsh
+        run: ./.github/ci/windows.ps1 test
+      - name: Upload the chain's compilers
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: chain-${{ matrix.host }}
+          path: |
+            build/chain/sultanc-a*
+            build/chain/sultanc-d
+            build/chain/sultanc-w
+          retention-days: 14
+          if-no-files-found: ignore
+      - name: Upload test results
+        if: always() && matrix.tests
+        continue-on-error: true
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: tests-chain-${{ matrix.host }}
+          path: |
+            build/tests-result.json
+            build/tests-junit.xml
+            build/tests-ci/*.log
+            build/tests-sultanc/*.out
+            build/tests-sultanc/*.err
+          retention-days: 14
+          if-no-files-found: ignore

@@ -5,7 +5,7 @@
 // incremental tooling analysis). A compilation's one stage starts from module
 // 0 and never copies. The C Stage0 (bootstrap/) has no `استنسخ`: its build
 // binds later_phase_facts_copy_unavailable.sn in this module's place
-// (cmake/modules/Stage1.cmake).
+// (bootstrap/chain.sh).
 عام عرف انسخ_حقائق_لاحقة_مرحلية(الحقائق: &حقائق_لاحقة_مرحلية): حقائق_لاحقة_مرحلية {
     أرجع استنسخ(الحقائق);
 }

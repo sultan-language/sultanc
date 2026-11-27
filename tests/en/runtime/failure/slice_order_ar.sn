@@ -1,0 +1,18 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 1
+// تفاضلي: نعم
+// بيئة: SULTANC_LANG=ar
+// خرج-قياسي: <فارغ>
+// خطأ-قياسي-ملف: slice_order_ar.stderr
+// نظير: tests/ar/runtime/failure/slice_order_ar.sn
+// A slice whose end is before its start minus one (start <= end + 1) (docs/en/reference/errors.md, "Runtime checks")
+// stops the program through the panic path: the frame "the program stopped",
+// then the start and the end, and the place of the slice, exit status 1.
+def main(): int {
+    let values: vector int = [10, 20, 30];
+    let start: int = 2;
+    let last: int = 0;
+    let part: [] int = values[start..last];
+    return length(part) as int;
+}

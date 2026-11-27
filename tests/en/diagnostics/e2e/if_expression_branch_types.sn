@@ -1,0 +1,11 @@
+// اختبار: رفض
+// تشخيص: SULTANC-TYPE-MISMATCH
+// نظير: tests/ar/diagnostics/e2e/if_expression_branch_types.sn
+// خرج-تشخيص-عربي: if_expression_branch_types.ar.stderr
+// خرج-تشخيص-إنجليزي: if_expression_branch_types.en.stderr
+// Both branches of an `if` value give the same type.
+def main(): int {
+    let n: int = 3;
+    let v: int = if (n > 0) 1 else "one";
+    return v;
+}

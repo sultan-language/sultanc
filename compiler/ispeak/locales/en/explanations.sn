@@ -70,6 +70,19 @@
 عام عرف نص_شرح_استخدام_قبل_التهيئة(): نص { أرجع «The variable is read before it has a value. Assign it on every path before use.»; }
 عام عرف نص_شرح_استخدام_بعد_النقل(): نص { أرجع «Value used after move. Find the move in the related spans.»; }
 عام عرف نص_شرح_تعارض_ملكية_عند_الدمج(): نص { أرجع «A local holds a value on one path and none, moved, released or borrowed differently on another, and the paths join. Give it the same state on every path before the join.»; }
+عام عرف نص_شرح_تجميع_غير_مدعوم(): نص { أرجع «SultanC does not compile asm yet, at module level or in functions. Write the code in C and import the file, or write it in SultanC.»; }
+عام عرف نص_شرح_بدائي_غير_مستدعى(): نص { أرجع «A built-in function such as `append` or `length` is only called with its arguments, as in `append(v, x)`: it cannot be stored, returned or assigned.»; }
+عام عرف نص_شرح_مطابقة_تعبيرية_بلا_قيمة(): نص { أرجع «A match used as an expression takes its value from the arm that matches, so at least one arm ends with a value: `| p -> value` or `| p -> { statements; value }`.»; }
+عام عرف نص_شرح_ذراع_مطابقة_بلا_قيمة(): نص { أرجع «An arm of a match expression without a final value must not finish: on every path its block returns, leaves or continues a loop, or panics. Give the arm a final expression without `;`, or end it so.»; }
+عام عرف نص_شرح_عرض_قابل_للكتابة_بلا_علامة(): نص { أرجع «A `mutable [] T` writes into the vector it views, so only `&mutable` makes one: `&mutable v` or `&mutable v[a..b]`. A vector or slice given without it is a read-only view.»; }
+عام عرف نص_شرح_إذا_تعبيرية_بلا_وإلا(): نص { أرجع «An `if` that gives a value needs an `else`: without one there is no value when the condition is false. Add `else` with the value for that case, or write the `if` as a statement.»; }
+عام عرف نص_شرح_إذا_تعبيرية_بلا_قيمة(): نص { أرجع «An `if` used as a value takes its value from the branch that runs, so at least one branch ends with a value: `if (c) a else { statements; b }`.»; }
+عام عرف نص_شرح_فرع_إذا_بلا_قيمة(): نص { أرجع «A branch of an `if` used as a value without a final value must not finish: on every path it returns, leaves or continues a loop, or panics. Give the branch a final expression without `;`, or end it so.»; }
+عام عرف نص_شرح_ربط_صف_غير_صالح(): نص { أرجع «`let (a, b): T = e;` gives each name its element for the rest of the block. Its pattern holds only names, `_` and nested tuples, in a block's statements; to test a value against other patterns, use `match`.»; }
+عام عرف نص_شرح_ربط_صف_بنوع_غير_مطابق(): نص { أرجع «A tuple `let` writes the Type of what it takes apart: a tuple with one element for each name or `_`, and a tuple for each nested pattern: `let (a, (b, _)): (int, (string, bool)) = e;`.»; }
+عام عرف نص_شرح_مقطع_نص_غير_صالح(): نص { أرجع «Slice text with `&s[a..b]`: a read-only `&string` over bytes a through b, with no copy. `&mutable s[a..b]` is not allowed (a write could split a character), and `s[a..b]` needs the `&`.»; }
+عام عرف نص_شرح_منشئ_تمهيدي_بلا_نوع(): نص { أرجع «`none`, `ok(x)` and `err(e)` take their option or result type from where they stand: a declared type, a parameter, a returned value. Here nothing gives one; name the value first: `let found: option int = none;`.»; }
+عام عرف نص_شرح_ربط_صف_قابل_للتغيير(): نص { أرجع «In a tuple `let` only a writable view `mutable [] T` is written `mutable`. To change a value taken out, copy it into its own `let name: mutable T = name;`.»; }
 عام عرف نص_شرح_مورد_محرر(): نص { أرجع «The resource is used after it was released. Use it before the release, or do not release it yet.»; }
 عام عرف نص_شرح_تعارض_استعارة(): نص { أرجع «A borrow conflicts with another active borrow of the same value. End one borrow first.»; }
 عام عرف نص_شرح_هروب_مرجع(): نص { أرجع «A reference outlives the value it points to. Return or store the value instead.»; }
@@ -80,6 +93,8 @@
 عام عرف نص_شرح_فهرس_خارج_الحدود(): نص { أرجع «The index is outside the bounds of the collection. Check the index against the length.»; }
 عام عرف نص_شرح_نمط_غير_شامل(): نص { أرجع «Pattern match misses possible values. Cover the missing cases.»; }
 عام عرف نص_شرح_نمط_غير_قابل_للوصول(): نص { أرجع «An earlier pattern already covers this one, so it never runs. Remove or reorder it.»; }
+عام عرف نص_شرح_ربط_بدائل_غير_متسق(): نص { أرجع «Every alternative of an or-pattern must bind the same names. Bind the name in each alternative, or match it with `_`.»; }
+عام عرف نص_شرح_نوع_ربط_بدائل_غير_متسق(): نص { أرجع «A name that every alternative of an or-pattern binds must have one type in all of them.»; }
 عام عرف نص_شرح_تحكم_حلقة_خارج_حلقة(): نص { أرجع «Leaving or continuing a loop is only possible inside a while or for loop of the same function.»; }
 عام عرف نص_شرح_انتهى_البرنامج_بخطأ(): نص { أرجع «The program entry returned an error. Its description follows: the message, its notes and its causes. The exit status is 1.»; }
 عام عرف نص_شرح_توقف_البرنامج(): نص { أرجع «The program called the stop primitive (panic) or an assertion failed. Owned values are not dropped. The exit status is 1.»; }
@@ -233,6 +248,19 @@
     | مفتاح_شرح.استخدام_قبل_التهيئة -> { أرجع نص_شرح_استخدام_قبل_التهيئة(); }
     | مفتاح_شرح.استخدام_بعد_النقل -> { أرجع نص_شرح_استخدام_بعد_النقل(); }
     | مفتاح_شرح.تعارض_ملكية_عند_الدمج -> { أرجع نص_شرح_تعارض_ملكية_عند_الدمج(); }
+    | مفتاح_شرح.تجميع_غير_مدعوم -> { أرجع نص_شرح_تجميع_غير_مدعوم(); }
+    | مفتاح_شرح.بدائي_غير_مستدعى -> { أرجع نص_شرح_بدائي_غير_مستدعى(); }
+    | مفتاح_شرح.مطابقة_تعبيرية_بلا_قيمة -> { أرجع نص_شرح_مطابقة_تعبيرية_بلا_قيمة(); }
+    | مفتاح_شرح.ذراع_مطابقة_بلا_قيمة -> { أرجع نص_شرح_ذراع_مطابقة_بلا_قيمة(); }
+    | مفتاح_شرح.عرض_قابل_للكتابة_بلا_علامة -> { أرجع نص_شرح_عرض_قابل_للكتابة_بلا_علامة(); }
+    | مفتاح_شرح.إذا_تعبيرية_بلا_وإلا -> { أرجع نص_شرح_إذا_تعبيرية_بلا_وإلا(); }
+    | مفتاح_شرح.إذا_تعبيرية_بلا_قيمة -> { أرجع نص_شرح_إذا_تعبيرية_بلا_قيمة(); }
+    | مفتاح_شرح.فرع_إذا_بلا_قيمة -> { أرجع نص_شرح_فرع_إذا_بلا_قيمة(); }
+    | مفتاح_شرح.ربط_صف_غير_صالح -> { أرجع نص_شرح_ربط_صف_غير_صالح(); }
+    | مفتاح_شرح.ربط_صف_بنوع_غير_مطابق -> { أرجع نص_شرح_ربط_صف_بنوع_غير_مطابق(); }
+    | مفتاح_شرح.ربط_صف_قابل_للتغيير -> { أرجع نص_شرح_ربط_صف_قابل_للتغيير(); }
+    | مفتاح_شرح.منشئ_تمهيدي_بلا_نوع -> { أرجع نص_شرح_منشئ_تمهيدي_بلا_نوع(); }
+    | مفتاح_شرح.مقطع_نص_غير_صالح -> { أرجع نص_شرح_مقطع_نص_غير_صالح(); }
     | مفتاح_شرح.مورد_محرر -> { أرجع نص_شرح_مورد_محرر(); }
     | مفتاح_شرح.تعارض_استعارة -> { أرجع نص_شرح_تعارض_استعارة(); }
     | مفتاح_شرح.هروب_مرجع -> { أرجع نص_شرح_هروب_مرجع(); }
@@ -243,6 +271,8 @@
     | مفتاح_شرح.فهرس_خارج_الحدود -> { أرجع نص_شرح_فهرس_خارج_الحدود(); }
     | مفتاح_شرح.نمط_غير_شامل -> { أرجع نص_شرح_نمط_غير_شامل(); }
     | مفتاح_شرح.نمط_غير_قابل_للوصول -> { أرجع نص_شرح_نمط_غير_قابل_للوصول(); }
+    | مفتاح_شرح.ربط_بدائل_غير_متسق -> { أرجع نص_شرح_ربط_بدائل_غير_متسق(); }
+    | مفتاح_شرح.نوع_ربط_بدائل_غير_متسق -> { أرجع نص_شرح_نوع_ربط_بدائل_غير_متسق(); }
     | مفتاح_شرح.إرجاع_مفقود -> { أرجع نص_شرح_إرجاع_مفقود(); }
     | مفتاح_شرح.انتهى_البرنامج_بخطأ -> { أرجع نص_شرح_انتهى_البرنامج_بخطأ(); }
     | مفتاح_شرح.توقف_البرنامج -> { أرجع نص_شرح_توقف_البرنامج(); }

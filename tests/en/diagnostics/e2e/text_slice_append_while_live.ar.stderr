@@ -1,0 +1,6 @@
+خطأ[SULTANC-BORROW-CONFLICT]: تعارض استعارة — القيمة ذات الاستعارة المتعارضة هي ⁨`greeting`⁩. القيمة مستعارة استعارة متغيرة بالفعل، لذا لا يمكن استعارتها مرة أخرى.
+  --> tests/en/diagnostics/e2e/text_slice_append_while_live.sn:16:5..16:44
+    |
+ 16 |     let greeting: mutable string = "hello";
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |

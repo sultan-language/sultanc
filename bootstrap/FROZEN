@@ -1,0 +1,19 @@
+# The C Stage0 in bootstrap/ is frozen: its sources do not change. It compiles
+# the compiler of one pinned commit, and the release check (bootstrap/chain.sh,
+# bootstrap/chain.ps1, .github/workflows/chain.yml) climbs from there to the
+# current sources:
+#
+#   stage0 COMMIT   the commit whose compiler/ and library/ the C Stage0
+#                   compiles (the commit the frozen Stage0 was last tested
+#                   with; tagged)
+#   step COMMIT     optional, in order: the compiler of COMMIT, built by the
+#                   compiler of the line before. A step is needed once the
+#                   current sources use a feature the previous step's compiler
+#                   lacks (a seed bump that let the compiler use a feature adds
+#                   the seed-bump commit here when the chain needs it).
+#
+# The chain's last compiler builds the current sources, that compiler builds
+# them again, and the result must be byte-identical to what the seed route
+# builds (a diverse double-compile: two independent roots, one compiler).
+stage0 9d2642f514f2f5c1347afb57222a9e961fd02bd8
+step 0e25442608f542fd1bf1ddc1ca8ff799aa9cfa06

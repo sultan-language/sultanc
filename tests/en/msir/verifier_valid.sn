@@ -67,7 +67,7 @@ def test_block_parameters_and_branch(): bool {
         أضف_معامل_كتلة_مسير(&mutable program, function, merge_block, int_type)
     );
     let arguments: vector معرف_قيمة_مسير = [value];
-    اختم_بفرع_مسير(&mutable program, &build, function, entry, merge_block, &arguments);
+    اختم_بفرع_مسير(&mutable program, &build, function, entry, merge_block, arguments);
     اختم_بإرجاع_مسير(&mutable program, &build, function, merge_block, option.some(merge_parameter));
     عين_دالة_بدء_برنامج_مسير(&mutable program, function);
     return is_valid(&program, &types);
@@ -90,13 +90,12 @@ def test_conditional_branch_and_loop(): bool {
     let exit_value: معرف_قيمة_مسير = test_value(
         أصدر_ثابتا_مسير(&mutable program, &build, function, entry, ثابت_مسير.صحيح_موقع(42), int_type)
     );
-    let no_arguments: vector معرف_قيمة_مسير = [];
     let loop_arguments: vector معرف_قيمة_مسير = [];
     let exit_arguments: vector معرف_قيمة_مسير = [];
     let loop_edge: حافة_مسير = { الهدف: loop_block, الحجج: loop_arguments };
     let exit_edge: حافة_مسير = { الهدف: exit_block, الحجج: exit_arguments };
     اختم_بفرع_شرطي_مسير(&mutable program, &build, function, entry, condition, loop_edge, exit_edge);
-    اختم_بفرع_مسير(&mutable program, &build, function, loop_block, loop_block, &no_arguments);
+    اختم_بفرع_مسير(&mutable program, &build, function, loop_block, loop_block, []);
     اختم_بإرجاع_مسير(&mutable program, &build, function, exit_block, option.some(exit_value));
     عين_دالة_بدء_برنامج_مسير(&mutable program, function);
     return is_valid(&program, &types);
@@ -150,14 +149,14 @@ def test_aggregate_and_call(): bool {
     );
     let members: vector معرف_قيمة_مسير = [a, b];
     let aggregate: معرف_قيمة_مسير = test_value(
-        أصدر_تجميع_مسير(&mutable program, &build, function, block, &members, tuple_type)
+        أصدر_تجميع_مسير(&mutable program, &build, function, block, members, tuple_type)
     );
     let field: معرف_قيمة_مسير = test_value(
         أصدر_استخراج_حقل_مسير(&mutable program, &build, function, block, aggregate, 1, int_type)
     );
     let arguments: vector معرف_قيمة_مسير = [field];
     let call_result: معرف_قيمة_مسير = test_value(
-        أصدر_نداء_مسير(&mutable program, &build, function, block, helper, &arguments)
+        أصدر_نداء_مسير(&mutable program, &build, function, block, helper, arguments)
     );
     اختم_بإرجاع_مسير(&mutable program, &build, function, block, option.some(call_result));
     عين_دالة_بدء_برنامج_مسير(&mutable program, function);

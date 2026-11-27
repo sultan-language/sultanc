@@ -1,0 +1,13 @@
+// اختبار: رفض
+// تشخيص: SULTANC-PARSE-LET-PATTERN
+// نظير: tests/ar/diagnostics/e2e/let_tuple_constructor_pattern.sn
+// خرج-تشخيص-عربي: let_tuple_constructor_pattern.ar.stderr
+// خرج-تشخيص-إنجليزي: let_tuple_constructor_pattern.en.stderr
+// A tuple `let` gives names to the elements; testing an element against a
+// constructor is a `match`.
+type Light = | Red | Green;
+
+def main(): int {
+    let (Light.Red, count): (Light, int) = (Light.Red, 3);
+    return count;
+}

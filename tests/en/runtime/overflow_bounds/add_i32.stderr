@@ -1,0 +1,2 @@
+error[SULTANC-RUNTIME-PROGRAM-STOPPED]: the program stopped
+integer overflow at tests/en/runtime/overflow_bounds/add_i32.sn:13:23

@@ -1,0 +1,7 @@
+error[SULTANC-PATTERN-NON-EXHAUSTIVE]: non-exhaustive pattern: `true` not covered — Every value of the matched type must match one of the arms.
+  --> tests/en/diagnostics/e2e/guard_non_exhaustive.sn:8:11..8:16
+   |
+ 8 |     match value with
+   |           ^^^^^
+   |
+  = help: add an arm for each case that is not covered

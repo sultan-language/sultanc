@@ -3,121 +3,179 @@
 # Bootstrap
 
 SultanC is self-hosted: the compiler is written in SultanC, so building it from source needs a
-first compiler. This page describes the three routes that provide that first compiler (the C
-Stage0, the committed WebAssembly seed, and an existing compiler), how `build.sh` and `cmake/`
-chain the stages, how the seed is checked and updated, and how CI proves each route on each host.
-It is written for people who build, verify or change the bootstrap.
+previous compiler. This page describes where that compiler comes from (the roots), the policies that
+keep the roots honest (N-1, the seed bump, the fixpoint), how `build.sh` builds the compiler, how the
+frozen C Stage0 checks the seed, and how CI proves each part on each host. It is written for people who
+build, verify or change the bootstrap.
+
+## Build, check, maintain
+
+**Build.** `./build.sh`. Without a shell, with only a C compiler:
+`cc -o build-bootstrap bootstrap-wasm/bootstrap.c && ./build-bootstrap`. Either way the result is
+`build/sultanc` (`build\sultanc.exe` on Windows), and the last line printed is
+`build: compiler: build/sultanc`. The stages are intermediates under `build/bootstrap/`; a Stage1 that
+`./build-bootstrap` left there is reused by `./build.sh`. On a host without a Native backend
+`build/sultanc` is Stage1, the seed compiler, and the build says so in one line. `--verbose` shows each
+command; without it a command's output is shown only when it fails, with the command.
+
+**Check.** `./build.sh verify` (`./build-bootstrap --verify` without a shell): the compiler builds itself
+again and the two are identical ([The fixpoint](#the-fixpoint)).
+
+**Maintainers.** `./build.sh seed-update` (the seed bump), `./build.sh seed-check` (the committed seed is
+what the sources build) and `./build.sh chain` (the release check of the frozen C Stage0); see
+[Seed check and update](#seed-check-and-update) and [The frozen C Stage0](#the-frozen-c-stage0).
+
+## Roots and policy
+
+Mature self-hosting toolchains build each compiler with the previous one, keep one portable root in the
+tree that changes only by an explicit commit, and check the self-host fixpoint when a change is promoted.
+SultanC follows the same rules.
+
+**The committed seed is the only root in the tree.** `bootstrap-wasm/seed/sultanc.wasm.zst` is the
+compiler built for `wasm32-wasi`. `bootstrap-wasm/` translates it to C, so any C compiler turns it into a
+working compiler (Stage1) on any host. No compiler is ever downloaded.
+
+**N-1.** Every build of the compiler is one compile of `compiler/main.sn` at `-O2` by a previous compiler:
+`build/sultanc`, the compiler CI cached for the base commit, or Stage1 from the seed. The compiler sources
+must always build with the seed's Stage1. CI proves it on a cold runner, where the seed is the only
+previous compiler.
+
+**The seed bump.** A new language feature or primitive reaches the compiler's own sources in three
+commits: the feature lands, unused by `compiler/`; a seed-bump commit regenerates the seed
+(`./build.sh seed-update`), so the seed's Stage1 has the feature; then `compiler/` may use it. A change
+that uses a feature the seed lacks fails the N-1 build.
+
+**The seed is current.** CI requires the committed seed to be exactly what the current sources build
+(`./build.sh seed-check`) when a commit lands on `main` and nightly, so a change to the compiler or std
+sources that changes the seed module carries its regenerated seed. Then Stage1 from the seed is the
+current compiler, and two compiles prove the fixpoint: Stage1 builds S2, S2 builds S3, and S2 must equal S3
+byte for byte.
+
+**The frozen C Stage0.** `bootstrap/` holds a compiler for the SultanC language written in C11. It is
+frozen: its sources do not change. It compiles the compiler of one pinned commit
+(`bootstrap/FROZEN`), and the release check climbs from there to the current sources and requires the
+result to equal what the seed builds (see [The frozen C Stage0](#the-frozen-c-stage0)). It is not on any
+build path a change takes.
+
+**No Stage0 subset.** Because the C Stage0 no longer compiles the current compiler, the compiler and std
+sources are no longer limited to the language Stage0 implements. The constraints that list in
+[Ownership and Destruction](../reference/ownership.md#constraints-on-compiler-sources) are lifted: a
+compiler source may use any feature the seed's Stage1 has (the seed bump above). Existing sources are not
+rewritten for that; new code may use what the seed supports.
 
 ## Stages
 
 ```text
-Stage0   the C seed compiler (bootstrap/)             needs a C compiler and an LLVM SDK
-Stage1   the first SultanC compiler, built by one of the routes below
-Stage2   Stage1 compiles compiler/main.sn             the compiler that build.sh exports
-Stage3   Stage2 compiles compiler/main.sn
-Stage4   Stage3 compiles compiler/main.sn             Stage3 and Stage4 must be byte-identical
+Stage1   the seed translated to C and compiled: a working compiler on any host (Native-only)
+S2       a previous compiler builds compiler/main.sn          build/sultanc
+S3       S2 builds compiler/main.sn                           S2 == S3: the fixpoint
 ```
 
-All stage policy lives in `cmake/`; `build.sh` only invokes CMake. Stage1 is always a host
-executable. Stage2 is the production compiler, Native-only unless `--enable-llvm` is given
-([Compiler Architecture](compiler-architecture.md), "Compiler-build capabilities"). Stage1 builds
-Stage2 directly with SultanC's own backend; there is no intermediate C build of the compiler.
+Stage1 is always a host executable. S2 is the production compiler, Native-only unless `--enable-llvm` is
+given ([Compiler Architecture](compiler-architecture.md), "Compiler-build capabilities"). Every compile of
+the compiler passes `-O2` explicitly: without `-O` the compiler optimizes nothing
+([The `sultanc` command](../reference/command-line.md#optimization-levels)).
 
-## Routes to Stage1
+## build.sh
 
-| | `--bootstrap=c` (default) | `--bootstrap=wasm` | `--bootstrap=existing` |
-|---|---|---|---|
-| Stage1 from | the C Stage0 in `bootstrap/` | the seed in `bootstrap-wasm/` | an already-built compiler (`--with=PATH`, default `build/sultanc`) |
-| Needs | C compiler and an LLVM SDK | C compiler (an LLVM SDK only with `--enable-llvm`) | the existing compiler (an LLVM SDK only with `--enable-llvm`) |
-| CMake tree | `build/bootstrap/cmake` | `build/bootstrap/cmake-wasm` | `build/bootstrap/cmake-existing` |
-| Stage1 | LLVM-enabled | Native-only | whatever the existing compiler contains |
-| `verify` (Native-only) | native and cross-backend convergence | native convergence (Stage1 has no LLVM backend) | native convergence |
-| `stage0` | builds Stage0 | not applicable (fails with a message) | not applicable (fails with a message) |
-
-The C route and the wasm route build a compiler from nothing but sources and are the reference
-routes. Use them on a new system, when the existing compiler is too old for the sources (new syntax
-or primitives), and to verify a release. The existing route is the fast development route: it skips Stage0 and the seed translation and takes one self-host step from
-the existing compiler to the new Stage2.
-
-### build.sh
+`build.sh` is a thin POSIX script: it gets a first compiler from the seed when there is none (Stage1, built
+with `bootstrap.c` and `$CC` or `cc`), builds the build driver with it and runs the driver with the same
+arguments. The driver, `tools/build/` (`main.sn`, `steps.sn`, `chain.sn`, `support.sn`), is written in
+SultanC; it is built again only when its sources or the compiler that builds it changed
+(`build/bootstrap/sultanc-build.stamp`). On a host without a Native backend the driver needs a compiler that
+has LLVM (`build/sultanc` or `--with`); with Stage1 alone, `build.sh` still runs `bootstrap` and
+`seed-check` itself.
 
 ```sh
-./build.sh                                  # Stage2 -> build/sultanc (C route, Native-only)
-./build.sh --enable-llvm                    # Stage2 that also contains the LLVM backend
-./build.sh verify                           # Stage2, then Stage3 == Stage4
-./build.sh verify --enable-llvm             # adds LLVM and cross-backend convergence
-./build.sh bootstrap                        # Stage0 + Stage1 only
-./build.sh stage0                           # Stage0 only
-
-./build.sh --bootstrap=wasm                 # Stage2 from the seed (needs only a C compiler)
-./build.sh verify --bootstrap=wasm          # + Stage3 == Stage4
-./build.sh bootstrap --bootstrap=wasm       # Stage1 only -> build/bootstrap/sultanc-stage1
-
-./build.sh --bootstrap=existing             # one self-host step from build/sultanc
-./build.sh --bootstrap=existing --with=/path/to/sultanc
+./build.sh                       # one step from build/sultanc (else from the seed) -> build/sultanc
+./build.sh --enable-llvm         # the same, with the LLVM backend inside
+./build.sh verify                # Stage1 -> S2 -> S3, S2 == S3
+./build.sh verify --enable-llvm  # adds the LLVM fixpoint and cross-backend equality
+./build.sh bootstrap             # Stage1 only -> build/bootstrap/sultanc-stage1
+./build.sh seed-check            # the committed seed equals what the sources build
+./build.sh seed-update           # the seed bump: replace the committed seed
+./build.sh --with=/path/sultanc  # one step from another compiler
+./build.sh --target=TRIPLE       # a compiler for another target -> build/cross/TRIPLE/
+./build.sh chain                 # the release check of the frozen C Stage0 (see below)
 ```
-
-The first argument may name a stage (`stage0`, `stage1`, `stage2`, `bootstrap`, `verify`); the
-default is `stage2`. The other options are:
 
 | Option | Meaning |
 |---|---|
-| `--enable-llvm` | include the LLVM backend in the built compiler (`SULTANC_COMPILER_LLVM`); with `--bootstrap=c`, Stage0 and Stage1 always use LLVM |
-| `--backend=native\|llvm` | backend that Stage1 uses to generate Stage2 (`SULTANC_STAGE2_BACKEND`, default `native`) |
-| `--bootstrap=c\|wasm\|existing` | the route (`SULTANC_BOOTSTRAP`) |
-| `--with=PATH` | the existing compiler of `--bootstrap=existing` (`SULTANC_EXISTING_COMPILER`) |
-| `--target=TRIPLE` | target of Stage2; Stage1 always runs on the build host |
-| `OUTPUT` | a path for the requested stage's product |
+| `--enable-llvm` | include the LLVM backend in the built compiler; it links libLLVM, found through `LLVM_CONFIG` (or the first `llvm-config`, versions 23 to 19, Homebrew's included) or named by `SULTANC_LLVM_LIBRARY` |
+| `--with=PATH` | the previous compiler of the step |
+| `--bootstrap=wasm` | start from the seed even when `build/sultanc` exists; `--bootstrap=existing` requires `build/sultanc` or `--with` |
+| `--backend=native\|llvm` | the backend that generates the compiler (default `native`; `llvm` needs a previous compiler that has it) |
+| `--target=TRIPLE` | build the compiler for TRIPLE |
+| `--release-version=VERSION` | the version the built compiler reports (a generated `compiler.version` module) |
+| `--rebuild` | build even when nothing changed |
+| `--jobs=N`, `-jN` | parallel C compilations of Stage1 and of the C Stage0 (default: the processors) |
+| `--verbose` | show each command as it runs |
+| `OUTPUT` | also copy the built compiler there |
 
-Products stay in each build tree (`bin/`), and the requested stage is copied to `build/sultanc`
-(`build/sultanc.exe` on Windows) for Stage2 or to `build/bootstrap/` for Stage0 and Stage1.
-`LLVM_CONFIG=/path/to/llvm-config`, or `-DLLVM_DIR` through CMake, selects the LLVM SDK. CMake can be
-driven directly:
+The default build is the developer loop. It records the hash of the files under `compiler/` and the build
+options in `build/sultanc.stamp`, and does nothing when neither changed: a change to `library/`, `tests/`,
+`docs/` or `examples/` costs no compiler build (the compiler reads std from `library/` for every program;
+its own copy of std follows on its next build). The previous compiler is copied before the step, so the
+new `build/sultanc` never overwrites the compiler that builds it. Stage1 (`build/bootstrap/seed/`) is
+translated again only when the seed or `bootstrap.c` changed: `build/bootstrap/seed/seed.stamp` holds the
+SHA-256 of the lines `<SHA-256>  <path>` of the two files, which `build.sh`, the driver and `bootstrap.c`
+all write and check, so the Stage1 a `./build-bootstrap` run left is reused. On a host without a Native
+backend and with no compiler that has LLVM, `./build.sh` copies Stage1 to `build/sultanc` (and marks it in
+`build/sultanc.stamp`, so the next run refreshes it from the seed).
 
-```sh
-cmake -S cmake -B build/bootstrap/cmake -DSULTANC_REQUESTED_STAGE=stage2
-cmake --build build/bootstrap/cmake --target sultanc-stage2
+`SULTANC_COMPILE_TIMEOUT` (seconds) bounds each compile, as CI sets it: a compile that runs longer is
+reported as hung. The developer loop's compiles use the compilation cache
+([The compilation cache](compile-cache.md)); `verify`, `seed-check`, `seed-update` and `chain` turn it off
+(`SULTANC_CACHE=off`) for every compiler they run.
+
+## The fixpoint
+
+`verify` checks that the compiler reproduces itself. Stage1 from the seed (or `--with`) builds S2, S2 builds
+S3, and the two must be byte-identical. With a current seed Stage1 is the current compiler, so S2 is already
+the fixpoint; a seed that predates the sources fails here (and in `seed-check`). Every compiler runs on the
+build host, and the compiles run one at a time because each needs several gigabytes of memory.
+
+With `--enable-llvm` on a host with a Native backend, verify continues: S3 builds an LLVM-generated
+compiler (`llvm-a`), which builds itself again (`llvm-b`, the LLVM fixpoint `llvm-a == llvm-b`), and
+`llvm-a` builds a native compiler that must equal S3 (cross-backend equality). A host without a Native
+backend verifies with `--backend=llvm --with=PATH`.
+
+## The frozen C Stage0
+
+`bootstrap/` lexes, parses and analyzes SultanC sources and emits objects through the LLVM C API
+(`bootstrap/src/llvm`), so building it needs an LLVM SDK. It has its own drop elaboration, so the compiler it
+builds releases its working data ([Safety Flow](safety-flow.md)). It is compiled with warnings as errors and
+CodeQL-scanned (`.github/workflows/security.yml`). Its sources are frozen; only `bootstrap/FROZEN` and the
+chain scripts beside them change.
+
+`bootstrap/FROZEN` names the commits the chain climbs:
+
+```text
+stage0 9d2642f514f2f5c1347afb57222a9e961fd02bd8   the commit whose compiler Stage0 compiles (tagged)
+step   <commit>                                     optional: built by the compiler of the line before
 ```
 
-Stage1 may use any backend it contains for Stage2, but the Native backend has no Windows target. A
-Windows Stage2 therefore needs the C route with LLVM:
-`./build.sh --bootstrap=c --enable-llvm --backend=llvm`. The wasm route's Stage1 runs on Windows but
-yields Stage1 only there. The existing route does not build an LLVM-enabled Windows Stage2.
+`./build.sh chain` (the build driver, `tools/build/chain.sn`, on a host with a Native backend),
+`bootstrap/chain.sh` (any POSIX host: before the chain a host without a Native backend has only Stage1,
+which cannot build the driver) and `bootstrap/chain.ps1` (Windows, from an MSVC developer environment with
+`LLVM_SDK`) run the release check, the same steps in each:
 
-For an LLVM-enabled Stage2, the wasm and existing routes pass the selected libLLVM (resolved path)
-to Stage1 explicitly. The C route's Stage1 records the same path itself, so every route produces
-identical Stage2 bytes.
+1. build the C Stage0 against the LLVM SDK;
+2. Stage0 compiles the `stage0` commit's compiler (exported from the git history), linked with libLLVM;
+3. each `step` commit's compiler is built by the compiler of the line before;
+4. the chain's last compiler builds the current sources (A, LLVM-enabled), and A builds them again,
+   Native-only, for the comparison target (D);
+5. Stage1 from the seed builds the same compiler (W), and D must equal W byte for byte.
 
-The existing compiler is copied into the build tree when CMake configures, so the Stage2 that the
-route exports to `build/sultanc` never overwrites the compiler that is producing it. The next
-configure takes the new `build/sultanc` as its existing compiler.
+The comparison target is the host where it has a Native backend and `x86_64-linux` elsewhere: the seed's
+Stage1 is Native-only, and it builds a compiler for a Native target on any host. Two independent roots,
+the C Stage0 and the WebAssembly seed, so give one compiler (a diverse double-compile). On a host without
+a Native backend, A (`build/chain/sultanc-a`) is also the from-source LLVM-enabled compiler for the host,
+which the release check's test run uses.
 
-## Convergence
-
-`verify` checks that the compiler reproduces itself. Stage2 builds Stage3, Stage3 builds Stage4, and
-the two must be byte-identical. Every executed compiler targets the build host, and the steps run one
-at a time because each self-build of the compiler needs several gigabytes of memory.
-
-- On a host with a Native backend, native convergence is always checked.
-- With an LLVM-enabled Stage2, LLVM convergence and cross-backend equality (an LLVM-generated
-  compiler building a native one) are checked as well.
-- With a Native-only Stage2, the cross-backend check uses a Native-only Stage3 generated by Stage1's
-  LLVM backend. It is skipped on the wasm route, whose Stage1 has no LLVM backend, and on the
-  existing route, which does not assume the existing compiler has one.
-- Windows has no Native backend, so Windows `verify` needs an LLVM-enabled compiler.
-
-## The C Stage0
-
-`bootstrap/` holds a compiler for the SultanC language written in C11. It lexes, parses and analyzes
-SultanC sources and emits objects through the LLVM C API (`bootstrap/src/llvm`), so building it needs
-an LLVM SDK. Stage0 compiles `compiler/**` and the std modules that the compiler imports into the
-Stage1 object, which CMake links with the host C linker driver.
-
-Stage0 is the seed, not a second production implementation. It is compiled with warnings as errors
-(`SULTANC_STAGE0_WARNINGS_AS_ERRORS`), is CodeQL-scanned in CI, and has its own drop elaboration so
-that the Stage1 it builds releases its working data ([Safety Flow](safety-flow.md)). Because it
-compiles the compiler, Stage0's language limits constrain the compiler and std sources; see
-[Contributing](../contributing/README.md) and [Ownership and Destruction](../reference/ownership.md).
+A step is added when the current sources use a feature the chain's last compiler lacks: the commit that
+bumped the seed for that feature is a good step, since its compiler has the feature and its own sources do
+not use it yet. `sh bootstrap/chain.sh --stage0-only` builds Stage0 alone, as CodeQL does.
 
 ## The WebAssembly seed
 
@@ -126,80 +184,83 @@ SultanC needs only a C compiler.
 
 ```text
 seed/sultanc.wasm.zst --wasm2c/--> C (10 files) --cc + runtime/--> sultanc-stage1
-sultanc-stage1 --compiler/main.sn--> sultanc-stage2 (native) --> Stage3 == Stage4
+sultanc-stage1 --compiler/main.sn--> S2 --compiler/main.sn--> S3 == S2
 ```
-
-`bootstrap-wasm/` holds the seed and its C sources only; the CMake rules are in `cmake/`.
 
 | File | Role |
 |---|---|
-| `bootstrap-wasm/seed/sultanc.wasm.zst` | the seed: the compiler built for `wasm32-wasi`, Native-only (LLVM provider bound to `unavailable.sn`), compressed with `zstd -19` |
+| `bootstrap-wasm/seed/sultanc.wasm.zst` | the seed: the compiler built for `wasm32-wasi` at `-O2`, Native-only (LLVM provider bound to `unavailable.sn`), compressed with `zstd -19` |
 | `bootstrap-wasm/wasm2c/` | `sultanc-wasm2c`, the translator from the seed to C99: `stream.c` (module bytes, LEB128, loading, with the in-tree zstd decoder `zstd_decoder.h`, MIT), `module.c` (module model, parser, what is accepted), `funcgen.c` (one function body to C), `output.c` (the generated files), `main.c` |
 | `bootstrap-wasm/runtime/` | what the translated seed links with: `w2c.h` and `w2c.c` (memory, checked integer operations, traps, call depth) and `wasi.c` (the WASI host, POSIX and Windows) |
-| `bootstrap-wasm/bootstrap.c` | the standalone driver: seed to Stage1 to Stage2, plus `--verify`, `--check-seed` and `--update-seed` |
-| `cmake/modules/WasmSeed.cmake` | the `sultanc-wasm2c` translator and the translated Stage1 |
-| `cmake/modules/Stage1Wasm.cmake` | the wasm route of the main build and the `sultanc-check-seed` target |
-| `cmake/scripts/CheckSeed.cmake` | the comparison behind `sultanc-check-seed` |
+| `bootstrap-wasm/bootstrap.c` | the standalone driver: seed to Stage1 to S2, copied to `build/sultanc`, plus `--verify`, `--check-seed` and `--update-seed`; `build.sh` uses it for Stage1 |
 
 The seed is about 4.9 MB compressed and the module about 24 MB (of which 12 MB is DWARF, which the
-translation ignores). The main build with
-`-DSULTANC_BOOTSTRAP=wasm` provides `sultanc-stage1`, `sultanc-stage2`, `sultanc-verify` and
-`sultanc-check-seed`. The seed check uses Stage2 when it runs on the host and otherwise Stage1
-itself (Windows, and hosts without a Native backend). For a cross build, pass
-`-DSULTANC_WASM2C=<sultanc-wasm2c built for the build machine>`.
+translation ignores).
 
 ### Standalone driver
 
-From the repository root, `bootstrap.c` needs only a C compiler with gcc-style options:
+From the repository root, `bootstrap.c` needs only a C compiler, with gcc-style options or MSVC-style
+ones (`cl`, `clang-cl`, chosen by the compiler's name or `--msvc`):
 
 ```sh
 cc -o build-bootstrap bootstrap-wasm/bootstrap.c
-./build-bootstrap --verify            # -> build/bootstrap-wasm/sultanc-stage2
+./build-bootstrap                     # -> build/sultanc
+./build-bootstrap --verify            # the same, and S2 == S3
 ```
 
-On Windows with MSVC, use the main build:
-
-```sh
-cmake -S cmake -B build/bootstrap/cmake-wasm -DSULTANC_BOOTSTRAP=wasm -DSULTANC_REQUESTED_STAGE=stage1
-cmake --build build/bootstrap/cmake-wasm --target sultanc-stage1
-cmake --build build/bootstrap/cmake-wasm --target sultanc-check-seed
+```bat
+cl /Fe:build-bootstrap.exe bootstrap-wasm/bootstrap.c
+build-bootstrap.exe --cc=cl           # -> build\sultanc.exe, the seed compiler (no Native backend)
 ```
+
+A normal run prints one line per phase and the result:
+
+```text
+build: translating the seed to C (bootstrap-wasm/seed/sultanc.wasm.zst)
+build: compiling C (11 files)
+build: building the compiler from compiler/ with the seed compiler
+build: compiler: build/sultanc
+```
+
+On a host without a Native backend the run stops after Stage1 and says so before the result:
+`build: no native backend for this host; build/sultanc is the seed compiler (targets x86_64-linux,
+arm64-darwin, wasm32-wasi)`.
 
 | Option | Meaning |
 |---|---|
-| `--cc=CC`, `--cflags=FLAGS` | C compiler and flags (default `$CC` or `cc`, `$CFLAGS` or `-std=c99 -O2`) |
+| `--cc=CC`, `--cflags=FLAGS` | C compiler and flags (default `$CC` or `cc`, `$CFLAGS` or `-std=c99 -O2`; `/nologo /O2` for an MSVC-style compiler) |
+| `--msvc` | the C compiler takes MSVC-style options |
 | `--jobs=N` | parallel C compilations (default 4) |
-| `--out=DIR` | output directory (default `build/bootstrap-wasm`) |
+| `--output=PATH` | where the compiler goes (default `build/sultanc`; `build/cross/TRIPLE/sultanc` for another `--target`) |
+| `--out=DIR` | directory of the intermediates (default `build/bootstrap/seed`, the one `build.sh` uses) |
 | `--target=TRIPLE` | target of Stage2 (default: this host) |
-| `--stage1-only` | stop after Stage1 |
-| `--verify` | build Stage3 and Stage4 and require Stage3 == Stage4 |
+| `--verbose` | show each command as it runs, and its output |
+| `--stage1-only` | stop after Stage1; it is copied to `--output` only when that is given (`build/sultanc` is left alone) |
+| `--verify` | build Stage3 with Stage2 and require Stage2 == Stage3 |
 | `--check-seed` | rebuild the seed with Stage2 and compare it with the committed seed |
 | `--update-seed` | rebuild, compress (`zstd -19`, needs the `zstd` command) and replace the committed seed |
 
-### Seed check and update policy
+### Seed check and update
 
 The seed is used as committed. Nothing pins it by checksum, and no hash files sit beside it. `wasm2c`
 translates whatever valid seed it is given and rejects a malformed zstd frame or a malformed module
-with a diagnostic, never a crash. Git history and review keep the seed honest, and the seed check
-shows whether it still matches the sources.
+with a diagnostic, never a crash. Git history and review keep the seed honest, the seed check shows
+whether it matches the sources, and the frozen C Stage0's chain shows that it builds the compiler an
+independent root builds.
 
-`--check-seed` (and the CMake target `sultanc-check-seed`) rebuilds the module from the current
-sources with Stage2, decompresses the committed seed with the in-tree decoder and compares the two
-byte for byte. It reports whether they are equal. When they differ, `bootstrap.c` exits with status 3
-and the CMake target fails.
+`./build.sh seed-check` rebuilds the module from the current sources (Native-only, `wasm32-wasi`, `-O2`)
+with `build/sultanc` when it is built from these sources, else with an S2 it builds from the seed (Stage1
+itself on a host without a Native backend), decompresses the committed seed with the in-tree decoder and
+compares the two byte for byte. It exits with status 3 when they differ.
 
-`--update-seed` rebuilds the module, compresses it with `zstd -19`, decodes the result again with the
-in-tree decoder to confirm that it gives back the same module, and only then replaces
-`seed/sultanc.wasm.zst`. It writes nothing else.
-
-The policy follows from CI, which requires the committed seed to be exactly what the current sources
-rebuild. A change to the compiler or std sources that changes the seed module is therefore
-accompanied by a refreshed seed in the same reviewed change:
+`./build.sh seed-update` (or `bootstrap.c --update-seed`) rebuilds the module, compresses it with
+`zstd -19`, decodes the result again with the in-tree decoder to confirm that it gives back the same
+module, and only then replaces `seed/sultanc.wasm.zst`. It writes nothing else. A seed bump is a commit
+of its own:
 
 ```sh
-cc -o build-bootstrap bootstrap-wasm/bootstrap.c
-./build-bootstrap --update-seed
-./build-bootstrap --out=build/bootstrap-check --verify --check-seed    # must pass cleanly
+./build.sh seed-update
+./build.sh verify && ./build.sh seed-check      # from the new seed: must pass cleanly
 ```
 
 ### Components
@@ -270,51 +331,28 @@ Preview 1 cannot set the executable bit, so the driver runs `chmod 0755` on its 
 
 ## Hosts
 
-| Host | Stage1 (a working SultanC compiler) | Stage2, verify and seed check |
+| Host | Stage1 (a working SultanC compiler) | A host compiler |
 |---|---|---|
-| Linux x86_64 | yes | yes |
-| macOS arm64 | yes | yes |
-| Linux aarch64, i686, s390x, riscv64 and others; FreeBSD, NetBSD, OpenBSD, illumos | yes | no: SultanC has no Native backend for these, and a host-native Stage2 needs an LLVM-enabled compiler |
-| Windows x64 and arm64 (MinGW, clang, MSVC through CMake) | yes | not from the seed, for the same reason; the main build stops with the supported path. A Windows Stage2 comes from the C route with LLVM: `./build.sh --bootstrap=c --enable-llvm --backend=llvm` |
+| Linux x86_64 | yes | S2 from the seed; `verify` and the seed check run here |
+| macOS arm64 | yes | S2 from the seed; `verify` and the seed check run here |
+| Linux aarch64, macOS x86_64, Windows x64 and arm64 | yes (Windows: MSVC, clang-cl, MinGW) | no Native backend: a Native-only compiler cross-built on a Native host by an LLVM-enabled compiler (`./build.sh --target=TRIPLE --backend=llvm --with=PATH`, nightly), or the LLVM-enabled compiler of the frozen C Stage0's chain (release check) |
+| Linux i686, s390x, riscv64 and others; FreeBSD, NetBSD, OpenBSD, illumos | yes | as the row above: cross-built, or an LLVM-enabled compiler with `--backend=llvm --with=PATH` |
 
-On hosts without a Native backend the seed check rebuilds the seed with Stage1. Stage1 on any host
-can compile SultanC programs for x86_64-linux, arm64-darwin and wasm32-wasi, including building the
-compiler itself for those targets.
+On hosts without a Native backend the seed check rebuilds the seed with Stage1. Stage1 on any host can
+compile SultanC programs for x86_64-linux, arm64-darwin and wasm32-wasi, including building the compiler
+itself for those targets. There `./build.sh` (with no compiler that has LLVM) and `./build-bootstrap` leave
+Stage1 at `build/sultanc` and say so in one line.
 
 ## CI
 
-`.github/workflows/ci.yml` proves every route on every host where it can run. One script serves each
-host family: `.github/ci/linux.sh` and `.github/ci/macos.sh` (POSIX sh) and
-`.github/ci/windows.ps1` (PowerShell). There are three jobs, each over the six hosts linux-x86_64,
-linux-arm64, macos-arm64, macos-x86_64, windows-x86_64 and windows-arm64, except `seed-update`.
+The CI tiers, in short:
 
-**`seed`** builds through the wasm route with only a C compiler and no LLVM.
-
-| Host | What runs |
-|---|---|
-| linux-x86_64, macos-arm64 (Native backend) | `./build.sh verify --bootstrap=wasm` (seed to Stage1 to Stage2, Stage3 == Stage4), then `sultanc-check-seed` (Stage2 rebuilds the committed seed byte for byte), then the test suite |
-| linux-arm64, macos-x86_64 (no Native backend) | `./build.sh bootstrap --bootstrap=wasm`, `sultanc-stage1 version`, then `sultanc-check-seed` (Stage1 rebuilds the seed) |
-| windows (x64 and arm64) | Stage1 only, through every C toolchain: MSVC (`cl`) through CMake, clang-cl through CMake, and on x64 also MinGW gcc with `bootstrap.c`. The MSVC Stage1 rebuilds the committed seed, which must match byte for byte |
-
-**`seed-update`** (linux-x86_64) runs `bootstrap.c --update-seed` and then a clean `--verify
---check-seed` from the updated seed, so the next seed update is known to work.
-
-**`llvm`** uses the C route against LLVM 22.1.8, pinned by version and file name and cached by the
-workflow. It builds an LLVM-enabled Stage2, checks convergence and runs the test suite.
-
-| Host | What runs |
-|---|---|
-| linux-x86_64, macos-arm64 | `./build.sh verify --enable-llvm` (Native, LLVM and Native == LLVM convergence), then the test suite |
-| linux-arm64, macos-x86_64 | Stage2 generated by LLVM (`./build.sh --enable-llvm --backend=llvm`), then an LLVM Stage3 and Stage4 built with libLLVM as a link input must be byte-identical, then the test suite |
-| windows | `sultanc-verify` with the C route, `SULTANC_COMPILER_LLVM=ON` and `SULTANC_STAGE2_BACKEND=llvm` (an LLVM-generated Stage2 and LLVM Stage3 == Stage4), then the test suite under Git for Windows' bash |
-
-The LLVM SDK is provisioned by each script. Linux links a monolithic `libLLVM` from the upstream
-release's component archives. macOS arm64 does the same, while macOS x86_64 builds the pinned source,
-which takes hours once and is then cached. Windows builds `LLVM-C.dll` from the pinned source with the
-pinned archive's clang-cl. The test suite is `tools/tests/ci_run.sh` ([Tests](../contributing/tests.md)).
-
-A separate workflow, `.github/workflows/security.yml`, runs CodeQL over the C Stage0 in `bootstrap/`.
-It does not analyze `.sn` sources.
+| Tier | Trigger | Bootstrap work |
+|---|---|---|
+| pr | pull request | one build from the previous compiler (the base commit's cached compiler, else Stage1 from the seed), then the tests |
+| main | push to `main` | Stage1 → S2 → S3, S2 == S3, the seed check, the tests; S2 is cached for pull requests |
+| full | nightly, qualification | the seed route on all six hosts, the seed update, the LLVM fixpoint and cross-backend equality, the compilers cross-built for the hosts without a Native backend, run there |
+| release | monthly, `v*` tags, by hand (`chain.yml`) | the frozen C Stage0 chain on all six hosts, equal to the seed route's compiler; the tests with the chain's compiler where no seed-route compiler exists |
 
 ## Qualification of the seed toolchain
 
@@ -330,21 +368,21 @@ against reference implementations.
   content size, multiple and skippable frames and empty input, and survives corrupted inputs without a
   crash.
 - The sources compile warning-free with `-Wall -Wextra -pedantic` on gcc, clang and MinGW, and the
-  generated code carries an `inline` fallback for older MSVC, for which CMake sets `/w /bigobj` on the
-  generated sources.
+  generated code carries an `inline` fallback for older MSVC, for which `bootstrap.c --msvc` compiles the
+  generated sources with `/w /bigobj`.
 
 ## Limitations
 
 - The committed seed must equal what the current sources rebuild, so a source change that alters the
-  module needs a seed update in the same change.
-- Stage2 from the seed exists only on hosts with a Native backend (see "Hosts").
+  module needs a seed bump in the same change (CI checks it when the change lands).
+- A host compiler from the seed exists only on hosts with a Native backend (see "Hosts").
 - `wasm2c` accepts only the subset of WebAssembly that SultanC's own wasm32 backend emits, and the
   zstd decoder has no dictionary support.
-- A wasm-route Stage1 has no LLVM backend, so LLVM-generated stages need the C route.
+- The frozen C Stage0 compiles only the pinned commit's compiler; the chain needs a `step` whenever the
+  current sources outgrow the chain's last compiler.
 
 ## See also
 
 - [Compiler Architecture](compiler-architecture.md)
 - [Contributor guide](../contributing/README.md)
 - [Tests](../contributing/tests.md)
-- [Ownership and Destruction](../reference/ownership.md)

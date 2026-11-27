@@ -1,0 +1,6 @@
+خطأ[SULTANC-PARSE-LET-PATTERN]: تفكك ⁨`ليكن`⁩ الصف إلى أسماء و⁨`_`⁩ وصفوف متداخلة فقط
+  --> tests/ar/diagnostics/e2e/let_tuple_literal_pattern.sn:8:11..8:12
+   |
+ 8 |     ليكن (0، العدد): (عدد، عدد) = (0، 3);
+   |           ^
+   |

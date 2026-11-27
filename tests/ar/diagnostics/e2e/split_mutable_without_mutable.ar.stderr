@@ -1,0 +1,7 @@
+خطأ[SULTANC-MUTABILITY-VIEW-WITHOUT-MUTABLE]: العرض القابل للكتابة ⁨`متغير [] T`⁩ يُصنع بـ⁨`&متغير`⁩
+  --> tests/ar/diagnostics/e2e/split_mutable_without_mutable.sn:9:29..9:34
+   |
+ 9 |     طابق اقسم_قابلا_للتعديل(القيم، 1) مع
+   |                             ^^^^^
+   |
+  = مساعدة: اكتب ⁨`&متغير`⁩ قبله ليعطي عرضا قابلا للكتابة

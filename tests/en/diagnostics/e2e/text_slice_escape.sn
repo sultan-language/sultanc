@@ -1,0 +1,15 @@
+// اختبار: رفض
+// تشخيص: SULTANC-BORROW-REFERENCE-ESCAPE
+// نظير: tests/ar/diagnostics/e2e/text_slice_escape.sn
+// خرج-تشخيص-عربي: text_slice_escape.ar.stderr
+// خرج-تشخيص-إنجليزي: text_slice_escape.en.stderr
+// A slice of a local text cannot leave the function: the text ends with it.
+// A slice of a text the function was given can (tests/*/language/surface/text_slices.sn).
+def first_two(): &string {
+    let greeting: string = "hello";
+    return &greeting[0..1];
+}
+
+def main(): int {
+    return length(*first_two());
+}

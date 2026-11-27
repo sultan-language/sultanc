@@ -1,0 +1,6 @@
+// اختبار: رفض
+// تشخيص: SULTANC-PARSE-PATTERN
+// نظير: tests/ar/frontend/parser/negative/match_path_pattern_at_end.sn
+// A constructor path cut off after `T.` at the end of the file is a pattern error,
+// not an internal parser failure (found by fuzzing).
+def f(e: int): int { match e with | t.

@@ -469,8 +469,8 @@ status 1. [Compile-time evaluation](comptime.md#stddebugassert) specifies them.
 
 ### Runtime checks
 
-An integer operation whose result does not fit its type, an index past the end of a vector or a text, and a
-division or remainder by zero stop the program as a panic does: through
+An integer operation whose result does not fit its type, an index past the end of a vector or a text, a
+division or remainder by zero, and a shift by the width of its type or more stop the program as a panic does: through
 `إنهيار` / `panic`, so the program's panic handler reports them, with the kind and the place in the source. With
 `SULTANC_LANG=en`:
 
@@ -479,11 +479,21 @@ error[SULTANC-RUNTIME-PROGRAM-STOPPED]: the program stopped
 index 5 out of range for length 3 at src/main.sn:4:12
 ```
 
-The other kinds read `integer overflow at …` (`تجاوز العدد الصحيح حدود نوعه عند …`) and `division by zero at …`
-(`قسمة على صفر عند …`). The words are iSpeak's runtime-failure identities (`compiler/runtime/failure_identity.sn`,
-`تجاوز_عدد_صحيح`, `فهرس_خارج_المدى`, `قسمة_على_صفر`), which the compiler writes into `std.process.failure_text`
-(`نص_فحص_تشغيل`) with the frames below; `{0}`, `{1}` and `{2}` in them stand for the index, the length and the
-place.
+The other kinds read `integer overflow at …` (`تجاوز العدد الصحيح حدود نوعه عند …`), `division by zero at …`
+(`قسمة على صفر عند …`) and `shift by 64 out of range for a 64-bit integer at …` (`إزاحة بمقدار 64 خارج المدى لعدد
+صحيح من 64 بت عند …`). A slice `v[a..b]` outside its vector reads `slice start 6 out of range for length 5 at …`
+(`بداية الشريحة 6 خارج المدى للطول 5 عند …`), `slice end 5 out of range for length 5 at …` (`نهاية الشريحة 5 خارج
+المدى للطول 5 عند …`) or `slice from 3 to 1 ends before it starts at …` (`الشريحة من 3 إلى 1 تنتهي قبل أن تبدأ عند
+…`), with the identities `بداية_شريحة_خارج_المدى`, `نهاية_شريحة_خارج_المدى` and `شريحة_معكوسة` (kinds 5, 6 and 7). A
+split index of `split_mutable` past the length reads `split at 4 out of range for length 3 at …` (`القسمة عند 4 خارج
+المدى للطول 3 عند …`, `قسمة_خارج_المدى`, kind 8). A slice of text `&s[a..b]` checks its bounds as a vector slice does
+(kinds 5, 6 and 7), and then that each written bound falls on a character's boundary: a start a, or b + 1 past an end
+b, that is not the text's length and whose byte continues a UTF-8 character reads `byte offset 1 is inside a
+character at …` (`إزاحة البايت 1 داخل حرف عند …`, `إزاحة_داخل_حرف`, kind 9), with that offset
+([Type system](type-system.md#text-slices)). The words are iSpeak's runtime-failure identities (`compiler/runtime/failure_identity.sn`,
+`تجاوز_عدد_صحيح`, `فهرس_خارج_المدى`, `قسمة_على_صفر`, `إزاحة_خارج_المدى`), which the compiler writes into
+`std.process.failure_text` (`نص_فحص_تشغيل`) with the frames below; `{0}`, `{1}` and `{2}` in them stand for the
+index, the length and the place (for a shift, its amount, the width and the place).
 
 MSIR's checked integer operations and lowering's bounds checks trap. After compile-time work is discharged and before
 the optimization pipeline, the pass `compiler/msir/runtime_checks.sn` gives each check a branch to one cold block of
@@ -500,13 +510,48 @@ These checks report:
   is computed in 64 bits, and one of 64 bits tests whether both operands fit in 32 bits before it divides the product
   back on the cold path);
 - division and remainder by zero, and the least signed value divided by -1 (an integer overflow);
-- an index past the end of a vector or a text.
+- a shift (`<<`, `>>`) by the width of its type or more, with the amount and the width; the amount is compared as
+  unsigned, so a negative amount is past the width too. A left shift by less that shifts out a significant bit (for a
+  signed type, one that changes the sign) is an integer overflow. Compile-time work keeps its own failure: such a
+  shift there stops the compilation, as any trap there does;
+- an index past the end of a vector or a text;
+- a slice `v[a..b]` or `&s[a..b]` whose start or end is outside its vector or text, or whose end is before its start,
+  and a slice of text with a bound inside a character.
 
-These still trap: shifts by the width of the type or more, conversions that do not fit, a check in a function that
+These still trap: conversions that do not fit, a check in a function that
 holds compile-time work, in the module initializer, in std's task switch or in the report itself, and every check of
 a program without std (bare metal), which has no report to call. The compiler loads `std.process.runtime_check` for
 every program on a target std serves (`compiler/frontend/semantic_pipeline.sn`); a cold block is not counted in the
 size the inliner limits (`compiler/msir/msir_inlining.sn`).
+
+A call stack that runs past its end stops the program the same way, with the words
+`stack overflow: the call stack ran out of space` (`فيض المكدس: نفدت مساحة مكدس الاستدعاءات`, the identity
+`فيض_المكدس`, kind 4 of `نص_فحص_تشغيل`), no place, and exit status 1:
+
+```text
+error[SULTANC-RUNTIME-PROGRAM-STOPPED]: the program stopped
+stack overflow: the call stack ran out of space
+```
+
+An executable's entry first calls `ثبت_تقرير_فيض_المكدس` (`library/std/os/stack_overflow.sn`, which the compiler
+loads for every program on a target std serves; the call is added by `ثبت_تقرير_فيض_المكدس_مسير` in
+`compiler/msir/runtime_checks.sn`). It writes the message once, in the program's language, into a page of its own,
+maps an alternate signal stack for the main thread (`std.os.signal_stack`; `std.thread` maps one on each thread it
+starts) and installs a SIGSEGV handler on it. The handler is async-signal-safe: it allocates nothing and runs no
+runtime check. When the kernel reports a fault in the guard of a std thread stack, or below the main thread's stack
+top by no more than the stack limit (`RLIMIT_STACK`, as `std.os.stack_limit` may have raised it) and the kernel's
+1 MiB guard gap, it writes the message with `write(2)` and ends the process with `exit_group(1)`. Any other fault
+takes the signal's default action, as before. Every frame of a page or more probes its stack in its prologue
+([Stack probes](targets.md)), so an overflow faults at the guard and never past it. The interpreters stop at their
+call-depth limit (250 000 frames in the checked interpreter) with the same two lines and status 1
+(`compiler/interpreter/diagnostic_translation.sn`, `اكتب_فيض_مكدس_مفسر`), on the main thread and on a thread.
+
+The report covers Linux and Android executables on x86-64 and AArch64, from the native and the LLVM backends. These
+still end as the system ends them: macOS (whose std would need libSystem's `sigaction` and `sigaltstack`, and their
+entries in the interpreter's extern table), Windows (std installs no vectored exception handler, so a stack overflow
+ends with `STATUS_STACK_OVERFLOW`), FreeBSD and the other Linux architectures (other `sigaction` and `stack_t`
+layouts), WebAssembly and bare metal; a thread whose stack is not one of std's stack slots (once all 1024 are in
+use), a std.async task's stack, and a thread std.thread did not start.
 
 ## Runtime failures of a program
 

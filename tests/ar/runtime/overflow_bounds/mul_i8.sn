@@ -1,0 +1,16 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 1
+// تفاضلي: نعم
+// بيئة: SULTANC_LANG=en
+// خرج-قياسي: <فارغ>
+// خطأ-قياسي-ملف: mul_i8.stderr
+// نظير: tests/en/runtime/overflow_bounds/mul_i8.sn
+// A checked i8 multiply past its bound (the least value times -1) reports the overflow at the
+// operation on every code generator (docs/en/internals/msir-and-codegen.md).
+عرف الرئيسية(): عدد {
+    ليكن القيم: متجه ص8 = [-128, -1];
+    ليكن الناتج: ص8 = القيم[0] * القيم[1];
+    إذا (الناتج == القيم[0]) { أرجع 3; };
+    أرجع 0;
+}

@@ -1,169 +1,172 @@
 #!/bin/sh
-# Optional convenience entry point. All build configuration and stage policy
-# belongs to cmake/; this script only invokes CMake.
+# Builds the SultanC compiler (docs/en/internals/bootstrap.md, "build.sh").
+#
+# This script only gets a first compiler from the committed seed when there is
+# none (bootstrap-wasm/bootstrap.c: the seed translated to C and compiled with
+# $CC, else cc), builds the build driver with it (tools/build/, written in
+# SultanC) and runs the driver with the same arguments:
+#
+#   ./build.sh [build|verify|bootstrap|seed-check|seed-update|chain] [options]
+#
+# ./build.sh with no command builds the compiler: build/sultanc, the last line
+# printed (`build: compiler: build/sultanc`). ./build.sh --help lists the
+# commands and options; --verbose shows each command as it runs. A host
+# without a Native backend (Linux arm64, macOS x86_64) builds the driver only
+# with a compiler that has LLVM (build/sultanc, or --with=PATH); with the seed
+# compiler (Stage1) alone this script still gives `build` (build/sultanc is
+# then Stage1), `bootstrap` and `seed-check` itself.
 set -eu
 
-source_directory=${0%/*}
-if [ "$source_directory" = "$0" ]; then
-    source_directory=.
-fi
+root=$(cd "$(dirname "$0")" && pwd)
+cd "$root"
 
-stage=stage2
-case "${1:-}" in
-    stage0|stage1|stage2|bootstrap|verify)
-        stage=$1
-        shift
-        ;;
-esac
+say() { printf 'build: %s\n' "$*"; }
+fail() { printf 'build: error: %s\n' "$*" >&2; exit 1; }
 
-target=
-output=
-# Compiler-build capability of the self-hosted compiler (SULTANC_COMPILER_LLVM):
-# Native-only unless --enable-llvm is given.
-compiler_llvm=OFF
-# --release-version=VERSION (SULTANC_RELEASE_VERSION): the version the built
-# compiler reports; empty is a development build.
-release_version=
-# Stage1 bootstrap route (SULTANC_BOOTSTRAP): c = bootstrap/ (C Stage0),
-# wasm = bootstrap-wasm/ (WebAssembly seed translated to C).
-bootstrap_route=c
-# --bootstrap=existing: the compiler that stands in for Stage1 (default build/sultanc).
-existing_compiler=
-# Producer backend (SULTANC_STAGE2_BACKEND): the backend Stage1 uses to
-# generate Stage2 (on Windows, also the verify stages' backend). It selects the
-# code generator of the compiler build only; it is not the backends the built
-# compiler contains (that is --enable-llvm) nor the backend of programs the
-# built compiler compiles (their own --backend). Empty keeps the build tree's
-# cached value (native when the tree is new).
-backend=
-while [ "$#" -gt 0 ]; do
-    case "$1" in
-        --enable-llvm) compiler_llvm=ON ;;
-        --release-version=*) release_version=${1#--release-version=} ;;
-        --bootstrap=*) bootstrap_route=${1#--bootstrap=} ;;
-        --with=*) existing_compiler=${1#--with=} ;;
-        --backend=*) backend=${1#--backend=} ;;
-        --backend)
-            if [ "$#" -lt 2 ]; then
-                printf '%s\n' 'build.sh: --backend requires native or llvm' >&2
-                exit 2
-            fi
-            backend=$2
-            shift
-            ;;
-        --bootstrap)
-            if [ "$#" -lt 2 ]; then
-                printf '%s\n' 'build.sh: --bootstrap requires c or wasm' >&2
-                exit 2
-            fi
-            bootstrap_route=$2
-            shift
-            ;;
-        --target=*) target=${1#--target=} ;;
-        --target)
-            if [ "$#" -lt 2 ]; then
-                printf '%s\n' 'build.sh: --target requires a value' >&2
-                exit 2
-            fi
-            target=$2
-            shift
-            ;;
-        -h|--help|help)
-            printf '%s\n' \
-                'usage: ./build.sh [stage0|stage1|stage2|bootstrap|verify] [--target=TRIPLE] [--enable-llvm]' \
-                '                  [--backend=native|llvm] [--bootstrap=c|wasm|existing [--with=PATH]]' \
-                '                  [--release-version=VERSION] [OUTPUT]' \
-                'All stages are configured and built by CMake in cmake/.' \
-                '  bootstrap  Stage0 + Stage1 only (the bootstrap compiler)' \
-                '  verify     Stage2, then Stage3/Stage4 convergence (LLVM convergence needs --enable-llvm)' \
-                '  --enable-llvm  include the LLVM backend in the built compiler (default: Native-only,' \
-                '             no libLLVM dependency); with --bootstrap=c, Stage0/Stage1 always use LLVM' \
-                '  --release-version=VERSION  the version the built compiler reports' \
-                '             (SULTANC_RELEASE_VERSION; default: a development build)' \
-                '  --backend=native|llvm  backend Stage1 uses to generate Stage2' \
-                '             (SULTANC_STAGE2_BACKEND; default llvm with --enable-llvm when Stage1 has it,' \
-                '             else native). Windows has no Native backend:' \
-                '             use --bootstrap=c --enable-llvm --backend=llvm there' \
-                '  --bootstrap=c     Stage1 from the C Stage0 in bootstrap/ (default; needs LLVM)' \
-                '  --bootstrap=wasm  Stage1 from the WebAssembly seed in bootstrap-wasm/' \
-                '             (translated to C; needs only a C compiler unless --enable-llvm)' \
-                '  --bootstrap=existing  Stage1 is an already-built compiler (--with=PATH, default' \
-                '             build/sultanc): one self-host step, the fast route for development' \
-                '             (as Go uses GOROOT_BOOTSTRAP). Use c or wasm on a new system, when the' \
-                '             existing compiler is too old for the sources, and to verify a release' \
-                'Products stay in build/bootstrap/cmake/bin (cmake-wasm/bin for --bootstrap=wasm);' \
-                'the requested stage is also' \
-                'copied to build/sultanc (Stage2) or build/bootstrap/ (Stage0/Stage1).' \
-                'LLVM selection: LLVM_CONFIG=/path/to/llvm-config, or -DLLVM_DIR via cmake.' \
-                'For direct builds: cmake -S cmake -B build/bootstrap/cmake' \
-                '                   cmake --build build/bootstrap/cmake --target sultanc-stage2'
-            exit 0
-            ;;
-        -*)
-            printf 'build.sh: unexpected option: %s\n' "$1" >&2
-            exit 2
-            ;;
-        *)
-            if [ -n "$output" ]; then
-                printf 'build.sh: unexpected argument: %s\n' "$1" >&2
-                exit 2
-            fi
-            output=$1
-            ;;
-    esac
-    shift
+seed_dir=build/bootstrap/seed
+stage1=$seed_dir/sultanc-stage1
+jobs=$(getconf _NPROCESSORS_ONLN 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 2)
+verbose=
+for argument in "$@"; do
+    case "$argument" in --verbose) verbose=--verbose ;; esac
 done
 
-# With --enable-llvm, Stage2 is generated by the LLVM backend (-O2) when
-# Stage1 has it: the C route's Stage1 always does, an existing compiler when
-# it lists the llvm backend. The interpreter (sultanc run) and the compile-time
-# evaluator run several times faster in an optimized compiler. The wasm seed's
-# Stage1 has no LLVM backend and generates Stage2 natively.
-if [ -z "$backend" ] && [ "$compiler_llvm" = ON ]; then
-    case "$bootstrap_route" in
-        c) backend=llvm ;;
-        existing)
-            candidate=${existing_compiler:-$source_directory/build/sultanc}
-            if [ -x "$candidate" ] && "$candidate" --version 2>/dev/null | grep -q llvm; then
-                backend=llvm
-            fi
-            ;;
-    esac
-fi
+sha256() { # file... -> one line per file: hash  path
+    if command -v sha256sum > /dev/null 2>&1; then sha256sum "$@"
+    elif command -v shasum > /dev/null 2>&1; then shasum -a 256 "$@"
+    else cksum "$@"
+    fi
+}
+digest() { sha256 - | cut -d' ' -f1; } # standard input -> one hash
 
-case "$backend" in
-    ''|native|llvm) ;;
-    *)
-        printf 'build.sh: --backend must be native or llvm, not %s\n' "$backend" >&2
-        exit 2
-        ;;
+# Stage1 from the committed seed, translated again only when the seed or
+# bootstrap.c changed. The stamp is the driver's (tools/build/steps.sn,
+# بصمة_ملفات): the hash of the lines "<hash>  <path>\n". bootstrap.c writes
+# the same stamp, so a Stage1 ./build-bootstrap left here is reused.
+seed_stage1() {
+    mkdir -p "$seed_dir"
+    stamp=$(sha256 bootstrap-wasm/seed/sultanc.wasm.zst bootstrap-wasm/bootstrap.c | digest)
+    if [ -x "$stage1" ] && [ -f "$seed_dir/seed.stamp" ] && [ "$(cat "$seed_dir/seed.stamp")" = "$stamp" ]; then
+        return
+    fi
+    # shellcheck disable=SC2086 # CC may hold a command and its flags
+    ${CC:-cc} -O2 -o "$seed_dir/build-bootstrap" bootstrap-wasm/bootstrap.c
+    "$seed_dir/build-bootstrap" "--out=$seed_dir" "--jobs=$jobs" --stage1-only $verbose
+    printf '%s' "$stamp" > "$seed_dir/seed.stamp"
+}
+
+command=${1:-build}
+# The host's target: a compiler that is itself a translated WASI module (the
+# seed's Stage1) would otherwise build for wasm32-wasi.
+case "$(uname -s)/$(uname -m)" in
+    Linux/x86_64|Linux/amd64) native_host=yes; host_target=x86_64-linux ;;
+    Darwin/arm64|Darwin/aarch64) native_host=yes; host_target=arm64-darwin ;;
+    *) native_host=no; host_target= ;;
 esac
 
-case "$bootstrap_route" in
-    c) build_directory="$source_directory/build/bootstrap/cmake" ;;
-    wasm) build_directory="$source_directory/build/bootstrap/cmake-wasm" ;;
-    existing) build_directory="$source_directory/build/bootstrap/cmake-existing" ;;
-    *)
-        printf 'build.sh: --bootstrap must be c, wasm or existing, not %s\n' "$bootstrap_route" >&2
-        exit 2
-        ;;
+# The commands, without building anything first (the driver's --help has the
+# options in full).
+case "$command" in
+    -h|--help|help)
+        if [ ! -x build/bootstrap/sultanc-build ]; then
+            sed -n '/^\/\/ The SultanC build driver/,/^\/\/ Run from/p' tools/build/main.sn | sed 's|^// \{0,1\}||'
+            exit 0
+        fi ;;
 esac
 
-cmake -S "$source_directory/cmake" -B "$build_directory" \
-    "-DSULTANC_BOOTSTRAP:STRING=$bootstrap_route" \
-    "-DSULTANC_REQUESTED_STAGE:STRING=$stage" \
-    "-DSULTANC_REQUESTED_TARGET:STRING=$target" \
-    "-DSULTANC_REQUESTED_OUTPUT:STRING=$output" \
-    "-DSULTANC_COMPILER_LLVM:BOOL=$compiler_llvm" \
-    "-DSULTANC_RELEASE_VERSION:STRING=$release_version" \
-    ${backend:+"-DSULTANC_STAGE2_BACKEND:STRING=$backend"} \
-    ${existing_compiler:+"-DSULTANC_EXISTING_COMPILER:FILEPATH=$existing_compiler"}
-
-# One compile job per core (the seed route translates the seed into units
-# that build in parallel), unless CMAKE_BUILD_PARALLEL_LEVEL says otherwise.
-if [ -z "${CMAKE_BUILD_PARALLEL_LEVEL:-}" ]; then
-    jobs=$(getconf _NPROCESSORS_ONLN 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 2)
-    CMAKE_BUILD_PARALLEL_LEVEL=$jobs
-    export CMAKE_BUILD_PARALLEL_LEVEL
+# `bootstrap` is the first compiler itself.
+if [ "$command" = bootstrap ] || [ "$command" = stage1 ]; then
+    seed_stage1
+    cp "$stage1" build/bootstrap/sultanc-stage1
+    if [ "$#" -ge 2 ]; then
+        case "$2" in -*) ;; *) mkdir -p "$(dirname "$2")"; cp "$stage1" "$2" ;; esac
+    fi
+    say "seed compiler (Stage1): build/bootstrap/sultanc-stage1"
+    exit 0
 fi
-cmake --build "$build_directory" --target "sultanc-$stage"
+
+# The compiler that builds the driver: build/sultanc, --with, or Stage1.
+with=
+for argument in "$@"; do
+    case "$argument" in --with=*) with=${argument#--with=} ;; esac
+done
+driver=build/bootstrap/sultanc-build
+driver_compiler=
+for candidate in build/sultanc "$with"; do
+    if [ -n "$candidate" ] && [ -x "$candidate" ]; then driver_compiler=$candidate; break; fi
+done
+if [ -z "$driver_compiler" ]; then
+    seed_stage1
+    driver_compiler=$stage1
+fi
+
+# Builds the driver with $1; the stamp is the hash of its sources and of $1.
+build_driver() {
+    mkdir -p build/bootstrap
+    rm -f "$driver" "$driver.new"
+    "$1" -O1 ${host_target:+--target="$host_target"} tools/build/main.sn -o "$driver.new" > build/bootstrap/sultanc-build.log 2>&1 || return 1
+    chmod 0755 "$driver.new"
+    mv -f "$driver.new" "$driver"
+    { sha256 tools/build/*.sn; sha256 "$1" | cut -d' ' -f1; } | digest > "$driver.stamp"
+}
+driver_stamp=$( { sha256 tools/build/*.sn; sha256 "$driver_compiler" | cut -d' ' -f1; } | digest)
+if [ ! -x "$driver" ] || [ ! -f "$driver.stamp" ] || [ "$(cat "$driver.stamp")" != "$driver_stamp" ]; then
+    say "building the build driver (tools/build)"
+    if build_driver "$driver_compiler"; then
+        :
+    elif [ "$native_host" = yes ] && [ "$driver_compiler" != "$stage1" ]; then
+        # The compiler there may be too old or broken for the driver: Stage1.
+        seed_stage1
+        build_driver "$stage1" ||
+            { cat build/bootstrap/sultanc-build.log >&2; fail "the build driver (tools/build) does not build"; }
+    elif [ "$native_host" = yes ]; then
+        cat build/bootstrap/sultanc-build.log >&2
+        fail "the build driver (tools/build) does not build"
+    else
+        driver=
+    fi
+fi
+
+if [ -n "$driver" ]; then
+    exec "$driver" "$@"
+fi
+
+# No driver: a host without a Native backend and no compiler that has LLVM.
+# The compiler here is Stage1, the seed compiler (as bootstrap.c leaves it),
+# and Stage1 still checks the seed (it rebuilds the seed module itself).
+# build/sultanc.stamp "seed compiler" marks a build/sultanc that is Stage1
+# (bootstrap.c writes it too); the driver's stamps never read so.
+plain=yes
+for argument in "$@"; do
+    case "$argument" in build|--verbose) ;; *) plain=no ;; esac
+done
+if [ "$plain" = yes ] && { [ ! -e build/sultanc ] || [ "$(cat build/sultanc.stamp 2>/dev/null)" = "seed compiler" ]; }; then
+    seed_stage1
+    if ! cmp -s "$stage1" build/sultanc; then
+        rm -f build/sultanc.new
+        cp "$stage1" build/sultanc.new
+        chmod 0755 build/sultanc.new
+        mv -f build/sultanc.new build/sultanc
+    fi
+    printf '%s\n' "seed compiler" > build/sultanc.stamp
+    say "no native backend for this host; build/sultanc is the seed compiler (targets x86_64-linux, arm64-darwin, wasm32-wasi)"
+    say "compiler: build/sultanc"
+    exit 0
+fi
+if [ "$command" = seed-check ]; then
+    seed_stage1
+    "$stage1" compiler/main.sn -O2 --backend=native --target=wasm32-wasi \
+        --module-source=compiler.backend.provider.llvm.llvm_codegen=compiler/backend/provider/llvm/unavailable.sn \
+        -o "$seed_dir/sultanc.wasm"
+    "$seed_dir/sultanc-wasm2c" --decompress bootstrap-wasm/seed/sultanc.wasm.zst "$seed_dir/sultanc.committed.wasm"
+    if cmp -s "$seed_dir/sultanc.wasm" "$seed_dir/sultanc.committed.wasm"; then
+        say "seed check: the committed seed is reproduced exactly (by Stage1)"
+        exit 0
+    fi
+    printf '%s\n' "build: seed check: the current sources give a different seed (a seed bump: ./build.sh seed-update)" >&2
+    exit 3
+fi
+cat build/bootstrap/sultanc-build.log >&2 2> /dev/null || true
+fail "this host has no Native backend, and $driver_compiler cannot build the build driver for it:
+  ./build.sh, ./build.sh bootstrap and ./build.sh seed-check work here with Stage1; everything else needs a compiler
+  that has LLVM (--with=PATH, or build/sultanc: a cross-built or bootstrap/chain.sh compiler)"

@@ -1,0 +1,6 @@
+error[SULTANC-FLOW-MATCH-ARM-WITHOUT-VALUE]: this arm of a match expression can end without a value
+  --> tests/en/diagnostics/semantic/match_expression_arm_without_value.sn:11:12..11:31
+    |
+ 11 |     | _ -> { let y: int = 2; };
+    |            ^^^^^^^^^^^^^^^^^^^
+    |

@@ -1,0 +1,6 @@
+error[SULTANC-PATTERN-INVALID]: invalid pattern — The pattern does not fit the type of the value being matched.
+  --> tests/ar/diagnostics/e2e/record_pun_unknown_field.sn:10:7..10:23
+    |
+ 10 |     | { العرض, العمق } -> { أرجع العرض; };
+    |       ^^^^^^^^^^^^^^^^
+    |

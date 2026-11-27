@@ -1,0 +1,18 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 1
+// تفاضلي: نعم
+// بيئة: SULTANC_LANG=en
+// خرج-قياسي: <فارغ>
+// خطأ-قياسي-ملف: loop_le_bound.stderr
+// نظير: tests/en/runtime/overflow_bounds/loop_le_bound.sn
+// `i <= n` does not prove `i + 1`: range-based check removal keeps the check,
+// which reports the overflow when n is the largest value.
+عرف الرئيسية(): عدد {
+    ليكن القيم: متجه ص64 = [9223372036854775805, 9223372036854775807];
+    ليكن ع: متغير ص64 = القيم[0];
+    طالما (ع <= القيم[1]) {
+        ع := ع + 1;
+    }
+    أرجع 0;
+}

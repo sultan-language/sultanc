@@ -1,5 +1,5 @@
 // host_threads.sn for the C Stage0 (bootstrap/), which has neither the
-// thread primitives nor closure literals (cmake/modules/Stage1.cmake binds
+// thread primitives nor closure literals (bootstrap/chain.sh binds
 // this file in that module's place). The Stage1 it builds starts no host
 // thread: a program's thread start answers -ENOSYS, as on a kernel
 // without clone, and a C entry is unavailable.

@@ -1,0 +1,2 @@
+خطأ[SULTANC-RUNTIME-PROGRAM-STOPPED]: توقف البرنامج
+إزاحة بمقدار 64 خارج المدى لعدد صحيح من 64 بت عند tests/en/runtime/failure/shift_ar.sn:13:12

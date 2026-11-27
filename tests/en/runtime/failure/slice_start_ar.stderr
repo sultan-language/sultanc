@@ -1,0 +1,2 @@
+خطأ[SULTANC-RUNTIME-PROGRAM-STOPPED]: توقف البرنامج
+بداية الشريحة 4 خارج المدى للطول 3 عند tests/en/runtime/failure/slice_start_ar.sn:15:24

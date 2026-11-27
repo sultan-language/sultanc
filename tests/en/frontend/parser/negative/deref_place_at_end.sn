@@ -1,0 +1,6 @@
+// اختبار: رفض
+// تشخيص: SULTANC-PARSE-SYNTAX
+// نظير: tests/ar/frontend/parser/negative/deref_place_at_end.sn
+// A `*` statement cut off at the end of the file is a syntax error at the
+// missing place, not an internal parser failure (found by fuzzing).
+def f(): int { if (true) { *

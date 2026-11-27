@@ -1,0 +1,6 @@
+error[SULTANC-TYPE-PRELUDE-CONSTRUCTOR-UNTYPED]: the option or result type of this `none`, `ok` or `err` cannot be known here
+  --> tests/ar/diagnostics/e2e/prelude_none_untyped.sn:8:10..8:16
+   |
+ 8 |     طابق لا_شيء مع
+   |          ^^^^^^
+   |

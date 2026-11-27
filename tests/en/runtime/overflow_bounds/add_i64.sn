@@ -1,0 +1,16 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 1
+// تفاضلي: نعم
+// بيئة: SULTANC_LANG=en
+// خرج-قياسي: <فارغ>
+// خطأ-قياسي-ملف: add_i64.stderr
+// نظير: tests/ar/runtime/overflow_bounds/add_i64.sn
+// A checked i64 add past its bound (the largest value plus 1) reports the overflow at the
+// operation on every code generator (docs/en/internals/msir-and-codegen.md).
+def main(): int {
+    let values: vector i64 = [9223372036854775807, 1];
+    let result: i64 = values[0] + values[1];
+    if (result == values[0]) { return 3; };
+    return 0;
+}

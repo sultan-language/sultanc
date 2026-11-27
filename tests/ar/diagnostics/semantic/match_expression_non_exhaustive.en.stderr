@@ -1,0 +1,7 @@
+error[SULTANC-PATTERN-NON-EXHAUSTIVE]: non-exhaustive pattern: `ضوء.أصفر` not covered — Every value of the matched type must match one of the arms.
+  --> tests/ar/diagnostics/semantic/match_expression_non_exhaustive.sn:10:15..10:20
+    |
+ 10 |     أرجع طابق الضوء مع
+    |               ^^^^^
+    |
+  = help: add an arm for each case that is not covered

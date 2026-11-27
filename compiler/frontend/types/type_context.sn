@@ -24,5 +24,12 @@
     // MSIR lowering's ownership class of each TypeID (ownership_glue.sn),
     // computed once before lowering: 0 not computed, 1 owns nothing, 2 owns
     // closure references only, 3 owns storage. Empty outside lowering.
-    تصنيفات_ملكية_مسير: متجه ط8
+    تصنيفات_ملكية_مسير: متجه ط8,
+    // Whether values of each TypeID are known to hold no reference (Type's
+    // هل_نوع_خال_من_المراجع_داخلي), filled as typing asks: 1 free of
+    // references, 0 not known. Only that answer is kept: setting a generic
+    // instance's definition can turn a "may hold one" into "free", never the
+    // reverse. Emptied whenever a named Type's definition is set or the
+    // instances are rebuilt.
+    خلو_المراجع: متجه ط8
 };

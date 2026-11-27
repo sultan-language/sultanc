@@ -1,0 +1,6 @@
+error[SULTANC-TYPE-MISMATCH]: expected `int`, found `string` — Every arm of a match expression gives a value of one type, the type of its first value.
+  --> tests/ar/diagnostics/semantic/match_expression_arm_types.sn:9:37..9:44
+   |
+ 9 |     طابق (طابق ن مع | 1 -> 2 | _ -> «اثنان») مع
+   |                                     ^^^^^^^
+   |

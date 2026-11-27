@@ -1,0 +1,246 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 0
+// نظير: tests/ar/stdlib/behavior/http_server_slow_clients.sn
+// Slow clients and the sequential server (std.http.server run_http_server)
+// with short deadlines: a client that sends half a request head does not
+// hold up a normal request, and is answered 408 and closed after the
+// header timeout; an idle keep-alive connection is closed silently after
+// the idle timeout; with max_connections open, one more is answered 503 at
+// once, and once the open ones expire a request is answered again. A client
+// thread checks it all, then requests the shutdown. No pair directive: the
+// interpreter runs one thread.
+import std.http.server;
+import std.http.shutdown;
+import std.http.model;
+import std.http.body;
+import std.net.socket_address;
+import std.net.options;
+import std.net.tcp;
+import std.sync.arc;
+import std.sync.atomic;
+import std.thread.thread;
+import std.time.time;
+import std.text.from_bytes;
+
+def server_address(): string { return «127.0.0.1:38571»; }
+
+def service(state: &int, request: &buffered_http_request): buffered_http_response {
+    let body: string = «ok»;
+    return text_http_response(200, &body);
+}
+
+// Short deadlines, so the test runs in a few seconds.
+def test_config(): http_server_config {
+    let address: string = server_address();
+    let config: mutable http_server_config = default_http_server_config(&address);
+    http_server_config_set_header_timeout_ms(&mutable config, 1000);
+    http_server_config_set_body_timeout_ms(&mutable config, 1000);
+    http_server_config_set_keep_alive_timeout_ms(&mutable config, 300);
+    http_server_config_set_max_connections(&mutable config, 4);
+    return config;
+}
+
+def now_ms(): int {
+    match monotonic_time_ns() with
+    | result.ok(t) -> { return t / 1000000; }
+    | result.err(_) -> { return 0; };
+}
+
+def pause_ms(ms: int): void {
+    let ignored: result int, int = sleep_ns(ms * 1000000);
+}
+
+def connect_local(): option tcp_stream {
+    let text: string = server_address();
+    match parse_socket_addr(&text) with
+    | result.err(_) -> { return option.none(); }
+    | result.ok(addr) -> {
+        match tcp_connect(&addr) with
+        | result.err(_) -> { return option.none(); }
+        | result.ok(stream) -> {
+            let ignored: result int, int = tcp_stream_set_option(&stream, receive_timeout_ms(3000));
+            return option.some(stream);
+        };
+    };
+}
+
+def send_text(stream: &tcp_stream, text: string): bool {
+    let bytes: vector u8 = bytes_from_text(text);
+    let total: int = length(bytes) as int;
+    let sent: mutable int = 0;
+    while (sent < total) {
+        match tcp_write(stream, &bytes, sent, total - sent) with
+        | result.err(_) -> { return false; }
+        | result.ok(n) -> {
+            if (n <= 0) { return false; };
+            sent := sent + n;
+        };
+    }
+    return true;
+}
+
+def contains(haystack: &vector u8, needle: &vector u8): bool {
+    let size: uint = length(*haystack) as uint;
+    let n: uint = length(*needle) as uint;
+    let i: mutable uint = 0;
+    while (i + n <= size) {
+        let j: mutable uint = 0;
+        while (j < n && (*haystack)[i + j] == (*needle)[j]) { j := j + 1; }
+        if (j == n) { return true; };
+        i := i + 1;
+    }
+    return false;
+}
+
+// One read appended to into: the byte count, 0 when the peer closed, -1 on
+// an error or the receive timeout.
+def read_some(stream: &tcp_stream, into: &mutable vector u8): int {
+    let buffer: mutable vector u8 = [];
+    let i: mutable uint = 0;
+    while (i < 4096) { append(buffer, 0); i := i + 1; }
+    match tcp_read(stream, &mutable buffer, 0, 4096) with
+    | result.err(_) -> { return -1; }
+    | result.ok(k) -> {
+        let j: mutable uint = 0;
+        while (j < (k as uint)) { append(*into, buffer[j]); j := j + 1; }
+        return k;
+    };
+}
+
+// Reads until the peer closes: true when it did.
+def read_until_closed(stream: &tcp_stream, into: &mutable vector u8): bool {
+    while (true) {
+        let got: int = read_some(stream, into);
+        if (got == 0) { return true; };
+        if (got < 0) { return false; };
+    }
+    return false;
+}
+
+// Reads until the bytes contain needle.
+def read_until(stream: &tcp_stream, into: &mutable vector u8, needle: &vector u8): bool {
+    while (!contains(&(*into), needle)) {
+        if (read_some(stream, into) <= 0) { return contains(&(*into), needle); };
+    }
+    return true;
+}
+
+def close_stream(stream: tcp_stream): void {
+    let ignored: result int, int = tcp_stream_close(stream);
+}
+
+// A request with "connection: close": true when it is answered 200.
+def answered(): bool {
+    match connect_local() with
+    | option.none -> { return false; }
+    | option.some(stream) -> {
+        if (!send_text(&stream, "GET / HTTP/1.1\r\nHost: local\r\nConnection: close\r\n\r\n")) {
+            close_stream(stream);
+            return false;
+        };
+        let answer: mutable vector u8 = [];
+        let closed: bool = read_until_closed(&stream, &mutable answer);
+        close_stream(stream);
+        let ok: vector u8 = bytes_from_text("HTTP/1.1 200");
+        return closed && contains(&answer, &ok);
+    };
+}
+
+def checks(): int {
+    pause_ms(200);
+    // A client sends half a request head and goes quiet.
+    let stalled: tcp_stream;
+    match connect_local() with
+    | option.none -> { return 1; }
+    | option.some(s) -> { stalled := s; };
+    if (!send_text(&stalled, "GET / HTTP/1.1\r\nHost: local\r\n")) { return 2; };
+    let stalled_at: int = now_ms();
+    pause_ms(50);
+    // Meanwhile a normal request is answered at once.
+    let started: int = now_ms();
+    if (!answered()) { return 3; };
+    if (now_ms() - started > 500) { return 4; };
+    // The stalled client is answered 408 and closed after the header timeout.
+    let late: mutable vector u8 = [];
+    if (!read_until_closed(&stalled, &mutable late)) { return 5; };
+    let waited: int = now_ms() - stalled_at;
+    let timeout_status: vector u8 = bytes_from_text("HTTP/1.1 408");
+    if (!contains(&late, &timeout_status)) { return 6; };
+    if (waited < 700 || waited > 2900) { return 7; };
+    close_stream(stalled);
+    // A keep-alive connection idle after its response is closed silently
+    // after the idle timeout.
+    let kept: tcp_stream;
+    match connect_local() with
+    | option.none -> { return 8; }
+    | option.some(s) -> { kept := s; };
+    if (!send_text(&kept, "GET / HTTP/1.1\r\nHost: local\r\n\r\n")) { return 9; };
+    let first: mutable vector u8 = [];
+    let body_end: vector u8 = bytes_from_text("\r\n\r\nok");
+    if (!read_until(&kept, &mutable first, &body_end)) { return 10; };
+    let idle_from: int = now_ms();
+    let rest: mutable vector u8 = [];
+    if (!read_until_closed(&kept, &mutable rest)) { return 11; };
+    let idle: int = now_ms() - idle_from;
+    if ((length(rest) as uint) != 0) { return 12; };
+    if (idle < 150 || idle > 2500) { return 13; };
+    close_stream(kept);
+    pause_ms(100);
+    // Four silent connections fill the limit; a fifth is answered 503 at once.
+    let held: mutable vector tcp_stream = [];
+    let i: mutable uint = 0;
+    while (i < 4) {
+        match connect_local() with
+        | option.none -> { return 14; }
+        | option.some(s) -> { append(held, s); };
+        i := i + 1;
+    }
+    pause_ms(100);
+    let refused_at: int = now_ms();
+    match connect_local() with
+    | option.none -> { return 15; }
+    | option.some(refused) -> {
+        let refusal: mutable vector u8 = [];
+        let closed: bool = read_until_closed(&refused, &mutable refusal);
+        close_stream(refused);
+        let busy_status: vector u8 = bytes_from_text("HTTP/1.1 503");
+        if (!contains(&refusal, &busy_status)) { return 16; };
+        if (now_ms() - refused_at > 800) { return 17; };
+    };
+    // The held connections sent nothing: each is closed silently at its
+    // header timeout, and then a request is answered again.
+    while ((length(held) as uint) > 0) {
+        match pop(held) with
+        | option.none -> { }
+        | option.some(s) -> {
+            let nothing: mutable vector u8 = [];
+            let closed: bool = read_until_closed(&s, &mutable nothing);
+            close_stream(s);
+            if (!closed || (length(nothing) as uint) != 0) { return 18; };
+        };
+    }
+    pause_ms(100);
+    if (!answered()) { return 19; };
+    return 0;
+}
+
+def check_then_stop(outcome: arc<atomic_u32>): void {
+    let code: int = checks();
+    atomic_u32_store(arc_get(&outcome), code as u32, memory_ordering.seq_cst());
+    request_http_shutdown();
+}
+
+def main(): int {
+    let outcome: arc<atomic_u32> = arc_new(atomic_u32_new(100 as u32));
+    let for_client: arc<atomic_u32> = arc_clone(&outcome);
+    match spawn(fn(): void -> check_then_stop(for_client)) with
+    | result.err(_) -> { return 90; }
+    | result.ok(_) -> { };
+    let config: http_server_config = test_config();
+    let state: int = 0;
+    match run_http_server(&config, &state, service) with
+    | result.err(_) -> { return 91; }
+    | result.ok(_) -> { };
+    return atomic_u32_load(arc_get(&outcome), memory_ordering.seq_cst()) as int;
+}

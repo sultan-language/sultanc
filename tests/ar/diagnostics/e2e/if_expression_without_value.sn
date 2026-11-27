@@ -1,0 +1,13 @@
+// اختبار: رفض
+// تشخيص: SULTANC-TYPE-IF-WITHOUT-VALUE
+// نظير: tests/en/diagnostics/e2e/if_expression_without_value.sn
+// خرج-تشخيص-عربي: if_expression_without_value.ar.stderr
+// خرج-تشخيص-إنجليزي: if_expression_without_value.en.stderr
+// فرع واحد على الأقل من قيمة `إذا` يعطي قيمة.
+عرف د(ن: عدد): عدد {
+    ليكن ق: عدد = إذا (ن > 0) { أرجع 1; } وإلا { أرجع 2; };
+    أرجع ق;
+}
+عرف الرئيسية(): عدد {
+    أرجع د(1);
+}

@@ -1,0 +1,13 @@
+// اختبار: رفض
+// تشخيص: SULTANC-TYPE-MATCH-WITHOUT-VALUE
+// نظير: tests/en/diagnostics/semantic/match_expression_without_value.sn
+// خرج-تشخيص-عربي: match_expression_without_value.ar.stderr
+// خرج-تشخيص-إنجليزي: match_expression_without_value.en.stderr
+// يأخذ تعبير المطابقة قيمته من ذراع: فلا بد أن ينتهي ذراع واحد على الأقل بقيمة.
+عرف الرئيسية(): عدد {
+    ليكن ن: عدد = 1;
+    ليكن س: عدد = طابق ن مع
+    | 1 -> { أرجع 1; }
+    | _ -> { أرجع 2; };
+    أرجع س;
+}

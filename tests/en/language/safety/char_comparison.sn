@@ -70,10 +70,10 @@ def main(): int {
     | 'ب' -> { }
     | _ -> { return 13; };
     match ya with
-    | range 'ء' to 'ي' -> { }
+    | range 'ء'..'ي' -> { }
     | _ -> { return 15; };
     match smile with
-    | range 'a' to 'ي' -> { return 16; }
+    | range 'a'..'ي' -> { return 16; }
     | _ -> { };
 
     return 42;

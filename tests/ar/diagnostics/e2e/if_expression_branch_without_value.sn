@@ -1,0 +1,13 @@
+// اختبار: رفض
+// تشخيص: SULTANC-FLOW-IF-BRANCH-WITHOUT-VALUE
+// نظير: tests/en/diagnostics/e2e/if_expression_branch_without_value.sn
+// خرج-تشخيص-عربي: if_expression_branch_without_value.ar.stderr
+// خرج-تشخيص-إنجليزي: if_expression_branch_without_value.en.stderr
+// فرع قيمة `إذا` الذي قد ينتهي بلا قيمة مرفوض: فرع وإلا هذا لا يعطي شيئا حين يكون شرطه خاطئا.
+عرف د(ن: عدد): عدد {
+    ليكن ق: عدد = إذا (ن > 0) 1 وإلا { إذا (ن < -5) { أرجع 0; }; };
+    أرجع ق;
+}
+عرف الرئيسية(): عدد {
+    أرجع د(1);
+}

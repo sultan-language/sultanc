@@ -1,0 +1,15 @@
+// اختبار: رفض
+// تشخيص: SULTANC-PATTERN-NON-EXHAUSTIVE
+// نظير: tests/ar/diagnostics/e2e/vector_non_exhaustive_single.sn
+// خرج-تشخيص-عربي: vector_non_exhaustive_single.ar.stderr
+// خرج-تشخيص-إنجليزي: vector_non_exhaustive_single.en.stderr
+// `[first, rest _, last]` needs two elements: a vector of one element matches no arm.
+def ends(v: vector int): int {
+    match v with
+    | [] -> { return 0; }
+    | [first, rest _, last] -> { return first + last; };
+}
+def main(): int {
+    let v: vector int = [1];
+    return ends(v);
+}

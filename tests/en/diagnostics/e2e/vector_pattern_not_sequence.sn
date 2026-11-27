@@ -1,0 +1,12 @@
+// اختبار: رفض
+// تشخيص: SULTANC-PATTERN-INVALID
+// نظير: tests/ar/diagnostics/e2e/vector_pattern_not_sequence.sn
+// خرج-تشخيص-عربي: vector_pattern_not_sequence.ar.stderr
+// خرج-تشخيص-إنجليزي: vector_pattern_not_sequence.en.stderr
+// A vector pattern matches a vector or a slice: an int is neither.
+def f(value: int): int {
+    match value with
+    | [a] -> { return a; }
+    | _ -> { return 0; };
+}
+def main(): int { return f(1); }

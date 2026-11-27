@@ -1,0 +1,17 @@
+// اختبار: رفض
+// تشخيص: SULTANC-PARSE-SYNTAX
+// نظير: tests/en/language/propagation/reject_guard.sn
+// `؟` is accepted only as the last postfix of a statement's whole right-hand
+// side (docs/en/reference/errors.md); in a match arm's guard it is an
+// unexpected token, so a guard never returns early.
+عرف موجب(س: عدد): نتيجة منطقي, نص {
+    أرجع نتيجة.نجح(س > 0);
+}
+
+عرف صنف(س: عدد): نتيجة عدد, نص {
+    طابق س مع
+    | ق إذا موجب(ق)؟ -> { أرجع نتيجة.نجح(1); }
+    | _ -> { أرجع نتيجة.نجح(0); };
+}
+
+عرف الرئيسية(): عدد { أرجع 0; }

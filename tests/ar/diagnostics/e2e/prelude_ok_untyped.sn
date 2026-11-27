@@ -1,0 +1,11 @@
+// اختبار: رفض
+// تشخيص: SULTANC-TYPE-PRELUDE-CONSTRUCTOR-UNTYPED
+// نظير: tests/en/diagnostics/e2e/prelude_ok_untyped.sn
+// خرج-تشخيص-عربي: prelude_ok_untyped.ar.stderr
+// خرج-تشخيص-إنجليزي: prelude_ok_untyped.en.stderr
+// تقول `نجح(س)` نوع قيمتها لا نوع الخطأ: فبلا نوع نتيجة تأخذه يبقى نوعها مجهولا.
+عرف الرئيسية(): عدد {
+    طابق نجح(5) مع
+    | نجح(ن) -> { أرجع ن; }
+    | خطأ(_) -> { أرجع 0; };
+}

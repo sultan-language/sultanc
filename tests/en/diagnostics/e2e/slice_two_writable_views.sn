@@ -1,0 +1,15 @@
+// اختبار: رفض
+// تشخيص: SULTANC-BORROW-CONFLICT
+// نظير: tests/ar/diagnostics/e2e/slice_two_writable_views.sn
+// خرج-تشخيص-عربي: slice_two_writable_views.ar.stderr
+// خرج-تشخيص-إنجليزي: slice_two_writable_views.en.stderr
+// Two writable views of one vector at once are rejected, even of parts
+// that do not overlap.
+def main(): int {
+    let values: mutable vector int = [1, 2, 3, 4];
+    let left: mutable [] int = &mutable values[..1];
+    let right: mutable [] int = &mutable values[2..];
+    left[0] := 0;
+    right[0] := 0;
+    return 0;
+}

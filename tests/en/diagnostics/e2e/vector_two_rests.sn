@@ -1,0 +1,16 @@
+// اختبار: رفض
+// تشخيص: SULTANC-PARSE-PATTERN
+// نظير: tests/ar/diagnostics/e2e/vector_two_rests.sn
+// خرج-تشخيص-عربي: vector_two_rests.ar.stderr
+// خرج-تشخيص-إنجليزي: vector_two_rests.en.stderr
+// One `rest` per vector pattern: with two, which elements each stands for is
+// unknown.
+def f(v: vector int): int {
+    match v with
+    | [a, rest _, b, rest _] -> { return a + b; }
+    | _ -> { return 0; };
+}
+def main(): int {
+    let v: vector int = [1, 2];
+    return f(v);
+}

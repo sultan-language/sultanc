@@ -1,0 +1,2 @@
+error[SULTANC-RUNTIME-PROGRAM-STOPPED]: the program stopped
+integer overflow at tests/ar/runtime/failure/shift_lost_bits_en.sn:13:10

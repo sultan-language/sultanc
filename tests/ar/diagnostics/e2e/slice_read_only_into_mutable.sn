@@ -1,0 +1,12 @@
+// اختبار: رفض
+// تشخيص: SULTANC-MUTABILITY-VIEW-WITHOUT-MUTABLE
+// نظير: tests/en/diagnostics/e2e/slice_read_only_into_mutable.sn
+// خرج-تشخيص-عربي: slice_read_only_into_mutable.ar.stderr
+// خرج-تشخيص-إنجليزي: slice_read_only_into_mutable.en.stderr
+// المتغير المحلي `متغير [] T` يُكتب عبره، فيأخذ عرضا قابلا للكتابة
+// (`&متغير القيم[1..]`) لا `القيم[1..]` الذي للقراءة فقط.
+عرف الرئيسية(): عدد {
+    ليكن القيم: متغير متجه عدد = [1، 2، 3];
+    ليكن الجزء: متغير [] عدد = القيم[1..];
+    أرجع الطول(الجزء) مثل عدد;
+}

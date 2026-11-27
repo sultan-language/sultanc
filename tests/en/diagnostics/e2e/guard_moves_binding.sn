@@ -1,0 +1,15 @@
+// اختبار: رفض
+// تشخيص: SULTANC-OWNERSHIP-MOVE-OUT-OF-REFERENCE
+// نظير: tests/ar/diagnostics/e2e/guard_moves_binding.sn
+// خرج-تشخيص-عربي: guard_moves_binding.ar.stderr
+// خرج-تشخيص-إنجليزي: guard_moves_binding.en.stderr
+// The guard borrows the bindings: it cannot move the payload, which still
+// belongs to the scrutinee when the guard fails.
+type Named = | One of string | Nothing;
+def take(s: string): int { return length(s) as int; }
+def f(n: Named): int {
+    match n with
+    | Named.One(s) if take(s) > 3 -> { return 1; }
+    | _ -> { return 0; };
+}
+def main(): int { return f(Named.Nothing()); }

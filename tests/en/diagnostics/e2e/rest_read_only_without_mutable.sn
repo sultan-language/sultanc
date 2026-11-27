@@ -1,0 +1,13 @@
+// اختبار: رفض
+// تشخيص: SULTANC-MUTABILITY-WRITE-TO-IMMUTABLE
+// نظير: tests/ar/diagnostics/e2e/rest_read_only_without_mutable.sn
+// خرج-تشخيص-عربي: rest_read_only_without_mutable.ar.stderr
+// خرج-تشخيص-إنجليزي: rest_read_only_without_mutable.en.stderr
+// Under `match v` (without `&mutable`) a named rest is a read-only view.
+def main(): int {
+    let values: mutable vector int = [1, 2, 3];
+    match values with
+    | [_, rest tail] -> { tail[0] := 0; }
+    | [] -> { };
+    return values[0];
+}

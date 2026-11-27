@@ -1,0 +1,6 @@
+خطأ[SULTANC-TYPE-TEXT-SLICE]: شريحة النص تُستعار للقراءة فقط: ⁨`&ن[أ..ب]`⁩
+  --> tests/ar/diagnostics/e2e/text_slice_without_borrow.sn:9:22..9:34
+   |
+ 9 |     ليكن الجزء: نص = التحية[1..3];
+   |                      ^^^^^^^^^^^^
+   |

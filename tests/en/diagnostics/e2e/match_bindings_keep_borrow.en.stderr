@@ -1,0 +1,41 @@
+error[SULTANC-BORROW-CONFLICT]: borrow conflict — The conflicting borrowed value is `value`. The value is already borrowed mutably, so it cannot be borrowed again.
+  --> tests/en/diagnostics/e2e/match_bindings_keep_borrow.sn:15:5..15:32
+    |
+ 15 |     let value: mutable int = 1;
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+error[SULTANC-BORROW-CONFLICT]: borrow conflict — The conflicting borrowed value is `first`. The value is borrowed for reading, so it cannot be borrowed mutably.
+  --> tests/en/diagnostics/e2e/match_bindings_keep_borrow.sn:27:5..27:32
+    |
+ 27 |     let first: mutable int = 1;
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+error[SULTANC-BORROW-CONFLICT]: borrow conflict — The conflicting borrowed value is `value`. The value is borrowed for reading, so it cannot be borrowed mutably.
+  --> tests/en/diagnostics/e2e/match_bindings_keep_borrow.sn:38:5..38:32
+    |
+ 38 |     let value: mutable int = 1;
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+error[SULTANC-BORROW-CONFLICT]: borrow conflict — The conflicting borrowed value is `value`. The value is borrowed for reading, so it cannot be borrowed mutably.
+  --> tests/en/diagnostics/e2e/match_bindings_keep_borrow.sn:48:5..48:32
+    |
+ 48 |     let value: mutable int = 1;
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+error[SULTANC-BORROW-CONFLICT]: borrow conflict — The conflicting borrowed value is `values`. The value is borrowed for reading, so it cannot be borrowed mutably.
+  --> tests/en/diagnostics/e2e/match_bindings_keep_borrow.sn:59:5..59:48
+    |
+ 59 |     let values: mutable vector int = [1, 2, 3];
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+error[SULTANC-BORROW-CONFLICT]: borrow conflict — The conflicting borrowed value is `values`. The value is borrowed for reading, so it cannot be borrowed mutably.
+  --> tests/en/diagnostics/e2e/match_bindings_keep_borrow.sn:68:5..68:48
+    |
+ 68 |     let values: mutable vector int = [1, 2, 3];
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |

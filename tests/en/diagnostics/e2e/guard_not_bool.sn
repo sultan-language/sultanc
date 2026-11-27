@@ -1,0 +1,12 @@
+// اختبار: رفض
+// تشخيص: SULTANC-TYPE-MISMATCH
+// نظير: tests/ar/diagnostics/e2e/guard_not_bool.sn
+// خرج-تشخيص-عربي: guard_not_bool.ar.stderr
+// خرج-تشخيص-إنجليزي: guard_not_bool.en.stderr
+// A guard is a condition: an int is not one.
+def f(value: int): int {
+    match value with
+    | x if x -> { return 1; }
+    | _ -> { return 0; };
+}
+def main(): int { return f(1); }

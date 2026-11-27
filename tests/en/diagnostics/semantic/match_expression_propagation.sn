@@ -1,0 +1,27 @@
+// اختبار: رفض
+// تشخيص: SULTANC-PARSE-EXPRESSION
+// نظير: tests/ar/diagnostics/semantic/match_expression_propagation.sn
+// خرج-تشخيص-عربي: match_expression_propagation.ar.stderr
+// خرج-تشخيص-إنجليزي: match_expression_propagation.en.stderr
+// `?` is not available in the arms of a match expression; a `?` after the
+// last arm applies to the whole match.
+def half(n: int): result int, string {
+    if (n % 2 == 0) { return result.ok(n / 2); };
+    return result.err("odd");
+}
+
+def quarter(n: int): result int, string {
+    let q: int = match n with
+    | 0 -> 0
+    | _ -> {
+        let h: int = half(n)?;
+        h / 2
+    };
+    return result.ok(q);
+}
+
+def main(): int {
+    match quarter(8) with
+    | result.ok(v) -> { return v; }
+    | result.err(_) -> { return 1; };
+}

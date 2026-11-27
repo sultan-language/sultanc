@@ -1,0 +1,30 @@
+// اختبار: تشغيل
+// أهداف: x86_64-linux,aarch64-linux-gnu
+// خروج: 1
+// بيئة: SULTANC_LANG=en
+// خرج-قياسي: <فارغ>
+// خطأ-قياسي-ملف: stack_overflow_thread_en.stderr
+// نظير: tests/ar/runtime/failure/stack_overflow_thread_en.sn
+// A recursion with no end on a spawned thread runs into the guard of the
+// thread's stack (docs/en/reference/errors.md, "Runtime checks"): the thread's
+// own alternate signal stack runs the report, which writes the frame "the
+// program stopped" and the words of a stack overflow, exit status 1. Not run
+// by the interpreter, whose call-depth limit the differential tests cover.
+import std.thread.thread;
+
+def descend(depth: u64): u64 {
+    if (depth == 0) { return 0; };
+    let below: u64 = descend(depth + 1);
+    return (below % 1000003) * 31 + depth % 7;
+}
+
+def main(): int {
+    match spawn_value(fn(): u64 -> descend(1)) with
+    | result.ok(h) -> {
+        let handle: mutable value_join_handle<u64> = h;
+        match join_value(&mutable handle) with
+        | option.some(value) -> { return (value % 100) as int; }
+        | option.none -> { return 3; };
+    }
+    | result.err(_) -> { return 2; };
+}

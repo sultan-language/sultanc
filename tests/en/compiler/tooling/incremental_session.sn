@@ -6,12 +6,14 @@
 // edited through an editor's unsaved texts; after each edit the session's
 // result is compared with a full analysis of the same texts: every resolved
 // occurrence (its declaration and Type), every diagnostic and every source's
-// completeness (صف_واجهة_للمقارنة). The edits: a body edit (twice: the second
-// reuses the kept workspace state and analyses only lib.sn and its
-// importers), a signature edit that breaks the callers, the fix, an added
-// std import, a new error, the fix, edits of an open document (they reuse the
-// kept workspace state, also when it was copied ahead), a cancelled request,
-// and a target switch (width.sn declares by target).
+// completeness (صف_واجهة_للمقارنة). The requests: one without edits (the
+// final state the full analysis kept, as it is), a body edit (twice: each
+// checks only lib.sn's bodies again, in that final state: early cutoff), a
+// signature edit that breaks the callers (the kept states are built), the
+// fix, an added std import, a new error, the fix, declaration edits of an
+// open document (they reuse the kept workspace state), a body edit of it
+// from the final state copied ahead, a cancelled request, and a target
+// switch (width.sn declares by target).
 import compiler.driver.source_inputs;
 import compiler.frontend.semantic_pipeline;
 import compiler.frontend.incremental_analysis;
@@ -143,8 +145,9 @@ def main(): int {
         let other: string = loaded_path(&first, "other.sn");
         if ((length(lib) as uint) == 0 || (length(user) as uint) == 0 || (length(other) as uint) == 0) { return 22; }
         if (!إحصاء_جلسة_تحليل(&session).كاملة) { return 3; }
+        // No edit: the kept final state as it is.
         if ((length(step(&mutable session, &env, &key, host())) as uint) == 0) { return 4; }
-        if (!إحصاء_جلسة_تحليل(&session).بنيت_لقطة_الأساس) { return 5; }
+        if (!إحصاء_جلسة_تحليل(&session).قطع_مبكر || إحصاء_جلسة_تحليل(&session).المحللة != 0) { return 5; }
         // A body edit, twice.
         ضع_تراكب_مصدر_في_البيئة(&mutable env, انسخ_نص(&lib),
             "public def scale(x: int): int { return x * 3; }\npublic def untouched(): int { return 1; }\n");
@@ -152,14 +155,16 @@ def main(): int {
         ضع_تراكب_مصدر_في_البيئة(&mutable env, انسخ_نص(&lib),
             "public def scale(x: int): int { return x * 4; }\npublic def untouched(): int { return 1; }\n");
         if ((length(step(&mutable session, &env, &key, host())) as uint) == 0) { return 7; }
-        // lib.sn and its importers user.sn and root.sn; the rest is kept.
-        if (إحصاء_جلسة_تحليل(&session).اللقطة != 2 || إحصاء_جلسة_تحليل(&session).المحللة != 3) { return 8; }
+        // No declaration changes: lib.sn alone, in the kept final state.
+        if (إحصاء_جلسة_تحليل(&session).اللقطة != 3 || إحصاء_جلسة_تحليل(&session).المحللة != 1
+            || !إحصاء_جلسة_تحليل(&session).قطع_مبكر) { return 8; }
         // A signature edit: the callers no longer type.
         ضع_تراكب_مصدر_في_البيئة(&mutable env, انسخ_نص(&lib),
             "public def scale(x: int, y: int): int { return x * y; }\npublic def untouched(): int { return 1; }\n");
         let broken: vector string = step(&mutable session, &env, &key, host());
         if ((length(broken) as uint) == 0) { return 9; }
         if (!mentions(&broken, "user.sn")) { return 10; }
+        if (!إحصاء_جلسة_تحليل(&session).بنيت_لقطة_الأساس || إحصاء_جلسة_تحليل(&session).قطع_مبكر) { return 29; }
         // The fix.
         ضع_تراكب_مصدر_في_البيئة(&mutable env, انسخ_نص(&lib),
             "public def scale(x: int): int { return x * 2; }\npublic def untouched(): int { return 1; }\n");
@@ -181,23 +186,24 @@ def main(): int {
             "public def other_value(): int { return 4; }\n");
         if ((length(step(&mutable session, &env, &key, host())) as uint) == 0) { return 16; }
         // other.sn is opened in the editor: the kept workspace state leaves it
-        // out, so its edits analyse only it and root.sn.
+        // out, so its declaration edits analyse only it and root.sn.
         let opened: vector مفتاح_وحدة_مقنن = [other_key];
         عيّن_مستندات_مفتوحة_جلسة(&mutable session, opened);
         ضع_تراكب_مصدر_في_البيئة(&mutable env, انسخ_نص(&other),
-            "public def other_value(): int { return 5; }\n");
+            "public def other_value(): int { return 5; }\npublic def spare_one(): int { return 1; }\n");
         if ((length(step(&mutable session, &env, &key, host())) as uint) == 0) { return 24; }
         ضع_تراكب_مصدر_في_البيئة(&mutable env, انسخ_نص(&other),
-            "public def other_value(): int { return 6; }\n");
+            "public def other_value(): int { return 6; }\npublic def spare_two(): int { return 1; }\n");
         if ((length(step(&mutable session, &env, &key, host())) as uint) == 0) { return 25; }
         if (إحصاء_جلسة_تحليل(&session).اللقطة != 2 || إحصاء_جلسة_تحليل(&session).المحللة != 2) { return 26; }
-        // The kept state is copied ahead (an editor's idle time); the next
-        // edit starts from that copy.
+        // The kept final state is copied ahead (an editor's idle time); the
+        // next edit, of other.sn's bodies, starts from that copy.
         جهز_جلسة_تحليل(&mutable session);
         ضع_تراكب_مصدر_في_البيئة(&mutable env, انسخ_نص(&other),
-            "public def other_value(): int { return 7; }\n");
+            "public def other_value(): int { return 7; }\npublic def spare_two(): int { return 1; }\n");
         if ((length(step(&mutable session, &env, &key, host())) as uint) == 0) { return 27; }
-        if (!إحصاء_جلسة_تحليل(&session).جاهزة || إحصاء_جلسة_تحليل(&session).المحللة != 2) { return 28; }
+        if (!إحصاء_جلسة_تحليل(&session).جاهزة || إحصاء_جلسة_تحليل(&session).المحللة != 1
+            || !إحصاء_جلسة_تحليل(&session).قطع_مبكر) { return 28; }
         // A cancelled request leaves the kept states; the next one reuses them.
         let more: vector مفتاح_وحدة_مقنن = [];
         let cancelled: حالة_إلغاء_واجهة = حالة_إلغاء_واجهة_جديدة();

@@ -1,0 +1,5 @@
+// Fixture of tests/en/compiler/tooling/incremental_session_cutoff.sn (not a test).
+import "lib.sn";
+import "user.sn";
+import std.text.number;
+def main(): int { return scale(2) + use_scale() + (length(uint_to_text(7)) as int); }

@@ -28,7 +28,7 @@ def square(x: int): int { return x * x; }
 def classify(code: option int): int {
     match code with
     | option.some(0) -> { return 1; }
-    | option.some(range 1 to 9) -> { return 2; }
+    | option.some(range 1..9) -> { return 2; }
     | option.some(-1 | 100) -> { return 3; }
     | option.some(_) -> { return 4; }
     | option.none -> { return 5; };

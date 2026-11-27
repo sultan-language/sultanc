@@ -94,8 +94,7 @@ def test_branch_argument_count_mismatch(): bool {
     let entry: معرف_كتلة_مسير = test_block(أضف_كتلة_مسير(&mutable program, function));
     let target: معرف_كتلة_مسير = test_block(أضف_كتلة_مسير(&mutable program, function));
     let parameter: معرف_قيمة_مسير = test_value(أضف_معامل_كتلة_مسير(&mutable program, function, target, int_type));
-    let no_args: vector معرف_قيمة_مسير = [];
-    اختم_بفرع_مسير(&mutable program, &build, function, entry, target, &no_args);
+    اختم_بفرع_مسير(&mutable program, &build, function, entry, target, []);
     اختم_بإرجاع_مسير(&mutable program, &build, function, target, option.some(parameter));
     عين_دالة_بدء_برنامج_مسير(&mutable program, function);
     return is_rejected(&program, &types);
@@ -116,7 +115,7 @@ def test_branch_argument_type_mismatch(): bool {
         أصدر_ثابتا_مسير(&mutable program, &build, function, entry, ثابت_مسير.منطق(true), bool_type)
     );
     let arguments: vector معرف_قيمة_مسير = [condition];
-    اختم_بفرع_مسير(&mutable program, &build, function, entry, target, &arguments);
+    اختم_بفرع_مسير(&mutable program, &build, function, entry, target, arguments);
     اختم_بإرجاع_مسير(&mutable program, &build, function, target, option.some(parameter));
     عين_دالة_بدء_برنامج_مسير(&mutable program, function);
     return is_rejected(&program, &types);
@@ -166,7 +165,7 @@ def test_malformed_aggregate(): bool {
     );
     let members: vector معرف_قيمة_مسير = [member];
     let aggregate: معرف_قيمة_مسير = test_value(
-        أصدر_تجميع_مسير(&mutable program, &build, function, block, &members, tuple_type)
+        أصدر_تجميع_مسير(&mutable program, &build, function, block, members, tuple_type)
     );
     اختم_بإرجاع_مسير(&mutable program, &build, function, block, option.some(aggregate));
     عين_دالة_بدء_برنامج_مسير(&mutable program, function);

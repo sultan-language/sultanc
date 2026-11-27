@@ -1,0 +1,6 @@
+error[SULTANC-BORROW-CONFLICT]: borrow conflict — The conflicting borrowed value is `greeting`. The value is already borrowed mutably, so it cannot be borrowed again.
+  --> tests/en/diagnostics/e2e/text_slice_move_while_live.sn:13:5..13:36
+    |
+ 13 |     let greeting: string = "hello";
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |

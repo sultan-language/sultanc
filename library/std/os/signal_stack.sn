@@ -1,0 +1,118 @@
+// The alternate signal stack of a thread (sigaltstack), on which std's
+// stack-overflow report (os/stack_overflow.sn, docs/en/reference/errors.md,
+// "Runtime checks") runs its handler: a thread whose stack ran past its end
+// has no stack left to run the handler on. The report sets one up for the
+// main thread when the program starts; std.thread (thread/thread.sn) sets one
+// up for every thread it starts, on that thread, and takes it down when the
+// thread's work returns. Until the report is installed nothing is done: an
+// interpreted program never installs it, nor does a program whose entry the
+// compiler did not give the report's call (Stage0's, a library's).
+//
+// Linux and Android on x86-64 and AArch64, on raw system calls: a 128 KiB
+// private anonymous mapping (mmap PROT_READ|PROT_WRITE, MAP_PRIVATE|
+// MAP_ANONYMOUS, committed only where the kernel writes a signal frame) and
+// sigaltstack with Linux's stack_t {ss_sp, ss_flags, ss_size}. Elsewhere
+// nothing (the report is not installed there).
+
+// Set once the report's handler is installed (os/stack_overflow.sn).
+ليكن تقرير_فيض_المكدس_مثبت: متغير منطقي = خطأ;
+
+عام عرف علم_تقرير_فيض_المكدس_مثبتا(): فراغ { تقرير_فيض_المكدس_مثبت := صواب; }
+عام عرف تقرير_فيض_المكدس_مثبت_الآن(): منطقي { أرجع تقرير_فيض_المكدس_مثبت; }
+
+// The main thread's stack limit (RLIMIT_STACK's soft limit) in bytes: read
+// by the report at start, and set again when os.stack_limit raises it, so the
+// report's signal handler reads a word instead of calling the kernel.
+ليكن حد_المكدس_الرئيسي: متغير ط64 = 0;
+
+عام عرف سجل_حد_المكدس_الرئيسي(البايتات: ط64): فراغ { حد_المكدس_الرئيسي := البايتات; }
+عام عرف حد_المكدس_الرئيسي_الآن(): ط64 { أرجع حد_المكدس_الرئيسي; }
+
+// The system call numbers (arch/x86/entry/syscalls/syscall_64.tbl,
+// include/uapi/asm-generic/unistd.h): mmap, munmap, sigaltstack.
+إذا ((الهدف.المنصة == «linux» || الهدف.المنصة == «android») && الهدف.المعمارية == «x86_64») {
+    عرف رقم_ربط_ذاكرة_الإشارات(): ط64 { أرجع 9; }
+    عرف رقم_إلغاء_ربط_ذاكرة_الإشارات(): ط64 { أرجع 11; }
+    عرف رقم_مكدس_الإشارات_البديل(): ط64 { أرجع 131; }
+}
+إذا ((الهدف.المنصة == «linux» || الهدف.المنصة == «android») && الهدف.المعمارية == «aarch64») {
+    عرف رقم_ربط_ذاكرة_الإشارات(): ط64 { أرجع 222; }
+    عرف رقم_إلغاء_ربط_ذاكرة_الإشارات(): ط64 { أرجع 215; }
+    عرف رقم_مكدس_الإشارات_البديل(): ط64 { أرجع 132; }
+}
+
+إذا ((الهدف.المنصة == «linux» || الهدف.المنصة == «android») && (الهدف.المعمارية == «x86_64» || الهدف.المعمارية == «aarch64»)) {
+    // Room for the kernel's signal frame (with the widest vector state) and
+    // the handler's own frame.
+    عام عرف حجم_مكدس_الإشارات(): ط64 { أرجع 131072; }
+
+    // Maps an alternate signal stack and installs it for the calling thread:
+    // the mapping's base, or 0 when either call failed.
+    عام عرف ثبت_مكدس_إشارات_نظام(): ط64 {
+        ليكن الربط: ط64;
+        غير_آمن {
+            // PROT_READ|PROT_WRITE (3), MAP_PRIVATE|MAP_ANONYMOUS (0x22), no descriptor.
+            الربط := بدائي_نداء_نواة_خام(
+                رقم_ربط_ذاكرة_الإشارات(), 0 مثل ط64, حجم_مكدس_الإشارات(), 3 مثل ط64,
+                0x22 مثل ط64, ~(0 مثل ط64), 0 مثل ط64
+            );
+        }
+        // A failure is -errno: an address in the last page of the address space.
+        إذا (الربط == 0 || الربط > (~(0 مثل ط64)) - 4095) { أرجع 0; };
+        ليكن المكدس: متغير متجه ط64 = [الربط, 0, حجم_مكدس_الإشارات()];
+        ليكن النتيجة: ط64;
+        غير_آمن {
+            النتيجة := بدائي_نداء_نواة_خام(
+                رقم_مكدس_الإشارات_البديل(), &متغير المكدس[0], 0 مثل ط64,
+                0 مثل ط64, 0 مثل ط64, 0 مثل ط64, 0 مثل ط64
+            );
+        }
+        إذا (النتيجة != 0) {
+            حرر_ربط_مكدس_الإشارات(الربط);
+            أرجع 0;
+        };
+        أرجع الربط;
+    }
+
+    عرف حرر_ربط_مكدس_الإشارات(القاعدة: ط64): فراغ {
+        ليكن تجاهل: ط64;
+        غير_آمن {
+            تجاهل := بدائي_نداء_نواة_خام(
+                رقم_إلغاء_ربط_ذاكرة_الإشارات(), القاعدة, حجم_مكدس_الإشارات(),
+                0 مثل ط64, 0 مثل ط64, 0 مثل ط64, 0 مثل ط64
+            );
+        }
+    }
+
+    // Takes the calling thread's alternate stack down (SS_DISABLE, 2) and
+    // unmaps it.
+    عام عرف أزل_مكدس_إشارات_نظام(القاعدة: ط64): فراغ {
+        إذا (القاعدة == 0) { أرجع; };
+        ليكن المكدس: متغير متجه ط64 = [0, 2, 0];
+        ليكن النتيجة: ط64;
+        غير_آمن {
+            النتيجة := بدائي_نداء_نواة_خام(
+                رقم_مكدس_الإشارات_البديل(), &متغير المكدس[0], 0 مثل ط64,
+                0 مثل ط64, 0 مثل ط64, 0 مثل ط64, 0 مثل ط64
+            );
+        }
+        إذا (النتيجة == 0) { حرر_ربط_مكدس_الإشارات(القاعدة); };
+    }
+}
+
+إذا (!((الهدف.المنصة == «linux» || الهدف.المنصة == «android») && (الهدف.المعمارية == «x86_64» || الهدف.المعمارية == «aarch64»))) {
+    عام عرف ثبت_مكدس_إشارات_نظام(): ط64 { أرجع 0; }
+    عام عرف أزل_مكدس_إشارات_نظام(القاعدة: ط64): فراغ { }
+}
+
+// A thread std.thread starts: its alternate stack once the report is
+// installed (its base, or 0), set up on the thread itself before its work.
+عام عرف ابدأ_مكدس_إشارات_الخيط(): ط64 {
+    إذا (!تقرير_فيض_المكدس_مثبت) { أرجع 0; };
+    أرجع ثبت_مكدس_إشارات_نظام();
+}
+
+// After the thread's work returned: its alternate stack goes.
+عام عرف أنه_مكدس_إشارات_الخيط(القاعدة: ط64): فراغ {
+    أزل_مكدس_إشارات_نظام(القاعدة);
+}

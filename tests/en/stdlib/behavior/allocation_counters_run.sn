@@ -2,6 +2,7 @@
 // أهداف: arm64-darwin,x86_64-linux
 // خروج: 0
 // نظير: tests/ar/stdlib/behavior/allocation_counters_run.sn
+// تحسين: -O2
 // std's allocation counters, process-wide and per thread, give the same
 // answers in an executable and under `run`, where the machine interpreter
 // serves storage itself and answers a call to a counter from its own counts.

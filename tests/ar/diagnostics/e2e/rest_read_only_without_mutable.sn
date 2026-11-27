@@ -1,0 +1,13 @@
+// اختبار: رفض
+// تشخيص: SULTANC-MUTABILITY-WRITE-TO-IMMUTABLE
+// نظير: tests/en/diagnostics/e2e/rest_read_only_without_mutable.sn
+// خرج-تشخيص-عربي: rest_read_only_without_mutable.ar.stderr
+// خرج-تشخيص-إنجليزي: rest_read_only_without_mutable.en.stderr
+// تحت `طابق م` (بلا `&متغير`) تكون البقية المسماة عرضا للقراءة فقط.
+عرف الرئيسية(): عدد {
+    ليكن القيم: متغير متجه عدد = [1، 2، 3];
+    طابق القيم مع
+    | [_، بقية الذيل] -> { الذيل[0] := 0; }
+    | [] -> { };
+    أرجع القيم[0];
+}

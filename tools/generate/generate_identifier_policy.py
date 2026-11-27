@@ -86,6 +86,10 @@ def parse_registry() -> IdentifierPolicy:
     for lower, upper in [*start_ranges, *rest_ranges]:
         if int(lower, 16) > int(upper, 16):
             raise SystemExit(f"reversed identifier-policy range: {lower}..{upper}")
+    # The generated hash and comparison take ASCII bytes as they are.
+    for scalar in [*ignored, *normalized_sources, *(target for _, target in normalized)]:
+        if int(scalar, 16) < 0x80:
+            raise SystemExit(f"identifier policy may not ignore or normalize an ASCII scalar: {scalar}")
     for source, target in normalized:
         source_bytes = chr(int(source, 16)).encode("utf-8")
         target_bytes = chr(int(target, 16)).encode("utf-8")
@@ -404,6 +408,19 @@ def stage1_identity_source(policy: IdentifierPolicy) -> str:
     ليكن المجموع: متغير طبيعي = 0;
     ليكن له_محتوى: متغير منطقي = خطأ;
     طالما (الموضع < النهاية) {{
+        // An ASCII byte is its own scalar, neither ignored nor normalized.
+        ليكن البايت: ط8 = (*النص)[الموضع];
+        إذا (البايت < 0x80) {{
+            إذا (!له_محتوى) {{
+                الأول := البايت;
+                المحرف_الأول := البايت مثل ط32;
+                له_محتوى := صواب;
+            }};
+            المجموع := المجموع + (البايت مثل طبيعي);
+            العدد := العدد + 1;
+            الموضع := الموضع + 1;
+            تابع_حلقة;
+        }};
         ليكن المفكوك: ط64 = فك_هوية_معرف_سريع(النص, الموضع, النهاية);
         إذا (المفكوك == 0) {{
             أرجع غير_صالح;
@@ -467,6 +484,13 @@ def stage1_identity_source(policy: IdentifierPolicy) -> str:
     ليكن أ: متغير طبيعي = البداية;
     ليكن ب: متغير طبيعي = 0;
     طالما (صواب) {{
+        // Two ASCII bytes are two scalars, equal only when the bytes are.
+        إذا (أ < النهاية && ب < حد_المطلوب && (*النص)[أ] < 0x80 && الأصل_المطلوب[ب] < 0x80) {{
+            إذا ((*النص)[أ] != الأصل_المطلوب[ب]) {{ أرجع خطأ; }};
+            أ := أ + 1;
+            ب := ب + 1;
+            تابع_حلقة;
+        }};
         // The next identity scalar on each side (spelling-only ones skipped).
         ليكن قيمة_أ: متغير ط64 = 0;
         ليكن وجد_أ: متغير منطقي = خطأ;
@@ -509,8 +533,17 @@ def stage1_identity_source(policy: IdentifierPolicy) -> str:
     النهاية: طبيعي
 ): متجه ط8 {{
     ليكن الناتج: متغير متجه ط8 = [];
+    // The identity is at most as long as the slice.
+    إذا (النهاية > البداية) {{ احجز_سعة(الناتج, النهاية - البداية); }};
     ليكن الموضع: متغير طبيعي = البداية;
     طالما (الموضع < النهاية) {{
+        // An ASCII byte is copied as it is.
+        ليكن البايت: ط8 = (*النص)[الموضع];
+        إذا (البايت < 0x80) {{
+            ألحق(الناتج, البايت);
+            الموضع := الموضع + 1;
+            تابع_حلقة;
+        }};
         ليكن المفكوك: ط64 = فك_هوية_معرف_سريع(النص, الموضع, النهاية);
         إذا (المفكوك == 0) {{
             أرجع الناتج;
@@ -573,6 +606,14 @@ def stage1_identity_source(policy: IdentifierPolicy) -> str:
     ليكن الهاش: متغير طبيعي = 0;
     ليكن الموضع: متغير طبيعي = 0;
     طالما (الموضع < النهاية) {{
+        // An ASCII byte is its own scalar, and no ASCII scalar is ignored or
+        // normalized (the generator checks it).
+        ليكن البايت: ط8 = (*الهوية)[الموضع];
+        إذا (البايت < 0x80) {{
+            الهاش := ((الهاش * 257) + (البايت مثل طبيعي)) % 1048573;
+            الموضع := الموضع + 1;
+            تابع_حلقة;
+        }};
         ليكن المفكوك: ط64 = فك_هوية_بايتات_سريع(الهوية, الموضع, النهاية);
         إذا (المفكوك == 0) {{ أرجع 0; }};
         ليكن القيمة: طبيعي = طبع_محرف_هوية_معرف((المفكوك & 0xFFFFFFFF) مثل ط32) مثل طبيعي;
@@ -592,6 +633,13 @@ def stage1_identity_source(policy: IdentifierPolicy) -> str:
     ليكن الموضع: متغير طبيعي = البداية;
     ليكن الهاش: متغير طبيعي = 0;
     طالما (الموضع < النهاية) {{
+        // ASCII as in هاش_هوية_معرف_بايتات.
+        ليكن البايت: ط8 = (*النص)[الموضع];
+        إذا (البايت < 0x80) {{
+            الهاش := ((الهاش * 257) + (البايت مثل طبيعي)) % 1048573;
+            الموضع := الموضع + 1;
+            تابع_حلقة;
+        }};
         ليكن المفكوك: ط64 = فك_هوية_معرف_سريع(النص, الموضع, النهاية);
         إذا (المفكوك == 0) {{
             أرجع 0;
@@ -623,6 +671,15 @@ def stage1_identity_source(policy: IdentifierPolicy) -> str:
     ليكن موضع_المصدر: متغير طبيعي = البداية;
     ليكن موضع_الهوية: متغير طبيعي = 0;
     طالما (موضع_المصدر < النهاية) {{
+        // An ASCII source byte matches only the same identity byte: any other
+        // identity scalar, normalized, is not ASCII.
+        ليكن بايت_المصدر: ط8 = (*النص)[موضع_المصدر];
+        إذا (بايت_المصدر < 0x80) {{
+            إذا (موضع_الهوية >= حد_الهوية || (*الهوية)[موضع_الهوية] != بايت_المصدر) {{ أرجع خطأ; }};
+            موضع_المصدر := موضع_المصدر + 1;
+            موضع_الهوية := موضع_الهوية + 1;
+            تابع_حلقة;
+        }};
         ليكن مفكوك_المصدر: ط64 = فك_هوية_معرف_سريع(النص, موضع_المصدر, النهاية);
         إذا (مفكوك_المصدر == 0) {{
             أرجع خطأ;

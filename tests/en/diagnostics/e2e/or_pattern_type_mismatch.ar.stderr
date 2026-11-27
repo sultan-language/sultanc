@@ -1,0 +1,7 @@
+خطأ[SULTANC-PATTERN-ALTERNATIVE-TYPES]: بدائل النمط تربط اسما بأنواع مختلفة: لـ⁨`x`⁩ نوع آخر في البديل الأول
+  --> tests/en/diagnostics/e2e/or_pattern_type_mismatch.sn:10:36..10:37
+    |
+ 10 |     | Value.Number(x) | Value.Word(x) -> { return 1; };
+    |                                    ^
+    |
+  = مساعدة: اربط الأسماء نفسها بالأنواع نفسها في كل بديل

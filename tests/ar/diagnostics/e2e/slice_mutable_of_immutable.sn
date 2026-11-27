@@ -1,0 +1,12 @@
+// اختبار: رفض
+// تشخيص: SULTANC-MUTABILITY-WRITE-TO-IMMUTABLE
+// نظير: tests/en/diagnostics/e2e/slice_mutable_of_immutable.sn
+// خرج-تشخيص-عربي: slice_mutable_of_immutable.ar.stderr
+// خرج-تشخيص-إنجليزي: slice_mutable_of_immutable.en.stderr
+// العرض القابل للكتابة `&متغير م[أ..ب]` يحتاج متجها يجوز للبرنامج أن يكتب فيه:
+// `القيم` ليست `متغير`.
+عرف صفر_الأول(ش: متغير [] عدد): عدد { ش[0] := 0; أرجع 0; }
+عرف الرئيسية(): عدد {
+    ليكن القيم: متجه عدد = [1، 2، 3];
+    أرجع صفر_الأول(&متغير القيم[0..1]);
+}

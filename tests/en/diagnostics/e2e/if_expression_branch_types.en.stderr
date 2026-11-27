@@ -1,0 +1,6 @@
+error[SULTANC-TYPE-MISMATCH]: expected `int`, found `string` — The value does not match the declared type of its destination.
+  --> tests/en/diagnostics/e2e/if_expression_branch_types.sn:9:36..9:41
+   |
+ 9 |     let v: int = if (n > 0) 1 else "one";
+   |                                    ^^^^^
+   |

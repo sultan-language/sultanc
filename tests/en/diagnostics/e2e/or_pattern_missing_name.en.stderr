@@ -1,0 +1,7 @@
+error[SULTANC-PATTERN-ALTERNATIVE-BINDINGS]: the alternatives of an or-pattern bind different names: `x` is not bound in every alternative
+  --> tests/en/diagnostics/e2e/or_pattern_missing_name.sn:10:11..10:12
+    |
+ 10 |     | (0, x) | (y, 0) -> { return 1; }
+    |           ^
+    |
+  = help: bind the same names, with the same types, in every alternative

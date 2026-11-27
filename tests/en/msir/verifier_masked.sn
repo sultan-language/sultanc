@@ -76,9 +76,8 @@ def program_with_call(types: &mutable سجل_أنواع): برنامج_مسير 
         أصدر_ثابتا_مسير(&mutable program, &build, callee, callee_block, ثابت_مسير.صحيح_موقع(42), int_type)
     );
     اختم_بإرجاع_مسير(&mutable program, &build, callee, callee_block, option.some(constant));
-    let no_arguments: vector معرف_قيمة_مسير = [];
     let result: معرف_قيمة_مسير = test_value(
-        أصدر_نداء_مسير(&mutable program, &build, caller, caller_block, callee, &no_arguments)
+        أصدر_نداء_مسير(&mutable program, &build, caller, caller_block, callee, [])
     );
     اختم_بإرجاع_مسير(&mutable program, &build, caller, caller_block, option.some(result));
     عين_دالة_بدء_برنامج_مسير(&mutable program, caller);

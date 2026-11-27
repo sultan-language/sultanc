@@ -1,0 +1,60 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// نظير: tests/ar/stdlib/behavior/text_slice_tokenizer.sn
+// A small tokenizer walks a line of source text and names each token with a
+// slice of the text (`&source[start..end]`, a `&string`), with no copy: std's
+// allocation counter does not move while it runs
+// (docs/en/reference/type-system.md, "Text slices"). A word is a run of
+// ASCII letters and digits or of bytes of non-ASCII characters, so every
+// slice starts and ends on a character's boundary; any other byte but a space
+// is a token of its own.
+import std.os.allocation;
+
+def is_space(b: u8): bool {
+    return b == 32 || b == 9 || b == 10;
+}
+
+def is_word(b: u8): bool {
+    return (b >= 97 && b <= 122) || (b >= 65 && b <= 90) || (b >= 48 && b <= 57) || b >= 128;
+}
+
+// The token that starts at byte `start` of the text: its last byte.
+def token_end(text: &string, start: int): int {
+    let end: mutable int = start;
+    if (is_word((*text)[start])) {
+        while (end + 1 < length(*text) && is_word((*text)[end + 1])) { end := end + 1; }
+    };
+    return end;
+}
+
+def main(): int {
+    let source: string = "let total = سعر * 12 + tax;";
+    let before: u64 = allocation_count();
+    let position: mutable int = 0;
+    let tokens: mutable int = 0;
+    let keywords: mutable int = 0;
+    let numbers: mutable int = 0;
+    let arabic: mutable int = 0;
+    let last_bytes: mutable int = 0;
+    while (position < length(source)) {
+        if (is_space(source[position])) {
+            position := position + 1;
+        } else {
+            let end: int = token_end(&source, position);
+            let token: &string = &source[position..end];
+            tokens := tokens + 1;
+            if (token == "let") { keywords := keywords + 1; };
+            if (token == "12") { numbers := numbers + 1; };
+            if (*token == "سعر") { arabic := arabic + 1; };
+            last_bytes := length(*token);
+            position := end + 1;
+        };
+    }
+    let allocations: u64 = allocation_count() - before;
+    if (tokens != 9) { return 1; };
+    if (keywords != 1 || numbers != 1 || arabic != 1) { return 2; };
+    if (last_bytes != 1) { return 3; };
+    if (allocations != 0) { return 4; };
+    return 42;
+}

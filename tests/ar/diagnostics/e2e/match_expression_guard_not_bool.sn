@@ -1,0 +1,12 @@
+// اختبار: رفض
+// تشخيص: SULTANC-TYPE-MISMATCH
+// نظير: tests/en/diagnostics/e2e/match_expression_guard_not_bool.sn
+// خرج-تشخيص-عربي: match_expression_guard_not_bool.ar.stderr
+// خرج-تشخيص-إنجليزي: match_expression_guard_not_bool.en.stderr
+// حارس تعبير المطابقة شرط كما في الجملة: والعدد ليس شرطا.
+عرف د(القيمة: عدد): عدد {
+    أرجع طابق القيمة مع
+    | س إذا س -> 1
+    | _ -> 0;
+}
+عرف الرئيسية(): عدد { أرجع د(1); }

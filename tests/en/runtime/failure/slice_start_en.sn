@@ -1,0 +1,17 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 1
+// تفاضلي: نعم
+// بيئة: SULTANC_LANG=en
+// خرج-قياسي: <فارغ>
+// خطأ-قياسي-ملف: slice_start_en.stderr
+// نظير: tests/ar/runtime/failure/slice_start_en.sn
+// A slice whose start is past the end of the vector (0 <= start <= length) (docs/en/reference/errors.md, "Runtime checks")
+// stops the program through the panic path: the frame "the program stopped",
+// then the start, and the place of the slice, exit status 1.
+def main(): int {
+    let values: vector int = [10, 20, 30];
+    let start: int = 4;
+    let part: [] int = values[start..];
+    return length(part) as int;
+}

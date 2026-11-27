@@ -1,0 +1,6 @@
+error[SULTANC-OWNERSHIP-MOVE-OUT-OF-REFERENCE]: cannot move an owned value out of borrowed storage — The value moved out of borrowed storage is `all`. An owned value is moved out of borrowed storage.
+  --> tests/en/diagnostics/e2e/as_borrowed_move.sn:12:47..12:50
+    |
+ 12 |     | Named.Two(a, _) as all -> { return take(all); }
+    |                                               ^^^
+    |

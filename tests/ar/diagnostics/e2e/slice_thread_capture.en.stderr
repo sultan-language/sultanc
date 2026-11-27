@@ -1,0 +1,6 @@
+error[SULTANC-THREAD-CAPTURE-REFERENCE]: a closure sent to another thread captures a borrowed reference — The symbol is `الجزء`. The type is `slice int`.
+  --> tests/ar/diagnostics/e2e/slice_thread_capture.sn:14:37..14:42
+    |
+ 14 |     طابق أطلق(دالة(): فراغ -> احتفظ(الجزء[0])) مع
+    |                                     ^^^^^
+    |

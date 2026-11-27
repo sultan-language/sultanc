@@ -1,0 +1,59 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/language/optimization/strength_reduction.sn
+// Integer strength reduction and range-based check removal
+// (docs/en/internals/msir-and-codegen.md) keep every result: a remainder by
+// a power of two compared with 0 at both signs, an unsigned one as a mask,
+// a remainder after its quotient by a constant, and loops and branches
+// whose additions and subtractions a dominating compare proves, run right
+// up to the type's bounds.
+def even(x: i64): bool { return x % 2 == 0; }
+def multiple_of_8(x: i32): bool { return x % 8 != 0; }
+def low_bits(x: u64): u64 { return x % 16; }
+def split(x: i64, d: [] i64): i64 {
+    let q: i64 = x / 3;
+    let r: i64 = x % 3;
+    let q2: i64 = x / -7;
+    let r2: i64 = x % -7;
+    if (q * 3 + r != x || q2 * -7 + r2 != x) { return 1; };
+    return q + r + q2 + r2 + d[0];
+}
+def split_unsigned(x: u64): u64 {
+    let q: u64 = x / 10;
+    let r: u64 = x % 10;
+    return q * 10 + r;
+}
+def count_to(n: i64): i64 {
+    let i: mutable i64 = 0;
+    let steps: mutable i64 = 0;
+    while (i < n) {
+        i := i + 1;
+        steps := steps + 1;
+        if (steps > 3) { i := n; };
+    }
+    return i;
+}
+def down_from(n: i64): i64 {
+    if (n < 2) { return n; };
+    return n - 1;
+}
+def main(): int {
+    let values: vector i64 = [-9, -8, 7, 0, 9223372036854775807, -9223372036854775807 - 1, 1];
+    let narrow: vector i32 = [-16, -15, 2147483647, -2147483647 - 1];
+    let wide: vector u64 = [18446744073709551615, 17, 0];
+    if (even(values[0]) || !even(values[1]) || even(values[2]) || !even(values[3])) { return 1; };
+    if (even(values[4]) || !even(values[5])) { return 2; };
+    if (multiple_of_8(narrow[0]) || !multiple_of_8(narrow[1]) || !multiple_of_8(narrow[2]) || multiple_of_8(narrow[3])) { return 3; };
+    if (low_bits(wide[0]) != 15 || low_bits(wide[1]) != 1 || low_bits(wide[2]) != 0) { return 4; };
+    let i: mutable uint = 0;
+    while (i < 7) {
+        if (split(values[i], values) == 1 && values[i] != 1) { return 5; };
+        i := i + 1;
+    }
+    if (split_unsigned(wide[0]) != wide[0] || split_unsigned(wide[1]) != 17) { return 6; };
+    if (count_to(values[4]) != values[4] || count_to(values[2]) != 7 || count_to(values[5]) != 0) { return 7; };
+    if (down_from(values[5]) != values[5] || down_from(values[4]) != 9223372036854775806 || down_from(values[6]) != 1) { return 8; };
+    return 42;
+}

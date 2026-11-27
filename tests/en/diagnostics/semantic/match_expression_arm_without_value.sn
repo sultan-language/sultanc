@@ -1,0 +1,13 @@
+// اختبار: رفض
+// تشخيص: SULTANC-FLOW-MATCH-ARM-WITHOUT-VALUE
+// نظير: tests/ar/diagnostics/semantic/match_expression_arm_without_value.sn
+// خرج-تشخيص-عربي: match_expression_arm_without_value.ar.stderr
+// خرج-تشخيص-إنجليزي: match_expression_arm_without_value.en.stderr
+// An arm without a final value must not finish: this one runs to its end.
+def main(): int {
+    let n: int = 1;
+    let x: int = match n with
+    | 1 -> 10
+    | _ -> { let y: int = 2; };
+    return x;
+}

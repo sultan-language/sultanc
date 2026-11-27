@@ -1,0 +1,14 @@
+// اختبار: رفض
+// تشخيص: SULTANC-BORROW-CONFLICT
+// نظير: tests/ar/diagnostics/e2e/slice_append_while_writable.sn
+// خرج-تشخيص-عربي: slice_append_while_writable.ar.stderr
+// خرج-تشخيص-إنجليزي: slice_append_while_writable.en.stderr
+// A writable view borrows its vector exclusively: the vector cannot grow
+// while the view is in use.
+def main(): int {
+    let values: mutable vector int = [1, 2, 3];
+    let part: mutable [] int = &mutable values[1..];
+    append(values, 4);
+    part[0] := 7;
+    return length(part) as int;
+}

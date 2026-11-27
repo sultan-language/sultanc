@@ -1,0 +1,11 @@
+// اختبار: رفض
+// تشخيص: SULTANC-TYPE-TEXT-SLICE
+// نظير: tests/en/diagnostics/e2e/text_slice_without_borrow.sn
+// خرج-تشخيص-عربي: text_slice_without_borrow.ar.stderr
+// خرج-تشخيص-إنجليزي: text_slice_without_borrow.en.stderr
+// شريحة النص تُستعار، `&ن[أ..ب]`: و`ن[أ..ب]` وحدها ليست قيمة.
+عرف الرئيسية(): عدد {
+    ليكن التحية: نص = «hello»;
+    ليكن الجزء: نص = التحية[1..3];
+    أرجع الطول(الجزء);
+}

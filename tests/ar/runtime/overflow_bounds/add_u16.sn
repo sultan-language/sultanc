@@ -1,0 +1,16 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 1
+// تفاضلي: نعم
+// بيئة: SULTANC_LANG=en
+// خرج-قياسي: <فارغ>
+// خطأ-قياسي-ملف: add_u16.stderr
+// نظير: tests/en/runtime/overflow_bounds/add_u16.sn
+// A checked u16 add past its bound (the largest value plus 1) reports the overflow at the
+// operation on every code generator (docs/en/internals/msir-and-codegen.md).
+عرف الرئيسية(): عدد {
+    ليكن القيم: متجه ط16 = [65535, 1];
+    ليكن الناتج: ط16 = القيم[0] + القيم[1];
+    إذا (الناتج == القيم[0]) { أرجع 3; };
+    أرجع 0;
+}

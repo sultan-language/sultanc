@@ -1,0 +1,6 @@
+error[SULTANC-MUTABILITY-WRITE-TO-IMMUTABLE]: cannot write to an immutable value — The value is not declared mutable.
+  --> tests/ar/diagnostics/e2e/let_tuple_read_only_half.sn:12:5..12:14
+    |
+ 12 |     اليسار[0] := 9;
+    |     ^^^^^^^^^
+    |

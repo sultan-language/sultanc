@@ -1,0 +1,13 @@
+// اختبار: رفض
+// تشخيص: SULTANC-FLOW-MATCH-ARM-WITHOUT-VALUE
+// نظير: tests/en/diagnostics/semantic/match_expression_arm_without_value.sn
+// خرج-تشخيص-عربي: match_expression_arm_without_value.ar.stderr
+// خرج-تشخيص-إنجليزي: match_expression_arm_without_value.en.stderr
+// الذراع الذي لا ينتهي بقيمة يجب ألا يكتمل: وهذا يبلغ نهايته.
+عرف الرئيسية(): عدد {
+    ليكن ن: عدد = 1;
+    ليكن س: عدد = طابق ن مع
+    | 1 -> 10
+    | _ -> { ليكن ص: عدد = 2; };
+    أرجع س;
+}

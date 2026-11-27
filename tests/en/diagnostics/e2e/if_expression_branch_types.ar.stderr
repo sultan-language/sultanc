@@ -1,0 +1,6 @@
+خطأ[SULTANC-TYPE-MISMATCH]: النوع الموجود ⁨`نص`⁩ لا يطابق النوع المتوقع ⁨`عدد`⁩ — القيمة لا تطابق النوع المصرح به لوجهتها.
+  --> tests/en/diagnostics/e2e/if_expression_branch_types.sn:9:36..9:41
+   |
+ 9 |     let v: int = if (n > 0) 1 else "one";
+   |                                    ^^^^^
+   |

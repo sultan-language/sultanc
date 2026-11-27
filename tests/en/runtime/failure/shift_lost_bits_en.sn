@@ -1,0 +1,18 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 1
+// تفاضلي: نعم
+// بيئة: SULTANC_LANG=en
+// خرج-قياسي: <فارغ>
+// خطأ-قياسي-ملف: shift_lost_bits_en.stderr
+// نظير: tests/ar/runtime/failure/shift_lost_bits_en.sn
+// A left shift below the width that shifts out a significant bit (here the
+// sign) is an integer overflow (docs/en/reference/errors.md, "Runtime checks"):
+// the frame "the program stopped", then the kind and the place, exit status 1.
+def shift(value: int, amount: int): int {
+    return value << amount;
+}
+
+def main(): int {
+    return shift(3, 62);
+}

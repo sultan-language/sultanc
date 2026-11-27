@@ -1,0 +1,2 @@
+error[SULTANC-RUNTIME-PROGRAM-STOPPED]: the program stopped
+split at 4 out of range for length 3 at tests/ar/runtime/failure/split_index_en.sn:16:10

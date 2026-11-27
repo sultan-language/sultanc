@@ -1,0 +1,11 @@
+error[SULTANC-MUTABILITY-WRITE-TO-IMMUTABLE]: cannot write to an immutable value — The immutable value being written to is `first`. An assignment targets an immutable variable.
+  --> tests/en/diagnostics/e2e/rest_element_read_only.sn:11:31..11:36
+    |
+ 11 |     | [first, rest tail] -> { first := 0; tail[0] := 0; }
+    |                               ^^^^^ invalid use
+    |
+  ::: tests/en/diagnostics/e2e/rest_element_read_only.sn:11:8..11:13
+    |
+ 11 |     | [first, rest tail] -> { first := 0; tail[0] := 0; }
+    |        ^^^^^ declared here without `mutable`
+    |

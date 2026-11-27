@@ -86,8 +86,14 @@
     أرجع الإعداد;
 }
 
-عام عرف اضبط_تحقق_نظير_تي_إل_إس(الإعداد: &متغير إعداد_عميل_تي_إل_إس, مفعل: منطقي): فراغ {
-    (*الإعداد).تحقق_النظير := مفعل;
+// DANGEROUS. Turns off checking the server's certificate chain and name:
+// anyone between the client and the server can then pose as the server and
+// read and change everything sent. A client configuration verifies the
+// server by default; this is only for a test against a server whose
+// certificate cannot be verified. Nothing turns verification back on for
+// this configuration: make a new one instead.
+عام عرف عطل_تحقق_النظير_بلا_أمان_تي_إل_إس(الإعداد: &متغير إعداد_عميل_تي_إل_إس): فراغ {
+    (*الإعداد).تحقق_النظير := خطأ;
 }
 
 عام عرف اضبط_اسم_خادم_تي_إل_إس(الإعداد: &متغير إعداد_عميل_تي_إل_إس, الاسم: &نص): فراغ {
@@ -139,7 +145,7 @@
 عام مرادف tls_client_config_default = إعداد_عميل_تي_إل_إس_افتراضي;
 عام مرادف tls_client_config_without_server_name = إعداد_عميل_تي_إل_إس_بلا_اسم;
 عام مرادف tls_server_config_new = أنشئ_إعداد_خادم_تي_إل_إس;
-عام مرادف tls_client_config_set_verify = اضبط_تحقق_نظير_تي_إل_إس;
+عام مرادف tls_client_config_disable_verification_insecure = عطل_تحقق_النظير_بلا_أمان_تي_إل_إس;
 عام مرادف tls_client_config_set_server_name = اضبط_اسم_خادم_تي_إل_إس;
 عام مرادف tls_client_config_clear_server_name = أزل_اسم_خادم_تي_إل_إس;
 عام مرادف tls_client_config_add_trust_root = أضف_جذر_ثقة_تي_إل_إس;

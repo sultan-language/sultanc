@@ -1,0 +1,6 @@
+error[SULTANC-PARSE-PATTERN]: Cannot parse the pattern syntax — The expected result is `]`, but the actual result is `identifier`. The parser could not recognize the pattern syntax.
+  --> tests/ar/diagnostics/e2e/vector_two_rests.sn:9:22..9:26
+   |
+ 9 |     | [أ، بقية _، ب، بقية _] -> { أرجع أ + ب; }
+   |                      ^^^^ parser discovered the problem here
+   |

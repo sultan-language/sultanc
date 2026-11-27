@@ -1,0 +1,6 @@
+خطأ[SULTANC-OWNERSHIP-MOVE-OUT-OF-REFERENCE]: لا يجوز نقل قيمة مملوكة من تخزين مستعار — القيمة المنقولة من تخزين مستعار هي ⁨`all`⁩. جرت محاولة نقل قيمة مملوكة من تخزين مستعار.
+  --> tests/en/diagnostics/e2e/as_borrowed_move.sn:12:47..12:50
+    |
+ 12 |     | Named.Two(a, _) as all -> { return take(all); }
+    |                                               ^^^
+    |

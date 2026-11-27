@@ -49,8 +49,8 @@ build() {
     backend=native
     if "$sc" version 2>/dev/null | grep -qi llvm; then backend=llvm; fi
     mkdir -p "$out"
-    echo "$sc --backend=$backend --target x86_64-windows-msvc -> $exe"
-    "$sc" --backend=$backend --target x86_64-windows-msvc \
+    echo "$sc -O2 --backend=$backend --target x86_64-windows-msvc -> $exe"
+    "$sc" -O2 --backend=$backend --target x86_64-windows-msvc \
         --module-source=compiler.backend.provider.llvm.llvm_codegen=compiler/backend/provider/llvm/unavailable.sn \
         -o "$exe" compiler/main.sn
 }

@@ -1,0 +1,6 @@
+error[SULTANC-TYPE-MATCH-WITHOUT-VALUE]: no arm of this match expression gives a value
+  --> tests/ar/diagnostics/semantic/match_expression_without_value.sn:9:19..11:23
+   |
+ 9 |     ليكن س: عدد = طابق ن مع
+   |                   ^
+   |

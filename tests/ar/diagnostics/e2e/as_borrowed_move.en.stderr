@@ -1,0 +1,6 @@
+error[SULTANC-OWNERSHIP-MOVE-OUT-OF-REFERENCE]: cannot move an owned value out of borrowed storage — The value moved out of borrowed storage is `الكل`. An owned value is moved out of borrowed storage.
+  --> tests/ar/diagnostics/e2e/as_borrowed_move.sn:12:46..12:50
+    |
+ 12 |     | مسمى.اثنان(أ, _) مثل الكل -> { أرجع خذ(الكل); }
+    |                                              ^^^^
+    |
