@@ -1,0 +1,13 @@
+// اختبار: رفض
+// تشخيص: SULTANC-PARSE-IF-WITHOUT-ELSE
+// نظير: tests/en/diagnostics/e2e/if_expression_without_else.sn
+// خرج-تشخيص-عربي: if_expression_without_else.ar.stderr
+// خرج-تشخيص-إنجليزي: if_expression_without_else.en.stderr
+// `إذا` المستعملة قيمةً تحتاج `وإلا`: لا قيمة حين يكون الشرط خاطئا.
+عرف الوصف(ن: عدد): نص {
+    ليكن الكتابة: نص = إذا (ن > 0) "موجب";
+    أرجع الكتابة;
+}
+عرف الرئيسية(): عدد {
+    أرجع الطول(الوصف(1)) مثل عدد;
+}

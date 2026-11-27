@@ -1,0 +1,12 @@
+// اختبار: رفض
+// تشخيص: SULTANC-MUTABILITY-VIEW-WITHOUT-MUTABLE
+// نظير: tests/ar/diagnostics/e2e/slice_read_only_into_mutable.sn
+// خرج-تشخيص-عربي: slice_read_only_into_mutable.ar.stderr
+// خرج-تشخيص-إنجليزي: slice_read_only_into_mutable.en.stderr
+// A `mutable [] T` local may be written through, so it takes a writable
+// view (`&mutable values[1..]`), not the read-only `values[1..]`.
+def main(): int {
+    let values: mutable vector int = [1, 2, 3];
+    let part: mutable [] int = values[1..];
+    return length(part) as int;
+}

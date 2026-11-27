@@ -1,0 +1,12 @@
+// اختبار: رفض
+// تشخيص: SULTANC-PATTERN-NON-EXHAUSTIVE
+// نظير: tests/ar/diagnostics/e2e/or_pattern_non_exhaustive.sn
+// خرج-تشخيص-عربي: or_pattern_non_exhaustive.ar.stderr
+// خرج-تشخيص-إنجليزي: or_pattern_non_exhaustive.en.stderr
+// The alternatives cover two of the three cases.
+type Hand = | Rock | Paper | Scissors;
+def soft(h: Hand): int {
+    match h with
+    | Hand.Rock | Hand.Paper -> { return 1; };
+}
+def main(): int { return soft(Hand.Rock()); }

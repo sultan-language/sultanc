@@ -1,0 +1,25 @@
+// Checked arithmetic a dominating compare proves cannot overflow: the
+// object suite (tests/runner/suites/objects.sn, تحقق_الفحوص_المثبتة) reads
+// the MSIR of count_to (i + 1 under i < n, depth - 1 under depth > 0) and
+// before_two (n - 1 under n >= 2) for a report block (docs/en/internals/
+// msir-and-codegen.md, "Range-based check removal"). Twin:
+// tests/ar/object/source/proven_checks.sn.
+def count_to(n: i64, depth: i64): i64 {
+    if (depth > 0) { return count_to(n, depth - 1); };
+    let i: mutable i64 = 0;
+    while (i < n) {
+        i := i + 1;
+    }
+    return i;
+}
+
+def before_two(n: i64, depth: i64): i64 {
+    if (depth > 0) { return before_two(n, depth - 1); };
+    if (n < 2) { return n; };
+    return n - 1;
+}
+
+def main(): int {
+    let values: vector i64 = [5, 1];
+    return (count_to(values[0], values[1]) + before_two(values[0], values[1])) as int;
+}

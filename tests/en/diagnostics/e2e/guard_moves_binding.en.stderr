@@ -1,0 +1,6 @@
+error[SULTANC-OWNERSHIP-MOVE-OUT-OF-REFERENCE]: cannot move an owned value out of borrowed storage — The value moved out of borrowed storage is `s`. An owned value is moved out of borrowed storage.
+  --> tests/en/diagnostics/e2e/guard_moves_binding.sn:12:28..12:29
+    |
+ 12 |     | Named.One(s) if take(s) > 3 -> { return 1; }
+    |                            ^
+    |

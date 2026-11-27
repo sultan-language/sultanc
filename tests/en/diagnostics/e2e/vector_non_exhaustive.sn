@@ -1,0 +1,15 @@
+// اختبار: رفض
+// تشخيص: SULTANC-PATTERN-NON-EXHAUSTIVE
+// نظير: tests/ar/diagnostics/e2e/vector_non_exhaustive.sn
+// خرج-تشخيص-عربي: vector_non_exhaustive.ar.stderr
+// خرج-تشخيص-إنجليزي: vector_non_exhaustive.en.stderr
+// Vectors of two or more elements match no arm.
+def f(v: vector int): int {
+    match v with
+    | [] -> { return 0; }
+    | [a] -> { return a; };
+}
+def main(): int {
+    let v: vector int = [1];
+    return f(v);
+}

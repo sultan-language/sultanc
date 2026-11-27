@@ -1,0 +1,18 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 1
+// تفاضلي: نعم
+// بيئة: SULTANC_LANG=en
+// خرج-قياسي: <فارغ>
+// خطأ-قياسي-ملف: text_slice_end_en.stderr
+// نظير: tests/ar/runtime/failure/text_slice_end_en.sn
+// A slice of text whose end is at or past the text's length (end < length)
+// (docs/en/reference/errors.md, "Runtime checks") stops the program through
+// the panic path: the frame "the program stopped", then the end, the length
+// and the place of the slice, exit status 1.
+def main(): int {
+    let text: string = "hello world";
+    let last: int = 11;
+    let part: &string = &text[6..last];
+    return length(*part);
+}

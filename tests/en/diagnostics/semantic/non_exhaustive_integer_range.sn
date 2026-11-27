@@ -5,6 +5,6 @@
 def main(): i32 {
     let level: u8 = 7;
     match level with
-    | range 0 to 100 -> { return 0; }
-    | range 102 to 255 -> { return 1; }
+    | range 0..100 -> { return 0; }
+    | range 102..255 -> { return 1; }
 }

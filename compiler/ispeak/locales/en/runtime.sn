@@ -13,5 +13,12 @@
     | هوية_فشل_تشغيل.إدخال_إخراج -> { أرجع «input/output failure»; }
     | هوية_فشل_تشغيل.تجاوز_عدد_صحيح -> { أرجع «integer overflow at {2}»; }
     | هوية_فشل_تشغيل.فهرس_خارج_المدى -> { أرجع «index {0} out of range for length {1} at {2}»; }
-    | هوية_فشل_تشغيل.قسمة_على_صفر -> { أرجع «division by zero at {2}»; };
+    | هوية_فشل_تشغيل.قسمة_على_صفر -> { أرجع «division by zero at {2}»; }
+    | هوية_فشل_تشغيل.إزاحة_خارج_المدى -> { أرجع «shift by {0} out of range for a {1}-bit integer at {2}»; }
+    | هوية_فشل_تشغيل.بداية_شريحة_خارج_المدى -> { أرجع «slice start {0} out of range for length {1} at {2}»; }
+    | هوية_فشل_تشغيل.نهاية_شريحة_خارج_المدى -> { أرجع «slice end {0} out of range for length {1} at {2}»; }
+    | هوية_فشل_تشغيل.شريحة_معكوسة -> { أرجع «slice from {0} to {1} ends before it starts at {2}»; }
+    | هوية_فشل_تشغيل.قسمة_خارج_المدى -> { أرجع «split at {0} out of range for length {1} at {2}»; }
+    | هوية_فشل_تشغيل.إزاحة_داخل_حرف -> { أرجع «byte offset {0} is inside a character at {2}»; }
+    | هوية_فشل_تشغيل.فيض_المكدس -> { أرجع «stack overflow: the call stack ran out of space»; };
 }

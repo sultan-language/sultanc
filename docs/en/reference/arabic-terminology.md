@@ -21,7 +21,7 @@ alef forms آ, أ and إ to ا and ignores tatweel
 | `def` | `عرف` | Function definition |
 | `let` | `ليكن` | Value declaration |
 | `return` | `أرجع` | Return from a function |
-| `if` | `إذا` | Conditional branch |
+| `if` | `إذا` | Conditional branch; after a match arm's pattern, its guard |
 | `else` | `وإلا` | Alternate branch |
 | `while` | `طالما` | While loop ("as long as") |
 | `for` | `لكل` | For loop |
@@ -34,8 +34,10 @@ alef forms آ, أ and إ to ا and ignores tatweel
 | `public` | `عام` | Public declaration |
 | `extern` | `خارجي` | External function declaration |
 | `import` | `استورد` | Module import |
-| `as` | `مثل` | Conversion/cast syntax |
+| `as` | `مثل` | Conversion/cast syntax; after a pattern, names the whole matched value |
 | `unsafe` | `غير_آمن` | Unsafe context |
+
+Patterns use the same words in both surfaces: `|` between alternatives, `إذا` (`if`) before a guard, `مثل` (`as`) before the name of the whole value, `بقية` (`rest`) before the name or `_` that stands for the other elements of a vector pattern (`بقية الذيل`, `rest tail`), and `مدى` (`range`) before a range of values, whose two ends `..` joins (`مدى 1..9`, `range 'a'..'z'`, both ends included; `مدى 100..` and `مدى ..0` leave one end open). `مدى` is special only there: elsewhere it is an ordinary name. A record pattern lists only the fields it looks at. `..` is also the range of a slice (`م[1..3]`, `م[2..]`, `م[..1]`, `م[..]`), again with both ends included; a slice is read-only, and `&متغير م[2..]` (`&mutable v[2..]`) is a writable view. `اقسم_قابلا_للتعديل` (`split_mutable`) splits a vector into two writable views: the verb `اقسم` (split) and `قابلا_للتعديل` (writable), the accusative of state for what it gives. See [The `match` statement](../book/ch06-02-match.md).
 
 The program entry function is `main` in English and `الرئيسية` ("the main function") in Arabic: `عرف الرئيسية(): عدد { … }`.
 
@@ -66,6 +68,7 @@ These names are contextual: they name the type only in a type or constructor pos
 | --- | --- | --- |
 | `option` | `اختياري` | `some`/`Some` = `موجود`, `none`/`None` = `لا_شيء` |
 | `result` | `نتيجة` | `ok`/`Ok` = `نجح`, `err`/`Err` = `خطأ` |
+| prelude | | `some`, `none`, `ok`, `err` (`موجود`, `لا_شيء`, `نجح`, `خطأ`) are written bare; a declaration of the same name shadows them in expressions; `خطأ` alone is false, `خطأ(e)` the error case |
 | `vector` | `متجه` | |
 
 ### Propagation and runtime failures
@@ -79,6 +82,7 @@ are ordinary identifiers with a reserved prefix that no source declares.
 | English | Arabic | Meaning |
 | --- | --- | --- |
 | `?` | `؟` (U+061F) | Propagation operator: the last postfix of a statement's right-hand side (token `استفهام`, `QUESTION_OPERATOR`) |
+| `,` | `،` (U+060C) | The comma, in every list (token `فاصلة`, `COMMA_OPERATOR`); `sultanc fmt` writes `،` in Arabic sources and `,` in English ones |
 | `panic` | `إنهيار` | Stop primitive: print a message and end the program (`std.process.panic`) |
 | `SULTANC-RUNTIME-PROGRAM-ERROR` | `انتهى_البرنامج_بخطأ` | Runtime failure identity: `main` returned an error ("the program ended with an error" / «انتهى البرنامج بخطأ») |
 | `SULTANC-RUNTIME-PROGRAM-STOPPED` | `توقف_البرنامج` | Runtime failure identity: the program stopped ("the program stopped" / «توقف البرنامج») |
@@ -146,6 +150,7 @@ Names built on the unsigned types follow them (`--segments`): the segment `غي�
 | physical register | `سجل_فعلي` |
 | compiler driver | `منسق_المترجم` |
 | module loading | `تحميل_وحدة` |
+| tuple `let` (destructuring) | `ليكن` المفككة (`تفكيك`) |
 
 Compiler terminology names the exact concept rather than translating an ambiguous English word
 mechanically. Terms such as *target*, *object*, *load* and *store* carry enough context to
@@ -445,6 +450,11 @@ Format names are transliterated as std already writes `جي_زيب` (gzip) and `
 | std.tls.stream | `tls_negotiated_protocol` | `بروتوكول_تدفق_تي_إل_إس` | the agreed ALPN protocol |
 | std.http.transport | `http_transport` (`tcp`, `tls`) | `ناقل_ويب` (`تي_سي_بي`, `تي_إل_إس`) | the byte transport under HTTP/1 and HTTP/2 |
 | std.http.server | `run_https_server`, `serve_http_connection`, `serve_https_connection` | `شغل_خادم_ويب_آمن`, `خدم_اتصال_ويب`, `خدم_اتصال_ويب_آمن` | HTTPS with ALPN; one connection |
+| std.http.server | `http_server_config_set_header_timeout_ms`, `http_server_config_set_body_timeout_ms`, `http_server_config_set_keep_alive_timeout_ms`, `http_server_config_set_max_connections` | `اضبط_مهلة_رأس_خادم_ويب`, `اضبط_مهلة_جسم_خادم_ويب`, `اضبط_مهلة_خمول_خادم_ويب`, `اضبط_أقصى_اتصالات_خادم_ويب` | slow-client limits ([Concurrency](concurrency.md#slow-clients-and-the-http-servers)) |
+| std.http.transport | `http_transport.tcp_async_timed`, `http_timed_tcp_stream` | `ناقل_ويب.تي_سي_بي_غير_متزامن_بمهلة`, `تدفق_بمهلة_ويب` | async TCP whose every wait is bounded |
+| std.async.net | `tcp_read_async_timeout`, `tcp_write_async_timeout`, `tcp_write_all_async_timeout` | `اقرأ_غير_متزامن_بمهلة`, `اكتب_غير_متزامن_بمهلة`, `اكتب_الكل_غير_متزامن_بمهلة` | async TCP with a bounded wait |
+| std.async.runtime | `wake_task` | `أيقظ_مهمة_منتظرة` | wake a waiting task (a spurious wake-up) |
+| std.tls.stream | `tls_stream_raw_descriptor` | `واصف_تدفق_تي_إل_إس` | the socket under a TLS stream |
 | std.http.http2.hpack | `hpack_encode_headers`, `hpack_decode_block` | `رمز_رؤوس_إتش_باك`, `فك_كتلة_إتش_باك` | header blocks |
 | std.http.http2.connection | `http2_connection`, `http2_read_and_process_frame`, `http2_flush_data`, `http2_send_headers` | `اتصال_ويب2`, `اقرأ_وعالج_إطار_ويب2`, `ادفع_بيانات_ويب2`, `أرسل_رؤوس_ويب2` | the shared connection layer |
 | std.http.http2.client | `http2_connect`, `http2_send_requests`, `http2_close_client` | `اتصل_عميل_ويب2`, `أرسل_طلبات_ويب2`, `أغلق_عميل_ويب2` | the client; concurrent streams |

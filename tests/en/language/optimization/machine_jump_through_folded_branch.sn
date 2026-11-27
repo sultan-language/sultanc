@@ -2,6 +2,7 @@
 // أهداف: arm64-darwin,x86_64-linux
 // خروج: 42
 // تفاضلي: نعم
+// تحسين: -O2
 // نظير: tests/ar/language/optimization/machine_jump_through_folded_branch.sn
 // The machine interpreter's optimizer (compiler/interpreter/machine/machine_optimizer.sn)
 // keeps a jump that other code reaches through a branch on a constant it removed. With

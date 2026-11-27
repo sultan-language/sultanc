@@ -1,0 +1,15 @@
+// اختبار: رفض
+// تشخيص: SULTANC-OWNERSHIP-MOVE-OUT-OF-REFERENCE
+// نظير: tests/en/diagnostics/e2e/match_expression_guard_moves_binding.sn
+// خرج-تشخيص-عربي: match_expression_guard_moves_binding.ar.stderr
+// خرج-تشخيص-إنجليزي: match_expression_guard_moves_binding.en.stderr
+// حارس تعبير المطابقة يستعير الروابط كما في الجملة: فلا ينقل الحمولة، وهي ما تزال
+// للمميز حين يفشل الحارس.
+نوع مسمى = | واحد بنوع نص | لا_شيء_هنا;
+عرف خذ(ق: نص): عدد { أرجع الطول(ق) مثل عدد; }
+عرف د(ن: مسمى): عدد {
+    أرجع طابق ن مع
+    | مسمى.واحد(ق) إذا خذ(ق) > 3 -> 1
+    | _ -> 0;
+}
+عرف الرئيسية(): عدد { أرجع د(مسمى.لا_شيء_هنا()); }

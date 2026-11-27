@@ -1,0 +1,10 @@
+// اختبار: رفض
+// تشخيص: SULTANC-TYPE-LET-TUPLE-SHAPE
+// نظير: tests/ar/diagnostics/e2e/let_tuple_not_tuple.sn
+// خرج-تشخيص-عربي: let_tuple_not_tuple.ar.stderr
+// خرج-تشخيص-إنجليزي: let_tuple_not_tuple.en.stderr
+// A tuple `let` takes apart a tuple: its Type is one.
+def main(): int {
+    let (a, b): int = 5;
+    return a + b;
+}

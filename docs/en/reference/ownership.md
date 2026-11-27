@@ -58,6 +58,27 @@ The rule has these parts:
 - **Borrowed views are not moves.** An immutable `let x: T = *r;` (or a projection through `r`), and a pattern
   binding whose scrutinee is borrowed storage, read the borrowed storage in place. A view is never destroyed and
   cannot be moved.
+- **Match arms that borrow** ([The `match` statement](../book/ch06-02-match.md)). A guard (`| p if c ->`) reads the
+  pattern's bindings as views of the scrutinee; nothing moves out of it until the arm is chosen, where the bindings
+  are bound again by the arm's rules. An arm whose pattern would hold one owned storage twice (an `as` name of an
+  owning value around an owning part) or binds owning elements of a vector borrows its scrutinee: all its bindings
+  of owning types are views, and the scrutinee keeps its value. An or-pattern's alternatives bind the same names,
+  and the matched alternative's unbound owned parts are destroyed when its arm moves parts out. A `rest name` of a
+  vector or slice pattern is a read-only slice of the scrutinee's own elements, of any element type, and owns nothing. It
+  borrows the scrutinee as a slice given a vector place does: a shared borrow of the local the scrutinee is rooted at
+  (or a read through the reference it is reached through), and the scrutinee's own origins for a slice. That local
+  cannot be moved or changed while the rest is live, and a value given the rest's origins and read after the local is
+  destroyed is `SULTANC-BORROW-REFERENCE-ESCAPE`. A temporary scrutinee is owned by the arm until it ends, and the
+  rest then cannot outlive the arm.
+- **Slices and writable views** ([Type system](type-system.md#slices)). `v[a..b]` borrows the place v as `&v`
+  does, and is read-only. `&mutable v[a..b]`, and `&mutable v` where a `mutable [] T` is expected, is a writable
+  view that borrows v as `&mutable v` does: while it is live, v is not read, written or viewed another way, and no
+  view outlives v.
+- **Slices of text** ([Type system](type-system.md#text-slices)). `&s[a..b]` is a `&string` that borrows the place s
+  as `&s` does: while it is live, s is not moved, assigned or changed (`SULTANC-BORROW-CONFLICT`), and it does not
+  outlive s (`SULTANC-BORROW-REFERENCE-ESCAPE`), so a slice of a local text is not returned while a slice of a text
+  the function was given is. A slice of text is always read-only. It owns nothing: `copy_text(w)` or `clone(w)` makes
+  an owned `string` of it.
 - **A view ends when the storage it reads is written.** The writes are an assignment through its reference;
   `append`, `swap`, `pop` or `truncate` through it; and passing the reference, or an exclusive reference local, as a
   `&mutable` argument. Using a view after it ends is reported as use after move
@@ -101,11 +122,30 @@ What counts as a use of the holder:
 - the destruction of a holder that owns storage (a vector of references, a closure, a record with an owning member
   and a reference): it keeps its borrows until it is destroyed at the end of its block, or moved.
 
-A borrow may not outlive the owner it borrows. An owner is destroyed where its scope ends, so a reference to it
-that is still read afterwards (a reference declared outside the owner's block, set inside it and read after it,
-or read again in the next iteration of a loop before it is set) escapes its valid scope
-(`SULTANC-BORROW-REFERENCE-ESCAPE`, marked where the owner's scope ends). Copying a plain value out through
-the reference before that point is fine.
+A borrow may not outlive the value it borrows. Every local ends where its scope ends (an owner is destroyed
+there; a plain value such as an `int`, a record of plain members or a fixed tuple is not destroyed, but its
+storage is no longer valid), so a reference to it, or to one of its members or elements, that is still read
+afterwards (a reference declared outside the local's block, set inside it and read after it, or read again in the
+next iteration of a loop before it is set) escapes its valid scope (`SULTANC-BORROW-REFERENCE-ESCAPE`, marked
+where the local's scope ends: the block's closing `}`, the end of a match arm, or the `break` or `continue` that
+leaves a loop body; the local is the related "original owner" and the later read the "invalid use"):
+
+```sultan
+def leak(c: bool): int {
+    let outer: int = 1;
+    let r: mutable &int = &outer;
+    if (c) {
+        let inner: int = 42;
+        r := &inner;
+    };                        // rejected: `inner` ends here and `r` is read below
+    return *r;
+}
+```
+
+The same holds for a reference stored into a member or element of a local that outlives the borrowed one
+(`holder.r := &inner`, `refs[0] := &inner`) or appended to a vector of references (`append(refs, &inner)`): the
+local the reference is stored into holds the borrow until its last use. Copying a plain value out through the
+reference before that point is fine, and so is a reference to a parameter or to a local of an enclosing block.
 
 A borrow used on one branch only leaves the value free on the other branch. Giving the holder a new value, or
 declaring it again in the next iteration, ends its old borrows. A value that leaves the function (a `return`, a
@@ -387,6 +427,8 @@ lowering destroys temporaries by these rules (`هل_أصل_مؤقت_للخفض`,
 - A member of a temporary is itself fresh: a counted one (a closure) is transferred rather than retained, and a
   fresh callee is dropped after the call. Match scrutinees, the reader primitives (`length`, `clone`) and slice views
   treat it as they treat the call results.
+- The value of a match expression is a temporary of the same kind: the owned value of the arm that matched
+  ([Type system](type-system.md#match-expressions)).
 
 `tests/*/language/surface/temporary_members.sn` (native and interpreter agree) and `temporary_members_rss_flat.sn`
 (live bytes flat over 10^5 rounds) cover them.
@@ -451,8 +493,12 @@ copies of the template and arguments it needs.
 
 ## Constraints on compiler sources
 
-Stage0 (`bootstrap/**`, owned by the bootstrap maintainers) compiles `compiler/**` and the std modules it imports,
-so those sources stay within Stage0's language. The constraints, with the reasons, are:
+These constraints are **lifted**. They held while the C Stage0 (`bootstrap/**`) compiled `compiler/**` and the
+std modules it imports. Stage0 is now frozen and compiles only the compiler of the commit `bootstrap/FROZEN` pins
+([Bootstrap](../internals/bootstrap.md), "Roots and policy"), so compiler and std sources may use any feature the
+committed seed's compiler has. The list stays as the record of Stage0's language, which `// مرحلة0: نعم` tests
+still check, and as the reason the existing sources look the way they do. The constraints, with the reasons,
+were:
 
 - **No copy primitive, no type reflection, no traits.** Copies are hand-written functions.
 - **No reference returns.** Stage0 rejects any function that returns a reference

@@ -250,6 +250,21 @@
     ألحق(الناتج, «SULTANC-RUN-NEEDS-PROCESS»);
     ألحق(الناتج, «SULTANC-NAME-CONSTRUCTOR-NOT-CALLED»);
     ألحق(الناتج, «SULTANC-OWNERSHIP-MERGE-CONFLICT»);
+    ألحق(الناتج, «SULTANC-ASM-UNSUPPORTED»);
+    ألحق(الناتج, «SULTANC-NAME-BUILTIN-NOT-CALLED»);
+    ألحق(الناتج, «SULTANC-PATTERN-ALTERNATIVE-BINDINGS»);
+    ألحق(الناتج, «SULTANC-PATTERN-ALTERNATIVE-TYPES»);
+    ألحق(الناتج, «SULTANC-TYPE-MATCH-WITHOUT-VALUE»);
+    ألحق(الناتج, «SULTANC-FLOW-MATCH-ARM-WITHOUT-VALUE»);
+    ألحق(الناتج, «SULTANC-MUTABILITY-VIEW-WITHOUT-MUTABLE»);
+    ألحق(الناتج, «SULTANC-PARSE-IF-WITHOUT-ELSE»);
+    ألحق(الناتج, «SULTANC-TYPE-IF-WITHOUT-VALUE»);
+    ألحق(الناتج, «SULTANC-FLOW-IF-BRANCH-WITHOUT-VALUE»);
+    ألحق(الناتج, «SULTANC-PARSE-LET-PATTERN»);
+    ألحق(الناتج, «SULTANC-TYPE-LET-TUPLE-SHAPE»);
+    ألحق(الناتج, «SULTANC-MUTABILITY-LET-TUPLE-MUTABLE»);
+    ألحق(الناتج, «SULTANC-TYPE-PRELUDE-CONSTRUCTOR-UNTYPED»);
+    ألحق(الناتج, «SULTANC-TYPE-TEXT-SLICE»);
     أرجع الناتج;
 }
 
@@ -492,6 +507,21 @@
     ألحق(الناتج, «run-needs-process»);
     ألحق(الناتج, «constructor-not-called»);
     ألحق(الناتج, «ownership-merge-conflict»);
+    ألحق(الناتج, «asm-unsupported»);
+    ألحق(الناتج, «builtin-not-called»);
+    ألحق(الناتج, «or-pattern-binding-mismatch»);
+    ألحق(الناتج, «or-pattern-type-mismatch»);
+    ألحق(الناتج, «match-without-value»);
+    ألحق(الناتج, «match-arm-without-value»);
+    ألحق(الناتج, «writable-view-without-mutable»);
+    ألحق(الناتج, «if-expression-without-else»);
+    ألحق(الناتج, «if-expression-without-value»);
+    ألحق(الناتج, «if-branch-without-value»);
+    ألحق(الناتج, «let-pattern»);
+    ألحق(الناتج, «let-tuple-shape»);
+    ألحق(الناتج, «let-tuple-mutable»);
+    ألحق(الناتج, «prelude-constructor-untyped»);
+    ألحق(الناتج, «text-slice»);
     أرجع الناتج;
 }
 

@@ -1,0 +1,6 @@
+error[SULTANC-MUTABILITY-LET-TUPLE-MUTABLE]: a name taken out of a tuple cannot be `mutable`
+  --> tests/en/diagnostics/e2e/let_tuple_mutable_name.sn:8:17..8:35
+   |
+ 8 |     let (a, b): (mutable int, int) = (1, 2);
+   |                 ^^^^^^^^^^^^^^^^^^
+   |

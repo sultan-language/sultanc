@@ -1,0 +1,6 @@
+error[SULTANC-PARSE-LET-PATTERN]: a tuple `let` takes a tuple apart only into names, `_` and nested tuples
+  --> tests/ar/diagnostics/e2e/let_tuple_literal_pattern.sn:8:11..8:12
+   |
+ 8 |     ليكن (0، العدد): (عدد، عدد) = (0، 3);
+   |           ^
+   |

@@ -1,0 +1,14 @@
+// اختبار: رفض
+// تشخيص: SULTANC-BORROW-CONFLICT
+// نظير: tests/ar/diagnostics/e2e/slice_read_while_writable.sn
+// خرج-تشخيص-عربي: slice_read_while_writable.ar.stderr
+// خرج-تشخيص-إنجليزي: slice_read_while_writable.en.stderr
+// While a writable view of a vector is in use, the vector is not read
+// another way.
+def main(): int {
+    let values: mutable vector int = [1, 2, 3];
+    let part: mutable [] int = &mutable values[..];
+    let first: int = values[0];
+    part[0] := first;
+    return 0;
+}

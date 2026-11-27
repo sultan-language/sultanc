@@ -1,0 +1,6 @@
+خطأ[SULTANC-MUTABILITY-LET-TUPLE-MUTABLE]: لا يكون الاسم المأخوذ من صف ⁨`متغير`⁩
+  --> tests/ar/diagnostics/e2e/let_tuple_mutable_name.sn:8:18..8:34
+   |
+ 8 |     ليكن (أ، ب): (متغير عدد، عدد) = (1، 2);
+   |                  ^^^^^^^^^^^^^^^^
+   |

@@ -49,8 +49,9 @@ Environment variables:
 | `SULTANC_BIN` | compiler the runner tests (default `./build/sultanc`); `ci_run.sh` sets it from `SC` |
 | `SULTANC_STAGE0_BIN` | a C Stage0 binary; enables the `// مرحلة0: نعم` comparison |
 | `SULTANC_TEST_TIMEOUT` | time limit of each command the runner starts, in seconds (default 300; 0: none). A command past it is killed, its check fails, and `TIMEOUT` with its name is printed at once; the convergence self-builds get six times the limit. Windows waits without a limit |
+| `SULTANC_CACHE` | the compilation cache of the runner's builds ([The compilation cache](../internals/compile-cache.md)); `off` runs every build uncached. The fixpoint, the RSS measurements and the determinism check pass `--no-cache` themselves |
 | `SULTANC_TEST_JOBS` | workers for the discovered tests (default: the available processors) |
-| `SULTANC_TEST_STAGE2_BACKEND` | the backend that generated the compiler under test (`native` or `llvm`); the convergence check builds Stage3 and Stage4 with it. The CI scripts set it where Stage2 comes from LLVM |
+| `SULTANC_TEST_STAGE2_BACKEND` | the backend that generated the compiler under test (`native` or `llvm`); the fixpoint check builds S3 with it (always at `-O2`, as every build of the compiler) |
 | `SULTANC_C_SYSROOT` | C headers for the targets the runner builds C-importing tests for; on a Windows host without it those builds (Linux and macOS targets) are skipped, as Windows has no headers of those targets |
 
 On Windows the runner starts each command itself, without a shell: std's `Command` sets its environment, folder and standard input and captures both outputs. A few system checks still use `SULTANC_TEST_SH`.
@@ -108,6 +109,7 @@ or modules of other tests.
 | `// خطأ-قياسي-ملف: <file>` | the exact standard error of the run, stored in a file beside the test |
 | `// بيئة: NAME=value` | environment assignments for the test program's runs, native and interpreted; several are separated by spaces (`NAME=value OTHER=value`) |
 | `// ربط: c,m` | libraries the test's executable and its interpretation link (`-l c -l m`): SultanC links no C library on its own, so a test that calls one through a C import names it |
+| `// تحسين: -O2` | the `-O` level of the test's builds and interpretations; without it they take the compiler's default, which optimizes nothing (`-O0`). A test of what the MSIR optimization pipeline rewrites names the level it needs |
 | `// تفاضلي: نعم` | on a differential test, also compare standard error between native and interpreted runs |
 | `// نظير: tests/ar/…` | the Arabic or English counterpart of the test |
 | `// مرحلة0: نعم` | the C Stage0 must agree with the compiler under test |
@@ -164,9 +166,9 @@ Tests that exist only in one language, such as ABI and layout checks, omit `نظ
 
 ### Stage0 agreement
 
-Compiler and std sources must stay within the language the C Stage0 accepts
-([Bootstrap](../internals/bootstrap.md)). A test that guards such a contract carries
-`// مرحلة0: نعم`. When `SULTANC_STAGE0_BIN` names a Stage0 binary, the runner also compiles the file
+The frozen C Stage0 compiles only the pinned commit's compiler ([Bootstrap](../internals/bootstrap.md)), so
+compiler and std sources are no longer held to its language. A test that pins what Stage0 accepts or
+rejects carries `// مرحلة0: نعم`. When `SULTANC_STAGE0_BIN` names a Stage0 binary, the runner also compiles the file
 with it for the host target. An accept test must be accepted, and a reject test must be rejected with
 the expected diagnostic code in the output. Without a Stage0 binary the check is skipped.
 
@@ -209,7 +211,7 @@ These are skipped unless the environment variable is set to `1`.
 - `SULTANC_TEST_ALLOCATIONS`: on macOS, exact high-water allocation reports through `malloc_history`
   and `vmmap`. Only system inspection tools are used; the orchestration, thresholds, parsing and
   reporting are SultanC code.
-- `SULTANC_TEST_CONVERGENCE`: Stage2 to Stage3 to Stage4 byte convergence.
+- `SULTANC_TEST_CONVERGENCE`: the self-host fixpoint: the compiler under test (S2) builds S3, and S3 must equal S2 byte for byte.
 
 ## Other test tools
 

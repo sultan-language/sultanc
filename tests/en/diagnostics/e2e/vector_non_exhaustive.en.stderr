@@ -1,0 +1,7 @@
+error[SULTANC-PATTERN-NON-EXHAUSTIVE]: non-exhaustive pattern: `[_, _, rest _]` not covered — Every value of the matched type must match one of the arms.
+  --> tests/en/diagnostics/e2e/vector_non_exhaustive.sn:8:11..8:12
+   |
+ 8 |     match v with
+   |           ^
+   |
+  = help: add an arm for each case that is not covered

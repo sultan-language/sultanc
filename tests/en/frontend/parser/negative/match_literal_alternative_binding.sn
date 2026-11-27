@@ -1,0 +1,8 @@
+// اختبار: رفض
+// تشخيص: SULTANC-PATTERN-ALTERNATIVE-BINDINGS
+// نظير: tests/ar/frontend/parser/negative/match_literal_alternative_binding.sn
+// Alternatives may be any patterns, but every alternative binds the same
+// names: `x` is bound by the second alternative only (found by fuzzing, when
+// only literals could be alternatives).
+def f(e: int): int { match e with | 1 | x -> { return 0; }; return 1; }
+def main(): int { return f(1); }

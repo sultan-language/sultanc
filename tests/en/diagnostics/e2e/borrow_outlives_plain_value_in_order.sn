@@ -1,0 +1,150 @@
+// اختبار: رفض
+// تشخيص: SULTANC-BORROW-REFERENCE-ESCAPE
+// نظير: tests/ar/diagnostics/e2e/borrow_outlives_plain_value_in_order.sn
+// خرج-تشخيص-عربي: borrow_outlives_plain_value_in_order.ar.stderr
+// خرج-تشخيص-إنجليزي: borrow_outlives_plain_value_in_order.en.stderr
+// A borrow may not outlive the local it borrows, even one that owns no
+// storage (docs/en/reference/ownership.md, "Borrow regions"): a plain value
+// is not destroyed where its scope ends, but a reference to it that is read
+// afterwards escapes its valid scope, as one to an owner does. The error is
+// marked where the local's scope ends (a block's closing brace, the `break`
+// or `continue` that leaves a loop body, the end of a match arm), with the
+// local and the later read as related spans: an `int`, a member of a record
+// of numbers and an element of a tuple set in a branch and read after it,
+// one set in a loop body and read after the loop, one read again in the next
+// iteration, one set before `break` and one before `continue`, one set in a
+// match arm, and a reference stored into a record member, a vector element
+// and appended to a vector that outlive the local. Each function reports its
+// first error.
+type Pair = { a: int, b: int };
+type Holder = { item: &int };
+type Choice =
+    | one of int
+    | other
+;
+
+def int_in_branch(flag: bool): int {
+    let outer: int = 1;
+    let r: mutable &int = &outer;
+    if (flag) {
+        let inner: int = 42;
+        r := &inner;
+    };
+    return *r;
+}
+
+def member_in_branch(flag: bool): int {
+    let outer: int = 1;
+    let r: mutable &int = &outer;
+    if (flag) {
+        let pair: Pair = { a: 40, b: 2 };
+        r := &pair.b;
+    };
+    return *r;
+}
+
+def element_in_branch(flag: bool): int {
+    let outer: int = 1;
+    let r: mutable &int = &outer;
+    if (flag) {
+        let both: (int, int) = (40, 2);
+        r := &both[1];
+    };
+    return *r;
+}
+
+def set_in_loop(): int {
+    let outer: int = 1;
+    let r: mutable &int = &outer;
+    let i: mutable uint = 0;
+    while (i < 3) {
+        let inner: int = 5;
+        r := &inner;
+        i := i + 1;
+    }
+    return *r;
+}
+
+def read_next_iteration(): int {
+    let outer: int = 1;
+    let r: mutable &int = &outer;
+    let total: mutable int = 0;
+    let i: mutable uint = 0;
+    while (i < 3) {
+        total := total + *r;
+        let inner: int = 5;
+        r := &inner;
+        i := i + 1;
+    }
+    return total;
+}
+
+def set_before_break(): int {
+    let outer: int = 1;
+    let r: mutable &int = &outer;
+    while (true) {
+        let inner: int = 7;
+        r := &inner;
+        break;
+    }
+    return *r;
+}
+
+def set_before_continue(): int {
+    let outer: int = 1;
+    let r: mutable &int = &outer;
+    let total: mutable int = 0;
+    let i: mutable uint = 0;
+    while (i < 3) {
+        i := i + 1;
+        total := total + *r;
+        let inner: int = 3;
+        r := &inner;
+        continue;
+    }
+    return total;
+}
+
+def set_in_arm(choice: Choice): int {
+    let outer: int = 1;
+    let r: mutable &int = &outer;
+    match choice with
+    | Choice.one(n) -> {
+        let inner: int = n;
+        r := &inner;
+    }
+    | Choice.other -> { r := &outer; };
+    return *r;
+}
+
+def stored_in_member(flag: bool): int {
+    let outer: int = 1;
+    let holder: mutable Holder = { item: &outer };
+    if (flag) {
+        let inner: int = 42;
+        holder.item := &inner;
+    };
+    return *holder.item;
+}
+
+def stored_in_element(flag: bool): int {
+    let outer: int = 1;
+    let refs: mutable vector &int = [&outer];
+    if (flag) {
+        let inner: int = 42;
+        refs[0] := &inner;
+    };
+    return *refs[0];
+}
+
+def appended(flag: bool): int {
+    let outer: int = 1;
+    let refs: mutable vector &int = [&outer];
+    if (flag) {
+        let inner: int = 42;
+        append(refs, &inner);
+    };
+    return *refs[length(refs) - 1];
+}
+
+def main(): int { return 0; }

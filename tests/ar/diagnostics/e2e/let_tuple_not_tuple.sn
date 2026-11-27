@@ -1,0 +1,10 @@
+// اختبار: رفض
+// تشخيص: SULTANC-TYPE-LET-TUPLE-SHAPE
+// نظير: tests/en/diagnostics/e2e/let_tuple_not_tuple.sn
+// خرج-تشخيص-عربي: let_tuple_not_tuple.ar.stderr
+// خرج-تشخيص-إنجليزي: let_tuple_not_tuple.en.stderr
+// تفكك `ليكن` المفككة صفا: فنوعها صف.
+عرف الرئيسية(): عدد {
+    ليكن (أ، ب): عدد = 5;
+    أرجع أ + ب;
+}

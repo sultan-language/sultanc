@@ -1,0 +1,7 @@
+error[SULTANC-PARSE-IF-WITHOUT-ELSE]: an `if` used as a value has no `else`
+  --> tests/en/diagnostics/e2e/if_expression_without_else.sn:9:24..9:45
+   |
+ 9 |     let text: string = if (n > 0) "positive";
+   |                        ^^^^^^^^^^^^^^^^^^^^^
+   |
+  = help: add `else` with the value for when the condition is false

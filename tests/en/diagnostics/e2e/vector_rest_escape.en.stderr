@@ -1,0 +1,16 @@
+error[SULTANC-BORROW-REFERENCE-ESCAPE]: reference escapes its valid scope — The escaping reference is `kept`. A reference outlives the value it points to.
+  --> tests/en/diagnostics/e2e/vector_rest_escape.sn:16:5..16:6
+    |
+ 16 |     };
+    |     ^
+    |
+  ::: tests/en/diagnostics/e2e/vector_rest_escape.sn:12:9..12:47
+    |
+ 12 |         let v: mutable vector int = [1, 2, 3];
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ original owner
+    |
+  ::: tests/en/diagnostics/e2e/vector_rest_escape.sn:17:19..17:23
+    |
+ 17 |     return length(kept) as int;
+    |                   ^^^^ invalid use
+    |

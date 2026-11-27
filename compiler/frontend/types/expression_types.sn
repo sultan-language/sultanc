@@ -42,6 +42,8 @@
 // span and what it stands for. فك (الصنف 0): `r.f` through references reads
 // `(*r).f`, العدد levels deep (`&&T` twice). استعارة (الصنف 1): a text
 // argument for a `&string` parameter is borrowed, as if written `&arg`.
+// عرض (الصنف 2): `&mutable v` where a `mutable [] T` is expected is the
+// writable view of all of v, as if written `&mutable v[..]`.
 عام نوع موضع_ضمني = {
     النطاق: نطاق,
     الصنف: ط8,
@@ -92,6 +94,7 @@
 عرف ابن_فهرس_نطاقات_تعبير_فارغا(السعة: طبيعي): متجه ط32 {
     ليكن الناتج: متغير متجه ط32 = [];
     ليكن ف: متغير طبيعي = 0;
+    احجز_سعة(الناتج, السعة);
     طالما (ف < السعة) { ألحق(الناتج, 0); ف := ف + 1; }
     أرجع الناتج;
 }

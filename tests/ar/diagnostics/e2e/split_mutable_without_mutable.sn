@@ -1,0 +1,12 @@
+// اختبار: رفض
+// تشخيص: SULTANC-MUTABILITY-VIEW-WITHOUT-MUTABLE
+// نظير: tests/en/diagnostics/e2e/split_mutable_without_mutable.sn
+// خرج-تشخيص-عربي: split_mutable_without_mutable.ar.stderr
+// خرج-تشخيص-إنجليزي: split_mutable_without_mutable.en.stderr
+// `اقسم_قابلا_للتعديل` تصنع عروضا قابلة للكتابة، فتُعطى `&متغير م`.
+عرف الرئيسية(): عدد {
+    ليكن القيم: متغير متجه عدد = [1، 2، 3];
+    طابق اقسم_قابلا_للتعديل(القيم، 1) مع
+    | (اليسار، اليمين) -> { اليسار[0] := 0; اليمين[0] := 0; };
+    أرجع القيم[0];
+}

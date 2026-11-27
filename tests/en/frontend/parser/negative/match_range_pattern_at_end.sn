@@ -1,0 +1,6 @@
+// اختبار: رفض
+// تشخيص: SULTANC-PARSE-SYNTAX
+// نظير: tests/ar/frontend/parser/negative/match_range_pattern_at_end.sn
+// `range` is a contextual word: cut off at the end of the file, `| range` is a binding
+// pattern, and the missing `->` is the syntax error (found by fuzzing).
+def f(e: int): int { match e with | range

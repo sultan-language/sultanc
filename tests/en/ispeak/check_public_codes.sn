@@ -250,6 +250,21 @@ def pinned_codes(): vector string {
     append(result, "SULTANC-RUN-NEEDS-PROCESS");
     append(result, "SULTANC-NAME-CONSTRUCTOR-NOT-CALLED");
     append(result, "SULTANC-OWNERSHIP-MERGE-CONFLICT");
+    append(result, "SULTANC-ASM-UNSUPPORTED");
+    append(result, "SULTANC-NAME-BUILTIN-NOT-CALLED");
+    append(result, "SULTANC-PATTERN-ALTERNATIVE-BINDINGS");
+    append(result, "SULTANC-PATTERN-ALTERNATIVE-TYPES");
+    append(result, "SULTANC-TYPE-MATCH-WITHOUT-VALUE");
+    append(result, "SULTANC-FLOW-MATCH-ARM-WITHOUT-VALUE");
+    append(result, "SULTANC-MUTABILITY-VIEW-WITHOUT-MUTABLE");
+    append(result, "SULTANC-PARSE-IF-WITHOUT-ELSE");
+    append(result, "SULTANC-TYPE-IF-WITHOUT-VALUE");
+    append(result, "SULTANC-FLOW-IF-BRANCH-WITHOUT-VALUE");
+    append(result, "SULTANC-PARSE-LET-PATTERN");
+    append(result, "SULTANC-TYPE-LET-TUPLE-SHAPE");
+    append(result, "SULTANC-MUTABILITY-LET-TUPLE-MUTABLE");
+    append(result, "SULTANC-TYPE-PRELUDE-CONSTRUCTOR-UNTYPED");
+    append(result, "SULTANC-TYPE-TEXT-SLICE");
     return result;
 }
 
@@ -492,6 +507,21 @@ def pinned_kinds(): vector string {
     append(result, "run-needs-process");
     append(result, "constructor-not-called");
     append(result, "ownership-merge-conflict");
+    append(result, "asm-unsupported");
+    append(result, "builtin-not-called");
+    append(result, "or-pattern-binding-mismatch");
+    append(result, "or-pattern-type-mismatch");
+    append(result, "match-without-value");
+    append(result, "match-arm-without-value");
+    append(result, "writable-view-without-mutable");
+    append(result, "if-expression-without-else");
+    append(result, "if-expression-without-value");
+    append(result, "if-branch-without-value");
+    append(result, "let-pattern");
+    append(result, "let-tuple-shape");
+    append(result, "let-tuple-mutable");
+    append(result, "prelude-constructor-untyped");
+    append(result, "text-slice");
     return result;
 }
 

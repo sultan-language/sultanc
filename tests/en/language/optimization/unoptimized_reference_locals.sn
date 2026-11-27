@@ -1,0 +1,112 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// نظير: tests/ar/language/optimization/unoptimized_reference_locals.sn
+// Scalar locals that are not promotable, read after they are reassigned:
+// a reference to another local bound once, reassigned in a branch, in a match
+// arm and in a loop, a `&mutable` reference written through after it is
+// reassigned, a reference given a global's address and then a local's, a
+// slice view reassigned, and a character given a constant and then another
+// local's value. The runner also builds this program with the LLVM backend at
+// -O0 (tests/runner/suites/cli.sn,
+// اختبر_مراجع_محلية_بإل_إل_في_إم_دون_تحسين), where every local stays in its
+// frame slot.
+
+type Choice = | First | Second;
+
+let primes: vector int = [2, 3, 5, 7];
+
+def once(): int {
+    let a: int = 3;
+    let b: int = 8;
+    let r: &int = &a;
+    return *r + b;
+}
+
+def pick(c: bool): int {
+    let a: int = 40;
+    let b: int = 42;
+    let r: mutable &int = &a;
+    if (c) {
+        r := &b;
+    };
+    return *r;
+}
+
+def by_choice(k: Choice): int {
+    let a: int = 1;
+    let b: int = 6;
+    let r: mutable &int = &a;
+    match k with
+    | Choice.First -> { }
+    | Choice.Second -> { r := &b; };
+    return *r;
+}
+
+def in_loop(n: int): int {
+    let a: int = 2;
+    let b: int = 3;
+    let r: mutable &int = &a;
+    let total: mutable int = 0;
+    let i: mutable int = 0;
+    while (i < n) {
+        total := total + *r;
+        r := &b;
+        i := i + 1;
+    }
+    return total;
+}
+
+def write_through(c: bool): int {
+    let a: mutable int = 1;
+    let b: mutable int = 2;
+    let r: mutable &mutable int = &mutable a;
+    if (c) {
+        r := &mutable b;
+    };
+    *r := *r + 4;
+    return a * 10 + b;
+}
+
+def from_global(c: bool): int {
+    let mine: vector int = [9, 1];
+    let r: mutable &vector int = &primes;
+    r := &mine;
+    if (c) {
+        r := &primes;
+    };
+    return (*r)[0];
+}
+
+def view(c: bool): int {
+    let first: mutable vector int = [1, 2];
+    let second: mutable vector int = [7, 8];
+    let s: mutable [] int = &mutable first;
+    if (c) {
+        s := &mutable second;
+    };
+    return s[0];
+}
+
+def letter(c: bool): int {
+    let n: char = 'n';
+    let ch: mutable char = 'a';
+    ch := n;
+    if (c) {
+        ch := 'z';
+    };
+    return (ch as u32) as int;
+}
+
+def main(): int {
+    let errors: mutable int = 0;
+    if (once() != 11) { errors := errors + 1; };
+    if (pick(true) != 42 || pick(false) != 40) { errors := errors + 1; };
+    if (by_choice(Choice.First()) != 1 || by_choice(Choice.Second()) != 6) { errors := errors + 1; };
+    if (in_loop(3) != 8) { errors := errors + 1; };
+    if (write_through(true) != 16 || write_through(false) != 52) { errors := errors + 1; };
+    if (from_global(false) != 9 || from_global(true) != 2) { errors := errors + 1; };
+    if (view(false) != 1 || view(true) != 7) { errors := errors + 1; };
+    if (letter(false) != 110 || letter(true) != 122) { errors := errors + 1; };
+    return 42 - errors;
+}

@@ -1,0 +1,6 @@
+error[SULTANC-FLOW-LOOP-CONTROL-OUTSIDE-LOOP]: loop control statement is outside of any loop
+  --> tests/ar/diagnostics/semantic/match_expression_loop_control.sn:10:14..10:27
+    |
+ 10 |     | 1 -> { اخرج_من_حلقة; }
+    |              ^^^^^^^^^^^^^
+    |

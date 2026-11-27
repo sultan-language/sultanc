@@ -1,0 +1,12 @@
+// اختبار: رفض
+// تشخيص: SULTANC-PATTERN-ALTERNATIVE-BINDINGS
+// نظير: tests/en/diagnostics/e2e/or_pattern_missing_name.sn
+// خرج-تشخيص-عربي: or_pattern_missing_name.ar.stderr
+// خرج-تشخيص-إنجليزي: or_pattern_missing_name.en.stderr
+// كل بديل يربط الأسماء نفسها: `س` يربطه البديل الأول وحده.
+عرف محور(ز: (عدد, عدد)): عدد {
+    طابق ز مع
+    | (0, س) | (ص, 0) -> { أرجع 1; }
+    | _ -> { أرجع 0; };
+}
+عرف الرئيسية(): عدد { أرجع محور((0, 1)); }

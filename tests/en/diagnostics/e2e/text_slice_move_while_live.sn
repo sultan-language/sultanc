@@ -1,0 +1,17 @@
+// اختبار: رفض
+// تشخيص: SULTANC-BORROW-CONFLICT
+// نظير: tests/ar/diagnostics/e2e/text_slice_move_while_live.sn
+// خرج-تشخيص-عربي: text_slice_move_while_live.ar.stderr
+// خرج-تشخيص-إنجليزي: text_slice_move_while_live.en.stderr
+// A slice of text borrows its text: the text cannot be moved while the slice
+// is alive.
+def consume(text: string): int {
+    return length(text);
+}
+
+def main(): int {
+    let greeting: string = "hello";
+    let middle: &string = &greeting[1..3];
+    let moved: int = consume(greeting);
+    return moved + length(*middle);
+}

@@ -1,0 +1,6 @@
+خطأ[SULTANC-TYPE-MISMATCH]: النوع الموجود ⁨`نص`⁩ لا يطابق النوع المتوقع ⁨`عدد`⁩ — تعطي أذرع تعبير المطابقة كلها قيمة من نوع واحد، نوع قيمتها الأولى.
+  --> tests/en/diagnostics/semantic/match_expression_arm_types.sn:10:41..10:46
+    |
+ 10 |     match (match n with | 1 -> 2 | _ -> "two") with
+    |                                         ^^^^^
+    |

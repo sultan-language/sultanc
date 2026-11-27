@@ -1,0 +1,5 @@
+// اختبار: رفض
+// تشخيص: SULTANC-ASM-UNSUPPORTED
+// نظير: tests/en/compiler/semantic/regression/asm_statement.sn
+// `تجميع` داخل دالة يُبلَّغ عنه غير مدعوم (وُجد بالتشويش).
+عرف الرئيسية(): عدد { غير_آمن { تجميع «nop»; }; أرجع 0; }

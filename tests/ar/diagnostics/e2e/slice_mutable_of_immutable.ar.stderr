@@ -1,0 +1,6 @@
+خطأ[SULTANC-MUTABILITY-WRITE-TO-IMMUTABLE]: لا يمكن الكتابة إلى قيمة غير متغيرة — القيمة غير مصرح بأنها قابلة للتغيير.
+  --> tests/ar/diagnostics/e2e/slice_mutable_of_immutable.sn:11:27..11:32
+    |
+ 11 |     أرجع صفر_الأول(&متغير القيم[0..1]);
+    |                           ^^^^^
+    |

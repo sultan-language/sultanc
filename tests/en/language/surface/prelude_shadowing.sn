@@ -1,0 +1,23 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/language/surface/prelude_shadowing.sn
+// A declaration with a prelude constructor's name shadows it in expressions:
+// a local `none` and a function `some` are used as written. In a pattern the
+// bare forms stay the constructors.
+def some(n: int): int { return n + 1; }
+
+def count(o: option int): int {
+    match o with
+    | some(n) -> { return n; }
+    | none -> { return 0; };
+}
+
+def main(): int {
+    let none: int = 40;
+    if (some(1) != 2) { return 1; };
+    let present: option int = option.some(2);
+    if (count(present) != 2 || count(option.none()) != 0) { return 2; };
+    return none + count(present);
+}

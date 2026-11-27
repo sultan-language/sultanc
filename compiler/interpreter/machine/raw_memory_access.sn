@@ -4,7 +4,7 @@
 // store unaligned scalars), instead of a read-modify-write of the enclosing
 // aligned words. The C Stage0 (bootstrap/) has no casts between integers and
 // pointers: its build binds raw_memory_access_unavailable.sn in this module's
-// place (cmake/modules/Stage1.cmake), whose Stage1 keeps the word accesses.
+// place (bootstrap/chain.sh), whose Stage1 keeps the word accesses.
 
 مرادف جمع_ملتف_آلة = بدائي_جمع_ملتف;
 

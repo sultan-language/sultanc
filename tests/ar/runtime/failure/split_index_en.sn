@@ -1,0 +1,18 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 1
+// تفاضلي: نعم
+// بيئة: SULTANC_LANG=en
+// خرج-قياسي: <فارغ>
+// خطأ-قياسي-ملف: split_index_en.stderr
+// نظير: tests/en/runtime/failure/split_index_en.sn
+// A split index past the length of the vector (0 <= i <= length) stops the
+// program through the panic path (docs/en/reference/errors.md, "Runtime
+// checks"): the frame "the program stopped", then the index, the length and
+// the place of the split, exit status 1.
+عرف الرئيسية(): عدد {
+    ليكن القيم: متغير متجه عدد = [10، 20، 30];
+    ليكن عند: عدد = 4;
+    طابق اقسم_قابلا_للتعديل(&متغير القيم، عند) مع
+    | (اليسار، اليمين) -> { أرجع الطول(اليسار) + الطول(اليمين); };
+}

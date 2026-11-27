@@ -1,0 +1,13 @@
+// اختبار: رفض
+// تشخيص: SULTANC-TYPE-MISMATCH
+// نظير: tests/en/diagnostics/semantic/match_expression_context_type.sn
+// خرج-تشخيص-عربي: match_expression_context_type.ar.stderr
+// خرج-تشخيص-إنجليزي: match_expression_context_type.en.stderr
+// مع نوع من السياق، تلقاه قيمة كل ذراع كما تلقاه قيمة السياق نفسها.
+عرف الرئيسية(): عدد {
+    ليكن ن: عدد = 1;
+    ليكن س: عدد = طابق ن مع
+    | 1 -> «واحد»
+    | _ -> 0;
+    أرجع س;
+}

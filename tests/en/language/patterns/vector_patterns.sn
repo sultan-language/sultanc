@@ -1,0 +1,212 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/language/patterns/vector_patterns.sn
+// Vector and slice patterns: `[]`, `[a]`, `[a, b]`, `[first, rest _]`,
+// `[first, rest tail]`, `[rest _, last]`, `[first, rest _, last]`; exhaustive
+// by length (`[]` and `[_, rest _]` cover every vector), with guards and inside
+// or-patterns. Elements that own storage are borrowed views of the vector,
+// on an owned vector, a borrowed one or a temporary. `rest tail` is a slice of
+// the matched sequence's own elements, of any element type, at the end, the
+// front or the middle, inside a loop, an or-pattern and a recursion over a
+// slice; it copies nothing. The allocator's counters show nothing is left
+// behind and that a rest allocates nothing.
+import std.os.allocation;
+import std.text.number;
+
+def describe(v: vector int): int {
+    match v with
+    | [] -> { return 0; }
+    | [a] -> { return a; }
+    | [a, b] -> { return a + b; }
+    | [first, rest _, last] -> { return first * 100 + last; };
+}
+
+def sum(s: [] int): int {
+    let total: mutable int = 0;
+    let i: mutable uint = 0;
+    while (i < (length(s) as uint)) {
+        total := total + s[i];
+        i := i + 1;
+    }
+    return total;
+}
+
+def head_rest(v: vector int): int {
+    match v with
+    | [first, rest tail] -> { return first + 10 * sum(tail); }
+    | [] -> { return 0; };
+}
+
+// A `rest tail` inside a loop: each pass views the vector again.
+def rest_in_loop(v: vector int): int {
+    let total: mutable int = 0;
+    let i: mutable int = 0;
+    while (i < 3) {
+        match v with
+        | [_, rest tail] -> { total := total + sum(tail); }
+        | [] -> { };
+        i := i + 1;
+    }
+    return total;
+}
+
+// A rest of a slice is a narrower slice of the same memory.
+def sum_slice(s: [] int): int {
+    match s with
+    | [] -> { return 0; }
+    | [x, rest tail] -> { return x + sum_slice(tail); };
+}
+
+def middle_length(v: vector int): int {
+    match v with
+    | [_, rest middle, _] -> { return length(middle) as int; }
+    | _ -> { return 0; };
+}
+
+def or_rest(v: vector int): int {
+    match v with
+    | [0, rest r] | [1, rest r] -> { return sum(r); }
+    | _ -> { return 0; };
+}
+
+def init_last(v: vector int): int {
+    match v with
+    | [rest init, last] -> { return last + 10 * (length(init) as int); }
+    | [] -> { return 0; };
+}
+
+def guarded(v: vector int): int {
+    match v with
+    | [x, rest _] if x > 5 -> { return 1; }
+    | [_, rest _] -> { return 2; }
+    | [] -> { return 3; };
+}
+
+def first_some(v: vector option int): int {
+    match v with
+    | [option.some(n), rest _] | [_, option.some(n), rest _] -> { return n; }
+    | _ -> { return 0; };
+}
+
+def slice_pair(s: [] int): int {
+    match s with
+    | [a, b, rest _] -> { return a * b; }
+    | _ -> { return 0; };
+}
+
+def text(i: int): string { return int_to_text(1000000 + i); }
+
+def names(i: int): vector string {
+    let v: mutable vector string = [];
+    append(v, text(i));
+    append(v, text(i + 1));
+    append(v, text(i + 2));
+    return v;
+}
+
+def owned_elements(v: vector string): int {
+    match v with
+    | [a, b, rest _] -> { return (length(a) as int) + (length(b) as int); }
+    | [a] -> { return length(a) as int; }
+    | [] -> { return 0; };
+}
+
+// A rest of elements that own storage: views of the vector's texts.
+def total_length(s: [] string): int {
+    let total: mutable int = 0;
+    let i: mutable uint = 0;
+    while (i < (length(s) as uint)) {
+        total := total + (length(s[i]) as int);
+        i := i + 1;
+    }
+    return total;
+}
+
+def rest_of_names(v: vector string): int {
+    match v with
+    | [_, rest tail] -> { return total_length(tail); }
+    | [] -> { return 0; };
+}
+
+def borrowed_rest(v: &vector string): int {
+    match *v with
+    | [first, rest tail] -> { return (length(first) as int) + total_length(tail); }
+    | [] -> { return 0; };
+}
+
+def temporary_rest(i: int): int {
+    match names(i) with
+    | [_, rest tail] -> { return total_length(tail); }
+    | [] -> { return 0; };
+}
+
+def borrowed_elements(v: &vector string): int {
+    match *v with
+    | [rest _, last] -> { return length(last) as int; }
+    | [] -> { return 0; };
+}
+
+def temporary_elements(i: int): int {
+    match names(i) with
+    | [first, rest _] -> { return length(first) as int; }
+    | [] -> { return 0; };
+}
+
+def rounds(): int {
+    let i: mutable int = 0;
+    let total: mutable int = 0;
+    while (i < 100) {
+        total := total + owned_elements(names(i));
+        let kept: vector string = names(i);
+        total := total + borrowed_elements(&kept);
+        total := total + temporary_elements(i);
+        total := total + rest_of_names(names(i)) - 14;
+        total := total + borrowed_rest(&kept) - 21;
+        total := total + temporary_rest(i) - 14;
+        let numbers: vector int = [i, 1, 2, 3];
+        total := total + head_rest(clone(&numbers)) - i;
+        total := total + rest_in_loop(clone(&numbers)) - 18;
+        i := i + 1;
+    }
+    return total;
+}
+
+def main(): int {
+    let empty: vector int = [];
+    let one: vector int = [7];
+    let two: vector int = [3, 4];
+    let many: vector int = [1, 2, 3, 9];
+    if (describe(clone(&empty)) != 0 || describe(clone(&one)) != 7 || describe(clone(&two)) != 7 || describe(clone(&many)) != 109) { return 1; };
+    if (head_rest(clone(&many)) != 141 || head_rest(clone(&empty)) != 0) { return 2; };
+    if (init_last(clone(&many)) != 39 || init_last(clone(&one)) != 7) { return 3; };
+    if (guarded(clone(&one)) != 1 || guarded(clone(&two)) != 2 || guarded(clone(&empty)) != 3) { return 4; };
+    let some_first: vector option int = [option.some(5), option.none()];
+    let some_second: vector option int = [option.none(), option.some(6)];
+    let none_at_all: vector option int = [option.none()];
+    if (first_some(clone(&some_first)) != 5 || first_some(clone(&some_second)) != 6 || first_some(clone(&none_at_all)) != 0) {
+        return 5;
+    };
+    if (slice_pair(clone(&many)) != 2 || slice_pair(clone(&one)) != 0) { return 6; };
+    if (rest_in_loop(clone(&many)) != 42 || rest_in_loop(clone(&empty)) != 0) { return 10; };
+    let zero_first: vector int = [0, 5, 6];
+    let one_first: vector int = [1, 7];
+    if (middle_length(clone(&many)) != 2 || middle_length(clone(&one)) != 0) { return 11; };
+    if (or_rest(clone(&zero_first)) != 11 || or_rest(clone(&one_first)) != 7 || or_rest(clone(&two)) != 0) {
+        return 12;
+    };
+    // Views of a vector's memory allocate nothing.
+    let before: u64 = allocation_count();
+    if (sum_slice(many) != 15 || sum_slice(empty) != 0) { return 13; };
+    if (allocation_count() != before) { return 14; };
+    let r: int = rounds();
+    if (r != 100 * (14 + 7 + 7 + 60)) { return 7; };
+    let allocations: u64 = allocation_count();
+    let frees: u64 = free_count();
+    if (rounds() != r) { return 8; };
+    let allocated: u64 = allocation_count() - allocations;
+    let freed: u64 = free_count() - frees;
+    if (allocated != 0 && freed + 8 < allocated) { return 9; };
+    return 42;
+}

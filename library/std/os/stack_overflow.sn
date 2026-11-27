@@ -1,0 +1,227 @@
+// std's stack-overflow report (docs/en/reference/errors.md, "Runtime
+// checks"): a program whose call stack runs past its end stops as a failed
+// runtime check does, with the frame "the program stopped" and the words of
+// a stack overflow (process.failure_text, نص_فحص_تشغيل kind 4) on standard
+// error, and status 1, instead of dying of a bare SIGSEGV.
+//
+// The compiler loads this module for every program on a target std serves
+// (frontend/semantic_pipeline.sn) and binds ثبت_تقرير_فيض_المكدس and
+// معالج_فيض_المكدس by this file and their names (msir/semantic_lowering.sn).
+// An executable's entry calls ثبت_تقرير_فيض_المكدس first, before its own
+// body (msir/runtime_checks.sn, ثبت_تقرير_فيض_المكدس_مسير); an interpreted
+// program does not, and stops at the interpreters' call-depth limit with the
+// same words (interpreter/diagnostic_translation.sn). No source module
+// imports this one: its handler is a `@@اصطلاح_سي` function.
+//
+// At start the report writes its message once, in the program's language,
+// into a page of its own; maps the main thread's alternate signal stack
+// (os/signal_stack.sn; std.thread maps one for each thread it starts); and
+// installs معالج_فيض_المكدس for SIGSEGV on that stack (SA_SIGINFO,
+// SA_ONSTACK), reset to the default action as it is entered (SA_RESETHAND)
+// and not blocked while it runs (SA_NODEFER). The handler does only what is
+// safe in a signal handler: it reads the fault's code and address, compares
+// the address with the stacks' ends, and writes the page with write(2) and
+// ends the process with exit_group(2), or raises the signal again with
+// kill(2), which now takes its default action. It allocates nothing and calls
+// no runtime check (msir/runtime_checks.sn leaves this file out).
+//
+// A fault is a stack overflow when the kernel raised it (si_code
+// SEGV_MAPERR or SEGV_ACCERR) at an address that is
+//   - in the guard of a thread stack slot (os/allocation.sn
+//     في_حارس_خانة_مكدس_مخصص), every std thread's stack while slots last;
+//   - or below the main thread's stack top (the address of a local of this
+//     function, which the entry calls first) by at most the stack limit
+//     (RLIMIT_STACK as read at start, or as os.stack_limit raised it since:
+//     os.signal_stack keeps it) and the kernel's 1 MiB stack guard gap; an
+//     unlimited stack counts as 8 GiB.
+// Every stack frame of a page or more probes its pages in order
+// (docs/en/reference/targets.md, "Stack probes"), so an overflow faults at
+// the guard and not beyond it.
+//
+// Linux and Android on x86-64 and AArch64, on raw system calls; the kernel's
+// struct sigaction {handler, flags, restorer, mask}. x86-64 requires
+// SA_RESTORER: the handler never returns, so the restorer word holds the
+// handler's own address. Elsewhere nothing is installed, and an overflow
+// ends the program as the system ends it.
+استورد نظام_التشغيل.مكدس_الإشارات;
+استورد نظام_التشغيل.تخصيص;
+استورد عمليات.فشل;
+استورد عمليات.نص_الفشل;
+استورد نصوص.من_بايتات;
+
+// The message's page and length, and the main thread's stack top: written
+// once at start, before the handler is installed, then only read.
+ليكن رسالة_فيض_المكدس: متغير ط64 = 0;
+ليكن طول_رسالة_فيض_المكدس: متغير ط64 = 0;
+ليكن قمة_المكدس_الرئيسي: متغير ط64 = 0;
+
+// The system call numbers (arch/x86/entry/syscalls/syscall_64.tbl,
+// include/uapi/asm-generic/unistd.h) and the handler's flags: SA_SIGINFO
+// (4), SA_ONSTACK (0x08000000), SA_NODEFER (0x40000000), SA_RESETHAND
+// (0x80000000), and on x86-64 SA_RESTORER (0x04000000).
+إذا ((الهدف.المنصة == «linux» || الهدف.المنصة == «android») && الهدف.المعمارية == «x86_64») {
+    عرف رقم_الكتابة_فيض(): ط64 { أرجع 1; }
+    عرف رقم_ربط_ذاكرة_فيض(): ط64 { أرجع 9; }
+    عرف رقم_فعل_إشارة_فيض(): ط64 { أرجع 13; }
+    عرف رقم_معرف_العملية_فيض(): ط64 { أرجع 39; }
+    عرف رقم_إرسال_إشارة_فيض(): ط64 { أرجع 62; }
+    عرف رقم_الخروج_الجماعي_فيض(): ط64 { أرجع 231; }
+    عرف رقم_حد_المورد_فيض(): ط64 { أرجع 302; }
+    عرف أعلام_معالج_فيض(): ط64 { أرجع 0xCC000004; }
+}
+إذا ((الهدف.المنصة == «linux» || الهدف.المنصة == «android») && الهدف.المعمارية == «aarch64») {
+    عرف رقم_الكتابة_فيض(): ط64 { أرجع 64; }
+    عرف رقم_ربط_ذاكرة_فيض(): ط64 { أرجع 222; }
+    عرف رقم_فعل_إشارة_فيض(): ط64 { أرجع 134; }
+    عرف رقم_معرف_العملية_فيض(): ط64 { أرجع 172; }
+    عرف رقم_إرسال_إشارة_فيض(): ط64 { أرجع 129; }
+    عرف رقم_الخروج_الجماعي_فيض(): ط64 { أرجع 94; }
+    عرف رقم_حد_المورد_فيض(): ط64 { أرجع 261; }
+    عرف أعلام_معالج_فيض(): ط64 { أرجع 0xC8000004; }
+}
+
+إذا ((الهدف.المنصة == «linux» || الهدف.المنصة == «android») && (الهدف.المعمارية == «x86_64» || الهدف.المعمارية == «aarch64»)) {
+    مرادف اقرأ_كلمة_فيض = بدائي_اقرأ_ذاكرة_الآلة;
+    مرادف اكتب_كلمة_فيض = بدائي_اكتب_ذاكرة_الآلة;
+
+    // The kernel's stack guard gap below the main stack (1 MiB), with a
+    // page of slack, and the reach of an unlimited stack.
+    عرف فجوة_حارس_المكدس_الرئيسي(): ط64 { أرجع 1052672; }
+    عرف أقصى_مكدس_رئيسي_فيض(): ط64 { أرجع 8589934592; }
+
+    // Whether a fault at العنوان is a stack's end (above). Only comparisons
+    // and a subtraction proven not to wrap: nothing here can trap.
+    عرف عنوان_في_نهاية_مكدس_فيض(العنوان: ط64): منطقي {
+        إذا (في_حارس_خانة_مكدس_مخصص(العنوان)) { أرجع صواب; };
+        ليكن القمة: ط64 = قمة_المكدس_الرئيسي;
+        إذا (القمة == 0 || العنوان >= القمة) { أرجع خطأ; };
+        ليكن الحد: ط64 = حد_المكدس_الرئيسي_الآن();
+        ليكن المدى: متغير ط64 = أقصى_مكدس_رئيسي_فيض();
+        إذا (الحد < أقصى_مكدس_رئيسي_فيض()) { المدى := الحد; };
+        أرجع القمة - العنوان <= المدى + فجوة_حارس_المكدس_الرئيسي();
+    }
+
+    // Ends the process with the signal's default action: SA_RESETHAND
+    // restored it on entry and SA_NODEFER left the signal unblocked, so it
+    // takes effect as kill(2) returns.
+    عرف أعد_رفع_إشارة_فيض(الإشارة: ط64): فراغ {
+        ليكن المعرف: ط64;
+        ليكن تجاهل: ط64;
+        غير_آمن {
+            المعرف := بدائي_نداء_نواة_خام(
+                رقم_معرف_العملية_فيض(), 0 مثل ط64, 0 مثل ط64, 0 مثل ط64, 0 مثل ط64, 0 مثل ط64, 0 مثل ط64
+            );
+            تجاهل := بدائي_نداء_نواة_خام(
+                رقم_إرسال_إشارة_فيض(), المعرف, الإشارة, 0 مثل ط64, 0 مثل ط64, 0 مثل ط64, 0 مثل ط64
+            );
+        }
+    }
+
+    عرف اخرج_فيض(الحالة: ط64): فراغ {
+        ليكن تجاهل: ط64;
+        غير_آمن {
+            تجاهل := بدائي_نداء_نواة_خام(
+                رقم_الخروج_الجماعي_فيض(), الحالة, 0 مثل ط64, 0 مثل ط64, 0 مثل ط64, 0 مثل ط64, 0 مثل ط64
+            );
+        }
+    }
+
+    // The SIGSEGV handler, called by the kernel on the thread's alternate
+    // stack with (signal, siginfo_t *, ucontext_t *). siginfo_t: si_code is
+    // the int at byte 8, si_addr the address at byte 16.
+    @@اصطلاح_سي
+    عرف معالج_فيض_المكدس(الإشارة: ص32, المعلومات: ط64, السياق: ط64): فراغ {
+        ليكن الرمز: ط64;
+        ليكن العنوان: ط64;
+        غير_آمن {
+            الرمز := اقرأ_كلمة_فيض(المعلومات + 8) & 0xFFFFFFFF;
+            العنوان := اقرأ_كلمة_فيض(المعلومات + 16);
+        }
+        // SEGV_MAPERR (1), SEGV_ACCERR (2): a fault, not a signal sent.
+        إذا ((الرمز == 1 || الرمز == 2) && طول_رسالة_فيض_المكدس != 0 && عنوان_في_نهاية_مكدس_فيض(العنوان)) {
+            ليكن تجاهل: ط64;
+            غير_آمن {
+                تجاهل := بدائي_نداء_نواة_خام(
+                    رقم_الكتابة_فيض(), 2 مثل ط64, رسالة_فيض_المكدس, طول_رسالة_فيض_المكدس,
+                    0 مثل ط64, 0 مثل ط64, 0 مثل ط64
+                );
+            }
+            // The status of a failed runtime check, as std's panic handler.
+            اخرج_فيض(1);
+        };
+        ليكن الرقم: ط64 = (الإشارة مثل ط64) & 0xFF;
+        أعد_رفع_إشارة_فيض(الرقم);
+        // Never reached: the default action of SIGSEGV ends the process.
+        اخرج_فيض(128 + الرقم);
+    }
+
+    // The message: the frame "the program stopped" and the words of a stack
+    // overflow, each on its line, in the program's language, in a page of
+    // their own written word by word (little-endian on both architectures).
+    عرف اكتب_رسالة_فيض_المكدس(): منطقي {
+        ليكن الإنجليزية: منطقي = البرنامج_بالإنجليزية();
+        ليكن البايتات: متغير متجه ط8 = بايتات_من_نص(إطار_فشل_تشغيل(1, الإنجليزية));
+        ألحق(البايتات, 10);
+        ألحق_بايتات_نص(&متغير البايتات, نص_فحص_تشغيل(4, الإنجليزية));
+        ألحق(البايتات, 10);
+        ليكن العدد: طبيعي = الطول(البايتات) مثل طبيعي;
+        ليكن الحجم: ط64 = (((العدد + 4095) / 4096) * 4096) مثل ط64;
+        ليكن الصفحة: ط64;
+        غير_آمن {
+            // PROT_READ|PROT_WRITE (3), MAP_PRIVATE|MAP_ANONYMOUS (0x22), no descriptor.
+            الصفحة := بدائي_نداء_نواة_خام(
+                رقم_ربط_ذاكرة_فيض(), 0 مثل ط64, الحجم, 3 مثل ط64, 0x22 مثل ط64, ~(0 مثل ط64), 0 مثل ط64
+            );
+        }
+        إذا (الصفحة == 0 || الصفحة > (~(0 مثل ط64)) - 4095) { أرجع خطأ; };
+        ليكن ف: متغير طبيعي = 0;
+        طالما (ف < العدد) {
+            ليكن الكلمة: متغير ط64 = 0;
+            ليكن ب: متغير طبيعي = 0;
+            طالما (ب < 8 && ف + ب < العدد) {
+                الكلمة := الكلمة | ((البايتات[ف + ب] مثل ط64) << ((ب * 8) مثل ط64));
+                ب := ب + 1;
+            }
+            غير_آمن { اكتب_كلمة_فيض(الصفحة + (ف مثل ط64), الكلمة); }
+            ف := ف + 8;
+        }
+        رسالة_فيض_المكدس := الصفحة;
+        طول_رسالة_فيض_المكدس := العدد مثل ط64;
+        أرجع صواب;
+    }
+
+    // Called by an executable's entry before its own body (above). Any
+    // failure leaves the program as it was, without the report.
+    عام عرف ثبت_تقرير_فيض_المكدس(): فراغ {
+        إذا (تقرير_فيض_المكدس_مثبت_الآن()) { أرجع; };
+        ليكن المحلي: متغير ط64 = 0;
+        ليكن القمة: ط64;
+        غير_آمن { القمة := ((&متغير المحلي) مثل *متغير ط64) مثل ط64; }
+        إذا (!اكتب_رسالة_فيض_المكدس()) { أرجع; };
+        // The stack limit now; os.stack_limit records a raise (os.signal_stack).
+        ليكن الحد: متغير متجه ط64 = [0, 0];
+        ليكن خام_الحد: ط64;
+        غير_آمن {
+            // prlimit64(0, RLIMIT_STACK (3), NULL, &old)
+            خام_الحد := بدائي_نداء_نواة_خام(
+                رقم_حد_المورد_فيض(), 0 مثل ط64, 3 مثل ط64, 0 مثل ط64, &متغير الحد[0], 0 مثل ط64, 0 مثل ط64
+            );
+        }
+        إذا (خام_الحد != 0) { أرجع; };
+        سجل_حد_المكدس_الرئيسي(الحد[0]);
+        قمة_المكدس_الرئيسي := القمة;
+        إذا (ثبت_مكدس_إشارات_نظام() == 0) { أرجع; };
+        ليكن المعالج: ط64 = بدائي_عنوان_دالة_سي(معالج_فيض_المكدس);
+        // struct sigaction: handler, flags, restorer, an empty mask.
+        ليكن الفعل: متغير متجه ط64 = [المعالج, أعلام_معالج_فيض(), المعالج, 0];
+        ليكن النتيجة: ط64;
+        غير_آمن {
+            // rt_sigaction(SIGSEGV (11), &act, NULL, sizeof(sigset_t))
+            النتيجة := بدائي_نداء_نواة_خام(
+                رقم_فعل_إشارة_فيض(), 11 مثل ط64, &متغير الفعل[0], 0 مثل ط64, 8 مثل ط64,
+                0 مثل ط64, 0 مثل ط64
+            );
+        }
+        إذا (النتيجة == 0) { علم_تقرير_فيض_المكدس_مثبتا(); };
+    }
+}

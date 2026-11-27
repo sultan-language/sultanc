@@ -1,0 +1,6 @@
+error[SULTANC-FLOW-LOOP-CONTROL-OUTSIDE-LOOP]: loop control statement is outside of any loop
+  --> tests/en/diagnostics/semantic/match_expression_loop_control.sn:11:14..11:20
+    |
+ 11 |     | 1 -> { break; }
+    |              ^^^^^^
+    |

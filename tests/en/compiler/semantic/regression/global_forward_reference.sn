@@ -1,0 +1,10 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/compiler/semantic/regression/global_forward_reference.sn
+// A module-level value may use one declared after it (found by fuzzing).
+let a: int = b + 2;
+let b: int = c * 2;
+let c: int = 20;
+def main(): int { return a; }

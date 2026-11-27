@@ -9,9 +9,10 @@ backend, and the language and format of diagnostics. To learn the language, star
 
 ## Building the compiler
 
-SultanC is self-hosted: the compiler is written in SultanC and builds itself in stages. A build starts
-from a small seed (Stage0), uses it to build Stage1, and uses Stage1 to build the final compiler, Stage2.
-`build.sh` drives all stages through CMake.
+SultanC is self-hosted: the compiler is written in SultanC. Each build is one compile of the sources
+by a previous compiler. The first one comes from the WebAssembly seed committed in the repository,
+which a C compiler turns into a working compiler (Stage1); every later build starts from the compiler
+you already have.
 
 ```sh
 git clone https://github.com/sultan-language/sultanc.git
@@ -19,40 +20,37 @@ cd sultanc
 ./build.sh
 ```
 
-The finished compiler is `build/sultanc`. The stage products stay under `build/bootstrap/cmake/bin`
-(`cmake-wasm/bin` for the WebAssembly seed). Copy `build/sultanc` anywhere on your `PATH`, or run it in place.
+The finished compiler is `build/sultanc`, and the last line the build prints is
+`build: compiler: build/sultanc`. Copy it anywhere on your `PATH`, or run it in place. Without a shell,
+`cc -o build-bootstrap bootstrap-wasm/bootstrap.c && ./build-bootstrap` builds the same `build/sultanc`
+with only a C compiler.
 
-The seed can come from three places, chosen with `--bootstrap`:
-
-| Route | Command | Needs |
-|---|---|---|
-| C seed (default) | `./build.sh` | a C compiler and LLVM |
-| WebAssembly seed | `./build.sh --bootstrap=wasm` | only a C compiler |
-| An existing compiler | `./build.sh --bootstrap=existing` | a built `build/sultanc`, or one named with `--with=PATH` |
-
-The existing-compiler route performs a single self-hosting step and takes about a minute, which makes it
-the fast loop during development. Use the C or WebAssembly route on a new system, when the existing compiler is
-too old for the sources, and when verifying a release.
-
-By default the finished compiler contains only the Native backend and has no dependency on libLLVM. Add
-`--enable-llvm` to build the LLVM backend into it (see [The LLVM backend](#the-llvm-backend)). The C seed
-always uses LLVM, so LLVM 19 to 23 must be installed for the default route. The build finds LLVM by itself
-in its usual install locations, including Homebrew's on macOS
-(`cmake/modules/LLVMToolchain.cmake`). Select another LLVM with `LLVM_CONFIG=/path/to/llvm-config`, or with
-`-DLLVM_DIR` for a direct CMake build.
-
-The remaining `build.sh` arguments name a stage or a check:
-
-| Argument | Effect |
+| Command | Effect |
 |---|---|
-| `stage0`, `stage1`, `stage2` | Build up to that stage. |
-| `bootstrap` | Build Stage0 and Stage1 only. |
-| `verify` | Build Stage2, then check that Stage3 and Stage4 are byte-for-byte identical. With `--enable-llvm` it also checks LLVM convergence. |
-| `--target=TRIPLE` | Build for another target. |
-| `--backend=native\|llvm` | Backend Stage1 uses to generate Stage2 (default `native`). |
-| `OUTPUT` | Where to copy the finished compiler. |
+| `./build.sh` | One build from `build/sultanc` (the first time: from the seed). Nothing is rebuilt when the files under `compiler/` and the options are unchanged, so a change to `library/`, `tests/`, `docs/` or `examples/` costs nothing. |
+| `./build.sh verify` | The self-host fixpoint: the seed's Stage1 builds S2, S2 builds S3, and S2 must equal S3 byte for byte. With `--enable-llvm` it also checks the LLVM fixpoint and that the LLVM-generated compiler builds S3 again. |
+| `./build.sh bootstrap` | Stage1 from the seed only (`build/bootstrap/sultanc-stage1`). |
+| `./build.sh seed-check` | The committed seed equals what the sources build. |
+| `./build.sh seed-update` | Replace the committed seed with what the sources build (a seed bump). |
+| `./build.sh chain` | The release check of the frozen C Stage0 ([Bootstrap](../internals/bootstrap.md)). |
 
-Windows has no Native backend. Build there with `./build.sh --bootstrap=c --enable-llvm --backend=llvm`.
+| Option | Effect |
+|---|---|
+| `--enable-llvm` | Build the LLVM backend into the compiler (it then links libLLVM). |
+| `--with=PATH` | The previous compiler of the step. |
+| `--bootstrap=wasm` | Start from the seed even when `build/sultanc` exists; `existing` requires it. |
+| `--target=TRIPLE` | Build the compiler for another target, into `build/cross/TRIPLE/`. |
+| `--backend=native\|llvm` | The backend that generates the compiler (default `native`; `llvm` needs a previous compiler that has it). |
+| `--release-version=VERSION` | The version the built compiler reports. |
+| `--rebuild` | Build even when nothing changed. |
+| `--verbose` | Show each command as it runs (otherwise a command's output appears only when it fails). |
+| `OUTPUT` | Also copy the finished compiler there. |
+
+By default the finished compiler contains only the Native backend and has no dependency on libLLVM.
+`--enable-llvm` finds LLVM 19 to 23 through `llvm-config` (versioned names and Homebrew's included);
+`LLVM_CONFIG=/path/to/llvm-config` or `SULTANC_LLVM_LIBRARY=/path/to/libLLVM` selects another.
+Hosts without a Native backend (Windows, Linux on arm64, macOS on x86_64) get a compiler generated by
+LLVM; [Bootstrap](../internals/bootstrap.md) says how.
 
 ### Where the compiler looks for std
 
@@ -120,6 +118,36 @@ compiler reports `SULTANC-LINK-OUTPUT-UNSUPPORTED` when they cannot.
 To link a C library, pass `-l name` for `libname` and `-L dir` to add a directory to the search before the
 standard locations.
 
+## Optimization levels
+
+`-O0`, `-O1`, `-O2` and `-O3` (also `--opt-level=N`) choose how much the compiler optimizes. Without
+any of them a build is not optimized: it behaves exactly as with `-O0`. `sultanc run` without `-O`
+optimizes as with `-O2`, since a program run directly is run for its speed. When `-O` is
+given more than once, the last one counts. The level applies to both backends, to `sultanc run`, to
+`sultanc test` and to the compile-time evaluation of `sultanc check`:
+
+| Level | MSIR optimization pipeline | LLVM backend | Native backend |
+|---|---|---|---|
+| `-O0` (and no `-O`) | no pass: locals stay in their frame slots and every call stays a call | no pass pipeline, code generator at level 0 | every variable readable by a debugger |
+| `-O1` | scalar promotion and control-flow simplification, no inlining | `default<O1>`, code generator at level 1 | optimized program |
+| `-O2` | `-O1` plus the inlining of small functions | `default<O2>`, code generator at level 2 | optimized program |
+| `-O3` | `-O2` with twice the inlining rounds | `default<O3>`, code generator at level 3 | optimized program |
+
+The compiler builds itself with an explicit `-O2`. [MSIR and code generation](../internals/msir-and-codegen.md)
+("Optimization levels") describes each pass. There is no `--release` option: a package manager's build
+profile chooses a level and passes it as `-O`.
+
+## The compilation cache
+
+`sultanc` keeps the outputs of its builds (executables, objects, libraries) in a content-addressed cache
+and writes the stored bytes when the same compilation comes again: the same compiler, request, working
+directory and module sources. `--no-cache` turns it off for one command, `SULTANC_CACHE=DIR` moves it,
+`SULTANC_CACHE=off` turns it off, `SULTANC_CACHE_LIMIT` bounds it in MiB (default 2048) and
+`SULTANC_CACHE_REPORT=1` says on standard error what it did. The default directory is `sultanc/` in the
+user cache directory (`$XDG_CACHE_HOME`, `~/Library/Caches`, `%LOCALAPPDATA%` or `~/.cache`).
+[The compilation cache](../internals/compile-cache.md) describes the key, what is never stored and the
+limits.
+
 ## Running with the interpreter
 
 `sultanc run` executes a program without producing a file:
@@ -146,6 +174,22 @@ sultanc check --target wasm32-wasi src/main.sn
 It exits with status 0 when the program is accepted and 1 when diagnostics report an error. With `--target`
 it checks for that target, which matters for code that depends on the platform. Without it the host is assumed.
 
+## Formatting source files
+
+`sultanc fmt` rewrites source files in the canonical layout; `sultanc fmt --check` reports the files whose
+layout differs (`SULTANC-FMT-UNFORMATTED`) and changes nothing. With no file it formats standard input to
+standard output:
+
+```sh
+sultanc fmt src/
+sultanc fmt --check src/
+sultanc fmt < main.sn
+```
+
+It changes only the whitespace between tokens, and the commas: a comma is written `,` in an English source
+and `،` (U+060C) in an Arabic one. A source is English when its first line of code starts with a Latin
+letter. Both commas mean the same everywhere, so a file may be written with either.
+
 ## Cross-compiling
 
 `--target` (`-t`) selects the target triple, and the compiler produces an executable for it with no further
@@ -166,11 +210,11 @@ WebAssembly. Other Linux ELF targets and FreeBSD are linked with `ld.lld`, which
 ## The LLVM backend
 
 Two code generators exist. The Native backend generates x86_64, arm64 and wasm32 code directly. The LLVM
-backend covers every target and optimizes at O2. `sultanc targets` prints the backends your compiler contains.
+backend covers every target and optimizes at the level `-O` gives (none without `-O`). `sultanc targets` prints the backends your compiler contains.
 Select one with `-b` or `--backend`:
 
 ```sh
-sultanc --backend=llvm examples/en/basics/hello.sn -o hello
+sultanc --backend=llvm -O2 examples/en/basics/hello.sn -o hello
 sultanc --backend=llvm --target=riscv64-linux-gnu examples/en/basics/hello.sn -o hello-rv
 sultanc --backend=llvm --emit=llvm-ir examples/en/basics/hello.sn -o hello.ll
 ```

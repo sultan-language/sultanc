@@ -204,8 +204,10 @@
     | خطأ بنوع فشل_مزود_إل_إل_في_إم
 ;
 
-// -O0 (none), -O1 (low), -O2 (the default) and -O3 (high): the new pass
-// manager's default<On> pipeline and the matching code-generation level.
+// -O0 (none; also what a command without -O gets), -O1 (low), -O2 and -O3
+// (high): the new pass manager's default<On> pipeline and the matching
+// code-generation level. The driver gives the MSIR optimization pipeline the
+// same level (driver/compiler_driver.sn مستوى_تحسين_مسير_من_طلب).
 عام نوع مستوى_تحسين_مزود_إل_إل_في_إم =
     | بلا
     | منخفض

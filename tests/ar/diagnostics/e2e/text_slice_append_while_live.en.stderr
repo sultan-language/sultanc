@@ -1,0 +1,6 @@
+error[SULTANC-BORROW-CONFLICT]: borrow conflict — The conflicting borrowed value is `التحية`. The value is already borrowed mutably, so it cannot be borrowed again.
+  --> tests/ar/diagnostics/e2e/text_slice_append_while_live.sn:16:5..16:37
+    |
+ 16 |     ليكن التحية: متغير نص = «hello»;
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |

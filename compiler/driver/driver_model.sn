@@ -27,10 +27,6 @@
 عام نوع اختيار_مزود_خلفية_عملية =
     | تلقائي
     | صريح بنوع هوية_مزود_خلفية
-    // `--release`: LLVM when this compiler contains it and the target admits
-    // it (its code runs several times faster than the native backend's),
-    // else the target's preferred provider.
-    | إصدار
 ;
 
 عام نوع نوع_مخرج_تجميع_عملية =
@@ -79,7 +75,11 @@
     ميزانية_وقت_الترجمة: طبيعي,
     // --package-graph=<file>: the package graph Supax wrote (package_graph.sn);
     // «» when not given, which compiles the sources standalone.
-    رسم_الحزم: نص
+    رسم_الحزم: نص,
+    // --no-cache: the compilation neither reads nor writes the compilation
+    // cache (compile_cache.sn); SULTANC_CACHE=off does the same for every
+    // compilation.
+    بلا_خزن: منطقي
 };
 
 عام عرف إعداد_عرض_عملية_افتراضي(): إعداد_عرض_عملية {
@@ -91,7 +91,8 @@
         الصيغة: الصيغة,
         اللون: اللون,
         ميزانية_وقت_الترجمة: 0,
-        رسم_الحزم: «»
+        رسم_الحزم: «»,
+        بلا_خزن: خطأ
     };
     أرجع الناتج;
 }
@@ -115,7 +116,8 @@
         الصيغة: (*الإعداد).الصيغة,
         اللون: (*الإعداد).اللون,
         ميزانية_وقت_الترجمة: (*الإعداد).ميزانية_وقت_الترجمة,
-        رسم_الحزم: انسخ_نص(&(*الإعداد).رسم_الحزم)
+        رسم_الحزم: انسخ_نص(&(*الإعداد).رسم_الحزم),
+        بلا_خزن: (*الإعداد).بلا_خزن
     };
     أرجع الناتج;
 }
@@ -322,12 +324,15 @@
     // `fmt`: the paths to format (none: standard input) and --check
     // (compiler/format/command.sn).
     | تنسيق بنوع طلب_تنسيق
-    | تحقق بنوع (نص, متجه نص, متجه ربط_مصدر_وحدة_عملية, اختيار_هدف_عملية)
-    // The last two fields are the -l library names and -L search
-    // directories, as for تجميع.
+    // The last field is the -O level: compile-time evaluation runs the
+    // functions the optimization pipeline gives it at that level.
+    | تحقق بنوع (نص, متجه نص, متجه ربط_مصدر_وحدة_عملية, اختيار_هدف_عملية, مستوى_تحسين_مزود_إل_إل_في_إم)
+    // The -l library names and -L search directories, as for تجميع, then
+    // the -O level: the interpreters run the program the optimization
+    // pipeline gives them at that level.
     | تفسير بنوع (
         نص, متجه نص, متجه متجه ط8, اختيار_هدف_عملية, متجه ربط_مصدر_وحدة_عملية,
-        متجه نص, متجه نص
+        متجه نص, متجه نص, مستوى_تحسين_مزود_إل_إل_في_إم
     )
     | تجميع بنوع (
         نص,
@@ -342,8 +347,9 @@
         // target once it is known.
         متجه نص,
         متجه نص,
-        // -O0 .. -O3 for the LLVM backend (-O2 by default); the Native
-        // backends have one level.
+        // -O0 .. -O3, for both backends: the MSIR optimization pipeline's
+        // level and LLVM's (compiler_driver.sn مستوى_تحسين_مسير_من_طلب).
+        // Without -O it is -O0: no optimization.
         مستوى_تحسين_مزود_إل_إل_في_إم
     )
     // `sultanc test`: the source and further sources, the target and

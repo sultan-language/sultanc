@@ -28,7 +28,7 @@
 
 <br>
 
-السلطان لغة برمجة أنظمة تُترجَم إلى شيفرة آلة أصلية، وتحمي الذاكرة بقواعد الملكية، وفيها أنواع البيانات الجبرية ومطابقة الأنماط والخيوط. كلماتها المفتاحية متاحة بالعربية والإنجليزية، وكلتاهما صياغة كاملة للغة نفسها، فيمكن الكتابة بأيٍّ منهما. ومترجم السلطان مكتوب بالسلطان، وهو يترجم نفسه: ويجتاز كل بناء فحص الاستضافة الذاتية، الذي يتحقق من أن جيلين متتاليين من المترجم متطابقان بايتًا ببايت (Stage3 == Stage4).
+السلطان لغة برمجة أنظمة تُترجَم إلى شيفرة آلة أصلية، وتحمي الذاكرة بقواعد الملكية، وفيها أنواع البيانات الجبرية ومطابقة الأنماط والخيوط. كلماتها المفتاحية متاحة بالعربية والإنجليزية، وكلتاهما صياغة كاملة للغة نفسها، فيمكن الكتابة بأيٍّ منهما. ومترجم السلطان مكتوب بالسلطان، وهو يترجم نفسه: ويجتاز كل بناء فحص الاستضافة الذاتية، الذي يتحقق من أن المترجم المبني من البذرة يعيد بناء نفسه مطابقًا بايتًا ببايت (S2 == S3).
 
 <br>
 
@@ -70,26 +70,66 @@ def main(): int {
 
 ## التثبيت
 
+### تنزيل إصدار
+
+في كل [إصدار](https://github.com/sultan-language/sultanc/releases) أرشيف لكل منصة فيه `sultanc` و`supax` (مدير الحزم)
+و`sultanc-analyzer` (خادم اللغة) والمكتبة القياسية: `sultanc-VERSION-TARGET.tar.gz` للأهداف `x86_64-linux`
+و`aarch64-linux-gnu` و`arm64-darwin` و`x86_64-darwin`، و`sultanc-VERSION-x86_64-windows-msvc.zip`. تحقق منه بالملف
+`SHA256SUMS.txt` من الإصدار، ثم فكّه وأضف مجلده `bin/` إلى `PATH`:
+
+<div dir="ltr">
+
+```sh
+version=0.1.2 target=x86_64-linux
+base=https://github.com/sultan-language/sultanc/releases/download/v$version
+curl -fL -O "$base/sultanc-$version-$target.tar.gz" -O "$base/SHA256SUMS.txt"
+sha256sum -c SHA256SUMS.txt --ignore-missing    # macOS: shasum -a 256 -c SHA256SUMS.txt --ignore-missing
+tar -xzf "sultanc-$version-$target.tar.gz"
+export PATH="$PWD/sultanc-$version-$target/bin:$PATH"
+sultanc --version
+```
+
+</div>
+
+وعلى Windows قارن ناتج `Get-FileHash sultanc-VERSION-x86_64-windows-msvc.zip` بسطره في `SHA256SUMS.txt`، ثم فك
+الأرشيف وأضف مجلده `bin` إلى `Path` الخاص بك. واترك `library/` بجوار `bin/`، فمنه يقرأ المترجم مكتبته القياسية.
+وفي الأرشيف `INSTALL.txt` بالخطوات نفسها، وتقول صفحة [الإصدارات](docs/ar/contributing/releases.md) ما في الإصدار.
+
+### البناء من المصدر
+
 <div dir="ltr">
 
 ```sh
 git clone https://github.com/sultan-language/sultanc.git && cd sultanc
-./build.sh                          # Stage0 بلغة C -> Stage1 -> Stage2 (يتطلب LLVM)
+./build.sh                          # لا يحتاج إلا مترجم C، والناتج build/sultanc
 sudo cp build/sultanc /usr/local/bin/sultanc
 ```
 
 </div>
 
-| طريقة البناء | الأمر | ما تحتاجه |
-|---|---|---|
-| الإقلاع الذاتي (bootstrap) من C، وهي الطريقة الافتراضية | `./build.sh` | مترجم C وLLVM |
-| بذرة WebAssembly (seed) | `./build.sh --bootstrap=wasm` | مترجم C فقط |
-| إعادة البناء بمترجم مبني مسبقًا (نحو دقيقة) | `./build.sh --bootstrap=existing` | نسخة مبنية من `build/sultanc` |
-| بناء المترجم مع خلفية LLVM | `./build.sh --enable-llvm` | LLVM من الإصدار 19 إلى 23 |
-| فحص الاستضافة الذاتية | `./build.sh verify` | يتحقق من تطابق Stage3 وStage4 بايتًا ببايت |
+وبلا shell لا يحتاج البناء نفسه إلا مترجم C:
 
-> يجد البناء LLVM بنفسه في مواضعه المعتادة، ومنها Homebrew على macOS، ويحدد `LLVM_CONFIG=/path/to/llvm-config` نسخة أخرى.
-> على Windows، ابنِ بالأمر: `./build.sh --bootstrap=c --enable-llvm --backend=llvm`
+<div dir="ltr">
+
+```sh
+cc -o build-bootstrap bootstrap-wasm/bootstrap.c && ./build-bootstrap
+```
+
+</div>
+
+وعلى Windows: ‏`cl /Fe:build-bootstrap.exe bootstrap-wasm/bootstrap.c` (أو `gcc -o build-bootstrap.exe bootstrap-wasm/bootstrap.c`) ثم `build-bootstrap.exe`.
+
+وينتهي كلاهما بالمترجم في `build/sultanc` (و`build\sultanc.exe` على Windows)، ويطبعانه في السطر الأخير: `build: compiler: build/sultanc`.
+
+| الخطوة | الأمر | ما تحتاجه |
+|---|---|---|
+| البناء، أو إعادة البناء بعد تغيير | `./build.sh` | مترجم C؛ ويبدأ البناء التالي من `build/sultanc` ويُتخطى إن لم يتغير `compiler/` |
+| الفحص | `./build.sh verify` | يعيد المترجم بناء نفسه بايتًا ببايت (S2 وS3 متطابقان) |
+| بناء المترجم مع خلفية LLVM | `./build.sh --enable-llvm` | LLVM من الإصدار 19 إلى 23 |
+| للمشرفين | `./build.sh seed-update` و`./build.sh seed-check` و`./build.sh chain` | انظر [الإقلاع الذاتي](docs/ar/internals/bootstrap.md) |
+
+> يجد `--enable-llvm` مكتبة LLVM عبر `llvm-config` (ومنها نسخة Homebrew على macOS)، ويحدد `LLVM_CONFIG=/path/to/llvm-config` نسخة أخرى.
+> لا خلفية أصلية على Windows ولينكس ARM وماك Intel: يكون `build/sultanc` هناك مترجمَ البذرة، وهو يستهدف x86_64-linux وarm64-darwin وwasm32-wasi؛ وانظر [الإقلاع الذاتي](docs/ar/internals/bootstrap.md) للمترجمات التي تُبنى لتلك الأنظمة.
 
 <div dir="ltr">
 
@@ -160,7 +200,8 @@ sultanc targets                             # عرض جميع الأهداف ا�
 |---|---|
 | [MSIR وتوليد الشيفرة](docs/ar/internals/msir-and-codegen.md) | كيف تتحول الشيفرة المصدرية إلى شيفرة آلة أصلية |
 | [بنية المترجم](docs/ar/internals/compiler-architecture.md) | أجزاء المترجم وطريقة عملها |
-| [الإقلاع الذاتي](docs/ar/internals/bootstrap.md) | Stage0 المكتوب بلغة C، وبذرة WebAssembly |
+| [الإقلاع الذاتي](docs/ar/internals/bootstrap.md) | بذرة WebAssembly وStage0 المجمَّد المكتوب بلغة C ومشغّل البناء |
+| [مخزن الترجمة](docs/ar/internals/compile-cache.md) | ما يخزنه `sultanc` وكيف |
 | [تدفق الأمان](docs/ar/internals/safety-flow.md) | كيف يفحص المترجم الملكية والاستعارة |
 | [نظام الأنواع](docs/ar/reference/type-system.md) | الأنواع، واستنتاج الأنواع، والأنواع العامة، والتحويل بين الأنواع |
 | [الملكية والإتلاف](docs/ar/reference/ownership.md) | النقل، والإتلاف، والقيم المؤقتة، وسعة المتجهات |
@@ -174,7 +215,7 @@ sultanc targets                             # عرض جميع الأهداف ا�
 
 ## الحالة
 
-المترجم مستضاف ذاتيًا على `x86_64-linux` و`arm64-darwin`، والدليل على ذلك أن الأجيال المتتالية من المترجم تنتج ملفات متطابقة بايتًا ببايت، سواء بدأ البناء من Stage0 المكتوب بلغة C أو من بذرة WebAssembly. ويبني التكامل المستمر (CI) المترجمَ بجميع طرق البناء على Linux وmacOS وWindows (x64 وarm64).
+المترجم مستضاف ذاتيًا على `x86_64-linux` و`arm64-darwin`، والدليل على ذلك النقطة الثابتة للاستضافة الذاتية المتطابقة بايتًا ببايت انطلاقًا من بذرة WebAssembly، وسلسلة Stage0 المجمَّد المكتوب بلغة C التي تبني المترجم نفسه. ويبني التكامل المستمر (CI) المترجمَ على Linux وmacOS وWindows (x64 وarm64).
 
 ## الترخيص
 

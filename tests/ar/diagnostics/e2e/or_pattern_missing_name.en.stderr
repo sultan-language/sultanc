@@ -1,0 +1,7 @@
+error[SULTANC-PATTERN-ALTERNATIVE-BINDINGS]: the alternatives of an or-pattern bind different names: `س` is not bound in every alternative
+  --> tests/ar/diagnostics/e2e/or_pattern_missing_name.sn:9:11..9:12
+   |
+ 9 |     | (0, س) | (ص, 0) -> { أرجع 1; }
+   |           ^
+   |
+  = help: bind the same names, with the same types, in every alternative

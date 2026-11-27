@@ -1,21 +1,28 @@
 # Windows CI (x64 and ARM64). PowerShell. Windows has no SultanC Native
-# backend, so a Stage2 always comes from the C Stage0 and LLVM. One job per
-# workflow step (as linux.sh and macos.sh):
+# backend: the nightly tiers build Stage1 from the seed here and run the
+# compiler cross-built for Windows on linux-x86_64; the release check builds an
+# LLVM-enabled Windows compiler from the frozen C Stage0. One job per workflow
+# step (as linux.sh and macos.sh):
 #
-#   seed          wasm seed through cmake/ (no LLVM), Stage1 only, with every
-#                 C toolchain: MSVC (cl), clang-cl, and MinGW gcc (x64;
-#                 bootstrap.c). The MSVC Stage1 rebuilds the committed seed,
-#                 which must match byte for byte.
+#   seed          Stage1 from the seed (bootstrap.c, no LLVM) with every C
+#                 toolchain: MSVC (cl), clang-cl, and MinGW gcc (x64). The
+#                 MSVC Stage1 rebuilds the committed seed, which must match
+#                 byte for byte.
+#   cross-run     the compiler cross-built for this host on linux-x86_64 runs
 #   llvm-sdk      the pinned LLVM SDK (llvm.lock) in $env:LLVM_SDK, unless cached
-#   llvm-build    C Stage0 against the SDK -> Stage1 -> LLVM-generated Stage2
-#   llvm-verify   LLVM Stage3 == Stage4
+#   chain         (release check) bootstrap/chain.ps1: the frozen C Stage0 ->
+#                 the pinned commit's compiler -> the current compiler, equal
+#                 to the seed route's; the LLVM-enabled result -> build\sultanc.exe
+#   release       (release.yml) the chain's LLVM-enabled compiler (chain, run
+#                 before) builds the current sources once more with LLVM and
+#                 the version the release reports ($env:SULTANC_RELEASE_VERSION)
+#                 -> build\sultanc.exe
 #   test          the test suite on build\sultanc.exe, reported to the job summary
-#   llvm          llvm-sdk, llvm-build, llvm-verify and test in order
 #
 # LLVM: the upstream Windows archive builds only some targets, so the SDK
 # (LLVM-C.dll + LLVM-C.lib) is built from the pinned source with the pinned
 # archive's clang-cl, once, and cached by the workflow in $env:LLVM_SDK.
-param([Parameter(Mandatory)][ValidateSet('seed', 'llvm-sdk', 'llvm-build', 'llvm-verify', 'test', 'llvm')][string]$Job)
+param([Parameter(Mandatory)][ValidateSet('seed', 'cross-run', 'llvm-sdk', 'chain', 'release', 'test')][string]$Job)
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
 
@@ -49,31 +56,50 @@ function Get-HostLlvm {
     return $bin
 }
 
+# The compiler cross-built for this host on linux-x86_64 (nightly, ci.yml
+# cross-run; downloaded into build\cross): it runs, checks and interprets.
+if ($Job -eq 'cross-run') {
+    $t = if ($arm) { 'aarch64-windows-msvc' } else { 'x86_64-windows-msvc' }
+    $sc = "build\cross\$t\sultanc.exe"
+    & $sc version; Check "$sc version"
+    & $sc check examples/en/basics/hello.sn; Check "$sc check"
+    & $sc run examples/en/basics/hello.sn; Check "$sc run"
+    exit 0
+}
+
 # Native MSVC developer environment of the runner's Visual Studio.
 $vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\Installer\vswhere.exe'
 $vs = & $vswhere -latest -products '*' -property installationPath
 Import-Module (Join-Path $vs 'Common7\Tools\Microsoft.VisualStudio.DevShell.dll')
 Enter-VsDevShell -VsInstallPath $vs -SkipAutomaticLocation -DevCmdArguments "-arch=$arch -host_arch=$arch"
 
+# Stage1 from the seed with bootstrap.c and the C compiler named, into $out.
+function Invoke-SeedStage1([string]$cc, [string]$out) {
+    if (Test-Path $out) { Remove-Item -Recurse -Force $out }
+    New-Item -ItemType Directory -Force $out | Out-Null
+    cl /nologo "/Fe:$out\build-bootstrap.exe" bootstrap-wasm/bootstrap.c; Check 'bootstrap.c'
+    & "$out\build-bootstrap.exe" "--cc=$cc" "--out=$out" --jobs=4 --stage1-only; Check "Stage1 ($cc)"
+    & "$out\sultanc-stage1.exe" version; Check "Stage1 ($cc) run"
+}
+
 if ($Job -eq 'seed') {
-    # 1. MSVC through the main CMake build, then the seed check.
-    $tree = 'build\bootstrap\cmake-wasm'
-    if (Test-Path $tree) { Remove-Item -Recurse -Force $tree }
-    cmake -S cmake -B $tree -G Ninja -DCMAKE_C_COMPILER=cl -DCMAKE_BUILD_TYPE=Release `
-        -DSULTANC_BOOTSTRAP=wasm -DSULTANC_REQUESTED_STAGE=stage1; Check 'MSVC configure'
-    cmake --build $tree --parallel 4 --target sultanc-stage1; Check 'MSVC Stage1'
-    cmake --build $tree --target sultanc-check-seed; Check 'seed check'
+    # 1. MSVC (cl), then the seed check: this Stage1 rebuilds the committed
+    #    seed (Native-only, wasm32-wasi, -O2), which must match byte for byte.
+    $out = 'build\ci-seed-msvc'
+    Invoke-SeedStage1 'cl' $out
+    & "$out\sultanc-stage1.exe" compiler/main.sn -O2 --backend=native --target=wasm32-wasi `
+        '--module-source=compiler.backend.provider.llvm.llvm_codegen=compiler/backend/provider/llvm/unavailable.sn' `
+        -o "$out\sultanc.wasm"; Check 'seed rebuild'
+    & "$out\sultanc-wasm2c.exe" --decompress bootstrap-wasm/seed/sultanc.wasm.zst "$out\sultanc.committed.wasm"; Check 'seed decompress'
+    if ((Get-FileHash "$out\sultanc.wasm").Hash -ne (Get-FileHash "$out\sultanc.committed.wasm").Hash) {
+        throw 'seed check: the current sources give a different seed (./build.sh seed-update)'
+    }
+    Write-Host 'seed check: the committed seed is reproduced exactly'
 
-    # 2. clang-cl through the same CMake build (the pinned upstream clang-cl).
-    $clangCl = Join-Path (Get-HostLlvm) 'clang-cl.exe'
-    $tree = 'build\bootstrap\cmake-wasm-clang-cl'
-    if (Test-Path $tree) { Remove-Item -Recurse -Force $tree }
-    cmake -S cmake -B $tree -G Ninja -DCMAKE_C_COMPILER="$clangCl" -DCMAKE_BUILD_TYPE=Release `
-        -DSULTANC_BOOTSTRAP=wasm -DSULTANC_REQUESTED_STAGE=stage1; Check 'clang-cl configure'
-    cmake --build $tree --parallel 4 --target sultanc-stage1; Check 'clang-cl Stage1'
-    & "$tree\bin\sultanc-stage1.exe" version; Check 'clang-cl Stage1 run'
+    # 2. clang-cl (the pinned upstream clang-cl).
+    Invoke-SeedStage1 (Join-Path (Get-HostLlvm) 'clang-cl.exe') 'build\ci-seed-clang-cl'
 
-    # 3. MinGW gcc with bootstrap.c (x64 runners ship MinGW-w64).
+    # 3. MinGW gcc (x64 runners ship MinGW-w64).
     if (-not $arm) {
         $out = 'build\ci-seed-mingw'
         if (Test-Path $out) { Remove-Item -Recurse -Force $out }
@@ -85,7 +111,7 @@ if ($Job -eq 'seed') {
     exit 0
 }
 
-# --- LLVM route ---------------------------------------------------------------
+# --- LLVM SDK and the release check ----------------------------------------------
 function Write-Summary([string]$line) {
     if ($env:GITHUB_STEP_SUMMARY) { Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value $line -Encoding utf8 }
     else { Write-Host "summary: $line" }
@@ -151,29 +177,58 @@ function Invoke-LlvmSdk {
     Write-Host "LLVM SDK built: $sdk"
 }
 
-$tree = 'build\bootstrap\cmake'
-
-function Invoke-LlvmBuild {
+# The release check (bootstrap/chain.ps1): the frozen C Stage0 builds the
+# pinned commit's compiler, the chain climbs to the current sources, and the
+# result must equal the seed route's compiler. Its LLVM-enabled compiler is
+# the one the tests run.
+function Invoke-Chain {
     if (-not (Test-Path "$sdk\bin\LLVM-C.dll")) { throw "no LLVM SDK in $sdk (run: windows.ps1 llvm-sdk)" }
-    cmake -S cmake -B $tree -G Ninja `
-        -DSULTANC_BOOTSTRAP=c -DSULTANC_COMPILER_LLVM=ON -DSULTANC_STAGE2_BACKEND=llvm `
-        -DSULTANC_REQUESTED_STAGE=verify -DSULTANC_LLVM_ROOT="$sdk"; Check 'configure'
-    cmake --build $tree --target sultanc-stage2; Check 'Stage0 -> Stage1 -> LLVM Stage2'
-    & build\sultanc.exe version; Check 'Stage2 run'
+    $env:LLVM_SDK = $sdk
+    & (Join-Path $root 'bootstrap\chain.ps1'); Check 'C Stage0 chain'
+    Copy-Item build\chain\sultanc-a.exe build\sultanc.exe
+    Copy-Item "$sdk\bin\LLVM-C.dll" build\LLVM-C.dll
+    & build\sultanc.exe version; Check 'chain compiler run'
 }
 
-function Invoke-LlvmVerify {
-    cmake --build $tree --target sultanc-verify; Check 'LLVM Stage3 == Stage4'
+# The compiler of a release (release.yml): the chain's LLVM-enabled compiler
+# builds the current sources as the chain's step A does, with the release
+# version bound as the module compiler.version. The build driver's
+# --release-version (tools/build/steps.sn) writes the same module; the driver
+# does not run here (build.sh is POSIX, and its LLVM selection knows no
+# LLVM-C.dll), so this writes it.
+function Invoke-Release {
+    $version = $env:SULTANC_RELEASE_VERSION
+    if (-not $version -or $version -cnotmatch '^[A-Za-z0-9.+_-]+$') {
+        throw 'set SULTANC_RELEASE_VERSION (letters, digits and . + _ - only)'
+    }
+    $a = 'build\chain\sultanc-a.exe'
+    if (-not (Test-Path $a)) { throw "no $a (run: windows.ps1 chain)" }
+    $generated = 'build\bootstrap\generated'
+    New-Item -ItemType Directory -Force $generated, 'build\release' | Out-Null
+    $module = "$generated\compiler_version.sn"
+    $source = "// Generated by .github/ci/windows.ps1 release, as the build driver writes it for`n" +
+        "// --release-version; bound to the module compiler.version in place of compiler/version.sn.`n" +
+        "عام عرف إصدار_السلطان(): اختياري نص {`n" +
+        "    أرجع اختياري.موجود(«${version}»);`n}`n"
+    [IO.File]::WriteAllText((Join-Path $root $module), $source, (New-Object Text.UTF8Encoding $false))
+    $hostTarget = if ($arm) { 'aarch64-windows-msvc' } else { 'x86_64-windows-msvc' }
+    $env:SULTANC_CACHE = 'off'
+    & $a compiler/main.sn -O2 --backend=llvm "--target=$hostTarget" `
+        "--module-source=compiler.version=$($module -replace '\\', '/')" -o build\release\sultanc.exe
+    Check 'release compiler'
+    Copy-Item -Force build\release\sultanc.exe build\sultanc.exe
+    if (-not (Test-Path build\LLVM-C.dll)) { Copy-Item "$sdk\bin\LLVM-C.dll" build\LLVM-C.dll }
+    & build\sultanc.exe version; Check 'release compiler run'
 }
 
 function Invoke-Tests {
     # The test suite is a bash script; Git for Windows provides bash on the runner.
     $env:PATH = "$sdk\bin;$env:PATH"
-    # Stage2 was generated by LLVM: the runner builds the compiler the same
-    # way for its convergence check.
+    # The compiler under test was generated by LLVM (the chain): the runner
+    # builds the compiler the same way for its fixpoint check.
     $env:SULTANC_TEST_STAGE2_BACKEND = 'llvm'
-    # The suite's target is the machine's own, as cmake chose it for Stage1
-    # and Stage2 (CMAKE_HOST_SYSTEM_PROCESSOR). ci_run.sh runs in Git for
+    # The suite's target is the machine's own, as the chain built the
+    # compiler for it. ci_run.sh runs in Git for
     # Windows' bash, an x64 program that runs emulated on an ARM64 runner and
     # sees an x64 machine: the ARM64 job tested x86_64 code, and its
     # convergence check ran an x86_64 Stage3 under emulation.
@@ -189,13 +244,7 @@ function Invoke-Tests {
 
 switch ($Job) {
     'llvm-sdk' { Step "LLVM $version SDK" { Invoke-LlvmSdk } }
-    'llvm-build' { Step 'LLVM-generated Stage2' { Invoke-LlvmBuild } }
-    'llvm-verify' { Step 'Convergence' { Invoke-LlvmVerify } }
+    'chain' { Step 'C Stage0 chain' { Invoke-Chain } }
+    'release' { Step 'Release compiler' { Invoke-Release } }
     'test' { Step 'Tests' { Invoke-Tests } }
-    'llvm' {
-        Step "LLVM $version SDK" { Invoke-LlvmSdk }
-        Step 'LLVM-generated Stage2' { Invoke-LlvmBuild }
-        Step 'Convergence' { Invoke-LlvmVerify }
-        Step 'Tests' { Invoke-Tests }
-    }
 }

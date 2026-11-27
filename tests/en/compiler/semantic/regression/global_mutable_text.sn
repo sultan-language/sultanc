@@ -1,0 +1,26 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/compiler/semantic/regression/global_mutable_text.sn
+// A mutable module-level text starts as its literal and can be replaced
+// (found by fuzzing: previously an internal lowering failure).
+let name: mutable string = "abc";
+let empty: mutable string = "";
+
+def length_of(t: &string): int { return length(*t) as int; }
+
+def main(): int {
+    let result: mutable int = 42;
+    unsafe {
+        if (length_of(&name) != 3 || name[0] != 97 || name[2] != 99) { result := 1; };
+        if (length_of(&empty) != 0) { result := 2; };
+        name := "hello, world";
+        empty := "xy";
+        if (length_of(&name) != 12 || name[11] != 100) { result := 3; };
+        if (length_of(&empty) != 2) { result := 4; };
+        name := "";
+        if (length_of(&name) != 0) { result := 5; };
+    };
+    return result;
+}

@@ -1,5 +1,5 @@
 // raw_memory_access.sn for the C Stage0 (bootstrap/), which has no casts
-// between integers and pointers (cmake/modules/Stage1.cmake binds this file in
+// between integers and pointers (bootstrap/chain.sh binds this file in
 // that module's place). The Stage1 it builds reads and writes raw memory
 // through its aligned words (raw_memory.sn); the accesses below are never
 // called.

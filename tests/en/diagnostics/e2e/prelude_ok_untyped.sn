@@ -1,0 +1,12 @@
+// اختبار: رفض
+// تشخيص: SULTANC-TYPE-PRELUDE-CONSTRUCTOR-UNTYPED
+// نظير: tests/ar/diagnostics/e2e/prelude_ok_untyped.sn
+// خرج-تشخيص-عربي: prelude_ok_untyped.ar.stderr
+// خرج-تشخيص-إنجليزي: prelude_ok_untyped.en.stderr
+// `ok(x)` says the Type of its value but not that of the error: without a
+// result Type to take, its Type is unknown.
+def main(): int {
+    match ok(5) with
+    | ok(n) -> { return n; }
+    | err(_) -> { return 0; };
+}

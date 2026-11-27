@@ -97,8 +97,11 @@ when none are configured, the system bundle (`SSL_CERT_FILE` or the usual distri
 path length, EKU along the path, DNS and IP name constraints, and unknown critical extensions.
 
 The server name is matched against SAN dNSName (a single left-most wildcard label) or SAN iPAddress;
-the common name is ignored. Disabling peer verification (`tls_client_config_set_verify(false)`) still
-checks the CertificateVerify signature against the leaf key.
+the common name is ignored. Verification is on by default. Turning it off
+(`tls_client_config_disable_verification_insecure`, `عطل_تحقق_النظير_بلا_أمان_تي_إل_إس`) is dangerous:
+any machine on the path can then pose as the server. It is meant only for tests against a server whose
+certificate cannot be verified, takes no argument and cannot be undone on that configuration; the
+handshake still checks the CertificateVerify signature against the leaf key.
 
 ### Server identity and client certificates
 

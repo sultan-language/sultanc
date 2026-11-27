@@ -50,6 +50,19 @@
     }
 }
 
+// A string attribute "المفتاح"="القيمة" of a function.
+عرف صفة_نصية_إل_إل_في_إم(الحالة: &حالة_مزود_إل_إل_في_إم, المفتاح: نص, القيمة: نص): مرجع_صفة_إل_إل_في_إم {
+    ليكن المفتاح_خام: متجه ط8 = بايتات_من_نص(المفتاح);
+    ليكن مفتاح_سي: متغير متجه ط8 = اجعل_اسما_سي_لإل_إل_في_إم(&المفتاح_خام);
+    ليكن القيمة_خام: متجه ط8 = بايتات_من_نص(القيمة);
+    ليكن قيمة_سي: متغير متجه ط8 = اجعل_اسما_سي_لإل_إل_في_إم(&القيمة_خام);
+    أرجع LLVMCreateStringAttribute(
+        (*الحالة).السياق,
+        مؤشر_اسم_سي_لإل_إل_في_إم(&متغير مفتاح_سي), (الطول(المفتاح_خام) مثل طبيعي) مثل ط32,
+        مؤشر_اسم_سي_لإل_إل_في_إم(&متغير قيمة_سي), (الطول(القيمة_خام) مثل طبيعي) مثل ط32
+    );
+}
+
 // Every defined function carries asynchronous unwind tables ("uwtable",
 // as clang's -funwind-tables / -fasynchronous-unwind-tables): LLVM then emits
 // call-frame information (.eh_frame on ELF, compact unwind and .eh_frame on
@@ -68,6 +81,14 @@
 // own producer string: without `push %rbp; mov %rsp,%rbp` it took a
 // function as frameless and stopped at its first instruction, before the
 // parameters reached their slots, and read them unset.
+//
+// Outside Windows (whose code generator already probes through __chkstk),
+// the same functions probe their stack: a frame of a page or more touches
+// it page by page in the prologue ("probe-stack"="inline-asm",
+// "stack-probe-size"="4096"), so it faults in the guard page at the
+// stack's end, where the stack-overflow report finds it
+// (std/os/stack_overflow.sn), and never steps over it. A target whose code
+// generator has no inline probe keeps its frames as they are.
 عام عرف علّم_جداول_فك_المكدس_إل_إل_في_إم(
     الحالة: &حالة_مزود_إل_إل_في_إم,
     الهدف: &واصف_هدف,
@@ -83,6 +104,12 @@
     | هوية_منصة.فري_بي_إس_دي -> { له_نظام := صواب; }
     | _ -> { };
     إذا (!له_نظام) { أرجع; };
+    ليكن يسبر_المكدس: متغير منطقي = صواب;
+    طابق (*الهدف).المنصة.المنصة مع
+    | هوية_منصة.ويندوز -> { يسبر_المكدس := خطأ; }
+    | _ -> { };
+    ليكن صفة_المسبار: مرجع_صفة_إل_إل_في_إم = صفة_نصية_إل_إل_في_إم(الحالة, «probe-stack», «inline-asm»);
+    ليكن صفة_خطوة_المسبار: مرجع_صفة_إل_إل_في_إم = صفة_نصية_إل_إل_في_إم(الحالة, «stack-probe-size», «4096»);
     ليكن الاسم_خام: متجه ط8 = بايتات_من_نص(«uwtable»);
     // UWTableKind::Async.
     ليكن القيمة: ط64 = 2;
@@ -103,6 +130,10 @@
         إذا (LLVMIsDeclaration(الدالة) == 0) {
             LLVMAddAttributeAtIndex(الدالة, 4294967295, الصفة);
             إذا (!محسن) { LLVMAddAttributeAtIndex(الدالة, 4294967295, صفة_الإطار); };
+            إذا (يسبر_المكدس) {
+                LLVMAddAttributeAtIndex(الدالة, 4294967295, صفة_المسبار);
+                LLVMAddAttributeAtIndex(الدالة, 4294967295, صفة_خطوة_المسبار);
+            };
         };
         الدالة := LLVMGetNextFunction(الدالة);
     }

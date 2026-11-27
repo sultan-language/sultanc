@@ -1,0 +1,2 @@
+خطأ[SULTANC-RUNTIME-PROGRAM-STOPPED]: توقف البرنامج
+إزاحة البايت 2 داخل حرف عند tests/ar/runtime/failure/text_slice_end_inside_emoji_ar.sn:16:24

@@ -18,10 +18,11 @@ if ! "$SC" fmt --check </dev/null >/dev/null 2>&1; then
 fi
 
 mkdir -p "$work/tree/sub"
-printf 'def f(  x: int ):int{\nreturn x+1;\n}\n' > "$work/tree/en.sn"
-printf 'def f(x: int): int {\n    return x + 1;\n}\n' > "$work/en.expected"
-printf 'عرف د(  س: عدد ):عدد{\nأرجع س+1; // تعليق\n}\n' > "$work/tree/sub/ar.sn"
-printf 'عرف د(س: عدد): عدد {\n    أرجع س + 1; // تعليق\n}\n' > "$work/ar.expected"
+# A comma is spelled in the source's language: `,` in English, `،` in Arabic.
+printf 'def f(  x: int ، y: int ):int{\nreturn x+1;\n}\n' > "$work/tree/en.sn"
+printf 'def f(x: int, y: int): int {\n    return x + 1;\n}\n' > "$work/en.expected"
+printf 'عرف د(  س: عدد , ص: عدد ):عدد{\nأرجع س+1; // تعليق, كما هو\n}\n' > "$work/tree/sub/ar.sn"
+printf 'عرف د(س: عدد، ص: عدد): عدد {\n    أرجع س + 1; // تعليق, كما هو\n}\n' > "$work/ar.expected"
 printf 'def f( {\n' > "$work/broken.sn"
 # A raw isolate control (U+2067) in a comment: the lexer rejects the file.
 printf '// \342\201\247 isolate\ndef f(): int { return 0; }\n' > "$work/isolate.sn"

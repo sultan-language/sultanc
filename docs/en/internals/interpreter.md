@@ -69,9 +69,13 @@ it, an operation that would trap) changes nothing and falls through to the check
 executes it and reports any failure. CTFE always takes the checked path, which counts every
 instruction against its budget.
 
-**Recursion limit.** Unbounded recursion stops at 250 000 live frames with
-`SULTANC-INTERPRETER-RUNTIME-FAILURE` (reason `interpreter.runtime.call-depth-exceeded`), instead
-of growing until the host runs out of memory. A native program overflows its 8 MiB stack at a comparable depth.
+**Recursion limit.** Unbounded recursion stops at 250 000 live frames instead of growing until the
+host runs out of memory. A native program overflows its 8 MiB stack at a comparable depth, and the
+interpreted program stops as that executable does (docs/en/reference/errors.md, "Runtime checks"):
+the frame "the program stopped", then `stack overflow: the call stack ran out of space` in the
+program's language, and status 1 (`اكتب_فيض_مكدس_مفسر`, on the main thread from the driver and on a
+thread from `machine/thread_failure.sn`). Compile-time work that runs out of depth keeps its
+compile-time diagnostic (reason `comptime.call-depth-exceeded`).
 
 ### Memory
 

@@ -1,0 +1,120 @@
+// اختبار: تشغيل
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// The value of a match expression is the owned value of the arm that matches
+// (docs/en/book/ch06-02-match.md, "A match that gives a value"): a binding
+// moves out of the scrutinee into the result, a field of a binding takes the
+// binding whole, a local moves into it on some paths only, and the arms that
+// bind nothing leave the scrutinee to its owner, which destroys it. Each case
+// runs many times on payloads the heap holds, and the allocator's live bytes
+// must return to their starting value after it: a value never destroyed grows
+// them, one destroyed twice traps in the allocator, and one destroyed too
+// early gives a wrong length.
+// Counterpart: tests/ar/language/ownership/match_expression_moves.sn; no pair
+// directive: the interpreter does not use the std allocator whose counters
+// this reads.
+import std.os.allocation;
+import std.text.number;
+
+type Named = { name: string, id: int };
+type Kind = | small of int | named of string | entry of Named;
+
+// Seven digits, on the heap.
+def payload(n: uint): string { return int_to_text((n + 1000000) as int); }
+
+def make(n: uint): Kind {
+    if ((n % 3) == 0) { return Kind.small(n as int); };
+    if ((n % 3) == 1) { return Kind.named(payload(n)); };
+    let item: Named = { name: payload(n), id: n as int };
+    return Kind.entry(item);
+}
+
+def text_of(n: uint): string {
+    let kind: Kind = make(n);
+    let text: string = match kind with
+    | Kind.named(t) -> t
+    | Kind.entry(r) -> r.name
+    | Kind.small(_) -> "small";
+    return text;
+}
+
+def moved_sometimes(n: uint): int {
+    let own: string = payload(n);
+    let taken: string = match n % 2 with
+    | 0 -> own
+    | _ -> "odd";
+    return length(taken) as int;
+}
+
+def in_loop(n: uint): int {
+    let total: mutable int = 0;
+    let i: mutable uint = 0;
+    while (i < 3) {
+        let piece: string = match make(n + i) with
+        | Kind.named(t) -> t
+        | Kind.entry(r) -> r.name
+        | Kind.small(_) -> "s";
+        total := total + (length(piece) as int);
+        i := i + 1;
+    }
+    return total;
+}
+
+def from_parameter(kind: Kind): string {
+    return match kind with
+    | Kind.named(t) -> t
+    | Kind.entry(r) -> r.name
+    | Kind.small(_) -> "small";
+}
+
+def through_closure(n: uint): int {
+    let measure: fn(Kind): int = fn(kind: Kind): int -> match kind with
+        | Kind.named(t) -> length(t) as int
+        | Kind.entry(r) -> length(r.name) as int
+        | Kind.small(k) -> k;
+    return measure(make(n));
+}
+
+def check(case: uint, n: uint): int {
+    if (case == 0) { return length(text_of(n)) as int; };
+    if (case == 1) { return moved_sometimes(n); };
+    if (case == 2) { return in_loop(n); };
+    if (case == 3) { return length(from_parameter(make(n))) as int; };
+    return through_closure(n);
+}
+
+// The length of the text an arm gives for make(n).
+def piece_length(n: uint, small: int): int {
+    if ((n % 3) == 0) { return small; };
+    return 7;
+}
+
+def expected(case: uint, n: uint): int {
+    if (case == 0 || case == 3) { return piece_length(n, 5); };
+    if (case == 1) {
+        if ((n % 2) == 0) { return 7; };
+        return 3;
+    };
+    if (case == 2) {
+        return piece_length(n, 1) + piece_length(n + 1, 1) + piece_length(n + 2, 1);
+    };
+    return piece_length(n, n as int);
+}
+
+def main(): int {
+    let warm_up: int = check(0, 1) + check(1, 2);
+    let case: mutable uint = 0;
+    while (case < 5) {
+        let before: u64 = بايتات_حية_مخصص_النظام();
+        let n: mutable uint = 0;
+        while (n < 2000) {
+            if (check(case, n) != expected(case, n)) { return 10 + (case as int); };
+            n := n + 1;
+        }
+        let after: u64 = بايتات_حية_مخصص_النظام();
+        if (after != before) { return 20 + (case as int); };
+        case := case + 1;
+    }
+    if (warm_up != 14) { return 1; };
+    return 42;
+}

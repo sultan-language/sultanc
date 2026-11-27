@@ -1,0 +1,92 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/runtime/overflow_bounds/edges.sn
+// Checked add, subtract and multiply of every width and signedness right at
+// their bounds without passing them: no code generator reports an overflow
+// that did not happen (docs/en/internals/msir-and-codegen.md, "Checked
+// arithmetic with an overflow exit").
+def main(): int {
+    let v_i8: vector i8 = [127, -128, 1, -1, 126, -127, 0, 2, 63, -64];
+    if (v_i8[4] + v_i8[2] != v_i8[0]) { return 11; };
+    if (v_i8[5] - v_i8[2] != v_i8[1]) { return 12; };
+    if (v_i8[0] * v_i8[3] != v_i8[5]) { return 13; };
+    if (v_i8[1] + v_i8[0] != v_i8[3]) { return 14; };
+    if (v_i8[6] - v_i8[0] != v_i8[5]) { return 15; };
+    if (v_i8[8] * v_i8[7] != v_i8[4]) { return 16; };
+    if (v_i8[9] * v_i8[7] != v_i8[1]) { return 17; };
+    if (v_i8[1] - v_i8[3] != v_i8[5]) { return 18; };
+    if (v_i8[0] + v_i8[3] != v_i8[4]) { return 19; };
+    if (v_i8[3] * v_i8[0] != v_i8[5]) { return 20; };
+    let v_i16: vector i16 = [32767, -32768, 1, -1, 32766, -32767, 0, 2, 16383, -16384];
+    if (v_i16[4] + v_i16[2] != v_i16[0]) { return 21; };
+    if (v_i16[5] - v_i16[2] != v_i16[1]) { return 22; };
+    if (v_i16[0] * v_i16[3] != v_i16[5]) { return 23; };
+    if (v_i16[1] + v_i16[0] != v_i16[3]) { return 24; };
+    if (v_i16[6] - v_i16[0] != v_i16[5]) { return 25; };
+    if (v_i16[8] * v_i16[7] != v_i16[4]) { return 26; };
+    if (v_i16[9] * v_i16[7] != v_i16[1]) { return 27; };
+    if (v_i16[1] - v_i16[3] != v_i16[5]) { return 28; };
+    if (v_i16[0] + v_i16[3] != v_i16[4]) { return 29; };
+    if (v_i16[3] * v_i16[0] != v_i16[5]) { return 30; };
+    let v_i32: vector i32 = [2147483647, -2147483647 - 1, 1, -1, 2147483646, -2147483647, 0, 2, 1073741823, -1073741824];
+    if (v_i32[4] + v_i32[2] != v_i32[0]) { return 31; };
+    if (v_i32[5] - v_i32[2] != v_i32[1]) { return 32; };
+    if (v_i32[0] * v_i32[3] != v_i32[5]) { return 33; };
+    if (v_i32[1] + v_i32[0] != v_i32[3]) { return 34; };
+    if (v_i32[6] - v_i32[0] != v_i32[5]) { return 35; };
+    if (v_i32[8] * v_i32[7] != v_i32[4]) { return 36; };
+    if (v_i32[9] * v_i32[7] != v_i32[1]) { return 37; };
+    if (v_i32[1] - v_i32[3] != v_i32[5]) { return 38; };
+    if (v_i32[0] + v_i32[3] != v_i32[4]) { return 39; };
+    if (v_i32[3] * v_i32[0] != v_i32[5]) { return 40; };
+    let v_i64: vector i64 = [9223372036854775807, -9223372036854775807 - 1, 1, -1, 9223372036854775806, -9223372036854775807, 0, 2, 4611686018427387903, -4611686018427387904];
+    if (v_i64[4] + v_i64[2] != v_i64[0]) { return 41; };
+    if (v_i64[5] - v_i64[2] != v_i64[1]) { return 42; };
+    if (v_i64[0] * v_i64[3] != v_i64[5]) { return 43; };
+    if (v_i64[1] + v_i64[0] != v_i64[3]) { return 44; };
+    if (v_i64[6] - v_i64[0] != v_i64[5]) { return 45; };
+    if (v_i64[8] * v_i64[7] != v_i64[4]) { return 46; };
+    if (v_i64[9] * v_i64[7] != v_i64[1]) { return 47; };
+    if (v_i64[1] - v_i64[3] != v_i64[5]) { return 48; };
+    if (v_i64[0] + v_i64[3] != v_i64[4]) { return 49; };
+    if (v_i64[3] * v_i64[0] != v_i64[5]) { return 50; };
+    let v_u8: vector u8 = [255, 0, 1, 2, 254, 127];
+    if (v_u8[4] + v_u8[2] != v_u8[0]) { return 51; };
+    if (v_u8[2] - v_u8[2] != v_u8[1]) { return 52; };
+    if (v_u8[0] - v_u8[0] != v_u8[1]) { return 53; };
+    if (v_u8[5] * v_u8[3] != v_u8[4]) { return 54; };
+    if (v_u8[0] * v_u8[2] != v_u8[0]) { return 55; };
+    if (v_u8[0] - v_u8[4] != v_u8[2]) { return 56; };
+    if (v_u8[1] + v_u8[0] != v_u8[0]) { return 57; };
+    if (v_u8[5] + v_u8[5] != v_u8[4]) { return 58; };
+    let v_u16: vector u16 = [65535, 0, 1, 2, 65534, 32767];
+    if (v_u16[4] + v_u16[2] != v_u16[0]) { return 59; };
+    if (v_u16[2] - v_u16[2] != v_u16[1]) { return 60; };
+    if (v_u16[0] - v_u16[0] != v_u16[1]) { return 61; };
+    if (v_u16[5] * v_u16[3] != v_u16[4]) { return 62; };
+    if (v_u16[0] * v_u16[2] != v_u16[0]) { return 63; };
+    if (v_u16[0] - v_u16[4] != v_u16[2]) { return 64; };
+    if (v_u16[1] + v_u16[0] != v_u16[0]) { return 65; };
+    if (v_u16[5] + v_u16[5] != v_u16[4]) { return 66; };
+    let v_u32: vector u32 = [4294967295, 0, 1, 2, 4294967294, 2147483647];
+    if (v_u32[4] + v_u32[2] != v_u32[0]) { return 67; };
+    if (v_u32[2] - v_u32[2] != v_u32[1]) { return 68; };
+    if (v_u32[0] - v_u32[0] != v_u32[1]) { return 69; };
+    if (v_u32[5] * v_u32[3] != v_u32[4]) { return 70; };
+    if (v_u32[0] * v_u32[2] != v_u32[0]) { return 71; };
+    if (v_u32[0] - v_u32[4] != v_u32[2]) { return 72; };
+    if (v_u32[1] + v_u32[0] != v_u32[0]) { return 73; };
+    if (v_u32[5] + v_u32[5] != v_u32[4]) { return 74; };
+    let v_u64: vector u64 = [18446744073709551615, 0, 1, 2, 18446744073709551614, 9223372036854775807];
+    if (v_u64[4] + v_u64[2] != v_u64[0]) { return 75; };
+    if (v_u64[2] - v_u64[2] != v_u64[1]) { return 76; };
+    if (v_u64[0] - v_u64[0] != v_u64[1]) { return 77; };
+    if (v_u64[5] * v_u64[3] != v_u64[4]) { return 78; };
+    if (v_u64[0] * v_u64[2] != v_u64[0]) { return 79; };
+    if (v_u64[0] - v_u64[4] != v_u64[2]) { return 80; };
+    if (v_u64[1] + v_u64[0] != v_u64[0]) { return 81; };
+    if (v_u64[5] + v_u64[5] != v_u64[4]) { return 82; };
+    return 42;
+}

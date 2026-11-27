@@ -1,0 +1,8 @@
+// اختبار: رفض
+// تشخيص: SULTANC-COMPTIME-NON-CONSTANT
+// نظير: tests/ar/compiler/semantic/regression/global_cycle.sn
+// Module-level values that initialize each other in a cycle are a user error,
+// not an internal lowering failure (found by fuzzing).
+let a: int = b;
+let b: int = a;
+def main(): int { return a; }

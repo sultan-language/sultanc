@@ -1,0 +1,6 @@
+error[SULTANC-BORROW-CONFLICT]: borrow conflict — The conflicting borrowed value is `م`. The value is already borrowed mutably, so it cannot be borrowed again.
+  --> tests/ar/diagnostics/e2e/vector_rest_keeps_borrow.sn:10:5..10:40
+    |
+ 10 |     ليكن م: متغير متجه عدد = [1، 2، 3];
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |

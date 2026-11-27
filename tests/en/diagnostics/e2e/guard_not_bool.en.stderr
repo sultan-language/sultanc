@@ -1,0 +1,6 @@
+error[SULTANC-TYPE-MISMATCH]: expected `bool`, found `int` — A condition must be a boolean value.
+  --> tests/en/diagnostics/e2e/guard_not_bool.sn:9:12..9:13
+   |
+ 9 |     | x if x -> { return 1; }
+   |            ^
+   |

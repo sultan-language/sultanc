@@ -1,0 +1,11 @@
+خطأ[SULTANC-MUTABILITY-WRITE-TO-IMMUTABLE]: لا يمكن الكتابة إلى قيمة غير متغيرة — القيمة غير المتغيرة التي جرت محاولة الكتابة إليها هي ⁨`first`⁩. جرت محاولة إسناد قيمة إلى متغير غير قابل للتعديل.
+  --> tests/en/diagnostics/e2e/rest_element_read_only.sn:11:31..11:36
+    |
+ 11 |     | [first, rest tail] -> { first := 0; tail[0] := 0; }
+    |                               ^^^^^ الاستخدام غير الصالح
+    |
+  ::: tests/en/diagnostics/e2e/rest_element_read_only.sn:11:8..11:13
+    |
+ 11 |     | [first, rest tail] -> { first := 0; tail[0] := 0; }
+    |        ^^^^^ صُرّح به هنا دون `متغير`
+    |

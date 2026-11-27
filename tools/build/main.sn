@@ -1,0 +1,244 @@
+استورد std.process.arguments;
+استورد std.text.search;
+استورد std.text.number;
+استورد std.text.from_bytes;
+استورد std.io.println;
+استورد std.env.variables;
+استورد "support.sn";
+استورد "steps.sn";
+استورد "chain.sn";
+
+// The SultanC build driver. build.sh gets a first compiler from the seed when
+// there is none, builds this program with it and runs it with its own
+// arguments (docs/en/internals/bootstrap.md, "build.sh"):
+//
+//   ./build.sh [build]        one step from build/sultanc (else the seed)
+//                             -> build/sultanc; nothing when compiler/ and
+//                             the options did not change
+//   ./build.sh verify         Stage1 (or --with) -> S2 -> S3, S2 == S3; with
+//                             --enable-llvm the LLVM fixpoint and
+//                             cross-backend equality too
+//   ./build.sh bootstrap      Stage1 from the seed only
+//   ./build.sh seed-check     the committed seed equals what the sources build
+//   ./build.sh seed-update    the seed bump
+//   ./build.sh chain          the release check of the frozen C Stage0
+//
+// Run from the repository root.
+
+عرف اطبع_الاستعمال(): فراغ {
+    ليكن الأسطر: متجه نص = [
+        "usage: ./build.sh [verify|bootstrap|seed-check|seed-update|chain] [--enable-llvm] [--target=TRIPLE]\n",
+        "                  [--with=PATH] [--bootstrap=wasm|existing] [--backend=native|llvm]\n",
+        "                  [--release-version=VERSION] [--rebuild] [--stage0-only] [--verbose] [OUTPUT]\n",
+        "  (none)       one self-host step from build/sultanc (else from the seed) -> build/sultanc;\n",
+        "               nothing is rebuilt when compiler/ and the options are unchanged\n",
+        "  verify       the seed (or --with) builds S2, S2 builds S3, S2 == S3; --enable-llvm adds the\n",
+        "               LLVM fixpoint and the cross-backend check\n",
+        "  bootstrap    Stage1 from the seed only -> build/bootstrap/sultanc-stage1\n",
+        "  seed-check   the committed seed equals what the sources build (exit 3 when it does not)\n",
+        "  seed-update  rebuild the committed seed (needs the zstd command)\n",
+        "  chain        the release check: the frozen C Stage0 -> bootstrap/FROZEN -> the current\n",
+        "               compiler, equal to the seed route's (needs git, a C compiler, LLVM);\n",
+        "               --stage0-only builds the C Stage0 alone\n",
+        "  --enable-llvm      include the LLVM backend (links libLLVM: LLVM_CONFIG or SULTANC_LLVM_LIBRARY)\n",
+        "  --target=TRIPLE    build the compiler for TRIPLE -> build/cross/TRIPLE/\n",
+        "  --with=PATH        the previous compiler of the step (default build/sultanc, else the seed)\n",
+        "  --bootstrap=wasm   always start from the seed; existing: require build/sultanc or --with\n",
+        "  --backend=B        the backend that generates the compiler (default native; llvm needs a\n",
+        "                     previous compiler that has it)\n",
+        "  --release-version=VERSION  the version the built compiler reports\n",
+        "  --rebuild          build even when nothing changed\n",
+        "  --jobs=N, -jN      parallel C compilations (Stage1, the chain's Stage0; default: the processors)\n",
+        "  --verbose          show each command as it runs\n",
+        "  OUTPUT             also copy the built compiler there\n",
+        "Environment: CC (the C compiler), LLVM_CONFIG, SULTANC_LLVM_LIBRARY, SULTANC_COMPILE_TIMEOUT (seconds)."
+    ];
+    طابق اطبع_سطر(صل(&الأسطر)) مع | نتيجة.نجح(_) -> { } | نتيجة.خطأ(_) -> { };
+}
+
+// Whether الحجة is --الاسم=VALUE; then the value in القيمة.
+عرف قيمة_خيار(الحجة: &نص, البادئة: &نص, القيمة: &متغير نص): منطقي {
+    إذا (!يبدأ_بـ(الحجة, البادئة)) { أرجع خطأ; };
+    *القيمة := جزء_من(الحجة, الطول(*البادئة) مثل طبيعي, الطول(*الحجة) مثل طبيعي);
+    أرجع صواب;
+}
+
+عرف الرئيسية(): عدد {
+    ليكن الحجج: متجه نص = الوسائط();
+    ليكن الخيارات: متغير خيارات_البناء = {
+        الأمر: «build», الهدف: «», المضيف: هدف_المضيف(), الإخراج: «», بإل_إل_في_إم: خطأ,
+        مكتبة_إل_إل_في_إم: «», الإصدار: «», الخلفية: «», السابق: «», الطريق: «auto», أعد_البناء: خطأ,
+        المهلة: 0, المهام: عدد_المعالجات()
+    };
+    ليكن مرحلة0_فقط: متغير منطقي = خطأ;
+    ليكن الأوامر: متجه نص = [«build», «verify», «bootstrap», «seed-check», «seed-update», «chain»];
+    ليكن ب_الإصدار: نص = «--release-version=»;
+    ليكن ب_مع: نص = «--with=»;
+    ليكن ب_الخلفية: نص = «--backend=»;
+    ليكن ب_الطريق: نص = «--bootstrap=»;
+    ليكن ب_الهدف: نص = «--target=»;
+    ليكن ب_المهام: نص = «--jobs=»;
+    ليكن ب_ج: نص = «-j»;
+    ليكن شرطة: نص = «-»;
+    ليكن ف: متغير طبيعي = 1;
+    طالما (ف < (الطول(الحجج) مثل طبيعي)) {
+        ليكن الحجة: نص = استنسخ(&الحجج[ف]);
+        ليكن القيمة: متغير نص = «»;
+        ليكن أمر_معروف: متغير منطقي = خطأ;
+        ليكن ك: متغير طبيعي = 0;
+        طالما (ك < (الطول(الأوامر) مثل طبيعي)) {
+            إذا (متساويان(&الحجة, &الأوامر[ك])) { أمر_معروف := صواب; };
+            ك := ك + 1;
+        }
+        ليكن stage2: نص = «stage2»;
+        ليكن stage1: نص = «stage1»;
+        ليكن stage0: نص = «stage0»;
+        ليكن مساعدة_أ: نص = «-h»;
+        ليكن مساعدة_ب: نص = «--help»;
+        ليكن مساعدة_ج: نص = «help»;
+        ليكن llvm: نص = «--enable-llvm»;
+        ليكن rebuild: نص = «--rebuild»;
+        ليكن stage0_only: نص = «--stage0-only»;
+        ليكن verbose: نص = «--verbose»;
+        إذا (ف == 1 && أمر_معروف) {
+            الخيارات.الأمر := الحجة;
+        } وإلا إذا (ف == 1 && متساويان(&الحجة, &stage2)) {
+            الخيارات.الأمر := «build»;
+        } وإلا إذا (ف == 1 && متساويان(&الحجة, &stage1)) {
+            الخيارات.الأمر := «bootstrap»;
+        } وإلا إذا (ف == 1 && متساويان(&الحجة, &stage0)) {
+            ليكن الرسالة: نص = «the C Stage0 is frozen and is built only by the release check: ./build.sh chain --stage0-only»;
+            قل_خطأ(&الرسالة);
+            أرجع 2;
+        } وإلا إذا (متساويان(&الحجة, &مساعدة_أ) || متساويان(&الحجة, &مساعدة_ب) || متساويان(&الحجة, &مساعدة_ج)) {
+            اطبع_الاستعمال();
+            أرجع 0;
+        } وإلا إذا (متساويان(&الحجة, &llvm)) {
+            الخيارات.بإل_إل_في_إم := صواب;
+        } وإلا إذا (متساويان(&الحجة, &rebuild)) {
+            الخيارات.أعد_البناء := صواب;
+        } وإلا إذا (متساويان(&الحجة, &stage0_only)) {
+            مرحلة0_فقط := صواب;
+        } وإلا إذا (متساويان(&الحجة, &verbose)) {
+            // support.sn, وضع_مفصل; it reaches the commands the driver runs too.
+            ليكن اسم_التفصيل: نص = «SULTANC_BUILD_VERBOSE»;
+            ليكن قيمة_التفصيل: نص = «1»;
+            طابق اضبط_متغير_بيئة(&اسم_التفصيل, &قيمة_التفصيل) مع | نتيجة.نجح(_) -> { } | نتيجة.خطأ(_) -> { };
+        } وإلا إذا (قيمة_خيار(&الحجة, &ب_الإصدار, &متغير القيمة)) {
+            الخيارات.الإصدار := القيمة;
+        } وإلا إذا (قيمة_خيار(&الحجة, &ب_مع, &متغير القيمة)) {
+            الخيارات.السابق := القيمة;
+        } وإلا إذا (قيمة_خيار(&الحجة, &ب_الخلفية, &متغير القيمة)) {
+            الخيارات.الخلفية := القيمة;
+        } وإلا إذا (قيمة_خيار(&الحجة, &ب_الطريق, &متغير القيمة)) {
+            الخيارات.الطريق := القيمة;
+        } وإلا إذا (قيمة_خيار(&الحجة, &ب_الهدف, &متغير القيمة)) {
+            الخيارات.الهدف := القيمة;
+        } وإلا إذا (يبدأ_بـ(&الحجة, &ب_المهام) || يبدأ_بـ(&الحجة, &ب_ج)) {
+            ليكن طول_البادئة: متغير طبيعي = الطول(ب_ج) مثل طبيعي;
+            إذا (يبدأ_بـ(&الحجة, &ب_المهام)) { طول_البادئة := الطول(ب_المهام) مثل طبيعي; };
+            القيمة := جزء_من(&الحجة, طول_البادئة, الطول(الحجة) مثل طبيعي);
+            طابق حلل_عدد(&القيمة) مع
+            | نتيجة.نجح(العدد) -> {
+                إذا (العدد < 1) { قل_خطأ(&صل(&[«--jobs takes a positive number, not », القيمة])); أرجع 2; };
+                الخيارات.المهام := العدد مثل طبيعي;
+            }
+            | نتيجة.خطأ(_) -> { قل_خطأ(&صل(&[«--jobs takes a positive number, not », القيمة])); أرجع 2; };
+        } وإلا إذا (يبدأ_بـ(&الحجة, &شرطة)) {
+            قل_خطأ(&صل(&[«unexpected option: », الحجة, « (./build.sh --help)»]));
+            أرجع 2;
+        } وإلا إذا (فارغ_النص(&الخيارات.الإخراج)) {
+            الخيارات.الإخراج := الحجة;
+        } وإلا {
+            قل_خطأ(&صل(&[«unexpected argument: », الحجة]));
+            أرجع 2;
+        };
+        ف := ف + 1;
+    }
+
+    // The options' rules.
+    ليكن native: نص = خلفية_أصلية();
+    ليكن llvm_خلفية: نص = خلفية_إل_إل_في_إم();
+    إذا (فارغ_النص(&الخيارات.الخلفية)) { الخيارات.الخلفية := خلفية_أصلية(); };
+    إذا (!متساويان(&الخيارات.الخلفية, &native) && !متساويان(&الخيارات.الخلفية, &llvm_خلفية)) {
+        قل_خطأ(&صل(&[«--backend must be native or llvm, not », استنسخ(&الخيارات.الخلفية)]));
+        أرجع 2;
+    };
+    ليكن auto: نص = «auto»;
+    ليكن wasm: نص = «wasm»;
+    ليكن existing: نص = «existing»;
+    ليكن c: نص = «c»;
+    إذا (متساويان(&الخيارات.الطريق, &c)) {
+        ليكن الرسالة: نص = «--bootstrap=c is gone: the C Stage0 is frozen and only the release check runs it (./build.sh chain); start from the seed: --bootstrap=wasm»;
+        قل_خطأ(&الرسالة);
+        أرجع 2;
+    };
+    إذا (!متساويان(&الخيارات.الطريق, &auto) && !متساويان(&الخيارات.الطريق, &wasm) && !متساويان(&الخيارات.الطريق, &existing)) {
+        قل_خطأ(&صل(&[«--bootstrap must be wasm or existing, not », استنسخ(&الخيارات.الطريق)]));
+        أرجع 2;
+    };
+    ليكن ب_إ: متجه ط8 = بايتات_من_نص(استنسخ(&الخيارات.الإصدار));
+    ليكن ب: متغير طبيعي = 0;
+    طالما (ب < (الطول(ب_إ) مثل طبيعي)) {
+        ليكن ح: ط8 = ب_إ[ب];
+        ليكن مقبول: منطقي = (ح >= 0x30 && ح <= 0x39) || (ح >= 0x41 && ح <= 0x5A) || (ح >= 0x61 && ح <= 0x7A)
+            || ح == 0x2E || ح == 0x2B || ح == 0x5F || ح == 0x2D;
+        إذا (!مقبول) {
+            قل_خطأ(&صل(&[«--release-version takes letters, digits and . + _ - only, not », استنسخ(&الخيارات.الإصدار)]));
+            أرجع 2;
+        };
+        ب := ب + 1;
+    }
+    إذا (فارغ_النص(&الخيارات.الهدف)) { الخيارات.الهدف := استنسخ(&الخيارات.المضيف); };
+    إذا (فارغ_النص(&الخيارات.الهدف)) {
+        ليكن الرسالة: نص = «this host has no SultanC target: name one with --target»;
+        قل_خطأ(&الرسالة);
+        أرجع 2;
+    };
+    ليكن اسم_المهلة: نص = «SULTANC_COMPILE_TIMEOUT»;
+    ليكن لا_مهلة: نص = «0»;
+    ليكن نص_المهلة: نص = بيئة_أو(&اسم_المهلة, &لا_مهلة);
+    طابق حلل_عدد(&نص_المهلة) مع
+    | نتيجة.نجح(القيمة) -> { الخيارات.المهلة := القيمة; }
+    | نتيجة.خطأ(_) -> {
+        قل_خطأ(&صل(&[«SULTANC_COMPILE_TIMEOUT is no number of seconds: », نص_المهلة]));
+        أرجع 2;
+    };
+    إذا (الخيارات.بإل_إل_في_إم) {
+        طابق مكتبة_إل_إل_في_إم() مع
+        | اختياري.موجود(المكتبة) -> { الخيارات.مكتبة_إل_إل_في_إم := المكتبة; }
+        | اختياري.لا_شيء -> { أرجع 1; };
+    };
+
+    ليكن build: نص = «build»;
+    ليكن verify: نص = «verify»;
+    ليكن bootstrap: نص = «bootstrap»;
+    ليكن seed_check: نص = «seed-check»;
+    ليكن seed_update: نص = «seed-update»;
+    // The checks compile for real: the compilers they run read and write no
+    // compilation cache (SULTANC_CACHE=off reaches every compiler, old or new;
+    // compiler/driver/compile_cache.sn).
+    إذا (!متساويان(&الخيارات.الأمر, &build)) {
+        ليكن اسم_الخزن: نص = «SULTANC_CACHE»;
+        ليكن مطفأ: نص = «off»;
+        طابق اضبط_متغير_بيئة(&اسم_الخزن, &مطفأ) مع | نتيجة.نجح(_) -> { } | نتيجة.خطأ(_) -> { };
+    };
+    ليكن نجح: متغير منطقي = خطأ;
+    إذا (متساويان(&الخيارات.الأمر, &build)) {
+        نجح := ابن(&الخيارات);
+    } وإلا إذا (متساويان(&الخيارات.الأمر, &verify)) {
+        نجح := تحقق(&الخيارات);
+    } وإلا إذا (متساويان(&الخيارات.الأمر, &bootstrap)) {
+        نجح := أقلع(&الخيارات);
+    } وإلا إذا (متساويان(&الخيارات.الأمر, &seed_check)) {
+        أرجع افحص_البذرة(&الخيارات);
+    } وإلا إذا (متساويان(&الخيارات.الأمر, &seed_update)) {
+        نجح := حدّث_البذرة(&الخيارات);
+    } وإلا إذا (مرحلة0_فقط) {
+        نجح := المرحلة0_وحدها(&الخيارات);
+    } وإلا {
+        نجح := السلسلة(&الخيارات);
+    };
+    إذا (نجح) { أرجع 0; };
+    أرجع 1;
+}

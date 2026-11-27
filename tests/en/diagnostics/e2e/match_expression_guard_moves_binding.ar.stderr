@@ -1,0 +1,6 @@
+خطأ[SULTANC-OWNERSHIP-MOVE-OUT-OF-REFERENCE]: لا يجوز نقل قيمة مملوكة من تخزين مستعار — القيمة المنقولة من تخزين مستعار هي ⁨`s`⁩. جرت محاولة نقل قيمة مملوكة من تخزين مستعار.
+  --> tests/en/diagnostics/e2e/match_expression_guard_moves_binding.sn:13:28..13:29
+    |
+ 13 |     | Named.One(s) if take(s) > 3 -> 1
+    |                            ^
+    |

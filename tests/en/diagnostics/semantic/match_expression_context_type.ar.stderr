@@ -1,0 +1,6 @@
+خطأ[SULTANC-TYPE-MISMATCH]: النوع الموجود ⁨`نص`⁩ لا يطابق النوع المتوقع ⁨`عدد`⁩ — القيمة لا تطابق النوع المصرح به لوجهتها.
+  --> tests/en/diagnostics/semantic/match_expression_context_type.sn:11:12..11:17
+    |
+ 11 |     | 1 -> "one"
+    |            ^^^^^
+    |

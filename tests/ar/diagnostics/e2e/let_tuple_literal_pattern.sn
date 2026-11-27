@@ -1,0 +1,10 @@
+// اختبار: رفض
+// تشخيص: SULTANC-PARSE-LET-PATTERN
+// نظير: tests/en/diagnostics/e2e/let_tuple_literal_pattern.sn
+// خرج-تشخيص-عربي: let_tuple_literal_pattern.ar.stderr
+// خرج-تشخيص-إنجليزي: let_tuple_literal_pattern.en.stderr
+// الحرفي في `ليكن` المفككة يختبر القيمة: وذلك عمل `طابق`.
+عرف الرئيسية(): عدد {
+    ليكن (0، العدد): (عدد، عدد) = (0، 3);
+    أرجع العدد;
+}

@@ -200,6 +200,55 @@ each may have a different width, and a position that looked cheap would quietly 
 text. Byte positions are always cheap, and the functions that work with characters, like `char_count`,
 say so in their names.
 
+## Slices of text
+
+A slice of text names part of a string without copying it. It is written with the borrow operator and a range
+of byte positions, both ends included: `&s[a..b]` is the bytes a through b of `s`. Its type is `&string`, the
+same as `&s`, which borrows the whole text, so a slice goes wherever a `&string` goes:
+
+```sultan
+import std.io.println;
+import std.text.number;
+
+def first_word(text: &string): &string {
+    let end: mutable int = 0;
+    while (end < length(*text) && (*text)[end] != 32) { end := end + 1; }
+    return &text[0..end - 1];
+}
+
+def main(): int {
+    let line: string = "hello world";
+    let word: &string = &line[6..10];
+    println(word);
+    println(int_to_text(length(*word)));
+    if (word == "world") { println("same text"); };
+    println(first_word(&line));
+    println(&line[..4]);
+    println(&line[6..]);
+    return 0;
+}
+```
+
+```text
+world
+5
+same text
+hello
+hello
+world
+```
+
+`&s[a..]` runs to the end, `&s[..b]` starts at the beginning, and `&s[..]` is all of the text. A slice compares
+with `==` to a string, a literal or another slice, and `length(*word)` counts its bytes. `first_word` returns a
+slice of the text it was given, which outlives the call; a slice of a local string cannot leave its function, and
+while a slice is alive its string cannot be moved or changed (chapter 4's borrowing rules).
+
+The positions are byte positions, so they must fall between characters. `&arabic[0..1]` is the first letter of
+`"سلطان"`, two bytes; `&arabic[0..0]` would cut it in half, and the program stops with `byte offset 1 is inside
+a character`. A slice is read-only for the same reason: writing into it could break a character, so
+`&mutable s[a..b]` is an error. When you need text of your own, `copy_text(word)` from `std.text.from_bytes`, or
+`clone(word)`, makes an owned `string` from a slice.
+
 ## Searching
 
 ```sultan

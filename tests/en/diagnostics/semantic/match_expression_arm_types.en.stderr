@@ -1,0 +1,6 @@
+error[SULTANC-TYPE-MISMATCH]: expected `int`, found `string` — Every arm of a match expression gives a value of one type, the type of its first value.
+  --> tests/en/diagnostics/semantic/match_expression_arm_types.sn:10:41..10:46
+    |
+ 10 |     match (match n with | 1 -> 2 | _ -> "two") with
+    |                                         ^^^^^
+    |

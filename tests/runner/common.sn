@@ -584,15 +584,17 @@
     أرجع اختياري.لا_شيء();
 }
 
-// The module sources a build of compiler/main.sn needs to match the compiler
-// under test (cmake/CMakeLists.txt, SULTANC_COMPILER_CAPABILITY_ARGS): a
-// compiler without the LLVM backend is built with LLVM's stub provider.
 // The arguments the compiler under test was built with, so that a compiler
-// the tests build is the same program: the backend that generated Stage2
-// (SULTANC_TEST_STAGE2_BACKEND, set by the CI scripts; native and llvm give
-// different bytes) and, without LLVM, the stub for its provider.
+// the tests build is the same program: -O2 (the level every build of the
+// compiler names; without -O nothing is optimized), the backend that
+// generated Stage2 (SULTANC_TEST_STAGE2_BACKEND, set by the CI scripts;
+// native and llvm give different bytes) and, without LLVM, the stub for its
+// provider (the module source the build driver binds for a Native-only
+// compiler, tools/build).
 عام عرف وسائط_بناء_المترجم(): متجه نص {
-    ليكن الناتج: متغير متجه نص = [];
+    // Without the compilation cache: these builds measure or compare what
+    // the compiler does (the fixpoint, RSS).
+    ليكن الناتج: متغير متجه نص = [«-O2», «--no-cache»];
     ليكن اسم_الخلفية: نص = «SULTANC_TEST_STAGE2_BACKEND»;
     ليكن فارغ: نص = «»;
     ليكن الخلفية: نص = قيمة_متغير_بيئة_أو(&اسم_الخلفية, &فارغ);

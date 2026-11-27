@@ -1,0 +1,6 @@
+خطأ[SULTANC-TYPE-ADDRESS-OF-NON-LVALUE]: لا يمكن أخذ عنوان قيمة غير قابلة للعنونة
+  --> tests/ar/diagnostics/e2e/slice_of_temporary.sn:9:26..9:32
+   |
+ 9 |     ليكن الجزء: [] عدد = اصنع()[1..];
+   |                          ^^^^^^
+   |

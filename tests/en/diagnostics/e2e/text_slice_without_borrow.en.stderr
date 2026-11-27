@@ -1,0 +1,6 @@
+error[SULTANC-TYPE-TEXT-SLICE]: a slice of text is borrowed read-only: `&s[a..b]`
+  --> tests/en/diagnostics/e2e/text_slice_without_borrow.sn:9:24..9:38
+   |
+ 9 |     let part: string = greeting[1..3];
+   |                        ^^^^^^^^^^^^^^
+   |

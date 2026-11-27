@@ -1,0 +1,15 @@
+// اختبار: رفض
+// تشخيص: SULTANC-BORROW-CONFLICT
+// نظير: tests/ar/diagnostics/e2e/let_tuple_split_use_while_live.sn
+// خرج-تشخيص-عربي: let_tuple_split_use_while_live.ar.stderr
+// خرج-تشخيص-إنجليزي: let_tuple_split_use_while_live.en.stderr
+// The halves a tuple `let` takes from `split_mutable` borrow the vector
+// exclusively: it is not read while either half is in use.
+def main(): int {
+    let values: mutable vector int = [1, 2, 3];
+    let (left, right): (mutable [] int, mutable [] int) = split_mutable(&mutable values, 1);
+    let first: int = values[0];
+    left[0] := first;
+    right[0] := 0;
+    return values[0];
+}

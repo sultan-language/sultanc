@@ -1,0 +1,71 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/language/surface/slicing.sn
+// Slices `v[a..b]`, both ends included, views with no copy: a middle part,
+// the whole vector (`v[0..length(v) - 1]` and `v[..]`), open ends (`v[2..]`,
+// `v[..1]`), the empty slice (`v[a..a - 1]`), a slice of a slice, read-only
+// views side by side, a slice passed to a `[] T` parameter, a recursion over
+// slices, and writable views made with `&mutable` that write into the vector:
+// `&mutable w[1..3]`, `&mutable w[2..]`, and `&mutable w` for a
+// `mutable [] int` parameter. A variable named `range` stays a name.
+def sum(s: [] int): int {
+    let total: mutable int = 0;
+    let i: mutable uint = 0;
+    while (i < (length(s) as uint)) { total := total + s[i]; i := i + 1; }
+    return total;
+}
+
+// Recursion over slices: the first element and the sum of the others.
+def sum_rec(s: [] int): int {
+    if (length(s) == 0) { return 0; };
+    return s[0] + sum_rec(s[1..]);
+}
+
+def fill(s: mutable [] int, value: int): int {
+    let i: mutable uint = 0;
+    while (i < (length(s) as uint)) { s[i] := value; i := i + 1; }
+    return length(s) as int;
+}
+
+def digits(n: int): int {
+    let range: int = 7;
+    match n with
+    | range 0..9 -> { return 1; }
+    | range 10..99 -> { return 2; }
+    | range 100.. -> { return 3; }
+    | range ..-1 -> { return range; };
+}
+
+def main(): int {
+    let v: vector int = [10, 20, 30, 40, 50];
+    let middle: [] int = v[1..3];
+    if (length(middle) != 3 || middle[0] != 20 || sum(middle) != 90) { return 1; };
+    let all_of_it: [] int = v[0..length(v) - 1];
+    let also_all: [] int = v[..];
+    if (sum(all_of_it) != 150 || sum(also_all) != 150) { return 2; };
+    let tail: [] int = v[2..];
+    let head: [] int = v[..1];
+    if (sum(tail) != 120 || sum(head) != 30) { return 3; };
+    let empty: [] int = v[2..1];
+    let none_left: [] int = v[5..];
+    let none_right: [] int = v[..-1];
+    if (length(empty) != 0 || length(none_left) != 0 || length(none_right) != 0) { return 4; };
+    let inner: [] int = middle[1..2];
+    if (sum(inner) != 70 || inner[0] != 30) { return 5; };
+    // Read-only views side by side.
+    let left: [] int = v[0..1];
+    let right: [] int = v[1..2];
+    if (left[1] != right[0]) { return 6; };
+    if (sum(v[3..4]) != 90 || sum_rec(v[..]) != 150) { return 7; };
+    // Writable views: each writes into w.
+    let w: mutable vector int = [1, 2, 3, 4, 5];
+    let part: mutable [] int = &mutable w[1..3];
+    part[0] := 9;
+    if (w[1] != 9) { return 8; };
+    if (fill(&mutable w[3..], 0) != 2 || w[3] != 0 || w[4] != 0 || w[2] != 3) { return 9; };
+    if (fill(&mutable w, 7) != 5 || sum(w[..]) != 35) { return 10; };
+    if (digits(5) != 1 || digits(42) != 2 || digits(500) != 3 || digits(-3) != 7) { return 11; };
+    return 42;
+}

@@ -47,7 +47,7 @@ def main(): int {
         | _ -> { };
         number := number + 1;
     }
-    if (count != (237 as uint)) { return 3; };
+    if (count != (252 as uint)) { return 3; };
     let unknown: string = "SULTANC-E0001";
     match معرف_تشخيص_من_كود(&unknown) with
     | option.none -> { }

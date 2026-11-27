@@ -1,0 +1,6 @@
+خطأ[SULTANC-TYPE-TEXT-SLICE]: شريحة النص تُستعار للقراءة فقط: ⁨`&ن[أ..ب]`⁩
+  --> tests/en/diagnostics/e2e/text_slice_without_borrow.sn:9:24..9:38
+   |
+ 9 |     let part: string = greeting[1..3];
+   |                        ^^^^^^^^^^^^^^
+   |

@@ -1,0 +1,11 @@
+// اختبار: رفض
+// تشخيص: SULTANC-TYPE-PRELUDE-CONSTRUCTOR-UNTYPED
+// نظير: tests/en/diagnostics/e2e/prelude_none_untyped.sn
+// خرج-تشخيص-عربي: prelude_none_untyped.ar.stderr
+// خرج-تشخيص-إنجليزي: prelude_none_untyped.en.stderr
+// تأخذ `لا_شيء` المجردة نوع اختياريها من موضعها؛ ومميَّز المطابقة لا يعطيها نوعا.
+عرف الرئيسية(): عدد {
+    طابق لا_شيء مع
+    | موجود(ن) -> { أرجع ن; }
+    | لا_شيء -> { أرجع 0; };
+}

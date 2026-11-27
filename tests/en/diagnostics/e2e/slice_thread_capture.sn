@@ -1,0 +1,23 @@
+// اختبار: رفض
+// تشخيص: SULTANC-THREAD-CAPTURE-REFERENCE
+// نظير: tests/ar/diagnostics/e2e/slice_thread_capture.sn
+// خرج-تشخيص-عربي: slice_thread_capture.ar.stderr
+// خرج-تشخيص-إنجليزي: slice_thread_capture.en.stderr
+// A slice is a borrowed view: a closure handed to another thread may not
+// capture it, as it may not capture a reference.
+import std.thread.thread;
+
+def keep(x: int): void { }
+
+def run(values: &vector int): void {
+    let part: [] int = (*values)[1..];
+    match spawn(fn(): void -> keep(part[0])) with
+    | result.ok(_) -> { }
+    | result.err(_) -> { };
+}
+
+def main(): i32 {
+    let values: vector int = [1, 2, 3];
+    run(&values);
+    return 0;
+}

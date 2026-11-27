@@ -1,0 +1,5 @@
+// اختبار: رفض
+// تشخيص: SULTANC-ASM-UNSUPPORTED
+// نظير: tests/ar/compiler/semantic/regression/asm_statement.sn
+// `asm` in a function is reported as unsupported (found by fuzzing).
+def main(): int { unsafe { asm "nop"; }; return 0; }

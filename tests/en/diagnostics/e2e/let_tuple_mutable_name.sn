@@ -1,0 +1,11 @@
+// اختبار: رفض
+// تشخيص: SULTANC-MUTABILITY-LET-TUPLE-MUTABLE
+// نظير: tests/ar/diagnostics/e2e/let_tuple_mutable_name.sn
+// خرج-تشخيص-عربي: let_tuple_mutable_name.ar.stderr
+// خرج-تشخيص-إنجليزي: let_tuple_mutable_name.en.stderr
+// Only a writable view `mutable [] T` is `mutable` in a tuple `let`.
+def main(): int {
+    let (a, b): (mutable int, int) = (1, 2);
+    a := a + b;
+    return a;
+}

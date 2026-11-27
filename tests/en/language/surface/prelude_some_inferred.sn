@@ -1,0 +1,25 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 42
+// تفاضلي: نعم
+// نظير: tests/ar/language/surface/prelude_some_inferred.sn
+// A bare `some(x)` where no Type is expected, such as a match's scrutinee,
+// is the option of its argument's Type: `some(40)` is an `option int`,
+// `some(word)` an `option string` that takes the text, and `some(&mutable n)`
+// an option of a borrow that writes `n`.
+def main(): int {
+    let total: mutable int = 0;
+    match some(30) with
+    | some(n) -> { total := total + n; }
+    | none -> { return 1; };
+    let word: string = "ab";
+    match some(word) with
+    | some(w) -> { total := total + (length(w) as int); }
+    | none -> { return 2; };
+    let counter: mutable int = 0;
+    match some(&mutable counter) with
+    | some(writer) -> { *writer := 8; }
+    | none -> { return 3; };
+    let doubled: int = match some(1) with | some(k) -> k * 2 | none -> 0;
+    return total + counter + doubled;
+}

@@ -10,7 +10,7 @@
 استورد compiler.diagnostics.schema;
 استورد compiler.ispeak.ispeak;
 
-// Every one of the 921 active identities must preserve each of the 22
+// Every one of the 939 active identities must preserve each of the 22
 // named context facts in both languages, without falling back to fixed text.
 عرف تحقق(اللغة: لغة_تشخيص, المفتاح: مفتاح_رسالة_تشخيص, الحمولة: حقائق_رسالة): منطقي {
     طابق رسالة_تشخيص_بحجج(اللغة, المفتاح, الحمولة) مع
@@ -127,6 +127,6 @@
         العدد := العدد + 1;
         رقم := رقم + 1;
     }
-    إذا (العدد != (921 مثل طبيعي)) { أرجع 3; };
+    إذا (العدد != (939 مثل طبيعي)) { أرجع 3; };
     أرجع 0;
 }

@@ -1,0 +1,12 @@
+// اختبار: رفض
+// تشخيص: SULTANC-MUTABILITY-WRITE-TO-IMMUTABLE
+// نظير: tests/ar/diagnostics/e2e/slice_mutable_of_immutable.sn
+// خرج-تشخيص-عربي: slice_mutable_of_immutable.ar.stderr
+// خرج-تشخيص-إنجليزي: slice_mutable_of_immutable.en.stderr
+// A writable view `&mutable v[a..b]` needs a vector the program may write:
+// `values` is not `mutable`.
+def first_zero(s: mutable [] int): int { s[0] := 0; return 0; }
+def main(): int {
+    let values: vector int = [1, 2, 3];
+    return first_zero(&mutable values[0..1]);
+}

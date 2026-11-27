@@ -1,0 +1,6 @@
+خطأ[SULTANC-TYPE-IF-WITHOUT-VALUE]: لا يعطي أي فرع من ⁨`إذا`⁩ هذه قيمة
+  --> tests/ar/diagnostics/e2e/if_expression_without_value.sn:8:19..8:59
+   |
+ 8 |     ليكن ق: عدد = إذا (ن > 0) { أرجع 1; } وإلا { أرجع 2; };
+   |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |

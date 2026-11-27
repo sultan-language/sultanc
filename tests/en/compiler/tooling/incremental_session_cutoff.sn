@@ -1,0 +1,341 @@
+// اختبار: تشغيل
+// خروج: 42
+// نظير: tests/ar/compiler/tooling/incremental_session_cutoff.sn
+// Early cutoff in an incremental analysis session. The workspace (root.sn
+// imports lib.sn and user.sn; user.sn imports lib.sn) is edited through an
+// editor's unsaved texts, and after each edit the session's result is
+// compared with a full analysis of the same texts: every resolved occurrence
+// (its declaration's place and its Type), every diagnostic (at its place)
+// and every source's completeness (صف_واجهة_للمقارنة). When the texts differ
+// from the final state the session kept in one module, and in no token
+// outside its function bodies, only that module is analysed (analysed 1,
+// early cutoff; none without an edit):
+// comments, with every later declaration moved; a new local and new and
+// removed references to an imported function; a type error in a body (the
+// importer still types) and its fix. A signature change, a new public
+// declaration and a generic function's body are analysed as before, with
+// the importers. Many body edits stay equal to a full analysis and do not
+// grow the analysis (the kept state is never changed). Two modules changed
+// at once keep no final state; the copy made ahead is then the workspace's.
+import compiler.driver.source_inputs;
+import compiler.frontend.semantic_pipeline;
+import compiler.frontend.incremental_analysis;
+import compiler.frontend.cancellation;
+import compiler.frontend.module_loading.logical_environment;
+import compiler.frontend.names.identifiers;
+import compiler.frontend.names.symbols;
+import compiler.frontend.names.name_context;
+import compiler.backend.target.target_model;
+import compiler.backend.target.target_registry;
+import std.text.search;
+import std.text.substring;
+import std.text.compare;
+import std.text.transform;
+import std.text.from_bytes;
+
+def host(): اختياري واصف_هدف {
+    match حل_هدف_المضيف_المسجل() with
+    | نتيجة_حل_هدف.غير_مسجل -> { return اختياري.لا_شيء(); }
+    | نتيجة_حل_هدف.محلول(target) -> { return اختياري.موجود(target); };
+}
+
+def path_of(name: string): string {
+    let parts: vector string = ["tests/en/compiler/tooling/incremental_session_cutoff/", name];
+    let separator: string = "";
+    return صل_النصوص(&parts, &separator);
+}
+
+def join(a: string, b: string): string {
+    let parts: vector string = [a, b];
+    let separator: string = "";
+    return صل_النصوص(&parts, &separator);
+}
+
+def request(env: &بيئة_وحدات_منطقية, key: &مفتاح_وحدة_مقنن): طلب_واجهة_وحدة {
+    let r: طلب_واجهة_وحدة = { البيئة: استنسخ(env), المفتاح_الجذري: استنسخ(key), احتفظ_بحقائق_الأدوات: true };
+    return r;
+}
+
+def describe(result: &نتيجة_بناء_واجهة_قابلة_للإلغاء): vector string {
+    match *result with
+    | نتيجة_بناء_واجهة_قابلة_للإلغاء.مكتملة(frontend) -> { return صف_واجهة_للمقارنة(&frontend); }
+    | _ -> { let none: vector string = []; return none; };
+}
+
+def same(a: &vector string, b: &vector string): bool {
+    if ((length(*a) as uint) == 0 || (length(*a) as uint) != (length(*b) as uint)) { return false; }
+    let i: mutable uint = 0;
+    while (i < (length(*a) as uint)) {
+        if (!نصان_متساويان(&(*a)[i], &(*b)[i])) { return false; }
+        i := i + 1;
+    }
+    return true;
+}
+
+// Whether any line names the given text.
+def mentions(lines: &vector string, text: string): bool {
+    let i: mutable uint = 0;
+    while (i < (length(*lines) as uint)) {
+        match ابحث_نصا(&(*lines)[i], &text) with
+        | اختياري.موجود(_) -> { return true; }
+        | اختياري.لا_شيء -> { };
+        i := i + 1;
+    }
+    return false;
+}
+
+// Whether a diagnostic line names the given source.
+def diagnostic_in(lines: &vector string, name: string): bool {
+    let i: mutable uint = 0;
+    let head: string = "D ";
+    while (i < (length(*lines) as uint)) {
+        if (يبدأ_بـ(&(*lines)[i], &head)) {
+            match ابحث_نصا(&(*lines)[i], &name) with
+            | اختياري.موجود(_) -> { return true; }
+            | اختياري.لا_شيء -> { };
+        }
+        i := i + 1;
+    }
+    return false;
+}
+
+// The path a source was loaded from, as its completeness line names it.
+def loaded_path(lines: &vector string, name: string): string {
+    let size: uint = length(name) as uint;
+    let tail: string = صل_النصوص(&["/", name, " load="], &"");
+    let i: mutable uint = 0;
+    while (i < (length(*lines) as uint)) {
+        let line: &string = &(*lines)[i];
+        let head: string = "C ";
+        if (يبدأ_بـ(line, &head)) {
+            match ابحث_نصا(line, &tail) with
+            | اختياري.موجود(at) -> {
+                match مقطع_نص(line, 2, at + 1 + size - 2) with
+                | اختياري.موجود(path) -> { return path; }
+                | اختياري.لا_شيء -> { };
+            }
+            | اختياري.لا_شيء -> { };
+        }
+        i := i + 1;
+    }
+    return "";
+}
+
+// The session's result for the current texts, compared with a full
+// analysis; the session's result is kept in results.
+def step(
+    session: &mutable جلسة_تحليل_تزايدي, env: &بيئة_وحدات_منطقية, key: &مفتاح_وحدة_مقنن,
+    results: &mutable vector نتيجة_واجهة_وحدة
+): vector string {
+    let more: vector مفتاح_وحدة_مقنن = [];
+    let cancel: حالة_إلغاء_واجهة = حالة_إلغاء_واجهة_جديدة();
+    let incremental: نتيجة_بناء_واجهة_قابلة_للإلغاء =
+        ابن_واجهة_في_جلسة(session, request(env, key), host(), &more, &cancel);
+    let full: نتيجة_بناء_واجهة_قابلة_للإلغاء =
+        ابن_واجهة_وحدة_بهدف_قابلة_للإلغاء(request(env, key), host(), &more, &cancel);
+    let a: vector string = describe(&incremental);
+    let b: vector string = describe(&full);
+    if (!same(&a, &b)) { let none: vector string = []; return none; }
+    match incremental with
+    | نتيجة_بناء_واجهة_قابلة_للإلغاء.مكتملة(frontend) -> { append(*results, frontend); }
+    | _ -> { };
+    return a;
+}
+
+// Early cutoff: one module analysed, every other one reused.
+def cut(session: &جلسة_تحليل_تزايدي): bool {
+    let stats: إحصاء_طلب_جلسة = إحصاء_جلسة_تحليل(session);
+    return stats.قطع_مبكر && stats.اللقطة == 3 && stats.المحللة == 1 && stats.المعاد_استعمالها > 0;
+}
+
+// Analysed as before: no cutoff, the module and its importers.
+def staged(session: &جلسة_تحليل_تزايدي): bool {
+    let stats: إحصاء_طلب_جلسة = إحصاء_جلسة_تحليل(session);
+    return !stats.قطع_مبكر && stats.المحللة >= 2;
+}
+
+// The byte of the first place of needle in text, past skip bytes of it.
+def byte_of(text: &string, needle: string, skip: uint): uint {
+    match ابحث_نصا(text, &needle) with
+    | اختياري.موجود(at) -> { return at + skip; }
+    | اختياري.لا_شيء -> { return 0; };
+}
+
+// The declaration the name at a byte of a source resolves to: whether its
+// name is at that byte, and how many occurrences resolve to it.
+def declared_at(frontend: &نتيجة_واجهة_وحدة, path: &string, at: uint): bool {
+    match معرف_مصدر_واجهة_باسم(frontend, path) with
+    | اختياري.لا_شيء -> { return false; }
+    | اختياري.موجود(source) -> {
+        match رمز_واجهة_عند_بايت(frontend, source, at) with
+        | اختياري.لا_شيء -> { return false; }
+        | اختياري.موجود(symbol) -> {
+            match تصريح_رمز_واجهة(frontend, symbol) with
+            | اختياري.لا_شيء -> { return false; }
+            | اختياري.موجود(declaration) -> {
+                return (declaration.نطاق_الاسم.البداية.البايت as uint) == at
+                    && (declaration.نطاق_الاسم.البداية.المصدر as uint) == source;
+            };
+        };
+    };
+}
+
+def references_at(frontend: &نتيجة_واجهة_وحدة, path: &string, at: uint): uint {
+    match معرف_مصدر_واجهة_باسم(frontend, path) with
+    | اختياري.لا_شيء -> { return 0; }
+    | اختياري.موجود(source) -> {
+        match رمز_واجهة_عند_بايت(frontend, source, at) with
+        | اختياري.لا_شيء -> { return 0; }
+        | اختياري.موجود(symbol) -> { return length(ظهورات_رمز_واجهة(frontend, symbol)) as uint; };
+    };
+}
+
+// How many Symbols the result's Name facts hold.
+def symbol_count(frontend: &نتيجة_واجهة_وحدة): uint {
+    match (*frontend).استعلامات_الأسماء with
+    | اختياري.موجود(names) -> { return length(names.الرموز) as uint; }
+    | اختياري.لا_شيء -> { return 0; };
+}
+
+def main(): int {
+    let root: string = path_of("root.sn");
+    let extras: vector string = [];
+    match ابن_إعداد_تجميع_مباشر(&root, &extras) with
+    | نتيجة_إعداد_تجميع_مباشر.غير_صالح -> { return 1; }
+    | نتيجة_إعداد_تجميع_مباشر.جاهز({ البيئة: env0, المفتاح_الجذري: key, المفاتيح_المباشرة: _ }) -> {
+        let env: mutable بيئة_وحدات_منطقية = env0;
+        let session: mutable جلسة_تحليل_تزايدي = جلسة_تحليل_تزايدي_جديدة();
+        let results: mutable vector نتيجة_واجهة_وحدة = [];
+        // A full analysis, then the kept states.
+        let first: vector string = step(&mutable session, &env, &key, &mutable results);
+        if ((length(first) as uint) == 0) { return 2; }
+        let lib: string = loaded_path(&first, "lib.sn");
+        let user: string = loaded_path(&first, "user.sn");
+        if ((length(lib) as uint) == 0 || (length(user) as uint) == 0) { return 3; }
+        // No edit: the final state the full analysis kept, as it is.
+        if ((length(step(&mutable session, &env, &key, &mutable results)) as uint) == 0) { return 4; }
+        if (!إحصاء_جلسة_تحليل(&session).قطع_مبكر || إحصاء_جلسة_تحليل(&session).المحللة != 0) { return 50; }
+
+        // A body edit of lib.sn: lib.sn alone, in that final state.
+        let lib_a: string = "public def scale(x: int): int { return x * 5; }\npublic def helper(): int { return 3; }\npublic def pick<T>(a: T, b: T): T { return a; }\n";
+        ضع_تراكب_مصدر_في_البيئة(&mutable env, انسخ_نص(&lib), انسخ_نص(&lib_a));
+        if ((length(step(&mutable session, &env, &key, &mutable results)) as uint) == 0) { return 5; }
+        if (!cut(&session)) { return 6; }
+
+        // 1. A comment appended to lib.sn, which has importers: lib.sn alone.
+        ضع_تراكب_مصدر_في_البيئة(&mutable env, انسخ_نص(&lib), join(انسخ_نص(&lib_a), "// a note at the end\n"));
+        if ((length(step(&mutable session, &env, &key, &mutable results)) as uint) == 0) { return 7; }
+        if (!cut(&session) || إحصاء_جلسة_تحليل(&session).المتغيرة != 1) { return 8; }
+        // Comments before the declarations: every later one moves.
+        let lib_b: string = join("// a note\n// and another, longer one\n", انسخ_نص(&lib_a));
+        ضع_تراكب_مصدر_في_البيئة(&mutable env, انسخ_نص(&lib), انسخ_نص(&lib_b));
+        if ((length(step(&mutable session, &env, &key, &mutable results)) as uint) == 0) { return 9; }
+        if (!cut(&session)) { return 10; }
+        let helper_at: uint = byte_of(&lib_b, "def helper", 4);
+        if (!declared_at(&results[(length(results) as uint) - 1], &lib, helper_at)) { return 11; }
+        // Declared once, used once in user.sn.
+        if (references_at(&results[(length(results) as uint) - 1], &lib, helper_at) != 2) { return 12; }
+
+        // 2. user.sn: a body edit (lib.sn differs from the kept final state
+        // too: analysed as before, and that final state is kept), then a new
+        // local and a new reference to an imported function, then that
+        // reference removed.
+        let user_a: string = "import \"lib.sn\";\npublic def use_scale(): int { return scale(4) + helper() + pick(1, 2); }\n";
+        ضع_تراكب_مصدر_في_البيئة(&mutable env, انسخ_نص(&user), انسخ_نص(&user_a));
+        if ((length(step(&mutable session, &env, &key, &mutable results)) as uint) == 0) { return 13; }
+        if (!staged(&session)) { return 14; }
+        let user_b: string = "import \"lib.sn\";\npublic def use_scale(): int { let twice: int = helper(); return scale(4) + helper() + twice + pick(1, 2); }\n";
+        ضع_تراكب_مصدر_في_البيئة(&mutable env, انسخ_نص(&user), انسخ_نص(&user_b));
+        if ((length(step(&mutable session, &env, &key, &mutable results)) as uint) == 0) { return 15; }
+        if (!cut(&session)) { return 16; }
+        if (references_at(&results[(length(results) as uint) - 1], &lib, helper_at) != 3) { return 17; }
+        let twice_at: uint = byte_of(&user_b, "twice", 0);
+        if (!declared_at(&results[(length(results) as uint) - 1], &user, twice_at)) { return 18; }
+        let user_c: string = "import \"lib.sn\";\npublic def use_scale(): int { let twice: int = 2; return scale(4) + twice + pick(1, 2); }\n";
+        ضع_تراكب_مصدر_في_البيئة(&mutable env, انسخ_نص(&user), انسخ_نص(&user_c));
+        if ((length(step(&mutable session, &env, &key, &mutable results)) as uint) == 0) { return 19; }
+        if (!cut(&session)) { return 20; }
+        if (references_at(&results[(length(results) as uint) - 1], &lib, helper_at) != 1) { return 21; }
+
+        // 3. A type error in a body: its diagnostic, at its place (compared
+        // with the full analysis's); root.sn still types. Then the fix.
+        let user_d: string = "import \"lib.sn\";\npublic def use_scale(): int { let twice: int = \"two\"; return scale(4) + twice + pick(1, 2); }\n";
+        ضع_تراكب_مصدر_في_البيئة(&mutable env, انسخ_نص(&user), انسخ_نص(&user_d));
+        let broken: vector string = step(&mutable session, &env, &key, &mutable results);
+        if ((length(broken) as uint) == 0) { return 22; }
+        if (!cut(&session)) { return 23; }
+        if (!diagnostic_in(&broken, "user.sn")) { return 24; }
+        if (!mentions(&broken, "root.sn load=1 names=1 types=1")) { return 25; }
+        ضع_تراكب_مصدر_في_البيئة(&mutable env, انسخ_نص(&user), انسخ_نص(&user_c));
+        let fixed: vector string = step(&mutable session, &env, &key, &mutable results);
+        if ((length(fixed) as uint) == 0) { return 26; }
+        if (!cut(&session) || mentions(&fixed, "D ")) { return 27; }
+
+        // 4. A signature change: the importers are analysed again; then back.
+        let user_e: string = "import \"lib.sn\";\npublic def use_scale(base: int): int { return scale(base); }\n";
+        ضع_تراكب_مصدر_في_البيئة(&mutable env, انسخ_نص(&user), انسخ_نص(&user_e));
+        let changed: vector string = step(&mutable session, &env, &key, &mutable results);
+        if ((length(changed) as uint) == 0) { return 28; }
+        if (!staged(&session) || !diagnostic_in(&changed, "root.sn")) { return 29; }
+        ضع_تراكب_مصدر_في_البيئة(&mutable env, انسخ_نص(&user), انسخ_نص(&user_c));
+        if ((length(step(&mutable session, &env, &key, &mutable results)) as uint) == 0) { return 30; }
+        if (!staged(&session)) { return 31; }
+
+        // 5. A new public declaration: analysed as before.
+        ضع_تراكب_مصدر_في_البيئة(&mutable env, انسخ_نص(&user), join(انسخ_نص(&user_c), "public def extra(): int { return 9; }\n"));
+        if ((length(step(&mutable session, &env, &key, &mutable results)) as uint) == 0) { return 32; }
+        if (!staged(&session)) { return 33; }
+
+        // 6. A body edit of lib.sn: cutoff. A generic function's body: its
+        // callers' facts may read it, so the importers are analysed again. A
+        // comment inside it changes no token: cutoff.
+        let lib_c: string = join("// a note\n// and another, longer one\n", "public def scale(x: int): int { return x * 6; }\npublic def helper(): int { return 3; }\npublic def pick<T>(a: T, b: T): T { return a; }\n");
+        ضع_تراكب_مصدر_في_البيئة(&mutable env, انسخ_نص(&lib), انسخ_نص(&lib_c));
+        if ((length(step(&mutable session, &env, &key, &mutable results)) as uint) == 0) { return 34; }
+        if (!cut(&session)) { return 35; }
+        let lib_d: string = join("// a note\n// and another, longer one\n", "public def scale(x: int): int { return x * 6; }\npublic def helper(): int { return 3; }\npublic def pick<T>(a: T, b: T): T { return b; }\n");
+        ضع_تراكب_مصدر_في_البيئة(&mutable env, انسخ_نص(&lib), انسخ_نص(&lib_d));
+        if ((length(step(&mutable session, &env, &key, &mutable results)) as uint) == 0) { return 36; }
+        if (!staged(&session)) { return 37; }
+        let lib_e: string = join("// a note\n// and another, longer one\n", "public def scale(x: int): int { return x * 6; }\npublic def helper(): int { return 3; }\npublic def pick<T>(a: T, b: T): T {\n    // the second one\n    return b;\n}\n");
+        ضع_تراكب_مصدر_في_البيئة(&mutable env, انسخ_نص(&lib), انسخ_نص(&lib_e));
+        if ((length(step(&mutable session, &env, &key, &mutable results)) as uint) == 0) { return 38; }
+        if (!cut(&session)) { return 39; }
+
+        // 7. Many body edits of user.sn: each equal to a full analysis, each
+        // a cutoff, and the analysis does not grow (the kept state is not
+        // changed: each edit starts from it).
+        let user_f: string = "import \"lib.sn\";\npublic def use_scale(): int { let twice: int = 2; return scale(5) + twice + pick(1, 2); }\n";
+        ضع_تراكب_مصدر_في_البيئة(&mutable env, انسخ_نص(&user), انسخ_نص(&user_f));
+        if ((length(step(&mutable session, &env, &key, &mutable results)) as uint) == 0) { return 40; }
+        if (!staged(&session)) { return 41; }
+        let x: string = "import \"lib.sn\";\npublic def use_scale(): int { let twice: int = 2; let more: int = twice + 1; return scale(more) + pick(1, 2); }\n";
+        let y: string = "import \"lib.sn\";\npublic def use_scale(): int {\n    // spelled out\n    let twice: int = 3;\n    return scale(twice) + helper();\n}\n";
+        let first_count: mutable uint = 0;
+        let round: mutable uint = 0;
+        while (round < 12) {
+            if ((round % 2) == 0) {
+                ضع_تراكب_مصدر_في_البيئة(&mutable env, انسخ_نص(&user), انسخ_نص(&x));
+            } else {
+                ضع_تراكب_مصدر_في_البيئة(&mutable env, انسخ_نص(&user), انسخ_نص(&y));
+            }
+            if ((length(step(&mutable session, &env, &key, &mutable results)) as uint) == 0) { return 43; }
+            if (!cut(&session)) { return 44; }
+            if (round == 0) { first_count := symbol_count(&results[(length(results) as uint) - 1]); }
+            if ((round % 2) == 0 && symbol_count(&results[(length(results) as uint) - 1]) != first_count) { return 45; }
+            round := round + 1;
+        }
+
+        // Two modules changed at once: no final state is kept, and the copy
+        // made ahead is the workspace state's.
+        ضع_تراكب_مصدر_في_البيئة(&mutable env, انسخ_نص(&lib), انسخ_نص(&lib_a));
+        ضع_تراكب_مصدر_في_البيئة(&mutable env, انسخ_نص(&user), انسخ_نص(&user_a));
+        if ((length(step(&mutable session, &env, &key, &mutable results)) as uint) == 0) { return 46; }
+        if (!staged(&session)) { return 47; }
+        جهز_جلسة_تحليل(&mutable session);
+        ضع_تراكب_مصدر_في_البيئة(&mutable env, انسخ_نص(&user), انسخ_نص(&user_b));
+        if ((length(step(&mutable session, &env, &key, &mutable results)) as uint) == 0) { return 48; }
+        if (إحصاء_جلسة_تحليل(&session).قطع_مبكر || !إحصاء_جلسة_تحليل(&session).جاهزة) { return 49; }
+        return 42;
+    };
+}

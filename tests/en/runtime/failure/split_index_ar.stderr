@@ -1,0 +1,2 @@
+خطأ[SULTANC-RUNTIME-PROGRAM-STOPPED]: توقف البرنامج
+القسمة عند 4 خارج المدى للطول 3 عند tests/en/runtime/failure/split_index_ar.sn:16:11

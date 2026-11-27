@@ -1,0 +1,125 @@
+// اختبار: تشغيل
+// خروج: 42
+// نظير: tests/ar/compiler/tooling/let_tuple_queries.sn
+// The editor queries of compiler/frontend/tooling_queries.sn on the names of a
+// tuple `let`: each name is one Symbol whose references are its declaration in
+// the pattern and its uses after it, and each has the Type written for it,
+// so `left`, a `mutable [] int`, is writable while `right`, a `[] int`, and
+// `quotient`, an `int`, are not.
+import compiler.driver.source_inputs;
+import compiler.frontend.semantic_pipeline;
+import compiler.frontend.tooling_queries;
+import compiler.frontend.cancellation;
+import compiler.frontend.module_loading.logical_environment;
+import compiler.frontend.names.identifiers;
+import compiler.frontend.names.symbols;
+import compiler.frontend.names.tooling_queries;
+import compiler.frontend.names.reference_queries;
+import compiler.frontend.types.tooling_queries;
+import compiler.frontend.types.type_identity;
+import compiler.backend.target.target_model;
+import compiler.backend.target.target_registry;
+import compiler.diagnostics.schema;
+import compiler.source.span;
+import compiler.source.source_file;
+import std.text.search;
+import std.text.substring;
+import std.text.compare;
+
+def host(): اختياري واصف_هدف {
+    match حل_هدف_المضيف_المسجل() with
+    | نتيجة_حل_هدف.غير_مسجل -> { return اختياري.لا_شيء(); }
+    | نتيجة_حل_هدف.محلول(target) -> { return اختياري.موجود(target); };
+}
+
+def build(path: string): اختياري نتيجة_واجهة_وحدة {
+    let extras: vector string = [];
+    match ابن_إعداد_تجميع_مباشر(&path, &extras) with
+    | نتيجة_إعداد_تجميع_مباشر.غير_صالح -> { return اختياري.لا_شيء(); }
+    | نتيجة_إعداد_تجميع_مباشر.جاهز({ البيئة: env, المفتاح_الجذري: key, المفاتيح_المباشرة: _ }) -> {
+        let request: طلب_واجهة_وحدة = { البيئة: env, المفتاح_الجذري: key, احتفظ_بحقائق_الأدوات: true };
+        let more: vector مفتاح_وحدة_مقنن = [];
+        let cancel: mutable حالة_إلغاء_واجهة = حالة_إلغاء_واجهة_جديدة();
+        match ابن_واجهة_وحدة_بهدف_قابلة_للإلغاء(request, host(), &more, &mutable cancel) with
+        | نتيجة_بناء_واجهة_قابلة_للإلغاء.مكتملة(frontend) -> { return اختياري.موجود(frontend); }
+        | _ -> { return اختياري.لا_شيء(); };
+    };
+}
+
+def content_of(frontend: &نتيجة_واجهة_وحدة, source: uint): string {
+    match مصدر_واجهة_بمعرف(frontend, source) with
+    | اختياري.موجود(found) -> { return استنسخ(&found.المحتوى); }
+    | اختياري.لا_شيء -> { return ""; };
+}
+
+def offset_of(content: &string, needle: string): uint {
+    match ابحث_نصا_من(content, &needle, 0) with
+    | اختياري.موجود(at) -> { return at; }
+    | اختياري.لا_شيء -> { return 1000000; };
+}
+
+def text_of(content: &string, found_range: نطاق): string {
+    let start: uint = found_range.البداية.البايت as uint;
+    let end: uint = found_range.النهاية.البايت as uint;
+    if (end < start) { return ""; }
+    match مقطع_نص(content, start, end - start) with
+    | اختياري.موجود(part) -> { return part; }
+    | اختياري.لا_شيء -> { return ""; };
+}
+
+def symbol_at(frontend: &نتيجة_واجهة_وحدة, source: uint, at: uint): uint {
+    match رمز_واجهة_عند_بايت(frontend, source, at) with
+    | اختياري.موجود(symbol) -> { return symbol.القيمة as uint; }
+    | اختياري.لا_شيء -> { return 4000000000; };
+}
+
+def declarations(references: &vector مرجع_رمز_دلالي): uint {
+    let count: mutable uint = 0;
+    let i: mutable uint = 0;
+    while (i < (length(*references) as uint)) {
+        if ((*references)[i].الدور == دور_مرجع.تصريح()) { count := count + 1; }
+        i := i + 1;
+    }
+    return count;
+}
+
+// The name declared at `declared` and used at `used`: one Symbol, spelled
+// `name` at each of its `count` references, one of them its declaration.
+def check_name(
+    frontend: &نتيجة_واجهة_وحدة, source: uint, content: &string,
+    declared: string, used: string, name: string, count: uint
+): bool {
+    let symbol: uint = symbol_at(frontend, source, offset_of(content, declared));
+    if (symbol == 4000000000 || symbol != symbol_at(frontend, source, offset_of(content, used))) { return false; }
+    let references: vector مرجع_رمز_دلالي = مراجع_رمز_واجهة(frontend, معرف_رمز_من(symbol));
+    if ((length(references) as uint) != count || declarations(&references) != 1) { return false; }
+    let i: mutable uint = 0;
+    while (i < count) {
+        let spelled: string = text_of(content, references[i].النطاق);
+        if (!نصان_متساويان(&spelled, &name)) { return false; }
+        i := i + 1;
+    }
+    return true;
+}
+
+def writable(frontend: &نتيجة_واجهة_وحدة, source: uint, content: &string, declared: string): bool {
+    let symbol: uint = symbol_at(frontend, source, offset_of(content, declared));
+    return رمز_قابل_للتغيير_واجهة(frontend, معرف_رمز_من(symbol));
+}
+
+def main(): int {
+    match build("tests/en/compiler/tooling/let_tuple/source.sn") with
+    | اختياري.لا_شيء -> { return 1; }
+    | اختياري.موجود(frontend) -> {
+        let source: uint = frontend.الوحدات[0].معرف_المصدر;
+        let content: string = content_of(&frontend, source);
+        if (!check_name(&frontend, source, &content, "quotient, remainder", "quotient;", "quotient", 2)) { return 2; }
+        if (!check_name(&frontend, source, &content, "remainder)", "remainder;", "remainder", 2)) { return 3; }
+        if (!check_name(&frontend, source, &content, "left, right", "left[1]", "left", 3)) { return 4; }
+        if (!check_name(&frontend, source, &content, "right): (mutable", "right[1]", "right", 2)) { return 5; }
+        if (!writable(&frontend, source, &content, "left, right")) { return 6; }
+        if (writable(&frontend, source, &content, "right): (mutable")) { return 7; }
+        if (writable(&frontend, source, &content, "quotient, remainder")) { return 8; }
+    };
+    return 42;
+}

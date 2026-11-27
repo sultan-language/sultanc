@@ -1,0 +1,16 @@
+// اختبار: رفض
+// تشخيص: SULTANC-PARSE-PATTERN
+// نظير: tests/ar/diagnostics/e2e/record_pattern_dots.sn
+// خرج-تشخيص-عربي: record_pattern_dots.ar.stderr
+// خرج-تشخيص-إنجليزي: record_pattern_dots.en.stderr
+// A record pattern names only the fields it needs: there is no `..` for the
+// others.
+type Size = { width: int, height: int };
+def f(s: Size): int {
+    match s with
+    | { width, .. } -> { return width; };
+}
+def main(): int {
+    let s: Size = { width: 1, height: 2 };
+    return f(s);
+}

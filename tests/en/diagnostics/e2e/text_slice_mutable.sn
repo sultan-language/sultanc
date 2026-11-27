@@ -1,0 +1,12 @@
+// اختبار: رفض
+// تشخيص: SULTANC-TYPE-TEXT-SLICE
+// نظير: tests/ar/diagnostics/e2e/text_slice_mutable.sn
+// خرج-تشخيص-عربي: text_slice_mutable.ar.stderr
+// خرج-تشخيص-إنجليزي: text_slice_mutable.en.stderr
+// A slice of text is read-only: writing into it could cut a character in
+// two, so `&mutable s[a..b]` is rejected, even for a `mutable` text.
+def main(): int {
+    let greeting: mutable string = "hello";
+    let all: &mutable string = &mutable greeting[..];
+    return length(*all);
+}

@@ -278,6 +278,32 @@
     | بيئة_إغلاق_ذراع بنوع معرف_سجل_افتراضي
     | استلام_معامل_ذراع بنوع استلام_معامل_ذراع_أربعة_وستون_منتقى
     | حساب_صحيح_ذراع بنوع حساب_صحيح_ذراع_أربعة_وستون
+    // A checked add, subtract or multiply whose overflow branches to the
+    // block (a report) instead of trapping: the same code, each overflow
+    // test's B.cond over BRK becoming one B.cond to the block. Only the
+    // native allocation path's simplification makes it
+    // (selected_simplification.sn, from msir/checked_arithmetic.sn).
+    | حساب_صحيح_بمخرج_ذراع بنوع (حساب_صحيح_ذراع_أربعة_وستون, معرف_كتلة_منتقاة)
+    // The wrapping add or subtract, or the bitwise AND, ORR or EOR, of a
+    // register and an immediate (the constant's 64-bit pattern: 0..4095 for
+    // add and subtract, a logical immediate for the others), then the
+    // operand type's canonical extension: (operation, destination, left,
+    // immediate, integer). Only the native allocation path's simplification
+    // makes it.
+    | حساب_صحيح_فوري_ذراع بنوع (عملية_حساب_ذراع_أربعة_وستون, معرف_سجل_افتراضي, معرف_سجل_افتراضي, طبيعي, وصف_عدد_ذراع_أربعة_وستون)
+    // حساب_صحيح_بمخرج_ذراع of a checked add or subtract with an immediate
+    // 0..4095 (ADDS or SUBS #imm): (operation, destination, left, immediate,
+    // integer, report block). The simplification makes a negative signed
+    // constant the other operation's positive immediate.
+    | حساب_صحيح_فوري_بمخرج_ذراع بنوع (عملية_حساب_ذراع_أربعة_وستون, معرف_سجل_افتراضي, معرف_سجل_افتراضي, طبيعي, وصف_عدد_ذراع_أربعة_وستون, معرف_كتلة_منتقاة)
+    // A branch to the edge when the register is zero (CBZ, false) or not
+    // (CBNZ, true). Only the native allocation path's simplification makes it.
+    | فرع_صفري_ذراع بنوع (معرف_سجل_افتراضي, منطقي, متطلبات_نقل_حافة_منتقاة)
+    // A branch to the edge when bit N of the register is 0 (false) or 1
+    // (true): TBZ or TBNZ to a block laid out within reach before it, TST and
+    // B.EQ or B.NE otherwise. Only the native allocation path's simplification
+    // makes it.
+    | فرع_بت_ذراع بنوع (معرف_سجل_افتراضي, طبيعي, منطقي, متطلبات_نقل_حافة_منتقاة)
     | حساب_عشري_ذراع بنوع (حساب_عشري_ذراع_أربعة_وستون, معرف_سجل_افتراضي, معرف_سجل_افتراضي, معرف_سجل_افتراضي, طبيعي)
     // Division or remainder by a constant with UMULH/SMULH
     // (backend/codegen/division_by_constant.sn): (destination, dividend,

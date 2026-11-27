@@ -1,0 +1,12 @@
+// اختبار: رفض
+// تشخيص: SULTANC-TYPE-PRELUDE-CONSTRUCTOR-UNTYPED
+// نظير: tests/ar/diagnostics/e2e/prelude_none_untyped.sn
+// خرج-تشخيص-عربي: prelude_none_untyped.ar.stderr
+// خرج-تشخيص-إنجليزي: prelude_none_untyped.en.stderr
+// A bare `none` takes its option Type from where it stands; a match's
+// scrutinee gives it none.
+def main(): int {
+    match none with
+    | some(n) -> { return n; }
+    | none -> { return 0; };
+}

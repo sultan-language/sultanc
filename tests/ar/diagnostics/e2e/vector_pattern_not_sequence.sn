@@ -1,0 +1,12 @@
+// اختبار: رفض
+// تشخيص: SULTANC-PATTERN-INVALID
+// نظير: tests/en/diagnostics/e2e/vector_pattern_not_sequence.sn
+// خرج-تشخيص-عربي: vector_pattern_not_sequence.ar.stderr
+// خرج-تشخيص-إنجليزي: vector_pattern_not_sequence.en.stderr
+// نمط المتجه يطابق متجها أو شريحة: العدد ليس أيا منهما.
+عرف د(القيمة: عدد): عدد {
+    طابق القيمة مع
+    | [أ] -> { أرجع أ; }
+    | _ -> { أرجع 0; };
+}
+عرف الرئيسية(): عدد { أرجع د(1); }

@@ -1,0 +1,11 @@
+// اختبار: رفض
+// تشخيص: SULTANC-NAME-DUPLICATE-DECLARATION
+// نظير: tests/en/diagnostics/e2e/as_duplicate_name.sn
+// خرج-تشخيص-عربي: as_duplicate_name.ar.stderr
+// خرج-تشخيص-إنجليزي: as_duplicate_name.en.stderr
+// الاسم الذي تربطه `مثل` يصرح به كأي ربط في النمط: مرة واحدة.
+عرف د(القيمة: عدد): عدد {
+    طابق القيمة مع
+    | س مثل س -> { أرجع س; };
+}
+عرف الرئيسية(): عدد { أرجع د(1); }

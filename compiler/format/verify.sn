@@ -12,7 +12,8 @@
 
 // The formatter's check of its own output, run on every formatting: the
 // formatted text is lexed again by the canonical lexer and must hold the same
-// tokens (kinds and exact bytes, so the same payloads), the same comments
+// tokens (kinds and exact bytes, so the same payloads; a comma may be spelled
+// `,` or `،`), the same comments
 // and marks byte for byte and in order, and it must parse. Only then is the
 // output used; otherwise the formatter reports an internal error and writes
 // nothing.
@@ -60,7 +61,7 @@
                 إذا (ر >= عدد_الرموز) { أرجع خطأ; };
                 ليكن الرمز: &رمز_مصدر = &السلسلة.الرموز[ر];
                 إذا ((*الرمز).النوع != العنصر.النوع) { أرجع خطأ; };
-                إذا (!بايتات_متساوية(
+                إذا (العنصر.النوع != رمز.فاصلة() && !بايتات_متساوية(
                     الأصل, العنصر.البداية, العنصر.النهاية,
                     الجديد, (*الرمز).النطاق.البداية.البايت مثل طبيعي, (*الرمز).النطاق.النهاية.البايت مثل طبيعي
                 )) {

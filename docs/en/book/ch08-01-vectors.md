@@ -194,6 +194,92 @@ def main(): int {
 6
 ```
 
+## Parts of a vector: slices
+
+`values[a..b]` is the part of a vector from position `a` through position `b`, both ends included: a *slice* of
+type `[] T`. It is a view of the vector's own values, not a copy. Either end may be left open: `values[2..]` runs to
+the last value, `values[..1]` starts at the first, and `values[..]` is all of it. `values[a..a - 1]` is the empty
+slice. A function that only reads takes `[] T`, and a vector or any slice of one can be passed to it:
+
+```sultan
+import std.io.println;
+import std.text.number;
+
+def total(values: [] int): int {
+    let sum: mutable int = 0;
+    for (let i: mutable int = 0; i < length(values); i := i + 1) {
+        sum := sum + values[i];
+    }
+    return sum;
+}
+
+def main(): int {
+    let marks: vector int = [10, 20, 30, 40, 50];
+    println(int_to_text(total(marks[1..3])));
+    println(int_to_text(total(marks[3..])));
+    println(int_to_text(total(marks)));
+    return 0;
+}
+```
+
+```text
+90
+90
+150
+```
+
+A slice is read-only. To change part of a vector through a slice, ask for it with `&mutable`, as for any change
+through a borrow: `&mutable values[2..]` is a writable view, of type `mutable [] T`, and `&mutable values` is a
+writable view of the whole vector where a `mutable [] T` is expected:
+
+```sultan
+import std.io.println;
+import std.text.number;
+
+def fill(part: mutable [] int, value: int): void {
+    for (let i: mutable int = 0; i < length(part); i := i + 1) {
+        part[i] := value;
+    }
+}
+
+def main(): int {
+    let numbers: mutable vector int = [1, 2, 3, 4, 5];
+    fill(&mutable numbers[3..], 0);
+    println(int_to_text(numbers[3]));
+    fill(&mutable numbers, 7);
+    println(int_to_text(numbers[0]));
+    return 0;
+}
+```
+
+```text
+0
+7
+```
+
+Two writable views of one vector at once come from `split_mutable(&mutable values, i)`: the values before position
+`i` and those from `i` on. A tuple `let` ([chapter 3](ch03-02-data-types.md#taking-a-tuple-apart)) names the two
+halves, and each half is written on its own:
+
+```sultan
+def main(): int {
+    let numbers: mutable vector int = [1, 2, 3, 4];
+    let (left, right): (mutable [] int, mutable [] int) = split_mutable(&mutable numbers, 2);
+    left[0] := right[1];
+    right[0] := 0;
+    return numbers[0] + numbers[2];
+}
+```
+
+The program returns 4. `mutable [] int` makes each half a writable view; written `[] int`, a half is read-only. While
+either half is in use, `numbers` is not used another way; once neither is, it is, as `return` does here. `i` may be
+anything from 0 to the length; any other value stops the program, as a position outside the vector does. A `match`
+takes the pair apart too: `match split_mutable(&mutable numbers, 2) with | (left, right) -> { … }`.
+
+A slice borrows its vector. While a writable view is in use, the vector is not read, changed or viewed another way;
+read-only slices can be used side by side. A slice cannot outlive its vector. A position outside the vector stops
+the program with the bound that was wrong, for example `slice end 5 out of range for length 5 at main.sn:4:28`.
+
 ## Vectors of owning values
 
 A vector of strings works the same way, with one rule from chapter 4: taking a string out of the vector

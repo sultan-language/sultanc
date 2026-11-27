@@ -1,0 +1,18 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 1
+// تفاضلي: نعم
+// بيئة: SULTANC_LANG=ar
+// خرج-قياسي: <فارغ>
+// خطأ-قياسي-ملف: split_index_ar.stderr
+// نظير: tests/ar/runtime/failure/split_index_ar.sn
+// A split index past the length of the vector (0 <= i <= length) stops the
+// program through the panic path (docs/en/reference/errors.md, "Runtime
+// checks"): the frame "the program stopped", then the index, the length and
+// the place of the split, exit status 1.
+def main(): int {
+    let values: mutable vector int = [10, 20, 30];
+    let at: int = 4;
+    match split_mutable(&mutable values, at) with
+    | (left, right) -> { return length(left) + length(right); };
+}

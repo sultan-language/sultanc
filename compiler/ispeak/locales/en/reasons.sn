@@ -532,6 +532,8 @@
     | سبب_تشخيص.سبب_نوع_عدد_حرفي_خارج_المدى -> { أرجع «The integer literal is outside the range of the expected type»; }
     | سبب_تشخيص.سبب_نوع_تحويل_غير_صالح -> { أرجع «`as` does not convert a value of this type to the target type»; }
     | سبب_تشخيص.سبب_نوع_سالب_عدد_طبيعي -> { أرجع «An unsigned integer value has no negation; subtract, or convert to a signed type first»; }
+    | سبب_تشخيص.سبب_نوع_أذرع_مطابقة_مختلفة -> { أرجع «Every arm of a match expression gives a value of one type, the type of its first value»; }
+    | سبب_تشخيص.سبب_نوع_فروع_إذا_مختلفة -> { أرجع «Both branches of an `if` used as a value have the same type»; }
     | سبب_تشخيص.سبب_نوع_عامل_غير_معرف_للنوع -> { أرجع «Equality is defined for numbers, characters, booleans, text, raw pointers and enums without payloads, and ordering for numbers and characters; compare a field, or write a comparison function»; }
     | سبب_تشخيص.سبب_نوع_ثابت_تسجيل_نوع_تعبير -> { أرجع «The type table did not record the expression type»; }
     | سبب_تشخيص.سبب_نوع_ثابت_تسجيل_نوع_منشئ -> { أرجع «The type table did not record the constructor call type»; }
@@ -572,6 +574,7 @@
     | سبب_تشخيص.سبب_وقت_الترجمة_فشل_التنفيذ -> { أرجع «Compile-time evaluation failed while running the code»; }
     | سبب_تشخيص.سبب_وقت_الترجمة_فخ_التنفيذ -> { أرجع «The code trapped during compile-time evaluation»; }
     | سبب_تشخيص.سبب_وقت_الترجمة_قيمة_عليا_منشئ_غير_ثابتة -> { أرجع «A module-level value built by a constructor is immutable, and its arguments are numbers, booleans, characters, text or such constructors»; }
+    | سبب_تشخيص.سبب_وقت_الترجمة_قيمة_عليا_غير_ثابتة -> { أرجع «A module-level value is computed while compiling, so it is initialized only from literals and other constant values, without a cycle»; }
     | سبب_تشخيص.سبب_وقت_الترجمة_خلل_المفسر -> { أرجع نص_سبب_سبب_وقت_الترجمة_خلل_المفسر(); }
     | سبب_تشخيص.سبب_وقت_الترجمة_مسير_غير_صالح -> { أرجع نص_سبب_سبب_وقت_الترجمة_مسير_غير_صالح(); }
     | سبب_تشخيص.سبب_وقت_الترجمة_تخطيط_غير_مثبت -> { أرجع نص_سبب_سبب_وقت_الترجمة_تخطيط_غير_مثبت(); }

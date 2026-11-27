@@ -1,0 +1,16 @@
+// اختبار: تفاضلي
+// أهداف: arm64-darwin,x86_64-linux
+// خروج: 1
+// تفاضلي: نعم
+// بيئة: SULTANC_LANG=en
+// خرج-قياسي: <فارغ>
+// خطأ-قياسي-ملف: mul_i64_square.stderr
+// نظير: tests/ar/runtime/overflow_bounds/mul_i64_square.sn
+// A checked i64 multiply past its bound (3037000500 squared) reports the overflow at the
+// operation on every code generator (docs/en/internals/msir-and-codegen.md).
+def main(): int {
+    let values: vector i64 = [3037000500, 3037000500];
+    let result: i64 = values[0] * values[1];
+    if (result == values[0]) { return 3; };
+    return 0;
+}

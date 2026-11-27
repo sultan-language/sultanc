@@ -1,0 +1,6 @@
+خطأ[SULTANC-TYPE-ADDRESS-OF-NON-LVALUE]: لا يمكن أخذ عنوان قيمة غير قابلة للعنونة
+  --> tests/en/diagnostics/e2e/slice_of_temporary.sn:10:24..10:30
+    |
+ 10 |     let part: [] int = make()[1..];
+    |                        ^^^^^^
+    |

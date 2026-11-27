@@ -72,8 +72,9 @@ These are not reserved, but have a meaning where they appear:
 | `option` | `اختياري` | a value or nothing |
 | `result` | `نتيجة` | a value or an error |
 | `vector` | `متجه` | a growable sequence |
-| `range … to …` | `مدى … إلى …` | a range pattern in `match` |
 | `main` | `الرئيسية` | the function where a program starts |
+| `range a..b` | `مدى أ..ب` | a range of values in a pattern (`range 1..9`) |
+| `rest` | `بقية` | the other elements in a vector pattern (`[first, rest tail]`) |
 | `@@test` | `@@اختبار` | marks a test function |
 | `opaque` | `معتم` | a type known only by name, used through pointers |
 

@@ -1,0 +1,11 @@
+// اختبار: رفض
+// تشخيص: SULTANC-TYPE-TEXT-SLICE
+// نظير: tests/ar/diagnostics/e2e/text_slice_without_borrow.sn
+// خرج-تشخيص-عربي: text_slice_without_borrow.ar.stderr
+// خرج-تشخيص-إنجليزي: text_slice_without_borrow.en.stderr
+// A slice of text is borrowed, `&s[a..b]`: `s[a..b]` alone is not a value.
+def main(): int {
+    let greeting: string = "hello";
+    let part: string = greeting[1..3];
+    return length(part);
+}

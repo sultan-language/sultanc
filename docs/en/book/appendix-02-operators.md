@@ -3,7 +3,7 @@
 # B. Operators and Symbols
 
 The operators and symbols of SultanC, with the chapter that explains each. They are the same in Arabic
-and English programs; only `?` has an Arabic spelling too, `؟`.
+and English programs; only `?` and `,` have Arabic spellings too, `؟` and `،`.
 
 ## Operators
 
@@ -25,6 +25,7 @@ and English programs; only `?` has an Arabic spelling too, `؟`.
 | `:=` | `x := 5;` | assignment to a `mutable` variable | [3.1](ch03-01-variables-and-mutability.md) |
 | `&` | `&x` | a reference that reads | [4.2](ch04-02-references-and-borrowing.md) |
 | `&mutable` | `&mutable x` | a reference that may change | [4.2](ch04-02-references-and-borrowing.md) |
+| `&mutable` | `&mutable v[2..]` | a writable view of part of a vector | [8.1](ch08-01-vectors.md) |
 | `*` | `*r` | the value a reference or pointer points at | [4.2](ch04-02-references-and-borrowing.md) |
 | `?` | `f()?` | gives the value of `ok`, or returns the error | [9.2](ch09-02-recoverable-errors.md) |
 
@@ -38,10 +39,11 @@ and English programs; only `?` has an Arabic spelling too, `؟`.
 | `{ }` | `{ x: 1, y: 2 }` | a block; a record type or value | [3.5](ch03-05-control-flow.md), [5.1](ch05-01-defining-records.md) |
 | `( )` | `f(x)`, `(1, 2)` | a call; a tuple; grouping | [3.3](ch03-03-how-functions-work.md) |
 | `[ ]` | `[1, 2]`, `v[0]` | a vector; a position | [8.1](ch08-01-vectors.md) |
+| `..` | `v[1..3]`, `v[2..]`, `range 1..9` | from one position or value through another, both included | [8.1](ch08-01-vectors.md), [6.2](ch06-02-match.md) |
 | `.` | `p.x`, `std.io` | a field, also through a reference; a path | [5.1](ch05-01-defining-records.md), [5.3](ch05-03-functions-on-records.md), [7.3](ch07-03-import-forms.md) |
-| `,` | `f(a, b)` | separates items | |
+| `,` `،` | `f(a, b)` | separates items; `،` (U+060C) is the same comma, and `sultanc fmt` writes `،` in Arabic sources | |
 | `\|` | `\| Red \| Green` | starts an enum case or a `match` branch; "or" in a pattern | [6.1](ch06-01-defining-an-enum.md) |
-| `->` | `\| 0 -> { … }` | introduces a `match` branch's block, or an anonymous function's body | [6.2](ch06-02-match.md), [10.3](ch10-03-closures.md) |
+| `->` | `\| 0 -> { … }` | introduces a `match` branch's block or value, or an anonymous function's body | [6.2](ch06-02-match.md), [10.3](ch10-03-closures.md) |
 | `_` | `\| _ -> { }` | a pattern that matches anything | [3.5](ch03-05-control-flow.md) |
 | `< >` | `Stack<T>` | type parameters | [10.1](ch10-01-generic-data-types.md) |
 | `" "` | `"text\n"` | a string, with escapes | [8.2](ch08-02-strings.md) |

@@ -1,0 +1,5 @@
+// اختبار: رفض
+// تشخيص: SULTANC-PARSE-PATTERN
+// نظير: tests/en/frontend/parser/negative/match_path_pattern_at_end.sn
+// مسار منشئ ينقطع بعد `T.` في آخر الملف خطأ نمط، لا عطل داخلي في المحلل (وُجد بالتشويش).
+عرف د(ق: عدد): عدد { طابق ق مع | ن.

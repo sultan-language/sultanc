@@ -1,0 +1,6 @@
+error[SULTANC-TYPE-TEXT-SLICE]: a slice of text is borrowed read-only: `&s[a..b]`
+  --> tests/ar/diagnostics/e2e/text_slice_without_borrow.sn:9:22..9:34
+   |
+ 9 |     ليكن الجزء: نص = التحية[1..3];
+   |                      ^^^^^^^^^^^^
+   |

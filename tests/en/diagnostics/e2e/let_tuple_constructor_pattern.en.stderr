@@ -1,0 +1,6 @@
+error[SULTANC-PARSE-LET-PATTERN]: a tuple `let` takes a tuple apart only into names, `_` and nested tuples
+  --> tests/en/diagnostics/e2e/let_tuple_constructor_pattern.sn:11:10..11:19
+    |
+ 11 |     let (Light.Red, count): (Light, int) = (Light.Red, 3);
+    |          ^^^^^^^^^
+    |

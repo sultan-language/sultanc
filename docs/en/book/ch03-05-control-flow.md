@@ -91,6 +91,41 @@ fail
 
 A score of 95 is also above 75 and above 50, but only the first matching branch runs.
 
+### `if` as a value
+
+`if` can also give a value, wherever a value is expected: after the `=` of a `let`, after `:=`, after `return`, as an
+argument or an operand. Each branch is a value, or a block whose last expression, written without `;`, is the value:
+
+```sultan
+import std.io.println;
+
+def size(n: int): string {
+    return if (n == 0) "none" else if (n < 10) "small" else "big";
+}
+
+def main(): int {
+    let n: int = 7;
+    let label: string = if (n > 0) "positive" else "other";
+    let doubled: int = if (n > 5) { let t: int = n * 2; t + 1 } else { 0 };
+    println(label);
+    println(size(n));
+    return doubled - 15;
+}
+```
+
+```text
+positive
+small
+```
+
+An `if` used as a value must have an `else`: without one there is no value when the condition is false
+(`SULTANC-PARSE-IF-WITHOUT-ELSE`). Both branches give the same type, as the branches of a `match` that gives a value
+do; a branch may `return`, `break` or `continue` instead, but at least one gives a value
+(`SULTANC-TYPE-IF-WITHOUT-VALUE`), and a branch without a value must not reach its end
+(`SULTANC-FLOW-IF-BRANCH-WITHOUT-VALUE`). A bare branch reads as far as it can, so in
+`if (c) a else b + 1` the `+ 1` belongs to the `else` branch. A statement that starts with `if` is the `if` statement.
+An `if` value is a `match` on the condition ([section 6.2](ch06-02-match.md#a-match-that-gives-a-value)).
+
 ## `match`
 
 When one value decides between many cases, `match` is clearer than a chain of `else if`. It compares the
@@ -129,7 +164,10 @@ The parts of a `match`:
 - `_` matches anything. As the last branch it catches every value the branches above did not.
 - A `;` after the last branch ends the whole `match`.
 
-A *range* pattern matches every value between two limits, both included:
+A `match` can also give a value, with branches `| pattern -> value`; [section 6.2](ch06-02-match.md#a-match-that-gives-a-value)
+shows how.
+
+A *value range* `a..b` matches every value from `a` through `b`, both included:
 
 ```sultan
 import std.io.println;
@@ -137,8 +175,8 @@ import std.io.println;
 def describe(n: int): string {
     match n with
     | 0 -> { return "zero"; }
-    | range 1 to 9 -> { return "one digit"; }
-    | range 10 to 99 -> { return "two digits"; }
+    | range 1..9 -> { return "one digit"; }
+    | range 10..99 -> { return "two digits"; }
     | _ -> { return "bigger, or negative"; };
 }
 
@@ -170,8 +208,8 @@ def answer(word: string): string {
 
 def kind(letter: char): string {
     match letter with
-    | range 'a' to 'z' -> { return "small Latin letter"; }
-    | range '0' to '9' -> { return "digit"; }
+    | range 'a'..'z' -> { return "small Latin letter"; }
+    | range '0'..'9' -> { return "digit"; }
     | _ -> { return "something else"; };
 }
 
